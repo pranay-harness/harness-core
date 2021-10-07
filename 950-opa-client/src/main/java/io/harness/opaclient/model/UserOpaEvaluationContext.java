@@ -1,4 +1,4 @@
-package io.harness.pms.opa;
+package io.harness.opaclient.model;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

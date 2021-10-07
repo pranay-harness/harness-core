@@ -23,6 +23,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
@@ -154,6 +155,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
                                           .build())
             .logServiceConfig(
                 LogServiceConfig.builder().baseUrl("http://localhost-inc:8079").globalToken("global-token").build())
+            .opaServerConfig(OpaServiceConfiguration.builder().baseUrl("http://localhost:3000").build())
             .tiServiceConfig(
                 TIServiceConfig.builder().baseUrl("http://localhost-inc:8078").globalToken("global-token").build())
             .scmConnectionConfig(ScmConnectionConfig.builder().url("localhost:8181").build())

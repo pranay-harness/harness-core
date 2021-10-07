@@ -12,9 +12,7 @@ import lombok.Data;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(HarnessTeam.PIPELINE)
-public class OpaEvaluationResponse {
-  boolean deny;
-  String type;
-  String action;
-  List<OpaPolicySetEvaluationResponse> details;
+public class OpaPolicyEvaluationResponse {
+  PolicyData policy;
+  List<String> deny_messages;
 }
