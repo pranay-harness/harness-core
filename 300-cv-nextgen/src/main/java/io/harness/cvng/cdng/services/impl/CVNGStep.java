@@ -3,6 +3,7 @@ package io.harness.cvng.cdng.services.impl;
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
@@ -112,10 +113,18 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       } else {
         activityUuid = activityService.register(deploymentActivity);
       }
-      cvngStepTaskBuilder.activityId(activityUuid).callbackId(activityUuid);
+      Activity activity = activityService.get(activityUuid);
+      cvngStepTaskBuilder.activityId(activityUuid)
+          .callbackId(activityUuid)
+          .verificationJobInstanceId(activity.getVerificationJobInstanceIds().get(0));
     }
-    CVNGStepTask cvngStepTask =
-        cvngStepTaskBuilder.accountId(accountId).status(CVNGStepTask.Status.IN_PROGRESS).build();
+    CVNGStepTask cvngStepTask = cvngStepTaskBuilder.accountId(accountId)
+                                    .orgIdentifier(orgIdentifier)
+                                    .projectIdentifier(projectIdentifier)
+                                    .serviceIdentifier(serviceIdentifier)
+                                    .environmentIdentifier(envIdentifier)
+                                    .status(CVNGStepTask.Status.IN_PROGRESS)
+                                    .build();
     cvngStepTaskService.create(cvngStepTask);
     return AsyncExecutableResponse.newBuilder().addCallbackIds(cvngStepTask.getCallbackId()).build();
   }
