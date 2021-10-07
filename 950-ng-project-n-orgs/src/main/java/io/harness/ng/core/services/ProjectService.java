@@ -28,9 +28,11 @@ public interface ProjectService {
 
   List<ProjectDTO> listProjectsForUser(String userId, String accountId);
 
-  /**
-   * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
-   */
+  Integer accessibleProjectsCount(String userId, String accountId, long startInterval, long endInterval);
+
+    /**
+     * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
+     */
   Page<Project> listPermittedProjects(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
 
   /**

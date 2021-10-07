@@ -11,6 +11,7 @@ import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
@@ -73,6 +74,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.atmosphere.config.service.Get;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -163,6 +165,14 @@ public class UserResource {
   public ResponseDTO<List<ProjectDTO>> getUserAllProjectsInfo(
       @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
+  }
+
+  @Get
+  @Path("projects-count")
+  @ApiOperation(value = "get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
+  public ResponseDTO<Integer> getAccessibleProjectsCount(@QueryParam("accountId") String accountId, @QueryParam("userId") String userId, @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+                                                          @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval){
+    return ResponseDTO.newResponse(projectService.accessibleProjectsCount(userId,accountId,startInterval,endInterval));
   }
 
   @POST
