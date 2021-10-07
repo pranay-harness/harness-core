@@ -13,6 +13,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.DelegateSelectable;
+import io.harness.connector.ManagerExecutable;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
@@ -62,6 +63,11 @@ public class ConnectorMapper {
     if (connectorInfo.getConnectorConfig() instanceof DelegateSelectable) {
       Set<String> delegateSelectors = ((DelegateSelectable) connectorInfo.getConnectorConfig()).getDelegateSelectors();
       connector.setDelegateSelectors(delegateSelectors);
+    }
+
+    if (connectorInfo.getConnectorConfig() instanceof ManagerExecutable) {
+      Boolean executeOnManager = ((ManagerExecutable) connectorInfo.getConnectorConfig()).getExecuteOnManager();
+      connector.setExecuteOnManager(executeOnManager);
     }
     return connector;
   }
@@ -167,6 +173,11 @@ public class ConnectorMapper {
     if (connectorDTO instanceof DelegateSelectable) {
       Set<String> delegateSelectors = Optional.ofNullable(connector.getDelegateSelectors()).orElse(new HashSet<>());
       ((DelegateSelectable) connectorDTO).setDelegateSelectors(delegateSelectors);
+    }
+
+    if (connectorDTO instanceof ManagerExecutable) {
+      final Boolean executeOnManager = Optional.ofNullable(connector.getExecuteOnManager()).orElse(false);
+      ((ManagerExecutable) connectorDTO).setExecuteOnManager(executeOnManager);
     }
     return connectorDTO;
   }
