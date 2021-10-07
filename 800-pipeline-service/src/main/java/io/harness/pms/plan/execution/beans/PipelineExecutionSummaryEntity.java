@@ -20,6 +20,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
@@ -97,6 +98,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @Deprecated ByteString gitSyncBranchContext;
   EntityGitDetails entityGitDetails;
   FailureInfoDTO failureInfo;
+  GovernanceMetadata governanceMetadata;
 
   Long startTs;
   Long endTs;

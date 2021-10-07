@@ -84,6 +84,7 @@ kmsTransitionEvent2 {"name": "next4", "background": true} {"topic": 1, "earliest
 nodeExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 nodeExecutions {"name": "parentId_status_idx", "background": true} {"parentId": 1, "status": 1, "oldRetry": 1}
 nodeExecutions {"name": "planExecutionId_mode_status_oldRetry_idx", "background": true} {"ambiance.planExecutionId": 1, "mode": 1, "status": 1, "oldRetry": 1}
+nodeExecutions {"name": "planExecutionId_nodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "node.identifier": 1}
 nodeExecutions {"name": "planExecutionId_notifyId_idx", "background": true} {"ambiance.planExecutionId": 1, "notifyId": 1}
 nodeExecutions {"name": "planExecutionId_oldRetry_idx", "background": true} {"ambiance.planExecutionId": 1, "oldRetry": 1}
 nodeExecutions {"name": "planExecutionId_parentId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1, "status": 1}
@@ -103,6 +104,7 @@ orchestrationEventLog {"name": "planExecutionId_createdAt", "background": true} 
 orchestrationEventLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
 outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
+outcomeInstances {"name": "producedByRuntimeIdIdx", "background": true} {"producedBy.runtimeId": 1}
 outcomeInstances {"name": "unique_levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
 outcomeInstances {"name": "unique_producedBySetupIdRuntimeIdIdx", "unique": true} {"planExecutionId": 1, "producedBy.setupId": 1, "producedBy.runtimeId": 1, "name": 1}
 outcomeInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}

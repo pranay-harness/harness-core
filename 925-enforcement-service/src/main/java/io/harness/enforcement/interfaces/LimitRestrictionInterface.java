@@ -1,10 +1,5 @@
 package io.harness.enforcement.interfaces;
 
-import io.harness.enforcement.services.impl.EnforcementSdkClient;
-
-public interface LimitRestrictionInterface {
+public interface LimitRestrictionInterface extends EnforcementSdkSupportInterface {
   Long getLimit();
-  String getClientName();
-  EnforcementSdkClient getEnforcementSdkClient();
-  void setEnforcementSdkClient(EnforcementSdkClient enforcementSdkClient);
 }

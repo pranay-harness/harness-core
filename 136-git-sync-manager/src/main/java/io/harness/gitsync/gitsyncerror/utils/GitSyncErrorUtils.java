@@ -39,16 +39,6 @@ public class GitSyncErrorUtils {
     return EMPTY_STR;
   }
 
-  public static Long getCommitTimeOfError(GitSyncError error) {
-    if (isGitToHarnessSyncError(error)) {
-      GitToHarnessErrorDetails gitToHarnessErrorDetails = (GitToHarnessErrorDetails) error.getAdditionalErrorDetails();
-      return gitToHarnessErrorDetails.getCommitTime();
-    }
-
-    log.warn("The commitTime is specific to the git to harness error, it should not be called for harness to git");
-    return DEFAULT_COMMIT_TIME;
-  }
-
   public static String getCommitMessageOfError(GitSyncError error) {
     if (isGitToHarnessSyncError(error)) {
       GitToHarnessErrorDetails gitToHarnessErrorDetails = (GitToHarnessErrorDetails) error.getAdditionalErrorDetails();

@@ -68,6 +68,8 @@ import org.mongodb.morphia.query.Query;
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface WorkflowExecutionService extends StateStatusUpdate {
+  void refreshPipelineExecution(WorkflowExecution workflowExecution);
+
   HIterator<WorkflowExecution> executions(String appId, long startedFrom, long statedTo, Set<String> includeOnlyFields);
 
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);

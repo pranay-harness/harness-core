@@ -14,6 +14,8 @@ public enum EventType {
   TEST("test"),
   PIPELINE_START("pipeline_start"),
   PIPELINE_END("pipeline_end"),
+  PIPELINE_PAUSE("pipeline_pause"),
+  PIPELINE_CONTINUE("pipeline_continue"),
   WORKFLOW_START("workflow_start"),
   WORKFLOW_END("workflow_end");
 
@@ -29,7 +31,7 @@ public enum EventType {
   }
 
   public static List<String> getPipelineEvents() {
-    return Lists.newArrayList(PIPELINE_START, PIPELINE_END)
+    return Lists.newArrayList(PIPELINE_START, PIPELINE_END, PIPELINE_PAUSE, PIPELINE_CONTINUE)
         .stream()
         .map(EventType::getEventValue)
         .collect(Collectors.toList());

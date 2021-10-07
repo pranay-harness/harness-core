@@ -8,8 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
-import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
@@ -19,14 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
-public class ActivitySourceServiceImpl implements ActivitySourceService {
+public class ActivitySourceServiceImpl implements DeleteEntityByHandler<ActivitySource> {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
-
-  @Override
-  public ActivitySource getActivitySource(String activitySourceId) {
-    return hPersistence.get(ActivitySource.class, activitySourceId);
-  }
 
   private boolean getActivitySourceForDeletion(String accountId, ActivitySource activitySource) {
     if (activitySource != null) {

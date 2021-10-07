@@ -34,7 +34,7 @@ public class NextStepHandler implements AdviserResponseHandler {
     if (EmptyPredicate.isNotEmpty(advise.getNextNodeId())) {
       Node nextNode = Preconditions.checkNotNull(
           planService.fetchNode(nodeExecution.getAmbiance().getPlanId(), advise.getNextNodeId()));
-      engine.triggerNode(nodeExecution.getAmbiance(), nextNode);
+      engine.triggerNode(nodeExecution.getAmbiance(), nextNode, null);
     } else {
       engine.endNodeExecution(nodeExecution.getAmbiance());
     }

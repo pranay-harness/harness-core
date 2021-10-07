@@ -90,7 +90,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .name("BarrierExecutionInstanceMonitor")
+            .name("PmsBarrierExecutionInstanceMonitor")
             .poolSize(2)
             .interval(ofMinutes(1))
             .build(),

@@ -16,6 +16,8 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = AvailabilityRestriction.class, name = "AVAILABILITY")
       , @JsonSubTypes.Type(value = StaticLimitRestriction.class, name = "STATIC_LIMIT"),
           @JsonSubTypes.Type(value = RateLimitRestriction.class, name = "RATE_LIMIT"),
+          @JsonSubTypes.Type(value = CustomRestriction.class, name = "CUSTOM"),
+          @JsonSubTypes.Type(value = DurationRestriction.class, name = "DURATION"),
     })
 public abstract class Restriction {
   protected RestrictionType restrictionType;

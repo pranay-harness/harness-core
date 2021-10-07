@@ -21,7 +21,6 @@ import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
-import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
@@ -745,9 +744,6 @@ public class ActivityServiceImpl implements ActivityService {
         break;
       case INFRASTRUCTURE:
         activity = InfrastructureActivity.builder().build();
-        break;
-      case CUSTOM:
-        activity = CustomActivity.builder().build();
         break;
       case KUBERNETES:
         throw new IllegalStateException("KUBERNETES events are handled by its own service");

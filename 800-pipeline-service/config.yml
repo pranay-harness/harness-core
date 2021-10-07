@@ -218,3 +218,11 @@ delegatePollingConfig:
   syncDelay: 2000
   asyncDelay: 2000
   progressDelay: 2000
+
+segmentConfiguration:
+  enabled: false
+  url: https://api.segment.io/v1/
+  apiKey: ""
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: false

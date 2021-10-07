@@ -11,6 +11,7 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.opaclient.OpaServiceClient;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.ServiceTokenGenerator;
@@ -22,6 +23,7 @@ import io.harness.serializer.PersistenceRegistrars;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tiserviceclient.TIServiceClientModule;
+import io.harness.user.remote.UserClient;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -84,6 +86,8 @@ public class CIExecutionTestModule extends AbstractModule {
     bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
     bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
     bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
+    bind(UserClient.class).toInstance(mock(UserClient.class));
+    bind(OpaServiceClient.class).toInstance(mock(OpaServiceClient.class));
     install(new ConnectorResourceClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "CI"));
     install(new SecretNGManagerClientModule(

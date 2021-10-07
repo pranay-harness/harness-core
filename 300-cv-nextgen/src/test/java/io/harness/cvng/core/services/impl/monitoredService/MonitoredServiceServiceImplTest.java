@@ -848,9 +848,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             + "  sources:\n"
             + "    healthSources:\n"
             + "    changeSources:\n"
-            + "      - name: Harness CD\n"
-            + "        identifier: harness_cd\n"
-            + "        type: HarnessCD\n"
+            + "      - name: Harness CD Next Gen\n"
+            + "        identifier: harness_cd_next_gen\n"
+            + "        type: HarnessCDNextGen\n"
             + "        enabled : true\n");
 
     assert (monitoredServiceService.getYamlTemplate(projectParams, MonitoredServiceType.INFRASTRUCTURE))
@@ -880,9 +880,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             + "  sources:\n"
             + "    healthSources:\n"
             + "    changeSources:\n"
-            + "      - name: Harness CD\n"
-            + "        identifier: harness_cd\n"
-            + "        type: HarnessCD\n"
+            + "      - name: Harness CD Next Gen\n"
+            + "        identifier: harness_cd_next_gen\n"
+            + "        type: HarnessCDNextGen\n"
             + "        enabled : true\n");
   }
 

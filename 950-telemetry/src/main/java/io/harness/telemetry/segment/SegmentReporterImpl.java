@@ -150,6 +150,11 @@ public class SegmentReporterImpl implements TelemetryReporter {
     }
   }
 
+  @Override
+  public void flush() {
+    segmentSender.flushDataInQueue();
+  }
+
   private String readIdentityFromPrincipal() {
     Principal principal = SecurityContextBuilder.getPrincipal();
     String identity = null;

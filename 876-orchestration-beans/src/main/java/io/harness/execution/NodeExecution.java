@@ -153,6 +153,10 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
 
     public static final String planNodeId = NodeExecutionKeys.planNode + "."
         + "uuid";
+
+    public static final String nodeId = NodeExecutionKeys.node + "."
+        + "uuid";
+
     public static final String planNodeIdentifier = NodeExecutionKeys.planNode + "."
         + "identifier";
     public static final String planNodeStepCategory = NodeExecutionKeys.planNode + "."
@@ -236,6 +240,11 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
                  .name("planExecutionId_step_category_idx")
                  .field(NodeExecutionKeys.planExecutionId)
                  .field(NodeExecutionKeys.stepCategory)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_nodeIdentifier_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.nodeIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();

@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -96,8 +97,6 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     Update update =
         update(PmsSdkInstanceKeys.supportedTypes, supportedTypes)
             .set(PmsSdkInstanceKeys.supportedSdkSteps, request.getSupportedStepsList())
-            .set(PmsSdkInstanceKeys.supportedStepTypes, getSupportedStepTypes(request.getSupportedStepsList()))
-            .set(PmsSdkInstanceKeys.supportedSteps, getStepInfos(request.getSupportedStepsList()))
             .set(PmsSdkInstanceKeys.interruptConsumerConfig, request.getInterruptConsumerConfig())
             .set(PmsSdkInstanceKeys.staticAliases, request.getStaticAliasesMap())
             .set(PmsSdkInstanceKeys.sdkFunctors, request.getSdkFunctorsList())
@@ -125,15 +124,12 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
   public Map<String, StepPalleteInfo> getModuleNameToStepPalleteInfo() {
     Map<String, StepPalleteInfo> instances = new HashMap<>();
     pmsSdkInstanceRepository.findByActive(true).forEach(instance -> {
-      List<StepInfo> stepTypes;
-      if (EmptyPredicate.isEmpty(instance.getSupportedSdkSteps())) {
-        stepTypes = instance.getSupportedSteps();
-      } else {
-        stepTypes = instance.getSupportedSdkSteps()
-                        .stream()
-                        .filter(SdkStep::getIsPartOfStepPallete)
-                        .map(SdkStep::getStepInfo)
-                        .collect(Collectors.toList());
+      List<StepInfo> stepTypes = new ArrayList<>();
+      for (SdkStep sdkStep : instance.getSupportedSdkSteps()) {
+        if (!sdkStep.getIsPartOfStepPallete()) {
+          continue;
+        }
+        stepTypes.add(sdkStep.getStepInfo());
       }
       instances.put(instance.getName(),
           StepPalleteInfo.builder()

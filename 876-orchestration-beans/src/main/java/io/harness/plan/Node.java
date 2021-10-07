@@ -1,10 +1,13 @@
 package io.harness.plan;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public interface Node extends UuidAccess {
   NodeType getNodeType();
 
@@ -16,15 +19,23 @@ public interface Node extends UuidAccess {
 
   String getGroup();
 
-  boolean isSkipExpressionChain();
+  default boolean isSkipExpressionChain() {
+    return false;
+  }
 
   String getServiceName();
 
   PmsStepParameters getStepParameters();
 
-  String getWhenCondition();
+  default String getWhenCondition() {
+    return null;
+  }
 
-  String getSkipCondition();
+  default String getSkipCondition() {
+    return null;
+  }
 
-  SkipType getSkipGraphType();
+  default SkipType getSkipGraphType() {
+    return SkipType.NOOP;
+  }
 }

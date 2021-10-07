@@ -12,6 +12,7 @@ import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
@@ -55,6 +56,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   private String ngManagerServiceSecret;
   private LogServiceConfig logServiceConfig;
   private TIServiceConfig tiServiceConfig;
+  private OpaServiceConfiguration opaServerConfig;
 
   private String managerServiceSecret;
   private String jwtAuthSecret;

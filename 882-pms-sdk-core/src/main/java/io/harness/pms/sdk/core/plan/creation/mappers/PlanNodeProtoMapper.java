@@ -33,6 +33,7 @@ public class PlanNodeProtoMapper {
             .setUuid(node.getUuid())
             .setName(isEmpty(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
+            .setStageFqn(node.getStageFqn())
             .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
             .setStepParameters(
                 node.getStepParameters() == null ? "" : RecastOrchestrationUtils.toJson(node.getStepParameters()))
