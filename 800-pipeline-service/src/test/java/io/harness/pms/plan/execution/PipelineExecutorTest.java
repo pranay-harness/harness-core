@@ -148,7 +148,7 @@ public class PipelineExecutorTest extends CategoryTest {
   }
 
   private void doReturnStatementsForFreshRun(String originalExecutionId, boolean addValidateAndMergeHelperDoReturn,
-      List<String> stageIdentifiers, List<String> uuidForSkipNodes) {
+      List<String> stageIdentifiers, List<String> identifierOfSkipStagess) {
     if (addValidateAndMergeHelperDoReturn) {
       doReturn(runtimeInputYaml)
           .when(validateAndMergeHelper)
