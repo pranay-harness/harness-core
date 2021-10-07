@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dashboards.DeploymentStatsSummary;
 import io.harness.dashboards.EnvCount;
 import io.harness.dashboards.GroupBy;
+import io.harness.dashboards.PipelinesExecutionDashboardInfo;
 import io.harness.dashboards.ProjectDashBoardInfo;
 import io.harness.dashboards.ProjectsDashboardInfo;
 import io.harness.dashboards.ServiceDashboardInfo;
@@ -135,32 +136,32 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         accountIdentifier, startInterval, endInterval, orgProjectIdentifierList, groupBy, sortBy);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
 
-    Optional<RestCallResponse> deploymentStatsSummaryOptional =
-        getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_DEPLOYMENTS_STATS_SUMMARY);
-    Optional<RestCallResponse> timeBasedDeploymentsInfoOptional =
-        getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_TIME_WISE_DEPLOYMENT_INFO);
+    Optional<RestCallResponse> activeDeploymentsInfoOptional =
+        getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_ACTIVE_DEPLOYMENTS_INFO);
+    Optional<RestCallResponse> deploymentStatsInfoOptional =
+        getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_DEPLOYMENT_STATS_SUMMARY);
     Optional<RestCallResponse> mostActiveServicesOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_MOST_ACTIVE_SERVICES);
 
-    if (deploymentStatsSummaryOptional.isPresent() && timeBasedDeploymentsInfoOptional.isPresent()
+    if (activeDeploymentsInfoOptional.isPresent() && deploymentStatsInfoOptional.isPresent()
         && mostActiveServicesOptional.isPresent()) {
-      if (deploymentStatsSummaryOptional.get().isCallFailed() || timeBasedDeploymentsInfoOptional.get().isCallFailed()
+      if (activeDeploymentsInfoOptional.get().isCallFailed() || deploymentStatsInfoOptional.get().isCallFailed()
           || mostActiveServicesOptional.get().isCallFailed()) {
         return ExecutionResponse.<DeploymentsStatsOverview>builder()
             .executionStatus(ExecutionStatus.FAILURE)
             .executionMessage(FAILURE_MESSAGE)
             .build();
       } else {
-        DeploymentStatsSummary deploymentStatsSummary =
-            (DeploymentStatsSummary) deploymentStatsSummaryOptional.get().getResponse();
-        List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList =
-            (List<TimeBasedDeploymentInfo>) timeBasedDeploymentsInfoOptional.get().getResponse();
+        PipelinesExecutionDashboardInfo activeDeploymentsInfo =
+            (PipelinesExecutionDashboardInfo) activeDeploymentsInfoOptional.get().getResponse();
+        DeploymentStatsSummary deploymentStatsInfo =
+            (DeploymentStatsSummary) deploymentStatsInfoOptional.get().getResponse();
         ServicesDashboardInfo servicesDashboardInfo =
             (ServicesDashboardInfo) mostActiveServicesOptional.get().getResponse();
         return ExecutionResponse.<DeploymentsStatsOverview>builder()
             .response(DeploymentsStatsOverview.builder()
-                          .deploymentsStatsSummary(
-                              getDeploymentStatsSummary(deploymentStatsSummary, timeBasedDeploymentInfoList))
+                          .deploymentsOverview(getDeploymentsOverview(activeDeploymentsInfo))
+                          .deploymentsStatsSummary(getDeploymentStatsSummary(deploymentStatsInfo))
                           .mostActiveServicesList(getMostActiveServicesList(sortBy, servicesDashboardInfo,
                               mapOfProjectIdentifierAndProjectName, mapOfOrganizationIdentifierAndOrganizationName))
                           .build())
@@ -219,31 +220,24 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         .build();
   }
 
-  private DeploymentsStatsSummary getDeploymentStatsSummary(
-      DeploymentStatsSummary deploymentStatsSummary, List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList) {
-    DeploymentsOverview deploymentsOverview =
-        DeploymentsOverview.builder()
-            .failedCount(deploymentStatsSummary.getFailed24HoursCount())
-            .manualInterventionsCount(deploymentStatsSummary.getManualInterventionsCount())
-            .pendingApprovalsCount(deploymentStatsSummary.getPendingApprovalsCount())
-            .runningCount(deploymentStatsSummary.getRunningCount())
-            .build();
+  private DeploymentsOverview getDeploymentsOverview(PipelinesExecutionDashboardInfo activeDeploymentsInfo) {
+    return DeploymentsOverview.builder()
+        .failed24HrsExecutions(activeDeploymentsInfo.getFailed24HrsExecutions())
+        .pendingApprovalExecutions(activeDeploymentsInfo.getPendingApprovalExecutions())
+        .pendingManualInterventionExecutions(activeDeploymentsInfo.getPendingManualInterventionExecutions())
+        .runningExecutions(activeDeploymentsInfo.getRunningExecutions())
+        .build();
+  }
 
+  private DeploymentsStatsSummary getDeploymentStatsSummary(DeploymentStatsSummary deploymentStatsSummary) {
     return DeploymentsStatsSummary.builder()
-        .countAndChangeRate(
-            CountChangeDetails.builder()
-                .count(deploymentStatsSummary.getCount())
-                .countChangeAndCountChangeRateInfo(CountChangeAndCountChangeRateInfo.builder()
-                                                       .countChangeRate(deploymentStatsSummary.getCountChangeRate())
-                                                       .build())
-                .build())
-        .failureCountAndChangeRate(
-            CountChangeDetails.builder()
-                .count(deploymentStatsSummary.getFailureCount())
-                .countChangeAndCountChangeRateInfo(CountChangeAndCountChangeRateInfo.builder()
-                                                       .countChangeRate(deploymentStatsSummary.getFailureChangeRate())
-                                                       .build())
-                .build())
+        .countAndChangeRate(CountChangeDetails.builder()
+                                .count(deploymentStatsSummary.getTotalCount())
+                                .countChangeAndCountChangeRateInfo(
+                                    CountChangeAndCountChangeRateInfo.builder()
+                                        .countChangeRate(deploymentStatsSummary.getTotalCountChangeRate())
+                                        .build())
+                                .build())
         .failureRateAndChangeRate(RateAndRateChangeInfo.builder()
                                       .rate(deploymentStatsSummary.getFailureRate())
                                       .rateChangeRate(deploymentStatsSummary.getFailureRateChangeRate())
@@ -252,8 +246,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                          .rate(deploymentStatsSummary.getDeploymentRate())
                                          .rateChangeRate(deploymentStatsSummary.getDeploymentRateChangeRate())
                                          .build())
-        .deploymentsOverview(deploymentsOverview)
-        .deploymentStats(getTimeWiseDeploymentInfo(timeBasedDeploymentInfoList))
+        .deploymentStats(getTimeWiseDeploymentInfo(deploymentStatsSummary.getTimeBasedDeploymentInfoList()))
         .build();
   }
 
@@ -262,9 +255,9 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     for (TimeBasedDeploymentInfo timeBasedDeploymentInfo : emptyIfNull(timeBasedDeploymentInfoList)) {
       TimeBasedStats timeBasedStats =
           TimeBasedStats.builder()
-              .time(timeBasedDeploymentInfo.getTime())
+              .time(timeBasedDeploymentInfo.getEpochTime())
               .countWithSuccessFailureDetails(CountWithSuccessFailureDetails.builder()
-                                                  .count(timeBasedDeploymentInfo.getCount())
+                                                  .count(timeBasedDeploymentInfo.getTotalCount())
                                                   .failureCount(timeBasedDeploymentInfo.getFailedCount())
                                                   .successCount(timeBasedDeploymentInfo.getSuccessCount())
                                                   .build())
@@ -406,14 +399,14 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
       SortBy sortBy) {
     List<RestCallRequest> restCallRequestList = new ArrayList<>();
     restCallRequestList.add(RestCallRequest.<DeploymentStatsSummary>builder()
-                                .request(cdLandingDashboardResourceClient.getDeploymentStatsSummary(
-                                    accountIdentifier, orgProjectIdentifierList, startInterval, endInterval))
-                                .requestType(OverviewDashboardRequestType.GET_DEPLOYMENTS_STATS_SUMMARY)
+                                .request(cdLandingDashboardResourceClient.getActiveDeploymentStats(
+                                    accountIdentifier, orgProjectIdentifierList))
+                                .requestType(OverviewDashboardRequestType.GET_ACTIVE_DEPLOYMENTS_INFO)
                                 .build());
     restCallRequestList.add(RestCallRequest.<List<TimeBasedDeploymentInfo>>builder()
-                                .request(cdLandingDashboardResourceClient.getTimeWiseDeploymentInfo(
+                                .request(cdLandingDashboardResourceClient.getDeploymentStatsSummary(
                                     accountIdentifier, orgProjectIdentifierList, startInterval, endInterval, groupBy))
-                                .requestType(OverviewDashboardRequestType.GET_TIME_WISE_DEPLOYMENT_INFO)
+                                .requestType(OverviewDashboardRequestType.GET_DEPLOYMENT_STATS_SUMMARY)
                                 .build());
     restCallRequestList.add(RestCallRequest.<ServicesDashboardInfo>builder()
                                 .request(cdLandingDashboardResourceClient.get(

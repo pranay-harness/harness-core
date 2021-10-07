@@ -6,10 +6,14 @@ package io.harness.timescaledb;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.NodePoolAggregated;
+import io.harness.timescaledb.tables.PipelineExecutionSummaryCd;
+import io.harness.timescaledb.tables.ServiceInfraInfo;
 import io.harness.timescaledb.tables.WorkloadInfo;
 import io.harness.timescaledb.tables.records.CeRecommendationsRecord;
 import io.harness.timescaledb.tables.records.NodeInfoRecord;
 import io.harness.timescaledb.tables.records.NodePoolAggregatedRecord;
+import io.harness.timescaledb.tables.records.PipelineExecutionSummaryCdRecord;
+import io.harness.timescaledb.tables.records.ServiceInfraInfoRecord;
 import io.harness.timescaledb.tables.records.WorkloadInfoRecord;
 
 import org.jooq.TableField;
@@ -41,6 +45,13 @@ public class Keys {
               NodePoolAggregated.NODE_POOL_AGGREGATED.CLUSTERID, NodePoolAggregated.NODE_POOL_AGGREGATED.NAME,
               NodePoolAggregated.NODE_POOL_AGGREGATED.STARTTIME, NodePoolAggregated.NODE_POOL_AGGREGATED.ENDTIME},
           true);
+  public static final UniqueKey<PipelineExecutionSummaryCdRecord> PIPELINE_EXECUTION_SUMMARY_CD_PKEY =
+      Internal.createUniqueKey(PipelineExecutionSummaryCd.PIPELINE_EXECUTION_SUMMARY_CD,
+          DSL.name("pipeline_execution_summary_cd_pkey"),
+          new TableField[] {PipelineExecutionSummaryCd.PIPELINE_EXECUTION_SUMMARY_CD.ID}, true);
+  public static final UniqueKey<ServiceInfraInfoRecord> SERVICE_INFRA_INFO_PKEY =
+      Internal.createUniqueKey(ServiceInfraInfo.SERVICE_INFRA_INFO, DSL.name("service_infra_info_pkey"),
+          new TableField[] {ServiceInfraInfo.SERVICE_INFRA_INFO.ID}, true);
   public static final UniqueKey<WorkloadInfoRecord> WORKLOAD_INFO_UNIQUE_RECORD_INDEX =
       Internal.createUniqueKey(WorkloadInfo.WORKLOAD_INFO, DSL.name("workload_info_unique_record_index"),
           new TableField[] {WorkloadInfo.WORKLOAD_INFO.ACCOUNTID, WorkloadInfo.WORKLOAD_INFO.CLUSTERID,
