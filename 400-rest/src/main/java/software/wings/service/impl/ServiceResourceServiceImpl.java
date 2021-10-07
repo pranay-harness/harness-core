@@ -2613,6 +2613,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
+  @Override
+  public Optional<Artifact> findArtifactForOnDemandWorkflow(String appId, String workflowExecutionId) {
+    if (!workflowExecutionService.checkIfOnDemand(appId, workflowExecutionId)) {
+      return Optional.empty();
+    }
+
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.fetchWorkflowExecution(appId, workflowExecutionId, WorkflowExecutionKeys.artifacts);
+    List<Artifact> artifacts = workflowExecution.getArtifacts();
+    Artifact artifact = isNotEmpty(artifacts) ? artifacts.get(0) : null;
+    return Optional.ofNullable(artifact);
+  }
+
   private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
     if (commandUnits != null && oldCommandUnits != null) {
       if (commandUnits.size() == oldCommandUnits.size()) {
