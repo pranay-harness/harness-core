@@ -6,10 +6,12 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import java.util.List;
@@ -110,5 +112,19 @@ public class NGExpressionUtilsTest extends CategoryTest {
     assertThat(listOfExpressions.get(6)).isEqualTo("<+input>");
     assertThat(listOfExpressions.get(7)).isEqualTo("<+pipeline.stages.stage.name>");
     assertThat(listOfExpressions.get(8)).isEqualTo("<+stage.serviceConfig.serviceRef>");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetFirstKeyOfExpression() {
+    assertThat(NGExpressionUtils.getFirstKeyOfExpression("<+pipeline.stages.s1.name>")).isEqualTo("pipeline");
+    assertThat(NGExpressionUtils.getFirstKeyOfExpression("<+stages.s1.description>")).isEqualTo("stages");
+    assertThat(NGExpressionUtils.getFirstKeyOfExpression("<+input>")).isEqualTo("input");
+    assertThat(NGExpressionUtils.getFirstKeyOfExpression("<+step.name>")).isEqualTo("step");
+    assertThat(NGExpressionUtils.getFirstKeyOfExpression("<+artifact.image>")).isEqualTo("artifact");
+    assertThatThrownBy(() -> NGExpressionUtils.getFirstKeyOfExpression("staticValue"))
+        .hasMessage("staticValue is not a syntactically valid pipeline expression")
+        .isInstanceOf(InvalidRequestException.class);
   }
 }
