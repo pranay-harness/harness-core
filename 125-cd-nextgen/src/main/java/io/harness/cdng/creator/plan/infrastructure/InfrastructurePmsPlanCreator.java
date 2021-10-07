@@ -78,14 +78,10 @@ public class InfrastructurePmsPlanCreator {
       String infraStepNodeUuid, PipelineInfrastructure infrastructure, KryoSerializer kryoSerializer,
       YamlField infraField) {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
-
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
 
-    InfraSectionStepParameters infraSectionStepParameters = InfraSectionStepParameters.builder()
-                                                                .environmentRef(actualInfraConfig.getEnvironmentRef())
-                                                                .environment(actualInfraConfig.getEnvironment())
-                                                                .childNodeID(infraStepNodeUuid)
-                                                                .build();
+    InfraSectionStepParameters infraSectionStepParameters =
+        getInfraSectionStepParams(actualInfraConfig, infraStepNodeUuid);
 
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
@@ -176,6 +172,20 @@ public class InfrastructurePmsPlanCreator {
             .build());
     adviserObtainments.add(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build());
     return adviserObtainments;
+  }
+
+  /**
+   * @param actualInfraConfig infrastructure after resolving useFromStage.
+   * @param infraStepNodeUuid infraStep node uuid
+   * @return step params
+   */
+  public InfraSectionStepParameters getInfraSectionStepParams(
+      PipelineInfrastructure actualInfraConfig, String infraStepNodeUuid) {
+    return InfraSectionStepParameters.builder()
+        .environmentRef(actualInfraConfig.getEnvironmentRef())
+        .environment(actualInfraConfig.getEnvironment())
+        .childNodeID(infraStepNodeUuid)
+        .build();
   }
 
   /**

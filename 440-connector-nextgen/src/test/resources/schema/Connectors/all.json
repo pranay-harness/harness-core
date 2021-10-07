@@ -2517,6 +2517,9 @@
                 "type": "string"
               }
             },
+            "executeOnManager": {
+              "type": "boolean"
+            },
             "type": {
               "type": "string",
               "enum": [

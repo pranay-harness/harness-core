@@ -3,6 +3,8 @@ package io.harness.rule;
 import static java.lang.String.format;
 
 import io.harness.NoopStatement;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.CategoryConfigException;
 import io.harness.rule.UserInfo.UserInfoBuilder;
 import io.harness.scm.ScmSecret;
@@ -25,6 +27,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class OwnerRule implements TestRule {
   @Getter(lazy = true) private static final JiraClient jira = connect();
   public static final String ASSIGNEE = "assignee";
@@ -92,6 +95,7 @@ public class OwnerRule implements TestRule {
   public static final String DEEPAK = "deepak.patankar";
   public static final String DHRUV = "dhruv.upadhyay";
   public static final String DINESH = "dinesh.garg";
+  public static final String FILIP = "filip.petrovic";
   public static final String GARVIT = "garvit.pahal";
   public static final String GEORGE = "george";
   public static final String GUNA = "guna.chandrasekaran";
@@ -358,6 +362,7 @@ public class OwnerRule implements TestRule {
           .put(ALEXANDRU_CIOFU, defaultUserInfo(ALEXANDRU_CIOFU).slack("U025JKQMRSA").team(DX).build())
           .put(NANA_XU, defaultUserInfo(NANA_XU).slack("U01QWLCSUHL").team(GTM).build())
           .put(JELENA, defaultUserInfo(JELENA).slack("U02AGRC9D0S").team(CDP).build())
+          .put(FILIP, defaultUserInfo(FILIP).slack("U02E3L2S803").team(CDP).build())
           .put(ABHINAV2, defaultUserInfo(ABHINAV2).slack("U02D3KJKF33").team(CDP).build())
           .put(BHAVYA, defaultUserInfo(BHAVYA).slack("U024WB5P1NF").team(PL).build())
           .put(MLUKIC, defaultUserInfo(MLUKIC).slack("U02DS8RGUSV").team(CDP).build())

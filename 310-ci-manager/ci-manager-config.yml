@@ -199,3 +199,6 @@ cacheConfig:
   cacheBackend: REDIS
   cacheNamespace: ""
   disabledCaches: [ ]
+
+opaServerConfig:
+  baseUrl: http://localhost:3000

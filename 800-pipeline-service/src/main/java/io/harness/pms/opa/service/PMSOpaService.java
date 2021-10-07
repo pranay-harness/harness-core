@@ -2,7 +2,7 @@ package io.harness.pms.opa.service;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.opa.PipelineOpaEvaluationContext;
+import io.harness.opaclient.model.PipelineOpaEvaluationContext;
 
 import java.io.IOException;
 import javax.validation.constraints.NotNull;

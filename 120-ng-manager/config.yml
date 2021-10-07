@@ -345,3 +345,6 @@ basePathPrefix: ${BASE_PATH_PREFIX:-""}
 
 enforcementClientConfiguration:
   enforcementCheckEnabled: false
+
+opaServerConfig:
+  baseUrl: http://localhost:3000
