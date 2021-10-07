@@ -198,9 +198,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         + "  metrics:\n"
         + "  - type: Resource\n"
         + "    resource:\n"
-        + "      name: cpu\n"
-        + "      targetAverageUtilization: 80\n";
-
+        + "      name: cpu\n";
     assertThat(hpaString).isEqualTo(yamlForHPAWithCustomMetric);
   }
   @Test
