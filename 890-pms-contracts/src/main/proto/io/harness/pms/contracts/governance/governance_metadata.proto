@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.governance;
+
+option java_multiple_files = true;
+
+// next ID: 5
+message PolicyMetadata {
+  string policyId = 1;
+  string policyName = 2;
+  string severity = 3;
+  repeated string denyMessages = 4;
+}
+
+// next ID: 5
+message PolicySetMetadata {
+  string policySetId = 1;
+  bool deny = 2;
+  repeated PolicyMetadata policyMetadata = 3;
+  string policySetName = 4;
+}
+
+// next ID: 6
+message GovernanceMetadata {
+  string id = 1;
+  bool deny = 2;
+  repeated PolicySetMetadata details = 3;
+  string message = 4;
+  int64 timestamp = 5;
+}

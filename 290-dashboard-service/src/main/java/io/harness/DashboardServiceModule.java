@@ -3,6 +3,7 @@ package io.harness;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.ProviderModule;
+import io.harness.organization.OrganizationClientModule;
 import io.harness.overviewdashboard.dashboardaggregateservice.impl.OverviewDashboardServiceImpl;
 import io.harness.overviewdashboard.dashboardaggregateservice.service.OverviewDashboardService;
 import io.harness.overviewdashboard.rbac.impl.DashboardRBACServiceImpl;
@@ -34,6 +35,9 @@ public class DashboardServiceModule extends AbstractModule {
   protected void configure() {
     install(ExecutorModule.getInstance());
     install(UserNGClientModule.getInstance(config.getNgManagerClientConfig(),
+        config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
+        AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
+    install(OrganizationClientModule.getInstance(config.getNgManagerClientConfig(),
         config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
         AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     install(new ProviderModule() {

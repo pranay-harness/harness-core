@@ -32,4 +32,5 @@ public interface CVNextGenConstants {
   String PROJECT_PATH = "account/{" + ACCOUNT_IDENTIFIER_KEY + "}/org/{" + ORG_IDENTIFIER_KEY + "}/project/{"
       + PROJECT_IDENTIFIER_KEY + "}";
   String CHANGE_EVENT_PATH = PROJECT_PATH + "/change-event";
+  String VERIFY_STEP_PATH = PROJECT_PATH + "/verify-step";
 }

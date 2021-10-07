@@ -4,6 +4,7 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.alert.entities.AlertRule;
 import io.harness.cvng.alert.entities.AlertRuleAnomaly;
+import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MonitoredService;
@@ -43,7 +44,7 @@ public abstract class EntityChangeEventMessageProcessor implements ConsumerMessa
     ENTITIES_MAP.put(Webhook.class, WebhookService.class);
     final List<Class<? extends PersistentEntity>> deleteEntitiesWithDefaultHandler =
         Arrays.asList(VerificationJob.class, Activity.class, ActivitySource.class, AlertRule.class, MetricPack.class,
-            HeatMap.class, TimeSeriesThreshold.class, AlertRuleAnomaly.class);
+            HeatMap.class, TimeSeriesThreshold.class, AlertRuleAnomaly.class, CVNGStepTask.class);
     deleteEntitiesWithDefaultHandler.forEach(entity -> ENTITIES_MAP.put(entity, DeleteEntityByHandler.class));
   }
 }

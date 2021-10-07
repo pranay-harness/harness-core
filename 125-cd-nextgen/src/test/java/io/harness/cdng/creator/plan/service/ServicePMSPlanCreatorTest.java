@@ -11,11 +11,14 @@ import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
+import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
+import io.harness.cdng.infra.steps.EnvironmentStep;
 import io.harness.cdng.manifest.steps.ManifestStep;
 import io.harness.cdng.manifest.steps.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.steps.ServiceConfigStep;
 import io.harness.cdng.service.steps.ServiceConfigStepParameters;
@@ -64,8 +67,23 @@ public class ServicePMSPlanCreatorTest extends CDNGTestBase {
     ServiceConfig serviceConfig = YamlUtils.read(yaml, ServiceConfig.class);
     assertThat(serviceConfig).isNotNull();
 
-    PlanCreationResponse response =
-        ServicePMSPlanCreator.createPlanForServiceNode(field, serviceConfig, kryoSerializer);
+    // infra field
+    yamlFile = classLoader.getResourceAsStream("cdng/plan/infra.yml");
+    assertThat(yamlFile).isNotNull();
+
+    yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField infraField = YamlUtils.readTree(yaml);
+    assertThat(infraField).isNotNull();
+
+    PipelineInfrastructure infrastructure = YamlUtils.read(yaml, PipelineInfrastructure.class);
+    assertThat(infrastructure).isNotNull();
+
+    PipelineInfrastructure actualInfraConfig =
+        InfrastructurePmsPlanCreator.getActualInfraConfig(infrastructure, infraField);
+
+    PlanCreationResponse response = ServicePMSPlanCreator.createPlanForServiceNode(field, serviceConfig, kryoSerializer,
+        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""));
     assertThat(response).isNotNull();
 
     String startingNodeId = response.getStartingNodeId();
@@ -73,7 +91,7 @@ public class ServicePMSPlanCreatorTest extends CDNGTestBase {
     assertThat(startingNodeId.length()).isGreaterThan(0);
 
     Map<String, PlanNode> nodeMap = response.getNodes();
-    assertThat(nodeMap.size()).isEqualTo(13);
+    assertThat(nodeMap.size()).isEqualTo(14);
 
     List<PlanNode> nodes = new ArrayList<>(nodeMap.values());
     List<PlanNode> artifactNodes = findNodes(nodes, ArtifactStep.STEP_TYPE);
@@ -105,10 +123,11 @@ public class ServicePMSPlanCreatorTest extends CDNGTestBase {
     assertThat(serviceSpecStepParameters.getChildrenNodeIds())
         .containsExactly(artifactsNode.getUuid(), manifestsNode.getUuid());
 
+    PlanNode environmentNode = findNode(nodes, EnvironmentStep.STEP_TYPE);
     PlanNode serviceDefNode = findNode(nodes, ServiceDefinitionStep.STEP_TYPE);
     ServiceDefinitionStepParameters serviceDefinitionStepParameters =
         (ServiceDefinitionStepParameters) serviceDefNode.getStepParameters();
-    assertThat(serviceDefinitionStepParameters.getChildNodeId()).isEqualTo(serviceSpecNode.getUuid());
+    assertThat(serviceDefinitionStepParameters.getChildNodeId()).isEqualTo(environmentNode.getUuid());
 
     PlanNode serviceNode = findNode(nodes, ServiceStep.STEP_TYPE);
     PlanNode serviceConfigNode = findNode(nodes, ServiceConfigStep.STEP_TYPE);

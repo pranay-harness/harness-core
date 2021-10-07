@@ -82,4 +82,6 @@ public interface TelemetryReporter {
    */
   void sendGroupEvent(String accountId, String identity, HashMap<String, Object> properties,
       Map<Destination, Boolean> destinations, Date timestamp);
+
+  void flush();
 }

@@ -1,6 +1,8 @@
 package io.harness.serializer.morphia;
 
 import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.CapabilityRequirement;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilityTaskSelectionDetails;
@@ -40,8 +42,12 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.models.Secret;
 
+import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
+import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
+
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.DEL)
 @BreakDependencyOn("io.harness.capability.CapabilityRequirement")
 @BreakDependencyOn("io.harness.capability.CapabilitySubjectPermission")
 public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
@@ -90,5 +96,8 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("delegate.task.artifacts.gcr.GcrArtifactDelegateResponse", GcrArtifactDelegateResponse.class);
     h.put("delegate.task.gcp.request.GcpValidationRequest", GcpValidationRequest.class);
     h.put("delegate.task.gcp.response.GcpValidationTaskResponse", GcpValidationTaskResponse.class);
+    h.put("software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse", EcsServiceDeployResponse.class);
+
+    w.put("helpers.ext.helm.response.HelmInstallCommandResponse", HelmInstallCommandResponse.class);
   }
 }

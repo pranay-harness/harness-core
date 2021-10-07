@@ -8,6 +8,8 @@ import io.harness.core.RecasterOptions;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exceptions.RecasterException;
 import io.harness.packages.HarnessPackages;
+import io.harness.pms.yaml.ParameterDocumentField;
+import io.harness.pms.yaml.ParameterDocumentFieldMapper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.recaster.JsonObjectRecastTransformer;
@@ -200,8 +202,12 @@ public class RecastOrchestrationUtils {
 
   @SuppressWarnings("unchecked")
   private Object handleParameterField(Map<String, Object> value1) {
-    ParameterField<?> parameterField = RecastOrchestrationUtils.fromMap(value1, ParameterField.class);
-    Object jsonFieldValue = parameterField.getJsonFieldValue();
+    Optional<ParameterDocumentField> parameterDocumentField =
+        ParameterDocumentFieldMapper.fromParameterFieldMap(value1);
+    if (!parameterDocumentField.isPresent()) {
+      return null;
+    }
+    Object jsonFieldValue = parameterDocumentField.get().fetchFinalValue();
     if (jsonFieldValue == null) {
       return null;
     }

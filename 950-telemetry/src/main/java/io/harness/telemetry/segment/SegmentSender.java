@@ -64,6 +64,12 @@ public class SegmentSender {
     return analytics != null;
   }
 
+  public void flushDataInQueue() {
+    if (isEnabled()) {
+      analytics.flush();
+    }
+  }
+
   private boolean isValidConfig(TelemetryConfiguration telemetryConfiguration) {
     return telemetryConfiguration != null && telemetryConfiguration.isEnabled()
         && isNotEmpty(telemetryConfiguration.getApiKey());

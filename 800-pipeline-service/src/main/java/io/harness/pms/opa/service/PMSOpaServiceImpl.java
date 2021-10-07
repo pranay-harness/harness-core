@@ -6,12 +6,12 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.opaclient.OpaUtils;
+import io.harness.opaclient.model.PipelineOpaEvaluationContext;
+import io.harness.opaclient.model.PipelineOpaEvaluationContext.PipelineOpaEvaluationContextBuilder;
+import io.harness.opaclient.model.UserOpaEvaluationContext;
+import io.harness.opaclient.model.UserOpaEvaluationContext.UserOpaEvaluationContextBuilder;
 import io.harness.pms.helpers.CurrentUserHelper;
 import io.harness.pms.merger.helpers.InputSetMergeHelper;
-import io.harness.pms.opa.PipelineOpaEvaluationContext;
-import io.harness.pms.opa.PipelineOpaEvaluationContext.PipelineOpaEvaluationContextBuilder;
-import io.harness.pms.opa.UserOpaEvaluationContext;
-import io.harness.pms.opa.UserOpaEvaluationContext.UserOpaEvaluationContextBuilder;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -43,6 +43,7 @@ public class PMSOpaServiceImpl implements PMSOpaService {
     if (!pipelineEntity.isPresent()) {
       throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
     }
+
     String pipelineYaml;
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();

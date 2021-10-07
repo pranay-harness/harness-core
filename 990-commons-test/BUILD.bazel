@@ -27,6 +27,7 @@ java_library(
     deps = [
         ":abstract-module",
         "//:lombok",
+        "//999-annotations:module",
         "@maven//:com_bettercloud_vault_java_driver",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
@@ -50,6 +51,7 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//999-annotations:module",
         "@maven//:com_bettercloud_vault_java_driver",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_inject_guice",

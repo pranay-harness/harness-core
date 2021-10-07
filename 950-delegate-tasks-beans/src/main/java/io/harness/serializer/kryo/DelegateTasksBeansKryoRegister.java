@@ -418,6 +418,8 @@ import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
+import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
+import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
@@ -919,12 +921,14 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmCommandResponse.class, 5261);
     kryo.register(AwsAmiPreDeploymentData.class, 5519);
     kryo.register(EcsCommandResponse.class, 5608);
+    kryo.register(EcsServiceDeployResponse.class, 7149);
     kryo.register(ExistingStackInfo.class, 5479);
     kryo.register(AwsLambdaDetails.class, 5701);
     kryo.register(S3FileRequest.class, 8067);
     kryo.register(CodeDeployParams.class, 5189);
     kryo.register(ServiceNowAction.class, 7156);
     kryo.register(ServiceNowFields.class, 7169);
+    kryo.register(HelmInstallCommandResponse.class, 5263);
 
     kryo.register(CEKubernetesConnectionTaskParams.class, 543437);
     kryo.register(CEK8sValidationParams.class, 543438);

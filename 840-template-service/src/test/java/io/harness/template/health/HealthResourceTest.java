@@ -1,7 +1,7 @@
 package io.harness.template.health;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.rule.OwnerRule.PHOENIKX;
+import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
@@ -40,7 +40,7 @@ public class HealthResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PHOENIKX)
+  @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGet_success() throws Exception {
     when(MaintenanceController.getMaintenanceFlag()).thenReturn(false);
@@ -51,7 +51,7 @@ public class HealthResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PHOENIKX)
+  @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGet_failure_due_to_monitor() throws Exception {
     when(healthService.check()).thenReturn(HealthCheck.Result.unhealthy("DB down"));

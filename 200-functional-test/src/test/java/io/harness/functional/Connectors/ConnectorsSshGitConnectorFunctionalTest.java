@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.ARVIND;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
@@ -16,9 +18,11 @@ import io.harness.testframework.restutils.SettingsUtils;
 import software.wings.beans.SettingAttribute;
 
 import com.google.inject.Inject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDP)
 public class ConnectorsSshGitConnectorFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private SettingGenerator settingGenerator;
@@ -28,6 +32,7 @@ public class ConnectorsSshGitConnectorFunctionalTest extends AbstractFunctionalT
   @Test
   @Owner(developers = ARVIND)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testSshConnectorWith7999Port() {
     OwnerManager.Owners owners = ownerManager.create();
     SettingAttribute connector = settingGenerator.ensurePredefined(seed, owners, SSH_GIT_CONNECTOR_WITH_7999_PORT);

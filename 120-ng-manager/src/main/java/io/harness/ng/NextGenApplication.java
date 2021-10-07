@@ -134,10 +134,12 @@ import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.token.remote.TokenClient;
+import io.harness.tracing.MongoRedisTracer;
 import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
@@ -206,6 +208,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PL)
 @Slf4j
@@ -371,6 +374,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // register Polling Framework Observer
     PollingServiceImpl pollingService = (PollingServiceImpl) injector.getInstance(Key.get(PollingService.class));
     pollingService.getSubject().register(injector.getInstance(Key.get(PollingPerpetualTaskManager.class)));
+
+    HMongoTemplate mongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
+    mongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerMigrations(Injector injector) {
@@ -761,6 +767,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                     .put(FeatureRestrictionName.TEST4, ExampleCustomImpl.class)
                     .build())
             .build();
+
     injector.getInstance(EnforcementSdkRegisterService.class)
         .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }

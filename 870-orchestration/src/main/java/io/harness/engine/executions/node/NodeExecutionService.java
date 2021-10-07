@@ -5,11 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.Node;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.NonNull;
@@ -69,7 +71,14 @@ public interface NodeExecutionService {
 
   List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId);
 
+  Map<String, String> fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(
+      List<String> identifierOfSkipStages, String previousExecutionId);
+
   List<NodeExecution> getStageNodesFromPlanExecutionId(String planExecutionId);
 
   NodeExecution getPipelineNodeFromPlanExecutionId(String planExecutionId);
+
+  List<String> fetchStageFqnFromStageIdentifiers(String planExecutionId, List<String> stageIdentifiers);
+
+  Map<String, Node> mapNodeExecutionIdWithPlanNodeForGivenStageFQN(String planExecutionId, List<String> stageFQNs);
 }

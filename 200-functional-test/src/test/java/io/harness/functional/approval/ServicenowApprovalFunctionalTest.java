@@ -103,6 +103,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void ExecuteServiceNowApprovalForMultipleORConditions() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
@@ -137,6 +138,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void ExecuteServiceNowApprovalWithChangeWindowTimeout() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
@@ -196,6 +198,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void ExecuteServiceNowApprovalWithChangingTimeWindowValuesForChange() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
@@ -243,6 +246,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void ThrowExceptionForInvalidChangeWindowValues() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
@@ -297,6 +301,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void ExecuteServiceNowApprovalForExpiredButWaitingForTimeWindow() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
@@ -351,6 +356,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void ExecuteServiceNowApprovalWithChangingTimeWindowValuesOtherTicketTypes() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
@@ -463,6 +469,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void ExecuteServiceNowApprovalPipelineForMultipleANDConditions() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
@@ -553,6 +560,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void ExecuteServiceNowRejectionPipelineForMultipleORConditions() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
