@@ -7,6 +7,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plan.IdentityPlanNode;
+import io.harness.plan.Node;
+import io.harness.plan.Plan;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -25,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -252,5 +256,42 @@ public class RetryExecutionHelper {
       Map.Entry<String, JsonNode> field = it.next();
       traverseUuid(field.getValue(), uuidForSkipNode);
     }
+  }
+
+  public Plan transformPlan(Plan plan, List<String> uuidForSkipNode, String previousExecutionId) {
+    List<Node> planNodes = plan.getPlanNodes();
+    /*
+    Mapping planNode.uuid with uuid in NodeExecution
+    planNode.uuid -> nodeExecution.uuid
+     */
+    List<Node> updatedPlanNodes = new ArrayList<>();
+    Map<String, String> nodeUuidToNodeExecutionUuid =
+        nodeExecutionService.fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(uuidForSkipNode, previousExecutionId);
+
+    /*
+    Convert the planNode to Identity Node whose uuids are there in map uuidForSkipNode
+    Copy of Node whose uuid is not in uuidForSkipNode
+     */
+    updatedPlanNodes = planNodes.stream()
+                           .map(node -> {
+                             if (nodeUuidToNodeExecutionUuid.containsKey(node.getUuid())) {
+                               return IdentityPlanNode.mapPlanNodeToIdentityNode(
+                                   node, nodeUuidToNodeExecutionUuid.get(node.getUuid()));
+                             } else {
+                               return node;
+                             }
+                           })
+                           .collect(Collectors.toList());
+
+    return Plan.builder()
+        .uuid(plan.getUuid())
+        .planNodes(updatedPlanNodes)
+        .startingNodeId(plan.getStartingNodeId())
+        .setupAbstractions(plan.getSetupAbstractions())
+        .graphLayoutInfo(plan.getGraphLayoutInfo())
+        .validUntil(plan.getValidUntil())
+        .valid(plan.isValid())
+        .errorResponse(plan.getErrorResponse())
+        .build();
   }
 }

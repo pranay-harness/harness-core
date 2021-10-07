@@ -113,7 +113,7 @@ public class PlanNodeExecutionStrategyTest extends OrchestrationTestBase {
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                     .build())
             .build();
-    executionStrategy.triggerNode(ambiance, planNode);
+    executionStrategy.triggerNode(ambiance, planNode, null);
     verify(executorService).submit(any(ExecutionEngineDispatcher.class));
   }
 

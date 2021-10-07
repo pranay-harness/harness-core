@@ -216,7 +216,7 @@ public class ExecutionHelper {
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier,
       ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry,
-      List<String> uuidForSkipNode) {
+      List<String> uuidForSkipNode, String previousExecutionId) {
     long startTs = System.currentTimeMillis();
     PlanCreationBlobResponse resp;
     try {
@@ -236,21 +236,15 @@ public class ExecutionHelper {
     log.info("Time taken to complete plan: {}", endTs - startTs);
 
     if (isRetry) {
-      transformPlan(plan, uuidForSkipNode);
-      return orchestrationService.retryExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+      Plan newPlan = retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
+      return orchestrationService.startExecution(newPlan, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
   }
 
-  private void transformPlan(Plan plan, List<String> uuidForSkipNode) {
-    /*
-    Update the plan for retry execution
-     */
-  }
-
   public PlanExecution startExecutionV2(String accountId, String orgIdentifier, String projectIdentifier,
       ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry,
-      List<String> uuidForSkipNode) {
+      List<String> uuidForSkipNode, String previousExecutionId) {
     long startTs = System.currentTimeMillis();
     String planCreationId = generateUuid();
     try {
@@ -278,7 +272,9 @@ public class ExecutionHelper {
       return PlanExecution.builder().build();
     }
     if (isRetry) {
-      return orchestrationService.retryExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+      Plan newPlan = retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
+      return orchestrationService.startExecutionV2(
+          planCreationId, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecutionV2(
         planCreationId, abstractions, executionMetadata, planExecutionMetadata);

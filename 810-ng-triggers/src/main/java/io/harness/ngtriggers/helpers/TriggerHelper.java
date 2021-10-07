@@ -79,7 +79,7 @@ public class TriggerHelper {
         jsonObject.put(GIT_USER, getGitUser(parsedPayload));
         break;
       case PUSH:
-        jsonObject.put(BRANCH, parsedPayload.getPush().getRepo().getBranch());
+        jsonObject.put(BRANCH, parsedPayload.getPush().getRef().replaceFirst("^refs/heads/", ""));
         jsonObject.put(TARGET_BRANCH, parsedPayload.getPush().getRepo().getBranch());
         jsonObject.put(COMMIT_SHA, parsedPayload.getPush().getAfter());
         jsonObject.put(EVENT, PUSH);

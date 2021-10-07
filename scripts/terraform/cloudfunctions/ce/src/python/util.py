@@ -23,6 +23,7 @@ AWSCURPREFIX = "awscur"
 COSTAGGREGATED = "costAggregated"
 CEINTERNALDATASET = "CE_INTERNAL"
 GCPINSTANCEINVENTORY = "gcpInstanceInventory"
+GCPDISKINVENTORY = "gcpDiskInventory"
 
 
 def print_(message, severity="INFO"):
@@ -126,6 +127,12 @@ def createTable(client, table_ref):
             range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
             field="projectNumberPartition"
         )
+    elif tableName.startswith(GCPDISKINVENTORY):
+        fieldset = bq_schema.gcpDiskInventorySchema
+        partition = bigquery.RangePartitioning(
+            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
+            field="projectNumberPartition"
+        )
 
     for field in fieldset:
         if field.get("type") == "RECORD":
@@ -150,7 +157,7 @@ def createTable(client, table_ref):
         tableName.startswith(AWSCURPREFIX):
         table.time_partitioning = partition
     elif tableName.startswith(AWSEC2INVENTORY) or tableName.startswith(AWSEBSINVENTORY) or \
-            tableName.startswith(GCPINSTANCEINVENTORY) or \
+            tableName.startswith(GCPINSTANCEINVENTORY) or tableName.startswith(GCPDISKINVENTORY) or\
             tableName in [CLUSTERDATA, CLUSTERDATAAGGREGATED, CLUSTERDATAHOURLY, CLUSTERDATAHOURLYAGGREGATED]:
         table.range_partitioning = partition
 

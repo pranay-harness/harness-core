@@ -29,6 +29,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.NodeExecutionMetadata;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -66,7 +67,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode> {
+public class PlanNodeExecutionStrategy
+    implements NodeExecutionStrategy<PlanNode, NodeExecution, NodeExecutionMetadata> {
   @Inject private Injector injector;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
@@ -85,7 +87,7 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
-  public void triggerNode(Ambiance ambiance, PlanNode node) {
+  public NodeExecution triggerNode(Ambiance ambiance, PlanNode node, NodeExecutionMetadata metadata) {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
@@ -106,9 +108,10 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
             .unitProgresses(new ArrayList<>())
             .startTs(AmbianceUtils.getCurrentLevelStartTs(cloned))
             .build();
-    nodeExecutionService.save(nodeExecution);
+    NodeExecution save = nodeExecutionService.save(nodeExecution);
     // TODO: Should add to an execution queue rather than submitting straight to thread pool
     executorService.submit(() -> startExecution(cloned));
+    return save;
   }
 
   @Override

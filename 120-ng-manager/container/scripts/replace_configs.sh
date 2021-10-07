@@ -344,6 +344,8 @@ replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATI
 replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
 replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
 
+replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
+
 replace_key_value accountConfig.deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
 
 replace_key_value gitGrpcClientConfigs.pms.target "$PMS_GITSYNC_TARGET"

@@ -384,8 +384,8 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     groupProperties.put(format("%s%s", moduleType, "LicenseStartTime"), moduleLicense.getStartTime());
     groupProperties.put(format("%s%s", moduleType, "LicenseDuration"), TRIAL_DURATION);
     groupProperties.put(format("%s%s", moduleType, "LicenseStatus"), moduleLicense.getStatus());
-    telemetryReporter.sendGroupEvent(accountIdentifier, groupProperties,
-        ImmutableMap.<Destination, Boolean>builder().put(Destination.SALESFORCE, true).build());
+    telemetryReporter.sendGroupEvent(
+        accountIdentifier, groupProperties, ImmutableMap.<Destination, Boolean>builder().build());
   }
 
   private void sendFailedTelemetryEvents(
