@@ -999,6 +999,7 @@ public class GitClientImpl implements GitClient {
                      .append(fetchResult.toString())
                      .toString());
 
+        return;
       } catch (Exception ex) {
         exceptionOccured = true;
         if (ex instanceof IOException) {
