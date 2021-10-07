@@ -125,6 +125,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
 
     CIBuildSetupTaskParams buildSetupTaskParams =
         buildSetupUtils.getBuildSetupTaskParams(stepParameters, ambiance, taskIds, logPrefix, stepLogKeys);
+    log.info("Creating patch build task");
     log.info("Created params for build task: {}", buildSetupTaskParams);
 
     final TaskData taskData = TaskData.builder()
