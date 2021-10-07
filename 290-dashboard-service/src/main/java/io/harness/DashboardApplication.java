@@ -5,8 +5,11 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.security.NextGenAuthenticationFilter;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.token.remote.TokenClient;
 import io.harness.utils.NGObjectMapperHelper;
 
 import com.codahale.metrics.MetricRegistry;
@@ -14,7 +17,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -33,10 +38,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.server.model.Resource;
 
 @OwnedBy(PL)
@@ -66,7 +77,7 @@ public class DashboardApplication extends Application<DashboardServiceConfig> {
     Injector injector = Guice.createInjector(modules);
     registerResources(environment, injector);
     registerOasResource(config, environment, injector);
-    // todo @deepak Add the auth filter
+    registerAuthFilters(config, environment, injector);
     // todo @deepak Add the correlation filter
     // todo @deepak Add the register for health check
     MaintenanceController.forceMaintenance(false);
@@ -96,6 +107,21 @@ public class DashboardApplication extends Application<DashboardServiceConfig> {
     OpenApiResource openApiResource = injector.getInstance(OpenApiResource.class);
     openApiResource.setOpenApiConfiguration(getOasConfig(appConfig));
     environment.jersey().register(openApiResource);
+  }
+
+  private void registerAuthFilters(DashboardServiceConfig config, Environment environment, Injector injector) {
+    Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
+        -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(
+        AuthorizationServiceHeader.BEARER.getServiceId(), config.getDashboardSecretsConfig().getJwtAuthSecret());
+    serviceToSecretMapping.put(AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(),
+        config.getDashboardSecretsConfig().getJwtIdentityServiceSecret());
+    serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(),
+        config.getDashboardSecretsConfig().getNgManagerServiceSecret());
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
   }
 
   private OpenAPIConfiguration getOasConfig(DashboardServiceConfig appConfig) {
