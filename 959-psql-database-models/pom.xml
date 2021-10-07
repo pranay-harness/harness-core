@@ -61,7 +61,8 @@
                             services |
                             pipeline_execution_summary_cd|
                             environments|
-                            pipelines</includes>
+                            pipelines |
+                            ng_instance_stats</includes>
                             <excludes />
                             <inputSchema>public</inputSchema>
                         </database>

@@ -8,6 +8,7 @@ import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.Environments;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
+import io.harness.timescaledb.tables.NgInstanceStats;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.NodePoolAggregated;
 import io.harness.timescaledb.tables.PipelineExecutionSummaryCd;
@@ -60,6 +61,11 @@ public class Public extends SchemaImpl {
    */
   public final KubernetesUtilizationData KUBERNETES_UTILIZATION_DATA =
       KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA;
+
+  /**
+   * The table <code>public.ng_instance_stats</code>.
+   */
+  public final NgInstanceStats NG_INSTANCE_STATS = NgInstanceStats.NG_INSTANCE_STATS;
 
   /**
    * The table <code>public.node_info</code>.
@@ -117,9 +123,9 @@ public class Public extends SchemaImpl {
   @Override
   public final List<Table<?>> getTables() {
     return Arrays.<Table<?>>asList(Anomalies.ANOMALIES, BillingData.BILLING_DATA, CeRecommendations.CE_RECOMMENDATIONS,
-        Environments.ENVIRONMENTS, KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA, NodeInfo.NODE_INFO,
-        NodePoolAggregated.NODE_POOL_AGGREGATED, PipelineExecutionSummaryCd.PIPELINE_EXECUTION_SUMMARY_CD,
-        Pipelines.PIPELINES, PodInfo.POD_INFO, ServiceInfraInfo.SERVICE_INFRA_INFO, Services.SERVICES,
-        WorkloadInfo.WORKLOAD_INFO);
+        Environments.ENVIRONMENTS, KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA,
+        NgInstanceStats.NG_INSTANCE_STATS, NodeInfo.NODE_INFO, NodePoolAggregated.NODE_POOL_AGGREGATED,
+        PipelineExecutionSummaryCd.PIPELINE_EXECUTION_SUMMARY_CD, Pipelines.PIPELINES, PodInfo.POD_INFO,
+        ServiceInfraInfo.SERVICE_INFRA_INFO, Services.SERVICES, WorkloadInfo.WORKLOAD_INFO);
   }
 }

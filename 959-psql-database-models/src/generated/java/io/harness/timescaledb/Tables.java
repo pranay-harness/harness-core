@@ -8,6 +8,7 @@ import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.Environments;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
+import io.harness.timescaledb.tables.NgInstanceStats;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.NodePoolAggregated;
 import io.harness.timescaledb.tables.PipelineExecutionSummaryCd;
@@ -47,6 +48,11 @@ public class Tables {
    */
   public static final KubernetesUtilizationData KUBERNETES_UTILIZATION_DATA =
       KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA;
+
+  /**
+   * The table <code>public.ng_instance_stats</code>.
+   */
+  public static final NgInstanceStats NG_INSTANCE_STATS = NgInstanceStats.NG_INSTANCE_STATS;
 
   /**
    * The table <code>public.node_info</code>.
