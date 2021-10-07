@@ -15,6 +15,7 @@ public class PlanCreatorConstants {
   public final String PARALLEL_STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER = "parallelStepGroupsRollback";
   public final String PARALLEL_STEP_GROUPS_ROLLBACK_NODE_NAME = "Parallel StepGroups (Rollback)";
   public final String SERVICE_NODE_NAME = "Service";
+  public final String ENVIRONMENT_NODE_NAME = "Environment";
   public final String SERVICE_DEFINITION_NODE_NAME = "ServiceDefinition";
   public final String SERVICE_SPEC_NODE_NAME = "ServiceSpec";
   public final String ARTIFACTS_NODE_NAME = "Artifacts";
