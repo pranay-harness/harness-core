@@ -41,6 +41,7 @@ import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.deployment.InstanceDetails;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
@@ -72,18 +73,22 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.ServiceVersionConvention;
 
 import com.google.common.primitives.Ints;
@@ -118,6 +123,9 @@ public class AzureVMSSStateHelper {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private StateMachineExecutor stateMachineExecutor;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private ArtifactService artifactService;
 
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return BLUE_GREEN == context.getOrchestrationWorkflowType();
@@ -176,9 +184,60 @@ public class AzureVMSSStateHelper {
     return serviceResourceService.getWithDetails(appId, serviceId);
   }
 
-  private String getServiceId(ExecutionContext context) {
+  public String getServiceId(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     return phaseElement.getServiceElement().getUuid();
+  }
+
+  public Artifact getWebAppNonContainerArtifact(ExecutionContext context, boolean isRollback) {
+    if (!isWebAppNonContainerDeployment(context)) {
+      return null;
+    }
+    String serviceId = getServiceId(context);
+
+    if (isRollback) {
+      return getArtifactForRollback(context, serviceId)
+          .orElseThrow(
+              () -> new InvalidArgumentsException(format("Not found artifact for rollback, serviceId: %s", serviceId)));
+    }
+
+    return getArtifact((DeploymentExecutionContext) context, serviceId);
+  }
+
+  public Optional<Artifact> getArtifactForRollback(ExecutionContext context, String serviceId) {
+    if (context.getContextElement(ContextElementType.INSTANCE) == null) {
+      WorkflowStandardParams contextElement = context.getContextElement(ContextElementType.STANDARD);
+      return Optional.ofNullable(contextElement.getRollbackArtifactForService(serviceId));
+    }
+
+    if (workflowExecutionService.checkIfOnDemand(context.getAppId(), context.getWorkflowExecutionId())) {
+      return serviceResourceService.findArtifactForOnDemandWorkflow(
+          context.getAppId(), context.getWorkflowExecutionId());
+    }
+
+    Optional<Activity> rollbackActivity = getWebAppRollbackActivity(context, serviceId);
+    return rollbackActivity.map(activity -> artifactService.getWithSource(activity.getArtifactId()));
+  }
+
+  public Optional<Activity> getWebAppRollbackActivity(ExecutionContext context, String serviceId) {
+    int skipLastActivity = 1;
+    int lastTwoActivitiesLimit = 2;
+    List<Activity> rollbackActivitiesForService = activityService.getRollbackActivitiesForService(
+        context.getAppId(), serviceId, context.getWorkflowExecutionId(), skipLastActivity, lastTwoActivitiesLimit);
+    Activity activity = isNotEmpty(rollbackActivitiesForService) ? rollbackActivitiesForService.get(0) : null;
+    return Optional.ofNullable(activity);
+  }
+
+  public boolean isWebAppNonContainerDeployment(ExecutionContext context) {
+    Service service = getServiceByAppId(context, context.getAppId());
+    ArtifactType artifactType = service.getArtifactType();
+    return (ArtifactType.WAR.equals(artifactType) || ArtifactType.ZIP.equals(artifactType)
+        || ArtifactType.NUGET.equals(artifactType));
+  }
+
+  public ExecutionContext getExecutionContext(
+      String appId, String workflowExecutionId, String stateExecutionInstanceId) {
+    return stateMachineExecutor.getExecutionContext(appId, workflowExecutionId, stateExecutionInstanceId);
   }
 
   public Application getApplication(ExecutionContext context) {

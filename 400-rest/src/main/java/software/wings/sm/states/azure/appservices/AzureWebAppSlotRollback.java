@@ -38,7 +38,7 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
 
   @Override
   protected boolean supportRemoteManifest() {
-    return false;
+    return true;
   }
 
   @Override

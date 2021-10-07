@@ -75,11 +75,13 @@ import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -96,6 +98,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -116,6 +119,8 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private LogService logService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private ArtifactService artifactService;
 
   @Spy @Inject @InjectMocks AzureVMSSStateHelper azureVMSSStateHelper;
 
@@ -1165,5 +1170,116 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
 
     ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(executionContext, artifact);
     assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.JELENA)
+  @Category(UnitTests.class)
+  public void testIsWebAppNonContainerDeployment() {
+    String serviceId = "serviceUUID";
+    String appId = "appId";
+    DeploymentExecutionContext context = mock(DeploymentExecutionContext.class);
+    Service service = Service.builder().uuid(serviceId).artifactType(ArtifactType.DOCKER).build();
+    PhaseElement phaseElement =
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(serviceId).build()).build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.getAppId()).thenReturn(appId);
+    doReturn(service).when(serviceResourceService).getWithDetails(appId, serviceId);
+
+    assertThat(azureVMSSStateHelper.isWebAppNonContainerDeployment(context)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.JELENA)
+  @Category(UnitTests.class)
+  public void testGetWebAppRollbackActivity() {
+    String serviceId = "serviceUUID";
+    String appId = "appId";
+    String workflowExecutionId = "workflowExecutionId";
+    int skip = 1;
+    int limit = 2;
+    DeploymentExecutionContext context = mock(DeploymentExecutionContext.class);
+    when(context.getAppId()).thenReturn(appId);
+    when(context.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
+    List<Activity> activities = Collections.singletonList(Activity.builder().build());
+    when(activityService.getRollbackActivitiesForService(appId, serviceId, workflowExecutionId, skip, limit))
+        .thenReturn(activities);
+    Optional<Activity> webappRollbackActivity = azureVMSSStateHelper.getWebAppRollbackActivity(context, serviceId);
+
+    verify(activityService, times(1))
+        .getRollbackActivitiesForService(appId, serviceId, workflowExecutionId, skip, limit);
+    assertThat(webappRollbackActivity.isPresent()).isTrue();
+    assertThat(webappRollbackActivity.get()).isEqualTo(activities.get(0));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.JELENA)
+  @Category(UnitTests.class)
+  public void testGetArtifactForRollback_instance() {
+    String serviceId = "serviceUUID";
+    String artifactId = "artifactUUID";
+    String appId = "appId";
+    String workflowExecutionId = "workflowExecutionId";
+    DeploymentExecutionContext context = mock(DeploymentExecutionContext.class);
+
+    when(context.getAppId()).thenReturn(appId);
+    when(context.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
+    WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
+
+    Artifact rollbackArtifact = new Artifact();
+    when(workflowStandardParams.getRollbackArtifactForService(serviceId)).thenReturn(rollbackArtifact);
+    when(context.getContextElement(ContextElementType.INSTANCE)).thenReturn(workflowStandardParams);
+    when(workflowExecutionService.checkIfOnDemand(any(), any())).thenReturn(false);
+
+    List<Activity> activities = Collections.singletonList(Activity.builder().artifactId(artifactId).build());
+    when(activityService.getRollbackActivitiesForService(appId, serviceId, workflowExecutionId, 1, 2))
+        .thenReturn(activities);
+    when(artifactService.getWithSource(artifactId)).thenReturn(rollbackArtifact);
+
+    Optional<Artifact> artifact = azureVMSSStateHelper.getArtifactForRollback(context, serviceId);
+
+    assertThat(artifact.isPresent()).isTrue();
+    assertThat(artifact.get()).isEqualTo(rollbackArtifact);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.JELENA)
+  @Category(UnitTests.class)
+  public void testGetArtifactForRollback_nonInstance() {
+    String serviceId = "serviceUUID";
+    DeploymentExecutionContext context = mock(DeploymentExecutionContext.class);
+    WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
+    Artifact rollbackArtifact = new Artifact();
+    when(workflowStandardParams.getRollbackArtifactForService(serviceId)).thenReturn(rollbackArtifact);
+    when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
+    Optional<Artifact> artifact = azureVMSSStateHelper.getArtifactForRollback(context, serviceId);
+
+    assertThat(artifact.isPresent()).isTrue();
+    assertThat(artifact.get()).isEqualTo(rollbackArtifact);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.JELENA)
+  @Category(UnitTests.class)
+  public void testGetArtifactForRollback_onDemand() {
+    String serviceId = "serviceUUID";
+    String appId = "appId";
+    String workflowExecutionId = "workflowExecutionId";
+    DeploymentExecutionContext context = mock(DeploymentExecutionContext.class);
+
+    when(context.getAppId()).thenReturn(appId);
+    when(context.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
+    WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
+    when(context.getContextElement(ContextElementType.INSTANCE)).thenReturn(workflowStandardParams);
+
+    Artifact rollbackArtifact = new Artifact();
+    when(workflowExecutionService.checkIfOnDemand(appId, workflowExecutionId)).thenReturn(true);
+    when(serviceResourceService.findArtifactForOnDemandWorkflow(appId, workflowExecutionId))
+        .thenReturn(Optional.of(rollbackArtifact));
+
+    Optional<Artifact> artifact = azureVMSSStateHelper.getArtifactForRollback(context, serviceId);
+    assertThat(artifact.isPresent()).isTrue();
+    assertThat(artifact.get()).isEqualTo(rollbackArtifact);
   }
 }

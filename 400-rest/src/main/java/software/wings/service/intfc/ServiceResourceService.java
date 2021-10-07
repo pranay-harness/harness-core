@@ -12,6 +12,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 
 import software.wings.api.DeploymentType;
+import software.wings.beans.Activity;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.InfrastructureMapping;
@@ -38,6 +39,7 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.validation.Valid;
@@ -309,6 +311,15 @@ public interface ServiceResourceService extends OwnedByApplication {
   List<Service> findServicesByAppInternal(String appId);
 
   Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement);
+
+  /**
+   * Find artifact for on demand workflow.
+   *
+   * @param appId the app id
+   * @param workflowExecutionId the workflow execution id
+   * @return optional of artifact
+   */
+  Optional<Artifact> findArtifactForOnDemandWorkflow(String appId, String workflowExecutionId);
 
   /**
    * Get service.

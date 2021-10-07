@@ -3,6 +3,7 @@ package software.wings.sm.states.azure.appservice;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.JELENA;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.TaskType.AZURE_APP_SERVICE_TASK;
@@ -17,6 +18,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.beans.ExecutionStatus;
@@ -54,12 +57,16 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContex
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
+import software.wings.sm.states.azure.appservices.manifest.AzureAppServiceManifestUtils;
+import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import javax.annotation.Generated;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -72,6 +79,7 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
   @Mock protected transient DelegateService delegateService;
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Mock protected AzureAppServiceManifestUtils azureAppServiceManifestUtils;
   @Mock protected ActivityService activityService;
   @Mock protected StateExecutionService stateExecutionService;
   @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
@@ -132,6 +140,37 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
     ExecutionResponse executionResponse = state.handleAsyncResponse(context, responseMap);
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testRollbackAppServiceConfiguration() {
+    String serviceId = "serviceId";
+    String appId = "appId";
+    String workflowId = "workflowId";
+    String stateExecutionInstanceId = "stateExecutionInstanceId";
+
+    Activity rollbackActivity = Activity.builder()
+                                    .appId(appId)
+                                    .workflowExecutionId(workflowId)
+                                    .stateExecutionInstanceId(stateExecutionInstanceId)
+                                    .build();
+
+    ExecutionContextImpl mockContext = initializeMockSetup(true, true);
+    ExecutionContextImpl rollbackContext = initializeMockSetup(true, true);
+    doReturn(serviceId).when(azureVMSSStateHelper).getServiceId(mockContext);
+    doReturn(true).when(azureVMSSStateHelper).isWebAppNonContainerDeployment(mockContext);
+    doReturn(Optional.of(rollbackActivity))
+        .when(azureVMSSStateHelper)
+        .getWebAppRollbackActivity(mockContext, serviceId);
+    doReturn(rollbackContext)
+        .when(azureVMSSStateHelper)
+        .getExecutionContext(appId, workflowId, stateExecutionInstanceId);
+
+    ExecutionResponse response = state.execute(mockContext);
+    verify(azureAppServiceManifestUtils, times(1)).getAppServiceConfigurationManifests(rollbackContext);
+    verifyStateExecutionData(response);
   }
 
   @NotNull

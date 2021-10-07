@@ -12,6 +12,7 @@ import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
+import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -24,6 +25,7 @@ import io.harness.beans.SweepingOutput;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -39,6 +41,7 @@ import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.GitConfigHelperService;
@@ -130,26 +133,42 @@ public abstract class AbstractAzureAppServiceState extends State {
       return ExecutionResponse.builder().executionStatus(SKIPPED).errorMessage(skipMessage()).build();
     }
     Activity activity;
+    Artifact artifact = azureVMSSStateHelper.getWebAppNonContainerArtifact(context, isRollback());
     if (supportRemoteManifest() && !isGitFetchDone(context)) {
-      Map<String, ApplicationManifest> appServiceConfigurationRemoteManifests =
-          azureAppServiceManifestUtils.getAppServiceConfigurationManifests(context);
+      Map<String, ApplicationManifest> appServiceConfigurationRemoteManifests = getAppServiceConfiguration(context);
       Map<String, ApplicationManifest> remoteManifest =
           azureAppServiceManifestUtils.filterOutRemoteManifest(appServiceConfigurationRemoteManifests);
       if (!isEmpty(remoteManifest)) {
         activity = azureVMSSStateHelper.createAndSaveActivity(
-            context, null, getStateType(), commandType(), commandUnitType(), commandUnits(true));
+            context, artifact, getStateType(), commandType(), commandUnitType(), commandUnits(true));
         return executeRemoteGITFetchTask(context, activity, appServiceConfigurationRemoteManifests, remoteManifest);
       }
     }
     activity = azureVMSSStateHelper.createAndSaveActivity(
-        context, null, getStateType(), commandType(), commandUnitType(), commandUnits(false));
+        context, artifact, getStateType(), commandType(), commandUnitType(), commandUnits(false));
 
     AzureAppServiceStateData azureAppServiceStateData = azureVMSSStateHelper.populateAzureAppServiceData(context);
-
     AzureTaskExecutionRequest executionRequest = buildTaskExecutionRequest(context, azureAppServiceStateData, activity);
     StateExecutionData stateExecutionData =
         createAndEnqueueDelegateTask(activity, context, azureAppServiceStateData, executionRequest);
     return successResponse(activity, stateExecutionData);
+  }
+
+  private Map<String, ApplicationManifest> getAppServiceConfiguration(ExecutionContext context) {
+    String serviceId = azureVMSSStateHelper.getServiceId(context);
+    if (azureVMSSStateHelper.isWebAppNonContainerDeployment(context) && isRollback()) {
+      Activity rollbackActivity =
+          azureVMSSStateHelper.getWebAppRollbackActivity(context, serviceId)
+              .orElseThrow(()
+                               -> new InvalidArgumentsException(
+                                   format("Not found activity for web app rollback, serviceId: %s", serviceId)));
+
+      ExecutionContext rollbackExecutionContext = azureVMSSStateHelper.getExecutionContext(rollbackActivity.getAppId(),
+          rollbackActivity.getWorkflowExecutionId(), rollbackActivity.getStateExecutionInstanceId());
+      return azureAppServiceManifestUtils.getAppServiceConfigurationManifests(rollbackExecutionContext);
+    }
+
+    return azureAppServiceManifestUtils.getAppServiceConfigurationManifests(context);
   }
 
   private ExecutionResponse executeRemoteGITFetchTask(ExecutionContext context, Activity activity,
@@ -311,7 +330,7 @@ public abstract class AbstractAzureAppServiceState extends State {
 
   protected void emitAnyDataForExternalConsumption(
       ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
-    log.info(String.format("Nothing to save for external consumption - [%s]", getName()));
+    log.info(format("Nothing to save for external consumption - [%s]", getName()));
   }
 
   protected boolean verifyIfContextElementExist(ExecutionContext context) {

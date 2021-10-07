@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.context.ContextElementType.AZURE_WEBAPP_SETUP;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.JELENA;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.TaskType.AZURE_APP_SERVICE_TASK;
@@ -77,6 +78,7 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
 import software.wings.sm.states.azure.appservices.manifest.AzureAppServiceManifestUtils;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -128,49 +130,124 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
 
     Application app = Application.Builder.anApplication().uuid(appId).build();
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
-    Service service = Service.builder().uuid(serviceId).build();
-    Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
+    Service service = Service.builder().uuid(serviceId).artifactType(ArtifactType.DOCKER).build();
 
-    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = getAzureWebAppInfraMapping();
-
-    AzureConfig azureConfig = AzureConfig.builder().build();
     Artifact artifact = Artifact.Builder.anArtifact().build();
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    ManagerExecutionLogCallback managerExecutionLogCallback = mock(ManagerExecutionLogCallback.class);
 
     doReturn(appServiceName).when(context).renderExpression("${webapp}");
     doReturn(slotName).when(context).renderExpression("${slot}");
 
-    AzureAppServiceStateData appServiceStateData = AzureAppServiceStateData.builder()
-                                                       .application(app)
-                                                       .environment(env)
-                                                       .service(service)
-                                                       .infrastructureMapping(azureWebAppInfrastructureMapping)
-                                                       .resourceGroup("rg")
-                                                       .subscriptionId("subId")
-                                                       .azureConfig(azureConfig)
-                                                       .artifact(artifact)
-                                                       .azureEncryptedDataDetails(encryptedDataDetails)
-                                                       .artifact(Artifact.Builder.anArtifact().build())
-                                                       .currentUser(EmbeddedUser.builder().build())
-                                                       .serviceId("serviceId")
-                                                       .build();
-
-    doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(context);
-
-    doReturn(activity)
-        .when(azureVMSSStateHelper)
-        .createAndSaveActivity(any(), any(), anyString(), anyString(), any(), anyListOf(CommandUnit.class));
-    doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
+    mockVMSSStateHelper(appId, serviceId, app, env, service, context, artifact);
     mockArtifactStreamMapper();
+    mockAppServiceConfiguration(context);
+    mockArtifactoryData(artifact, context);
+    mockUserDataSpecification();
+
     doReturn(delegateResult).when(delegateService).queueTask(any());
     doReturn(Collections.emptyMap())
         .when(azureAppServiceManifestUtils)
         .getAppServiceConfigurationManifests(eq(context));
 
+    doReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
+        .when(secretManager)
+        .getEncryptionDetails(any(), anyString(), anyString());
+    doReturn(EncryptedData.builder().uuid("encrypted-data-uuid").build())
+        .when(secretManager)
+        .getSecretMappedToAppByName(anyString(), anyString(), anyString(), anyString());
+    doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(appId).when(context).getAppId();
+
     state.setSlotSteadyStateTimeout("10");
+    state.setAppService("${webapp}");
+    state.setDeploymentSlot("${slot}");
+
+    ExecutionResponse result = state.execute(context);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(result.getErrorMessage()).isNull();
+    assertThat(result.getStateExecutionData()).isNotNull();
+    assertThat(result.getStateExecutionData()).isInstanceOf(AzureAppServiceSlotSetupExecutionData.class);
+
+    verifyStateExecutionData(activityId, appServiceName, slotName, result);
+    assertThat(state.skipMessage()).isNotNull();
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testSlotSetupExecuteSuccess_nonContainer() {
+    String appId = "appId";
+    String serviceId = "serviceId";
+    String envId = "envId";
+    String activityId = "activityId";
+
+    Application app = Application.Builder.anApplication().uuid(appId).build();
+    Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
+    Service service = Service.builder().uuid(serviceId).artifactType(ArtifactType.WAR).build();
+
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+
+    Artifact artifact = Artifact.Builder.anArtifact().build();
+    doReturn(artifact).when(context).getDefaultArtifactForService(serviceId);
+
+    mockArtifactStreamMapper();
+    mockVMSSStateHelper(appId, serviceId, app, env, service, context, artifact);
+    mockAppServiceConfiguration(context);
+    mockArtifactoryData(artifact, context);
+    mockUserDataSpecification();
+
+    doReturn(Collections.emptyMap())
+        .when(azureAppServiceManifestUtils)
+        .getAppServiceConfigurationManifests(eq(context));
+    doReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
+        .when(secretManager)
+        .getEncryptionDetails(any(), anyString(), anyString());
+    doReturn(EncryptedData.builder().uuid("encrypted-data-uuid").build())
+        .when(secretManager)
+        .getSecretMappedToAppByName(anyString(), anyString(), anyString(), anyString());
+    doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(appId).when(context).getAppId();
+
+    ExecutionResponse result = state.execute(context);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(result.getErrorMessage()).isNull();
+    assertThat(result.getStateExecutionData()).isNotNull();
+    assertThat(result.getStateExecutionData()).isInstanceOf(AzureAppServiceSlotSetupExecutionData.class);
+
+    verifyStateExecutionData(activityId, null, null, result);
+    assertThat(state.skipMessage()).isNotNull();
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+  }
+
+  private AzureAppServiceStateData getAzureAppServiceStateData(
+      Application app, Environment env, Service service, Artifact artifact) {
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = getAzureWebAppInfraMapping();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    AzureConfig azureConfig = AzureConfig.builder().build();
+    return AzureAppServiceStateData.builder()
+        .application(app)
+        .environment(env)
+        .service(service)
+        .infrastructureMapping(azureWebAppInfrastructureMapping)
+        .resourceGroup("rg")
+        .subscriptionId("subId")
+        .azureConfig(azureConfig)
+        .artifact(artifact)
+        .azureEncryptedDataDetails(encryptedDataDetails)
+        .artifact(Artifact.Builder.anArtifact().build())
+        .currentUser(EmbeddedUser.builder().build())
+        .serviceId("serviceId")
+        .build();
+  }
+
+  private void mockAppServiceConfiguration(ExecutionContextImpl context) {
     AzureAppServiceConfiguration azureAppServiceConfiguration = new AzureAppServiceConfiguration();
     azureAppServiceConfiguration.setAppSettingsJSON(getAppSettingsJSON());
     azureAppServiceConfiguration.setConnStringsJSON(getConnStringJSON());
@@ -187,29 +264,10 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
         .renderExpression("jdbc:sqlxxxxxxxx//INNOWAVE-99\\SQLEXPRESS01;databaseName=EDS");
 
     doReturn(azureAppServiceConfiguration).when(azureAppServiceManifestUtils).getAzureAppServiceConfiguration(any());
-    doReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
-        .when(secretManager)
-        .getEncryptionDetails(any(), anyString(), anyString());
-    doReturn(EncryptedData.builder().uuid("encrypted-data-uuid").build())
-        .when(secretManager)
-        .getSecretMappedToAppByName(anyString(), anyString(), anyString(), anyString());
-    doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
-    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+  }
 
-    mockArtifactoryData(artifact, context);
-    mockUserDataSpecification();
-
-    state.setAppService("${webapp}");
-    state.setDeploymentSlot("${slot}");
-
-    ExecutionResponse result = state.execute(context);
-
-    assertThat(result).isNotNull();
-    assertThat(result.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(result.getErrorMessage()).isNull();
-    assertThat(result.getStateExecutionData()).isNotNull();
-    assertThat(result.getStateExecutionData()).isInstanceOf(AzureAppServiceSlotSetupExecutionData.class);
-
+  private void verifyStateExecutionData(
+      String activityId, String appServiceName, String slotName, ExecutionResponse result) {
     AzureAppServiceSlotSetupExecutionData stateExecutionData =
         (AzureAppServiceSlotSetupExecutionData) result.getStateExecutionData();
     assertThat(stateExecutionData.equals(new AzureAppServiceSlotSetupExecutionData())).isFalse();
@@ -228,8 +286,20 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
     assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
     assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
-    assertThat(state.skipMessage()).isNotNull();
-    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+  }
+
+  private void mockVMSSStateHelper(String appId, String serviceId, Application app, Environment env, Service service,
+      ExecutionContextImpl context, Artifact artifact) {
+    ManagerExecutionLogCallback managerExecutionLogCallback = mock(ManagerExecutionLogCallback.class);
+    Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
+    doReturn(activity)
+        .when(azureVMSSStateHelper)
+        .createAndSaveActivity(any(), any(), anyString(), anyString(), any(), anyListOf(CommandUnit.class));
+    doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
+    AzureAppServiceStateData appServiceStateData = getAzureAppServiceStateData(app, env, service, artifact);
+    doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(context);
+    doReturn(service).when(azureVMSSStateHelper).getServiceByAppId(context, appId);
+    doReturn(serviceId).when(azureVMSSStateHelper).getServiceId(context);
   }
 
   private void mockArtifactoryData(Artifact artifact, ExecutionContextImpl context) {
