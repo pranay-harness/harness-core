@@ -264,6 +264,7 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -309,6 +310,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String ENV_ENV_VAR = "ENV";
   public static final String TASK_SELECTORS = "Task Selectors";
   public static final String TASK_CATEGORY_MAP = "Task Category Map";
+  private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -3613,5 +3615,27 @@ public class DelegateServiceImpl implements DelegateService {
       return delegateServiceClassicGrpcClient.executeTask(task);
     }
     return delegateTaskServiceClassic.executeTask(task);
+  }
+
+  @Override
+  public boolean sampleDelegateExists(String accountId) {
+    Key<Delegate> delegateKey = persistence.createQuery(Delegate.class)
+                                    .filter(DelegateKeys.accountId, accountId)
+                                    .filter(DelegateKeys.delegateName, SAMPLE_DELEGATE_NAME)
+                                    .getKey();
+    if (delegateKey == null) {
+      return false;
+    }
+    return delegateConnectionDao.checkDelegateConnected(
+        accountId, delegateKey.getId().toString(), versionInfoManager.getVersionInfo().getVersion());
+  }
+
+  @Override
+  public List<Delegate> getNonDeletedDelegatesForAccount(String accountId) {
+    return persistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .asList();
   }
 }

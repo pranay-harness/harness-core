@@ -278,14 +278,26 @@ public class OrganizationServiceImpl implements OrganizationService {
     List<Scope> orgs = organizationRepository.findAllOrgs(criteria);
     List<String> permittedOrgsIds =
         scopeAccessHelper.getPermittedScopes(orgs).stream().map(Scope::getOrgIdentifier).collect(Collectors.toList());
-    criteria.and(OrganizationKeys.identifier).in(permittedOrgsIds);
 
     if (permittedOrgsIds.isEmpty()) {
       return Page.empty();
     }
 
+    // Update the identifiers in the organizationFilterDTO
+    if (organizationFilterDTO != null) {
+      organizationFilterDTO.setIdentifiers(permittedOrgsIds);
+    } else {
+      organizationFilterDTO = OrganizationFilterDTO.builder().identifiers(permittedOrgsIds).build();
+    }
+    Criteria criteriaForPermittedOrgs =
+        createOrganizationFilterCriteria(Criteria.where(OrganizationKeys.accountIdentifier)
+                                             .is(accountIdentifier)
+                                             .and(OrganizationKeys.deleted)
+                                             .is(FALSE),
+            organizationFilterDTO);
+
     return organizationRepository.findAll(
-        criteria, pageable, organizationFilterDTO != null && organizationFilterDTO.isIgnoreCase());
+        criteriaForPermittedOrgs, pageable, organizationFilterDTO != null && organizationFilterDTO.isIgnoreCase());
   }
 
   @Override

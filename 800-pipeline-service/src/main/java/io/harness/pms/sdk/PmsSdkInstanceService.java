@@ -140,6 +140,14 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     return instances;
   }
 
+  // Todo: Introduce Caching per module
+  public Map<String, Set<SdkStep>> getSdkSteps() {
+    Map<String, Set<SdkStep>> sdkSteps = new HashMap<>();
+    pmsSdkInstanceRepository.findByActive(true).forEach(
+        instance -> { sdkSteps.put(instance.getName(), new HashSet<>(instance.getSupportedSdkSteps())); });
+    return sdkSteps;
+  }
+
   public Set<String> getInstanceNames() {
     Set<String> instanceNames = new HashSet<>();
     pmsSdkInstanceRepository.findAll().forEach(instance -> instanceNames.add(instance.getName()));

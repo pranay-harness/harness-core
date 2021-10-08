@@ -107,7 +107,7 @@ public class DelegateServiceDriverRule implements MethodRule, InjectorRuleMixin,
       }
     });
 
-    modules.add(DelegateServiceDriverModule.getInstance(true));
+    modules.add(DelegateServiceDriverModule.getInstance(true, false));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(new AbstractWaiterModule() {

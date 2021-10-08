@@ -168,4 +168,8 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  boolean sampleDelegateExists(String accountId);
+
+  List<Delegate> getNonDeletedDelegatesForAccount(String accountId);
 }

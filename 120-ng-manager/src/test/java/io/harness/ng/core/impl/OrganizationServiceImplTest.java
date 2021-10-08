@@ -177,7 +177,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();
 
-    assertEquals(4, criteriaObject.size());
+    assertEquals(3, criteriaObject.size());
     assertEquals(accountIdentifier, criteriaObject.get(OrganizationKeys.accountIdentifier));
     assertTrue(criteriaObject.containsKey(OrganizationKeys.deleted));
 

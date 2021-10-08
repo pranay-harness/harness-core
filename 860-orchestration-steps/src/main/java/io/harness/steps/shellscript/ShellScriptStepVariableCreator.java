@@ -1,11 +1,9 @@
-package io.harness.cdng.creator.variables;
+package io.harness.steps.shellscript;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;
-import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.GenericStepVariableCreator;
@@ -13,7 +11,8 @@ import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.shellscript.ShellScriptSourceType;
+import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.YamlTypes;
 
 import java.util.ArrayList;
 import java.util.Collections;
