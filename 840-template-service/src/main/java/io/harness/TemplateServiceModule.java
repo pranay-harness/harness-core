@@ -100,7 +100,7 @@ public class TemplateServiceModule extends AbstractModule {
     });
     install(new TemplateServicePersistenceModule());
     install(PersistentLockModule.getInstance());
-    install(DelegateServiceDriverModule.getInstance(true));
+    install(DelegateServiceDriverModule.getInstance(true, false));
     install(PrimaryVersionManagerModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
