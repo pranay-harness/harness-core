@@ -129,6 +129,10 @@ public class AzureHelperService {
         encryptionService.decrypt(azureConfig, encryptedDataDetails, false);
       }
 
+      if (azureConfig.getKey() == null && azureConfig.getEncryptedKey() != null) {
+        throw new InvalidRequestException("Please input a valid encrypted key.");
+      }
+
       ApplicationTokenCredentials credentials =
           new ApplicationTokenCredentials(azureConfig.getClientId(), azureConfig.getTenantId(),
               new String(azureConfig.getKey()), getAzureEnvironment(azureConfig.getAzureEnvironmentType()));
