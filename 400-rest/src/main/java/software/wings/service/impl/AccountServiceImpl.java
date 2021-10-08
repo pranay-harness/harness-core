@@ -58,8 +58,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
-import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -151,6 +149,7 @@ import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -203,7 +202,6 @@ import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -238,7 +236,6 @@ public class AccountServiceImpl implements AccountService {
       + "-d '{\"application\":\"4qPkwP5dQI2JduECqGZpcg\","
       + "\"parameters\":{\"Environment\":\"%s\",\"delegate\":\"delegate\","
       + "\"account_id\":\"%s\",\"account_id_short\":\"%s\",\"account_secret\":\"%s\"}}'";
-  private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   private static final String DELIMITER = "####";
   private static final String DEFAULT_EXPERIENCE = "defaultExperience";
@@ -273,13 +270,13 @@ public class AccountServiceImpl implements AccountService {
   @Inject private EventPublisher eventPublisher;
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
   @Inject private Morphia morphia;
-  @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private DeleteAccountHelper deleteAccountHelper;
   @Inject private AccountDao accountDao;
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
+  @Inject private DelegateService delegateService;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -1203,18 +1200,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean sampleDelegateExists(String accountId) {
     assertTrialAccount(accountId);
-
-    Key<Delegate> delegateKey = wingsPersistence.createQuery(Delegate.class)
-                                    .filter(DelegateKeys.accountId, accountId)
-                                    .filter(DelegateKeys.delegateName, SAMPLE_DELEGATE_NAME)
-                                    .getKey();
-
-    if (delegateKey == null) {
-      return false;
-    }
-
-    return delegateConnectionDao.checkDelegateConnected(
-        accountId, delegateKey.getId().toString(), versionInfoManager.getVersionInfo().getVersion());
+    return delegateService.sampleDelegateExists(accountId);
   }
 
   @Override
