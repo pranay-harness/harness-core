@@ -32,8 +32,8 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
-import io.harness.delegate.git.NGGitService;
-import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.task.git.NGGitService;
+import io.harness.task.scm.ScmDelegateClient;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.errorhandling.NGErrorHelper;
@@ -44,6 +44,7 @@ import io.harness.rule.Owner;
 import io.harness.service.ScmServiceClient;
 import io.harness.shell.SshSessionConfig;
 
+import io.harness.task.git.GitCommandTaskHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -60,7 +61,8 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Mock private ScmDelegateClient scmDelegateClient;
   @Mock private ScmServiceClient scmServiceClient;
 
-  @Spy @InjectMocks GitCommandTaskHandler gitCommandTaskHandler;
+  @Spy @InjectMocks
+  GitCommandTaskHandler gitCommandTaskHandler;
 
   private static final long SIMULATED_REQUEST_TIME_MILLIS = 1609459200000L;
   private static final String ACCOUNT_IDENTIFIER = generateUuid();

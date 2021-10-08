@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+
+import io.harness.task.scm.ScmDelegateClient;
 import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -38,7 +40,8 @@ public class ScmPathFilterEvaluationTask extends AbstractDelegateRunnableTask {
       ScmPathFilterEvaluationTaskResponse.builder().matched(false).build();
 
   @Inject ScmServiceClient scmServiceClient;
-  @Inject ScmDelegateClient scmDelegateClient;
+  @Inject
+  ScmDelegateClient scmDelegateClient;
   @Inject SecretDecryptionService secretDecryptionService;
 
   public ScmPathFilterEvaluationTask(DelegateTaskPackage delegateTaskPackage,

@@ -1,7 +1,7 @@
 package io.harness.connector;
 
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
-import io.harness.delegate.task.ConnectorValidationHandler;
+import io.harness.task.ConnectorValidationHandler;
 
 import com.google.inject.Singleton;
 

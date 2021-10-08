@@ -1,4 +1,4 @@
-package io.harness.delegate.task.git;
+package io.harness.task.git;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.helper.GitApiAccessDecryptionHelper.hasApiAccess;
@@ -12,7 +12,7 @@ import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.task.ConnectorValidationHandler;
+import io.harness.task.ConnectorValidationHandler;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.SshSessionConfig;
 

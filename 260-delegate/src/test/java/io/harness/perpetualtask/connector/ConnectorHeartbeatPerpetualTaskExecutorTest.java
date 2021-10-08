@@ -19,7 +19,7 @@ import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.task.ConnectorValidationHandler;
+import io.harness.task.ConnectorValidationHandler;
 import io.harness.delegate.task.k8s.KubernetesValidationHandler;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;

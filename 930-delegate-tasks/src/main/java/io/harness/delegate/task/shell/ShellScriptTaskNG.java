@@ -23,6 +23,8 @@ import io.harness.shell.SshSessionManager;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+
+import io.harness.task.shell.SshSessionConfigMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 

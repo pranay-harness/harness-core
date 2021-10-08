@@ -9,7 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.task.shell.SshSessionConfigMapper;
+import io.harness.task.shell.SshSessionConfigMapper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
 import io.harness.git.UsernamePasswordAuthRequest;
@@ -30,6 +30,8 @@ import com.google.inject.Singleton;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import javax.validation.executable.ValidateOnExecution;
+
+import io.harness.task.git.NGGitService;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig;

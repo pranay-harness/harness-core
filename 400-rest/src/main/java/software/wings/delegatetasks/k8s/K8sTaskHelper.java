@@ -34,7 +34,7 @@ import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
-import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.task.scm.ScmDelegateClient;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;

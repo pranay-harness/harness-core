@@ -44,7 +44,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
-import io.harness.delegate.task.git.GitDecryptionHelper;
+import io.harness.task.git.GitDecryptionHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;

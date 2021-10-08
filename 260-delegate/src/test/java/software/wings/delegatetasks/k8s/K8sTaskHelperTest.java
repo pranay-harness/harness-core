@@ -64,7 +64,7 @@ import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
-import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.task.scm.ScmDelegateClient;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.HelmClientException;

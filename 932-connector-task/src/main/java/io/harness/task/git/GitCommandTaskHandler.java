@@ -1,4 +1,4 @@
-package io.harness.delegate.task.git;
+package io.harness.task.git;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.GITHUB_APP;
@@ -24,8 +24,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
-import io.harness.delegate.git.NGGitService;
-import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.task.scm.ScmDelegateClient;
 import io.harness.eraro.ErrorCode;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.runtime.SCMRuntimeException;

@@ -34,6 +34,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.SshSessionConfig;
 
+import io.harness.task.git.GitCommandTaskHandler;
+import io.harness.task.git.GitDecryptionHelper;
+import io.harness.task.git.GitValidationHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,7 +49,8 @@ public class GitValidationHandlerTest extends CategoryTest {
   @Mock private GitCommandTaskHandler gitCommandTaskHandler;
   @Mock private SecretDecryptionService decryptionService;
   @Mock private GitDecryptionHelper gitDecryptionHelper;
-  @InjectMocks GitValidationHandler gitValidationHandler;
+  @InjectMocks
+  GitValidationHandler gitValidationHandler;
 
   private SshSessionConfig sshSessionConfig;
   private DecryptableEntity decryptableEntity;

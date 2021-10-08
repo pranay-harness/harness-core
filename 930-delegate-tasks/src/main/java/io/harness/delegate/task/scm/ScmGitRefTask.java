@@ -24,12 +24,15 @@ import io.harness.service.ScmServiceClient;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+
+import io.harness.task.scm.ScmDelegateClient;
 import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(HarnessTeam.DX)
 public class ScmGitRefTask extends AbstractDelegateRunnableTask {
   @Inject SecretDecryptionService secretDecryptionService;
-  @Inject ScmDelegateClient scmDelegateClient;
+  @Inject
+  ScmDelegateClient scmDelegateClient;
   @Inject ScmServiceClient scmServiceClient;
 
   public ScmGitRefTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,

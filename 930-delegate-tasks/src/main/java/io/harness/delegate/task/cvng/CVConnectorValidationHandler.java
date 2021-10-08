@@ -11,7 +11,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorValidationParams;
 import io.harness.delegate.beans.cvng.ConnectorValidationInfo;
-import io.harness.delegate.task.ConnectorValidationHandler;
+import io.harness.task.ConnectorValidationHandler;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.security.encryption.SecretDecryptionService;
 

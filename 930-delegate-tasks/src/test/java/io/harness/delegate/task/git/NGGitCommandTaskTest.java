@@ -23,7 +23,7 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
-import io.harness.delegate.git.NGGitService;
+import io.harness.task.git.NGGitService;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.git.model.CommitAndPushRequest;
 import io.harness.git.model.CommitAndPushResult;
@@ -31,6 +31,8 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.SshSessionConfig;
 
+import io.harness.task.git.GitCommandTaskHandler;
+import io.harness.task.git.GitDecryptionHelper;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Test;

@@ -16,9 +16,10 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.git.NGGitService;
+import io.harness.task.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.task.git.GitCommandTaskHandler;
 import io.harness.git.model.CommitAndPushRequest;
 import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.GitBaseRequest;
@@ -27,6 +28,8 @@ import io.harness.shell.SshSessionConfig;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+
+import io.harness.task.git.GitDecryptionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 

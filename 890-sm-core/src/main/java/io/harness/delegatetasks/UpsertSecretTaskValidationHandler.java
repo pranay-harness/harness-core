@@ -15,7 +15,7 @@ import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultC
 import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultValidationParams;
-import io.harness.delegate.task.ConnectorValidationHandler;
+import io.harness.task.ConnectorValidationHandler;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.SecretManagementDelegateException;
