@@ -1,6 +1,6 @@
 package io.harness.istio.api.networking;
 
-import static io.harness.istio.api.networking.IstioApiNetworkingHandlerHelper.getCustomResourceDefinition;
+import static io.harness.istio.api.networking.IstioApiNetworkingUtils.getCustomResourceDefinition;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +27,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class IstioApiNetworkingHandlerHelperTest extends CategoryTest {
+public class IstioApiNetworkingUtilsTest extends CategoryTest {
   @Mock
   private NonNamespaceOperation<CustomResourceDefinition, CustomResourceDefinitionList,
       DoneableCustomResourceDefinition, Resource<CustomResourceDefinition, DoneableCustomResourceDefinition>>

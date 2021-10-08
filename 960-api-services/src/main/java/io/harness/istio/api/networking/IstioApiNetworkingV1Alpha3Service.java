@@ -2,7 +2,7 @@ package io.harness.istio.api.networking;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.istio.api.networking.IstioApiNetworkingHandlerHelper.getCustomResourceDefinition;
+import static io.harness.istio.api.networking.IstioApiNetworkingUtils.getCustomResourceDefinition;
 import static io.harness.k8s.KubernetesConvention.DASH;
 
 import static java.util.stream.Collectors.toMap;
@@ -67,15 +67,6 @@ public class IstioApiNetworkingV1Alpha3Service {
       log.error("Failed to get istio DestinationRule/{}", name, e);
       return null;
     }
-  }
-
-  public Map<String, String> getVirtualServiceResourcesAnnotations(HasMetadata virtualService) {
-    VirtualService istioVirtualService = (VirtualService) virtualService;
-    if (istioVirtualService != null && istioVirtualService.getMetadata() != null
-        && isNotEmpty(istioVirtualService.getMetadata().getAnnotations())) {
-      return istioVirtualService.getMetadata().getAnnotations();
-    }
-    return Collections.emptyMap();
   }
 
   public Map<String, Integer> getTrafficWeights(HasMetadata istioAlpha3VirtualService, String controllerNamePrefix) {

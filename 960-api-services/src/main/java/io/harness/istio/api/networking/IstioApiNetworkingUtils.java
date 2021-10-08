@@ -1,6 +1,7 @@
 package io.harness.istio.api.networking;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.model.K8sExpressions.canaryDestinationExpression;
 import static io.harness.k8s.model.K8sExpressions.stableDestinationExpression;
 
@@ -12,15 +13,18 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.model.HarnessLabelValues;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import java.util.Collections;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
-public class IstioApiNetworkingHandlerHelper {
+public class IstioApiNetworkingUtils {
   public static final String ISTIO_DESTINATION_TEMPLATE = "host: $ISTIO_DESTINATION_HOST_NAME\n"
       + "subset: $ISTIO_DESTINATION_SUBSET_NAME";
   public static final String HARNESS_KUBERNETES_MANAGED_LABEL_KEY = "harness.io/managed";

@@ -3,8 +3,8 @@ package io.harness.istio.api.networking;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.istio.api.networking.IstioApiNetworkingHandlerHelper.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
-import static io.harness.istio.api.networking.IstioApiNetworkingHandlerHelper.getCustomResourceDefinition;
+import static io.harness.istio.api.networking.IstioApiNetworkingUtils.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
+import static io.harness.istio.api.networking.IstioApiNetworkingUtils.getCustomResourceDefinition;
 import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
 
@@ -330,7 +330,7 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
 
     for (IstioDestinationWeight istioDestinationWeight : istioDestinationWeights) {
       String destinationYaml =
-          IstioApiNetworkingHandlerHelper.getDestinationYaml(istioDestinationWeight.getDestination(), host);
+          IstioApiNetworkingUtils.getDestinationYaml(istioDestinationWeight.getDestination(), host);
       Destination destination = new YamlUtils().read(destinationYaml, Destination.class);
       destination.setPort(portSelector);
 
@@ -342,22 +342,5 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
     }
 
     return httpRouteDestinations;
-  }
-
-  private DestinationRule getIstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
-    try {
-      DestinationRule destinationRule = new DestinationRuleBuilder().build();
-
-      return kubernetesClient
-          .customResources(getCustomResourceDefinition(kubernetesClient, destinationRule), DestinationRule.class,
-              KubernetesResourceList.class, DoneableDestinationRule.class)
-          .inNamespace(kubernetesConfig.getNamespace())
-          .withName(name)
-          .get();
-    } catch (Exception e) {
-      log.error("Failed to get istio DestinationRule/{}", name, e);
-      return null;
-    }
   }
 }

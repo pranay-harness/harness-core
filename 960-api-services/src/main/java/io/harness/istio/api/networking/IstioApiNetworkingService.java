@@ -1,5 +1,7 @@
 package io.harness.istio.api.networking;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.model.KubernetesConfig;
@@ -22,12 +24,14 @@ public class IstioApiNetworkingService {
       KubernetesResourceId resourceId, KubernetesConfig kubernetesConfig) {
     HasMetadata istioAlpha3VirtualService =
         istioApiNetworkingV1Alpha3Service.getIstioAlpha3VirtualService(kubernetesConfig, resourceId.getName());
+    if (istioAlpha3VirtualService != null) {
+      return getResourcesMetadataAnnotations(istioAlpha3VirtualService);
+    }
+
     HasMetadata istioBeta1VirtualService =
         istioApiNetworkingV1Beta1Service.getIstioBeta1VirtualService(kubernetesConfig, resourceId.getName());
-    if (istioAlpha3VirtualService != null) {
-      return istioApiNetworkingV1Alpha3Service.getVirtualServiceResourcesAnnotations(istioAlpha3VirtualService);
-    } else if (istioBeta1VirtualService != null) {
-      istioApiNetworkingV1Beta1Service.getVirtualServiceResourcesAnnotations(istioBeta1VirtualService);
+    if (istioBeta1VirtualService != null) {
+      return getResourcesMetadataAnnotations(istioBeta1VirtualService);
     }
     return Collections.emptyMap();
   }
@@ -36,28 +40,29 @@ public class IstioApiNetworkingService {
       KubernetesConfig kubernetesConfig, String serviceName, String controllerNamePrefix) {
     HasMetadata istioAlpha3VirtualService =
         istioApiNetworkingV1Alpha3Service.getIstioAlpha3VirtualService(kubernetesConfig, serviceName);
-    HasMetadata istioBeta1VirtualService =
-        istioApiNetworkingV1Beta1Service.getIstioBeta1VirtualService(kubernetesConfig, serviceName);
-
     if (istioAlpha3VirtualService != null) {
       return istioApiNetworkingV1Alpha3Service.getTrafficWeights(istioAlpha3VirtualService, controllerNamePrefix);
-    } else if (istioBeta1VirtualService != null) {
+    }
+
+    HasMetadata istioBeta1VirtualService =
+        istioApiNetworkingV1Beta1Service.getIstioBeta1VirtualService(kubernetesConfig, serviceName);
+    if (istioBeta1VirtualService != null) {
       return istioApiNetworkingV1Beta1Service.getTrafficWeights(istioBeta1VirtualService, controllerNamePrefix);
     }
     return Collections.emptyMap();
   }
 
   public int getTrafficPercent(KubernetesConfig kubernetesConfig, String serviceName, Optional<Integer> revision) {
-    HasMetadata istioAlpha3VirtualService =
-        istioApiNetworkingV1Alpha3Service.getIstioAlpha3VirtualService(kubernetesConfig, serviceName);
-    HasMetadata istioBeta1VirtualService =
-        istioApiNetworkingV1Beta1Service.getIstioBeta1VirtualService(kubernetesConfig, serviceName);
-
     if (!revision.isPresent()) {
+      HasMetadata istioAlpha3VirtualService =
+          istioApiNetworkingV1Alpha3Service.getIstioAlpha3VirtualService(kubernetesConfig, serviceName);
       if (istioAlpha3VirtualService != null) {
-        istioApiNetworkingV1Alpha3Service.getTrafficPercentage(istioAlpha3VirtualService, revision.get());
-      } else if (istioBeta1VirtualService != null) {
-        istioApiNetworkingV1Beta1Service.getTrafficPercentage(istioBeta1VirtualService, revision.get());
+        return istioApiNetworkingV1Alpha3Service.getTrafficPercentage(istioAlpha3VirtualService, revision.get());
+      }
+      HasMetadata istioBeta1VirtualService =
+          istioApiNetworkingV1Beta1Service.getIstioBeta1VirtualService(kubernetesConfig, serviceName);
+      if (istioBeta1VirtualService != null) {
+        return istioApiNetworkingV1Beta1Service.getTrafficPercentage(istioBeta1VirtualService, revision.get());
       }
     }
     return 0;
@@ -76,5 +81,13 @@ public class IstioApiNetworkingService {
       return istioBeta1VirtualService;
     }
     return null;
+  }
+
+  public static Map<String, String> getResourcesMetadataAnnotations(HasMetadata hasMetadata) {
+    if (hasMetadata != null && hasMetadata.getMetadata() != null
+        && isNotEmpty(hasMetadata.getMetadata().getAnnotations())) {
+      return hasMetadata.getMetadata().getAnnotations();
+    }
+    return Collections.emptyMap();
   }
 }
