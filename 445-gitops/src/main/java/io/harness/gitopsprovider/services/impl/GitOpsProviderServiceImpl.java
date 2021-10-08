@@ -37,10 +37,10 @@ public class GitOpsProviderServiceImpl implements GitopsProviderService {
   }
 
   @Override
-  public Page<GitOpsProviderResponseDTO> list(
-      Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm) {
-    Page<GitOpsProvider> gitOpsProviders =
-        gitopsProviderRepository.findAll(pageable, projectIdentifier, orgIdentifier, accountIdentifier, searchTerm);
+  public Page<GitOpsProviderResponseDTO> list(Pageable pageable, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String searchTerm, GitOpsProviderType type) {
+    Page<GitOpsProvider> gitOpsProviders = gitopsProviderRepository.findAll(
+        pageable, projectIdentifier, orgIdentifier, accountIdentifier, searchTerm, type);
     return gitOpsProviders.map(this::toResponseDTO);
   }
 
@@ -50,7 +50,7 @@ public class GitOpsProviderServiceImpl implements GitopsProviderService {
         gitopsProviderEntityMapperBinding.get(gitopsProviderDTO.getInfoDTO().getGitProviderType());
     GitOpsProvider gitopsProvider = entityMapper.toGitOpsProviderEntity(gitopsProviderDTO, accountIdentifier);
     final GitOpsProvider savedEntity = gitopsProviderRepository.save(gitopsProvider);
-    return entityMapper.toGitOpsProvider(savedEntity);
+    return entityMapper.toGitOpsProviderDTO(savedEntity);
   }
 
   @Override
@@ -59,7 +59,7 @@ public class GitOpsProviderServiceImpl implements GitopsProviderService {
         gitopsProviderEntityMapperBinding.get(gitopsProviderDTO.getInfoDTO().getGitProviderType());
     GitOpsProvider gitopsProvider = entityMapper.toGitOpsProviderEntity(gitopsProviderDTO, accountIdentifier);
     final GitOpsProvider savedEntity = gitopsProviderRepository.update(accountIdentifier, gitopsProvider);
-    return entityMapper.toGitOpsProvider(savedEntity);
+    return entityMapper.toGitOpsProviderDTO(savedEntity);
   }
 
   @Override
@@ -71,6 +71,6 @@ public class GitOpsProviderServiceImpl implements GitopsProviderService {
 
   private GitOpsProviderResponseDTO toResponseDTO(GitOpsProvider gitopsProvider) {
     return gitopsProviderEntityMapperBinding.get(gitopsProvider.getGitOpsProviderType())
-        .toGitOpsProvider(gitopsProvider);
+        .toGitOpsProviderDTO(gitopsProvider);
   }
 }

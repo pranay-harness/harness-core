@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 
 @OwnedBy(HarnessTeam.GITOPS)
 public interface GitOpsProviderEntityMapper {
-  GitOpsProviderResponseDTO toGitOpsProvider(@NotNull GitOpsProvider gitopsProvider);
+  GitOpsProviderResponseDTO toGitOpsProviderDTO(@NotNull GitOpsProvider gitopsProvider);
   GitOpsProvider toGitOpsProviderEntity(
       @NotNull GitOpsProviderDTO gitopsProviderDTO, @NotNull String accountIdentifier);
 }

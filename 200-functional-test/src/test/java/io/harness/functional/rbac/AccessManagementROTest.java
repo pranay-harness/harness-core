@@ -6,6 +6,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
@@ -32,6 +34,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class AccessManagementROTest extends AbstractFunctionalTest {
   final String RBAC_USER = "rbac2@harness.io";
   String readOnlyUserid;
@@ -93,6 +96,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void amNoPermissionToPostForIPWhitelisting() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
     AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(

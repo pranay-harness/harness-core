@@ -2,6 +2,7 @@ package io.harness.gitopsprovider.services;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.connector.GitOpsProviderType;
 import io.harness.delegate.beans.connector.gitops.GitOpsProviderDTO;
 import io.harness.delegate.beans.connector.gitops.GitOpsProviderResponseDTO;
 
@@ -16,7 +17,7 @@ public interface GitopsProviderCrudService {
       @NotNull String projectIdentifier, @NotNull String connectorIdentifier);
 
   Page<GitOpsProviderResponseDTO> list(Pageable pageable, @NotNull String accountIdentifier, String orgIdentifier,
-      @NotNull String projectIdentifier, String searchTerm);
+      @NotNull String projectIdentifier, String searchTerm, GitOpsProviderType type);
 
   GitOpsProviderResponseDTO create(@NotNull GitOpsProviderDTO connector, @NotNull String accountIdentifier);
 
