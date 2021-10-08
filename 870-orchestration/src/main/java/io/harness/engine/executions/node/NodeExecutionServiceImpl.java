@@ -187,8 +187,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                             .setServiceName(nodeExecution.getNode().getServiceName());
 
       if (nodeExecution.getResolvedStepParameters() != null) {
-        builder.setStepParameters(ByteString.copyFromUtf8(
-            emptyIfNull(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))));
+        builder.setStepParameters(nodeExecution.getResolvedStepParametersBytes());
       }
       eventEmitter.emitEvent(builder.build());
       nodeExecutionStartSubject.fireInform(
@@ -384,11 +383,6 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   private void emitEvent(NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType) {
-    Map<String, Object> resolvedStepParameters =
-        nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
-    String stepParametersJson =
-        resolvedStepParameters != null ? RecastOrchestrationUtils.toJson(resolvedStepParameters) : null;
-
     TriggerPayload triggerPayload = TriggerPayload.newBuilder().build();
     if (nodeExecution != null && nodeExecution.getAmbiance() != null) {
       PlanExecutionMetadata metadata =
@@ -402,7 +396,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Builder eventBuilder = OrchestrationEvent.newBuilder()
                                .setAmbiance(nodeExecution.getAmbiance())
                                .setStatus(nodeExecution.getStatus())
-                               .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParametersJson)))
+                               .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
                                .setEventType(orchestrationEventType)
                                .setServiceName(nodeExecution.getNode().getServiceName())
                                .setTriggerPayload(triggerPayload);

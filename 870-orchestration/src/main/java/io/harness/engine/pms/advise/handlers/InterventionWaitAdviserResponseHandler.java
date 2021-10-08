@@ -58,17 +58,12 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
         ops
         -> ops.set(NodeExecutionKeys.adviserTimeoutInstanceIds, Arrays.asList(instance.getUuid())),
         EnumSet.noneOf(Status.class));
-    Map<String, Object> resolvedStepParameters = nodeExecution.getResolvedStepParameters();
-    String stepParameters = null;
-    if (resolvedStepParameters != null) {
-      stepParameters = RecastOrchestrationUtils.toJson(resolvedStepParameters);
-    }
     PlanNode planNode = nodeExecution.getNode();
     eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
                                .setEventType(OrchestrationEventType.INTERVENTION_WAIT_START)
                                .setAmbiance(nodeExecution.getAmbiance())
                                .setStatus(nodeExecution.getStatus())
-                               .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParameters)))
+                               .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
                                .setServiceName(planNode.getServiceName())
                                .build());
   }

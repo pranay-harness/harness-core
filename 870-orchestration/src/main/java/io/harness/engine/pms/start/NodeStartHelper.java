@@ -70,15 +70,13 @@ public class NodeStartHelper {
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
     PlanNode planNode = nodeExecution.getNode();
     String serviceName = planNode.getServiceName();
-    NodeStartEvent nodeStartEvent =
-        NodeStartEvent.newBuilder()
-            .setAmbiance(nodeExecution.getAmbiance())
-            .addAllRefObjects(planNode.getRefObjects())
-            .setFacilitatorPassThoroughData(passThroughData)
-            .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
-                RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))))
-            .setMode(nodeExecution.getMode())
-            .build();
+    NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
+                                        .setAmbiance(nodeExecution.getAmbiance())
+                                        .addAllRefObjects(planNode.getRefObjects())
+                                        .setFacilitatorPassThoroughData(passThroughData)
+                                        .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+                                        .setMode(nodeExecution.getMode())
+                                        .build();
     eventSender.sendEvent(
         nodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, true);
   }
