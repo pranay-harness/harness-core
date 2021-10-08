@@ -19,6 +19,7 @@ import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.Build;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -206,6 +207,37 @@ public class RunTimeInputHandler {
     }
 
     Map<String, String> m = parameterField.getValue();
+    if (isNotEmpty(m)) {
+      m.remove(UUID_FIELD_NAME);
+    }
+    return m;
+  }
+
+  public Map<String, JsonNode> resolveJsonNodeMapParameter(String fieldName, String stepType, String stepIdentifier,
+      ParameterField<Map<String, JsonNode>> parameterField, boolean isMandatory) {
+    if (parameterField == null || parameterField.getValue() == null) {
+      if (isMandatory) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      } else {
+        return null;
+      }
+    }
+
+    if (parameterField.isExpression()) {
+      if (isMandatory) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      } else {
+        log.warn(format("Failed to resolve optional field %s in step type %s with identifier %s", fieldName, stepType,
+            stepIdentifier));
+        return null;
+      }
+    }
+
+    Map<String, JsonNode> m = parameterField.getValue();
     if (isNotEmpty(m)) {
       m.remove(UUID_FIELD_NAME);
     }
