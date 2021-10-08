@@ -559,33 +559,4 @@ public class ProjectServiceImpl implements ProjectService {
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, project.getIdentifier())), false);
     validateParentOrgExists(accountIdentifier, orgIdentifier);
   }
-
-  private List<Project> getListOfProjectsForUser(String userId, String accountId) {
-    Criteria criteria = Criteria.where(UserMembershipKeys.userId)
-                            .is(userId)
-                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                            .is(accountId)
-                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                            .exists(true)
-                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
-                            .exists(true);
-    Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
-    List<UserMembership> userMembershipList = userMembershipPage.getContent();
-    if (userMembershipList.isEmpty()) {
-      return Collections.emptyList();
-    }
-    Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
-    List<Criteria> criteriaList = new ArrayList<>();
-    for (UserMembership userMembership : userMembershipList) {
-      Scope scope = userMembership.getScope();
-      criteriaList.add(Criteria.where(ProjectKeys.orgIdentifier)
-                           .is(scope.getOrgIdentifier())
-                           .and(ProjectKeys.identifier)
-                           .is(scope.getProjectIdentifier())
-                           .and(ProjectKeys.deleted)
-                           .is(false));
-    }
-    projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
-    return projectRepository.findAll(projectCriteria);
-  }
 }
