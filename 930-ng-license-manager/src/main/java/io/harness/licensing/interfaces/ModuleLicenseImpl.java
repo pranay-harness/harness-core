@@ -26,6 +26,13 @@ public class ModuleLicenseImpl implements ModuleLicenseInterface {
   }
 
   @Override
+  public ModuleLicenseDTO generateCommunityLicense(String accountId, ModuleType moduleType) {
+    ModuleLicenseDTO trialLicense = clientMap.get(moduleType).createTrialLicense(Edition.COMMUNITY, accountId);
+    trialLicense.setAccountIdentifier(accountId);
+    return trialLicense;
+  }
+
+  @Override
   public ModuleLicenseDTO generateTrialLicense(Edition edition, String accountId, ModuleType moduleType) {
     ModuleLicenseDTO trialLicense = clientMap.get(moduleType).createTrialLicense(edition, accountId);
     trialLicense.setAccountIdentifier(accountId);

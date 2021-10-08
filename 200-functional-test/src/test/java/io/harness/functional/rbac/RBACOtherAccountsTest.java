@@ -6,6 +6,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
@@ -32,6 +34,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   final String RBAC_USER = "default@harness.io";
   String userGroupManagementId;
@@ -50,6 +53,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void accessManagementPermissionTestForList() {
     log.info("Logging in as a default user");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "default");
@@ -59,6 +63,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
 
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void amNoPermissionToPostForUser() {
     String email = "testemail2@harness.mailinator.com";
     String password = "default";
@@ -68,6 +73,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
 
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void accessManagementNoPermissionTestForGet() {
     log.info("Readonly test for GET");
     AccessManagementUtils.runAllGetTests(
@@ -78,6 +84,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void amNoPermissionToPostForUserGroup() {
     AccessManagementUtils.testPermissionToPostInUserGroup(
         getAccount(), bearerToken, RBAC_USER, "default", HttpStatus.SC_BAD_REQUEST);
@@ -104,6 +111,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void createApplicationFail() {
     log.info("Check if create application test fails");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "default");
@@ -125,6 +133,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void deleteApplicationFail() {
     log.info("Check if delete application test fails");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "default");

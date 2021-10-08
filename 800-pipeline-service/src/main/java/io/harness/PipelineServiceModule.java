@@ -22,6 +22,7 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.filter.FilterType;
@@ -74,6 +75,8 @@ import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaServiceImpl;
 import io.harness.pms.pipeline.service.PipelineDashboardService;
 import io.harness.pms.pipeline.service.PipelineDashboardServiceImpl;
+import io.harness.pms.pipeline.service.PipelineEnforcementService;
+import io.harness.pms.pipeline.service.PipelineEnforcementServiceImpl;
 import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaService;
 import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaServiceImpl;
 import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlService;
@@ -106,6 +109,8 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.telemetry.AbstractTelemetryModule;
+import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -190,7 +195,7 @@ public class PipelineServiceModule extends AbstractModule {
     });
     install(PipelineServiceGrpcModule.getInstance());
     install(new PipelinePersistenceModule());
-    install(DelegateServiceDriverModule.getInstance(true));
+    install(DelegateServiceDriverModule.getInstance(true, false));
     install(OrchestrationModule.getInstance(
         OrchestrationModuleConfig.builder()
             .serviceName("PIPELINE")
@@ -251,7 +256,12 @@ public class PipelineServiceModule extends AbstractModule {
         this.configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new WebhookEventClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-
+    install(new AbstractTelemetryModule() {
+      @Override
+      public TelemetryConfiguration telemetryConfiguration() {
+        return configuration.getSegmentConfiguration();
+      }
+    });
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
@@ -264,6 +274,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSOpaService.class).to(PMSOpaServiceImpl.class);
     bind(ApprovalYamlSchemaService.class).to(ApprovalYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(FeatureFlagYamlService.class).to(FeatureFlagYamlServiceImpl.class).in(Singleton.class);
+    bind(PipelineEnforcementService.class).to(PipelineEnforcementServiceImpl.class).in(Singleton.class);
 
     bind(NodeTypeLookupService.class).to(NodeTypeLookupServiceImpl.class);
 
@@ -310,7 +321,9 @@ public class PipelineServiceModule extends AbstractModule {
           .annotatedWith(Names.named("TimeScaleDBConfig"))
           .toInstance(TimeScaleDBConfig.builder().build());
     }
-
+    install(EnforcementClientModule.getInstance(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId(),
+        configuration.getEnforcementClientConfiguration()));
     registerEventsFrameworkMessageListeners();
   }
 

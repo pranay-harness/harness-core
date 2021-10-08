@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.NATARAJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.notifications.beans.Conditions;
@@ -21,14 +23,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void alertsCRUD() {
     Set<String> userGroups = new HashSet<>();
     userGroups.add(
@@ -59,6 +64,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void updateAllAlertTypes() {
     Set<String> userGroups = new HashSet<>();
     userGroups.add(
@@ -88,6 +94,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void updateAlertConditions() {
     Set<String> userGroups = new HashSet<>();
     userGroups.add(
@@ -116,6 +123,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void updateAlertCategory() {
     Set<String> userGroups = new HashSet<>();
     userGroups.add(

@@ -16,6 +16,7 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.NodeType;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -66,6 +67,7 @@ public class PlanExecution implements PersistentRegularIterable, UuidAccess, Pms
   Long endTs;
 
   ExecutionMetadata metadata;
+  GovernanceMetadata governanceMetadata;
 
   @Wither @LastModifiedDate Long lastUpdatedAt;
   @Wither @Version Long version;

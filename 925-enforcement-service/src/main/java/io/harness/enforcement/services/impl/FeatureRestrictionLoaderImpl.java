@@ -6,14 +6,15 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.enforcement.bases.AvailabilityRestriction;
+import io.harness.enforcement.bases.CustomRestriction;
+import io.harness.enforcement.bases.DurationRestriction;
 import io.harness.enforcement.bases.FeatureRestriction;
 import io.harness.enforcement.bases.RateLimitRestriction;
 import io.harness.enforcement.bases.Restriction;
 import io.harness.enforcement.bases.StaticLimitRestriction;
 import io.harness.enforcement.configs.ClientInfo;
 import io.harness.enforcement.configs.FeatureRestrictionConfig;
-import io.harness.enforcement.constants.RestrictionType;
-import io.harness.enforcement.interfaces.LimitRestrictionInterface;
+import io.harness.enforcement.interfaces.EnforcementSdkSupportInterface;
 import io.harness.enforcement.services.FeatureRestrictionLoader;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
@@ -139,11 +140,10 @@ public class FeatureRestrictionLoaderImpl implements FeatureRestrictionLoader {
     });
   }
 
-  private void loadUsageClientToLimitRestriction(io.harness.enforcement.bases.Restriction restriction) {
-    if (RestrictionType.STATIC_LIMIT.equals(restriction.getRestrictionType())
-        || RestrictionType.RATE_LIMIT.equals(restriction.getRestrictionType())) {
-      LimitRestrictionInterface limitRestriction = (LimitRestrictionInterface) restriction;
-      limitRestriction.setEnforcementSdkClient(findFeatureClient(limitRestriction.getClientName()));
+  private void loadUsageClientToLimitRestriction(Restriction restriction) {
+    if (EnforcementSdkSupportInterface.class.isAssignableFrom(restriction.getClass())) {
+      EnforcementSdkSupportInterface enforcementSdkSupport = (EnforcementSdkSupportInterface) restriction;
+      enforcementSdkSupport.setEnforcementSdkClient(findFeatureClient(enforcementSdkSupport.getClientName()));
     }
   }
 
@@ -192,6 +192,18 @@ public class FeatureRestrictionLoaderImpl implements FeatureRestrictionLoader {
 
         if (staticLimitRestriction.getClientName() == null || staticLimitRestriction.getLimit() == null) {
           throw new InvalidArgumentsException("StaticLimitRestriction is missing necessary config");
+        }
+        break;
+      case CUSTOM:
+        CustomRestriction customRestriction = (CustomRestriction) restriction;
+        if (customRestriction.getClientName() == null) {
+          throw new InvalidArgumentsException("CustomRestriction is missing necessary config");
+        }
+        break;
+      case DURATION:
+        DurationRestriction durationRestriction = (DurationRestriction) restriction;
+        if (durationRestriction.getTimeUnit() == null || durationRestriction.getTimeUnit().getUnit() == null) {
+          throw new InvalidArgumentsException("DurationRestriction is missing necessary config");
         }
         break;
       default:

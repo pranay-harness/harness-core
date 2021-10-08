@@ -40,7 +40,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 @OwnedBy(HarnessTeam.PL)
 public class ManagerExecutor {
   private static boolean failedAlready;
-  private static Duration waiting = ofMinutes(5);
+  private static Duration waiting = ofMinutes(15);
 
   public static void ensureManager(Class clazz) throws IOException {
     if (!isHealthy()) {

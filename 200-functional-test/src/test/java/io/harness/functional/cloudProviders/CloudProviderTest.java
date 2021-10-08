@@ -8,6 +8,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.SecretGenerator;
@@ -29,12 +31,14 @@ import com.google.inject.Inject;
 import io.restassured.path.json.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@OwnedBy(HarnessTeam.CDP)
 public class CloudProviderTest extends AbstractFunctionalTest {
   @Inject private SecretGenerator secretGenerator;
   // Test Constants
@@ -102,6 +106,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void runPhysicalDataCenterCloudProvider() {
     retry.executeWithRetry(this::createPhysicalDataCenterCloudProvider, booleanMatcher, true);
     log.info(

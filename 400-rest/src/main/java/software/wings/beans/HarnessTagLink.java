@@ -3,6 +3,10 @@ package software.wings.beans;
 import static software.wings.beans.HarnessTagType.USER;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -31,6 +35,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
@@ -57,6 +63,7 @@ public class HarnessTagLink implements PersistentEntity, UuidAware, UpdatedAtAwa
                  .build())
         .build();
   }
+
   @Id private String uuid;
   @NotEmpty private String accountId;
   @NotEmpty private String appId;

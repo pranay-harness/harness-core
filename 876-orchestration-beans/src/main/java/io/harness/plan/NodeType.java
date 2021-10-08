@@ -1,5 +1,8 @@
 package io.harness.plan;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 /**
  * This represents node type in a plan
  * A node can be of the type
@@ -10,4 +13,4 @@ package io.harness.plan;
  *  RESUMEABLE_PLAN_NODE
  *
  */
-public enum NodeType { PLAN, PLAN_NODE }
+@OwnedBy(HarnessTeam.PIPELINE) public enum NodeType { PLAN, PLAN_NODE, IDENTITY_PLAN_NODE }

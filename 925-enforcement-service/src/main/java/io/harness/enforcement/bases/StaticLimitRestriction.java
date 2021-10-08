@@ -23,6 +23,7 @@ public class StaticLimitRestriction extends Restriction implements LimitRestrict
     this.enforcementSdkClient = enforcementSdkClient;
   }
 
+  @Override
   public void setEnforcementSdkClient(EnforcementSdkClient enforcementSdkClient) {
     this.enforcementSdkClient = enforcementSdkClient;
   }

@@ -122,8 +122,18 @@ public class LicenseResource {
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO> startFreeLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) @AccountIdentifier ModuleType moduleType) {
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
     return ResponseDTO.newResponse(licenseService.startFreeLicense(accountIdentifier, moduleType));
+  }
+
+  @POST
+  @Path("community")
+  @ApiOperation(value = "Starts Community License For A Module", nickname = "startCommunityLicense")
+  @InternalApi
+  public ResponseDTO<ModuleLicenseDTO> startCommunityLicense(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
+    return ResponseDTO.newResponse(licenseService.startCommunityLicense(accountIdentifier, moduleType));
   }
 
   @POST

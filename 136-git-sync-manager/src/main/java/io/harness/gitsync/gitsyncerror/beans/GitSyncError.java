@@ -81,8 +81,6 @@ public class GitSyncError
   public static final class GitSyncErrorKeys {
     public static final String gitCommitId =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.gitCommitId;
-    public static final String commitTime =
-        GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitTime;
     public static final String commitMessage =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitMessage;
     public static final String orgIdentifier =
@@ -96,9 +94,9 @@ public class GitSyncError
         .<MongoIndex>builder()
         // for gitToHarness errors
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_errorType_repo_branch_sort_Index")
+                 .name("accountId_errorType_repo_branch_status_sort_Index")
                  .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.errorType,
-                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName))
+                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.status))
                  .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()

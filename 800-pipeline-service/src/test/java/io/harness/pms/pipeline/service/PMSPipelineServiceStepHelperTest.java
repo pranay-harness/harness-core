@@ -18,6 +18,7 @@ import io.harness.pms.pipeline.StepCategory;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,11 +33,13 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
   @InjectMocks private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Mock private CommonStepInfo commonStepInfo;
   @Mock private PmsFeatureFlagHelper pmsFeatureFlagHelper;
+  @Mock private PipelineEnforcementService pipelineEnforcementService;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    pmsPipelineServiceStepHelper = new PMSPipelineServiceStepHelper(pmsFeatureFlagHelper, commonStepInfo);
+    pmsPipelineServiceStepHelper =
+        new PMSPipelineServiceStepHelper(pmsFeatureFlagHelper, commonStepInfo, pipelineEnforcementService);
   }
 
   @Test
@@ -47,16 +50,16 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
     expectedStepInfoList.add(StepInfo.newBuilder()
                                  .setName("testStepCV")
                                  .setType("testStepCV")
-                                 .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                                 .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                                  .build());
     expectedStepInfoList.add(StepInfo.newBuilder()
                                  .setName("testStepCV1")
                                  .setType("testStepCV1")
-                                 .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                                 .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                                  .build());
 
     List<StepInfo> actualStepInfoList =
-        pmsPipelineServiceStepHelper.filterStepsOnFeatureFlag(expectedStepInfoList, "accountId");
+        pmsPipelineServiceStepHelper.filterStepsBasedOnFeatureFlag(expectedStepInfoList, "accountId");
 
     assertThat(actualStepInfoList).isEqualTo(expectedStepInfoList);
   }
@@ -69,12 +72,12 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
     stepInfoList.add(StepInfo.newBuilder()
                          .setName("testStepCV")
                          .setType("testStepCV")
-                         .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                         .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                          .build());
     stepInfoList.add(StepInfo.newBuilder()
                          .setName("testStepCV1")
                          .setType("testStepCV1")
-                         .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                         .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                          .build());
     String module = "cv";
     StepCategory stepCategory =
@@ -82,7 +85,7 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
     assertThat(stepCategory).isNotNull();
     assertThat(stepCategory.toString())
         .isEqualTo(
-            "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV), StepData(name=testStepCV1, type=testStepCV1)], stepCategories=[])])])");
+            "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false), StepData(name=testStepCV1, type=testStepCV1, disabled=false)], stepCategories=[])])])");
   }
 
   @Test
@@ -95,19 +98,19 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
         StepInfo.newBuilder()
             .setName("testStepCD")
             .setType("testStepCD")
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("K8S").setFolderPath("Double/Single").build())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("K8S").addFolderPaths("Double/Single").build())
             .build());
     stepInfoList.add(StepInfo.newBuilder()
                          .setName("testStepCV")
                          .setType("testStepCV")
-                         .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                         .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                          .build());
     StepCategory stepCategory =
         pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory("Terraform", stepInfoList, "account");
     assertThat(stepCategory).isNotNull();
     assertThat(stepCategory.toString())
         .isEqualTo(
-            "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])");
+            "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])");
   }
 
   @Test
@@ -117,12 +120,12 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
     StepInfo stepInfo = StepInfo.newBuilder()
                             .setName("testStepCV")
                             .setType("testStepCV")
-                            .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                             .build();
     StepCategory stepCategory = StepCategory.builder().name("cv").build();
-    pmsPipelineServiceStepHelper.addToTopLevel(stepCategory, stepInfo);
+    pmsPipelineServiceStepHelper.addToTopLevel(stepCategory, stepInfo, new HashMap<>());
     assertThat(stepCategory.toString())
         .isEqualTo(
-            "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])");
+            "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])");
   }
 }

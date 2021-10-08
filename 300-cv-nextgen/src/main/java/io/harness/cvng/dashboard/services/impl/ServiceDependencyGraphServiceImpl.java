@@ -3,8 +3,6 @@ package io.harness.cvng.dashboard.services.impl;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.activity.beans.ActivityDashboardDTO;
-import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.MonitoredService;
@@ -19,8 +17,6 @@ import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.ServiceDependencyGraphService;
 
 import com.google.inject.Inject;
-import java.time.Clock;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,14 +34,12 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
   @Inject private ServiceDependencyService serviceDependencyService;
   @Inject private HeatMapService heatMapService;
   @Inject private MonitoredServiceService monitoredServiceService;
-  @Inject private ActivityService activityService;
-  @Inject private Clock clock;
 
   @Override
-  public ServiceDependencyGraphDTO getDependencyGraph(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
+  public ServiceDependencyGraphDTO getDependencyGraph(@NonNull ProjectParams projectParams,
+      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier) {
     List<MonitoredService> monitoredServices =
-        monitoredServiceService.list(projectParams, serviceIdentifier, envIdentifier);
+        monitoredServiceService.list(projectParams, serviceIdentifier, environmentIdentifier);
     Set<String> identifiers =
         monitoredServices.stream().map(MonitoredService::getIdentifier).collect(Collectors.toSet());
     List<ServiceDependency> serviceDependencies =
@@ -56,21 +50,17 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
         serviceDependency -> identifiers.add(serviceDependency.getFromMonitoredServiceIdentifier()));
     monitoredServices = monitoredServiceService.list(projectParams, new ArrayList<>(identifiers));
 
-    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(projectParams, serviceIdentifier, envIdentifier);
-    List<ActivityDashboardDTO> changes = activityService.listActivitiesInTimeRange(
-        projectParams, serviceIdentifier, envIdentifier, clock.instant().minus(1, ChronoUnit.DAYS), clock.instant());
+    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(projectParams, serviceIdentifier, environmentIdentifier);
 
-    return constructGraph(monitoredServices, serviceDependencies, heatMaps, changes);
+    return constructGraph(monitoredServices, serviceDependencies, heatMaps);
   }
 
-  private ServiceDependencyGraphDTO constructGraph(List<MonitoredService> monitoredServices,
-      List<ServiceDependency> serviceDependencies, List<HeatMap> heatMaps, List<ActivityDashboardDTO> changes) {
+  private ServiceDependencyGraphDTO constructGraph(
+      List<MonitoredService> monitoredServices, List<ServiceDependency> serviceDependencies, List<HeatMap> heatMaps) {
     Map<GraphKey, MonitoredService> monitoredServiceMap = monitoredServices.stream().collect(
         Collectors.toMap(x -> new GraphKey(x.getServiceIdentifier(), x.getEnvironmentIdentifier()), x -> x));
     Map<GraphKey, List<HeatMap>> heatMapMap = heatMaps.stream().collect(
         Collectors.groupingBy(x -> new GraphKey(x.getServiceIdentifier(), x.getEnvIdentifier())));
-    Map<GraphKey, List<ActivityDashboardDTO>> changeMap = changes.stream().collect(
-        Collectors.groupingBy(x -> new GraphKey(x.getServiceIdentifier(), x.getEnvironmentIdentifier())));
 
     List<ServiceSummaryDetails> nodes = new ArrayList<>();
     monitoredServiceMap.forEach((key, value) -> {
@@ -90,9 +80,6 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
                                     .sum();
         anomalousLogsCount =
             serviceRisks.stream().mapToLong(x -> x.getHeatMapRisks().iterator().next().getAnomalousLogsCount()).sum();
-      }
-      if (changeMap.containsKey(key)) {
-        changeCount = changeMap.get(key).size();
       }
       Risk risk = Risk.getRiskFromRiskScore(riskScore);
       nodes.add(ServiceSummaryDetails.builder()
