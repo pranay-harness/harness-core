@@ -21,6 +21,8 @@ import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.CIFeatureFlagNoopServiceImpl;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
@@ -90,6 +92,12 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+      }
+    });
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(CIFeatureFlagService.class).to(CIFeatureFlagNoopServiceImpl.class);
       }
     });
     CacheConfigBuilder cacheConfigBuilder =
