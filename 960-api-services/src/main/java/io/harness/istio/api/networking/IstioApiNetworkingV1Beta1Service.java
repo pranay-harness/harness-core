@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.networking.v1beta1.DestinationRule;
 import me.snowdrop.istio.api.networking.v1beta1.DestinationRuleBuilder;
 import me.snowdrop.istio.api.networking.v1beta1.DoneableDestinationRule;
+import me.snowdrop.istio.api.networking.v1beta1.DoneableVirtualService;
 import me.snowdrop.istio.api.networking.v1beta1.HTTPRouteDestination;
 import me.snowdrop.istio.api.networking.v1beta1.VirtualService;
+import me.snowdrop.istio.api.networking.v1beta1.VirtualServiceBuilder;
 import me.snowdrop.istio.api.networking.v1beta1.VirtualServiceSpec;
 
 @Slf4j
@@ -42,27 +45,24 @@ public class IstioApiNetworkingV1Beta1Service {
           .inNamespace(kubernetesConfig.getNamespace())
           .withName(name)
           .get();
-    } catch (Exception e) {
+    } catch (KubernetesClientException e) {
       log.error("Failed to get istio DestinationRule/{}", name, e);
       return null;
     }
   }
 
-  public me.snowdrop.istio.api.networking.v1beta1.VirtualService getIstioBeta1VirtualService(
-      KubernetesConfig kubernetesConfig, String name) {
+  public VirtualService getIstioBeta1VirtualService(KubernetesConfig kubernetesConfig, String name) {
     KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     try {
-      me.snowdrop.istio.api.networking.v1beta1.VirtualService virtualService =
-          new me.snowdrop.istio.api.networking.v1beta1.VirtualServiceBuilder().build();
+      VirtualService virtualService = new VirtualServiceBuilder().build();
 
       return kubernetesClient
-          .customResources(getCustomResourceDefinition(kubernetesClient, virtualService),
-              me.snowdrop.istio.api.networking.v1beta1.VirtualService.class, KubernetesResourceList.class,
-              me.snowdrop.istio.api.networking.v1beta1.DoneableVirtualService.class)
+          .customResources(getCustomResourceDefinition(kubernetesClient, virtualService), VirtualService.class,
+              KubernetesResourceList.class, DoneableVirtualService.class)
           .inNamespace(kubernetesConfig.getNamespace())
           .withName(name)
           .get();
-    } catch (Exception e) {
+    } catch (KubernetesClientException e) {
       log.error("Failed to get istio VirtualService/{}", name, e);
       return null;
     }

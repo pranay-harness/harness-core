@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class IstioApiNetworkingV1Alpha3Service {
           .inNamespace(kubernetesConfig.getNamespace())
           .withName(name)
           .get();
-    } catch (Exception e) {
+    } catch (KubernetesClientException e) {
       log.error("Failed to get istio VirtualService/{}", name, e);
       return null;
     }
@@ -61,7 +62,7 @@ public class IstioApiNetworkingV1Alpha3Service {
           .inNamespace(kubernetesConfig.getNamespace())
           .withName(name)
           .get();
-    } catch (Exception e) {
+    } catch (KubernetesClientException e) {
       log.error("Failed to get istio DestinationRule/{}", name, e);
       return null;
     }

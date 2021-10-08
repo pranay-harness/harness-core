@@ -100,7 +100,7 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
     if (null != virtualService) {
       VirtualService beta1VirtualService = (VirtualService) virtualService;
       if (beta1VirtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
-        executionLogCallback.saveExecutionLog("Deleting Istio VirtualService" + virtualServiceName);
+        executionLogCallback.saveExecutionLog("Deleting Istio VirtualService: " + virtualServiceName);
         deleteIstioVirtualService(kubernetesConfig, virtualServiceName);
       }
     }
@@ -113,7 +113,7 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
       DestinationRule beta1DestinationRule = (DestinationRule) destinationRule;
 
       if (beta1DestinationRule.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
-        executionLogCallback.saveExecutionLog("Deleting Istio DestinationRule" + virtualServiceName);
+        executionLogCallback.saveExecutionLog("Deleting Istio DestinationRule: " + virtualServiceName);
         deleteIstioDestinationRule(kubernetesConfig, virtualServiceName);
       }
     }
@@ -217,7 +217,7 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
     HTTPRoute existingVirtualServiceHttpRoute = (((VirtualService) existingVirtualService).getSpec()).getHttp().get(0);
 
     if ((virtualServiceHttpRoute == null || existingVirtualServiceHttpRoute == null)
-        && virtualServiceHttpRoute != existingVirtualServiceHttpRoute) {
+        && virtualServiceHttpRoute.equals(existingVirtualServiceHttpRoute)) {
       return false;
     }
 

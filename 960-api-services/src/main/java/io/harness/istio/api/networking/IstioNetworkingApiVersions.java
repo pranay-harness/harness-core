@@ -12,9 +12,9 @@ public enum IstioNetworkingApiVersions {
     this.apiVersion = apiVersion;
   }
 
-  public static IstioNetworkingApiVersions findByApiVersion(String apiVerison) {
+  public static IstioNetworkingApiVersions findByApiVersion(String apiVersion) {
     for (IstioNetworkingApiVersions v : values()) {
-      if (v.getApiVersion().equals(apiVerison)) {
+      if (v.getApiVersion().equals(apiVersion)) {
         return v;
       }
     }
