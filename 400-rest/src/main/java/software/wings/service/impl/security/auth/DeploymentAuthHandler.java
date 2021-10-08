@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
@@ -8,11 +9,13 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
+import static software.wings.security.PermissionAttribute.PermissionType.ALLOW_DEPLOYMENTS_DURING_FREEZE;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Pipeline;
@@ -42,11 +45,13 @@ import org.apache.commons.lang3.StringUtils;
 @Singleton
 @Slf4j
 @OwnedBy(PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class DeploymentAuthHandler {
   @Inject private AuthService authService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
+  @Inject private AuthHandler authHandler;
 
   private void authorize(List<PermissionAttribute> requiredPermissionAttributes, List<String> appIds, String entityId) {
     User user = UserThreadLocal.get();
@@ -160,5 +165,11 @@ public class DeploymentAuthHandler {
         authService.checkIfUserAllowedToDeployPipelineToEnv(appId, workflowExecution.getEnvId());
       }
     }
+  }
+
+  public void authorizeDeploymentDuringFreeze() {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(ALLOW_DEPLOYMENTS_DURING_FREEZE));
+    authHandler.authorizeAccountPermission(permissionAttributeList);
   }
 }

@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.ArrayList;
 import java.util.List;
 import lombok.EqualsAndHashCode;
@@ -8,6 +11,7 @@ import lombok.EqualsAndHashCode;
  * The Class GraphGroup.
  */
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class GraphGroup extends GraphNode {
   private List<GraphNode> elements = new ArrayList<>();
 
