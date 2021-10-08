@@ -78,6 +78,7 @@ public class BudgetsQuery {
                 .name(budget.getName())
                 .budgetAmount(budget.getBudgetAmount())
                 .actualCost(budget.getActualCost())
+                .forecastCost(budget.getForecastCost())
                 .timeLeft(BudgetUtils.getTimeLeftForBudget(budget))
                 .timeUnit(BudgetUtils.DEFAULT_TIME_UNIT)
                 .timeScope(BudgetUtils.DEFAULT_TIME_SCOPE)
