@@ -16,6 +16,7 @@ import io.harness.dashboards.ServicesDashboardInfo;
 import io.harness.dashboards.SortBy;
 import io.harness.dashboards.TimeBasedDeploymentInfo;
 import io.harness.ng.core.OrgProjectIdentifier;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.overviewdashboard.bean.OverviewDashboardRequestType;
 import io.harness.overviewdashboard.bean.RestCallRequest;
@@ -455,7 +456,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                 .requestType(OverviewDashboardRequestType.GET_PIPELINES_COUNT)
                                 .build());
     restCallRequestList.add(
-        RestCallRequest.<Integer>builder()
+        RestCallRequest.<ActiveProjectsCountDTO>builder()
             .request(userNGClient.getAccessibleProjectsCount(accountIdentifier, userId, startInterval, endInterval))
             .requestType(OverviewDashboardRequestType.GET_PROJECTS_COUNT)
             .build());

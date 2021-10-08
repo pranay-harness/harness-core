@@ -53,9 +53,9 @@ public class DashboardServiceModule extends AbstractModule {
       }
     });
     install(CDLandingDashboardResourceClientModule.getInstance(
-        config.getCdServiceClientConfig(), config.getDashboardSecretsConfig().getNgManagerServiceSecret(), null));
+        config.getNgManagerClientConfig(), config.getDashboardSecretsConfig().getNgManagerServiceSecret(), AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     install(PMSLandingDashboardResourceClientModule.getInstance(
-        config.getCdServiceClientConfig(), config.getDashboardSecretsConfig().getNgManagerServiceSecret(), null));
+        config.getCdServiceClientConfig(), config.getDashboardSecretsConfig().getPipelineServiceSecret(), AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     install(new TokenClientModule(config.getNgManagerClientConfig(),
         config.getDashboardSecretsConfig().getNgManagerServiceSecret(), DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     bind(OverviewDashboardService.class).to(OverviewDashboardServiceImpl.class);
