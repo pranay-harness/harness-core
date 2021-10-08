@@ -16,14 +16,16 @@ import com.google.inject.name.Names;
 public class DelegateServiceDriverModule extends AbstractModule {
   private static volatile DelegateServiceDriverModule instance;
   private final boolean disableDeserialization;
+  private final boolean enablePrimaryCheck;
 
-  public DelegateServiceDriverModule(boolean disableDeserialization) {
+  public DelegateServiceDriverModule(boolean disableDeserialization, boolean enablePrimaryCheck) {
     this.disableDeserialization = disableDeserialization;
+    this.enablePrimaryCheck = enablePrimaryCheck;
   }
 
-  public static DelegateServiceDriverModule getInstance(boolean disableDeserialization) {
+  public static DelegateServiceDriverModule getInstance(boolean disableDeserialization, boolean enablePrimaryCheck) {
     if (instance == null) {
-      instance = new DelegateServiceDriverModule(disableDeserialization);
+      instance = new DelegateServiceDriverModule(disableDeserialization, enablePrimaryCheck);
     }
     return instance;
   }
@@ -34,5 +36,6 @@ public class DelegateServiceDriverModule extends AbstractModule {
     bind(DelegateAsyncService.class).to(DelegateAsyncServiceImpl.class);
     bind(DelegateProgressService.class).to(DelegateProgressServiceImpl.class);
     bind(boolean.class).annotatedWith(Names.named("disableDeserialization")).toInstance(disableDeserialization);
+    bind(boolean.class).annotatedWith(Names.named("enablePrimaryCheck")).toInstance(enablePrimaryCheck);
   }
 }

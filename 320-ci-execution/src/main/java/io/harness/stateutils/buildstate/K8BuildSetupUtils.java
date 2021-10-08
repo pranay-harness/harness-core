@@ -313,7 +313,7 @@ public class K8BuildSetupUtils {
 
     CodebaseSweepingOutput codebaseSweeping = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
     if (isNotEmpty(codebaseSweeping.getBranch())) {
-      codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getSourceBranch());
+      codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
     }
 
     if (!isEmpty(codebaseSweeping.getTag())) {

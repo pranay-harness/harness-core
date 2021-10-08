@@ -83,6 +83,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   String yamlGitConfigRef;
   String filePath;
   String rootFolder;
+  Boolean executeOnManager = Boolean.FALSE;
 
   @Override
   public String getAccountIdentifier() {

@@ -67,6 +67,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
@@ -225,6 +226,11 @@ public class AccessControlModule extends AbstractModule {
         FeatureFlagClientModule.getInstance(config.getFeatureFlagClientConfiguration().getFeatureFlagServiceConfig(),
             config.getFeatureFlagClientConfiguration().getFeatureFlagServiceSecret(),
             ACCESS_CONTROL_SERVICE.getServiceId()));
+
+    install(
+        EnforcementClientModule.getInstance(config.getOrganizationClientConfiguration().getOrganizationServiceConfig(),
+            config.getOrganizationClientConfiguration().getOrganizationServiceSecret(),
+            ACCESS_CONTROL_SERVICE.getServiceId(), config.getEnforcementClientConfiguration()));
 
     install(new TransactionOutboxModule(config.getOutboxPollConfig(), ACCESS_CONTROL_SERVICE.getServiceId(),
         config.getAggregatorConfiguration().isExportMetricsToStackDriver()));

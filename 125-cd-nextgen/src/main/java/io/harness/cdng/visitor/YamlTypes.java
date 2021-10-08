@@ -41,7 +41,6 @@ public interface YamlTypes {
   String OPENSHIFT_MANIFEST = ManifestType.OpenshiftTemplate;
   String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
-  String SHELL_SCRIPT_STEP = StepSpecTypeConstants.SHELL_SCRIPT;
   String SERVICE_CONFIG = "serviceConfig";
   String SERVICE_ENTITY = "service";
   String SERVICE_REF = "serviceRef";
@@ -67,13 +66,8 @@ public interface YamlTypes {
   String OUTPUT = "output";
   String TIMEOUT = "timeout";
   String UUID = YamlNode.UUID_FIELD_NAME;
-  String SHELL = "shell";
-  String SOURCE = "source";
-  String EXECUTION_TARGET = "executionTarget";
-  String OUTPUT_VARIABLES = "outputVariables";
   String HEADERS = "headers";
   String DELEGATE_SELECTORS = "delegateSelectors";
-  String ENVIRONMENT_VARIABLES = "environmentVariables";
 
   String COMMAND_FLAGS_WRAPPER = "commandFlags";
 }

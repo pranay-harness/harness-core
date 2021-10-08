@@ -6,6 +6,9 @@ clients:
   - name: pipelineService
     clientConfig: pipelineServiceClientConfig
     secretConfig: nextGenConfig.pipelineServiceSecret
+  - name: accesscontrol
+    clientConfig: accessControlClientConfiguration.accessControlServiceConfig
+    secretConfig: accessControlClientConfiguration.accessControlServiceSecret
 features:
   # Feature availability example
   # TEST1 feature
@@ -93,6 +96,19 @@ features:
 
   - name: LDAP_SUPPORT
     description: Allow LDAP provider configuration
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: CUSTOM_ROLES
+    description: Allow creating custom roles
     restrictions:
       FREE:
         restrictionType: AVAILABILITY

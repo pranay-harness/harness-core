@@ -1,9 +1,11 @@
-package io.harness.ccm.businessMapping.entities;
+package io.harness.ccm.views.businessMapping.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.views.entities.ViewRule;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -15,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CE)
-public class SharedCostSplit {
-  String costTargetName;
-  double percentageContribution;
+public class CostTarget {
+  String name;
+  List<ViewRule> rules;
 }

@@ -340,6 +340,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   @Transient private String failureDetails;
 
   private boolean isRollbackProvisionerAfterPhases;
+  private boolean canOverrideFreeze;
 
   // Making this consistent with data retention default of 183 days instead of "6 months"
   @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(183).toInstant());
