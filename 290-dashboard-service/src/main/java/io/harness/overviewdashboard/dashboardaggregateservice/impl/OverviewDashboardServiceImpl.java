@@ -398,12 +398,12 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
       long startInterval, long endInterval, List<OrgProjectIdentifier> orgProjectIdentifierList, GroupBy groupBy,
       SortBy sortBy) {
     List<RestCallRequest> restCallRequestList = new ArrayList<>();
-    restCallRequestList.add(RestCallRequest.<DeploymentStatsSummary>builder()
+    restCallRequestList.add(RestCallRequest.<PipelinesExecutionDashboardInfo>builder()
                                 .request(cdLandingDashboardResourceClient.getActiveDeploymentStats(
                                     accountIdentifier, orgProjectIdentifierList))
                                 .requestType(OverviewDashboardRequestType.GET_ACTIVE_DEPLOYMENTS_INFO)
                                 .build());
-    restCallRequestList.add(RestCallRequest.<List<TimeBasedDeploymentInfo>>builder()
+    restCallRequestList.add(RestCallRequest.<DeploymentStatsSummary>builder()
                                 .request(cdLandingDashboardResourceClient.getDeploymentStatsSummary(
                                     accountIdentifier, orgProjectIdentifierList, startInterval, endInterval, groupBy))
                                 .requestType(OverviewDashboardRequestType.GET_DEPLOYMENT_STATS_SUMMARY)
