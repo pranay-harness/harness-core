@@ -90,6 +90,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private boolean useAutoscaler;
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
+  private int targetCpuUtilizationPercentage;
   private boolean useIngress;
   private String ingressYaml;
   private String customMetricYamlConfig;
@@ -256,6 +257,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withUseAutoscaler(useAutoscaler)
         .withMinAutoscaleInstances(minAutoscaleInstances)
         .withMaxAutoscaleInstances(maxAutoscaleInstances)
+        .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
         .withCustomMetricYamlConfig(customMetricYamlEvaluated)
         .withSubscriptionId(subscriptionId)
         .withResourceGroup(resourceGroup)
@@ -338,6 +340,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
       containerServiceElementBuilder.useAutoscaler(true)
           .minAutoscaleInstances(minAutoscaleInstances)
           .maxAutoscaleInstances(maxAutoscaleInstances)
+          .targetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
           .customMetricYamlConfig(customMetricYamlEvaluated);
     }
 
@@ -512,6 +515,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   public void setMaxAutoscaleInstances(int maxAutoscaleInstances) {
     this.maxAutoscaleInstances = maxAutoscaleInstances;
+  }
+
+  public int getTargetCpuUtilizationPercentage() {
+    return targetCpuUtilizationPercentage;
+  }
+
+  public void setTargetCpuUtilizationPercentage(int targetCpuUtilizationPercentage) {
+    this.targetCpuUtilizationPercentage = targetCpuUtilizationPercentage;
   }
 
   public String getCustomMetricYamlConfig() {

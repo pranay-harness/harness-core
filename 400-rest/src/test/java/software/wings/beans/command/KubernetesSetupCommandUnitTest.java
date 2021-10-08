@@ -293,6 +293,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                             .withCustomMetricYamlConfig(null)
                                             .withMinAutoscaleInstances(1)
                                             .withMaxAutoscaleInstances(2)
+                                            .withTargetCpuUtilizationPercentage(20)
                                             .build();
 
     HorizontalPodAutoscaler horizontalPodAutoscaler =
@@ -313,6 +314,11 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().get("version")).isEqualTo("9");
     assertThat(horizontalPodAutoscaler.getSpec().getMinReplicas()).isEqualTo(Integer.valueOf(1));
     assertThat(horizontalPodAutoscaler.getSpec().getMaxReplicas()).isEqualTo(Integer.valueOf(2));
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics()).hasSize(1);
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics().get(0).getResource()).isNotNull();
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics().get(0).getResource().getName()).isEqualTo("cpu");
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics().get(0).getResource().getTarget().getAverageUtilization())
+        .isEqualTo(20);
 
     setupParams = KubernetesSetupParamsBuilder
                       .aKubernetesSetupParams()
@@ -320,6 +326,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                       .withCustomMetricYamlConfig("")
                       .withMinAutoscaleInstances(2)
                       .withMaxAutoscaleInstances(3)
+                      .withTargetCpuUtilizationPercentage(30)
                       .build();
 
     horizontalPodAutoscaler = kubernetesSetupCommandUnit.createAutoscaler("abaris.hpanormal.prod-0", "Deployment",

@@ -176,9 +176,11 @@ public class WorkflowResource {
     if (maxAutoscaleInstances == null) {
       maxAutoscaleInstances = Integer.valueOf(0);
     }
-
-    return new RestResponse<>(
-        workflowService.getHPAYamlStringWithCustomMetric(minAutoscaleInstances, maxAutoscaleInstances));
+    if (targetCpuUtilizationPercentage == null) {
+      targetCpuUtilizationPercentage = Integer.valueOf(80);
+    }
+    return new RestResponse<>(workflowService.getHPAYamlStringWithCustomMetric(
+        minAutoscaleInstances, maxAutoscaleInstances, targetCpuUtilizationPercentage));
   }
 
   /**

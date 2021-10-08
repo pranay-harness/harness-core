@@ -194,7 +194,6 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
     try {
       updateVirtualServiceWithDestinationWeights(k8sTrafficSplitTaskParameters, executionLogCallback);
       if (virtualService != null) {
-        // here we may need to cast to appropriate object
         executionLogCallback.saveExecutionLog("\n" + toYaml(virtualService));
       }
 

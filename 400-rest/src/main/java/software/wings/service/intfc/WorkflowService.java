@@ -160,7 +160,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   boolean workflowHasSshDeploymentPhase(String appId, String workflowId);
 
-  String getHPAYamlStringWithCustomMetric(Integer minAutoscaleInstances, Integer maxAutoscaleInstances);
+  String getHPAYamlStringWithCustomMetric(
+      Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage);
 
   void loadOrchestrationWorkflow(Workflow workflow, Integer version);
 

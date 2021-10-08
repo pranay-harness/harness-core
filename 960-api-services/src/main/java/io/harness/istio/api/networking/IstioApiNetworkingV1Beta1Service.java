@@ -1,7 +1,6 @@
 package io.harness.istio.api.networking;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.istio.api.networking.IstioApiNetworkingUtils.getCustomResourceDefinition;
 import static io.harness.k8s.KubernetesConvention.DASH;
 
@@ -16,7 +15,6 @@ import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

@@ -361,7 +361,10 @@ public class WorkflowServiceHelper {
       + "  metrics:\n"
       + "  - type: Resource\n"
       + "    resource:\n"
-      + "      name: cpu\n";
+      + "      name: cpu\n"
+      + "      target:\n"
+      + "        type: Utilization\n"
+      + "        averageUtilization: ${UTILIZATION}\n";
 
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -372,11 +375,13 @@ public class WorkflowServiceHelper {
   @Inject private AppService appService;
   @Inject private FeatureFlagService featureFlagService;
 
-  public String getHPAYamlStringWithCustomMetric(Integer minAutoscaleInstances, Integer maxAutoscaleInstances) {
+  public String getHPAYamlStringWithCustomMetric(
+      Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage) {
     try {
       String hpaYaml =
           yamlForHPAWithCustomMetric.replaceAll(MIN_REPLICAS, String.valueOf(minAutoscaleInstances.intValue()))
-              .replaceAll(MAX_REPLICAS, String.valueOf(maxAutoscaleInstances.intValue()));
+              .replaceAll(MAX_REPLICAS, String.valueOf(maxAutoscaleInstances.intValue()))
+              .replaceAll(UTILIZATION, String.valueOf(targetCpuUtilizationPercentage.intValue()));
       if (KubernetesHelper.loadYaml(hpaYaml, HorizontalPodAutoscaler.class) == null) {
         log.error("HPA couldn't be parsed: {}", hpaYaml);
       }

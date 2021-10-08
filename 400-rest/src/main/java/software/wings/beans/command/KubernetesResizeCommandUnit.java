@@ -35,8 +35,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +43,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import me.snowdrop.istio.api.IstioResource;
-import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
-import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import org.mongodb.morphia.annotations.Transient;
 
 /**
@@ -178,39 +173,6 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (executedSomething) {
       executionLogCallback.saveExecutionLog(DASH_STRING + "\n");
     }
-  }
-
-  private boolean virtualServiceHttpRouteMatchesExisting(
-      IstioResource existingVirtualService, HasMetadata virtualService) {
-    if (existingVirtualService == null) {
-      return false;
-    }
-
-    HTTPRoute virtualServiceHttpRoute = (((VirtualService) virtualService).getSpec()).getHttp().get(0);
-    HTTPRoute existingVirtualServiceHttpRoute = (((VirtualService) existingVirtualService).getSpec()).getHttp().get(0);
-
-    if ((virtualServiceHttpRoute == null || existingVirtualServiceHttpRoute == null)
-        && virtualServiceHttpRoute != existingVirtualServiceHttpRoute) {
-      return false;
-    }
-
-    List<HTTPRouteDestination> sorted = new ArrayList<>(virtualServiceHttpRoute.getRoute());
-    List<HTTPRouteDestination> existingSorted = new ArrayList<>(existingVirtualServiceHttpRoute.getRoute());
-    Comparator<HTTPRouteDestination> comparator =
-        Comparator.comparing(a -> Integer.valueOf(a.getDestination().getSubset()));
-    sorted.sort(comparator);
-    existingSorted.sort(comparator);
-
-    for (int i = 0; i < sorted.size(); i++) {
-      HTTPRouteDestination dw1 = sorted.get(i);
-      HTTPRouteDestination dw2 = existingSorted.get(i);
-      if (!dw1.getDestination().getSubset().equals(dw2.getDestination().getSubset())
-          || !dw1.getWeight().equals(dw2.getWeight())) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   private KubernetesConfig getKubernetesConfig(ContextData contextData) {

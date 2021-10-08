@@ -50,6 +50,7 @@ public class ContainerServiceElement implements ContextElement, SweepingOutput {
   private String autoscalerYaml;
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
+  private int targetCpuUtilizationPercentage;
   private String customMetricYamlConfig;
   private boolean useIstioRouteRule;
   private List<String[]> activeServiceCounts;

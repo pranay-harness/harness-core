@@ -110,11 +110,16 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerSpecBuilder;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.fabric8.kubernetes.api.model.MetricSpec;
+import io.fabric8.kubernetes.api.model.MetricSpecBuilder;
+import io.fabric8.kubernetes.api.model.MetricTarget;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
+import io.fabric8.kubernetes.api.model.ResourceMetricSource;
+import io.fabric8.kubernetes.api.model.ResourceMetricSourceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
@@ -1099,10 +1104,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       horizontalPodAutoscaler =
           getCustomMetricHorizontalPodAutoscaler(name, kind, apiVersion, namespace, serviceLabels, setupParams);
     } else {
-      // removed TargetCpuUtilizationPercentage as replaced by metrics in api
       executionLogCallback.saveExecutionLog(
-          format("Setting autoscaler min instances %d, max instances %d", setupParams.getMinAutoscaleInstances(),
-              setupParams.getMaxAutoscaleInstances()),
+          format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
+              setupParams.getMinAutoscaleInstances(), setupParams.getMaxAutoscaleInstances(),
+              setupParams.getTargetCpuUtilizationPercentage()),
           LogLevel.INFO);
 
       horizontalPodAutoscaler =
@@ -1147,12 +1152,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  // removed TargetCpuUtilizationPercentage as replaced by metrics in api
   private HorizontalPodAutoscaler getBasicHorizontalPodAutoscaler(String name, String kind, String apiVersion,
       String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+    ResourceMetricSource resourceMetricSource =
+        new ResourceMetricSourceBuilder()
+            .withName("cpu")
+            .withTarget(new MetricTarget(setupParams.getTargetCpuUtilizationPercentage(), null, "Utilization", null))
+            .build();
+    MetricSpec metricSpec = new MetricSpecBuilder().withType("Resource").withResource(resourceMetricSource).build();
+
     HorizontalPodAutoscalerSpecBuilder spec = new HorizontalPodAutoscalerSpecBuilder()
                                                   .withMinReplicas(setupParams.getMinAutoscaleInstances())
                                                   .withMaxReplicas(setupParams.getMaxAutoscaleInstances())
+                                                  .withMetrics(metricSpec)
                                                   .withNewScaleTargetRef()
                                                   .withKind(kind)
                                                   .withName(name)
