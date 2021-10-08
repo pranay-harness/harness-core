@@ -539,7 +539,6 @@ public class CIExecutionPlanTestHelper {
 
   private ContainerDefinitionInfo getPluginStepContainer(Integer index) {
     Map<String, String> envVar = new HashMap<>();
-    envVar.put(PLUGIN_ENV_PREFIX + PLUGIN_ENV_VAR.toUpperCase(), PLUGIN_ENV_VAL);
     envVar.putAll(getEnvVariables(false));
 
     Map<String, String> volumeToMountPath = new HashMap<>();
@@ -569,7 +568,6 @@ public class CIExecutionPlanTestHelper {
 
   private ContainerDefinitionInfo getGitPluginStepContainer(Integer index) {
     Map<String, String> envVar = new HashMap<>();
-    envVar.put(GIT_PLUGIN_DEPTH_ENV, GIT_CLONE_MANUAL_DEPTH.toString());
     envVar.putAll(getEnvVariables(false));
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);

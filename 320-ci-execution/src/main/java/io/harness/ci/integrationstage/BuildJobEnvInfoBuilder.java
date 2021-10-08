@@ -8,7 +8,6 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParam
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
 import static io.harness.common.CIExecutionConstants.ADDON_VOLUME;
 import static io.harness.common.CIExecutionConstants.ADDON_VOL_MOUNT_PATH;
-import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS;
 import static io.harness.common.CIExecutionConstants.SHARED_VOLUME_PREFIX;
@@ -401,14 +400,6 @@ public class BuildJobEnvInfoBuilder {
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-    Map<String, String> settings =
-        resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
-    if (!isEmpty(settings)) {
-      for (Map.Entry<String, String> entry : settings.entrySet()) {
-        String key = PLUGIN_ENV_PREFIX + entry.getKey().toUpperCase();
-        envVarMap.put(key, entry.getValue());
-      }
-    }
     if (!isEmpty(pluginStepInfo.getEnvVariables())) {
       envVarMap.putAll(pluginStepInfo.getEnvVariables());
     }
