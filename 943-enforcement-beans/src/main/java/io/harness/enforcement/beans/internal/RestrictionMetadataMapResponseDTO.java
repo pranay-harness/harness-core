@@ -4,7 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.enforcement.beans.metadata.RestrictionMetadataDTO;
+import io.harness.enforcement.beans.metadata.FeatureRestrictionMetadataDTO;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,5 +22,5 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RestrictionMetadataMapResponseDTO {
-  private Map<FeatureRestrictionName, RestrictionMetadataDTO> metadataMap;
+  private Map<FeatureRestrictionName, FeatureRestrictionMetadataDTO> metadataMap;
 }

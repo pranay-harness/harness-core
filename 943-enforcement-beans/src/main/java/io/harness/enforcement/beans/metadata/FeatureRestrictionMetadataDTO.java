@@ -2,6 +2,7 @@ package io.harness.enforcement.beans.metadata;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -23,7 +24,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureRestrictionMetadataDTO {
   private FeatureRestrictionName name;
-  private String moduleType;
+  private ModuleType moduleType;
   private Edition edition;
   private Map<Edition, RestrictionMetadataDTO> restrictionMetadata;
 }
