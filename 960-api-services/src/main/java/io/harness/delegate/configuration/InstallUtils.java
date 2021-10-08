@@ -179,9 +179,9 @@ public class InstallUtils {
 
   public static String getKustomizePath(boolean useLatestVersion) {
     if (useLatestVersion) {
-      return Paths.get(kustomizeBaseDir + kustomizeVersionNew + "/kustomize").toAbsolutePath().normalize().toString();
+      return Paths.get(kustomizeBaseDir, kustomizeVersionNew, "/kustomize").toAbsolutePath().normalize().toString();
     } else {
-      return Paths.get(kustomizeBaseDir + kustomizeVersionOld + "/kustomize").toAbsolutePath().normalize().toString();
+      return Paths.get(kustomizeBaseDir, kustomizeVersionOld, "/kustomize").toAbsolutePath().normalize().toString();
     }
   }
   public static boolean installKubectl(DelegateConfiguration configuration) {
