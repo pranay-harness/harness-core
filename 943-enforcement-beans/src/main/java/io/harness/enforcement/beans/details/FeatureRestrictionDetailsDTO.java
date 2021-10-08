@@ -11,6 +11,7 @@ import io.harness.enforcement.constants.RestrictionType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(name = "FeatureRestrictionDetails",
+    description = "This is the view of a feature restriction details object defined in Harness")
 public class FeatureRestrictionDetailsDTO {
   private FeatureRestrictionName name;
   private String description;
