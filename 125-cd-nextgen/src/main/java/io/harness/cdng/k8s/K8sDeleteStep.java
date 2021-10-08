@@ -19,13 +19,13 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -100,7 +100,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
 
     InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
     String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
-    final String accountId = AmbianceHelper.getAccountId(ambiance);
+    final String accountId = AmbianceUtils.getAccountId(ambiance);
 
     K8sDeleteRequest request =
         K8sDeleteRequest.builder()
