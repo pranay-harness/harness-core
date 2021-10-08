@@ -73,6 +73,7 @@ public class InstallUtils {
   private static String kustomizeVersionOld = "v3.5.4";
   private static String kustomizeVersionNew = "v4.4.0";
   private static String kustomizePath = "kustomize";
+  private static String kustomizeBinaryName = "kustomize";
 
   private static final List<String> kustomizeVersions = Arrays.asList(kustomizeVersionOld, kustomizeVersionNew);
 
@@ -179,11 +180,18 @@ public class InstallUtils {
 
   public static String getKustomizePath(boolean useLatestVersion) {
     if (useLatestVersion) {
-      return Paths.get(kustomizeBaseDir, kustomizeVersionNew, "/kustomize").toAbsolutePath().normalize().toString();
+      return Paths.get(kustomizeBaseDir, kustomizeVersionNew, kustomizeBinaryName)
+          .toAbsolutePath()
+          .normalize()
+          .toString();
     } else {
-      return Paths.get(kustomizeBaseDir, kustomizeVersionOld, "/kustomize").toAbsolutePath().normalize().toString();
+      return Paths.get(kustomizeBaseDir, kustomizeVersionOld, kustomizeBinaryName)
+          .toAbsolutePath()
+          .normalize()
+          .toString();
     }
   }
+
   public static boolean installKubectl(DelegateConfiguration configuration) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKubectlPath())) {
