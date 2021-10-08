@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class DatadogCvConfigurationYamlHandler
-    extends CVConfigurationYamlHandler<DatadogCVConfigurationYaml, DatadogCVServiceConfiguration> {
+    extends MetricCVConfigurationYamlHandler<DatadogCVConfigurationYaml, DatadogCVServiceConfiguration> {
   @Inject private DatadogService datadogService;
   @Override
   public DatadogCVConfigurationYaml toYaml(DatadogCVServiceConfiguration bean, String appId) {

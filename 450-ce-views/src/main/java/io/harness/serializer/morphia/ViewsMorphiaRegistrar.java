@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.ccm.views.businessMapping.entities.BusinessMapping;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCustomField;
@@ -14,6 +15,7 @@ public class ViewsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CEView.class);
     set.add(ViewCustomField.class);
     set.add(CEReportSchedule.class);
+    set.add(BusinessMapping.class);
   }
 
   @Override

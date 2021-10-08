@@ -189,7 +189,7 @@ public class K8sPodInfoTasklet implements Tasklet {
     try {
       workloadRepository.savePodWorkload(accountId, podInfo);
     } catch (Exception ex) {
-      log.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podUid);
+      log.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podUid, ex);
     }
 
     final Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());

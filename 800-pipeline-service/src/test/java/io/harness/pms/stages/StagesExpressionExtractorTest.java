@@ -9,18 +9,84 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(PIPELINE)
 public class StagesExpressionExtractorTest extends CategoryTest {
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testReplaceExpressionsReferringToOtherStagesWithRuntimeInput() {
+    String pipelineYaml = getPipelineYaml();
+    String res1 = StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
+        pipelineYaml, Collections.singletonList("d1"));
+    assertThat(res1).isEqualTo(getPipelineYamlWithRuntimeInputs(Collections.singletonList("d1")));
+    String res2 = StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
+        pipelineYaml, Collections.singletonList("p_d1"));
+    assertThat(res2).isEqualTo(getPipelineYamlWithRuntimeInputs(Collections.singletonList("p_d1")));
+    String res3 = StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
+        pipelineYaml, Arrays.asList("d1", "a1"));
+    assertThat(res3).isEqualTo(pipelineYaml);
+    String res4 = StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
+        pipelineYaml, Collections.singletonList("a1"));
+    assertThat(res4).isEqualTo(pipelineYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetNonLocalExpressions() {
+    String pipelineYaml = getPipelineYaml();
+    Set<String> nonLocalExpressions1 =
+        StagesExpressionExtractor.getNonLocalExpressions(pipelineYaml, Arrays.asList("a1", "d1", "p_d1"));
+    assertThat(nonLocalExpressions1).hasSize(1);
+    assertThat(nonLocalExpressions1).contains("<+pipeline.stages.a2.name>");
+
+    Set<String> nonLocalExpressions2 =
+        StagesExpressionExtractor.getNonLocalExpressions(pipelineYaml, Arrays.asList("a2", "d1_again", "p_d2"));
+    assertThat(nonLocalExpressions2).hasSize(0);
+
+    Set<String> nonLocalExpressions3 =
+        StagesExpressionExtractor.getNonLocalExpressions(pipelineYaml, Collections.singletonList("d1"));
+    assertThat(nonLocalExpressions3).hasSize(1);
+    assertThat(nonLocalExpressions3).contains("<+stages.a1.name>");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetAllExpressionsInListOfStages() {
+    String pipelineYaml = getPipelineYaml();
+    Map<String, List<String>> d1AndPD1 =
+        StagesExpressionExtractor.getAllExpressionsInListOfStages(pipelineYaml, Arrays.asList("d1", "p_d1"));
+    assertThat(d1AndPD1).hasSize(2);
+    assertThat(d1AndPD1.containsKey("d1")).isTrue();
+    List<String> d1 = d1AndPD1.get("d1");
+    assertThat(d1).hasSize(1);
+    assertThat(d1.contains("<+stages.a1.name>")).isTrue();
+    assertThat(d1AndPD1.containsKey("p_d1")).isTrue();
+    List<String> pd1 = d1AndPD1.get("p_d1");
+    assertThat(pd1).hasSize(1);
+    assertThat(pd1.contains("<+pipeline.stages.a2.name>")).isTrue();
+
+    Map<String, List<String>> a1 =
+        StagesExpressionExtractor.getAllExpressionsInListOfStages(pipelineYaml, Collections.singletonList("a1"));
+    assertThat(a1).hasSize(1);
+    assertThat(a1.get("a1")).hasSize(0);
+  }
+
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
@@ -73,6 +139,60 @@ public class StagesExpressionExtractorTest extends CategoryTest {
     assertThat(pd2Expressions.get(1)).isEqualTo("<+input>");
   }
 
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testRemoveLocalExpressions() {
+    String s1 = "s1";
+    List<String> s1Expressions =
+        Arrays.asList("<+pipeline.stages.s1.name>", "<+stages.s10.description>", "<+stages.s2.description>",
+            "<+artifact.name>", "<+input>", "<+input>", "<+input>", "<+input>", "<+step.timeout>", "<+pipeline.name>");
+    String s2 = "s2";
+    List<String> s2Expressions = Arrays.asList("<+pipeline.stages.a1.name>", "<+stages.s1.description>",
+        "<+stages.s20.description>", "<+pipeline.variables.v1>", "<+pipeline.properties.ci.codebase.connectorRef>",
+        "<+step.timeout>", "<+pipeline.name>");
+    String s3 = "s3";
+    List<String> s3Expressions = Arrays.asList("<+pipeline.stages.s3.name>", "<+stage.name>");
+    String s4 = "s4";
+    List<String> s4Expressions = Collections.emptyList();
+    Map<String, List<String>> expressionsMap = new LinkedHashMap<>();
+    expressionsMap.put(s1, s1Expressions);
+    expressionsMap.put(s2, s2Expressions);
+    expressionsMap.put(s3, s3Expressions);
+    expressionsMap.put(s4, s4Expressions);
+    Set<String> expressionsToOtherStages = StagesExpressionExtractor.removeLocalExpressions(expressionsMap);
+    assertThat(expressionsToOtherStages).hasSize(3);
+    assertThat(expressionsToOtherStages)
+        .contains("<+stages.s10.description>", "<+pipeline.stages.a1.name>", "<+stages.s20.description>");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testIsLocalToStage() {
+    assertThat(StagesExpressionExtractor.isLocalToStage("<+pipeline.stages.s1.name>")).isFalse();
+    assertThat(StagesExpressionExtractor.isLocalToStage("<+stages.s1.description>")).isFalse();
+    assertThat(StagesExpressionExtractor.isLocalToStage("<+input>")).isTrue();
+    assertThat(StagesExpressionExtractor.isLocalToStage("<+step.name>")).isTrue();
+    assertThat(StagesExpressionExtractor.isLocalToStage("<+artifact.image>")).isTrue();
+    assertThatThrownBy(() -> StagesExpressionExtractor.isLocalToStage("staticValue"))
+        .hasMessage("staticValue is not a syntactically valid pipeline expression")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetStageIdentifierInExpression() {
+    assertThat(StagesExpressionExtractor.getStageIdentifierInExpression("<+pipeline.stages.s1.name>")).isEqualTo("s1");
+    assertThat(StagesExpressionExtractor.getStageIdentifierInExpression("<+stages.s1.name>")).isEqualTo("s1");
+    assertThat(StagesExpressionExtractor.getStageIdentifierInExpression("<+pipeline.stages.s_2.name>"))
+        .isEqualTo("s_2");
+    assertThatThrownBy(() -> StagesExpressionExtractor.getStageIdentifierInExpression("<+artifact.image>"))
+        .hasMessage("<+artifact.image> is not a pipeline level or stages level expression")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
   private String getPipelineYaml() {
     return "pipeline:\n"
         + "  stages:\n"
@@ -97,6 +217,42 @@ public class StagesExpressionExtractorTest extends CategoryTest {
         + "        name: p d1\n"
         + "        type: Deployment\n"
         + "        field: <+pipeline.stages.a2.name>\n"
+        + "    - stage:\n"
+        + "        identifier: p_d2\n"
+        + "        name: p d2\n"
+        + "        type: Deployment\n"
+        + "        field: <+input>\n"
+        + "  - stage:\n"
+        + "      identifier: d1_again\n"
+        + "      name: d1 again\n"
+        + "      type: Deployment\n"
+        + "      field: <+that.other.field>\n";
+  }
+
+  private String getPipelineYamlWithRuntimeInputs(List<String> stages) {
+    return "pipeline:\n"
+        + "  stages:\n"
+        + "  - stage:\n"
+        + "     identifier: a1\n"
+        + "     name: a1\n"
+        + "     type: Approval\n"
+        + "     field: notAnExpression\n"
+        + "  - stage:\n"
+        + "     identifier: a2\n"
+        + "     name: a2\n"
+        + "     type: Approval\n"
+        + "     field: <+stage.name>\n"
+        + "  - stage:\n"
+        + "      identifier: d1\n"
+        + "      name: d1\n"
+        + "      type: Deployment\n"
+        + "      field: " + (stages.contains("d1") ? "<+input>" : "<+stages.a1.name>") + "\n"
+        + "  - parallel:\n"
+        + "    - stage:\n"
+        + "        identifier: p_d1\n"
+        + "        name: p d1\n"
+        + "        type: Deployment\n"
+        + "        field: " + (stages.contains("p_d1") ? "<+input>" : "<+pipeline.stages.a2.name>") + "\n"
         + "    - stage:\n"
         + "        identifier: p_d2\n"
         + "        name: p d2\n"
