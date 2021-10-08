@@ -329,9 +329,6 @@ public class K8BuildSetupUtils {
       codebaseRuntimeVars.put(DRONE_SOURCE_BRANCH, codebaseSweeping.getSourceBranch());
     }
 
-    if (!isEmpty(codebaseSweeping.getSourceBranch())) {
-      codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getSourceBranch());
-    }
     if (!isEmpty(codebaseSweeping.getGitUserEmail())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_AUTHOR_EMAIL, codebaseSweeping.getGitUserEmail());
     }
