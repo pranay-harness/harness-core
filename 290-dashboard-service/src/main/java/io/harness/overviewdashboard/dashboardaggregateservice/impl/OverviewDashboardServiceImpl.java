@@ -207,7 +207,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         ServicesCount servicesCount = (ServicesCount) servicesCountOptional.get().getResponse();
         EnvCount envCount = (EnvCount) envCountOptional.get().getResponse();
         PipelinesCount pipelinesCount = (PipelinesCount) pipelinesCountOptional.get().getResponse();
-        Integer projectsNewCount = (Integer) projectsCountOptional.get().getResponse();
+        ActiveProjectsCountDTO projectsNewCount = (ActiveProjectsCountDTO) projectsCountOptional.get().getResponse();
         return ExecutionResponse.<CountOverview>builder()
             .response(CountOverview.builder()
                           .servicesCountDetail(getServicesCount(servicesCount))
@@ -347,9 +347,10 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         .build();
   }
 
-  private CountChangeDetails getProjectsCount(long totalCount, Integer newCount) {
+  private CountChangeDetails getProjectsCount(long totalCount, ActiveProjectsCountDTO newCount) {
     return CountChangeDetails.builder()
-        .countChangeAndCountChangeRateInfo(CountChangeAndCountChangeRateInfo.builder().countChange(newCount).build())
+        .countChangeAndCountChangeRateInfo(
+            CountChangeAndCountChangeRateInfo.builder().countChange(newCount.getCount()).build())
         .count(totalCount)
         .build();
   }
