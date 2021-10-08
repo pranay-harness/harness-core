@@ -1,11 +1,13 @@
 package io.harness.ci.serializer;
 
-import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveJsonNodeMapParameter;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.callback.DelegateCallbackToken;
@@ -17,14 +19,21 @@ import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.timeout.Timeout;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class PluginStepProtobufSerializer implements ProtobufStepSerializer<PluginStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
@@ -42,13 +51,13 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
     long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, pluginStepInfo.getDefaultTimeout());
     StepContext stepContext = StepContext.newBuilder().setExecutionTimeoutSecs(timeout).build();
 
-    Map<String, String> settings =
-        resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
+    Map<String, JsonNode> settings =
+        resolveJsonNodeMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
     Map<String, String> envVarMap = new HashMap<>();
     if (!isEmpty(settings)) {
-      for (Map.Entry<String, String> entry : settings.entrySet()) {
+      for (Map.Entry<String, JsonNode> entry : settings.entrySet()) {
         String key = PLUGIN_ENV_PREFIX + entry.getKey().toUpperCase();
-        envVarMap.put(key, entry.getValue());
+        envVarMap.put(key, convertJsonNodeToString(entry.getKey(), entry.getValue()));
       }
     }
 
@@ -72,5 +81,37 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
         .setPlugin(pluginStep)
         .setLogKey(logKey)
         .build();
+  }
+
+  private String convertJsonNodeToString(String key, JsonNode jsonNode) {
+    try {
+      if (jsonNode.isValueNode()) {
+        return jsonNode.asText("");
+      } else if (jsonNode.isArray() && isPrimitiveArray(jsonNode)) {
+        ArrayNode arrayNode = (ArrayNode) jsonNode;
+        List<String> strValues = new ArrayList<>();
+        for (JsonNode node : arrayNode) {
+          strValues.add(node.asText(""));
+        }
+
+        return String.join(",", strValues);
+      } else {
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        return ow.writeValueAsString(jsonNode);
+      }
+    } catch (Exception ex) {
+      throw new CIStageExecutionException(String.format("Invalid setting attribute %s value", key));
+    }
+  }
+
+  // Return whether array contains only value node or not.
+  private boolean isPrimitiveArray(JsonNode jsonNode) {
+    ArrayNode arrayNode = (ArrayNode) jsonNode;
+    for (JsonNode e : arrayNode) {
+      if (!e.isValueNode()) {
+        return false;
+      }
+    }
+    return true;
   }
 }
