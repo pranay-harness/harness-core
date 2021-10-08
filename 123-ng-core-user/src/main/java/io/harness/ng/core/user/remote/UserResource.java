@@ -11,6 +11,7 @@ import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
@@ -24,6 +25,7 @@ import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -163,6 +165,16 @@ public class UserResource {
   public ResponseDTO<List<ProjectDTO>> getUserAllProjectsInfo(
       @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
+  }
+
+  @GET
+  @Path("projects-count")
+  @ApiOperation(value = "get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
+  public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(@QueryParam("accountId") String accountId,
+      @QueryParam("userId") String userId, @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(
+        projectService.accessibleProjectsCount(userId, accountId, startInterval, endInterval));
   }
 
   @POST

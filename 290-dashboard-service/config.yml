@@ -7,7 +7,7 @@ xxxxxxxx
       port: 7101
 
 cdServiceClientConfig:
-  baseUrl: http://localhost:12001/
+  baseUrl: http://localhost:12001/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 

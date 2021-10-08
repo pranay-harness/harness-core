@@ -47,6 +47,7 @@ import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.beans.ProjectsPerOrganizationCount;
 import io.harness.ng.core.beans.ProjectsPerOrganizationCount.ProjectsPerOrganizationCountKeys;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
@@ -324,6 +325,48 @@ public class ProjectServiceImpl implements ProjectService {
     projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
     List<Project> projectsList = projectRepository.findAll(projectCriteria);
     return projectsList.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
+  }
+
+  @Override
+  public ActiveProjectsCountDTO accessibleProjectsCount(
+      String userId, String accountId, long startInterval, long endInterval) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .exists(true)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                            .exists(true);
+    Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
+    List<UserMembership> userMembershipList = userMembershipPage.getContent();
+    if (userMembershipList.isEmpty()) {
+      return ActiveProjectsCountDTO.builder().count(0).build();
+    }
+    Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
+    List<Criteria> criteriaList = new ArrayList<>();
+    for (UserMembership userMembership : userMembershipList) {
+      Scope scope = userMembership.getScope();
+      criteriaList.add(Criteria.where(ProjectKeys.orgIdentifier)
+                           .is(scope.getOrgIdentifier())
+                           .and(ProjectKeys.identifier)
+                           .is(scope.getProjectIdentifier()));
+    }
+    Criteria accessibleProjectCriteria =
+        projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    Criteria deletedFalseCriteria = Criteria.where(ProjectKeys.createdAt)
+                                        .gt(startInterval)
+                                        .lt(endInterval)
+                                        .andOperator(Criteria.where(ProjectKeys.deleted).is(false));
+    Criteria deletedTrueCriteria =
+        Criteria.where(ProjectKeys.deleted)
+            .is(true)
+            .andOperator(Criteria.where(ProjectKeys.lastModifiedAt).gt(startInterval).lt(endInterval));
+    return ActiveProjectsCountDTO.builder()
+        .count(projectRepository.findAll(new Criteria().andOperator(accessibleProjectCriteria, deletedFalseCriteria))
+                   .size()
+            - projectRepository.findAll(accessibleProjectCriteria.andOperator(deletedTrueCriteria)).size())
+        .build();
   }
 
   @Override
