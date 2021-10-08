@@ -5,6 +5,7 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_CI_INDIRECT_LOG_UPLOAD_FF;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
@@ -44,6 +46,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTestBase;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -86,6 +89,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock private SecretManagerClientService secretManagerClientService;
   @Mock private SecretNGManagerClient secretNGManagerClient;
+  @Mock private CIFeatureFlagService featureFlagService;
   @Mock private ConnectorUtils connectorUtils;
   @Mock CILogServiceUtils logServiceUtils;
   @Mock TIServiceUtils tiServiceUtils;
@@ -99,6 +103,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
     on(k8BuildSetupUtils).set("secretUtils", secretUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
     on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
+    on(k8BuildSetupUtils).set("featureFlagService", featureFlagService);
     on(k8BuildSetupUtils).set("tiServiceUtils", tiServiceUtils);
     on(k8BuildSetupUtils).set("pipelineRbacHelper", pipelineRbacHelper);
   }
@@ -127,6 +132,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
     when(tiServiceUtils.getTiServiceConfig()).thenReturn(tiServiceConfig);
     when(tiServiceUtils.getTIServiceToken(eq(accountID))).thenReturn(tiToken);
     doNothing().when(pipelineRbacHelper).checkRuntimePermissions(any(), any(), any());
+
+    when(featureFlagService.isEnabled(FeatureName.CI_INDIRECT_LOG_UPLOAD, eq(accountID))).thenReturn(true);
 
     Call<ResponseDTO<SecretResponseWrapper>> getSecretCall = mock(Call.class);
     ResponseDTO<SecretResponseWrapper> responseDTO = ResponseDTO.newResponse(
@@ -193,6 +200,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
     stepEnvVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
     stepEnvVars.put(HARNESS_BUILD_ID_VARIABLE, String.valueOf(buildID));
     stepEnvVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
+    stepEnvVars.put(HARNESS_CI_INDIRECT_LOG_UPLOAD_FF, "true");
     stepEnvVars.putAll(ciExecutionPlanTestHelper.getEnvVariables(true));
 
     Map<String, String> map = new HashMap<>();
