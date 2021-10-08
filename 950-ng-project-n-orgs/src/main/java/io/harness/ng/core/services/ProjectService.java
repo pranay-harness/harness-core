@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
@@ -28,11 +29,11 @@ public interface ProjectService {
 
   List<ProjectDTO> listProjectsForUser(String userId, String accountId);
 
-  Integer accessibleProjectsCount(String userId, String accountId, long startInterval, long endInterval);
+  ActiveProjectsCountDTO accessibleProjectsCount(String userId, String accountId, long startInterval, long endInterval);
 
-    /**
-     * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
-     */
+  /**
+   * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
+   */
   Page<Project> listPermittedProjects(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
 
   /**

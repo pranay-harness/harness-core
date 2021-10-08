@@ -47,6 +47,7 @@ import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.beans.ProjectsPerOrganizationCount;
 import io.harness.ng.core.beans.ProjectsPerOrganizationCount.ProjectsPerOrganizationCountKeys;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
@@ -327,7 +328,8 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public Integer accessibleProjectsCount(String userId, String accountId, long startInterval, long endInterval) {
+  public ActiveProjectsCountDTO accessibleProjectsCount(
+      String userId, String accountId, long startInterval, long endInterval) {
     Criteria criteria = Criteria.where(UserMembershipKeys.userId)
                             .is(userId)
                             .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
@@ -339,7 +341,7 @@ public class ProjectServiceImpl implements ProjectService {
     Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
     List<UserMembership> userMembershipList = userMembershipPage.getContent();
     if (userMembershipList.isEmpty()) {
-      return 0;
+      return ActiveProjectsCountDTO.builder().count(0).build();
     }
     Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
     List<Criteria> criteriaList = new ArrayList<>();
@@ -348,9 +350,7 @@ public class ProjectServiceImpl implements ProjectService {
       criteriaList.add(Criteria.where(ProjectKeys.orgIdentifier)
                            .is(scope.getOrgIdentifier())
                            .and(ProjectKeys.identifier)
-                           .is(scope.getProjectIdentifier())
-                           .and(ProjectKeys.deleted)
-                           .is(false));
+                           .is(scope.getProjectIdentifier()));
     }
     Criteria accessibleProjectCriteria =
         projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
@@ -362,8 +362,11 @@ public class ProjectServiceImpl implements ProjectService {
         Criteria.where(ProjectKeys.deleted)
             .is(true)
             .andOperator(Criteria.where(ProjectKeys.lastModifiedAt).gt(startInterval).lt(endInterval));
-    return projectRepository.findAll(accessibleProjectCriteria.andOperator(deletedFalseCriteria)).size()
-        - projectRepository.findAll(accessibleProjectCriteria.andOperator(deletedTrueCriteria)).size();
+    return ActiveProjectsCountDTO.builder()
+        .count(projectRepository.findAll(new Criteria().andOperator(accessibleProjectCriteria, deletedFalseCriteria))
+                   .size()
+            - projectRepository.findAll(accessibleProjectCriteria.andOperator(deletedTrueCriteria)).size())
+        .build();
   }
 
   @Override

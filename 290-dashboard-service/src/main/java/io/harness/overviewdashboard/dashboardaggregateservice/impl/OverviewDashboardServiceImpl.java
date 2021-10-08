@@ -45,6 +45,7 @@ import io.harness.overviewdashboard.rbac.service.DashboardRBACService;
 import io.harness.overviewdashboard.remote.ParallelRestCallExecutor;
 import io.harness.pipeline.dashboards.PMSLandingDashboardResourceClient;
 import io.harness.pms.dashboards.PipelinesCount;
+import io.harness.userng.remote.UserNGClient;
 
 import com.google.inject.Inject;
 import dashboards.CDLandingDashboardResourceClient;
@@ -64,6 +65,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   @Inject CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
   @Inject PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
   @Inject ParallelRestCallExecutor parallelRestCallExecutor;
+  @Inject private UserNGClient userNGClient;
 
   @Inject
   public OverviewDashboardServiceImpl(DashboardRBACService dashboardRBACService) {
@@ -180,8 +182,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
       String accountIdentifier, String userId, long startInterval, long endInterval) {
     List<ProjectDTO> listOfAccessibleProject = dashboardRBACService.listAccessibleProject(accountIdentifier, userId);
     List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
-    List<RestCallRequest> restCallRequestList =
-        getRestCallRequestListForCountOverview(accountIdentifier, startInterval, endInterval, orgProjectIdentifierList);
+    List<RestCallRequest> restCallRequestList = getRestCallRequestListForCountOverview(
+        accountIdentifier, userId, startInterval, endInterval, orgProjectIdentifierList);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
 
     Optional<RestCallResponse> servicesCountOptional =
@@ -190,10 +192,12 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_ENV_COUNT);
     Optional<RestCallResponse> pipelinesCountOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_PIPELINES_COUNT);
+    Optional<RestCallResponse> projectsCountOptional =
+        getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_PROJECTS_COUNT);
 
     if (servicesCountOptional.isPresent() && envCountOptional.isPresent() && pipelinesCountOptional.isPresent()) {
       if (servicesCountOptional.get().isCallFailed() || envCountOptional.get().isCallFailed()
-          || pipelinesCountOptional.get().isCallFailed()) {
+          || pipelinesCountOptional.get().isCallFailed() || projectsCountOptional.get().isCallFailed()) {
         return ExecutionResponse.<CountOverview>builder()
             .executionStatus(ExecutionStatus.FAILURE)
             .executionMessage(FAILURE_MESSAGE)
@@ -202,11 +206,13 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         ServicesCount servicesCount = (ServicesCount) servicesCountOptional.get().getResponse();
         EnvCount envCount = (EnvCount) envCountOptional.get().getResponse();
         PipelinesCount pipelinesCount = (PipelinesCount) pipelinesCountOptional.get().getResponse();
+        Integer projectsNewCount = (Integer) projectsCountOptional.get().getResponse();
         return ExecutionResponse.<CountOverview>builder()
             .response(CountOverview.builder()
                           .servicesCountDetail(getServicesCount(servicesCount))
                           .envCountDetail(getEnvCount(envCount))
                           .pipelinesCountDetail(getPipelinesCount(pipelinesCount))
+                          .projectsCountDetail(getProjectsCount(listOfAccessibleProject.size(), projectsNewCount))
                           .build())
             .executionStatus(ExecutionStatus.SUCCESS)
             .executionMessage(SUCCESS_MESSAGE)
@@ -340,6 +346,13 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         .build();
   }
 
+  private CountChangeDetails getProjectsCount(long totalCount, Integer newCount) {
+    return CountChangeDetails.builder()
+        .countChangeAndCountChangeRateInfo(CountChangeAndCountChangeRateInfo.builder().countChange(newCount).build())
+        .count(totalCount)
+        .build();
+  }
+
   private List<OrgProjectIdentifier> getOrgProjectIdentifier(List<ProjectDTO> listOfAccessibleProject) {
     return emptyIfNull(listOfAccessibleProject)
         .stream()
@@ -423,8 +436,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     return restCallRequestList;
   }
 
-  private List<RestCallRequest> getRestCallRequestListForCountOverview(String accountIdentifier, long startInterval,
-      long endInterval, List<OrgProjectIdentifier> orgProjectIdentifierList) {
+  private List<RestCallRequest> getRestCallRequestListForCountOverview(String accountIdentifier, String userId,
+      long startInterval, long endInterval, List<OrgProjectIdentifier> orgProjectIdentifierList) {
     List<RestCallRequest> restCallRequestList = new ArrayList<>();
     restCallRequestList.add(RestCallRequest.<ServicesCount>builder()
                                 .request(cdLandingDashboardResourceClient.getServicesCount(
@@ -441,6 +454,11 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                     accountIdentifier, orgProjectIdentifierList, startInterval, endInterval))
                                 .requestType(OverviewDashboardRequestType.GET_PIPELINES_COUNT)
                                 .build());
+    restCallRequestList.add(
+        RestCallRequest.<Integer>builder()
+            .request(userNGClient.getAccessibleProjectsCount(accountIdentifier, userId, startInterval, endInterval))
+            .requestType(OverviewDashboardRequestType.GET_PROJECTS_COUNT)
+            .build());
     return restCallRequestList;
   }
 

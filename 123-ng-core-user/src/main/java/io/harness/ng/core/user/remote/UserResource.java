@@ -25,6 +25,7 @@ import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -74,7 +75,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.atmosphere.config.service.Get;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -167,12 +167,14 @@ public class UserResource {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
   }
 
-  @Get
+  @GET
   @Path("projects-count")
   @ApiOperation(value = "get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
-  public ResponseDTO<Integer> getAccessibleProjectsCount(@QueryParam("accountId") String accountId, @QueryParam("userId") String userId, @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-                                                          @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval){
-    return ResponseDTO.newResponse(projectService.accessibleProjectsCount(userId,accountId,startInterval,endInterval));
+  public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(@QueryParam("accountId") String accountId,
+      @QueryParam("userId") String userId, @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(
+        projectService.accessibleProjectsCount(userId, accountId, startInterval, endInterval));
   }
 
   @POST

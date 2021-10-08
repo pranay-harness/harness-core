@@ -13,8 +13,14 @@ import retrofit2.http.Query;
 @OwnedBy(HarnessTeam.PL)
 public interface UserNGClient {
   String ALL_PROJECTS_ACCESSIBLE_TO_USER_API = "user/all-projects";
+  String COUNT_OF_ACCESSIBLE_PROJECTS_API = "user/projects-count";
 
   @GET(ALL_PROJECTS_ACCESSIBLE_TO_USER_API)
   Call<ResponseDTO<List<ProjectDTO>>> getUserAllProjectsInfo(
       @Query(value = "accountId") String accountId, @Query(value = "userId") String userId);
+
+  @GET(COUNT_OF_ACCESSIBLE_PROJECTS_API)
+  Call<ResponseDTO<Integer>> getAccessibleProjectsCount(@Query(value = "accountId") String accountId,
+      @Query(value = "userId") String userId, @Query(value = "startTime") long startInterval,
+      @Query(value = "endTime") long endInterval);
 }
