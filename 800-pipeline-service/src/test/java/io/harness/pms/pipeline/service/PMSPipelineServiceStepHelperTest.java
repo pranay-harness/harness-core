@@ -18,6 +18,7 @@ import io.harness.pms.pipeline.StepCategory;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,11 +33,13 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
   @InjectMocks private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Mock private CommonStepInfo commonStepInfo;
   @Mock private PmsFeatureFlagHelper pmsFeatureFlagHelper;
+  @Mock private PipelineEnforcementService pipelineEnforcementService;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    pmsPipelineServiceStepHelper = new PMSPipelineServiceStepHelper(pmsFeatureFlagHelper, commonStepInfo, null);
+    pmsPipelineServiceStepHelper =
+        new PMSPipelineServiceStepHelper(pmsFeatureFlagHelper, commonStepInfo, pipelineEnforcementService);
   }
 
   @Test
@@ -120,7 +123,7 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
                             .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                             .build();
     StepCategory stepCategory = StepCategory.builder().name("cv").build();
-    pmsPipelineServiceStepHelper.addToTopLevel(stepCategory, stepInfo, null);
+    pmsPipelineServiceStepHelper.addToTopLevel(stepCategory, stepInfo, new HashMap<>());
     assertThat(stepCategory.toString())
         .isEqualTo(
             "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])");

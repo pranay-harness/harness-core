@@ -9,6 +9,8 @@ import static software.wings.beans.VariableType.ARTIFACT;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.KryoSerializer;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class MultiArtifactWorkflowExecutionServiceHelper {
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private ArtifactService artifactService;

@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.SneakyThrows;
 
 @OwnedBy(PIPELINE)
 @TargetModule(HarnessModule._882_PMS_SDK_CORE)
@@ -65,6 +66,7 @@ public abstract class GenericStagePlanCreator extends ChildrenPlanCreator<StageE
     return Collections.singletonMap(YAMLFieldNameConstants.STAGE, stageTypes);
   }
 
+  @SneakyThrows
   @Override
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, StageElementConfig stageElementConfig, List<String> childrenNodeIds) {

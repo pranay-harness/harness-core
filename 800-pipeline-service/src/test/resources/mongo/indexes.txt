@@ -90,7 +90,9 @@ nodeExecutions {"name": "planExecutionId_oldRetry_idx", "background": true} {"am
 nodeExecutions {"name": "planExecutionId_parentId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1, "status": 1}
 nodeExecutions {"name": "planExecutionId_planNodeId_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.uuid": 1}
 nodeExecutions {"name": "planExecutionId_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.identifier": 1}
+nodeExecutions {"name": "planExecutionId_stageFqn_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.stageFqn": 1}
 nodeExecutions {"name": "planExecutionId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "status": 1}
+nodeExecutions {"name": "planExecutionId_stepCategory_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.stepType.stepCategory": 1, "planNode.identifier": 1}
 nodeExecutions {"name": "planExecutionId_step_category_idx", "background": true} {"ambiance.planExecutionId": 1, "node.stepType.stepCategory": 1}
 nodeExecutions {"name": "previous_id_idx", "background": true} {"previousId": 1}
 nodeExecutions {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}

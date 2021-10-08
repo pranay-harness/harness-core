@@ -122,15 +122,20 @@ import software.wings.beans.PhaseStepType;
 import software.wings.common.ProvisionerConstants;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.impl.yaml.handler.workflow.APMVerificationStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.AppDynamicsStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.BambooStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.BarrierStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.CloudFormationProvisionStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.CommandStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.DynatraceStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.GcbStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.JenkinsStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.JiraStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.NewRelicStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.PrometheusStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.ResourceConstraintStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.ServiceNowStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.ShellScriptProvisionStepYamlBuilder;
@@ -608,20 +613,21 @@ public enum StepType {
   // APM
   APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK),
+      AppDynamicsStepYamlBuilder.class),
   NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), NewRelicStepYamlBuilder.class),
   INSTANA(InstanaState.class, WorkflowServiceHelper.INSTANA, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   DYNA_TRACE(DynatraceState.class, DYNATRACE, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), DynatraceStepYamlBuilder.class),
   PROMETHEUS(PrometheusState.class, WorkflowServiceHelper.PROMETHEUS, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), PrometheusStepYamlBuilder.class),
   DATA_DOG(DatadogState.class, DATADOG_METRICS, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
@@ -634,7 +640,7 @@ public enum StepType {
 
   APM_VERIFICATION(APMVerificationState.class, CUSTOM_METRICS, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), APMVerificationStepYamlBuilder.class),
 
   // Logs
   DATA_DOG_LOG(DatadogLogState.class, DATADOG_LOG, asList(LOG),

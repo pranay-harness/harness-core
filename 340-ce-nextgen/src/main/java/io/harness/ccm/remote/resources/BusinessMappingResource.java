@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.businessMapping.entities.BusinessMapping;
-import io.harness.ccm.businessMapping.service.intf.BusinessMappingService;
+import io.harness.ccm.views.businessMapping.entities.BusinessMapping;
+import io.harness.ccm.views.businessMapping.service.intf.BusinessMappingService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
