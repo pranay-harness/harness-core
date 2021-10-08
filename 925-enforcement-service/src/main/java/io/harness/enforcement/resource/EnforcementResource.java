@@ -21,6 +21,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -33,10 +37,23 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
 
-@Api("/enforcement")
-@Path("/enforcement")
+@Api("enforcement")
+@Path("enforcement")
 @Produces({"application/json"})
 @Consumes({"application/json"})
+@Tag(name = "Enforcement", description = "This contains APIs related to enforcement as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -51,9 +68,15 @@ public class EnforcementResource {
 
   @POST
   @ApiOperation(value = "Gets Feature Restriction Detail", nickname = "getFeatureRestrictionDetail")
+  @Operation(operationId = "getFeatureRestrictionDetail", summary = "Gets Feature Restriction Detail",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a feature restriction details DTO")
+      })
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
-  public ResponseDTO<FeatureRestrictionDetailsDTO> getFeatureRestrictionDetail(
-      @NotNull @Valid @Body FeatureRestrictionDetailRequestDTO requestDTO,
+  public ResponseDTO<FeatureRestrictionDetailsDTO>
+  getFeatureRestrictionDetail(@NotNull @Valid @Body FeatureRestrictionDetailRequestDTO requestDTO,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureDetail(requestDTO.getName(), accountIdentifier));
   }
@@ -62,6 +85,13 @@ public class EnforcementResource {
   @Path("/enabled")
   @ApiOperation(value = "Gets List of Enabled Feature Restriction Detail for The Account",
       nickname = "getEnabledFeatureRestrictionDetailByAccountId")
+  @Operation(operationId = "getEnabledFeatureRestrictionDetailByAccountId",
+      summary = "Gets List of Enabled Feature Restriction Detail for The Account",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a list of freature restriction details DTO")
+      })
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
   public ResponseDTO<List<FeatureRestrictionDetailsDTO>>
   getEnabledFeatureRestrictionForAccount(
@@ -72,7 +102,14 @@ public class EnforcementResource {
   @GET
   @Path("/metadata")
   @ApiOperation(value = "Gets All Feature Restriction Metadata", nickname = "getAllFeatureRestrictionMetadata")
-  public ResponseDTO<List<FeatureRestrictionMetadataDTO>> getAllFeatureRestrictionMetadata() {
+  @Operation(operationId = "getAllFeatureRestrictionMetadata", summary = "Gets All Feature Restriction Metadata",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a list of feature restriction metadata dto")
+      })
+  public ResponseDTO<List<FeatureRestrictionMetadataDTO>>
+  getAllFeatureRestrictionMetadata() {
     return ResponseDTO.newResponse(featureService.getAllFeatureRestrictionMetadata());
   }
 
