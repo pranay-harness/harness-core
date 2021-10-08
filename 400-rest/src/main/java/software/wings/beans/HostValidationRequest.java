@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -7,6 +10,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * Created by anubhaw on 2/23/17.
  */
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class HostValidationRequest {
   @NotEmpty private String appId;
   @NotEmpty private String envId;
