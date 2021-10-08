@@ -2,7 +2,6 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
-import static io.harness.beans.FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
@@ -29,7 +28,9 @@ import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -139,6 +140,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.ExpressionUtils;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -199,6 +201,7 @@ public class K8sStepHelper {
   @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
   @Inject private K8sEntityHelper k8sEntityHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private AccountClient accountClient;
 
   String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -1285,6 +1288,7 @@ public class K8sStepHelper {
   }
 
   public boolean isUseLatestKustomizeVersion(String accountId) {
-    return featureFlagService.isEnabled(VARIABLE_SUPPORT_FOR_KUSTOMIZE, accountId);
+    return RestClientUtils.getResponse(
+        accountClient.isFeatureFlagEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE.name(), accountId));
   }
 }
