@@ -14,6 +14,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -22,10 +26,23 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 @OwnedBy(HarnessTeam.GTM)
-@Api("/feedback")
-@Path("/feedback")
+@Api("feedback")
+@Path("feedback")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@Tag(name = "Feedback", description = "This contains APIs related to feedback as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -42,8 +59,14 @@ public class FeedbackResource {
 
   @POST
   @ApiOperation(value = "Saves Feedback", nickname = "saveFeedback")
-  public ResponseDTO<Boolean> saveFeedback(
-      @QueryParam("accountIdentifier") String accountIdentifier, FeedbackFormDTO dto) {
+  @Operation(operationId = "saveFeedback", summary = "Saves Feedback",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a boolean")
+      })
+  public ResponseDTO<Boolean>
+  saveFeedback(@QueryParam("accountIdentifier") String accountIdentifier, FeedbackFormDTO dto) {
     return ResponseDTO.newResponse(feedbackService.saveFeedback(dto));
   }
 }

@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,6 +37,7 @@ import lombok.experimental.SuperBuilder;
           @JsonSubTypes.Type(value = CVModuleLicenseDTO.class, name = "CV"),
           @JsonSubTypes.Type(value = CFModuleLicenseDTO.class, name = "CF"),
     })
+@Schema(name = "ModuleLicense", description = "This is the view of a Module License defined in Harness")
 public abstract class ModuleLicenseDTO {
   String id;
   String accountIdentifier;
