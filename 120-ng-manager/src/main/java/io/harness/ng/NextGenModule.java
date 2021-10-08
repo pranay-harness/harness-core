@@ -377,7 +377,7 @@ public class NextGenModule extends AbstractModule {
       }
     });
 
-    install(DelegateServiceDriverModule.getInstance(false));
+    install(DelegateServiceDriverModule.getInstance(false, false));
     install(TimeModule.getInstance());
     bind(NextGenConfiguration.class).toInstance(appConfig);
 

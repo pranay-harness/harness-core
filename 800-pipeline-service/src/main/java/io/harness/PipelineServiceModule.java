@@ -195,7 +195,7 @@ public class PipelineServiceModule extends AbstractModule {
     });
     install(PipelineServiceGrpcModule.getInstance());
     install(new PipelinePersistenceModule());
-    install(DelegateServiceDriverModule.getInstance(true));
+    install(DelegateServiceDriverModule.getInstance(true, false));
     install(OrchestrationModule.getInstance(
         OrchestrationModuleConfig.builder()
             .serviceName("PIPELINE")
