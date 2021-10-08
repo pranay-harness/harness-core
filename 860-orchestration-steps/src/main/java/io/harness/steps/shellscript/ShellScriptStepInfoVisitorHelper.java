@@ -1,9 +1,8 @@
-package io.harness.cdng.visitor.helpers.cdstepinfo;
+package io.harness.steps.shellscript;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.walktree.visitor.validation.ConfigValidator;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 

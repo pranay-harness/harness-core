@@ -109,6 +109,8 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.steps.shellscript.ShellScriptHelperService;
+import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.threading.ThreadPool;
@@ -272,6 +274,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
     bind(ApprovalNotificationHandler.class).to(ApprovalNotificationHandlerImpl.class);
     bind(PMSOpaService.class).to(PMSOpaServiceImpl.class);
+    bind(ShellScriptHelperService.class).to(ShellScriptHelperServiceImpl.class);
     bind(ApprovalYamlSchemaService.class).to(ApprovalYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(FeatureFlagYamlService.class).to(FeatureFlagYamlServiceImpl.class).in(Singleton.class);
     bind(PipelineEnforcementService.class).to(PipelineEnforcementServiceImpl.class).in(Singleton.class);

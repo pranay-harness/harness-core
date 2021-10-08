@@ -35,6 +35,7 @@ import io.harness.pms.sdk.core.variables.VariableCreator;
 import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
 import io.harness.rule.Owner;
+import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -108,10 +109,11 @@ public class PipelineServiceInternalInfoProviderTest extends CategoryTest {
             .stream()
             .map(e -> e.getClass())
             .collect(Collectors.toSet());
-    assertThat(variableCreatorClasses).hasSize(3);
+    assertThat(variableCreatorClasses).hasSize(4);
     assertThat(variableCreatorClasses.contains(PipelineVariableCreator.class)).isTrue();
     assertThat(variableCreatorClasses.contains(HTTPStepVariableCreator.class)).isTrue();
     assertThat(variableCreatorClasses.contains(StepGroupVariableCreator.class)).isTrue();
+    assertThat(variableCreatorClasses.contains(ShellScriptStepVariableCreator.class)).isTrue();
   }
 
   @Test
