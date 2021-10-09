@@ -12,6 +12,7 @@ java_library(
         "//999-annotations:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:io_swagger_core_v3_swagger_annotations",
     ],
 )
 
