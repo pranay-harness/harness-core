@@ -54,6 +54,7 @@ import software.wings.service.impl.yaml.handler.deploymentspec.container.Storage
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.DefaultSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.FunctionSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.environment.EnvironmentYamlHandler;
+import software.wings.service.impl.yaml.handler.eventConfig.EventConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.ApplicationFilterYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.CustomAppFilterYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.CustomEnvFilterYamlHandler;
@@ -183,6 +184,7 @@ public class YamlHandlerFactory {
   @Inject private GovernanceConfigYamlHandler governanceConfigYamlHandler;
   @Inject private CustomAppFilterYamlHandler customAppFilterYamlHandler;
   @Inject private CustomEnvFilterYamlHandler customEnvFilterYamlHandler;
+  @Inject private EventConfigYamlHandler eventConfigYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -407,6 +409,10 @@ public class YamlHandlerFactory {
         // insert map here
       case ENV_FILTER:
         yamlHandler = environmentFilterYamlHandlerMap.get(subType);
+        break;
+
+      case EVENT_RULE:
+        yamlHandler = eventConfigYamlHandler;
         break;
 
       default:

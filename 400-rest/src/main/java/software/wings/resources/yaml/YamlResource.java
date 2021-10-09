@@ -26,6 +26,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.CgEventConfig;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
@@ -323,6 +324,15 @@ public class YamlResource {
   }
 
   @GET
+  @Path("/cgeventconfigs/{eventConfigId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getCgEventConfig(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @PathParam("eventConfigId") String eventConfigId) {
+    return yamlResourceService.getEventConfig(appId, eventConfigId);
+  }
+
+  @GET
   @Path("/application-manifests/{applicationManifestId}")
   @Timed
   @ExceptionMetered
@@ -382,6 +392,15 @@ public class YamlResource {
   public RestResponse<Pipeline> updatePipeline(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("pipelineId") String pipelineId) {
     return yamlService.update(yamlPayload, accountId, pipelineId);
+  }
+
+  @PUT
+  @Path("/cgeventconfigs/{eventConfigId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<CgEventConfig> updateCgEventConfig(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("eventConfigId") String eventConfigId) {
+    return yamlService.update(yamlPayload, accountId, eventConfigId);
   }
 
   @PUT
