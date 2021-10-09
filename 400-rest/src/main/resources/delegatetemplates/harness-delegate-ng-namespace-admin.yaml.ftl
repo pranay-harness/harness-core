@@ -194,6 +194,8 @@ spec:
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
+        - name: VERSION_CHECK_DISABLED
+          value: "${versionCheckDisabled}"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
