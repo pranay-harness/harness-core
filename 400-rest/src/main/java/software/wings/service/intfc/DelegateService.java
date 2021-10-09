@@ -172,4 +172,6 @@ public interface DelegateService extends OwnedByAccount {
   boolean sampleDelegateExists(String accountId);
 
   List<Delegate> getNonDeletedDelegatesForAccount(String accountId);
+
+  boolean checkDelegateConnected(String accountId, String delegateId);
 }

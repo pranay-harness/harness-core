@@ -63,6 +63,4 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
       List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
 
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
-
-  boolean checkDelegateConnected(String accountId, String delegateId);
 }
