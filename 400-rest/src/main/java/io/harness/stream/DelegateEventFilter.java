@@ -34,7 +34,7 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
     if (message instanceof DelegateTaskBroadcast) {
       DelegateTaskBroadcast broadcast = (DelegateTaskBroadcast) message;
 
-      if (!StringUtils.equals(version, broadcast.getVersion())) {
+      if (version != null && !StringUtils.equals(version, broadcast.getVersion())) {
         return abort(message);
       }
 
