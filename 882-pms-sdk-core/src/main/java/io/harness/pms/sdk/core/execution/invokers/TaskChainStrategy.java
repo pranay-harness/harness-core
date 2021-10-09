@@ -36,7 +36,6 @@ import org.apache.commons.collections4.CollectionUtils;
 public class TaskChainStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-  @Inject private KryoSerializer kryoSerializer;
   @Inject private StrategyHelper strategyHelper;
 
   @Override

@@ -16,7 +16,7 @@ public class NodeEventHelper {
 
     resolvedInputs.forEach(in -> {
       StepTransput transput =
-          RecastOrchestrationUtils.fromDocumentJson(in.getTransput().toStringUtf8(), StepTransput.class);
+          RecastOrchestrationUtils.fromJson(in.getTransput().toStringUtf8(), StepTransput.class);
       inputPackageBuilder.input(io.harness.pms.sdk.core.steps.io.ResolvedRefInput.builder()
                                     .refObject(in.getRefObject())
                                     .transput(transput)

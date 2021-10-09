@@ -13,7 +13,6 @@ import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.engine.pms.data.PmsTransputHelper;
-import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.expression.EngineExpressionEvaluator;
@@ -76,8 +75,8 @@ public class NodeStartHelper {
     NodeStartEvent nodeStartEvent =
         NodeStartEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
-    addAllResolvedInput(
-        transputHelper.resolveInputs(nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
+            .addAllResolvedInput(transputHelper.resolveInputs(
+                nodeExecution.getAmbiance(), ((PlanNode) nodeExecution.getNode()).getRefObjects()))
             .setFacilitatorPassThoroughData(passThroughData)
             .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
                 RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))))

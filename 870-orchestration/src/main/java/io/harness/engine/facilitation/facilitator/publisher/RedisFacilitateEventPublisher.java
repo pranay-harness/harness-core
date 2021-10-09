@@ -29,8 +29,8 @@ public class RedisFacilitateEventPublisher implements FacilitateEventPublisher {
                                  .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
                                  .setStepType(planNode.getStepType())
                                  .setNotifyId(generateUuid())
-        .addAllResolvedInput(transputHelper.resolveInputs(
-            nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
+                                 .addAllResolvedInput(transputHelper.resolveInputs(
+                                     nodeExecution.getAmbiance(), planNode.getRefObjects()))
                                  .addAllFacilitatorObtainments(planNode.getFacilitatorObtainments())
                                  .build();
 

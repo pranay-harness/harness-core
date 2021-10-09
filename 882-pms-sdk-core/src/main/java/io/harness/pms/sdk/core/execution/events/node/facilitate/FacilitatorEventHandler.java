@@ -10,8 +10,6 @@ import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.events.base.PmsBaseEventHandler;
-import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -57,8 +55,8 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
         Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
         StepParameters stepParameters =
             RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
-        currFacilitatorResponse =
-            facilitator.facilitate(ambiance, stepParameters, obtainment.getParameters().toByteArray(), buildStepInputPackage(event.getResolvedInputList()));
+        currFacilitatorResponse = facilitator.facilitate(ambiance, stepParameters,
+            obtainment.getParameters().toByteArray(), buildStepInputPackage(event.getResolvedInputList()));
         if (currFacilitatorResponse != null) {
           break;
         }
