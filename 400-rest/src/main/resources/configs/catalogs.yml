@@ -176,6 +176,8 @@ REPAIR_ACTION_CODE:
       value: ROLLBACK_WORKFLOW
     - name: Rollback Phase Execution
       value: ROLLBACK_PHASE
+    - name: Rollback Provisioner after Phases
+      value: ROLLBACK_PROVISIONER_AFTER_PHASES
     - name: Ignore
       value: IGNORE
     - name: Retry
@@ -192,6 +194,8 @@ ACTION_AFTER_RETRY:
       value: ROLLBACK_WORKFLOW
     - name: Rollback Phase
       value: ROLLBACK_PHASE
+    - name: Rollback Provisioner after Phases
+      value: ROLLBACK_PROVISIONER_AFTER_PHASES
     - name: Ignore
       value: IGNORE
     - name: Retry

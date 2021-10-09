@@ -17,18 +17,17 @@ import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheModule;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
-import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
-import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.jobs.ActivityStatusJob;
-import io.harness.cvng.activity.jobs.K8ActivityCollectionHandler;
-import io.harness.cvng.beans.activity.ActivitySourceType;
+import io.harness.cvng.activity.jobs.KubernetesChangeSourceCollectionHandler;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.cdng.jobs.CVNGStepTaskHandler;
 import io.harness.cvng.cdng.services.impl.CVNGFilterCreationResponseMerger;
 import io.harness.cvng.cdng.services.impl.CVNGModuleInfoProvider;
@@ -42,9 +41,11 @@ import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
+import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
-import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
-import io.harness.cvng.core.jobs.DataCollectionTaskRecoverNextTaskHandler;
+import io.harness.cvng.core.jobs.DataCollectionTaskCreateNextTaskHandler;
+import io.harness.cvng.core.jobs.DeploymentChangeEventConsumer;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
@@ -103,6 +104,7 @@ import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsu
 import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -117,6 +119,8 @@ import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
+import io.harness.token.TokenClientModule;
+import io.harness.token.remote.TokenClient;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.ProgressUpdateService;
@@ -139,6 +143,7 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -219,6 +224,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
   }
   private void createConsumerThreadsToListenToEvents(Injector injector) {
     new Thread(injector.getInstance(EntityCRUDStreamConsumer.class)).start();
+    new Thread(injector.getInstance(DeploymentChangeEventConsumer.class)).start();
   }
 
   @Override
@@ -328,6 +334,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
+    modules.add(new CacheModule(configuration.getCacheConfig()));
+    modules.add(new TokenClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(configuration.getNgManagerServiceConfig().getNgManagerUrl()).build(),
+        configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
                                                     .requireSchemaInit(true)
                                                     .requireSnippetInit(false)
@@ -352,7 +362,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationTaskOrchestrationIterator(injector);
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
-    registerRecoverNextTaskHandlerIterator(injector);
+    registerCreateNextDataCollectionTaskIterator(injector);
     injector.getInstance(CVNGStepTaskHandler.class).registerIterator();
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     registerExceptionMappers(environment.jersey());
@@ -474,8 +484,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   private void registerVerificationTaskOrchestrationIterator(Injector injector) {
     // TODO: Reevaluate the thread count here. 20 might be enough now but as we scale, we need to reconsider.
-    ScheduledThreadPoolExecutor workflowVerificationExecutor =
-        new ScheduledThreadPoolExecutor(20, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
+    int poolSize = 20;
+    ScheduledThreadPoolExecutor workflowVerificationExecutor = new ScheduledThreadPoolExecutor(
+        poolSize, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
     Handler<AnalysisOrchestrator> handler = injector.getInstance(AnalysisOrchestrationJob.class);
 
     PersistenceIterator analysisOrchestrationIterator =
@@ -486,7 +497,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofSeconds(30))
             .executorService(workflowVerificationExecutor)
-            .semaphore(new Semaphore(3))
+            .semaphore(new Semaphore(poolSize - 1))
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query
@@ -527,27 +538,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void registerDataCollectionTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("cv-config-data-collection-iterator").build());
-    CVConfigDataCollectionHandler cvConfigDataCollectionHandler =
-        injector.getInstance(CVConfigDataCollectionHandler.class);
-    // TODO: setup alert if this goes above acceptable threshold.
-    // TODO: We need to set alert for these intervals and find a way to implement transaction for this
-    PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
-            .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(CVConfig.class)
-            .fieldName(CVConfigKeys.dataCollectionTaskIteration)
-            .targetInterval(ofMinutes(5))
-            .acceptableNoAlertDelay(ofMinutes(1))
-            .executorService(dataCollectionExecutor)
-            .semaphore(new Semaphore(5))
-            .handler(cvConfigDataCollectionHandler)
-            .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(CVConfigKeys.firstTaskQueued).doesNotExist())
-            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
-            .redistribute(true)
-            .build();
-    injector.injectMembers(dataCollectionIterator);
-    dataCollectionExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
 
     MonitoringSourcePerpetualTaskHandler monitoringSourcePerpetualTaskHandler =
         injector.getInstance(MonitoringSourcePerpetualTaskHandler.class);
@@ -570,34 +560,37 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.injectMembers(monitoringSourceIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(() -> monitoringSourceIterator.process(), 0, 30, TimeUnit.SECONDS);
 
-    K8ActivityCollectionHandler k8ActivityCollectionHandler = injector.getInstance(K8ActivityCollectionHandler.class);
-    PersistenceIterator activityCollectionIterator =
-        MongoPersistenceIterator.<KubernetesActivitySource, MorphiaFilterExpander<KubernetesActivitySource>>builder()
+    KubernetesChangeSourceCollectionHandler k8ChangeSourceCollectionHandler =
+        injector.getInstance(KubernetesChangeSourceCollectionHandler.class);
+    PersistenceIterator changeSourceCollectionIterator =
+        MongoPersistenceIterator.<KubernetesChangeSource, MorphiaFilterExpander<KubernetesChangeSource>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(KubernetesActivitySource.class)
-            .fieldName(ActivitySourceKeys.dataCollectionTaskIteration)
+            .clazz(KubernetesChangeSource.class)
+            .fieldName(ChangeSourceKeys.dataCollectionTaskIteration)
             .targetInterval(ofMinutes(5))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(5))
-            .handler(k8ActivityCollectionHandler)
+            .handler(k8ChangeSourceCollectionHandler)
             .schedulingType(REGULAR)
             .filterExpander(query
-                -> query.filter(ActivitySourceKeys.type, ActivitySourceType.KUBERNETES)
-                       .criteria(ActivitySourceKeys.dataCollectionTaskId)
+                -> query.filter(ChangeSourceKeys.type, ChangeSourceType.KUBERNETES)
+                       .filter(ChangeSourceKeys.dataCollectionRequired, true)
+                       .criteria(ChangeSourceKeys.dataCollectionTaskId)
                        .doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
-    injector.injectMembers(activityCollectionIterator);
-    dataCollectionExecutor.scheduleWithFixedDelay(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+    injector.injectMembers(changeSourceCollectionIterator);
+    dataCollectionExecutor.scheduleWithFixedDelay(
+        () -> changeSourceCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
-  private void registerRecoverNextTaskHandlerIterator(Injector injector) {
+  private void registerCreateNextDataCollectionTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
-        3, new ThreadFactoryBuilder().setNameFormat("recover-next-task-iterator").build());
-    DataCollectionTaskRecoverNextTaskHandler dataCollectionTaskRecoverNextTaskHandler =
-        injector.getInstance(DataCollectionTaskRecoverNextTaskHandler.class);
+        3, new ThreadFactoryBuilder().setNameFormat("create-next-task-iterator").build());
+    DataCollectionTaskCreateNextTaskHandler dataCollectionTaskCreateNextTaskHandler =
+        injector.getInstance(DataCollectionTaskCreateNextTaskHandler.class);
     PersistenceIterator dataCollectionTaskRecoverHandlerIterator =
         MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
@@ -607,15 +600,15 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(3))
-            .handler(dataCollectionTaskRecoverNextTaskHandler)
+            .handler(dataCollectionTaskCreateNextTaskHandler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(CVConfigKeys.firstTaskQueued).equal(true))
+            .filterExpander(query -> query.filter(CVConfigKeys.enabled, true))
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionTaskRecoverHandlerIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(
-        () -> dataCollectionTaskRecoverHandlerIterator.process(), 0, 2, TimeUnit.MINUTES);
+        () -> dataCollectionTaskRecoverHandlerIterator.process(), 0, 1, TimeUnit.MINUTES);
   }
 
   private void registerVerificationJobInstanceDataCollectionTaskIterator(Injector injector) {
@@ -683,7 +676,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
         IDENTITY_SERVICE.getServiceId(), configuration.getManagerAuthConfig().getJwtIdentityServiceSecret());
     serviceToSecretMapping.put(
         DEFAULT.getServiceId(), configuration.getNgManagerServiceConfig().getManagerServiceSecret());
-    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
     environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
   }
 
@@ -736,6 +730,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
   }
 
   private void registerResources(Environment environment, Injector injector) {

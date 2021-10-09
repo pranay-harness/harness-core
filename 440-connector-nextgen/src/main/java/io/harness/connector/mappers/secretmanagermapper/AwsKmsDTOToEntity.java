@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecA
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecAssumeSTSDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
 
 @OwnedBy(PL)
@@ -31,14 +32,10 @@ public class AwsKmsDTOToEntity implements ConnectorDTOToEntityMapper<AwsKmsConne
       case ASSUME_STS_ROLE:
         builder = AwsKmsMappingHelper.buildSTSConfig((AwsKmsCredentialSpecAssumeSTSDTO) credential.getConfig());
         break;
-
       default:
         throw new InvalidRequestException("Invalid Credential type.");
     }
-
-    return builder.kmsArn(connectorDTO.getKmsArn())
-        .region(connectorDTO.getRegion())
-        .isDefault(connectorDTO.isDefault())
-        .build();
+    final String kmsArn = SecretRefHelper.getSecretConfigString(connectorDTO.getKmsArn());
+    return builder.kmsArn(kmsArn).region(connectorDTO.getRegion()).isDefault(connectorDTO.isDefault()).build();
   }
 }

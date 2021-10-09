@@ -147,4 +147,29 @@ enum DataFetcherEnum {
   tagConnection
   tagUsageConnection
   verificationResultConnection
+  artifactCleanup
+  delegateApproval
+  deleteDelegate
+  delegateList
+  addDelegateScope
+  attachScopeToDelegate
+  createEventsConfig
+  updateEventsConfig
+  deleteEventsConfig
+  eventsConfig
+  eventsConfigConnection
+  eventsConfigByName
+  verificationStats
+  approvalDetails
+  approveOrRejectApprovals
+  createDeploymentFreezeWindow
+  updateDeploymentFreezeWindow
+  deleteDeploymentFreezeWindow
+  deploymentFreezeWindow
+  deploymentFreezeWindowConnection
+  toggleDeploymentFreezeWindow
+  templateList
+  createApiKey
+  updateApiKey
+  deleteApiKey
 }

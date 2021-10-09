@@ -1,45 +1,30 @@
-load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:tools/bazel/harness.bzl", "java_library")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//970-grpc:module",
-        "//980-commons:module",
-        "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_google_inject_guice",
-        "@maven//:com_google_protobuf_protobuf_java",
-        "@maven//:io_grpc_grpc_context",
-        "@maven//:io_grpc_grpc_core",
-        "@maven//:io_grpc_grpc_netty",
-        "@maven//:io_grpc_grpc_netty_shaded",
-        "@maven//:io_grpc_grpc_protobuf",
-        "@maven//:io_grpc_grpc_services",
-        "@maven//:io_grpc_grpc_stub",
-        "@maven//:joda_time_joda_time",
-        "@maven//:net_openhft_chronicle_queue",
-        "@maven//:net_openhft_chronicle_wire",
-        "@maven//:org_awaitility_awaitility",
-        "@maven//:org_projectlombok_lombok",
-        "@maven//:org_slf4j_slf4j_api",
-    ],
-)
-
-java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     resource_jars = [
         "//960-expression-service/src/main/proto/io/harness/expression/service:960_expression_service_java_proto",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
         "//:lombok",
         "//960-expression-service/src/main/proto/io/harness/expression/service:960_expression_service_java_proto",
         "//970-grpc:module",
+        "//980-commons:module",
+        "//999-annotations:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:commons_io_commons_io",
+        "@maven//:io_grpc_grpc_api",
+        "@maven//:io_grpc_grpc_stub",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 
@@ -52,14 +37,20 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
         "module",
         "//:lombok",
+        "//970-grpc:module",
+        "//980-commons:module",
         "//990-commons-test:module",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_inject_guice",
+        "@maven//:io_grpc_grpc_api",
+        "@maven//:io_grpc_grpc_core",
         "@maven//:io_grpc_grpc_testing",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 

@@ -1,5 +1,7 @@
 inputSet:
   identifier: thisInputSetIsWrong
+  orgIdentifier: orgId
+  projectIdentifier: projectId
   pipeline:
     identifier: "Test_Pipline11"
     variables:

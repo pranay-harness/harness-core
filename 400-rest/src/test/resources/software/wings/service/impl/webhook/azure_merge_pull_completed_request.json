@@ -1,0 +1,136 @@
+{
+  "subscriptionId": "904f0472-f0cb-46fa-b146-7b2f4e9f3a89",
+  "notificationId": 13,
+  "id": "f6740d56-0524-4aac-acf4-1502eab7612e",
+  "eventType": "git.pullrequest.merged",
+  "publisherId": "tfs",
+  "message": {
+    "text": "Merge attempted  for pull request 8 (Updated Index.yaml) in azuregitsync\r\nhttps://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/",
+    "html": "Merge attempted  for <a href=\"https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/pullrequest/8\">pull request 8</a> (Updated Index.yaml) in <a href=\"https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/\">azuregitsync</a>",
+    "markdown": "Merge attempted  for [pull request 8](https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/pullrequest/8) (Updated Index.yaml) in [azuregitsync](https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/)"
+  },
+  "detailedMessage": {
+    "text": "Merge attempted  for pull request 8 (Updated Index.yaml) in azuregitsync\r\nhttps://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/\r\nUpdated Index.yaml\r\n",
+    "html": "Merge attempted  for <a href=\"https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/pullrequest/8\">pull request 8</a> (Updated Index.yaml) in <a href=\"https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/\">azuregitsync</a><p>Updated Index.yaml</p>",
+    "markdown": "Merge attempted  for [pull request 8](https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/pullrequest/8) (Updated Index.yaml) in [azuregitsync](https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/)\r\nUpdated Index.yaml\r\n"
+  },
+  "resource": {
+    "repository": {
+      "id": "07cf2eb0-7236-4b3e-810c-4bb5b9b27eaa",
+      "name": "azuregitsync",
+      "url": "https://dev.azure.com/harnessuser/f3837034-daf6-4ecd-a4f2-ec52a105927d/_apis/git/repositories/07cf2eb0-7236-4b3e-810c-4bb5b9b27eaa",
+      "project": {
+        "id": "f3837034-daf6-4ecd-a4f2-ec52a105927d",
+        "name": "azuregitsync",
+        "url": "https://dev.azure.com/harnessuser/_apis/projects/f3837034-daf6-4ecd-a4f2-ec52a105927d",
+        "state": "wellFormed",
+        "revision": 21,
+        "visibility": "private",
+        "lastUpdateTime": "2021-06-22T11:11:37.43Z"
+      },
+      "size": 721,
+      "remoteUrl": "https://harnessuser@dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync",
+      "sshUrl": "git@ssh.dev.azure.com:v3/harnessuser/azuregitsync/azuregitsync",
+      "webUrl": "https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync",
+      "isDisabled": false
+    },
+    "pullRequestId": 8,
+    "codeReviewId": 8,
+    "status": "completed",
+    "createdBy": {
+      "displayName": "harnessuser@gocasin.com",
+      "url": "https://spsprodsin1.vssps.visualstudio.com/A55cfa1cf-37ed-46cf-ad5f-d47998e0ce44/_apis/Identities/7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "_links": {
+        "avatar": {
+          "href": "https://dev.azure.com/harnessuser/_apis/GraphProfile/MemberAvatars/msa.N2E3NjdmNzctOWRjNy03NTVjLTg3NzktNWYwZmQwOWU0ZGEy"
+        }
+      },
+      "id": "7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "uniqueName": "harnessuser@gocasin.com",
+      "imageUrl": "https://dev.azure.com/harnessuser/_api/_common/identityImage?id=7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "descriptor": "msa.N2E3NjdmNzctOWRjNy03NTVjLTg3NzktNWYwZmQwOWU0ZGEy"
+    },
+    "creationDate": "2021-06-23T13:56:52.970227Z",
+    "closedDate": "2021-06-23T14:04:00.0236982Z",
+    "title": "Updated Index.yaml",
+    "description": "Updated Index.yaml",
+    "sourceRefName": "refs/heads/pr-2",
+    "targetRefName": "refs/heads/main",
+    "mergeStatus": "succeeded",
+    "isDraft": false,
+    "mergeId": "4b4f9432-84a4-4ce9-89bc-d206105bff36",
+    "lastMergeSourceCommit": {
+      "commitId": "a276dab99c457026135b41f7112e5629f26ed447",
+      "url": "https://dev.azure.com/harnessuser/f3837034-daf6-4ecd-a4f2-ec52a105927d/_apis/git/repositories/07cf2eb0-7236-4b3e-810c-4bb5b9b27eaa/commits/a276dab99c457026135b41f7112e5629f26ed447"
+    },
+    "lastMergeTargetCommit": {
+      "commitId": "5cfefc08444acf167649eca23f50475abe910c57",
+      "url": "https://dev.azure.com/harnessuser/f3837034-daf6-4ecd-a4f2-ec52a105927d/_apis/git/repositories/07cf2eb0-7236-4b3e-810c-4bb5b9b27eaa/commits/5cfefc08444acf167649eca23f50475abe910c57"
+    },
+    "lastMergeCommit": {
+      "commitId": "232e903258c9d2890f3585750c8155a35a1414fd",
+      "author": {
+        "name": "harnessuser@gocasin.com",
+        "email": "harnessuser@gocasin.com",
+        "date": "2021-06-23T14:03:59Z"
+      },
+      "committer": {
+        "name": "harnessuser@gocasin.com",
+        "email": "harnessuser@gocasin.com",
+        "date": "2021-06-23T14:03:59Z"
+      },
+      "comment": "Merged PR 8: Updated Index.yaml",
+      "commentTruncated": true,
+      "url": "https://dev.azure.com/harnessuser/f3837034-daf6-4ecd-a4f2-ec52a105927d/_apis/git/repositories/07cf2eb0-7236-4b3e-810c-4bb5b9b27eaa/commits/232e903258c9d2890f3585750c8155a35a1414fd"
+    },
+    "reviewers": [],
+    "url": "https://dev.azure.com/harnessuser/f3837034-daf6-4ecd-a4f2-ec52a105927d/_apis/git/repositories/07cf2eb0-7236-4b3e-810c-4bb5b9b27eaa/pullRequests/8",
+    "_links": {
+      "web": {
+        "href": "https://dev.azure.com/harnessuser/azuregitsync/_git/azuregitsync/pullrequest/8"
+      },
+      "statuses": {
+        "href": "https://dev.azure.com/harnessuser/f3837034-daf6-4ecd-a4f2-ec52a105927d/_apis/git/repositories/07cf2eb0-7236-4b3e-810c-4bb5b9b27eaa/pullRequests/8/statuses"
+      }
+    },
+    "completionOptions": {
+      "mergeCommitMessage": "Merged PR 8: Updated Index.yaml\n\nUpdated Index.yaml",
+      "deleteSourceBranch": true,
+      "mergeStrategy": "noFastForward",
+      "transitionWorkItems": true,
+      "autoCompleteIgnoreConfigIds": []
+    },
+    "supportsIterations": true,
+    "completionQueueTime": "2021-06-23T14:03:59.096436Z",
+    "closedBy": {
+      "displayName": "harnessuser@gocasin.com",
+      "url": "https://spsprodsin1.vssps.visualstudio.com/A55cfa1cf-37ed-46cf-ad5f-d47998e0ce44/_apis/Identities/7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "_links": {
+        "avatar": {
+          "href": "https://dev.azure.com/harnessuser/_apis/GraphProfile/MemberAvatars/msa.N2E3NjdmNzctOWRjNy03NTVjLTg3NzktNWYwZmQwOWU0ZGEy"
+        }
+      },
+      "id": "7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "uniqueName": "harnessuser@gocasin.com",
+      "imageUrl": "https://dev.azure.com/harnessuser/_api/_common/identityImage?id=7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "descriptor": "msa.N2E3NjdmNzctOWRjNy03NTVjLTg3NzktNWYwZmQwOWU0ZGEy"
+    },
+    "artifactId": "vstfs:///Git/PullRequestId/f3837034-daf6-4ecd-a4f2-ec52a105927d%2f07cf2eb0-7236-4b3e-810c-4bb5b9b27eaa%2f8"
+  },
+  "resourceVersion": "1.0",
+  "resourceContainers": {
+    "collection": {
+      "id": "879ba525-a1b9-4e9c-af4e-6e84e2110070",
+      "baseUrl": "https://dev.azure.com/harnessuser/"
+    },
+    "account": {
+      "id": "55cfa1cf-37ed-46cf-ad5f-d47998e0ce44",
+      "baseUrl": "https://dev.azure.com/harnessuser/"
+    },
+    "project": {
+      "id": "f3837034-daf6-4ecd-a4f2-ec52a105927d",
+      "baseUrl": "https://dev.azure.com/harnessuser/"
+    }
+  },
+  "createdDate": "2021-06-23T14:04:06.5459115Z"
+}

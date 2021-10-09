@@ -1,5 +1,10 @@
 package software.wings.helpers.ext.k8s.request;
 
+import static io.harness.annotations.dev.HarnessModule._950_DELEGATE_TASKS_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
@@ -20,6 +25,8 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
+@TargetModule(_950_DELEGATE_TASKS_BEANS)
 public class K8sClusterConfig implements ExecutionCapabilityDemander {
   private SettingValue cloudProvider;
   private List<EncryptedDataDetail> cloudProviderEncryptionDetails;

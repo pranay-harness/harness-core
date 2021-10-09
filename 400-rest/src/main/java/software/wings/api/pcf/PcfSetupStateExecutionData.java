@@ -3,7 +3,9 @@ package software.wings.api.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.pcf.CfCommandRequest;
@@ -17,6 +19,8 @@ import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.sm.StateExecutionData;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -31,6 +35,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class PcfSetupStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String accountId;
@@ -50,6 +55,8 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   private boolean useTempRoutes;
   private TaskType taskType;
   private Map<K8sValuesLocation, ApplicationManifest> appManifestMap;
+  private Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
+  private String zippedManifestFileId;
   private GitFetchFilesFromMultipleRepoResult fetchFilesResult;
   private boolean enforceSslValidation;
   private boolean useAppAutoscalar;
@@ -65,6 +72,8 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   private boolean useArtifactProcessingScript;
   private String artifactProcessingScript;
   private List<String> tags;
+  private String cfAppNamePrefix;
+  private boolean isNonVersioning;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

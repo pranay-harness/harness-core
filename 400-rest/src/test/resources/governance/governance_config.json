@@ -38,6 +38,7 @@
         }
       ],
       "timeRange": {
+        "durationBased": false,
         "from": 1609372800000,
         "to": 1609459200000,
         "timeZone": "Africa/Addis_Ababa"

@@ -1,5 +1,6 @@
 package software.wings.sm.states.azure.appservices;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -14,6 +15,7 @@ import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetu
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
@@ -73,6 +75,7 @@ import org.jetbrains.annotations.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
+@OwnedBy(CDP)
 public abstract class AbstractAzureAppServiceState extends State {
   @Inject protected DelegateService delegateService;
   @Inject protected AzureVMSSStateHelper azureVMSSStateHelper;
@@ -376,6 +379,7 @@ public abstract class AbstractAzureAppServiceState extends State {
   }
 
   @Override
+  @SchemaIgnore
   public boolean isSelectionLogsTrackingForTasksEnabled() {
     return true;
   }

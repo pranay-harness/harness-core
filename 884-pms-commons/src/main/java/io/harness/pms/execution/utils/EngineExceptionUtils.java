@@ -100,7 +100,8 @@ public class EngineExceptionUtils {
     }
   }
 
-  private static FailureType mapToOrchestrationFailureType(io.harness.exception.FailureType hFailureType) {
+  @VisibleForTesting
+  static FailureType mapToOrchestrationFailureType(io.harness.exception.FailureType hFailureType) {
     switch (hFailureType) {
       case DELEGATE_PROVISIONING:
         return FailureType.DELEGATE_PROVISIONING_FAILURE;

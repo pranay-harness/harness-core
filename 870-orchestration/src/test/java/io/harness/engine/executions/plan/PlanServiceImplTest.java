@@ -8,7 +8,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 
@@ -25,7 +27,8 @@ public class PlanServiceImplTest extends OrchestrationTestBase {
   private static final String DUMMY_NODE_2_ID = generateUuid();
   private static final String DUMMY_NODE_3_ID = generateUuid();
 
-  private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
+  private static final StepType DUMMY_STEP_TYPE =
+      StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build();
 
   @Test
   @Owner(developers = PRASHANT)
@@ -57,7 +60,7 @@ public class PlanServiceImplTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestFetchNode() {
     Plan plan = buildAnsSavePlan();
-    PlanNodeProto fetchNode = planService.fetchNode(plan.getUuid(), DUMMY_NODE_1_ID);
+    PlanNode fetchNode = planService.fetchNode(plan.getUuid(), DUMMY_NODE_1_ID);
     assertThat(fetchNode.getUuid()).isNotNull();
     assertThat(fetchNode.getUuid()).isEqualTo(DUMMY_NODE_1_ID);
     assertThat(fetchNode.getName()).isEqualTo("Dummy Node 1");

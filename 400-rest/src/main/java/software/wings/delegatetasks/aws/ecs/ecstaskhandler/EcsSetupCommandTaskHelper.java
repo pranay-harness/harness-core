@@ -674,6 +674,8 @@ public class EcsSetupCommandTaskHelper {
       createServiceRequest.setPlacementStrategy(advancedServiceConfig.getPlacementStrategy());
       createServiceRequest.setPlacementConstraints(advancedServiceConfig.getPlacementConstraints());
       createServiceRequest.setHealthCheckGracePeriodSeconds(advancedServiceConfig.getHealthCheckGracePeriodSeconds());
+      createServiceRequest.setEnableExecuteCommand(advancedServiceConfig.getEnableExecuteCommand());
+
       if (isNotEmpty(advancedServiceConfig.getServiceRegistries())) {
         serviceRegistries.addAll(advancedServiceConfig.getServiceRegistries());
       }

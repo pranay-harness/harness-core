@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
@@ -40,20 +40,19 @@ import org.mongodb.morphia.annotations.Transient;
  * The Base class is used to extend all the bean classes that requires persistence. The base class
  * includes common fields such as uuid, createdBy, create timestamp, updatedBy and update timestamp.
  * These fields are common for the beans that are persisted as documents in the mongo DB.
- *
- * @author Rishi
  */
+
+// Do not use base class for your collection class. Instead use subset of the interfaces from the persistence layer:
+// PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware
+// To implement these interfaces simply define the respective field
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @FieldNameConstants(innerTypeName = "BaseKeys")
-@Deprecated
 @OwnedBy(PL)
-@TargetModule(_871_CG_BEANS)
-// Do not use base class for your collection class. Instead use subset of the interfaces from the persistence layer:
-// PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware
-// To implement these interfaces simply define the respective field
+@TargetModule(_957_CG_BEANS)
+@Deprecated
 public class Base implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                              UpdatedByAware, ApplicationAccess {
   @Deprecated public static final String ID_KEY2 = "_id";

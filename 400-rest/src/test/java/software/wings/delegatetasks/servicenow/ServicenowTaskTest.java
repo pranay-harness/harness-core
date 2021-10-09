@@ -14,6 +14,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -57,7 +58,7 @@ import retrofit2.Response;
 @PrepareForTest({Response.class, JsonNode.class})
 @OwnedBy(HarnessTeam.CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
-public class ServicenowTaskTest {
+public class ServicenowTaskTest extends CategoryTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String TABLE_NAME = "TABLE_NAME";
   private static final String ISSUE_ID = "ISSUE_ID";

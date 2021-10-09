@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -43,6 +45,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @ToString(exclude = {"password", "token"})
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class JenkinsConfig extends SettingValue
     implements EncryptableSetting, ArtifactSourceable, TaskParameters, ExecutionCapabilityDemander {
   public static final String USERNAME_DEFAULT_TEXT = "UserName/Password";

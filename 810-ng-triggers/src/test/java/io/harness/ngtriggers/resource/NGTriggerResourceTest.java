@@ -32,7 +32,7 @@ import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.rule.Owner;
-import io.harness.yaml.utils.YamlPipelineUtils;
+import io.harness.utils.YamlPipelineUtils;
 
 import com.google.common.io.Resources;
 import java.io.IOException;
@@ -166,10 +166,20 @@ public class NGTriggerResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() throws Exception {
     doReturn(ngTriggerEntity).when(ngTriggerService).update(any());
+    doReturn(Optional.of(ngTriggerEntity))
+        .when(ngTriggerService)
+        .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, false);
     TriggerDetails triggerDetails = TriggerDetails.builder().ngTriggerEntity(ngTriggerEntity).build();
     doReturn(triggerDetails)
         .when(ngTriggerElementMapper)
         .toTriggerDetails(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, ngTriggerYaml);
+    doReturn(triggerDetails)
+        .when(ngTriggerElementMapper)
+        .mergeTriggerEntity(triggerDetails.getNgTriggerEntity(), ngTriggerYaml);
+    doReturn(triggerDetails)
+        .when(ngTriggerService)
+        .fetchTriggerEntity(
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, ngTriggerYaml);
     when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
 
     NGTriggerResponseDTO responseDTO =

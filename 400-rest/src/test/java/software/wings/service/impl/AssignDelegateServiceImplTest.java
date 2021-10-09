@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.EnvironmentType.PROD;
+import static io.harness.beans.FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateInstanceStatus.ENABLED;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -51,7 +52,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
@@ -1436,6 +1436,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         .thenReturn(asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate,
             delegateInScalingGroup));
 
+    // Test with FF NG_CG_TASK_ASSIGNMENT_ISOLATION disabled
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
 
     List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, batch);
@@ -1451,6 +1452,16 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
     verify(delegateSelectionLogsService)
         .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+
+    // Test with FF NG_CG_TASK_ASSIGNMENT_ISOLATION enabled
+    activeDelegate1.setNg(true);
+    when(featureFlagService.isEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(true);
+    batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, batch);
+    assertThat(activeDelegates).isNotNull();
+    assertThat(activeDelegates.size()).isEqualTo(1);
+    assertThat(activeDelegates).containsExactly(activeDelegate2Id);
   }
 
   @Test
@@ -1957,11 +1968,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateCache.get(accountId, delegateId, false)).thenReturn(delegate);
 
     // Test FF disabled
-    when(featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(true);
+    when(featureFlagService.isNotEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(true);
     canAssignCgNgAssert(delegateTask, batch, delegate, true, null, true);
 
     // Test FF disabled
-    when(featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(false);
+    when(featureFlagService.isNotEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(false);
 
     // Test delegate cg and task cg
     canAssignCgNgAssert(delegateTask, batch, delegate, false, null, true);

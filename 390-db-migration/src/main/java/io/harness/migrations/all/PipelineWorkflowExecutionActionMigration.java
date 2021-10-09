@@ -9,7 +9,6 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLO
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

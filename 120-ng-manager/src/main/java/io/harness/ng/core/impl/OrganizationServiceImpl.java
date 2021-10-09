@@ -2,8 +2,9 @@ package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
-import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_NAME;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.enforcement.constants.FeatureRestrictionName.MULTIPLE_ORGANIZATIONS;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
@@ -14,13 +15,17 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -33,13 +38,14 @@ import io.harness.ng.core.events.OrganizationCreateEvent;
 import io.harness.ng.core.events.OrganizationDeleteEvent;
 import io.harness.ng.core.events.OrganizationRestoreEvent;
 import io.harness.ng.core.events.OrganizationUpdateEvent;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.remote.OrganizationMapper;
+import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.core.spring.OrganizationRepository;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextBuilder;
@@ -54,14 +60,13 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -74,31 +79,31 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
   private static final String ORG_ADMIN_ROLE = "_organization_admin";
-  private static final String RESOURCE_GROUP_DESCRIPTION =
-      "All the resources in this organization are included in this resource group.";
   private final OrganizationRepository organizationRepository;
   private final OutboxService outboxService;
   private final TransactionTemplate transactionTemplate;
   private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
   private final AccessControlClient accessControlClient;
-  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
+  private final ScopeAccessHelper scopeAccessHelper;
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
       @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient, NgUserService ngUserService,
-      AccessControlClient accessControlClient) {
+      AccessControlClient accessControlClient, ScopeAccessHelper scopeAccessHelper) {
     this.organizationRepository = organizationRepository;
     this.outboxService = outboxService;
     this.transactionTemplate = transactionTemplate;
     this.resourceGroupClient = resourceGroupClient;
     this.ngUserService = ngUserService;
     this.accessControlClient = accessControlClient;
+    this.scopeAccessHelper = scopeAccessHelper;
   }
 
   @Override
-  public Organization create(String accountIdentifier, OrganizationDTO organizationDTO) {
+  @FeatureRestrictionCheck(MULTIPLE_ORGANIZATIONS)
+  public Organization create(@AccountIdentifier String accountIdentifier, OrganizationDTO organizationDTO) {
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
     try {
@@ -115,24 +120,32 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
   }
 
+  @Override
+  public List<String> getDistinctAccounts() {
+    return organizationRepository.findDistinctAccounts();
+  }
+
   private void setupOrganization(Scope scope) {
     if (DEFAULT_ORG_IDENTIFIER.equals(scope.getOrgIdentifier())) {
       // Default org is a special case. That is handled by default org service
       return;
     }
-    String userId = null;
+    String principalId = null;
+    PrincipalType principalType = PrincipalType.USER;
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+        && (SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER
+            || SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.SERVICE_ACCOUNT)) {
+      principalId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+      principalType = SourcePrincipalContextBuilder.getSourcePrincipal().getType();
     }
     // in case of default org identifier userprincipal will not be set in security context and that is okay
-    if (Objects.isNull(userId)) {
+    if (isEmpty(principalId)) {
       throw new InvalidRequestException("User not found in security context");
     }
     try {
       createDefaultResourceGroup(scope);
-      assignOrgAdmin(scope, userId);
-      busyPollUntilOrgSetupCompletes(scope, userId);
+      assignOrgAdmin(scope, principalId, principalType);
+      busyPollUntilOrgSetupCompletes(scope, principalId);
     } catch (Exception e) {
       log.error("Failed to complete post organization creation steps for [{}]", ScopeUtils.toString(scope));
     }
@@ -162,14 +175,35 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
   }
 
-  private void assignOrgAdmin(Scope scope, String userId) {
-    ngUserService.addUserToScope(userId,
-        Scope.builder()
-            .accountIdentifier(scope.getAccountIdentifier())
-            .orgIdentifier(scope.getOrgIdentifier())
-            .projectIdentifier(scope.getProjectIdentifier())
-            .build(),
-        ORG_ADMIN_ROLE, SYSTEM);
+  private void assignOrgAdmin(Scope scope, String principalId, PrincipalType principalType) {
+    switch (principalType) {
+      case USER:
+        ngUserService.addUserToScope(principalId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            singletonList(RoleBinding.builder().roleIdentifier(ORG_ADMIN_ROLE).build()), emptyList(), SYSTEM);
+        break;
+      case SERVICE_ACCOUNT:
+        ngUserService.addServiceAccountToScope(principalId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            ORG_ADMIN_ROLE, SYSTEM);
+        break;
+      case API_KEY:
+      case SERVICE: {
+        throw new InvalidRequestException(
+            "Cannot assign principal" + principalId + "with type" + principalType + "to org");
+      }
+      default: {
+        throw new InvalidRequestException("Invalid  principal type" + principalType);
+      }
+    }
   }
 
   private void createDefaultResourceGroup(Scope scope) {
@@ -180,29 +214,15 @@ public class OrganizationServiceImpl implements OrganizationService {
       if (resourceGroupResponse != null) {
         return;
       }
-      ResourceGroupDTO resourceGroupDTO = getResourceGroupDTO(scope);
       NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
-          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), resourceGroupDTO));
+          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
     } catch (Exception e) {
       log.error("Couldn't create default resource group for [{}]", ScopeUtils.toString(scope));
     }
   }
 
-  private ResourceGroupDTO getResourceGroupDTO(Scope scope) {
-    return ResourceGroupDTO.builder()
-        .accountIdentifier(scope.getAccountIdentifier())
-        .orgIdentifier(scope.getOrgIdentifier())
-        .projectIdentifier(scope.getProjectIdentifier())
-        .name(DEFAULT_RESOURCE_GROUP_NAME)
-        .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-        .description(RESOURCE_GROUP_DESCRIPTION)
-        .resourceSelectors(Collections.emptyList())
-        .fullScopeSelected(true)
-        .build();
-  }
-
   private Organization saveOrganization(Organization organization) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Organization savedOrganization = organizationRepository.save(organization);
       outboxService.save(
           new OrganizationCreateEvent(organization.getAccountIdentifier(), OrganizationMapper.writeDto(organization)));
@@ -235,7 +255,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         organization.setVersion(existingOrganization.getVersion());
       }
       validate(organization);
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
         Organization updatedOrganization = organizationRepository.save(organization);
         log.info(String.format("Organization with identifier %s was successfully updated", identifier));
         outboxService.save(new OrganizationUpdateEvent(organization.getAccountIdentifier(),
@@ -248,15 +268,36 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Page<Organization> list(
+  public Page<Organization> listPermittedOrgs(
       String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO) {
     Criteria criteria = createOrganizationFilterCriteria(Criteria.where(OrganizationKeys.accountIdentifier)
                                                              .is(accountIdentifier)
                                                              .and(OrganizationKeys.deleted)
-                                                             .ne(Boolean.TRUE),
+                                                             .is(FALSE),
         organizationFilterDTO);
+    List<Scope> orgs = organizationRepository.findAllOrgs(criteria);
+    List<String> permittedOrgsIds =
+        scopeAccessHelper.getPermittedScopes(orgs).stream().map(Scope::getOrgIdentifier).collect(Collectors.toList());
+
+    if (permittedOrgsIds.isEmpty()) {
+      return Page.empty();
+    }
+
+    // Update the identifiers in the organizationFilterDTO
+    if (organizationFilterDTO != null) {
+      organizationFilterDTO.setIdentifiers(permittedOrgsIds);
+    } else {
+      organizationFilterDTO = OrganizationFilterDTO.builder().identifiers(permittedOrgsIds).build();
+    }
+    Criteria criteriaForPermittedOrgs =
+        createOrganizationFilterCriteria(Criteria.where(OrganizationKeys.accountIdentifier)
+                                             .is(accountIdentifier)
+                                             .and(OrganizationKeys.deleted)
+                                             .is(FALSE),
+            organizationFilterDTO);
+
     return organizationRepository.findAll(
-        criteria, pageable, organizationFilterDTO != null && organizationFilterDTO.isIgnoreCase());
+        criteriaForPermittedOrgs, pageable, organizationFilterDTO != null && organizationFilterDTO.isIgnoreCase());
   }
 
   @Override
@@ -267,6 +308,11 @@ public class OrganizationServiceImpl implements OrganizationService {
   @Override
   public List<Organization> list(Criteria criteria) {
     return organizationRepository.findAll(criteria);
+  }
+
+  @Override
+  public Long countOrgs(String accountIdentifier) {
+    return organizationRepository.countByAccountIdentifier(accountIdentifier);
   }
 
   private Criteria createOrganizationFilterCriteria(Criteria criteria, OrganizationFilterDTO organizationFilterDTO) {
@@ -288,7 +334,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public boolean delete(String accountIdentifier, String organizationIdentifier, Long version) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Organization organization = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
       boolean delete = organization != null;
       if (delete) {
@@ -303,7 +349,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public boolean restore(String accountIdentifier, String identifier) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Organization organization = organizationRepository.restore(accountIdentifier, identifier);
       boolean success = organization != null;
       if (success) {

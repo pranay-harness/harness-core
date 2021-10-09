@@ -13,16 +13,17 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
-import static software.wings.service.impl.aws.model.AwsConstants.LAMBDA_SLEEP_SECS;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.eraro.ErrorCode;
@@ -31,9 +32,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FileCreationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -43,6 +46,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse.AwsLambdaExecuteFunctionResponseBuilder;
@@ -71,6 +75,8 @@ import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.Environment;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.FunctionConfiguration;
+import com.amazonaws.services.lambda.model.GetFunctionConfigurationRequest;
+import com.amazonaws.services.lambda.model.GetFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.InvokeRequest;
@@ -95,6 +101,8 @@ import com.amazonaws.services.lambda.model.VpcConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
@@ -105,6 +113,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -121,13 +130,26 @@ import org.apache.logging.log4j.util.Strings;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
+@BreakDependencyOn("software.wings.api.AwsLambdaExecutionData")
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
   String REPOSITORY_DIR_PATH = "./repository";
   String LAMBDA_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/lambdaartifacts";
   String AWS_LAMBDA_LOG_PREFIX = "AWS_LAMBDA_LOG_PREFIX ";
 
+  String ACTIVE_FUNCTION_STATE = "Active";
+  String PENDING_FUNCTION_STATE = "Pending";
+  String FAILED_FUNCTION_STATE = "Failed";
+
+  String ACTIVE_LAST_UPDATE_STATUS = "Successful";
+  String PENDING_LAST_UPDATE_STATUS = "InProgress";
+  String FAILED_LAST_UPDATE_STATUS = "Failed";
+
+  long TIMEOUT_IN_SECONDS = 60 * 60L;
+  long WAIT_SLEEP_IN_SECONDS = 10L;
+
   @Inject private DelegateFileManager delegateFileManager;
+  @Inject private TimeLimiter timeLimiter;
 
   @VisibleForTesting
   public AWSLambdaClient getAmazonLambdaClient(String region, AwsConfig awsConfig) {
@@ -138,11 +160,11 @@ public class AwsLambdaHelperServiceDelegateImpl
 
   @Override
   public AwsLambdaExecuteFunctionResponse executeFunction(AwsLambdaExecuteFunctionRequest request) {
-    try {
-      AwsConfig awsConfig = request.getAwsConfig();
-      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+    AwsConfig awsConfig = request.getAwsConfig();
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AWSLambdaClient> closeableAWSLambdaClient =
+             new CloseableAmazonWebServiceClient(getAmazonLambdaClient(request.getRegion(), request.getAwsConfig()))) {
       InvokeRequest invokeRequest = new InvokeRequest()
                                         .withFunctionName(request.getFunctionName())
                                         .withQualifier(request.getQualifier())
@@ -151,7 +173,7 @@ public class AwsLambdaHelperServiceDelegateImpl
         invokeRequest.setPayload(request.getPayload());
       }
       tracker.trackLambdaCall("Invoke Function");
-      InvokeResult invokeResult = lambdaClient.invoke(invokeRequest);
+      InvokeResult invokeResult = closeableAWSLambdaClient.getClient().invoke(invokeRequest);
       log.info("Lambda invocation result: " + invokeResult.toString());
       AwsLambdaExecuteFunctionResponseBuilder responseBuilder = AwsLambdaExecuteFunctionResponse.builder();
       responseBuilder.statusCode(invokeResult.getStatusCode());
@@ -174,17 +196,19 @@ public class AwsLambdaHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
 
   @Override
   public AwsLambdaFunctionResponse getLambdaFunctions(AwsLambdaFunctionRequest request) {
-    try {
-      AwsConfig awsConfig = request.getAwsConfig();
-      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+    AwsConfig awsConfig = request.getAwsConfig();
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AWSLambdaClient> closeableAWSLambdaClient =
+             new CloseableAmazonWebServiceClient(getAmazonLambdaClient(request.getRegion(), request.getAwsConfig()))) {
       AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
       List<String> lambdaFunctions = new ArrayList<>();
       List<FunctionConfiguration> functionConfigurations = new ArrayList<>();
@@ -193,8 +217,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       String nextMarker = null;
       do {
         tracker.trackLambdaCall("List Functions");
-        listFunctionsResult =
-            lambdaClient.listFunctions(new ListFunctionsRequest().withMaxItems(100).withMarker(nextMarker));
+        listFunctionsResult = closeableAWSLambdaClient.getClient().listFunctions(
+            new ListFunctionsRequest().withMaxItems(100).withMarker(nextMarker));
         functionConfigurations.addAll(listFunctionsResult.getFunctions());
         nextMarker = listFunctionsResult.getNextMarker();
       } while (nextMarker != null);
@@ -206,6 +230,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
@@ -213,13 +239,15 @@ public class AwsLambdaHelperServiceDelegateImpl
   @Override
   public AwsLambdaExecuteWfResponse executeWf(AwsLambdaExecuteWfRequest request, ExecutionLogCallback logCallback) {
     AwsLambdaExecuteWfResponseBuilder responseBuilder = AwsLambdaExecuteWfResponse.builder();
-    try {
-      AwsConfig awsConfig = request.getAwsConfig();
-      responseBuilder.awsConfig(awsConfig);
-      responseBuilder.region(request.getRegion());
-      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+
+    AwsConfig awsConfig = request.getAwsConfig();
+    responseBuilder.awsConfig(awsConfig);
+    responseBuilder.region(request.getRegion());
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+
+    try (CloseableAmazonWebServiceClient<AWSLambdaClient> closeableAWSLambdaClient =
+             new CloseableAmazonWebServiceClient(getAmazonLambdaClient(request.getRegion(), request.getAwsConfig()))) {
       String roleArn = request.getRoleArn();
       List<String> evaluatedAliases = request.getEvaluatedAliases();
       Map<String, String> serviceVariables = request.getServiceVariables();
@@ -231,8 +259,9 @@ public class AwsLambdaHelperServiceDelegateImpl
       ExecutionStatus status = SUCCESS;
       for (AwsLambdaFunctionParams functionParams : functionParamsList) {
         try {
-          functionResultList.add(executeFunctionDeployment(lambdaClient, roleArn, evaluatedAliases, serviceVariables,
-              lambdaVpcConfig, functionParams, request, workingDirectory, logCallback));
+          functionResultList.add(
+              executeFunctionDeployment(closeableAWSLambdaClient.getClient(), roleArn, evaluatedAliases,
+                  serviceVariables, lambdaVpcConfig, functionParams, request, workingDirectory, logCallback));
         } catch (Exception ex) {
           logCallback.saveExecutionLog(
               "Exception: " + ex.getMessage() + " while deploying function: " + functionParams.getFunctionName(),
@@ -271,6 +300,8 @@ public class AwsLambdaHelperServiceDelegateImpl
           .executionStatus(FAILED)
           .errorMessage(ExceptionUtils.getMessage(ioException))
           .build();
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return responseBuilder.build();
   }
@@ -393,6 +424,7 @@ public class AwsLambdaHelperServiceDelegateImpl
             .withVpcConfig(vpcConfig);
     tracker.trackLambdaCall("Create Function");
     CreateFunctionResult createFunctionResult = lambdaClient.createFunction(createFunctionRequest);
+    waitForFunctionToCreate(lambdaClient, functionName, executionLogCallback);
     executionLogCallback.saveExecutionLog(format("Function [%s] published with version [%s] successfully", functionName,
                                               createFunctionResult.getVersion()),
         INFO);
@@ -434,33 +466,11 @@ public class AwsLambdaHelperServiceDelegateImpl
           format("Updated Function Code Sha256: [%s]", updateFunctionCodeResult.getCodeSha256()));
       executionLogCallback.saveExecutionLog(
           format("Updated Function ARN: [%s]", updateFunctionCodeResult.getFunctionArn()));
+      waitForFunctionToUpdate(lambdaClient, functionName, executionLogCallback);
     }
 
-    /*
-     * CDP-13038:
-     * We saw a case where even though UpdateFunctionCode returned, the update was still in progress.
-     * As a result, the Update function configuration was failing.
-     * So we decided to introduce a small sleep.
-     */
-    executionLogCallback.saveExecutionLog(
-        format("Waiting [%d] seconds before updating function configuration", LAMBDA_SLEEP_SECS));
-    sleep(ofSeconds(LAMBDA_SLEEP_SECS));
-
-    executionLogCallback.saveExecutionLog("Updating function configuration", INFO);
-    UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest =
-        new UpdateFunctionConfigurationRequest()
-            .withEnvironment(new Environment().withVariables(serviceVariables))
-            .withRuntime(functionParams.getRuntime())
-            .withFunctionName(functionName)
-            .withHandler(functionParams.getHandler())
-            .withRole(roleArn)
-            .withTimeout(functionParams.getTimeout())
-            .withMemorySize(functionParams.getMemory())
-            .withVpcConfig(vpcConfig);
-    tracker.trackLambdaCall("Update Function Configuration");
-    UpdateFunctionConfigurationResult updateFunctionConfigurationResult =
-        lambdaClient.updateFunctionConfiguration(updateFunctionConfigurationRequest);
-    executionLogCallback.saveExecutionLog("Function configuration updated successfully", INFO);
+    UpdateFunctionConfigurationResult updateFunctionConfigurationResult = updateFunctionConfiguration(
+        lambdaClient, functionName, roleArn, functionParams, vpcConfig, serviceVariables, executionLogCallback);
     executionLogCallback.saveExecutionLog("Publishing new version", INFO);
     PublishVersionRequest publishVersionRequest =
         new PublishVersionRequest()
@@ -506,6 +516,118 @@ public class AwsLambdaHelperServiceDelegateImpl
                        .build();
 
     return functionMeta;
+  }
+
+  private UpdateFunctionConfigurationResult updateFunctionConfiguration(AWSLambdaClient lambdaClient,
+      String functionName, String roleArn, AwsLambdaFunctionParams functionParams, VpcConfig vpcConfig,
+      Map<String, String> serviceVariables, LogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("Updating function configuration", INFO);
+    UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest =
+        new UpdateFunctionConfigurationRequest()
+            .withEnvironment(new Environment().withVariables(serviceVariables))
+            .withRuntime(functionParams.getRuntime())
+            .withFunctionName(functionName)
+            .withHandler(functionParams.getHandler())
+            .withRole(roleArn)
+            .withTimeout(functionParams.getTimeout())
+            .withMemorySize(functionParams.getMemory())
+            .withVpcConfig(vpcConfig);
+    tracker.trackLambdaCall("Update Function Configuration");
+    UpdateFunctionConfigurationResult updateFunctionConfigurationResult =
+        lambdaClient.updateFunctionConfiguration(updateFunctionConfigurationRequest);
+
+    waitForFunctionToUpdate(lambdaClient, functionName, executionLogCallback);
+    executionLogCallback.saveExecutionLog("Function configuration updated successfully", INFO);
+    return updateFunctionConfigurationResult;
+  }
+
+  /**
+   * successOnResponse -> "State" = "Active"
+   * errorOnResponse -> "State" = "Failed"
+   * retryOnResponse -> "State" = "Pending"
+   */
+  public void waitForFunctionToCreate(
+      AWSLambdaClient lambdaClient, String functionName, LogCallback executionLogCallback) {
+    try {
+      executionLogCallback.saveExecutionLog("Verifying if state of function is " + ACTIVE_FUNCTION_STATE);
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(TIMEOUT_IN_SECONDS), () -> {
+        while (true) {
+          GetFunctionConfigurationResult result =
+              getFunctionConfiguration(lambdaClient, functionName, executionLogCallback);
+          String state = result.getState();
+          if (ACTIVE_FUNCTION_STATE.equalsIgnoreCase(state)) {
+            break;
+          } else if (FAILED_FUNCTION_STATE.equalsIgnoreCase(state)) {
+            throw new InvalidRequestException(
+                "Function failed to reach " + ACTIVE_FUNCTION_STATE + " state", WingsException.SRE);
+          } else {
+            executionLogCallback.saveExecutionLog(
+                format("function: [%s], state: [%s], reason: [%s]", functionName, state, result.getStateReason()));
+          }
+          sleep(ofSeconds(WAIT_SLEEP_IN_SECONDS));
+        }
+        return true;
+      });
+    } catch (UncheckedTimeoutException e) {
+      throw new TimeoutException("Timed out waiting for function to reach " + ACTIVE_FUNCTION_STATE + " state",
+          "Timeout", e, WingsException.SRE);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(
+          "Error while waiting for function to reach " + ACTIVE_FUNCTION_STATE + " state", e);
+    }
+  }
+
+  /**
+   * successOnResponse -> "LastUpdateStatus" = "Successful"
+   * errorOnResponse -> "LastUpdateStatus" = "Failed"
+   * retryOnResponse -> "LastUpdateStatus" = "InProgress"
+   */
+  public void waitForFunctionToUpdate(
+      AWSLambdaClient lambdaClient, String functionName, LogCallback executionLogCallback) {
+    try {
+      executionLogCallback.saveExecutionLog("Verifying if status of function to be " + ACTIVE_LAST_UPDATE_STATUS);
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(TIMEOUT_IN_SECONDS), () -> {
+        while (true) {
+          GetFunctionConfigurationResult result =
+              getFunctionConfiguration(lambdaClient, functionName, executionLogCallback);
+          String status = result.getLastUpdateStatus();
+          if (ACTIVE_LAST_UPDATE_STATUS.equalsIgnoreCase(status)) {
+            break;
+          } else if (FAILED_LAST_UPDATE_STATUS.equalsIgnoreCase(status)) {
+            throw new InvalidRequestException(
+                "Function failed to reach " + ACTIVE_LAST_UPDATE_STATUS + " status", WingsException.SRE);
+          } else {
+            executionLogCallback.saveExecutionLog(format("function: [%s], status: [%s], reason: [%s]", functionName,
+                status, result.getLastUpdateStatusReason()));
+          }
+          sleep(ofSeconds(WAIT_SLEEP_IN_SECONDS));
+        }
+        return true;
+      });
+    } catch (UncheckedTimeoutException e) {
+      throw new TimeoutException("Timed out waiting for function to reach " + ACTIVE_LAST_UPDATE_STATUS + " status",
+          "Timeout", e, WingsException.SRE);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(
+          "Error while waiting for function to reach " + ACTIVE_LAST_UPDATE_STATUS + " status", e);
+    }
+  }
+
+  private GetFunctionConfigurationResult getFunctionConfiguration(
+      AWSLambdaClient lambdaClient, String functionName, LogCallback executionLogCallback) {
+    try {
+      tracker.trackLambdaCall("Get Function configuration");
+      return lambdaClient.getFunctionConfiguration(
+          new GetFunctionConfigurationRequest().withFunctionName(functionName));
+    } catch (ResourceNotFoundException exception) {
+      // Function does not exist
+      executionLogCallback.saveExecutionLog(format("Function: [%s] not found.", functionName));
+    }
+    throw new InvalidRequestException(format("Function: [%s] not found.", functionName));
   }
 
   private AwsLambdaFunctionResult executeFunctionDeploymentAfterDownloadingArtifact(AWSLambdaClient lambdaClient,
@@ -716,15 +838,16 @@ public class AwsLambdaHelperServiceDelegateImpl
 
   @Override
   public AwsLambdaDetailsResponse getFunctionDetails(AwsLambdaDetailsRequest request, boolean isInstanceSync) {
-    try {
-      GetFunctionResult getFunctionResult = null;
-      final AwsConfig awsConfig = request.getAwsConfig();
-      final List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
-      final AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+    GetFunctionResult getFunctionResult = null;
+    final AwsConfig awsConfig = request.getAwsConfig();
+    final List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
+
+    try (CloseableAmazonWebServiceClient<AWSLambdaClient> closeableAWSLambdaClient =
+             new CloseableAmazonWebServiceClient(getAmazonLambdaClient(request.getRegion(), request.getAwsConfig()))) {
       try {
         tracker.trackLambdaCall("Get Function");
-        getFunctionResult = lambdaClient.getFunction(
+        getFunctionResult = closeableAWSLambdaClient.getClient().getFunction(
             new GetFunctionRequest().withFunctionName(request.getFunctionName()).withQualifier(request.getQualifier()));
       } catch (ResourceNotFoundException rnfe) {
         log.info("No function found with name =[{}], qualifier =[{}]. Error Msg is [{}]", request.getFunctionName(),
@@ -739,13 +862,15 @@ public class AwsLambdaHelperServiceDelegateImpl
           listAliasRequest.withFunctionVersion(getFunctionResult.getConfiguration().getVersion());
         }
         tracker.trackLambdaCall("List Function Aliases");
-        listAliasesResult = lambdaClient.listAliases(listAliasRequest);
+        listAliasesResult = closeableAWSLambdaClient.getClient().listAliases(listAliasRequest);
       }
       return AwsLambdaDetailsResponse.from(getFunctionResult, listAliasesResult);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }

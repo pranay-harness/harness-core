@@ -48,7 +48,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
@@ -201,7 +201,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact create(Artifact artifact, ArtifactStream concreteArtifactStream, boolean skipDuplicateCheck) {
     String appId = artifact.fetchAppId();
     if (appId != null && !appId.equals(GLOBAL_APP_ID) && !appService.exist(appId)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "App does not exist: " + appId);
+      throw new InvalidArgumentsException("App does not exist: " + appId, USER);
     }
     ArtifactStream artifactStream;
     if (concreteArtifactStream == null) {

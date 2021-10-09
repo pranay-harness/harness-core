@@ -8,6 +8,9 @@ import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.commons.entities.batch.DataGeneratedNotification;
 import io.harness.ccm.commons.utils.TimeUtils;
+import io.harness.ccm.views.dto.DefaultViewIdDto;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -56,6 +59,8 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   @Autowired private TimeUtils utils;
   @Autowired private CEMailNotificationService emailNotificationService;
   @Autowired private CEMetadataRecordDao metadataRecordDao;
+  @Autowired private CEViewService ceViewService;
+
   private JobParameters parameters;
 
   private static final int MAX_RETRY_COUNT = 3;
@@ -74,6 +79,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
     try {
       parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
       String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+      createDefaultPerspective(accountId);
       CEMetadataRecord ceMetadataRecord = metadataRecordDao.getByAccountId(accountId);
       boolean isApplicationDataPresent = false;
       if (ceMetadataRecord != null) {
@@ -93,6 +99,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
                                                               .accountId(accountId)
                                                               .applicationDataPresent(isApplicationDataPresent)
                                                               .clusterDataConfigured(true)
+                                                              .clusterConnectorConfigured(true)
                                                               .build());
       boolean notificationSend = notificationDao.isMailSent(accountId);
       if (!notificationSend) {
@@ -121,6 +128,13 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
       log.error("Failed to execute step BillingDataGeneratedMailTasklet, Exception: ", e);
     }
     return null;
+  }
+
+  private void createDefaultPerspective(String accountId) {
+    DefaultViewIdDto defaultViewIds = ceViewService.getDefaultViewIds(accountId);
+    if (defaultViewIds.getClusterViewId() == null) {
+      ceViewService.createDefaultView(accountId, ViewFieldIdentifier.CLUSTER);
+    }
   }
 
   // Map returns clusterId -> clusterName mapping

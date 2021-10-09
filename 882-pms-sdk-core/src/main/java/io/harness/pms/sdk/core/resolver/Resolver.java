@@ -11,9 +11,9 @@ import io.harness.pms.sdk.core.data.StepTransput;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
-import org.bson.Document;
 
 @OwnedBy(CDC)
 public interface Resolver<T extends StepTransput> {
@@ -46,12 +46,12 @@ public interface Resolver<T extends StepTransput> {
     throw new GroupNotFoundException(groupName);
   }
 
-  default Document convertToDocument(T value) {
-    return RecastOrchestrationUtils.toDocument(value);
+  default Map<String, Object> convertToMap(T value) {
+    return RecastOrchestrationUtils.toMap(value);
   }
 
   @SneakyThrows
-  default T convertToObject(Document value, Class<T> clazz) {
-    return RecastOrchestrationUtils.fromDocument(value, clazz);
+  default T convertToObject(Map<String, Object> value, Class<T> clazz) {
+    return RecastOrchestrationUtils.fromMap(value, clazz);
   }
 }

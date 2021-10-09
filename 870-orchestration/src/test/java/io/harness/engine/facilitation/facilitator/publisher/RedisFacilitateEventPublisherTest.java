@@ -25,7 +25,6 @@ import io.harness.pms.contracts.facilitators.FacilitatorEvent;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -70,7 +69,7 @@ public class RedisFacilitateEventPublisherTest extends OrchestrationTestBase {
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
                       .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                      .setStepParameters(RecastOrchestrationUtils.toDocumentJson(sectionStepParams))
+                      .setStepParameters(RecastOrchestrationUtils.toJson(sectionStepParams))
                       .setServiceName("DUMMY")
                       .build())
             .executableResponse(ExecutableResponse.newBuilder()
@@ -87,10 +86,10 @@ public class RedisFacilitateEventPublisherTest extends OrchestrationTestBase {
     redisFacilitateEventPublisher.publishEvent(nodeExecution.getUuid());
 
     ArgumentCaptor<ByteString> argumentCaptor = ArgumentCaptor.forClass(ByteString.class);
+    ArgumentCaptor<Ambiance> ambianceArgumentCaptor = ArgumentCaptor.forClass(Ambiance.class);
     verify(eventSender)
-        .sendEvent(argumentCaptor.capture(), eq(PmsEventCategory.FACILITATOR_EVENT),
-            eq(nodeExecution.getNode().getServiceName()), eq(AmbianceUtils.getAccountId(nodeExecution.getAmbiance())),
-            eq(true));
+        .sendEvent(ambianceArgumentCaptor.capture(), argumentCaptor.capture(), eq(PmsEventCategory.FACILITATOR_EVENT),
+            eq(nodeExecution.getNode().getServiceName()), eq(true));
     ByteString value = argumentCaptor.getValue();
     FacilitatorEvent facilitatorEvent = FacilitatorEvent.parseFrom(value);
     assertThat(facilitatorEvent.getStepParameters()).isEqualTo(nodeExecution.getResolvedStepParametersBytes());

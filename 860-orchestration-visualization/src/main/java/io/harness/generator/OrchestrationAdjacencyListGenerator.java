@@ -19,7 +19,10 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.stepdetails.PmsStepDetails;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import com.google.inject.Inject;
@@ -33,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
@@ -41,6 +43,7 @@ import org.bson.Document;
 public class OrchestrationAdjacencyListGenerator {
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private GraphVertexConverter graphVertexConverter;
+  @Inject private PmsGraphStepDetailsService pmsGraphStepDetailsService;
 
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
@@ -227,15 +230,17 @@ public class OrchestrationAdjacencyListGenerator {
         String currentNodeId = queue.removeFirst();
         NodeExecution nodeExecution = nodeExIdMap.get(currentNodeId);
 
-        Map<String, Document> outcomes;
+        Map<String, PmsOutcome> outcomes;
         if (isOutcomePresent) {
-          outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
+          outcomes = PmsOutcomeMapper.convertJsonToOrchestrationMap(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
               nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
         } else {
           outcomes = new LinkedHashMap<>();
         }
+        Map<String, PmsStepDetails> stepDetails =
+            pmsGraphStepDetailsService.getStepDetails(nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId);
 
-        GraphVertex graphVertex = graphVertexConverter.convertFrom(nodeExecution, outcomes);
+        GraphVertex graphVertex = graphVertexConverter.convertFrom(nodeExecution, outcomes, stepDetails);
 
         if (graphVertexMap.containsKey(graphVertex.getUuid())) {
           continue;

@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
+import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS_REVERSE;
 import static software.wings.service.impl.yaml.handler.workflow.PhaseStepYamlHandler.PHASE_STEP_PROPERTY_NAME;
 
 import static java.util.Collections.emptyList;
@@ -18,10 +19,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -51,6 +54,7 @@ import software.wings.service.impl.yaml.handler.notification.NotificationRulesYa
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.yaml.workflow.BuildWorkflowYaml;
@@ -71,12 +75,14 @@ import lombok.Data;
  * @author rktummala on 10/27/17
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYamlHandler<Y, Workflow> {
   @Inject WorkflowService workflowService;
   @Inject YamlHelper yamlHelper;
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EnvironmentService environmentService;
+  @Inject AppService appService;
+  @Inject FeatureFlagService featureFlagService;
 
   protected abstract void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflowBuilder);
 
@@ -305,10 +311,16 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                 .collect(toList());
       }
 
-      PhaseStep rollbackProvisioners = null;
+      PhaseStep rollbackProvisioners = null, rollbackProvisionersReverse = null;
       if (isNotEmpty(preDeploymentStepsFinal.getSteps())) {
         rollbackProvisioners = workflowService.generateRollbackProvisioners(
             preDeploymentStepsFinal, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
+        String accountId = appService.getAccountIdByAppId(appId);
+        if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
+          // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
+          rollbackProvisionersReverse = workflowService.generateRollbackProvisionersReverse(
+              preDeploymentStepsFinal, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS_REVERSE);
+        }
       }
 
       WorkflowInfo workflowInfo = WorkflowInfo.builder()
@@ -321,6 +333,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                       .phaseList(phaseList)
                                       .concurrencyStrategy(yaml.getConcurrencyStrategy())
                                       .rollbackProvisioners(rollbackProvisioners)
+                                      .rollbackProvisionersReverse(rollbackProvisionersReverse)
                                       .build();
       setOrchestrationWorkflow(workflowInfo, workflow);
 
@@ -573,5 +586,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     private List<WorkflowPhase> phaseList;
     private String concurrencyStrategy;
     private PhaseStep rollbackProvisioners;
+    private PhaseStep rollbackProvisionersReverse;
   }
 }

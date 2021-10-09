@@ -104,6 +104,8 @@ public class HashicorpVaultDataFetcher implements SecretManagerMutationDataFetch
       vaultConfig.setUsageRestrictions(
           usageScopeController.populateUsageRestrictions(input.getUsageScope(), accountId));
     }
+
+    vaultConfig.setNamespace(input.getNamespace());
   }
 
   private VaultConfig createVaultConfig(QLHashicorpVaultSecretManagerInput input, String accountId) {
@@ -120,6 +122,7 @@ public class HashicorpVaultDataFetcher implements SecretManagerMutationDataFetch
     vaultConfig.setSecretEngineVersion(input.getSecretEngineVersion());
     vaultConfig.setRenewalInterval(input.getSecretEngineRenewalInterval());
     vaultConfig.setUsageRestrictions(usageScopeController.populateUsageRestrictions(input.getUsageScope(), accountId));
+    vaultConfig.setNamespace(input.getNamespace());
 
     resolveAuthType(vaultConfig, input.getAuthDetails());
 

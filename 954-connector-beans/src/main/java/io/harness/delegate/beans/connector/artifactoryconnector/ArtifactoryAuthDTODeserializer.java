@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.artifactoryconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthDTODeserializer;
 import io.harness.exception.InvalidRequestException;
 
@@ -10,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 
+@OwnedBy(CDC)
 public class ArtifactoryAuthDTODeserializer extends StdDeserializer<ArtifactoryAuthenticationDTO> {
   public ArtifactoryAuthDTODeserializer() {
     super(NexusAuthDTODeserializer.class);

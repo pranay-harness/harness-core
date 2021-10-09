@@ -11,14 +11,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.rule.Owner;
-import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import org.junit.Test;
@@ -30,8 +28,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class AbortAllInterruptHandlerTest extends OrchestrationTestBase {
   @Mock private NodeExecutionService nodeExecutionService;
-  @Mock private WaitNotifyEngine waitNotifyEngine;
-  @Mock private InterruptEventPublisher interruptEventPublisher;
   @Inject @InjectMocks private AbortAllInterruptHandler abortAllInterruptHandler;
   @Inject private MongoTemplate mongoTemplate;
 
@@ -50,7 +46,7 @@ public class AbortAllInterruptHandlerTest extends OrchestrationTestBase {
                               .build();
 
     mongoTemplate.save(interrupt);
-    when(nodeExecutionService.markAllLeavesDiscontinuingOnAbort(planExecutionId, StatusUtils.finalizableStatuses()))
+    when(nodeExecutionService.markAllLeavesDiscontinuing(planExecutionId, StatusUtils.finalizableStatuses()))
         .thenReturn(0L);
     Interrupt handledInterrupt = abortAllInterruptHandler.handleInterrupt(interrupt);
     assertThat(handledInterrupt).isNotNull();
@@ -73,7 +69,7 @@ public class AbortAllInterruptHandlerTest extends OrchestrationTestBase {
                               .build();
 
     mongoTemplate.save(interrupt);
-    when(nodeExecutionService.markAllLeavesDiscontinuingOnAbort(planExecutionId, StatusUtils.finalizableStatuses()))
+    when(nodeExecutionService.markAllLeavesDiscontinuing(planExecutionId, StatusUtils.abortAndExpireStatuses()))
         .thenReturn(-1L);
     Interrupt handledInterrupt = abortAllInterruptHandler.handleInterrupt(interrupt);
     assertThat(handledInterrupt).isNotNull();

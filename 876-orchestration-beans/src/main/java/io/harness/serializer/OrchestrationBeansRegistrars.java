@@ -6,11 +6,14 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationBeansMorphiaRegistrar;
-import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
+import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersReadConverter;
+import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersWriteConverter;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -33,7 +36,7 @@ public class OrchestrationBeansRegistrars {
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(TimeoutEngineRegistrars.morphiaRegistrars)
           .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
-          .add(PmsCommonsMorphiaRegistrar.class)
+          .addAll(PmsCommonsModuleRegistrars.morphiaRegistrars)
           .add(PmsSdkCoreMorphiaRegistrar.class)
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
           .add(OrchestrationBeansMorphiaRegistrar.class)
@@ -41,4 +44,7 @@ public class OrchestrationBeansRegistrars {
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder().addAll(PersistenceRegistrars.morphiaConverters).build();
+
+  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.of(PmsStepParametersReadConverter.class, PmsStepParametersWriteConverter.class);
 }

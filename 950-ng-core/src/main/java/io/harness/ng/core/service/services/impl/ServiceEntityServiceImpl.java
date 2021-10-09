@@ -1,12 +1,12 @@
 package io.harness.ng.core.service.services.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import io.harness.EntityType;
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
@@ -55,19 +55,23 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@OwnedBy(HarnessTeam.PIPELINE)
+@OwnedBy(PIPELINE)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class ServiceEntityServiceImpl implements ServiceEntityService {
   private final ServiceRepository serviceRepository;
   private final EntitySetupUsageService entitySetupUsageService;
-  private static final String DUP_KEY_EXP_FORMAT_STRING =
-      "Service [%s] under Project[%s], Organization [%s] already exists";
   private static final Integer QUERY_PAGE_SIZE = 10000;
-  @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
+  @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private final TransactionTemplate transactionTemplate;
   private final OutboxService outboxService;
   private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
+
+  private static final String DUP_KEY_EXP_FORMAT_STRING_FOR_PROJECT =
+      "Service [%s] under Project[%s], Organization [%s] in Account [%s] already exists";
+  private static final String DUP_KEY_EXP_FORMAT_STRING_FOR_ORG =
+      "Service [%s] under Organization [%s] in Account [%s] already exists";
+  private static final String DUP_KEY_EXP_FORMAT_STRING_FOR_ACCOUNT = "Service [%s] in Account [%s] already exists";
 
   void validatePresenceOfRequiredFields(Object... fields) {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
@@ -76,8 +80,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   @Override
   public ServiceEntity create(@NotNull @Valid ServiceEntity serviceEntity) {
     try {
-      validatePresenceOfRequiredFields(serviceEntity.getAccountId(), serviceEntity.getOrgIdentifier(),
-          serviceEntity.getProjectIdentifier(), serviceEntity.getIdentifier());
+      validatePresenceOfRequiredFields(serviceEntity.getAccountId(), serviceEntity.getIdentifier());
       setNameIfNotPresent(serviceEntity);
       return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         ServiceEntity service = serviceRepository.save(serviceEntity);
@@ -91,8 +94,9 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
       }));
 
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, serviceEntity.getIdentifier(),
-                                            serviceEntity.getProjectIdentifier(), serviceEntity.getOrgIdentifier()),
+      throw new DuplicateFieldException(
+          getDuplicateServiceExistsErrorMessage(serviceEntity.getAccountId(), serviceEntity.getOrgIdentifier(),
+              serviceEntity.getProjectIdentifier(), serviceEntity.getIdentifier()),
           USER_SRE, ex);
     }
   }
@@ -106,8 +110,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
 
   @Override
   public ServiceEntity update(@Valid ServiceEntity requestService) {
-    validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
-        requestService.getProjectIdentifier(), requestService.getIdentifier());
+    validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getIdentifier());
     setNameIfNotPresent(requestService);
     Criteria criteria = getServiceEqualityCriteria(requestService, requestService.getDeleted());
     Optional<ServiceEntity> serviceEntityOptional =
@@ -141,8 +144,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
 
   @Override
   public ServiceEntity upsert(@Valid ServiceEntity requestService) {
-    validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
-        requestService.getProjectIdentifier(), requestService.getIdentifier());
+    validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getIdentifier());
     setNameIfNotPresent(requestService);
     Criteria criteria = getServiceEqualityCriteria(requestService, requestService.getDeleted());
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
@@ -165,6 +167,11 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   @Override
   public Page<ServiceEntity> list(@NotNull Criteria criteria, @NotNull Pageable pageable) {
     return serviceRepository.findAll(criteria, pageable);
+  }
+
+  @Override
+  public List<ServiceEntity> listRunTimePermission(Criteria criteria) {
+    return serviceRepository.findAllRunTimePermission(criteria);
   }
 
   @Override
@@ -262,7 +269,8 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
       List<ServiceEntity> outputServiceEntitiesList = (List<ServiceEntity>) serviceRepository.saveAll(serviceEntities);
       return new PageImpl<>(outputServiceEntitiesList);
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(getDuplicateServiceExistsErrorMessage(ex.getMessage()), USER_SRE, ex);
+      throw new DuplicateFieldException(
+          getDuplicateServiceExistsErrorMessage(accountId, ex.getMessage()), USER_SRE, ex);
     } catch (Exception ex) {
       String serviceNames = serviceEntities.stream().map(ServiceEntity::getName).collect(Collectors.joining(","));
       log.info(
@@ -287,15 +295,37 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
         .intValue();
   }
 
+  @Override
+  public ServiceEntity find(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, boolean deleted) {
+    return serviceRepository.find(accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifier, deleted);
+  }
+
+  String getDuplicateServiceExistsErrorMessage(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceIdentifier) {
+    if (EmptyPredicate.isEmpty(orgIdentifier)) {
+      return String.format(DUP_KEY_EXP_FORMAT_STRING_FOR_ACCOUNT, serviceIdentifier, accountIdentifier);
+    } else if (EmptyPredicate.isEmpty(projectIdentifier)) {
+      return String.format(DUP_KEY_EXP_FORMAT_STRING_FOR_ORG, serviceIdentifier, orgIdentifier, accountIdentifier);
+    }
+    return String.format(
+        DUP_KEY_EXP_FORMAT_STRING_FOR_PROJECT, serviceIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
+  }
+
   @VisibleForTesting
-  String getDuplicateServiceExistsErrorMessage(String exceptionString) {
-    String errorMessageToBeReturned = null;
+  String getDuplicateServiceExistsErrorMessage(String accountId, String exceptionString) {
+    String errorMessageToBeReturned;
     try {
       JSONObject jsonObjectOfDuplicateKey = DuplicateKeyExceptionParser.getDuplicateKey(exceptionString);
-      String orgIdentifier = jsonObjectOfDuplicateKey.getString("orgIdentifier");
-      String projectIdentifier = jsonObjectOfDuplicateKey.getString("projectIdentifier");
-      String identifier = jsonObjectOfDuplicateKey.getString("identifier");
-      errorMessageToBeReturned = String.format(DUP_KEY_EXP_FORMAT_STRING, identifier, orgIdentifier, projectIdentifier);
+      if (jsonObjectOfDuplicateKey != null) {
+        String orgIdentifier = jsonObjectOfDuplicateKey.getString("orgIdentifier");
+        String projectIdentifier = jsonObjectOfDuplicateKey.getString("projectIdentifier");
+        String identifier = jsonObjectOfDuplicateKey.getString("identifier");
+        errorMessageToBeReturned =
+            getDuplicateServiceExistsErrorMessage(accountId, orgIdentifier, projectIdentifier, identifier);
+      } else {
+        errorMessageToBeReturned = "A Duplicate Service already exists";
+      }
     } catch (Exception ex) {
       errorMessageToBeReturned = "A Duplicate Service already exists";
     }
@@ -309,9 +339,9 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
 
     Criteria criteria = Criteria.where(ServiceEntityKeys.accountId)
                             .is(accountIdentifier)
-                            .where(ServiceEntityKeys.orgIdentifier)
+                            .and(ServiceEntityKeys.orgIdentifier)
                             .is(orgIdentifier)
-                            .where(ServiceEntityKeys.projectIdentifier)
+                            .and(ServiceEntityKeys.projectIdentifier)
                             .is(projectIdentifier);
 
     int pageNum = 0;
@@ -334,9 +364,8 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
     if (isEmpty(serviceEntities)) {
       return;
     }
-    serviceEntities.forEach(serviceEntity
-        -> validatePresenceOfRequiredFields(serviceEntity.getAccountId(), serviceEntity.getOrgIdentifier(),
-            serviceEntity.getProjectIdentifier(), serviceEntity.getIdentifier()));
+    serviceEntities.forEach(
+        serviceEntity -> validatePresenceOfRequiredFields(serviceEntity.getAccountId(), serviceEntity.getIdentifier()));
   }
 
   private void populateDefaultNameIfNotPresent(List<ServiceEntity> serviceEntities) {

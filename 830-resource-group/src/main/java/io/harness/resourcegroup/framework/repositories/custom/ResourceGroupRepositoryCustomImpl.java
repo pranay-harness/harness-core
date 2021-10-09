@@ -3,8 +3,9 @@ package io.harness.resourcegroup.framework.repositories.custom;
 import io.harness.resourcegroup.model.ResourceGroup;
 
 import com.google.inject.Inject;
-import com.mongodb.client.result.UpdateResult;
+import com.mongodb.client.result.DeleteResult;
 import java.util.List;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,8 +29,20 @@ public class ResourceGroupRepositoryCustomImpl implements ResourceGroupRepositor
   }
 
   @Override
-  public boolean update(Criteria criteria, Update update) {
-    UpdateResult updateResult = mongoTemplate.updateMulti(new Query(criteria), update, ResourceGroup.class);
-    return updateResult.wasAcknowledged();
+  public Optional<ResourceGroup> find(Criteria criteria) {
+    Query query = new Query(criteria);
+    return Optional.ofNullable(mongoTemplate.findOne(query, ResourceGroup.class));
+  }
+
+  @Override
+  public boolean delete(Criteria criteria) {
+    Query query = new Query(criteria);
+    DeleteResult removeResult = mongoTemplate.remove(query, ResourceGroup.class);
+    return removeResult.wasAcknowledged();
+  }
+
+  @Override
+  public boolean updateMultiple(Query query, Update update) {
+    return mongoTemplate.updateMulti(query, update, ResourceGroup.class).wasAcknowledged();
   }
 }

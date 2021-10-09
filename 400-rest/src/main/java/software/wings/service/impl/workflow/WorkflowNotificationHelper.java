@@ -98,7 +98,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowNotificationHelper {
   private static final String APPLICATION = "APPLICATION";
   private static final String TRIGGER = "TRIGGER";

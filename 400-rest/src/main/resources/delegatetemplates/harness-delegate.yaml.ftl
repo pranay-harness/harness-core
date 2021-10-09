@@ -88,6 +88,8 @@ spec:
           periodSeconds: 10
           failureThreshold: 2
         env:
+        - name: JAVA_OPTS
+          value: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2 -Xms64M"
         - name: ACCOUNT_ID
           value: ${accountId}
         - name: ACCOUNT_SECRET
@@ -136,8 +138,6 @@ spec:
           value: "false"
         - name: HELM_DESIRED_VERSION
           value: ""
-        - name: CF_PLUGIN_HOME
-          value: ""
         - name: USE_CDN
           value: "${useCdn}"
         - name: CDN_URL
@@ -148,13 +148,7 @@ spec:
           value: ""
         - name: HELM_PATH
           value: ""
-        - name: CF_CLI6_PATH
-          value: ""
-        - name: CF_CLI7_PATH
-          value: ""
         - name: KUSTOMIZE_PATH
-          value: ""
-        - name: OC_PATH
           value: ""
         - name: KUBECTL_PATH
           value: ""
@@ -164,8 +158,6 @@ spec:
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
-        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
-          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

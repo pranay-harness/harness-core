@@ -23,12 +23,14 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -39,6 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class WaitNotifyEngine {
+  public static final int MIN_WAIT_INSTANCE_TIMEOUT = 3;
+
   @Inject private PersistenceWrapper persistenceWrapper;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private NotifyQueuePublisherRegister publisherRegister;
@@ -64,24 +68,30 @@ public class WaitNotifyEngine {
       list = new ArrayList<>(set);
     }
 
-    return waitForAllOn(publisherName, callback, progressCallback, list);
+    return waitForAllOn(publisherName, callback, progressCallback, list, Duration.ofSeconds(0));
   }
 
   public String waitForAllOnInList(String publisherName, OldNotifyCallback callback, List<String> list) {
-    return waitForAllOn(publisherName, callback, null, list);
+    return waitForAllOn(publisherName, callback, null, list, Duration.ofSeconds(0));
   }
 
-  public String waitForAllOn(
-      String publisherName, NotifyCallback callback, ProgressCallback progressCallback, List<String> list) {
+  public String waitForAllOnInList(
+      String publisherName, OldNotifyCallback callback, List<String> list, Duration timeout) {
+    return waitForAllOn(publisherName, callback, null, list, timeout);
+  }
+
+  private String waitForAllOn(String publisherName, NotifyCallback callback, ProgressCallback progressCallback,
+      List<String> list, Duration timeout) {
     final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder()
                                                         .uuid(generateUuid())
                                                         .callback(callback)
                                                         .progressCallback(progressCallback)
-                                                        .publisher(publisherName);
+                                                        .publisher(publisherName)
+                                                        .timeout(timeout);
 
     waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list);
 
-    final String waitInstanceId = persistenceWrapper.save(waitInstanceBuilder.build());
+    final String waitInstanceId = persistenceWrapper.saveWithTimeout(waitInstanceBuilder.build(), timeout);
 
     WaitInstance waitInstance;
     if ((waitInstance = persistenceWrapper.modifyAndFetchWaitInstanceForExistingResponse(waitInstanceId, list))
@@ -134,7 +144,7 @@ public class WaitNotifyEngine {
                                   .build());
       handleNotifyResponse(correlationId);
       return correlationId;
-    } catch (DuplicateKeyException exception) {
+    } catch (DuplicateKeyException | org.springframework.dao.DuplicateKeyException exception) {
       log.warn("Unexpected rate of DuplicateKeyException per correlation", exception);
     } catch (Exception exception) {
       log.error("Failed to notify for response of type " + response.getClass().getSimpleName(), exception);
@@ -165,6 +175,21 @@ public class WaitNotifyEngine {
       if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
         sendNotification(waitInstance);
       }
+    }
+  }
+
+  public boolean doneWithWithoutCallback(@NonNull String correlationId) {
+    try {
+      WaitInstance waitInstance;
+      while ((waitInstance = persistenceWrapper.modifyAndFetchWaitInstance(correlationId)) != null) {
+        if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
+          persistenceWrapper.deleteWaitInstance(waitInstance);
+        }
+      }
+      return true;
+    } catch (Exception exception) {
+      log.error("Failed to Noop notify for correlationId: {}", correlationId, exception);
+      return false;
     }
   }
 }

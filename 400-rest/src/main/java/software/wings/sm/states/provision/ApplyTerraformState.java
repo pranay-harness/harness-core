@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ApplyTerraformState extends TerraformProvisionState {
   public ApplyTerraformState(String name) {
     super(name, StateType.TERRAFORM_APPLY.name());

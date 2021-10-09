@@ -2,6 +2,10 @@ package software.wings.infra;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.expression.Expression;
 
 import software.wings.annotation.IncludeFieldMap;
@@ -22,6 +26,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @JsonTypeName(InfrastructureType.CUSTOM_INFRASTRUCTURE)
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CustomInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   public static final String DUMMY_CLOUD_PROVIDER = "DUMMY_CLOUD_PROVIDER";
 

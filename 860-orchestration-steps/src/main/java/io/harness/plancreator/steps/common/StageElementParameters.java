@@ -2,6 +2,7 @@ package io.harness.plancreator.steps.common;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -27,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CDC)
 // TODO this should go to yaml commons
 @TargetModule(HarnessModule._884_PMS_COMMONS)
+@RecasterAlias("io.harness.plancreator.steps.common.StageElementParameters")
 public class StageElementParameters implements StepParameters {
   String uuid;
   String identifier;
@@ -46,7 +48,7 @@ public class StageElementParameters implements StepParameters {
   public String toViewJson() {
     StageElementParameters stageElementParameters = cloneParameters();
     stageElementParameters.setSpecConfig(specConfig.getViewJsonObject());
-    return RecastOrchestrationUtils.toDocumentJson(stageElementParameters);
+    return RecastOrchestrationUtils.toJson(stageElementParameters);
   }
 
   public StageElementParameters cloneParameters() {

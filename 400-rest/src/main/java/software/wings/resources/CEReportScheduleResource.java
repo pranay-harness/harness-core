@@ -3,6 +3,8 @@ package software.wings.resources;
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 import static software.wings.security.PermissionAttribute.ResourceType.USER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
@@ -48,6 +50,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Produces("application/json")
 @Scope(USER)
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class CEReportScheduleResource {
   private CEReportScheduleService ceReportScheduleService;
   @Inject private CEReportTemplateBuilderService ceReportTemplateBuilderService;
@@ -121,7 +124,7 @@ public class CEReportScheduleResource {
     List<CEReportSchedule> ceList = new ArrayList<>();
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      ceList.add(ceReportScheduleService.createReportSetting(cronSequenceGenerator, accountId, schedule));
+      ceList.add(ceReportScheduleService.createReportSetting(accountId, schedule));
       RestResponse rr = new RestResponse<List<CEReportSchedule>>(ceList);
       return prepareResponse(rr, Response.Status.OK);
     } catch (IllegalArgumentException e) {
@@ -141,8 +144,7 @@ public class CEReportScheduleResource {
       @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(
-          ceReportScheduleService.update(cronSequenceGenerator, accountId, schedule));
+      RestResponse rr = new RestResponse<List<CEReportSchedule>>(ceReportScheduleService.update(accountId, schedule));
       return prepareResponse(rr, Response.Status.OK);
     } catch (IllegalArgumentException e) {
       log.warn(String.valueOf(e));

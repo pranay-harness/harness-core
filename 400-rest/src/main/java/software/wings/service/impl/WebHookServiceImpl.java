@@ -41,6 +41,7 @@ import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
@@ -61,6 +62,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.trigger.WebhookTriggerProcessor;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
@@ -106,6 +108,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Transient @Inject protected FeatureFlagService featureFlagService;
   @Inject private SecretManager secretManager;
   @Inject private DelegateServiceImpl delegateService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   private String getBaseUrlUI() {
     String baseUrl = configuration.getPortal().getUrl().trim();
@@ -182,7 +185,7 @@ public class WebHookServiceImpl implements WebHookService {
           && Boolean.TRUE.equals(app.getIsManualTriggerAuthorized())
           && isEmpty(httpHeaders.getHeaderString(API_KEY_HEADER))) {
         WebHookResponse webHookResponse = WebHookResponse.builder().error("Api Key cannot be empty").build();
-        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+        return prepareResponse(webHookResponse, Response.Status.UNAUTHORIZED);
       }
 
       return executeTriggerWebRequest(trigger.getAppId(), token, app, webHookRequest);
@@ -202,7 +205,7 @@ public class WebHookServiceImpl implements WebHookService {
       String appId, String token, Application app, WebHookRequest webHookRequest) {
     Map<String, ArtifactSummary> serviceBuildNumbers = new HashMap<>();
     try {
-      Map<String, String> serviceManifestMapping =
+      Map<String, ManifestSummary> serviceManifestMapping =
           featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, app.getAccountId())
           ? resolveServiceHelmChartVersion(appId, webHookRequest)
           : new HashMap<>();
@@ -412,20 +415,22 @@ public class WebHookServiceImpl implements WebHookService {
     return null;
   }
 
-  Map<String, String> resolveServiceHelmChartVersion(String appId, WebHookRequest webHookRequest) {
-    Map<String, String> serviceManifestMapping = new HashMap<>();
+  Map<String, ManifestSummary> resolveServiceHelmChartVersion(String appId, WebHookRequest webHookRequest) {
+    Map<String, ManifestSummary> serviceManifestMapping = new HashMap<>();
     List<Map<String, Object>> manifests = webHookRequest.getManifests();
     if (manifests != null) {
       for (Map<String, Object> manifest : manifests) {
         String serviceName = (String) manifest.get("service");
         String versionNumber = (String) manifest.get("versionNumber");
+        String appManifestName = (String) manifest.get("appManifestName");
         log.info("WebHook params Service name {} and Versions Number {}", serviceName, versionNumber);
         if (serviceName != null) {
           Service service = serviceResourceService.getServiceByName(appId, serviceName, false);
           if (service == null) {
             throw new InvalidRequestException("Service Name [" + serviceName + "] does not exist");
           }
-          serviceManifestMapping.put(service.getUuid(), versionNumber);
+          serviceManifestMapping.put(service.getUuid(),
+              ManifestSummary.builder().appManifestName(appManifestName).versionNo(versionNumber).build());
         }
       }
     }

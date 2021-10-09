@@ -53,13 +53,20 @@ public class K8sPVUtilizationAggregationTasklet implements Tasklet {
               String settingId = instanceData.getSettingId();
               String clusterId = instanceData.getClusterId();
 
-              double storageCapacity = instanceData.getStorageResource().getCapacity(); // It is in "MB"
-              double usage = ofNullable(instanceUtilizationDataMap.get(instanceId))
-                                 .map(InstanceUtilizationData::getStorageUsageAvgValue)
-                                 .orElse(0D);
-              double request = ofNullable(instanceUtilizationDataMap.get(instanceId))
-                                   .map(InstanceUtilizationData::getStorageRequestAvgValue)
-                                   .orElse(0D);
+              double storageCapacity = instanceData.getStorageResource().getCapacity(); // It is in "MiB"
+
+              final InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataMap.get(instanceId);
+              double storageUsageAvgValue =
+                  ofNullable(instanceUtilizationData).map(InstanceUtilizationData::getStorageUsageAvgValue).orElse(0D);
+              double storageRequestAvgValue = ofNullable(instanceUtilizationData)
+                                                  .map(InstanceUtilizationData::getStorageRequestAvgValue)
+                                                  .orElse(0D);
+              double storageUsageMaxValue =
+                  ofNullable(instanceUtilizationData).map(InstanceUtilizationData::getStorageUsageMaxValue).orElse(0D);
+
+              double storageRequestMaxValue = ofNullable(instanceUtilizationData)
+                                                  .map(InstanceUtilizationData::getStorageRequestMaxValue)
+                                                  .orElse(0D);
 
               return InstanceUtilizationData.builder()
                   .accountId(jobConstants.getAccountId())
@@ -68,8 +75,10 @@ public class K8sPVUtilizationAggregationTasklet implements Tasklet {
                   .instanceType(K8S_PV.name())
                   .instanceId(instanceId)
                   .storageCapacityAvgValue(storageCapacity)
-                  .storageRequestAvgValue(request)
-                  .storageUsageAvgValue(usage)
+                  .storageRequestAvgValue(storageRequestAvgValue)
+                  .storageUsageAvgValue(storageUsageAvgValue)
+                  .storageRequestMaxValue(storageRequestMaxValue)
+                  .storageUsageMaxValue(storageUsageMaxValue)
                   .startTimestamp(jobConstants.getJobStartTime())
                   .endTimestamp(jobConstants.getJobEndTime())
                   .build();
@@ -77,6 +86,7 @@ public class K8sPVUtilizationAggregationTasklet implements Tasklet {
             .collect(Collectors.toList());
 
     utilizationDataService.create(instanceUtilizationDataList);
+
     return null;
   }
 }

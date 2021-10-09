@@ -43,6 +43,18 @@ const (
 	FileDeleted = "deleted"
 )
 
+func ConvertToFileStatus(s string) FileStatus {
+	switch s {
+	case FileModified:
+		return FileModified
+	case FileAdded:
+		return FileAdded
+	case FileDeleted:
+		return FileDeleted
+	}
+	return FileModified
+}
+
 type Result struct {
 	Status  Status `json:"status"`
 	Message string `json:"message"`
@@ -83,9 +95,11 @@ type TestSummary struct {
 }
 
 type SummaryResponse struct {
-	TotalTests int           `json:"total_tests"`
-	TimeMs     int64         `json:"duration_ms"`
-	Tests      []TestSummary `json:"tests"`
+	TotalTests      int   `json:"total_tests"`
+	FailedTests     int   `json:"failed_tests"`
+	SuccessfulTests int   `json:"successful_tests"`
+	SkippedTests    int   `json:"skipped_tests"`
+	TimeMs          int64 `json:"duration_ms"`
 }
 
 type StepInfo struct {
@@ -142,10 +156,14 @@ type SelectionDetails struct {
 }
 
 type SelectionOverview struct {
-	Total       int              `json:"total_tests"`
-	Skipped     int              `json:"skipped_tests"`
-	TimeSavedMs int              `json:"time_saved_ms"`
-	Selected    SelectionDetails `json:"selected_tests"`
+	Total        int              `json:"total_tests"`
+	Skipped      int              `json:"skipped_tests"`
+	TimeSavedMs  int              `json:"time_saved_ms"`
+	TimeTakenMs  int              `json:"time_taken_ms"`
+	Repo         string           `json:"repo"`
+	SourceBranch string           `json:"source_branch"`
+	TargetBranch string           `json:"target_branch"`
+	Selected     SelectionDetails `json:"selected_tests"`
 }
 
 type File struct {
@@ -176,4 +194,39 @@ type MergePartialCgRequest struct {
 	Repo         string
 	TargetBranch string
 	Diff         DiffInfo
+}
+
+// Visualization structures
+
+// Simplified node
+type VisNode struct {
+	Id int `json:"id"`
+
+	Package string `json:"package"`
+	Class   string `json:"class"`
+	File    string `json:"file"`
+	Type    string `json:"type"`
+	Root    bool   `json:"root,omitempty"`
+	// Gives information about useful nodes which might be used by UI on which nodes to center
+	Important bool `json:"important"`
+}
+
+type VisMapping struct {
+	From int   `json:"from"`
+	To   []int `json:"to"`
+}
+
+type GetVgReq struct {
+	AccountId    string
+	Repo         string
+	SourceBranch string
+	TargetBranch string
+	Limit        int64
+	Class        string
+	DiffFiles    []File
+}
+
+type GetVgResp struct {
+	Nodes []VisNode    `json:"nodes"`
+	Edges []VisMapping `json:"edges"`
 }

@@ -30,6 +30,9 @@ public final class HelmConstants {
   public static final String VALUES_YAML = "values.yaml";
   public static final String CHARTS_YAML_KEY = "Chart.yaml";
 
+  // Add more command types as needed
+  enum CommandType { REPO_ADD, REPO_UPDATE }
+
   public static final class V2Commands {
     // The reason we are using ^ and $ before and after ${RELEASE_NAME} is because helm list doesn't take releaseName as
     // a param and release name becomes a regex
@@ -47,7 +50,7 @@ public final class HelmConstants {
     public static final String HELM_ADD_REPO_COMMAND_TEMPLATE =
         "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL}";
     public static final String HELM_REPO_UPDATE_COMMAND_TEMPLATE =
-        "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} repo update";
+        "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} repo update ${HELM_HOME_PATH_FLAG}";
     public static final String HELM_REPO_LIST_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} repo list";
     public static final String HELM_DELETE_RELEASE_TEMPLATE =
         "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} delete ${COMMAND_FLAGS} ${FLAGS} ${RELEASE_NAME}";

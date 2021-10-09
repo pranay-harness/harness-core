@@ -60,31 +60,45 @@ public class ChronicleEventTailer extends AbstractScheduledService {
 
   @Override
   protected void startUp() {
-    log.info("Starting up");
-    if (fileDeletionManager.getSentIndex() == 0 && readTailer.index() != 0) {
-      // Only for migration when readTailer is present, and sentTailer is not.
-      log.info("Index of sent-tailer is 0. Setting it to read-tailer index");
-      fileDeletionManager.setSentIndex(readTailer.index());
+    try {
+      log.info("Starting up");
+      if (fileDeletionManager.getSentIndex() == 0 && readTailer.index() != 0) {
+        // Only for migration when readTailer is present, and sentTailer is not.
+        log.info("Index of sent-tailer is 0. Setting it to read-tailer index");
+        fileDeletionManager.setSentIndex(readTailer.index());
+      }
+      printStats();
+      fileDeletionManager.deleteOlderFiles();
+    } catch (Exception e) {
+      log.error("Exception in startUp", e);
     }
-    printStats();
-    fileDeletionManager.deleteOlderFiles();
   }
 
   @Override
   protected void shutDown() {
-    log.info("Shutting down");
-    printStats();
-    fileDeletionManager.deleteOlderFiles();
-    this.queue.close();
+    try {
+      log.info("Shutting down");
+      printStats();
+      fileDeletionManager.deleteOlderFiles();
+    } catch (Exception e) {
+      log.error("Exception in shutDown", e);
+    } finally {
+      this.queue.close();
+      log.info("Successfully closed the queue.");
+    }
   }
 
   private void printStats() {
-    long readIndex = readTailer.index();
-    long sentIndex = fileDeletionManager.getSentIndex();
-    long endIndex = queue.createTailer().toEnd().index();
-    long excerptCount = queue.countExcerpts(readIndex, endIndex);
-    log.info("index.read-tailer={},  index.sent-tailer={}, index.end={}, excerptCount={}", readIndex, sentIndex,
-        endIndex, excerptCount);
+    try {
+      long readIndex = readTailer.index();
+      long sentIndex = fileDeletionManager.getSentIndex();
+      long endIndex = queue.createTailer().toEnd().index();
+      long excerptCount = queue.countExcerpts(readIndex, endIndex);
+      log.info("index.read-tailer={},  index.sent-tailer={}, index.end={}, excerptCount={}", readIndex, sentIndex,
+          endIndex, excerptCount);
+    } catch (Exception e) {
+      log.error("Exception in printStats", e);
+    }
   }
 
   @Override

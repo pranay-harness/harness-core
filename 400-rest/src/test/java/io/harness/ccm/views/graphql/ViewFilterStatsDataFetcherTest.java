@@ -78,7 +78,7 @@ public class ViewFilterStatsDataFetcherTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void fetchSelectedFields() {
-    QLData data = viewFieldsDataFetcher.fetchSelectedFields(ACCOUNT_ID, null, null, null, null, 10, 0, null);
+    QLData data = viewFieldsDataFetcher.fetchSelectedFields(ACCOUNT_ID, null, null, null, null, 10, 0, false, null);
     assertThat(data).isNull();
   }
 

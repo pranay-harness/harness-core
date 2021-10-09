@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @OwnedBy(CDP)
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class GitUtilsManager {
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private SettingsService settingsService;

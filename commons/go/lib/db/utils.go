@@ -14,12 +14,27 @@ func logQuery(log *zap.SugaredLogger, start time.Time, query string, args []inte
 		logw = log.Errorw
 	}
 
-	logw("sql query execute", "sql.query", collapseSpaces(query), "sql.hash", hash(query),
-		"sql.parameters", args, "query_time_ms", ms(time.Since(start)), zap.Error(err))
+	// Log only the first 50 args and the first 2000 characters of the SQL query to avoid spamming the logs
+	logw("sql query execute", "sql.query", truncateString(collapseSpaces(query), 2000), "sql.hash", hash(query),
+		"logQuerysql.parameters", truncateList(args, 50), "query_time_ms", ms(time.Since(start)), zap.Error(err))
+}
+
+func truncateList(inp []interface{}, to int) []interface{} {
+	if len(inp) > to {
+		return inp[:to]
+	}
+	return inp
+}
+
+func truncateString(inp string, to int) string {
+	if len(inp) > to {
+		return inp[:to]
+	}
+	return inp
 }
 
 // collapseSpaces standardizes string by removing multiple spaces between words
-func collapseSpaces(s string) interface{} {
+func collapseSpaces(s string) string {
 	return strings.Join(strings.Fields(s), " ")
 }
 

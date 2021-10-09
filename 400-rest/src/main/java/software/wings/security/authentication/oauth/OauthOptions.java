@@ -1,15 +1,17 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.OauthProviderType;
 
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.saml.SSORequest;
 import software.wings.service.impl.SSOSettingServiceImpl;
 
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class OauthOptions {
   @Inject GithubClientImpl githubClient;
   @Inject LinkedinClientImpl linkedinClient;

@@ -22,8 +22,8 @@ import static software.wings.sm.states.ResourceConstraintState.NotificationEvent
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
+import io.harness.beans.ResourceConstraint;
 import io.harness.beans.WorkflowType;
-import io.harness.beans.shared.ResourceConstraint;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager.Owners;

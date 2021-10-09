@@ -37,4 +37,6 @@ public interface GitEntityService {
 
   List<GitFileLocation> getDefaultEntities(
       String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId);
+
+  GitSyncEntityDTO get(String accountIdentifier, String completeFilePath, String repoUrl, String branch);
 }

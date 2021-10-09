@@ -3,7 +3,7 @@ package io.harness.invites.remote;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.user.UserInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -24,4 +24,5 @@ public class InviteAcceptResponse {
   String orgIdentifier;
   String projectIdentifier;
   String inviteId;
+  String email;
 }

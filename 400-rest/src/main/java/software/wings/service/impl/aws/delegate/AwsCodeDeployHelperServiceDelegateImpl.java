@@ -9,11 +9,14 @@ import static java.util.Collections.emptyList;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.service.impl.AwsUtils;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
 import software.wings.service.intfc.aws.delegate.AwsCodeDeployHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
@@ -45,9 +48,11 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@Slf4j
 @OwnedBy(CDP)
 public class AwsCodeDeployHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsCodeDeployHelperServiceDelegate {
@@ -64,16 +69,16 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   @Override
   public List<String> listApplications(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonCodeDeployClient> closeableAmazonCodeDeployClient =
+             new CloseableAmazonWebServiceClient(getAmazonCodeDeployClient(Regions.fromName(region), awsConfig))) {
       List<String> applications = new ArrayList<>();
       String nextToken = null;
       ListApplicationsResult listApplicationsResult;
       ListApplicationsRequest listApplicationsRequest;
       do {
         listApplicationsRequest = new ListApplicationsRequest().withNextToken(nextToken);
-        listApplicationsResult =
-            getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).listApplications(listApplicationsRequest);
+        listApplicationsResult = closeableAmazonCodeDeployClient.getClient().listApplications(listApplicationsRequest);
         tracker.trackCDCall("Get Applications");
         applications.addAll(listApplicationsResult.getApplications());
         nextToken = listApplicationsResult.getNextToken();
@@ -83,6 +88,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listApplications", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -90,8 +98,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   @Override
   public List<String> listDeploymentConfiguration(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonCodeDeployClient> closeableAmazonCodeDeployClient =
+             new CloseableAmazonWebServiceClient(getAmazonCodeDeployClient(Regions.fromName(region), awsConfig))) {
       String nextToken = null;
       List<String> deploymentConfigurations = new ArrayList<>();
       ListDeploymentConfigsResult listDeploymentConfigsResult;
@@ -99,8 +108,8 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       do {
         listDeploymentConfigsRequest = new ListDeploymentConfigsRequest().withNextToken(nextToken);
         tracker.trackCDCall("List Deployment Configs");
-        listDeploymentConfigsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
-                                          .listDeploymentConfigs(listDeploymentConfigsRequest);
+        listDeploymentConfigsResult =
+            closeableAmazonCodeDeployClient.getClient().listDeploymentConfigs(listDeploymentConfigsRequest);
         deploymentConfigurations.addAll(listDeploymentConfigsResult.getDeploymentConfigsList());
         nextToken = listDeploymentConfigsResult.getNextToken();
       } while (nextToken != null);
@@ -109,6 +118,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listDeploymentConfiguration", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -116,8 +128,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   @Override
   public List<String> listDeploymentGroups(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String appName) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonCodeDeployClient> closeableAmazonCodeDeployClient =
+             new CloseableAmazonWebServiceClient(getAmazonCodeDeployClient(Regions.fromName(region), awsConfig))) {
       String nextToken = null;
       List<String> deploymentGroups = new ArrayList<>();
       ListDeploymentGroupsResult listDeploymentGroupsResult;
@@ -126,8 +139,8 @@ public class AwsCodeDeployHelperServiceDelegateImpl
         listDeploymentGroupsRequest =
             new ListDeploymentGroupsRequest().withNextToken(nextToken).withApplicationName(appName);
         tracker.trackCDCall("List Deployment Groups");
-        listDeploymentGroupsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
-                                         .listDeploymentGroups(listDeploymentGroupsRequest);
+        listDeploymentGroupsResult =
+            closeableAmazonCodeDeployClient.getClient().listDeploymentGroups(listDeploymentGroupsRequest);
         deploymentGroups.addAll(listDeploymentGroupsResult.getDeploymentGroups());
         nextToken = listDeploymentGroupsResult.getNextToken();
       } while (nextToken != null);
@@ -136,6 +149,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listDeploymentGroups", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -143,20 +159,21 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   @Override
   public List<Instance> listDeploymentInstances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String deploymentId) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonCodeDeployClient> closeableAmazonCodeDeployClient =
+             new CloseableAmazonWebServiceClient(getAmazonCodeDeployClient(Regions.fromName(region), awsConfig))) {
       String nextToken = null;
       List<String> instanceIds = new ArrayList<>();
       ListDeploymentInstancesRequest listDeploymentInstancesRequest;
       ListDeploymentInstancesResult listDeploymentInstancesResult;
-      AmazonCodeDeployClient amazonCodeDeployClient = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig);
       do {
         listDeploymentInstancesRequest = new ListDeploymentInstancesRequest()
                                              .withNextToken(nextToken)
                                              .withDeploymentId(deploymentId)
                                              .withInstanceStatusFilter(asList(InstanceStatus.Succeeded.name()));
         tracker.trackCDCall("List Deployment Instances");
-        listDeploymentInstancesResult = amazonCodeDeployClient.listDeploymentInstances(listDeploymentInstancesRequest);
+        listDeploymentInstancesResult =
+            closeableAmazonCodeDeployClient.getClient().listDeploymentInstances(listDeploymentInstancesRequest);
         instanceIds.addAll(listDeploymentInstancesResult.getInstancesList());
         nextToken = listDeploymentInstancesResult.getNextToken();
       } while (nextToken != null);
@@ -177,6 +194,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listDeploymentInstances", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -184,13 +204,14 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   @Override
   public AwsCodeDeployS3LocationData listAppRevision(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String region, String appName, String deploymentGroupName) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonCodeDeployClient> closeableAmazonCodeDeployClient =
+             new CloseableAmazonWebServiceClient(getAmazonCodeDeployClient(Regions.fromName(region), awsConfig))) {
       GetDeploymentGroupRequest getDeploymentGroupRequest =
           new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(deploymentGroupName);
       tracker.trackCDCall("Get Deployment Group");
       GetDeploymentGroupResult getDeploymentGroupResult =
-          getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).getDeploymentGroup(getDeploymentGroupRequest);
+          closeableAmazonCodeDeployClient.getClient().getDeploymentGroup(getDeploymentGroupRequest);
       DeploymentGroupInfo deploymentGroupInfo = getDeploymentGroupResult.getDeploymentGroupInfo();
       RevisionLocation revisionLocation = deploymentGroupInfo.getTargetRevision();
       if (revisionLocation == null || revisionLocation.getS3Location() == null) {
@@ -206,6 +227,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listAppRevision", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }

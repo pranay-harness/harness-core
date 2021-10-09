@@ -2,12 +2,17 @@ package io.harness.perpetualtask;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.JENNY;
+import static io.harness.rule.OwnerRule.MOHIT_GARG;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -31,6 +36,8 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,8 +50,12 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
 
   @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
   @Mock private Subject<PerpetualTaskStateObserver> perpetualTaskStateObserverSubject;
+  @Inject private PerpetualTaskScheduleService perpetualTaskScheduleService;
 
   @InjectMocks @Inject private PerpetualTaskServiceImpl perpetualTaskService;
+
+  @Inject private BroadcasterFactory broadcasterFactory;
+  @Mock private Broadcaster broadcaster;
 
   public static final String TASK_DESCRIPTION = "taskDescription";
   private final String ACCOUNT_ID = "test-account-id";
@@ -78,9 +89,32 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     String taskId = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
     assertThat(taskId).isNotNull();
+
     String taskIdDuplicate = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
     assertThat(taskIdDuplicate).isEqualTo(taskId);
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testCustomTimeIntervalIfNotPresent() {
+    long finalTaskTimeInterval =
+        perpetualTaskService.getTaskTimeInterval(perpetualTaskSchedule(), ACCOUNT_ID, PerpetualTaskType.ECS_CLUSTER);
+
+    assertThat(finalTaskTimeInterval).isEqualTo(perpetualTaskSchedule().getInterval().getSeconds());
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testCustomTimeIntervalIfPresent() {
+    long customTimeIntervalInMs = 100000;
+    perpetualTaskScheduleService.save(ACCOUNT_ID, PerpetualTaskType.ECS_CLUSTER, customTimeIntervalInMs);
+    long finalTaskTimeInterval =
+        perpetualTaskService.getTaskTimeInterval(perpetualTaskSchedule(), ACCOUNT_ID, PerpetualTaskType.ECS_CLUSTER);
+
+    assertThat(finalTaskTimeInterval).isEqualTo(customTimeIntervalInMs / 1000);
   }
 
   @Test
@@ -165,6 +199,128 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
     assertThat(resetTask).isTrue();
     assertThat(record.getClientContext()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testSingleUpdateTaskSchedule() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateId = UUIDGenerator.generateUuid();
+    String taskId = UUIDGenerator.generateUuid();
+    long intervalInMillis = 1000;
+
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setAccountId(accountId);
+    perpetualTaskRecord.setDelegateId(delegateId);
+    perpetualTaskRecord.setUuid(taskId);
+    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
+    perpetualTaskRecord.setIntervalSeconds(intervalInMillis * 10);
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    long updatedRecords =
+        perpetualTaskService.updateTasksSchedule(accountId, PerpetualTaskType.K8S_WATCH, intervalInMillis);
+
+    PerpetualTaskRecord record = perpetualTaskService.getTaskRecord(taskId);
+
+    assertThat(updatedRecords).isEqualTo(1L);
+    assertThat(record).isNotNull();
+    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
+    assertThat(record.getIntervalSeconds()).isEqualTo(intervalInMillis / 1000);
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testMultiUpdateTaskSchedule() {
+    long intervalInMillis = 1000;
+
+    for (int i = 0; i < 10; i++) {
+      String delegateId = UUIDGenerator.generateUuid();
+      String taskId = UUIDGenerator.generateUuid();
+      PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+      perpetualTaskRecord.setDelegateId(delegateId);
+      perpetualTaskRecord.setUuid(taskId);
+      perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
+      perpetualTaskRecord.setIntervalSeconds(intervalInMillis * 10);
+      perpetualTaskRecordDao.save(perpetualTaskRecord);
+    }
+
+    long updatedRecords =
+        perpetualTaskService.updateTasksSchedule(ACCOUNT_ID, PerpetualTaskType.K8S_WATCH, intervalInMillis);
+
+    assertThat(updatedRecords).isEqualTo(10L);
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testMultiUpdateTaskScheduleInCaseOfMultipleAccounts() {
+    long intervalInMillis = 1000;
+
+    for (int i = 0; i < 10; i++) {
+      String delegateId = UUIDGenerator.generateUuid();
+      String taskId = UUIDGenerator.generateUuid();
+      PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+      perpetualTaskRecord.setDelegateId(delegateId);
+      perpetualTaskRecord.setUuid(taskId);
+      perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
+      perpetualTaskRecord.setIntervalSeconds(intervalInMillis * 10);
+      perpetualTaskRecordDao.save(perpetualTaskRecord);
+    }
+
+    for (int i = 0; i < 10; i++) {
+      String delegateId = UUIDGenerator.generateUuid();
+      String taskId = UUIDGenerator.generateUuid();
+      PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+      perpetualTaskRecord.setDelegateId(delegateId);
+      perpetualTaskRecord.setAccountId(UUIDGenerator.generateUuid());
+      perpetualTaskRecord.setUuid(taskId);
+      perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
+      perpetualTaskRecord.setIntervalSeconds(intervalInMillis * 10);
+      perpetualTaskRecordDao.save(perpetualTaskRecord);
+    }
+
+    long updatedRecords =
+        perpetualTaskService.updateTasksSchedule(ACCOUNT_ID, PerpetualTaskType.K8S_WATCH, intervalInMillis);
+
+    assertThat(updatedRecords).isEqualTo(10L);
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testMultiUpdateTaskScheduleInCaseOfMultipleTaskTypes() {
+    long intervalInMillis = 1000;
+
+    for (int i = 0; i < 5; i++) {
+      String delegateId = UUIDGenerator.generateUuid();
+      String taskId = UUIDGenerator.generateUuid();
+      PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+      perpetualTaskRecord.setDelegateId(delegateId);
+      perpetualTaskRecord.setUuid(taskId);
+      perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
+      perpetualTaskRecord.setIntervalSeconds(intervalInMillis * 10);
+      perpetualTaskRecordDao.save(perpetualTaskRecord);
+    }
+
+    for (int i = 0; i < 5; i++) {
+      String delegateId = UUIDGenerator.generateUuid();
+      String taskId = UUIDGenerator.generateUuid();
+      PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+      perpetualTaskRecord.setDelegateId(delegateId);
+      perpetualTaskRecord.setPerpetualTaskType("TASK_TYPE");
+      perpetualTaskRecord.setAccountId(UUIDGenerator.generateUuid());
+      perpetualTaskRecord.setUuid(taskId);
+      perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
+      perpetualTaskRecord.setIntervalSeconds(intervalInMillis * 10);
+      perpetualTaskRecordDao.save(perpetualTaskRecord);
+    }
+
+    long updatedRecords =
+        perpetualTaskService.updateTasksSchedule(ACCOUNT_ID, PerpetualTaskType.K8S_WATCH, intervalInMillis);
+
+    assertThat(updatedRecords).isEqualTo(5L);
   }
 
   @Test
@@ -299,6 +455,30 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskService.appointDelegate(accountId, taskId, delegateId2, 1L);
     assertThat(testBroadcastAggregateSet).isNotNull();
     assertThat(testBroadcastAggregateSet).size().isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testBroadcastToDelegate() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateId = UUIDGenerator.generateUuid();
+    String taskId = UUIDGenerator.generateUuid();
+
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+    perpetualTaskRecord.setAccountId(accountId);
+    perpetualTaskRecord.setDelegateId(delegateId);
+    perpetualTaskRecord.setUuid(taskId);
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    perpetualTaskService.appointDelegate(accountId, taskId, delegateId, 1L);
+
+    assertThat(testBroadcastAggregateSet).isNotNull();
+    assertThat(testBroadcastAggregateSet).size().isEqualTo(1);
+    when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
+    perpetualTaskService.broadcastToDelegate();
   }
 
   public PerpetualTaskClientContext clientContext() {

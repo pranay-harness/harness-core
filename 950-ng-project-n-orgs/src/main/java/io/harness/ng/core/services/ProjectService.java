@@ -3,6 +3,8 @@ package io.harness.ng.core.services;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
@@ -22,10 +24,14 @@ public interface ProjectService {
 
   Project update(String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO project);
 
+  PageResponse<ProjectDTO> listProjectsForUser(String userId, String accountId, PageRequest pageRequest);
+
+  List<ProjectDTO> listProjectsForUser(String userId, String accountId);
+
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
    */
-  Page<Project> list(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
+  Page<Project> listPermittedProjects(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
 
   /**
    * Use this method with caution, verify that the criteria and pageable sort is able to make use of the indexes.
@@ -42,4 +48,6 @@ public interface ProjectService {
   boolean restore(String accountIdentifier, String orgIdentifier, String identifier);
 
   Map<String, Integer> getProjectsCountPerOrganization(String accountIdentifier, List<String> orgIdentifiers);
+
+  Long countProjects(String accountIdenifier);
 }

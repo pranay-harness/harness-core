@@ -71,27 +71,27 @@ public class NexusServiceImpl implements NexusService {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
-        HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+        HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20),
             () -> nexusTwoService.collectGroupIds(nexusConfig, repoId, groupIds, repositoryFormat));
       } else {
         if (repositoryFormat != null) {
           switch (repositoryFormat) {
             case "nuget":
             case "npm":
-              return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+              return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20),
                   () -> nexusThreeService.getPackageNames(nexusConfig, repoId, repositoryFormat, groupIds));
             case "maven":
-              return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+              return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20),
                   () -> nexusThreeService.getGroupIds(nexusConfig, repoId, repositoryFormat, groupIds));
             case "docker":
-              return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+              return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20),
                   () -> nexusThreeService.getDockerImages(nexusConfig, repoId, groupIds));
             default:
               throw new InvalidArtifactServerException("Unsupported repositoryFormat for Nexus 3.x");
           }
         } else {
           // for backward compatibility  with old UI when repositoryFormat is null
-          return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+          return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20),
               () -> nexusThreeService.getDockerImages(nexusConfig, repoId, groupIds));
         }
       }

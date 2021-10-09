@@ -7,6 +7,7 @@ import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
 import static io.harness.common.CIExecutionConstants.GIT_SSL_NO_VERIFY;
+import static io.harness.common.CIExecutionConstants.PR_CLONE_STRATEGY_ATTRIBUTE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -14,6 +15,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
@@ -21,6 +23,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -35,10 +38,10 @@ import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,9 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 public class CILiteEngineStepGroupUtils {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
-  private static final String BUILD_NUMBER = "buildnumber";
   @Inject private LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
-  private static final SecureRandom random = new SecureRandom();
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public List<ExecutionWrapperConfig> createExecutionWrapperWithLiteEngineSteps(StageElementConfig stageElementConfig,
@@ -131,8 +132,10 @@ public class CILiteEngineStepGroupUtils {
       String uuid = generateUuid();
       String jsonString = JsonPipelineUtils.writeJsonString(StepElementConfig.builder()
                                                                 .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+                                                                .name(LITE_ENGINE_TASK + liteEngineCounter)
                                                                 .uuid(generateUuid())
                                                                 .type("liteEngineTask")
+                                                                .timeout(getTimeout(infrastructure))
                                                                 .stepSpecType(liteEngineTaskStepInfo)
                                                                 .build());
       JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
@@ -144,6 +147,20 @@ public class CILiteEngineStepGroupUtils {
 
   private boolean isLiteEngineStep(ExecutionWrapperConfig executionWrapper) {
     return !isCIManagerStep(executionWrapper);
+  }
+
+  private ParameterField<Timeout> getTimeout(Infrastructure infrastructure) {
+    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+
+    ParameterField<String> timeout = ((K8sDirectInfraYaml) infrastructure).getSpec().getInitTimeout();
+
+    if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
+      return ParameterField.createValueField(Timeout.fromString((String) timeout.fetchFinalValue()));
+    } else {
+      return ParameterField.createValueField(Timeout.fromString("10m"));
+    }
   }
 
   private boolean containsManagerStep(List<ExecutionWrapperConfig> executionSections) {
@@ -200,17 +217,28 @@ public class CILiteEngineStepGroupUtils {
   }
 
   private ExecutionWrapperConfig getGitCloneStep(CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase) {
-    Map<String, String> settings = new HashMap<>();
+    Map<String, JsonNode> settings = new HashMap<>();
     if (ciCodebase == null) {
       throw new CIStageExecutionException("Codebase is mandatory with enabled cloneCodebase flag");
     }
     Integer depth = ciCodebase.getDepth();
-    if (depth == null && ciExecutionArgs.getExecutionSource().getType() != ExecutionSource.Type.WEBHOOK) {
-      depth = GIT_CLONE_MANUAL_DEPTH;
+    ExecutionSource executionSource = ciExecutionArgs.getExecutionSource();
+    if (depth == null) {
+      if (executionSource.getType() == ExecutionSource.Type.MANUAL) {
+        ManualExecutionSource manualExecutionSource = (ManualExecutionSource) executionSource;
+        if (isNotEmpty(manualExecutionSource.getBranch()) || isNotEmpty(manualExecutionSource.getTag())) {
+          depth = GIT_CLONE_MANUAL_DEPTH;
+        }
+      }
     }
 
     if (depth != null) {
-      settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, depth.toString());
+      settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, JsonNodeFactory.instance.textNode(depth.toString()));
+    }
+
+    if (ciCodebase.getPrCloneStrategy() != null) {
+      settings.put(PR_CLONE_STRATEGY_ATTRIBUTE,
+          JsonNodeFactory.instance.textNode(ciCodebase.getPrCloneStrategy().getYamlName()));
     }
 
     Map<String, String> envVariables = new HashMap<>();

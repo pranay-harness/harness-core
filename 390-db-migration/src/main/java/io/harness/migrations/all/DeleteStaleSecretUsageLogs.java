@@ -1,6 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.SecretUsageLog;
 import io.harness.beans.SecretUsageLog.SecretUsageLogKeys;
 import io.harness.migrations.Migration;

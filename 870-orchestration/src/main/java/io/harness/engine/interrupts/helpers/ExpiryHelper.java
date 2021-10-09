@@ -5,11 +5,14 @@ import static io.harness.logging.UnitStatus.EXPIRED;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -26,8 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ExpiryHelper {
   @Inject private OrchestrationEngine engine;
   @Inject private InterruptHelper interruptHelper;
+  @Inject private NodeExecutionService nodeExecutionService;
 
-  public String expireMarkedInstance(NodeExecution nodeExecution, Interrupt interrupt) {
+  public void expireMarkedInstance(NodeExecution nodeExecution, Interrupt interrupt) {
     try {
       boolean taskDiscontinued = interruptHelper.discontinueTaskIfRequired(nodeExecution);
       if (!taskDiscontinued) {
@@ -35,6 +39,15 @@ public class ExpiryHelper {
       }
 
       List<UnitProgress> unitProgressList = InterruptHelper.evaluateUnitProgresses(nodeExecution, EXPIRED);
+      nodeExecutionService.update(nodeExecution.getUuid(),
+          ops
+          -> ops.addToSet(NodeExecutionKeys.interruptHistories,
+              InterruptEffect.builder()
+                  .interruptType(interrupt.getType())
+                  .tookEffectAt(System.currentTimeMillis())
+                  .interruptId(interrupt.getUuid())
+                  .interruptConfig(interrupt.getInterruptConfig())
+                  .build()));
 
       StepResponseProto expiredStepResponse =
           StepResponseProto.newBuilder()
@@ -45,11 +58,10 @@ public class ExpiryHelper {
                                   .build())
               .addAllUnitProgress(unitProgressList)
               .build();
-      engine.handleStepResponse(nodeExecution.getUuid(), expiredStepResponse);
-      return interrupt.getUuid();
+      engine.processStepResponse(nodeExecution.getAmbiance(), expiredStepResponse);
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(
-          InterruptType.MARK_EXPIRED, "Expiry failed failed for NodeExecutionId: " + nodeExecution.getUuid(), ex);
+          InterruptType.MARK_EXPIRED, "Expiry failed for NodeExecutionId: " + nodeExecution.getUuid(), ex);
     } catch (Exception e) {
       log.error("Error in discontinuing", e);
       throw new InvalidRequestException("Error in discontinuing, " + e.getMessage());

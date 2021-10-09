@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.advisers.rollback.RollbackTriggeredOutput;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
@@ -9,12 +10,17 @@ import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
-import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.section.chain.SectionChainPassThroughData;
 import io.harness.tasks.ResponseData;
@@ -25,10 +31,12 @@ import java.util.Map;
 
 @OwnedBy(PIPELINE)
 public class RollbackOptionalChildChainStep implements ChildChainExecutable<RollbackOptionalChildChainStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").setStepCategory(StepCategory.STEP).build();
 
   @Inject private PlanCreatorHelper planCreatorHelper;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
   public Class<RollbackOptionalChildChainStepParameters> getStepParametersClass() {
@@ -56,8 +64,10 @@ public class RollbackOptionalChildChainStep implements ChildChainExecutable<Roll
   @Override
   public ChildChainExecutableResponse executeNextChild(Ambiance ambiance,
       RollbackOptionalChildChainStepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    int index = ((SectionChainPassThroughData) passThroughData).getChildIndex() + 1;
+      ByteString passThroughData, Map<String, ResponseData> responseDataMap) {
+    SectionChainPassThroughData sectionChainPassThroughData =
+        (SectionChainPassThroughData) kryoSerializer.asObject(passThroughData.toByteArray());
+    int index = sectionChainPassThroughData.getChildIndex() + 1;
 
     for (int i = index; i < stepParameters.getChildNodes().size(); i++) {
       RollbackNode childNode = stepParameters.getChildNodes().get(i);
@@ -76,8 +86,16 @@ public class RollbackOptionalChildChainStep implements ChildChainExecutable<Roll
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, RollbackOptionalChildChainStepParameters stepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      ByteString passThroughData, Map<String, ResponseData> responseDataMap) {
     StepResponseNotifyData notifyData = (StepResponseNotifyData) responseDataMap.values().iterator().next();
+    // Publish this outcome to let the next step advise for stage know that the stage has been rolled back and new stage
+    // should not run
+    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.DEPLOYMENT_ROLLED_BACK));
+    if (!optionalSweepingOutput.isFound()) {
+      executionSweepingOutputService.consume(ambiance, YAMLFieldNameConstants.DEPLOYMENT_ROLLED_BACK,
+          RollbackTriggeredOutput.builder().rollbackTriggered(true).build(), StepOutcomeGroup.STAGE.name());
+    }
     // If status is suspended, then we should mark the execution as success
     if (notifyData.getStatus() == Status.SUSPENDED) {
       return StepResponse.builder().status(Status.SUCCEEDED).failureInfo(notifyData.getFailureInfo()).build();

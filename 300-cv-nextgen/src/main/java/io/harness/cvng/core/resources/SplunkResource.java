@@ -1,7 +1,6 @@
 package io.harness.cvng.core.resources;
 
 import io.harness.cvng.beans.SplunkSavedSearch;
-import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -11,6 +10,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.LinkedHashMap;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -30,28 +30,41 @@ public class SplunkResource {
   @Path("saved-searches")
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "gets saved searches in splunk", nickname = "getSavedSearches")
+  @ApiOperation(value = "gets saved searches in splunk", nickname = "getSplunkSavedSearches")
   public RestResponse<List<SplunkSavedSearch>> getSavedSearches(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("connectorIdentifier") String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("connectorIdentifier") String connectorIdentifier,
       @QueryParam("requestGuid") @NotNull String requestGuid) {
     return new RestResponse<>(
-        splunkService.getSavedSearches(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, requestGuid));
+        splunkService.getSavedSearches(accountId, orgIdentifier, projectIdentifier, connectorIdentifier, requestGuid));
   }
 
   @GET
-  @Path("validation")
+  @Path("sample-data")
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "validates given setting for splunk data source", nickname = "getValidationResponseForSplunk")
-  public RestResponse<SplunkValidationResponse> getValidationResponse(
-      @NotNull @QueryParam("accountId") final String accountId,
-      @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
+  @ApiOperation(value = "validates given setting for splunk data source", nickname = "getSplunkSampleData")
+  public RestResponse<List<LinkedHashMap>> getSampleData(@NotNull @QueryParam("accountId") final String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @NotNull @NotEmpty @QueryParam("query") String query, @QueryParam("requestGuid") @NotNull String requestGuid) {
-    return new RestResponse<>(splunkService.getValidationResponse(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, query, requestGuid));
+    return new RestResponse<>(splunkService.getSampleData(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, query, requestGuid));
+  }
+
+  @GET
+  @Path("latest-histogram")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get latest histogram for the query", nickname = "getSplunkLatestHistogram")
+  public RestResponse<List<LinkedHashMap>> getLatestHistogram(@NotNull @QueryParam("accountId") final String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
+      @NotNull @NotEmpty @QueryParam("query") String query, @QueryParam("requestGuid") @NotNull String requestGuid) {
+    return new RestResponse<>(splunkService.getLatestHistogram(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, query, requestGuid));
   }
 }

@@ -26,9 +26,9 @@ public class SlackChannel extends NotificationChannel {
   List<String> webhookUrls;
 
   @Builder
-  public SlackChannel(String accountId, List<String> userGroupIds, List<NotificationRequest.UserGroup> userGroups,
-      String templateId, Map<String, String> templateData, Team team, List<String> webhookUrls) {
-    super(accountId, userGroupIds, userGroups, templateId, templateData, team);
+  public SlackChannel(String accountId, List<NotificationRequest.UserGroup> userGroups, String templateId,
+      Map<String, String> templateData, Team team, List<String> webhookUrls) {
+    super(accountId, userGroups, templateId, templateData, team);
     this.webhookUrls = webhookUrls;
   }
 
@@ -43,7 +43,6 @@ public class SlackChannel extends NotificationChannel {
                       .addAllSlackWebHookUrls(webhookUrls)
                       .setTemplateId(templateId)
                       .putAllTemplateData(templateData)
-                      .addAllUserGroupIds(CollectionUtils.emptyIfNull(userGroupIds))
                       .addAllUserGroup(CollectionUtils.emptyIfNull(userGroups)))
         .build();
   }

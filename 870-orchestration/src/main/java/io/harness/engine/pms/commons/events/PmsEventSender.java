@@ -19,10 +19,12 @@ import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.PmsFeatureFlagService;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.ConsumerConfig.ConfigCase;
 import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.events.base.PmsEventCategory;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
 import io.harness.redis.RedisConfig;
@@ -38,6 +40,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -67,19 +70,30 @@ public class PmsEventSender {
             }
           });
 
-  public String sendEvent(
-      ByteString eventData, PmsEventCategory eventCategory, String serviceName, String accountId, boolean isMonitored) {
+  public String sendEvent(Ambiance ambiance, ByteString eventData, PmsEventCategory eventCategory, String serviceName,
+      boolean isMonitored) {
     log.info("Sending {} event for {} to the producer", eventCategory, serviceName);
+    ImmutableMap.Builder<String, String> metadataBuilder = ImmutableMap.<String, String>builder()
+                                                               .put(SERVICE_NAME, serviceName)
+                                                               .putAll(AmbianceUtils.logContextMap(ambiance));
     Producer producer = obtainProducer(eventCategory, serviceName);
 
-    ImmutableMap.Builder<String, String> metadataBuilder =
-        ImmutableMap.<String, String>builder().put(SERVICE_NAME, serviceName);
-    if (isMonitored && pmsFeatureFlagService.isEnabled(accountId, FeatureName.PIPELINE_MONITORING)) {
+    if (isMonitored
+        && pmsFeatureFlagService.isEnabled(AmbianceUtils.getAccountId(ambiance), FeatureName.PIPELINE_MONITORING)) {
       metadataBuilder.put(PIPELINE_MONITORING_ENABLED, "true");
     }
-
     String messageId =
         producer.send(Message.newBuilder().putAllMetadata(metadataBuilder.build()).setData(eventData).build());
+    log.info("Successfully Sent {} event for {} to the producer. MessageId {}", eventCategory, serviceName, messageId);
+    return messageId;
+  }
+
+  public String sendEvent(
+      ByteString eventData, Map<String, String> metadataMap, PmsEventCategory eventCategory, String serviceName) {
+    log.info("Sending {} event for {} to the producer", eventCategory, serviceName);
+    Producer producer = obtainProducer(eventCategory, serviceName);
+    metadataMap.put(SERVICE_NAME, serviceName);
+    String messageId = producer.send(Message.newBuilder().putAllMetadata(metadataMap).setData(eventData).build());
     log.info("Successfully Sent {} event for {} to the producer. MessageId {}", eventCategory, serviceName, messageId);
     return messageId;
   }
@@ -122,6 +136,9 @@ public class PmsEventSender {
       case NODE_RESUME:
         return extractProducer(
             instance.getNodeResumeEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE);
+      case CREATE_PARTIAL_PLAN:
+        return extractProducer(instance.getStartPlanCreationEventConsumerConfig(),
+            EventsFrameworkConstants.PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE);
       default:
         throw new InvalidRequestException("Invalid Event Category while obtaining Producer");
     }

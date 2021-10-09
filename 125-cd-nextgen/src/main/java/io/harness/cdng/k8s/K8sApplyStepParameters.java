@@ -1,8 +1,11 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.cdng.k8s.K8sStepHelper.getParameterFieldBooleanValue;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
@@ -22,6 +25,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("k8sApplyStepParameters")
+@RecasterAlias("io.harness.cdng.k8s.K8sApplyStepParameters")
 public class K8sApplyStepParameters extends K8sApplyBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
   public K8sApplyStepParameters(ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,
@@ -33,7 +37,9 @@ public class K8sApplyStepParameters extends K8sApplyBaseStepInfo implements K8sS
   @Override
   @JsonIgnore
   public List<String> getCommandUnits() {
-    if (!ParameterField.isNull(skipSteadyStateCheck) && skipSteadyStateCheck.getValue()) {
+    if (!ParameterField.isNull(skipSteadyStateCheck)
+        && getParameterFieldBooleanValue(skipSteadyStateCheck, K8sApplyBaseStepInfoKeys.skipSteadyStateCheck,
+            String.format("%s step", ExecutionNodeType.K8S_APPLY.getYamlType()))) {
       return Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
           K8sCommandUnitConstants.Prepare, K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WrapUp);
     } else {

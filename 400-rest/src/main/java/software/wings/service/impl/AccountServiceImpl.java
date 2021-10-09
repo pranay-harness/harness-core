@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.FeatureName.AUTO_ACCEPT_SAML_ACCOUNT_INVITES;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -9,6 +10,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -33,7 +35,9 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofHours;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
@@ -54,8 +58,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
-import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -82,6 +84,9 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
@@ -114,6 +119,7 @@ import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.OauthSettings;
+import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
@@ -135,8 +141,6 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AccountSettingsResponse;
-import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -145,6 +149,7 @@ import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -152,12 +157,14 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -195,7 +202,6 @@ import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -230,13 +236,14 @@ public class AccountServiceImpl implements AccountService {
       + "-d '{\"application\":\"4qPkwP5dQI2JduECqGZpcg\","
       + "\"parameters\":{\"Environment\":\"%s\",\"delegate\":\"delegate\","
       + "\"account_id\":\"%s\",\"account_id_short\":\"%s\",\"account_secret\":\"%s\"}}'";
-  private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   private static final String DELIMITER = "####";
+  private static final String DEFAULT_EXPERIENCE = "defaultExperience";
 
   @Inject protected AuthService authService;
   @Inject protected HarnessCacheManager harnessCacheManager;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private RoleService roleService;
   @Inject private AuthHandler authHandler;
   @Inject private LicenseService licenseService;
@@ -263,13 +270,13 @@ public class AccountServiceImpl implements AccountService {
   @Inject private EventPublisher eventPublisher;
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
   @Inject private Morphia morphia;
-  @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private DeleteAccountHelper deleteAccountHelper;
   @Inject private AccountDao accountDao;
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
+  @Inject private DelegateService delegateService;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -454,17 +461,16 @@ public class AccountServiceImpl implements AccountService {
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
     featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
     featureFlagService.enableAccount(FeatureName.DISABLE_WINRM_ENV_VARIABLES, account.getUuid());
-    featureFlagService.enableAccount(FeatureName.HELM_CHART_NAME_SPLIT, account.getUuid());
 
     if (fromDataGen) {
-      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
+      updateNextGenEnabled(account.getUuid(), true);
       featureFlagService.enableAccount(FeatureName.CDNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CENG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CFNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CING_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CVNG_ENABLED, account.getUuid());
     } else if (account.isCreatedFromNG()) {
-      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
+      updateNextGenEnabled(account.getUuid(), true);
     }
   }
 
@@ -511,7 +517,22 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public AccountDetails getDetails(String accountId) {
+  public boolean isNextGenEnabled(String accountId) {
+    Account account = getFromCacheWithFallback(accountId);
+    return account != null && account.isNextGenEnabled();
+  }
+
+  @Override
+  public Boolean updateNextGenEnabled(String accountId, boolean enabled) {
+    Account account = get(accountId);
+    account.setNextGenEnabled(enabled);
+    update(account);
+    publishAccountChangeEventViaEventFramework(accountId, UPDATE_ACTION);
+    return true;
+  }
+
+  @Override
+  public AccountDetails getAccountDetails(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
     if (account == null) {
       throw new AccountNotFoundException(
@@ -525,6 +546,9 @@ public class AccountServiceImpl implements AccountService {
     accountDetails.setCluster(mainConfiguration.getDeploymentClusterName());
     accountDetails.setLicenseInfo(account.getLicenseInfo());
     accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
+    accountDetails.setDefaultExperience(account.getDefaultExperience());
+    accountDetails.setCreatedFromNG(account.isCreatedFromNG());
+    accountDetails.setActiveServiceCount(workflowExecutionService.getActiveServiceCount(accountId));
     return accountDetails;
   }
 
@@ -833,6 +857,7 @@ public class AccountServiceImpl implements AccountService {
             .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
             .set(AccountKeys.oauthEnabled, account.isOauthEnabled())
             .set(AccountKeys.cloudCostEnabled, account.isCloudCostEnabled())
+            .set(AccountKeys.nextGenEnabled, account.isNextGenEnabled())
             .set(AccountKeys.ceAutoCollectK8sEvents, account.isCeAutoCollectK8sEvents())
             .set("whitelistedDomains", account.getWhitelistedDomains());
 
@@ -913,9 +938,16 @@ public class AccountServiceImpl implements AccountService {
     }
 
     Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-                          .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
+                          .filter(AccountKeys.uuid, accountId)
                           .project("delegateConfiguration", true)
                           .get();
+
+    if (account.getDelegateConfiguration() == null) {
+      account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                    .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
+                    .project("delegateConfiguration", true)
+                    .get();
+    }
 
     return account.getDelegateConfiguration();
   }
@@ -952,6 +984,26 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
     return false;
+  }
+
+  @Override
+  public void updateFeatureFlagsForOnPremAccount() {
+    Optional<Account> onPremAccount = getOnPremAccount();
+    if (!onPremAccount.isPresent()) {
+      return;
+    }
+    String featureNames = mainConfiguration.getFeatureNames();
+    List<String> enabled = isBlank(featureNames)
+        ? emptyList()
+        : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(featureNames);
+    for (String name : Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet())) {
+      if (enabled.contains(name)) {
+        featureFlagService.enableAccount(FeatureName.valueOf(name), onPremAccount.get().getUuid());
+      }
+    }
+    if (enabled.contains("NEXT_GEN_ENABLED")) {
+      updateNextGenEnabled(onPremAccount.get().getUuid(), true);
+    }
   }
 
   @Override
@@ -1148,18 +1200,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean sampleDelegateExists(String accountId) {
     assertTrialAccount(accountId);
-
-    Key<Delegate> delegateKey = wingsPersistence.createQuery(Delegate.class)
-                                    .filter(DelegateKeys.accountId, accountId)
-                                    .filter(DelegateKeys.delegateName, SAMPLE_DELEGATE_NAME)
-                                    .getKey();
-
-    if (delegateKey == null) {
-      return false;
-    }
-
-    return delegateConnectionDao.checkDelegateConnected(
-        accountId, delegateKey.getId().toString(), versionInfoManager.getVersionInfo().getVersion());
+    return delegateService.sampleDelegateExists(accountId);
   }
 
   @Override
@@ -1764,11 +1805,13 @@ public class AccountServiceImpl implements AccountService {
 
       Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-      long assureInterval = ofDays(2).toMillis();
+      long assureInterval;
       if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
         assureInterval = ofDays(10).toMillis();
       } else if (Calendar.DAY_OF_WEEK == Calendar.SUNDAY) {
         assureInterval = ofDays(30).toMillis();
+      } else {
+        return;
       }
 
       long assureTo = now + assureInterval;
@@ -1819,5 +1862,33 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public boolean isAutoInviteAcceptanceEnabled(String accountId) {
+    if (!featureFlagService.isEnabled(AUTO_ACCEPT_SAML_ACCOUNT_INVITES, accountId)) {
+      // This feature is restricted only to a certain accounts
+      return false;
+    }
+
+    Account account = get(accountId);
+
+    if (!AuthenticationMechanism.SAML.equals(account.getAuthenticationMechanism())) {
+      // Currently this provision is only for SAML authenticated accounts
+      return false;
+    }
+
+    List<SSOSettings> ssoSettings = ssoSettingService.getAllSsoSettings(accountId);
+    return ssoSettings.stream().anyMatch(settings -> settings.getType() == SSOType.SAML);
+  }
+
+  @Override
+  public Void setDefaultExperience(String accountId, DefaultExperience defaultExperience) {
+    Account account = getFromCacheWithFallback(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    notNullCheck("Invalid Default Experience: " + defaultExperience, defaultExperience);
+    wingsPersistence.updateField(Account.class, accountId, DEFAULT_EXPERIENCE, defaultExperience);
+    dbCache.invalidate(Account.class, account.getUuid());
+    return null;
   }
 }

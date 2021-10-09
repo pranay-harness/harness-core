@@ -34,6 +34,7 @@ public class InputSetResponseDTOPMS {
   String name;
   String description;
   Map<String, String> tags;
+  boolean isInvalid;
 
   @ApiModelProperty(name = "isErrorResponse") boolean isErrorResponse;
   InputSetErrorWrapperDTOPMS inputSetErrorWrapper;

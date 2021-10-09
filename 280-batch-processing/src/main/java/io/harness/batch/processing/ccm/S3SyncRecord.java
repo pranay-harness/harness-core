@@ -17,4 +17,5 @@ public class S3SyncRecord {
   String roleArn;
   String externalId;
   String curReportName;
+  String destinationBucket;
 }

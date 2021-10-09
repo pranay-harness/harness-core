@@ -1,21 +1,17 @@
 package io.harness.repositories.gitSyncError;
 
-import io.harness.annotation.HarnessRepo;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.common.beans.GitSyncDirection;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import java.util.List;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
+
+import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
-@OwnedBy(HarnessTeam.DX)
-public interface GitSyncErrorRepository
-    extends PagingAndSortingRepository<GitSyncError, String>, GitSyncErrorRepositoryCustom {
-  GitSyncError findByAccountIdAndYamlFilePathAndGitSyncDirection(
-      String accountId, String yamlFilePath, GitSyncDirection direction);
-
-  Long removeByAccountIdAndOrganizationIdAndProjectIdAndYamlFilePathIn(
-      String accountId, String orgId, String projectId, List<String> yamlFilePath);
+@OwnedBy(PL)
+public interface GitSyncErrorRepository extends CrudRepository<GitSyncError, String>, GitSyncErrorRepositoryCustom {
+  GitSyncError findByAccountIdentifierAndCompleteFilePathAndErrorType(
+      String accountId, String yamlFilePath, GitSyncErrorType errorType);
 }

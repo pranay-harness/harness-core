@@ -1,6 +1,8 @@
 package software.wings.graphql.schema.type.secrets;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.Builder;
@@ -11,6 +13,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLCreateWinRMCredentialInputKeys")
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.CDP)
 public class QLWinRMCredentialInput {
   private String name;
   private String domain;

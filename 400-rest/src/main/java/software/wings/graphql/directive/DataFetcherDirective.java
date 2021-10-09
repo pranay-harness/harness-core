@@ -3,7 +3,7 @@ package software.wings.graphql.directive;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.app.GraphQLModule;
+import software.wings.app.WingsGraphQLModule;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.datafetcher.PlainObjectBaseDataFetcher;
 
@@ -111,7 +111,7 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
   private DataFetcher getDataFetcherForField(String dataFetcherName, Boolean useBatch) {
     DataFetcher dataFetcher = null;
     if (useBatch) {
-      dataFetcher = getDataFetcherByName(GraphQLModule.getBatchDataLoaderAnnotationName(dataFetcherName));
+      dataFetcher = getDataFetcherByName(WingsGraphQLModule.getBatchDataLoaderAnnotationName(dataFetcherName));
     }
     return Objects.isNull(dataFetcher) ? getDataFetcherByName(dataFetcherName) : dataFetcher;
   }

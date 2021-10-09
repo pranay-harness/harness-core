@@ -27,6 +27,7 @@ logging:
   loggers:
     org.glassfish.jersey: INFO
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+    io.debezium.embedded.EmbeddedEngine$EmbeddedConfig: "OFF"
   appenders:
     - type: console
       threshold: TRACE
@@ -106,6 +107,20 @@ iteratorsConfig:
   serviceAccountIteratorConfig:
     enabled: ${SERVICEACCOUNT_ITERATOR_ENABLED:-true}
     targetIntervalInSeconds: ${SERVICEACCOUNT_ITERATOR_INTERVAL:-600}
+  supportPreferenceIteratorConfig:
+    enabled: ${SUPPORTPREFERENCE_ITERATOR_ENABLED:-true}
+    targetIntervalInSeconds: ${SUPPORTPREFERENCE_ITERATOR_INTERVAL:-600}
+  scopeIteratorConfig:
+    enabled: ${SCOPE_ITERATOR_ENABLED:-true}
+    targetIntervalInSeconds: ${SCOPE_ITERATOR_INTERVAL:-600}
+
+accountClient:
+  accountServiceConfig:
+    baseUrl: ${ACCOUNT_CLIENT_BASE_URL:-https://localhost:9090/api/}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+  accountServiceSecret: ${ACCOUNT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 accessControlClient:
   enableAccessControl: ${ENABLE_ACCESS_CONTROL:-true}
@@ -140,11 +155,25 @@ userGroupClient:
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   userGroupServiceSecret: ${USER_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
+projectClient:
+  projectServiceConfig:
+    baseUrl: ${PROJECT_CLIENT_BASE_URL:-https://localhost:7090}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+  projectServiceSecret: ${PROJECT_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+
+organizationClient:
+  organizationServiceConfig:
+    baseUrl: ${ORGANIZATION_CLIENT_BASE_URL:-https://localhost:7090}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+  organizationServiceSecret: ${ORGANIZATION_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+
 notificationConfig:
   slackWebhookUrl: ${NOTIFICATION_SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/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}
   environment: ${NOTIFICATION_ENVIRONMENT:-localhost}
-
-decisionModuleConfig:
 
 aggregatorModuleConfig:
   debezium:
@@ -153,7 +182,7 @@ aggregatorModuleConfig:
     key.converter.schemas.enable: ${KEY_CONVERTER_SCHEMAS_ENABLE:-false}
     value.converter.schemas.enable: ${VALUE_CONVERTER_SCHEMAS_ENABLE:-false}
     offset.flush.interval.ms: ${OFFSET_FLUSH_INTERVAL_MS:-5000}
-    mongodb.hosts: ${MONGODB_HOSTS:-rs0/localhost:27018}
+    mongodb.hosts: ${MONGODB_HOSTS:-rs0/localhost:27018,rs0/localhost:27019,rs0/localhost:27020}
     mongodb.name: ${MONGODB_NAME:-access_control_db}
     mongodb.user: ${MONGODB_USER:-""}
     mongodb.password: ${MONGODB_PASSWORD:-""}
@@ -170,7 +199,7 @@ accessControlPreferenceConfig:
 enableAuth: ${ENABLE_AUTH:-true}
 defaultServiceSecret: ${DEFAULT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 jwtAuthSecret: ${JWT_AUTH_SECRET:-dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq}
-identityServiceSecret: ${IDENTITY_SERVICE_SECRET:-HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU}
+identityServiceSecret: ${IDENTITY_SERVICE_SECRET:-HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=}
 
 enableAudit: ${ENABLE_AUDIT:-false}
 
@@ -186,6 +215,14 @@ outboxPollConfig:
   maximumRetryAttemptsForAnEvent: ${OUTBOX_MAX_RETRY_ATTEMPTS:-7}
   lockId: AccessControlService
 
+featureFlagClientConfiguration:
+  featureFlagServiceConfig:
+    baseUrl: ${FEATURE_FLAG_CLIENT_BASE_URL:-https://localhost:9090/api/}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+  featureFlagServiceSecret: ${FEATURE_FLAG_CLIENT_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+
 serviceAccountClient:
   serviceAccountServiceConfig:
     baseUrl: ${SERVICEACCOUNT_CLIENT_BASE_URL:-https://localhost:7090}
@@ -193,3 +230,6 @@ serviceAccountClient:
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   serviceAccountServiceSecret: ${SERVICEACCOUNT_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: ${ENFORCEMENT_CHECK_ENABLED:-false}

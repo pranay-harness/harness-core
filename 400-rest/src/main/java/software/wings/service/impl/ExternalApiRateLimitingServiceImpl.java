@@ -1,31 +1,48 @@
 package software.wings.service.impl;
 
+import io.harness.limits.ActionType;
+import io.harness.limits.ConfiguredLimit;
+import io.harness.limits.configuration.LimitConfigurationService;
+import io.harness.limits.lib.StaticLimit;
+
 import software.wings.service.intfc.ExternalApiRateLimitingService;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.RateLimiter;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @ValidateOnExecution
+@Slf4j
 public class ExternalApiRateLimitingServiceImpl implements ExternalApiRateLimitingService {
   private static final Duration CACHE_EXPIRATION = Duration.ofMinutes(2);
   // TODO this needs to be removed when generic rate limiting is implemented.
   private static final double MAX_QPM_PER_MANAGER = 50;
-  private static final LoadingCache<String, RateLimiter> limiters =
+  private static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
+  private LoadingCache<String, RateLimiter> limiters =
       CacheBuilder.newBuilder()
           .expireAfterAccess(CACHE_EXPIRATION.toMillis(), TimeUnit.MILLISECONDS)
           .build(new CacheLoader<String, RateLimiter>() {
             @Override
             public RateLimiter load(String key) {
-              return RateLimiter.create(MAX_QPM_PER_MANAGER / 60);
+              return RateLimiter.create(getMaxQPMPerManager() / 60);
             }
           });
+
+  private LimitConfigurationService limitConfigurationService;
+
+  @Inject
+  public ExternalApiRateLimitingServiceImpl(@NotNull LimitConfigurationService limitConfigurationService) {
+    this.limitConfigurationService = limitConfigurationService;
+  }
 
   @Override
   public boolean rateLimitRequest(String key) {
@@ -34,6 +51,12 @@ public class ExternalApiRateLimitingServiceImpl implements ExternalApiRateLimiti
 
   @Override
   public double getMaxQPMPerManager() {
-    return MAX_QPM_PER_MANAGER;
+    ConfiguredLimit<StaticLimit> configuredLimit =
+        limitConfigurationService.getOrDefault(GLOBAL_ACCOUNT_ID, ActionType.MAX_QPM_PER_MANAGER);
+    if (configuredLimit != null && configuredLimit.getLimit() != null) {
+      return configuredLimit.getLimit().getCount();
+    } else {
+      return MAX_QPM_PER_MANAGER;
+    }
   }
 }

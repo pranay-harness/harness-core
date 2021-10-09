@@ -11,7 +11,7 @@ public interface ChangeConsumer<T extends AccessControlEntity> {
 
   void consumeDeleteEvent(String id);
 
-  long consumeCreateEvent(String id, T createdEntity);
+  void consumeCreateEvent(String id, T createdEntity);
 
   default void consumeEvent(OpType opType, String id, T entity) {
     switch (opType) {

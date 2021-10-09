@@ -1,7 +1,9 @@
 package io.harness.connector.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.errorhandling.NGErrorHelper;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(PL)
 public class SecretManagerConnectorValidator implements ConnectionValidator {
   @Inject private NGSecretManagerService ngSecretManagerService;
   @Inject private NGErrorHelper ngErrorHelper;

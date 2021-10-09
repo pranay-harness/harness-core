@@ -37,6 +37,7 @@ const (
 	dRemoteUrl       = "DRONE_REMOTE_URL"
 	dCommitSha       = "DRONE_COMMIT_SHA"
 	wrkspcPath       = "HARNESS_WORKSPACE"
+	logUploadFf      = "HARNESS_CI_INDIRECT_LOG_UPLOAD_FF"
 	gitBin           = "git"
 	diffFilesCmd     = "%s diff --name-status --diff-filter=MADR HEAD@{1} HEAD -1"
 )
@@ -86,6 +87,9 @@ func GetNudges() []logs.Nudge {
 		logs.NewNudge("[Kk]illed", "Increase memory resources for the step", errors.New("Out of memory")),
 		logs.NewNudge(".*git.* SSL certificate problem",
 			"Set sslVerify to false in CI codebase properties", errors.New("SSL certificate error")),
+		logs.NewNudge("Cannot connect to the Docker daemon",
+			"Setup dind if it's not running. If dind is running, privileged should be set to true",
+			errors.New("Could not connect to the docker daemon")),
 	}
 }
 
@@ -114,7 +118,11 @@ func GetHTTPRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	rw, err := plogs.NewRemoteWriter(client, key, GetNudges())
+	indirectUpload, err := GetLogUploadFF()
+	if err != nil {
+		return nil, err
+	}
+	rw, err := plogs.NewRemoteWriter(client, key, GetNudges(), indirectUpload)
 	if err != nil {
 		return nil, err
 	}
@@ -258,6 +266,18 @@ func GetRepo() (string, error) {
 		return "", fmt.Errorf("remote url variable not set %s", dRemoteUrl)
 	}
 	return stage, nil
+}
+
+// If FF is not set or is not set to "true", we return the value false
+func GetLogUploadFF() (bool, error) {
+	indirectUpload, ok := os.LookupEnv(logUploadFf)
+	if !ok {
+		return false, nil
+	}
+	if indirectUpload == "true" {
+		return true, nil
+	}
+	return false, nil
 }
 
 func GetSha() (string, error) {

@@ -1,7 +1,9 @@
 package io.harness.cdng.provision.terraform;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.TaskData;
@@ -16,37 +18,49 @@ import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.provision.TerraformConstants;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.StepHelper;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
+import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
-public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskNGResponse> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.TERRAFORM_PLAN.getYamlType()).build();
+public class TerraformPlanStep extends TaskExecutableWithRollbackAndRbac<TerraformTaskNGResponse> {
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.TERRAFORM_PLAN.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TerraformStepHelper helper;
   @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
+  @Inject private StepHelper stepHelper;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -54,8 +68,42 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
   }
 
   @Override
-  public TaskRequest obtainTask(
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    List<EntityDetail> entityDetailList = new ArrayList<>();
+
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+
+    TerraformPlanStepParameters stepParametersSpec = (TerraformPlanStepParameters) stepParameters.getSpec();
+
+    // Config Files connector
+    String connectorRef =
+        stepParametersSpec.configuration.configFiles.store.getSpec().getConnectorReference().getValue();
+    IdentifierRef identifierRef =
+        IdentifierRefHelper.getIdentifierRef(connectorRef, accountId, orgIdentifier, projectIdentifier);
+    EntityDetail entityDetail = EntityDetail.builder().type(EntityType.CONNECTORS).entityRef(identifierRef).build();
+    entityDetailList.add(entityDetail);
+
+    // Var Files connectors
+    LinkedHashMap<String, TerraformVarFile> varFiles = stepParametersSpec.getConfiguration().getVarFiles();
+    List<EntityDetail> varFilesEntityDetails =
+        TerraformStepHelper.prepareEntityDetailsForVarFiles(accountId, orgIdentifier, projectIdentifier, varFiles);
+    entityDetailList.addAll(varFilesEntityDetails);
+
+    // Secret Manager Connector
+    String secretManagerRef = stepParametersSpec.getConfiguration().getSecretManagerRef().getValue();
+    identifierRef = IdentifierRefHelper.getIdentifierRef(secretManagerRef, accountId, orgIdentifier, projectIdentifier);
+    entityDetail = EntityDetail.builder().type(EntityType.CONNECTORS).entityRef(identifierRef).build();
+    entityDetailList.add(entityDetail);
+
+    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetailList, true);
+  }
+
+  @Override
+  public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    log.info("Starting execution ObtainTask after Rbac for the Plan Step");
     TerraformPlanStepParameters planStepParameters = (TerraformPlanStepParameters) stepElementParameters.getSpec();
     helper.validatePlanStepConfigFiles(planStepParameters);
     TerraformPlanExecutionDataParameters configuration = planStepParameters.getConfiguration();
@@ -90,14 +138,16 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    return StepUtils.prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         Collections.singletonList(TerraformCommandUnit.Plan.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
-        StepUtils.getTaskSelectors(planStepParameters.getDelegateSelectors()));
+        StepUtils.getTaskSelectors(planStepParameters.getDelegateSelectors()), stepHelper.getEnvironmentType(ambiance));
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<TerraformTaskNGResponse> responseSupplier)
+      throws Exception {
+    log.info("Handling Task result with Security Context for the Plan Step");
     TerraformPlanStepParameters planStepParameters = (TerraformPlanStepParameters) stepElementParameters.getSpec();
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();

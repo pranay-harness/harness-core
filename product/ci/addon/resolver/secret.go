@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -12,7 +13,10 @@ const (
 )
 
 var (
-	secretRegex = regexp.MustCompile(`\${ngSecretManager.obtain\("([^"]*)", [^\)]*\)}`)
+    // Allowed values for the regex:
+    // 1. ${ngSecretManager.obtain(\"account.testSecret\", 12345)}
+    // 2. ${ngSecretManager.obtain("account.testSecret", 12345)}
+	secretRegex = regexp.MustCompile(`\${ngSecretManager.obtain\((\\|)"([^\\"]*)(\\|)", [^\)]*\)}`)
 )
 
 // ResolveSecretInList replaces secrets in the given list
@@ -51,8 +55,8 @@ func ResolveSecretInString(expr string) (string, error) {
 	resolved := expr
 	matches := secretRegex.FindAllStringSubmatch(expr, -1)
 	for _, v := range matches {
-		if len(v) == 2 {
-			env, err := getSecretEnv(v[1])
+		if len(v) == 4 {
+			env, err := getSecretEnvVal(v[2])
 			if err != nil {
 				return "", err
 			}
@@ -71,6 +75,16 @@ func getSecretEnv(secret string) (string, error) {
 	}
 
 	return fmt.Sprintf("$%s%s_%s", secretEnvPrefix, level, secretID), nil
+}
+
+func getSecretEnvVal(secret string) (string, error) {
+	level, secretID, err := getSecretLevelAndID(secret)
+	if err != nil {
+		return "", err
+	}
+
+	secretEnv := fmt.Sprintf("$%s%s_%s", secretEnvPrefix, level, secretID)
+	return os.ExpandEnv(secretEnv), nil
 }
 
 // getSecretLevelAndID returns level and ID for a secret

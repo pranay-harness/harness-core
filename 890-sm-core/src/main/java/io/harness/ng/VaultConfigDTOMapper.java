@@ -1,6 +1,8 @@
 package io.harness.ng;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.secretmanagerclient.dto.VaultConfigDTO.VaultConfigDTOBuilder;
+import static io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO.VaultConfigUpdateDTOBuilder;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
@@ -19,49 +21,69 @@ public class VaultConfigDTOMapper {
       ConnectorDTO connectorRequestDTO, VaultConnectorDTO vaultConnectorDTO) {
     vaultConnectorDTO.validate();
     ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
-    return VaultConfigUpdateDTO.builder()
-        .authToken(vaultConnectorDTO.getAuthToken())
-        .basePath(vaultConnectorDTO.getBasePath())
-        .vaultUrl(vaultConnectorDTO.getVaultUrl())
-        .isReadOnly(vaultConnectorDTO.isReadOnly())
-        .renewalIntervalMinutes(vaultConnectorDTO.getRenewalIntervalMinutes())
-        .secretEngineName(vaultConnectorDTO.getSecretEngineName())
-        .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
-        .appRoleId(vaultConnectorDTO.getAppRoleId())
-        .secretId(vaultConnectorDTO.getSecretId())
-        .isDefault(false)
-        .name(connector.getName())
-        .encryptionType(EncryptionType.VAULT)
-        .tags(connector.getTags())
-        .description(connector.getDescription())
-        .build();
+
+    VaultConfigUpdateDTOBuilder<?, ?> builder =
+        VaultConfigUpdateDTO.builder()
+            .basePath(vaultConnectorDTO.getBasePath())
+            .namespace(vaultConnectorDTO.getNamespace())
+            .useVaultAgent(vaultConnectorDTO.isUseVaultAgent())
+            .sinkPath(vaultConnectorDTO.getSinkPath())
+            .vaultUrl(vaultConnectorDTO.getVaultUrl())
+            .isReadOnly(vaultConnectorDTO.isReadOnly())
+            .renewalIntervalMinutes(vaultConnectorDTO.getRenewalIntervalMinutes())
+            .secretEngineName(vaultConnectorDTO.getSecretEngineName())
+            .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
+            .appRoleId(vaultConnectorDTO.getAppRoleId())
+            .isDefault(false)
+            .name(connector.getName())
+            .encryptionType(EncryptionType.VAULT)
+            .tags(connector.getTags())
+            .description(connector.getDescription());
+
+    if (null != vaultConnectorDTO.getAuthToken() && null != vaultConnectorDTO.getAuthToken().getDecryptedValue()) {
+      builder.authToken(String.valueOf(vaultConnectorDTO.getAuthToken().getDecryptedValue()));
+    }
+    if (null != vaultConnectorDTO.getSecretId() && null != vaultConnectorDTO.getSecretId().getDecryptedValue()) {
+      builder.secretId(String.valueOf(vaultConnectorDTO.getSecretId().getDecryptedValue()));
+    }
+    return builder.build();
   }
 
   public static VaultConfigDTO getVaultConfigDTO(
       String accountIdentifier, ConnectorDTO connectorRequestDTO, VaultConnectorDTO vaultConnectorDTO) {
     vaultConnectorDTO.validate();
     ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
-    return VaultConfigDTO.builder()
-        .authToken(vaultConnectorDTO.getAuthToken())
-        .basePath(vaultConnectorDTO.getBasePath())
-        .vaultUrl(vaultConnectorDTO.getVaultUrl())
-        .isReadOnly(vaultConnectorDTO.isReadOnly())
-        .renewalIntervalMinutes(vaultConnectorDTO.getRenewalIntervalMinutes())
-        .secretEngineName(vaultConnectorDTO.getSecretEngineName())
-        .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
-        .appRoleId(vaultConnectorDTO.getAppRoleId())
-        .secretId(vaultConnectorDTO.getSecretId())
-        .isDefault(false)
-        .encryptionType(EncryptionType.VAULT)
-        .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
 
-        .name(connector.getName())
-        .accountIdentifier(accountIdentifier)
-        .orgIdentifier(connector.getOrgIdentifier())
-        .projectIdentifier(connector.getProjectIdentifier())
-        .tags(connector.getTags())
-        .identifier(connector.getIdentifier())
-        .description(connector.getDescription())
-        .build();
+    VaultConfigDTOBuilder<?, ?> builder = VaultConfigDTO.builder()
+                                              .basePath(vaultConnectorDTO.getBasePath())
+                                              .namespace(vaultConnectorDTO.getNamespace())
+                                              .useVaultAgent(vaultConnectorDTO.isUseVaultAgent())
+                                              .sinkPath(vaultConnectorDTO.getSinkPath())
+                                              .vaultUrl(vaultConnectorDTO.getVaultUrl())
+                                              .isReadOnly(vaultConnectorDTO.isReadOnly())
+                                              .renewalIntervalMinutes(vaultConnectorDTO.getRenewalIntervalMinutes())
+                                              .secretEngineName(vaultConnectorDTO.getSecretEngineName())
+                                              .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
+                                              .appRoleId(vaultConnectorDTO.getAppRoleId())
+                                              .isDefault(vaultConnectorDTO.isDefault())
+                                              .encryptionType(EncryptionType.VAULT)
+                                              .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
+                                              .delegateSelectors(vaultConnectorDTO.getDelegateSelectors())
+                                              .name(connector.getName())
+                                              .accountIdentifier(accountIdentifier)
+                                              .orgIdentifier(connector.getOrgIdentifier())
+                                              .projectIdentifier(connector.getProjectIdentifier())
+                                              .tags(connector.getTags())
+                                              .identifier(connector.getIdentifier())
+                                              .description(connector.getDescription());
+
+    if (null != vaultConnectorDTO.getAuthToken() && null != vaultConnectorDTO.getAuthToken().getDecryptedValue()) {
+      builder.authToken(String.valueOf(vaultConnectorDTO.getAuthToken().getDecryptedValue()));
+    }
+    if (null != vaultConnectorDTO.getSecretId() && null != vaultConnectorDTO.getSecretId().getDecryptedValue()) {
+      builder.secretId(String.valueOf(vaultConnectorDTO.getSecretId().getDecryptedValue()));
+    }
+
+    return builder.build();
   }
 }

@@ -81,7 +81,7 @@ public class CategoryTimeoutRule extends Timeout {
     final Class categoryElement = fetchCategoryElement(category);
 
     // There should not be categorized test to exceed execution of 10 minutes.
-    long timeoutMS = TimeUnit.MINUTES.toMillis(10);
+    long timeoutMS = TimeUnit.MINUTES.toMillis(20);
 
     // Start from the most time restricting group. Unit tests should take way less than
     // integration tests. If tests belongs to more than one group we would like to apply

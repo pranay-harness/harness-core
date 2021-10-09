@@ -1,6 +1,6 @@
 package io.harness.batch.processing.billing.service;
 
-import io.harness.batch.processing.ccm.PricingSource;
+import io.harness.batch.processing.pricing.PricingSource;
 
 import lombok.Value;
 

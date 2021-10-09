@@ -1,13 +1,5 @@
-Var authTokenUrl = "https://www.googleapis.com/oauth2/v4/token"
-Var authBodyMap = {}
-Var:authBodyMap.put("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
-Var:authBodyMap.put("assertion",Env:jwtToken)
-
-Var bearerTokenResponse = sync-call(url=Var:authTokenUrl,body=Var:authBodyMap, bodyType=FORM_URL_ENCODED)
-Var token = extract(Var:bearerTokenResponse, $.access_token)
-
 Var header = {}
-Var headerVal = concat("Bearer ", Var:token)
+Var headerVal = concat("Bearer ", Env:accessToken)
 Var:header.put("Authorization", Var:headerVal)
 
 Var dashboardUrl = concat(Env:baseUrl, Env:path)

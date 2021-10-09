@@ -14,7 +14,11 @@ public class UtilizationData {
   private double maxMemoryUtilizationValue;
   private double avgCpuUtilizationValue;
   private double avgMemoryUtilizationValue;
+
   private double avgStorageCapacityValue;
   private double avgStorageUsageValue;
   private double avgStorageRequestValue;
+
+  private double maxStorageUsageValue;
+  private double maxStorageRequestValue;
 }

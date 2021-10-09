@@ -1,5 +1,6 @@
 package io.harness.verificationclient;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.CHANGE_EVENT_RESOURCE;
 import static io.harness.cvng.core.services.CVNextGenConstants.CVNG_LOG_RESOURCE_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION;
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION_TASK;
@@ -16,6 +17,7 @@ import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.rest.RestResponse;
 
@@ -57,4 +59,8 @@ public interface CVNextGenServiceClient {
   @GET(KUBERNETES_RESOURCE + "/source")
   Call<RestResponse<KubernetesActivitySourceDTO>> getKubernetesActivitySourceDTO(
       @Query("accountId") String accountId, @Query("dataCollectionWorkerId") String dataCollectionWorkerId);
+
+  @POST(CHANGE_EVENT_RESOURCE + "/register-change")
+  Call<RestResponse<Boolean>> saveChangeEvent(
+      @Query("accountId") String accountId, @Body ChangeEventDTO changeEventDTO);
 }

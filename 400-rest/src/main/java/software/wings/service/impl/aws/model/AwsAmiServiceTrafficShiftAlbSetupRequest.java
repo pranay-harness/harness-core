@@ -43,8 +43,10 @@ public class AwsAmiServiceTrafficShiftAlbSetupRequest extends AwsAmiRequest {
       String region, String infraMappingAsgName, String infraMappingId, String newAsgNamePrefix, Integer maxInstances,
       Integer autoScalingSteadyStateTimeout, String artifactRevision, String accountId, String appId, String activityId,
       String commandName, boolean useCurrentRunningCount, Integer desiredInstances, Integer minInstances,
-      List<LbDetailsForAlbTrafficShift> lbDetails, String userData) {
-    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_SETUP, region);
+      List<LbDetailsForAlbTrafficShift> lbDetails, String userData, boolean amiInServiceHealthyStateFFEnabled,
+      boolean amiAsgConfigCopyEnabled) {
+    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_SETUP, region,
+        amiInServiceHealthyStateFFEnabled, amiAsgConfigCopyEnabled);
     this.appId = appId;
     this.activityId = activityId;
     this.useCurrentRunningCount = useCurrentRunningCount;

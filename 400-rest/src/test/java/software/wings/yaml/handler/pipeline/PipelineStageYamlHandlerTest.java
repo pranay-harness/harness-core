@@ -15,8 +15,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -29,6 +32,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.yaml.handler.workflow.ApprovalStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
@@ -40,6 +44,7 @@ import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -48,12 +53,14 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
   @Mock private YamlHelper yamlHelper;
   @Mock private AppService appService;
   @Mock private UserGroupService userGroupService;
   @Mock private WorkflowService workflowService;
+  @Mock private ApprovalStepYamlBuilder approvalStepYamlBuilder;
 
   @UtilityClass
   private static class PipelineStageYamlFiles {
@@ -74,6 +81,25 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
     when(userGroupService.fetchUserGroupByName(eq(ACCOUNT_ID), any()))
         .thenReturn(UserGroup.builder().uuid(USER_GROUP_ID).build());
     when(userGroupService.get(ACCOUNT_ID, USER_GROUP_ID)).thenReturn(UserGroup.builder().name(userGroupName).build());
+    when(userGroupService.get(USER_GROUP_ID)).thenReturn(UserGroup.builder().name(userGroupName).build());
+
+    doAnswer(invocationOnMock -> {
+      Object[] args = invocationOnMock.getArguments();
+      Map<String, Object> properties = (Map<String, Object>) args[2];
+      properties.put((String) args[0], args[1]);
+      return null;
+    })
+        .when(approvalStepYamlBuilder)
+        .convertNameToIdForKnownTypes(any(), any(), any(), any(), any(), any());
+
+    doAnswer(invocationOnMock -> {
+      Object[] args = invocationOnMock.getArguments();
+      Map<String, Object> properties = (Map<String, Object>) args[2];
+      properties.put((String) args[0], args[1]);
+      return null;
+    })
+        .when(approvalStepYamlBuilder)
+        .convertIdToNameForKnownTypes(any(), any(), any(), any(), any());
   }
 
   @Test

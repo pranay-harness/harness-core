@@ -8,6 +8,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.csv.CSVFormat.DEFAULT;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 
@@ -29,6 +33,8 @@ import org.apache.commons.csv.CSVRecord;
  * Created by anubhaw on 4/15/16.
  */
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HostCsvFileHelper {
   private final Object[] CSVHeader = {
       "HOST_NAME", "HOST_CONNECTION_ATTRIBUTES", "BASTION_HOST_CONNECTION_ATTRIBUTES", "TAGS"};

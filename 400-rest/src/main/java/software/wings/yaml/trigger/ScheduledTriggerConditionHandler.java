@@ -2,7 +2,9 @@ package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.TriggerCondition;
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Singleton
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ScheduledTriggerConditionHandler extends TriggerConditionYamlHandler<ScheduleTriggerConditionYaml> {
   @Override
   public ScheduleTriggerConditionYaml toYaml(TriggerCondition bean, String appId) {

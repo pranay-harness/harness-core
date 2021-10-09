@@ -3,8 +3,8 @@ package io.harness.pms.triggers.webhook.helpers;
 import static io.harness.constants.Constants.X_AMZ_SNS_TOPIC_ARN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.aws.codecommit.AwsCodeCommitRequestType.CONFIRM_TRIGGER_SUBSCRIPTION;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TRIGGER_CONFIRMATION_FAILED;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TRIGGER_CONFIRMATION_SUCCESSFUL;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.TRIGGER_CONFIRMATION_FAILED;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.TRIGGER_CONFIRMATION_SUCCESSFUL;
 
 import static java.lang.String.format;
 
@@ -20,8 +20,8 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ErrorResponseData;
@@ -49,8 +49,8 @@ public class TriggerWebhookConfirmationHelper {
         log.info(
             "Successfully confirmed trigger subscription event for accountId:{}, orgId: {}, projectId: {}, sourceRepoType: {}",
             event.getAccountId(), event.getOrgIdentifier(), event.getProjectIdentifier(), event.getSourceRepoType());
-        WebhookEventResponse webhookEventResponse =
-            WebhookEventResponseHelper.toResponse(TRIGGER_CONFIRMATION_SUCCESSFUL, event, null, null, null);
+        TriggerEventResponse webhookEventResponse =
+            TriggerEventResponseHelper.toResponse(TRIGGER_CONFIRMATION_SUCCESSFUL, event, null, null, null);
         return WebhookEventProcessingResult.builder()
             .mappedToTriggers(false)
             .responses(Collections.singletonList(webhookEventResponse))
@@ -62,7 +62,7 @@ public class TriggerWebhookConfirmationHelper {
             awsCodeCommitApiTaskResponse.getErrorMessage()));
         return WebhookEventProcessingResult.builder()
             .mappedToTriggers(false)
-            .responses(Collections.singletonList(WebhookEventResponseHelper.toResponse(
+            .responses(Collections.singletonList(TriggerEventResponseHelper.toResponse(
                 TRIGGER_CONFIRMATION_FAILED, event, null, awsCodeCommitApiTaskResponse.getErrorMessage(), null)))
             .build();
       }
@@ -76,7 +76,7 @@ public class TriggerWebhookConfirmationHelper {
       return WebhookEventProcessingResult.builder()
           .mappedToTriggers(false)
           .responses(Collections.singletonList(
-              WebhookEventResponseHelper.toResponse(TRIGGER_CONFIRMATION_FAILED, event, null, e.getMessage(), null)))
+              TriggerEventResponseHelper.toResponse(TRIGGER_CONFIRMATION_FAILED, event, null, e.getMessage(), null)))
           .build();
     }
   }

@@ -3,6 +3,7 @@ package io.harness.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
@@ -14,22 +15,27 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.stepdetails.PmsStepDetails;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
+import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.Document;
 
 @OwnedBy(CDC)
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -46,13 +52,13 @@ public class GraphVertex implements Serializable {
   private String stepType;
   private Status status;
   private FailureInfo failureInfo;
-  private Document stepParameters;
+  private PmsStepParameters stepParameters;
   private ExecutionMode mode;
 
   private List<ExecutableResponse> executableResponses;
   private List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   private List<InterruptEffect> interruptHistories;
-  private Map<String, Document> outcomeDocuments;
+  private Map<String, PmsOutcome> outcomeDocuments;
   private List<String> retryIds;
 
   private Map<String, List<ProgressData>> progressDataMap;
@@ -63,8 +69,31 @@ public class GraphVertex implements Serializable {
   private SkipType skipType;
 
   private List<UnitProgress> unitProgresses;
-  private Document progressData;
+  private OrchestrationMap progressData;
+  private Map<String, PmsStepDetails> stepDetails;
 
   // UI
   @Builder.Default RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;
+
+  public PmsStepParameters getPmsStepParameters() {
+    return PmsStepParameters.parse(
+        OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(stepParameters));
+  }
+
+  public Map<String, PmsOutcome> getPmsOutcomes() {
+    if (EmptyPredicate.isEmpty(outcomeDocuments)) {
+      return new LinkedHashMap<>();
+    }
+
+    Map<String, PmsOutcome> outcomes = new LinkedHashMap<>();
+    for (Map.Entry<String, ?> entry : outcomeDocuments.entrySet()) {
+      outcomes.put(
+          entry.getKey(), entry.getValue() == null ? null : PmsOutcome.parse((Map<String, Object>) entry.getValue()));
+    }
+    return outcomes;
+  }
+
+  public OrchestrationMap getPmsProgressData() {
+    return OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData);
+  }
 }

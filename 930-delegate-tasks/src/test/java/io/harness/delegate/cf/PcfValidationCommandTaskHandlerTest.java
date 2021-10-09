@@ -1,6 +1,6 @@
 package io.harness.delegate.cf;
 
-import static io.harness.delegate.cf.PcfCommandTaskHandlerTest.ACCOUNT_ID;
+import static io.harness.delegate.cf.CfTestConstants.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static org.mockito.Mockito.verify;

@@ -1,7 +1,11 @@
 package software.wings.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 
 import software.wings.jersey.KryoMessageBodyProvider;
@@ -26,6 +30,7 @@ import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.Singular;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.glassfish.jersey.test.DeploymentContext;
@@ -37,8 +42,10 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+@OwnedBy(PL)
 @Getter
 @Builder
+@TargetModule(HarnessModule._980_COMMONS)
 public class ResourceTestRule implements TestRule {
   @Singular private final Set<Object> instances;
   @Singular private final Set<Class<?>> types;
@@ -84,6 +91,7 @@ public class ResourceTestRule implements TestRule {
             @Override
             protected void configureClient(ClientConfig config) {
               config.register(KryoMessageBodyProvider.class, 0);
+              config.register(MultiPartFeature.class);
 
               JacksonJsonProvider jsonProvider = new JacksonJsonProvider();
               jsonProvider.setMapper(mapper);

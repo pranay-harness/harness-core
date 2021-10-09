@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse.DelegateAsyncTaskResp
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueController;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.tasks.BinaryResponseData;
@@ -21,6 +22,9 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
@@ -36,15 +40,21 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("disableDeserialization") private boolean disableDeserialization;
+  @Inject @Named("enablePrimaryCheck") private boolean enablePrimaryCheck;
   private static final int DELETE_THRESHOLD = 20;
   private static final long MAX_PROCESSING_DURATION_MILLIS = 60000L;
+  @Inject private QueueController queueController;
 
   @Override
   public void run() {
     // TODO - method guaranties at least one delivery
     Set<String> responsesToBeDeleted = new HashSet<>();
 
-    while (true) {
+    boolean consumeResponse = true;
+    if (enablePrimaryCheck && queueController != null) {
+      consumeResponse = queueController.isPrimary();
+    }
+    while (consumeResponse) {
       try {
         Query<DelegateAsyncTaskResponse> taskResponseQuery =
             persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
@@ -68,7 +78,8 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
             : (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData());
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(), responseData);
 
-        if (lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
+        if (lockedAsyncTaskResponse.getHoldUntil() == null
+            || lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
           responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
           if (responsesToBeDeleted.size() >= DELETE_THRESHOLD) {
             deleteProcessedResponses(responsesToBeDeleted);
@@ -119,11 +130,17 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
 
   @Override
   public void setupTimeoutForTask(String taskId, long expiry, long holdUntil) {
-    persistence.save(DelegateAsyncTaskResponse.builder()
-                         .uuid(taskId)
-                         .responseData(getTimeoutMessage())
-                         .processAfter(expiry)
-                         .holdUntil(holdUntil)
-                         .build());
+    Instant validUntilInstant = Instant.ofEpochMilli(expiry).plusSeconds(Duration.ofHours(1).getSeconds());
+    UpdateOperations<DelegateAsyncTaskResponse> updateOperations =
+        persistence.createUpdateOperations(DelegateAsyncTaskResponse.class)
+            .setOnInsert(DelegateAsyncTaskResponseKeys.responseData, getTimeoutMessage())
+            .setOnInsert(DelegateAsyncTaskResponseKeys.processAfter, expiry)
+            .setOnInsert(DelegateAsyncTaskResponseKeys.validUntil, Date.from(validUntilInstant))
+            .set(DelegateAsyncTaskResponseKeys.holdUntil, holdUntil);
+
+    Query<DelegateAsyncTaskResponse> upsertQuery =
+        persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
+            .filter(DelegateAsyncTaskResponseKeys.uuid, taskId);
+    persistence.upsert(upsertQuery, updateOperations);
   }
 }

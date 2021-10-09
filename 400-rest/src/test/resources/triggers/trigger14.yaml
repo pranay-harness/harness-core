@@ -12,7 +12,7 @@ triggerCondition:
   - push
   filePaths:
   - index.yaml
-  gitConnectorId: connectorId
+  gitConnectorName: gitConnectorName
   repoName: testRepo
   repositoryType: GITLAB
 workflowVariables:

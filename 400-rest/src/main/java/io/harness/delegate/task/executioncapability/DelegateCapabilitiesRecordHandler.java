@@ -74,7 +74,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
                        .field(DelegateKeys.lastHeartBeat)
                        .greaterThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)))
             .targetInterval(Duration.ofMinutes(CAPABILITIES_CHECK_INTERVAL_IN_MINUTES))
-            .acceptableNoAlertDelay(Duration.ofMinutes(2))
+            .acceptableNoAlertDelay(Duration.ofMinutes(CAPABILITIES_CHECK_INTERVAL_IN_MINUTES + 2))
             .handler(this)
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)

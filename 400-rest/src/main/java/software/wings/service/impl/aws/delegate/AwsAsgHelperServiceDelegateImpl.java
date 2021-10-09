@@ -35,6 +35,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
@@ -56,6 +57,7 @@ import com.amazonaws.services.autoscaling.model.CreateOrUpdateTagsRequest;
 import com.amazonaws.services.autoscaling.model.DeleteAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DeleteLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.DeletePolicyRequest;
+import com.amazonaws.services.autoscaling.model.DeleteScheduledActionRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
@@ -63,12 +65,16 @@ import com.amazonaws.services.autoscaling.model.DescribePoliciesRequest;
 import com.amazonaws.services.autoscaling.model.DescribePoliciesResult;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
+import com.amazonaws.services.autoscaling.model.DescribeScheduledActionsRequest;
+import com.amazonaws.services.autoscaling.model.DescribeScheduledActionsResult;
 import com.amazonaws.services.autoscaling.model.DetachLoadBalancerTargetGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DetachLoadBalancersRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.PutScalingPolicyRequest;
 import com.amazonaws.services.autoscaling.model.PutScalingPolicyResult;
+import com.amazonaws.services.autoscaling.model.PutScheduledUpdateGroupActionRequest;
 import com.amazonaws.services.autoscaling.model.ScalingPolicy;
+import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
@@ -101,6 +107,7 @@ public class AwsAsgHelperServiceDelegateImpl
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   @Inject private AwsEc2HelperServiceDelegate awsEc2HelperServiceDelegate;
   @Inject private TimeLimiter timeLimiter;
+  private final Integer MAX_SCHEDULED_ACTIONS_BATCH_SIZE = 100;
 
   @VisibleForTesting
   AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, AwsConfig awsConfig) {
@@ -126,6 +133,36 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public List<String> listAutoScalingGroupInstanceIds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String autoScalingGroupName, boolean isInstanceSync) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
+          new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
+      tracker.trackASGCall("Describe ASGs");
+      DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
+          closeableAmazonAutoScalingClient.getClient().describeAutoScalingGroups(describeAutoScalingGroupsRequest);
+      if (describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()) {
+        return emptyList();
+      }
+      AutoScalingGroup autoScalingGroup = describeAutoScalingGroupsResult.getAutoScalingGroups().get(0);
+      return autoScalingGroup.getInstances()
+          .stream()
+          .map(com.amazonaws.services.autoscaling.model.Instance::getInstanceId)
+          .collect(toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listAutoScalingGroupInstanceIds", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+    return emptyList();
+  }
+
+  @Override
+  public List<com.amazonaws.services.autoscaling.model.Instance> listAutoScalingGroupModelInstances(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, boolean isInstanceSync) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
@@ -138,10 +175,7 @@ public class AwsAsgHelperServiceDelegateImpl
         return emptyList();
       }
       AutoScalingGroup autoScalingGroup = describeAutoScalingGroupsResult.getAutoScalingGroups().get(0);
-      return autoScalingGroup.getInstances()
-          .stream()
-          .map(com.amazonaws.services.autoscaling.model.Instance::getInstanceId)
-          .collect(toList());
+      return autoScalingGroup.getInstances();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
@@ -162,14 +196,14 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public AutoScalingGroup getAutoScalingGroup(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       tracker.trackASGCall("Describe Autoscaling Group");
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
-          amazonAutoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest);
+          closeableAmazonAutoScalingClient.getClient().describeAutoScalingGroups(describeAutoScalingGroupsRequest);
       if (!describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()) {
         return describeAutoScalingGroupsResult.getAutoScalingGroups().get(0);
       }
@@ -177,6 +211,9 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getAutoScalingGroup", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
@@ -184,11 +221,11 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public LaunchConfiguration getLaunchConfiguration(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String launchConfigName) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       tracker.trackASGCall("Describe Launch Configuration");
-      return amazonAutoScalingClient
+      return closeableAmazonAutoScalingClient.getClient()
           .describeLaunchConfigurations(
               new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launchConfigName))
           .getLaunchConfigurations()
@@ -199,6 +236,9 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getLaunchConfiguration", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
@@ -206,10 +246,9 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public List<AutoScalingGroup> listAllAsgs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
-
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest;
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult;
       String nextToken = null;
@@ -219,7 +258,7 @@ public class AwsAsgHelperServiceDelegateImpl
             new DescribeAutoScalingGroupsRequest().withMaxRecords(100).withNextToken(nextToken);
         tracker.trackASGCall("Describe Autoscaling Group");
         describeAutoScalingGroupsResult =
-            amazonAutoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest);
+            closeableAmazonAutoScalingClient.getClient().describeAutoScalingGroups(describeAutoScalingGroupsRequest);
         result.addAll(describeAutoScalingGroupsResult.getAutoScalingGroups());
         nextToken = describeAutoScalingGroupsResult.getNextToken();
       } while (nextToken != null);
@@ -228,6 +267,9 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listAllAsgs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -235,16 +277,19 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public void deleteLaunchConfig(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       tracker.trackASGCall("Delete Launch Config");
-      amazonAutoScalingClient.deleteLaunchConfiguration(
+      closeableAmazonAutoScalingClient.getClient().deleteLaunchConfiguration(
           new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(autoScalingGroupName));
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception deleteLaunchConfig", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -252,15 +297,18 @@ public class AwsAsgHelperServiceDelegateImpl
   public CreateLaunchConfigurationResult createLaunchConfiguration(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region,
       CreateLaunchConfigurationRequest createLaunchConfigurationRequest) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       tracker.trackASGCall("Create Launch Config");
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
-      return amazonAutoScalingClient.createLaunchConfiguration(createLaunchConfigurationRequest);
+      return closeableAmazonAutoScalingClient.getClient().createLaunchConfiguration(createLaunchConfigurationRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception createLaunchConfiguration", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return new CreateLaunchConfigurationResult();
   }
@@ -270,9 +318,10 @@ public class AwsAsgHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region,
       CreateAutoScalingGroupRequest createAutoScalingGroupRequest, LogCallback logCallback) {
     AmazonAutoScalingClient amazonAutoScalingClient = null;
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      amazonAutoScalingClient = closeableAmazonAutoScalingClient.getClient();
       tracker.trackASGCall("Create Autoscaling Group");
       return amazonAutoScalingClient.createAutoScalingGroup(createAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -283,6 +332,9 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception createAutoScalingGroup", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return new CreateAutoScalingGroupResult();
   }
@@ -290,29 +342,32 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public void deleteAutoScalingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<AutoScalingGroup> autoScalingGroups, LogCallback callback) {
-    AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    AmazonAutoScalingClient amazonAutoScalingClient = null;
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      amazonAutoScalingClient = closeableAmazonAutoScalingClient.getClient();
+      AmazonAutoScalingClient finalAmazonAutoScalingClient = amazonAutoScalingClient;
       autoScalingGroups.forEach(autoScalingGroup -> {
         try {
           tracker.trackASGCall("Delete Autoscaling Group");
-          amazonAutoScalingClient.deleteAutoScalingGroup(
+          finalAmazonAutoScalingClient.deleteAutoScalingGroup(
               new DeleteAutoScalingGroupRequest().withAutoScalingGroupName(autoScalingGroup.getAutoScalingGroupName()));
-          waitForAutoScalingGroupToBeDeleted(amazonAutoScalingClient, autoScalingGroup, callback);
+          waitForAutoScalingGroupToBeDeleted(finalAmazonAutoScalingClient, autoScalingGroup, callback);
         } catch (Exception ignored) {
-          describeAutoScalingGroupActivities(
-              amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
+          describeAutoScalingGroupActivities(finalAmazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(),
+              new HashSet<>(), callback, true);
           log.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
         }
         if (isNotEmpty(autoScalingGroup.getLaunchConfigurationName())) {
           try {
             tracker.trackASGCall("Delete Launch Config");
-            amazonAutoScalingClient.deleteLaunchConfiguration(
+            finalAmazonAutoScalingClient.deleteLaunchConfiguration(
                 new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(
                     autoScalingGroup.getLaunchConfigurationName()));
           } catch (Exception ignored) {
-            describeAutoScalingGroupActivities(
-                amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
+            describeAutoScalingGroupActivities(finalAmazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(),
+                new HashSet<>(), callback, true);
             log.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
           }
         }
@@ -321,23 +376,26 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception deleteAutoScalingGroups", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
   public Map<String, Integer> getDesiredCapacitiesOfAsgs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       Map<String, Integer> capacities = new HashMap<>();
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       String nextToken = null;
       DescribeAutoScalingGroupsRequest request = null;
       DescribeAutoScalingGroupsResult result = null;
       do {
         request = new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asgs).withNextToken(nextToken);
         tracker.trackASGCall("Describe ASGs");
-        result = amazonAutoScalingClient.describeAutoScalingGroups(request);
+        result = closeableAmazonAutoScalingClient.getClient().describeAutoScalingGroups(request);
         List<AutoScalingGroup> groups = result.getAutoScalingGroups();
         groups.forEach(group -> { capacities.put(group.getAutoScalingGroupName(), group.getDesiredCapacity()); });
         nextToken = result.getNextToken();
@@ -347,6 +405,9 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getDesiredCapacitiesOfAsgs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyMap();
   }
@@ -354,10 +415,13 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
-      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout) {
+      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout,
+      boolean amiInServiceHealthyStateFFEnabled) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
-    try {
+    AmazonAutoScalingClient amazonAutoScalingClient = null;
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      amazonAutoScalingClient = closeableAmazonAutoScalingClient.getClient();
       logCallback.saveExecutionLog(
           format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
       tracker.trackASGCall("Set ASG Desired Capacity");
@@ -365,30 +429,39 @@ public class AwsAsgHelperServiceDelegateImpl
                                                      .withAutoScalingGroupName(autoScalingGroupName)
                                                      .withDesiredCapacity(desiredCapacity));
       logCallback.saveExecutionLog("Successfully set desired capacity");
-      waitForAllInstancesToBeReady(awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity,
-          logCallback, autoScalingSteadyStateTimeout);
+      if (amiInServiceHealthyStateFFEnabled) {
+        waitForAllInstancesToBeInServiceHealthyState(awsConfig, encryptionDetails, region, autoScalingGroupName,
+            desiredCapacity, logCallback, autoScalingSteadyStateTimeout);
+      } else {
+        waitForAllInstancesToBeReady(awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity,
+            logCallback, autoScalingSteadyStateTimeout);
+      }
     } catch (AmazonServiceException amazonServiceException) {
       describeAutoScalingGroupActivities(
           amazonAutoScalingClient, autoScalingGroupName, new HashSet<>(), logCallback, true);
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception setAutoScalingGroupCapacityAndWaitForInstancesReadyState", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
   public void setMinInstancesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String autoScalingGroupName, int minCapacity, ExecutionLogCallback logCallback) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       if (isEmpty(autoScalingGroupName)) {
         return;
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       tracker.trackASGCall("Describe Autoscaling Group");
       DescribeAutoScalingGroupsRequest request =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
-      DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
+      DescribeAutoScalingGroupsResult result =
+          closeableAmazonAutoScalingClient.getClient().describeAutoScalingGroups(request);
       List<AutoScalingGroup> autoScalingGroups = result.getAutoScalingGroups();
       if (isEmpty(autoScalingGroups)) {
         return;
@@ -398,26 +471,30 @@ public class AwsAsgHelperServiceDelegateImpl
       UpdateAutoScalingGroupRequest updateAutoScalingGroupRequest =
           new UpdateAutoScalingGroupRequest().withAutoScalingGroupName(autoScalingGroupName).withMinSize(minCapacity);
       tracker.trackASGCall("Update Autoscaling Group");
-      amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
+      closeableAmazonAutoScalingClient.getClient().updateAutoScalingGroup(updateAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
       logCallback.saveExecutionLog(
           format("Exception: [%s] while setting Asg limits", ExceptionUtils.getMessage(amazonServiceException)));
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception setMinInstancesForAsg", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
   public void setAutoScalingGroupLimits(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String autoScalingGroupName, Integer desiredCapacity, ExecutionLogCallback logCallback) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       DescribeAutoScalingGroupsRequest request =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       tracker.trackASGCall("Describe Autoscaling Groups");
-      DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
+      DescribeAutoScalingGroupsResult result =
+          closeableAmazonAutoScalingClient.getClient().describeAutoScalingGroups(request);
       List<AutoScalingGroup> autoScalingGroups = result.getAutoScalingGroups();
       if (isEmpty(autoScalingGroups)) {
         return;
@@ -432,7 +509,7 @@ public class AwsAsgHelperServiceDelegateImpl
                 .withAutoScalingGroupName(autoScalingGroupName)
                 .withMinSize(desiredCapacity);
         tracker.trackASGCall("Update Autoscaling Group");
-        amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
+        closeableAmazonAutoScalingClient.getClient().updateAutoScalingGroup(updateAutoScalingGroupRequest);
       } else if (desiredCapacity > autoScalingGroup.getMaxSize()) {
         logCallback.saveExecutionLog(
             format("Autoscaling group: [%s] has max Size: [%d] < desired capacity: [%d]. Updating",
@@ -442,7 +519,7 @@ public class AwsAsgHelperServiceDelegateImpl
                 .withAutoScalingGroupName(autoScalingGroupName)
                 .withMaxSize(desiredCapacity);
         tracker.trackASGCall("Update Autoscaling Group");
-        amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
+        closeableAmazonAutoScalingClient.getClient().updateAutoScalingGroup(updateAutoScalingGroupRequest);
       }
     } catch (AmazonServiceException amazonServiceException) {
       logCallback.saveExecutionLog(
@@ -450,13 +527,16 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception setAutoScalingGroupLimits", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   private void waitForAutoScalingGroupToBeDeleted(
       AmazonAutoScalingClient amazonAutoScalingClient, AutoScalingGroup autoScalingGroup, LogCallback callback) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1), () -> {
         Set<String> completedActivities = new HashSet<>();
         while (true) {
           tracker.trackASGCall("Describe Autoscaling Group");
@@ -516,23 +596,22 @@ public class AwsAsgHelperServiceDelegateImpl
             });
       }
     } catch (Exception e) {
-      log.warn("Failed to describe autoScalingGroup for [%s]", autoScalingGroupName, e);
+      log.warn("Failed to describe autoScalingGroup for [%s] %s", autoScalingGroupName, e);
     }
   }
 
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String autoScalingGroupName, Integer desiredCount, ExecutionLogCallback logCallback,
       Integer autoScalingSteadyStateTimeout) {
-    try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
-        AmazonAutoScalingClient amazonAutoScalingClient =
-            getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
         Set<String> completedActivities = new HashSet<>();
         while (true) {
           List<String> instanceIds =
               listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, autoScalingGroupName, false);
-          describeAutoScalingGroupActivities(
-              amazonAutoScalingClient, autoScalingGroupName, completedActivities, logCallback, false);
+          describeAutoScalingGroupActivities(closeableAmazonAutoScalingClient.getClient(), autoScalingGroupName,
+              completedActivities, logCallback, false);
           if (instanceIds.size() == desiredCount
               && allInstanceInReadyStateWithRetry(awsConfig, encryptionDetails, region, instanceIds, logCallback)) {
             return true;
@@ -550,6 +629,39 @@ public class AwsAsgHelperServiceDelegateImpl
       throw new InvalidRequestException("Error while waiting for all instances to be in running state", e);
     }
     logCallback.saveExecutionLog("AutoScaling group reached steady state");
+  }
+
+  private void waitForAllInstancesToBeInServiceHealthyState(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCount,
+      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout) {
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
+        Set<String> completedActivities = new HashSet<>();
+        while (true) {
+          List<com.amazonaws.services.autoscaling.model.Instance> instances =
+              listAutoScalingGroupModelInstances(awsConfig, encryptionDetails, region, autoScalingGroupName, false);
+          describeAutoScalingGroupActivities(closeableAmazonAutoScalingClient.getClient(), autoScalingGroupName,
+              completedActivities, logCallback, false);
+          if (instances.size() == desiredCount
+              && allInstanceInServiceHealthyStateWithRetry(
+                  awsConfig, encryptionDetails, region, instances, logCallback)) {
+            return true;
+          }
+          sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
+        }
+      });
+    } catch (UncheckedTimeoutException e) {
+      logCallback.saveExecutionLog("Request timeout. Auto Scaling Group couldn't reach steady state", ERROR);
+      throw new WingsException(INIT_TIMEOUT)
+          .addParam("message", "Timed out waiting for Auto Scaling Group to be in InService and Healthy state");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(
+          "Error while waiting for all instances to be in InService and Healthy state", e);
+    }
+    logCallback.saveExecutionLog("Auto Scaling Group reached steady state");
   }
 
   @VisibleForTesting
@@ -580,85 +692,128 @@ public class AwsAsgHelperServiceDelegateImpl
     return allRunning;
   }
 
+  @VisibleForTesting
+  boolean allInstanceInServiceHealthyStateWithRetry(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, List<com.amazonaws.services.autoscaling.model.Instance> instances,
+      ExecutionLogCallback logCallback) throws InterruptedRuntimeException {
+    try {
+      return allInstanceInServiceHealthyState(awsConfig, encryptionDetails, region, instances, logCallback);
+    } catch (Exception ex) {
+      log.warn(
+          "Exception while waiting for instances to be in InService and Healthy state. Retrying once after 15 seconds");
+    }
+    sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
+    return allInstanceInServiceHealthyState(awsConfig, encryptionDetails, region, instances, logCallback);
+  }
+
+  @VisibleForTesting
+  boolean allInstanceInServiceHealthyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, List<com.amazonaws.services.autoscaling.model.Instance> instances,
+      ExecutionLogCallback logCallback) {
+    boolean allInServiceHealthy = instances.isEmpty()
+        || instances.stream().allMatch(instance
+            -> instance.getLifecycleState() != null && instance.getLifecycleState().equals("InService")
+                && instance.getHealthStatus() != null && instance.getHealthStatus().equals("Healthy"));
+    if (!allInServiceHealthy) {
+      Map<String, Long> instanceStateCountMap =
+          instances.stream().collect(groupingBy(instance -> instance.getLifecycleState(), counting()));
+      logCallback.saveExecutionLog("Waiting for instances to be in InService and Healthy state. "
+          + Joiner.on(",").withKeyValueSeparator("=").join(instanceStateCountMap));
+    }
+    return allInServiceHealthy;
+  }
+
   @Override
   public void registerAsgWithTargetGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback) {
-    try {
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       if (isEmpty(targetGroupARNs)) {
         logCallback.saveExecutionLog(format("No Target Groups to attach to: [%s]", asgName));
         return;
       }
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       tracker.trackASGCall("Attach LB Target Groups");
       AttachLoadBalancerTargetGroupsRequest request =
           new AttachLoadBalancerTargetGroupsRequest().withAutoScalingGroupName(asgName).withTargetGroupARNs(
               targetGroupARNs);
-      amazonAutoScalingClient.attachLoadBalancerTargetGroups(request);
+      closeableAmazonAutoScalingClient.getClient().attachLoadBalancerTargetGroups(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception registerAsgWithTargetGroups", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
   public void registerAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String asgName, List<String> classicLBs, ExecutionLogCallback logCallback) {
-    try {
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       if (isEmpty(classicLBs)) {
         logCallback.saveExecutionLog(format("No classic load balancers to attach to: [%s]", asgName));
         return;
       }
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       AttachLoadBalancersRequest request =
           new AttachLoadBalancersRequest().withAutoScalingGroupName(asgName).withLoadBalancerNames(classicLBs);
       tracker.trackASGCall("Attach Load Balancers");
-      amazonAutoScalingClient.attachLoadBalancers(request);
+      closeableAmazonAutoScalingClient.getClient().attachLoadBalancers(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception registerAsgWithClassicLBs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
   public void deRegisterAsgWithTargetGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback) {
-    try {
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       if (isEmpty(targetGroupARNs)) {
         logCallback.saveExecutionLog(format("No Target Groups to attach to: [%s]", asgName));
         return;
       }
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       DetachLoadBalancerTargetGroupsRequest request =
           new DetachLoadBalancerTargetGroupsRequest().withAutoScalingGroupName(asgName).withTargetGroupARNs(
               targetGroupARNs);
       tracker.trackASGCall("Detach Load Balancer Target Groups");
-      amazonAutoScalingClient.detachLoadBalancerTargetGroups(request);
+      closeableAmazonAutoScalingClient.getClient().detachLoadBalancerTargetGroups(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception deRegisterAsgWithTargetGroups", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
   public void deRegisterAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, List<String> classicLBs, ExecutionLogCallback logCallback) {
-    try {
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       if (isEmpty(classicLBs)) {
         logCallback.saveExecutionLog(format("No classic load balancers to detach to: [%s]", asgName));
         return;
       }
       tracker.trackASGCall("Detach Load Balancers");
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       DetachLoadBalancersRequest request =
           new DetachLoadBalancersRequest().withAutoScalingGroupName(asgName).withLoadBalancerNames(classicLBs);
-      amazonAutoScalingClient.detachLoadBalancers(request);
+      closeableAmazonAutoScalingClient.getClient().detachLoadBalancers(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception deRegisterAsgWithClassicLBs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -717,6 +872,23 @@ public class AwsAsgHelperServiceDelegateImpl
     }
   }
 
+  private String getJSONForScheduledAction(
+      ScheduledUpdateGroupAction scheduledAction, ExecutionLogCallback logCallback) {
+    if (scheduledAction == null) {
+      return EMPTY;
+    }
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      return mapper.writeValueAsString(scheduledAction);
+    } catch (Exception ex) {
+      String errorMessage = format("Exception: [%s] while extracting JSON for scheduled action: [%s]. Ignored.",
+          ex.getMessage(), scheduledAction.getScheduledActionARN());
+      log.error(errorMessage, ex);
+      logCallback.saveExecutionLog(errorMessage);
+      return EMPTY;
+    }
+  }
+
   private List<ScalingPolicy> listAllScalingPoliciesOfAsg(
       AmazonAutoScalingClient amazonAutoScalingClient, String asgName) {
     List<ScalingPolicy> scalingPolicies = newArrayList();
@@ -738,11 +910,12 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public List<String> getScalingPolicyJSONs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, ExecutionLogCallback logCallback) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       logCallback.saveExecutionLog(format("Extracting scaling policy JSONs from: [%s]", asgName));
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
-      List<ScalingPolicy> scalingPolicies = listAllScalingPoliciesOfAsg(amazonAutoScalingClient, asgName);
+      List<ScalingPolicy> scalingPolicies =
+          listAllScalingPoliciesOfAsg(closeableAmazonAutoScalingClient.getClient(), asgName);
       if (isEmpty(scalingPolicies)) {
         logCallback.saveExecutionLog("No policies found");
         return emptyList();
@@ -757,6 +930,9 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getScalingPolicyJSONs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -764,11 +940,12 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public void clearAllScalingPoliciesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, ExecutionLogCallback logCallback) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       logCallback.saveExecutionLog(format("Clearing away all scaling policies for Asg: [%s]", asgName));
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
-      List<ScalingPolicy> scalingPolicies = listAllScalingPoliciesOfAsg(amazonAutoScalingClient, asgName);
+      List<ScalingPolicy> scalingPolicies =
+          listAllScalingPoliciesOfAsg(closeableAmazonAutoScalingClient.getClient(), asgName);
       if (isEmpty(scalingPolicies)) {
         logCallback.saveExecutionLog("No policies found");
         return;
@@ -778,12 +955,15 @@ public class AwsAsgHelperServiceDelegateImpl
         DeletePolicyRequest deletePolicyRequest =
             new DeletePolicyRequest().withAutoScalingGroupName(asgName).withPolicyName(scalingPolicy.getPolicyARN());
         tracker.trackASGCall("Delete ASG Policies");
-        amazonAutoScalingClient.deletePolicy(deletePolicyRequest);
+        closeableAmazonAutoScalingClient.getClient().deletePolicy(deletePolicyRequest);
       });
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception clearAllScalingPoliciesForAsg", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -792,7 +972,19 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       return mapper.readValue(json, ScalingPolicy.class);
     } catch (Exception ex) {
-      String errorMessage = format("Exception: [%s] while desirializing cached JSON", ex.getMessage());
+      String errorMessage = format("Exception: [%s] while deserializing cached JSON", ex.getMessage());
+      logCallback.saveExecutionLog(errorMessage);
+      log.error(errorMessage, ex);
+      return null;
+    }
+  }
+
+  private ScheduledUpdateGroupAction getScheduledActionFromJSON(String json, ExecutionLogCallback logCallback) {
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      return mapper.readValue(json, ScheduledUpdateGroupAction.class);
+    } catch (Exception ex) {
+      String errorMessage = format("Exception: [%s] while deserializing cached JSON", ex.getMessage());
       logCallback.saveExecutionLog(errorMessage);
       log.error(errorMessage, ex);
       return null;
@@ -802,12 +994,12 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public void addUpdateTagAutoScalingGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String asgName, String region, String tagKey, String tagValue, ExecutionLogCallback executionLogCallback) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       executionLogCallback.saveExecutionLog(
           format("Tagging ASG with name: [%s] with tag: [%s] -> [%s]", asgName, tagKey, tagValue));
-      encryptionService.decrypt(awsConfig, encryptedDataDetails, false);
       tracker.trackASGCall("Add Update Tags to Autoscaling group");
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       CreateOrUpdateTagsRequest createOrUpdateTagsRequest = new CreateOrUpdateTagsRequest();
       Tag blueVersionTag = new Tag();
       blueVersionTag.withKey(tagKey)
@@ -816,25 +1008,28 @@ public class AwsAsgHelperServiceDelegateImpl
           .withResourceId(asgName)
           .withResourceType("auto-scaling-group");
       createOrUpdateTagsRequest.withTags(blueVersionTag);
-      amazonAutoScalingClient.createOrUpdateTags(createOrUpdateTagsRequest);
+      closeableAmazonAutoScalingClient.getClient().createOrUpdateTags(createOrUpdateTagsRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception addUpdateTagAutoScalingGroup", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
   public void attachScalingPoliciesToAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, List<String> scalingPolicyJSONs, ExecutionLogCallback logCallback) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
       logCallback.saveExecutionLog(format("Attaching scaling policies to Asg: [%s]", asgName));
       if (isEmpty(scalingPolicyJSONs)) {
         logCallback.saveExecutionLog("No policy to attach");
         return;
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       scalingPolicyJSONs.forEach(scalingPolicyJSON -> {
         if (isNotEmpty(scalingPolicyJSON)) {
           ScalingPolicy scalingPolicy = getScalingPolicyFromJSON(scalingPolicyJSON, logCallback);
@@ -857,7 +1052,7 @@ public class AwsAsgHelperServiceDelegateImpl
                     .withTargetTrackingConfiguration(scalingPolicy.getTargetTrackingConfiguration());
             tracker.trackASGCall("Put ASG Scaling Policy");
             PutScalingPolicyResult putScalingPolicyResult =
-                amazonAutoScalingClient.putScalingPolicy(putScalingPolicyRequest);
+                closeableAmazonAutoScalingClient.getClient().putScalingPolicy(putScalingPolicyRequest);
             logCallback.saveExecutionLog(
                 format("Created policy with Arn: [%s]", putScalingPolicyResult.getPolicyARN()));
           }
@@ -867,6 +1062,138 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception attachScalingPoliciesToAsg", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  public void attachScheduledActionsToAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, List<String> scheduledActionJSONs, ExecutionLogCallback logCallback) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      logCallback.saveExecutionLog(format("Attaching scheduled actions to Asg: [%s]", asgName));
+      if (isEmpty(scheduledActionJSONs)) {
+        logCallback.saveExecutionLog("No scheduled action to attach");
+        return;
+      }
+      scheduledActionJSONs.forEach(scheduledActionJSON -> {
+        if (isNotEmpty(scheduledActionJSON)) {
+          ScheduledUpdateGroupAction scheduledAction = getScheduledActionFromJSON(scheduledActionJSON, logCallback);
+          logCallback.saveExecutionLog(format(
+              "Found scheduled action : [%s]. Attaching to: [%s]", scheduledAction.getScheduledActionName(), asgName));
+          PutScheduledUpdateGroupActionRequest putScheduledUpdateGroupActionRequest =
+              new PutScheduledUpdateGroupActionRequest()
+                  .withAutoScalingGroupName(asgName)
+                  .withScheduledActionName(scheduledAction.getScheduledActionName())
+                  .withTime(scheduledAction.getTime())
+                  .withStartTime(scheduledAction.getStartTime())
+                  .withEndTime(scheduledAction.getEndTime())
+                  .withRecurrence(scheduledAction.getRecurrence())
+                  .withMinSize(scheduledAction.getMinSize())
+                  .withMaxSize(scheduledAction.getMaxSize())
+                  .withDesiredCapacity(scheduledAction.getDesiredCapacity());
+          tracker.trackASGCall("Put ASG Scheduled Action");
+          closeableAmazonAutoScalingClient.getClient().putScheduledUpdateGroupAction(
+              putScheduledUpdateGroupActionRequest);
+          logCallback.saveExecutionLog(
+              format("Created scheduled action with Arn: [%s]", scheduledAction.getScheduledActionARN()));
+        }
+      });
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception attachScheduledActionsToAsg", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  @Override
+  public List<String> getScheduledActionJSONs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, ExecutionLogCallback logCallback) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    List<ScheduledUpdateGroupAction> scheduledUpdateGroupActionList = new ArrayList<>();
+    List<String> scheduledUpdateGroupActionJSONList = new ArrayList<>();
+    logCallback.saveExecutionLog(format("Extracting scheduled actions from: [%s]", asgName));
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      scheduledUpdateGroupActionList = listScheduledActions(closeableAmazonAutoScalingClient.getClient(), asgName);
+
+      if (isEmpty(scheduledUpdateGroupActionList)) {
+        logCallback.saveExecutionLog("No scheduled actions found");
+      } else {
+        scheduledUpdateGroupActionList.forEach(scheduledUpdateGroupAction -> {
+          logCallback.saveExecutionLog(
+              format("Found scheduled action: [%s]", scheduledUpdateGroupAction.getScheduledActionName()));
+          scheduledUpdateGroupActionJSONList.add(getJSONForScheduledAction(scheduledUpdateGroupAction, logCallback));
+        });
+      }
+
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getScheduledActionJSONs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+
+    return scheduledUpdateGroupActionJSONList;
+  }
+
+  private List<ScheduledUpdateGroupAction> listScheduledActions(
+      AmazonAutoScalingClient amazonAutoScalingClient, String asgName) {
+    List<ScheduledUpdateGroupAction> scheduledUpdateGroupActionList = new ArrayList<>();
+    String nextToken;
+    tracker.trackASGCall("Describe Scheduled Actions");
+    do {
+      DescribeScheduledActionsRequest describeScheduledActionsRequest =
+          new DescribeScheduledActionsRequest().withAutoScalingGroupName(asgName).withMaxRecords(
+              MAX_SCHEDULED_ACTIONS_BATCH_SIZE);
+      DescribeScheduledActionsResult describeScheduledActionsResult =
+          amazonAutoScalingClient.describeScheduledActions(describeScheduledActionsRequest);
+
+      scheduledUpdateGroupActionList.addAll(describeScheduledActionsResult.getScheduledUpdateGroupActions());
+
+      nextToken = describeScheduledActionsResult.getNextToken();
+    } while (nextToken != null);
+
+    return scheduledUpdateGroupActionList;
+  }
+
+  public void clearAllScheduledActionsForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, ExecutionLogCallback logCallback) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      logCallback.saveExecutionLog(format("Clearing away all scheduled actions for Asg: [%s]", asgName));
+      List<ScheduledUpdateGroupAction> scheduledUpdateGroupActions =
+          listScheduledActions(closeableAmazonAutoScalingClient.getClient(), asgName);
+
+      if (isEmpty(scheduledUpdateGroupActions)) {
+        logCallback.saveExecutionLog("No scheduled actions found");
+        return;
+      }
+
+      scheduledUpdateGroupActions.forEach(scheduledUpdateGroupAction -> {
+        logCallback.saveExecutionLog(
+            format("Found scheduled action: [%s]. Deleting it.", scheduledUpdateGroupAction.getScheduledActionName()));
+        DeleteScheduledActionRequest deleteScheduledActionRequest =
+            new DeleteScheduledActionRequest().withAutoScalingGroupName(asgName).withScheduledActionName(
+                scheduledUpdateGroupAction.getScheduledActionName());
+        tracker.trackASGCall("Delete ASG Scheduled Actions");
+        closeableAmazonAutoScalingClient.getClient().deleteScheduledAction(deleteScheduledActionRequest);
+      });
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception clearAllScheduledActionsForAsg", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 }

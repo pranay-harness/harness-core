@@ -8,6 +8,8 @@ import static software.wings.beans.LogHelper.color;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask {
   @Inject private CustomManifestService customManifestService;
 
@@ -107,9 +110,9 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
         Throwable cause = e.getCause();
         boolean isNotFound = e instanceof FileNotFoundException || cause instanceof FileNotFoundException;
         if (isNotFound && !fetchFileConfig.isRequired()) {
-          log.info("No values.yaml file found for {} and activity {}", fetchFileConfig.getKey(),
-              fetchParams.getActivityId());
-          logCallback.saveExecutionLog("Values.yaml file not found for " + fetchFileConfig.getKey(), LogLevel.WARN);
+          log.info(
+              "No values file found for {} and activity {}", fetchFileConfig.getKey(), fetchParams.getActivityId());
+          logCallback.saveExecutionLog("Values file not found for " + fetchFileConfig.getKey(), LogLevel.WARN);
           continue;
         }
 

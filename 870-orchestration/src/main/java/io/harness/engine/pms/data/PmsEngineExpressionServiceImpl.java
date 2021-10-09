@@ -26,7 +26,7 @@ public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionServic
   public String evaluateExpression(Ambiance ambiance, String expression) {
     EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
     Object value = evaluator.evaluateExpression(expression);
-    return RecastOrchestrationUtils.toDocumentJson(value);
+    return RecastOrchestrationUtils.toJson(value);
   }
 
   @Override

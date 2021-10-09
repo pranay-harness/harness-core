@@ -1,8 +1,10 @@
 package software.wings.beans.sso;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.helpers.ext.ldap.LdapConnectionConfig;
 import software.wings.helpers.ext.ldap.LdapConstants;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 @JsonIgnoreProperties(value = {"encryptedBindPassword"})
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class LdapConnectionSettings implements LdapConnectionConfig {
   @NotNull String host;
   int port = LdapConstants.DEFAULT_CONNECTION_PORT;
@@ -34,6 +37,7 @@ public class LdapConnectionSettings implements LdapConnectionConfig {
   String encryptedBindPassword;
   int connectTimeout = LdapConstants.DEFAULT_CONNECT_TIMEOUT;
   int responseTimeout = LdapConstants.DEFAULT_RESPONSE_TIMEOUT;
+  Boolean useRecursiveGroupMembershipSearch;
 
   @AssertTrue(message = "Bind password can't be empty if Bind DN is provided.")
   private boolean isNonEmptyCredentials() {

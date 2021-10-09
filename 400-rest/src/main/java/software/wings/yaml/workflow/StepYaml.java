@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 /**
  * @author rktummala on 10/26/17
  */
-@TargetModule(HarnessModule._870_YAML_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 @Data
 @NoArgsConstructor

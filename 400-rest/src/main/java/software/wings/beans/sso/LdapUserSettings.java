@@ -1,8 +1,10 @@
 package software.wings.beans.sso;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapUserConfig;
@@ -19,6 +21,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class LdapUserSettings implements LdapUserConfig {
   @JsonProperty @NotBlank String baseDN;
   @JsonProperty @NotBlank String searchFilter = LdapConstants.DEFAULT_USER_SEARCH_FILTER;

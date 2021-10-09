@@ -4,17 +4,20 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.MOUNIK;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -76,6 +79,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.LastDeployedHelmChartInformation;
@@ -198,9 +202,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(artifactInformation.getExecutionEntityType()).isEqualTo(WorkflowType.PIPELINE);
     assertThat(artifactInformation.getExecutionEntityName()).isEqualTo(PIPELINE_NAME);
 
-    PageResponse<HelmChart> pageResponse2 = new PageResponse<>();
-    pageResponse2.setResponse(helmCharts);
-    when(helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, new PageRequest<>())).thenReturn(pageResponse2);
+    when(helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, null, new PageRequest<>()))
+        .thenReturn(ImmutableMap.of(APP_MANIFEST_NAME, helmCharts));
 
     LastDeployedHelmChartInformation helmChartInformation =
         workflowServiceImpl.fetchLastDeployedHelmChart(workflow, SERVICE_ID);
@@ -272,6 +275,104 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(helmChartInformation).isNull();
   }
 
+  private PhaseStep getSinglePhaseWithSingleStep(String phaseName, String stepName) {
+    GraphNode graphnode = GraphNode.builder().name(stepName).build();
+    List<GraphNode> graphNodes = asList(graphnode);
+    PhaseStep phaseStep = aPhaseStep(VERIFY_SERVICE).addAllSteps(graphNodes).build();
+    phaseStep.setName(phaseName);
+    return phaseStep;
+  }
+
+  private WorkflowPhase getWorkflowWithPhaseStep(PhaseStep phaseStep) {
+    List<PhaseStep> phaseSteps = asList(phaseStep);
+    WorkflowPhase workflowPhase = aWorkflowPhase().phaseSteps(phaseSteps).build();
+    return workflowPhase;
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void checkStepNames() {
+    WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
+    final PhaseStep phaseStepWithInvalidStep = getSinglePhaseWithSingleStep("Phase 1", "Step.1");
+    assertThatThrownBy(() -> workflowServiceImpl.checkPhaseStepAndStepNames(phaseStepWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+    final WorkflowPhase workflowPhaseWithInvalidStep = getWorkflowWithPhaseStep(phaseStepWithInvalidStep);
+    assertThatThrownBy(() -> workflowService.updatePostDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePreDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updateWorkflowPhase(APP_ID, WORKFLOW_ID, workflowPhaseWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+    assertThatThrownBy(
+        () -> workflowService.updateWorkflowPhaseRollback(APP_ID, WORKFLOW_ID, PHASE_ID, workflowPhaseWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void checkPhaseStepNamesWithValidSteps() {
+    final PhaseStep phaseStepWithInvalidName = getSinglePhaseWithSingleStep("Phase.1", "Step 1");
+    WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
+    assertThatThrownBy(() -> workflowServiceImpl.checkPhaseStepAndStepNames(phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    final WorkflowPhase workflowPhaseWithInvalidPhaseStep = getWorkflowWithPhaseStep(phaseStepWithInvalidName);
+    assertThatThrownBy(() -> workflowServiceImpl.checkWorkflowForStepNames(workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePostDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePreDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(
+        () -> workflowService.updateWorkflowPhase(APP_ID, WORKFLOW_ID, workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflowPhaseRollback(
+                               APP_ID, WORKFLOW_ID, PHASE_ID, workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+  }
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void checkPhaseStepNamesWithInvalidSteps() {
+    final PhaseStep phaseStepWithInvalidName = getSinglePhaseWithSingleStep("Phase.1", "Step.1");
+    WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
+    assertThatThrownBy(() -> workflowServiceImpl.checkPhaseStepAndStepNames(phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    final WorkflowPhase workflowPhaseWithInvalidPhaseStep = getWorkflowWithPhaseStep(phaseStepWithInvalidName);
+    assertThatThrownBy(() -> workflowServiceImpl.checkWorkflowForStepNames(workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePostDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePreDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(
+        () -> workflowService.updateWorkflowPhase(APP_ID, WORKFLOW_ID, workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflowPhaseRollback(
+                               APP_ID, WORKFLOW_ID, PHASE_ID, workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+  }
+
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
@@ -320,16 +421,16 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                    .withMetadata(Collections.singletonMap(ArtifactMetadataKeys.buildNo, BUILD_NO + 2))
                    .build()));
     when(artifactService.listArtifactsForService(APP_ID, SERVICE_ID, new PageRequest<>())).thenReturn(pageResponse);
+    when(helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, null, new PageRequest<>()))
+        .thenReturn(ImmutableMap.of(APP_MANIFEST_NAME,
+            asList(HelmChart.builder()
+                       .uuid(HELM_CHART_ID + 2)
+                       .serviceId(SERVICE_ID)
+                       .name(CHART_NAME)
+                       .applicationManifestId(MANIFEST_ID)
+                       .version(VERSION + 2)
+                       .build())));
 
-    PageResponse<HelmChart> pageResponse2 = new PageResponse<>();
-    pageResponse2.setResponse(asList(HelmChart.builder()
-                                         .uuid(HELM_CHART_ID + 2)
-                                         .serviceId(SERVICE_ID)
-                                         .name(CHART_NAME)
-                                         .applicationManifestId(MANIFEST_ID)
-                                         .version(VERSION + 2)
-                                         .build()));
-    when(helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, new PageRequest<>())).thenReturn(pageResponse2);
     WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
     LastDeployedArtifactInformation artifactInformation = workflowServiceImpl.fetchLastDeployedArtifact(
         workflow, asList(ARTIFACT_STREAM_ID, ARTIFACT_STREAM_ID_ARTIFACTORY), SERVICE_ID);
@@ -501,6 +602,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
             .build();
     applicationManifest.setUuid(MANIFEST_ID);
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(applicationManifest);
+    when(applicationManifestService.getManifestsByServiceId(APP_ID, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
+        .thenReturn(Collections.singletonList(applicationManifest));
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
         .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).name("chart").version("1").displayName("chart-1").build());
@@ -511,11 +614,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     assertThat(deploymentMetadata.getManifestVariables()).hasSize(1);
     ManifestVariable manifestVariable = deploymentMetadata.getManifestVariables().get(0);
-    ManifestSummary manifestSummary = manifestVariable.getApplicationManifestSummary().getLastCollectedManifest();
+    ManifestSummary manifestSummary =
+        manifestVariable.getApplicationManifestSummary().get(0).getLastCollectedManifest();
     assertThat(manifestSummary.getUuid()).isEqualTo(HELM_CHART_ID);
     assertThat(manifestSummary.getVersionNo()).isEqualTo("1");
     assertThat(manifestVariable.getServiceName()).isEqualTo(SERVICE_NAME);
-    assertThat(manifestVariable.getApplicationManifestSummary().getDefaultManifest()).isNull();
+    assertThat(manifestVariable.getApplicationManifestSummary().get(0).getDefaultManifest()).isNull();
   }
 
   @Test
@@ -535,6 +639,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
             .build();
     applicationManifest.setUuid(MANIFEST_ID);
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(applicationManifest);
+    when(applicationManifestService.getManifestsByServiceId(APP_ID, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
+        .thenReturn(Collections.singletonList(applicationManifest));
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
         .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).name("chart").version("1").displayName("chart-1").build());
@@ -561,11 +667,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     assertThat(deploymentMetadata.getManifestVariables()).hasSize(1);
     ManifestVariable manifestVariable = deploymentMetadata.getManifestVariables().get(0);
-    ManifestSummary manifestSummary = manifestVariable.getApplicationManifestSummary().getLastCollectedManifest();
+    ManifestSummary manifestSummary =
+        manifestVariable.getApplicationManifestSummary().get(0).getLastCollectedManifest();
     assertThat(manifestSummary.getUuid()).isEqualTo(HELM_CHART_ID);
     assertThat(manifestSummary.getVersionNo()).isEqualTo("1");
     assertThat(manifestVariable.getServiceName()).isEqualTo(SERVICE_NAME);
-    manifestSummary = manifestVariable.getApplicationManifestSummary().getDefaultManifest();
+    manifestSummary = manifestVariable.getApplicationManifestSummary().get(0).getDefaultManifest();
     assertThat(manifestSummary.getUuid()).isEqualTo(HELM_CHART_ID + 1);
     assertThat(manifestSummary.getVersionNo()).isEqualTo(VERSION + 1);
   }
@@ -624,9 +731,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(artifactInformation.getExecutionEntityType()).isEqualTo(WorkflowType.PIPELINE);
     assertThat(artifactInformation.getExecutionEntityName()).isEqualTo(PIPELINE_NAME);
 
-    PageResponse<HelmChart> pageResponse2 = new PageResponse<>();
-    pageResponse2.setResponse(helmCharts);
-    when(helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, new PageRequest<>())).thenReturn(pageResponse2);
+    when(helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, null, new PageRequest<>()))
+        .thenReturn(ImmutableMap.of(APP_MANIFEST_NAME, helmCharts));
 
     LastDeployedHelmChartInformation helmChartInformation =
         workflowServiceImpl.fetchLastDeployedHelmChart(workflow, SERVICE_ID);
@@ -872,5 +978,52 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                canaryOrchestrationWorkflow, false, false, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Specify the steps for timeout error. Allowed step types are:");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldPopulateMultipleAppManifestSummaryAndServiceName() {
+    GraphNode k8sDeploy = GraphNode.builder().type(StateType.K8S_BLUE_GREEN_DEPLOY.name()).name("K8sDeploy").build();
+
+    Workflow workflow = createWorkflowWithPhaseStep(k8sDeploy);
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .storeType(StoreType.HelmChartRepo)
+            .pollForChanges(true)
+            .helmChartConfig(HelmChartConfig.builder().connectorId(SETTING_ID).build())
+            .build();
+    ApplicationManifest applicationManifest2 =
+        ApplicationManifest.builder()
+            .storeType(StoreType.HelmChartRepo)
+            .pollForChanges(true)
+            .helmChartConfig(HelmChartConfig.builder().connectorId(SETTING_ID).build())
+            .build();
+    applicationManifest.setUuid(MANIFEST_ID);
+    applicationManifest2.setUuid(MANIFEST_ID + 2);
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(applicationManifest);
+    when(applicationManifestService.getManifestsByServiceId(APP_ID, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
+        .thenReturn(asList(applicationManifest, applicationManifest2));
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
+    when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).name("chart").version("1").displayName("chart-1").build());
+
+    DeploymentMetadata deploymentMetadata =
+        workflowService.fetchDeploymentMetadata(APP_ID, workflow, Collections.EMPTY_MAP, Collections.EMPTY_LIST,
+            Collections.EMPTY_LIST, false, null, DeploymentMetadata.Include.ARTIFACT_SERVICE);
+
+    assertThat(deploymentMetadata.getManifestVariables()).hasSize(1);
+    ManifestVariable manifestVariable = deploymentMetadata.getManifestVariables().get(0);
+    assertThat(manifestVariable.getApplicationManifestSummary()).hasSize(2);
+    ManifestSummary manifestSummary =
+        manifestVariable.getApplicationManifestSummary().get(0).getLastCollectedManifest();
+    assertThat(manifestSummary.getUuid()).isEqualTo(HELM_CHART_ID);
+    assertThat(manifestSummary.getVersionNo()).isEqualTo("1");
+    assertThat(manifestVariable.getServiceName()).isEqualTo(SERVICE_NAME);
+    assertThat(manifestVariable.getApplicationManifestSummary().get(0).getDefaultManifest()).isNull();
+    assertThat(manifestVariable.getApplicationManifestSummary().get(1).getAppManifestId()).isEqualTo(MANIFEST_ID + 2);
+    assertThat(manifestVariable.getApplicationManifestSummary().get(0).getAppManifestId()).isEqualTo(MANIFEST_ID);
   }
 }

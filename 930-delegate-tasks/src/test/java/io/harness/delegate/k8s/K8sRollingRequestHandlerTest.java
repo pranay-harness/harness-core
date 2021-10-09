@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -112,6 +113,10 @@ public class K8sRollingRequestHandlerTest extends CategoryTest {
     doReturn(singletonList(deployment()))
         .when(taskHelperBase)
         .readManifestAndOverrideLocalSecrets(anyListOf(FileData.class), eq(logCallback), anyBoolean());
+    doReturn(true)
+        .when(taskHelperBase)
+        .doStatusCheckForAllCustomResources(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), eq(logCallback), eq(true), anyLong());
 
     K8sDeployResponse response = rollingRequestHandler.executeTask(
         rollingDeployRequest, delegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
@@ -135,6 +140,10 @@ public class K8sRollingRequestHandlerTest extends CategoryTest {
         .when(baseHandler)
         .getExistingPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString(),
             any(LogCallback.class));
+    doReturn(true)
+        .when(taskHelperBase)
+        .doStatusCheckForAllCustomResources(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), eq(logCallback), eq(true), anyLong());
     doThrow(thrownException)
         .when(baseHandler)
         .getPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString());
@@ -146,6 +155,6 @@ public class K8sRollingRequestHandlerTest extends CategoryTest {
 
     verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
     verify(kubernetesContainerService, times(2))
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), anyString(), anyString());
+        .saveReleaseHistory(any(KubernetesConfig.class), anyString(), anyString(), anyBoolean());
   }
 }

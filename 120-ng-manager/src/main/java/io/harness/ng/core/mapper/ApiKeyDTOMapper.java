@@ -20,6 +20,9 @@ public class ApiKeyDTOMapper {
         .accountIdentifier(dto.getAccountIdentifier())
         .orgIdentifier(dto.getOrgIdentifier())
         .projectIdentifier(dto.getProjectIdentifier())
+        .name(dto.getName())
+        .description(dto.getDescription())
+        .tags(TagMapper.convertToList(dto.getTags()))
         .defaultTimeToExpireToken(
             dto.getDefaultTimeToExpireToken() == null ? DEFAULT_TTL_FOR_TOKEN : dto.getDefaultTimeToExpireToken())
         .build();
@@ -34,6 +37,9 @@ public class ApiKeyDTOMapper {
         .orgIdentifier(apiKey.getOrgIdentifier())
         .projectIdentifier(apiKey.getProjectIdentifier())
         .defaultTimeToExpireToken(apiKey.getDefaultTimeToExpireToken())
+        .name(apiKey.getName())
+        .description(apiKey.getDescription())
+        .tags(TagMapper.convertToMap(apiKey.getTags()))
         .build();
   }
 }

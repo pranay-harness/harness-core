@@ -1,27 +1,36 @@
 extend type Query {
+  # Get statistics about Cloud Efficiency Setup.
   eksClusterStats(filters: [CESetupFilter]): eksClusterData @dataFetcher(name: eksClusterStats)
+  # Get statistics about Linked Account
   linkedAccountStats(filters: [CESetupFilter], sortCriteria: [CESetupSortCriteria]): linkedAccountData
     @dataFetcher(name: linkedAccountStats)
+  # Get info about CE Connector
   ceConnector(filters: [CESetupFilter]): ceConnectorData @dataFetcher(name: ceConnector)
+  # Get details about Infra Account Connection
   infraAccountConnectionDetail(infraType: infraTypesEnum): infraAccountConnectionData
     @dataFetcher(name: infraAccountConnection)
+  # Get statistics about Overview Page
   overviewPageStats: OverviewStatsData @dataFetcher(name: overviewPageStats)
 }
 
+# Set CE Setup sort criteria
 input CESetupSortCriteria {
   sortType: CESetupSortType
   sortOrder: SortOrder
 }
 
+# Possible CE Setup Sort Type values
 enum CESetupSortType {
   status
 }
 
+# Define Linked Account Data type
 type linkedAccountData {
   count: countStats
   linkedAccounts: [linkedAccount]
 }
 
+# Define Infra Account Connection Data type
 type infraAccountConnectionData {
   harnessAccountId: String
   externalId: String
@@ -32,10 +41,12 @@ type infraAccountConnectionData {
   azureHarnessAppClientId: String
 }
 
+# Define CE Connector Data type
 type ceConnectorData {
   ceConnectors: [ceConnector]
 }
 
+# Define CE Connector type
 type ceConnector {
   settingId: String
   accountName: String
@@ -51,12 +62,14 @@ type ceConnector {
   azureTenantId: String
 }
 
+# Define Count Stats type
 type countStats {
   countOfConnected: Number
   countOfNotConnected: Number
   countOfNotVerified: Number
 }
 
+# Define Linked Account type
 type linkedAccount {
   id: String
   name: String
@@ -65,11 +78,13 @@ type linkedAccount {
   accountStatus: accountStatusEnum
 }
 
+# Define EKS Cluster Data type
 type eksClusterData {
   count: Number
   clusters: [eksCluster]
 }
 
+# Define EKS Cluster type
 type eksCluster {
   id: String
   name: String
@@ -80,6 +95,7 @@ type eksCluster {
   cloudProviderId: String
 }
 
+# Define Overview Stats Data type
 type OverviewStatsData {
   ceEnabledClusterPresent: Boolean
   cloudConnectorsPresent: Boolean
@@ -93,19 +109,26 @@ type OverviewStatsData {
   defaultAzurePerspectiveId: String
 }
 
+# Set CE Setup filter criteria
 input CESetupFilter {
+  # Filter by Cloud Provider id
   cloudProviderId: IdFilter
+  # Filter by Infra Master Account id
   infraMasterAccountId: IdFilter
+  # Filter by Master Account Setting id
   masterAccountSettingId: IdFilter
+  # Filter by Setting id
   settingId: IdFilter
 }
 
+# Possible Infra values
 enum infraTypesEnum {
   AWS
   GCP
   AZURE
 }
 
+# Possible Account Status values
 enum accountStatusEnum {
   NOT_VERIFIED
   CONNECTED

@@ -60,6 +60,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -131,6 +133,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Captor ArgumentCaptor<Command> commandCaptor;
   @Captor ArgumentCaptor<Boolean> booleanCaptor;
@@ -745,7 +748,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
 
     service.setDeploymentType(AWS_CODEDEPLOY);
     service.setHelmVersion(null);
-    service = serviceResourceService.save(service);
+    service = serviceResourceService.update(service);
     try {
       serviceResourceService.updateServiceWithHelmVersion(service);
       service.setHelmVersion(null);
@@ -1110,5 +1113,20 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
 
     k8sService.setK8sV2(false);
     assertThat(spyServiceResourceService.isK8sV2Service(APP_ID, SERVICE_ID)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testCheckAndSetServiceAsK8sV2() {
+    Service k8sService = Service.builder().isK8sV2(true).build();
+    spyServiceResourceService.checkAndSetServiceAsK8sV2(k8sService);
+    assertThat(k8sService.isK8sV2()).isTrue();
+    k8sService.setK8sV2(false);
+    spyServiceResourceService.checkAndSetServiceAsK8sV2(k8sService);
+    assertThat(k8sService.isK8sV2()).isFalse();
+    k8sService.setDeploymentType(KUBERNETES);
+    spyServiceResourceService.checkAndSetServiceAsK8sV2(k8sService);
+    assertThat(k8sService.isK8sV2()).isTrue();
   }
 }

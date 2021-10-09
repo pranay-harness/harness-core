@@ -1,6 +1,8 @@
 package io.harness.grpc;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder;
+import static io.harness.beans.SearchFilter.Operator.CONTAINS;
+import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
@@ -16,6 +18,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.beans.SearchFilter.SearchFilterBuilder;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
@@ -24,15 +27,19 @@ import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
+import io.harness.delegateprofile.DelegateProfileFilterGrpc;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceImplBase;
 import io.harness.delegateprofile.DeleteProfileRequest;
 import io.harness.delegateprofile.DeleteProfileResponse;
+import io.harness.delegateprofile.DeleteProfileV2Request;
 import io.harness.delegateprofile.EmbeddedUserDetails;
 import io.harness.delegateprofile.GetProfileRequest;
 import io.harness.delegateprofile.GetProfileResponse;
+import io.harness.delegateprofile.GetProfileV2Request;
 import io.harness.delegateprofile.ListProfilesRequest;
+import io.harness.delegateprofile.ListProfilesRequestV2;
 import io.harness.delegateprofile.ListProfilesResponse;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
@@ -42,8 +49,11 @@ import io.harness.delegateprofile.UpdateProfileRequest;
 import io.harness.delegateprofile.UpdateProfileResponse;
 import io.harness.delegateprofile.UpdateProfileScopingRulesRequest;
 import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
+import io.harness.delegateprofile.UpdateProfileScopingRulesV2Request;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
+import io.harness.delegateprofile.UpdateProfileSelectorsV2Request;
+import io.harness.filter.FilterUtils;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.owner.OrgIdentifier;
 import io.harness.owner.ProjectIdentifier;
@@ -126,10 +136,97 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   }
 
   @Override
+  public void listProfilesV2(ListProfilesRequestV2 request, StreamObserver<ListProfilesResponse> responseObserver) {
+    try {
+      PageRequest<DelegateProfile> pageRequest = convertGrpcPageRequest(request.getPageRequest());
+      DelegateProfileFilterGrpc filterProperties = request.getFilterProperties();
+      String accountId = filterProperties.getAccountId().getId();
+      pageRequest.addFilter(DelegateProfileKeys.accountId, SearchFilter.Operator.EQ, accountId);
+      pageRequest.addFilter(DelegateProfileKeys.ng, SearchFilter.Operator.EQ, true);
+      pageRequest.addFilter(getOwnerSearchFilter(filterProperties));
+
+      if (isNotEmpty(request.getSearchTerm())) {
+        Object[] filtersForSearchTerm =
+            FilterUtils.getFiltersForSearchTerm(request.getSearchTerm(), CONTAINS, DelegateProfileKeys.name,
+                DelegateProfileKeys.description, DelegateProfileKeys.identifier, DelegateProfileKeys.selectors);
+        pageRequest.addFilter(DelegateProfileKeys.searchTermFilter, OR, filtersForSearchTerm);
+      }
+
+      populatePageRequestWithFilterProperties(pageRequest, filterProperties);
+
+      PageResponse<DelegateProfile> pageResponse = delegateProfileService.list(pageRequest);
+      if (pageResponse != null) {
+        DelegateProfilePageResponseGrpc response = convertPageResponse(pageResponse);
+        responseObserver.onNext(ListProfilesResponse.newBuilder().setResponse(response).build());
+      } else {
+        responseObserver.onNext(ListProfilesResponse.newBuilder().build());
+      }
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing list profiles request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  private SearchFilter getOwnerSearchFilter(DelegateProfileFilterGrpc filterProperties) {
+    String orgId = filterProperties.getOrgIdentifier() != null ? filterProperties.getOrgIdentifier().getId() : null;
+    String projectId =
+        filterProperties.getOrgIdentifier() != null ? filterProperties.getProjectIdentifier().getId() : null;
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
+
+    SearchFilterBuilder searchFilterBuilder = SearchFilter.builder().fieldName(DelegateProfileKeys.owner);
+    if (owner != null) {
+      searchFilterBuilder.op(SearchFilter.Operator.EQ).fieldValues(new Object[] {owner}).build();
+    } else {
+      searchFilterBuilder.op(SearchFilter.Operator.NOT_EXISTS).build();
+    }
+
+    return searchFilterBuilder.build();
+  }
+
+  private void populatePageRequestWithFilterProperties(
+      PageRequest<DelegateProfile> pageRequest, DelegateProfileFilterGrpc filterProperties) {
+    if (isNotEmpty(filterProperties.getIdentifier())) {
+      pageRequest.addFilter(DelegateProfileKeys.identifier, SearchFilter.Operator.EQ, filterProperties.getIdentifier());
+    }
+    if (isNotEmpty(filterProperties.getName())) {
+      pageRequest.addFilter(DelegateProfileKeys.name, CONTAINS, filterProperties.getName());
+    }
+    if (isNotEmpty(filterProperties.getDescription())) {
+      pageRequest.addFilter(DelegateProfileKeys.description, CONTAINS, filterProperties.getDescription());
+    }
+    if (isNotEmpty(filterProperties.getSelectorsList())) {
+      pageRequest.addFilter(
+          DelegateProfileKeys.selectors, SearchFilter.Operator.IN, filterProperties.getSelectorsList());
+    }
+  }
+
+  @Override
   public void getProfile(GetProfileRequest request, StreamObserver<GetProfileResponse> responseObserver) {
     try {
       DelegateProfile delegateProfile =
           delegateProfileService.get(request.getAccountId().getId(), request.getProfileId().getId());
+
+      if (delegateProfile != null) {
+        responseObserver.onNext(GetProfileResponse.newBuilder().setProfile(convert(delegateProfile)).build());
+      } else {
+        responseObserver.onNext(GetProfileResponse.newBuilder().build());
+      }
+
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing get profile request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void getProfileV2(GetProfileV2Request request, StreamObserver<GetProfileResponse> responseObserver) {
+    try {
+      DelegateProfile delegateProfile = delegateProfileService.getProfileByIdentifier(request.getAccountId().getId(),
+          DelegateEntityOwnerHelper.buildOwner(request.getOrgId() != null ? request.getOrgId().getId() : null,
+              request.getProjectId() != null ? request.getProjectId().getId() : null),
+          request.getProfileIdentifier().getIdentifier());
 
       if (delegateProfile != null) {
         responseObserver.onNext(GetProfileResponse.newBuilder().setProfile(convert(delegateProfile)).build());
@@ -177,9 +274,44 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   }
 
   @Override
+  public void updateProfileV2(UpdateProfileRequest request, StreamObserver<UpdateProfileResponse> responseObserver) {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
+      DelegateProfile delegateProfile = delegateProfileService.updateV2(convert(request.getProfile()));
+
+      if (delegateProfile != null) {
+        responseObserver.onNext(UpdateProfileResponse.newBuilder().setProfile(convert(delegateProfile)).build());
+      } else {
+        responseObserver.onNext(UpdateProfileResponse.newBuilder().build());
+      }
+
+      responseObserver.onCompleted();
+
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing update profile request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
   public void deleteProfile(DeleteProfileRequest request, StreamObserver<DeleteProfileResponse> responseObserver) {
     try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       delegateProfileService.delete(request.getAccountId().getId(), request.getProfileId().getId());
+      responseObserver.onNext(DeleteProfileResponse.newBuilder().build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing delete profile request.", ex);
+      responseObserver.onError(
+          io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).withCause(ex).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void deleteProfileV2(DeleteProfileV2Request request, StreamObserver<DeleteProfileResponse> responseObserver) {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
+      delegateProfileService.deleteProfileV2(request.getAccountId().getId(),
+          DelegateEntityOwnerHelper.buildOwner(request.getOrgId() != null ? request.getOrgId().getId() : null,
+              request.getProjectId() != null ? request.getProjectId().getId() : null),
+          request.getProfileIdentifier().getIdentifier());
       responseObserver.onNext(DeleteProfileResponse.newBuilder().build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
@@ -216,6 +348,35 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   }
 
   @Override
+  public void updateProfileSelectorsV2(
+      UpdateProfileSelectorsV2Request request, StreamObserver<UpdateProfileSelectorsResponse> responseObserver) {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
+      List<String> selectors = null;
+      if (isNotEmpty(request.getSelectorsList())) {
+        selectors = request.getSelectorsList().stream().map(ProfileSelector::getSelector).collect(Collectors.toList());
+      }
+
+      DelegateProfile updatedDelegateProfile =
+          delegateProfileService.updateProfileSelectorsV2(request.getAccountId().getId(),
+              DelegateEntityOwnerHelper.buildOwner(request.getOrgId() != null ? request.getOrgId().getId() : null,
+                  request.getProjectId() != null ? request.getProjectId().getId() : null),
+              request.getProfileIdentifier().getIdentifier(), selectors);
+
+      if (updatedDelegateProfile != null) {
+        responseObserver.onNext(
+            UpdateProfileSelectorsResponse.newBuilder().setProfile(convert(updatedDelegateProfile)).build());
+      } else {
+        responseObserver.onNext(UpdateProfileSelectorsResponse.newBuilder().build());
+      }
+
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing update profile selectors request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
   public void updateProfileScopingRules(
       UpdateProfileScopingRulesRequest request, StreamObserver<UpdateProfileScopingRulesResponse> responseObserver) {
     try {
@@ -233,6 +394,41 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
       DelegateProfile updatedDelegateProfile = delegateProfileService.updateScopingRules(
           request.getAccountId().getId(), request.getProfileId().getId(), scopingRules);
+
+      if (updatedDelegateProfile != null) {
+        responseObserver.onNext(
+            UpdateProfileScopingRulesResponse.newBuilder().setProfile(convert(updatedDelegateProfile)).build());
+      } else {
+        responseObserver.onNext(UpdateProfileScopingRulesResponse.newBuilder().build());
+      }
+
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing update profile scoping rules request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void updateProfileScopingRulesV2(
+      UpdateProfileScopingRulesV2Request request, StreamObserver<UpdateProfileScopingRulesResponse> responseObserver) {
+    try {
+      List<DelegateProfileScopingRule> scopingRules = null;
+      if (isNotEmpty(request.getScopingRulesList())) {
+        scopingRules = request.getScopingRulesList()
+                           .stream()
+                           .map(scopingRule
+                               -> DelegateProfileScopingRule.builder()
+                                      .description(scopingRule.getDescription())
+                                      .scopingEntities(convertGrpcScopes(scopingRule.getScopingEntitiesMap()))
+                                      .build())
+                           .collect(Collectors.toList());
+      }
+
+      DelegateProfile updatedDelegateProfile = delegateProfileService.updateScopingRules(request.getAccountId().getId(),
+          DelegateEntityOwnerHelper.buildOwner(request.getOrgId() != null ? request.getOrgId().getId() : null,
+              request.getProjectId() != null ? request.getProjectId().getId() : null),
+          request.getProfileIdentifier().getIdentifier(), scopingRules);
 
       if (updatedDelegateProfile != null) {
         responseObserver.onNext(

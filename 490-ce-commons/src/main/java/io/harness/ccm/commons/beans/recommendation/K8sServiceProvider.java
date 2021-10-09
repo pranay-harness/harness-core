@@ -16,6 +16,19 @@ public class K8sServiceProvider {
   String region;
   String instanceFamily;
   int nodeCount;
+
   CloudProvider cloudProvider;
   InstanceCategory instanceCategory;
+
+  double cpusPerVm;
+  double memPerVm;
+  double costPerVmPerHr;
+  double spotCostPerVmPerHr;
+
+  public double getCategoryAwareCost() {
+    if (InstanceCategory.SPOT.equals(instanceCategory)) {
+      return spotCostPerVmPerHr;
+    }
+    return costPerVmPerHr;
+  }
 }

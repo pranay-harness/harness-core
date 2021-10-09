@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class ManagerExecutionLogCallback implements LogCallback {
   private transient LogService logService;
   private Builder logBuilder;

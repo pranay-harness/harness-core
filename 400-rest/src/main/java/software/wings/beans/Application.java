@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
@@ -45,7 +45,7 @@ import org.mongodb.morphia.annotations.Transient;
  * @author Rishi
  */
 @OwnedBy(CDC)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
@@ -508,11 +508,20 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private Boolean isManualTriggerAuthorized;
+    private Boolean isGitSyncEnabled;
+    private String gitConnector;
+    private String branchName;
+    private String repoName;
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String description) {
+    public Yaml(String type, String harnessApiVersion, String description, Boolean isGitSyncEnabled,
+        String gitConnector, String branchName, String repoName) {
       super(type, harnessApiVersion);
       this.description = description;
+      this.isGitSyncEnabled = isGitSyncEnabled;
+      this.gitConnector = gitConnector;
+      this.branchName = branchName;
+      this.repoName = repoName;
     }
   }
 

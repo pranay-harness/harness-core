@@ -46,7 +46,7 @@ input DeleteTriggerInput {
 }
 
 input TriggerConditionInput {
-  #Condition to execute Trigger: ON_NEW_ARTIFACT, ON_PIPELINE_COMPLETION, ON_SCHEDULE, ON_WEBHOOK
+  #Condition to execute Trigger: ON_NEW_ARTIFACT, ON_PIPELINE_COMPLETION, ON_SCHEDULE, ON_WEBHOOK, ON_NEW_MANIFEST
   conditionType: ConditionType!
   #Should be provided when conditionType is ON_NEW_ARTIFACT.
   artifactConditionInput: ArtifactConditionInput
@@ -56,6 +56,14 @@ input TriggerConditionInput {
   scheduleConditionInput: ScheduleConditionInput
   #Should be provided when conditionType is ON_WEBHOOK.
   webhookConditionInput: WebhookConditionInput
+  #Beta: Should be provided when conditionType is ON_NEW_MANIFEST.
+  manifestConditionInput: ManifestConditionInput
+}
+
+#Beta: Should be provided when conditionType is ON_NEW_MANIFEST.
+input ManifestConditionInput {
+  appManifestId: String!
+  versionRegex: String
 }
 
 input ArtifactConditionInput {
@@ -181,6 +189,7 @@ enum ConditionType {
   ON_PIPELINE_COMPLETION
   ON_SCHEDULE
   ON_WEBHOOK
+  ON_NEW_MANIFEST
 }
 
 input TriggerActionInput {
@@ -192,6 +201,8 @@ input TriggerActionInput {
   variables: [VariableInput]
   #Artifact Selections required for the execution
   artifactSelections: [ArtifactSelectionInput]
+  #Beta: Manifest Selections required for the execution
+  manifestSelections: [ManifestSelectionInput]
   #Skip deployment on the host, if the same artifact is already deployed
   excludeHostsWithSameArtifact: Boolean
   # Beta: Coninue with default values as defined in pipeline
@@ -222,6 +233,21 @@ enum ArtifactSelectionType {
   LAST_COLLECTED
   LAST_DEPLOYED_WORKFLOW
   LAST_DEPLOYED_PIPELINE
+}
+
+#Beta: Manifest Selections required for the execution
+input ManifestSelectionInput {
+  #Id of the service providing manifest selection for
+  serviceId: String!
+  manifestSelectionType: ManifestSelectionType!
+  # Application Manifest Id to select helm chart from. Required for LAST_COLLECTED,WEBHOOK_VARIABLE
+  appManifestId: String
+  #Version regex to filter artifacts when using LAST_COLLECTED
+  versionRegex: String
+  #Workflow Id to select helm chart from, Required when using LAST_DEPLOYED WORKFLOW
+  workflowId: String
+  #Pipeline Id to select artifact from, Required when using LAST_DEPLOYED PIPELINE
+  pipelineId: String
 }
 
 type TriggerPayload {

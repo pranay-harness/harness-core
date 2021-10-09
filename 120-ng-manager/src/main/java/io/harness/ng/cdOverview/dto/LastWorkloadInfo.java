@@ -10,8 +10,8 @@ import lombok.Value;
 @Value
 @Builder
 public class LastWorkloadInfo {
-  private long startTime;
-  private long endTime;
+  private Long startTime;
+  private Long endTime;
   private String deploymentType;
   private String status;
 }

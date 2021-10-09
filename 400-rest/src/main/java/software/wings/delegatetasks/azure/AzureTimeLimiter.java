@@ -41,7 +41,7 @@ public class AzureTimeLimiter {
       DefaultCompletableSubscriber subscriber, Supplier<Void> pollAction, LogCallback errorLogCallback,
       String commandUnitName) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(steadyCheckTimeoutInMinutes), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(steadyCheckTimeoutInMinutes), () -> {
         while (true) {
           if (ERROR == subscriber.getStatus()) {
             Throwable cause = subscriber.getError().getCause();

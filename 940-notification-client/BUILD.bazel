@@ -2,15 +2,27 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
-java_library(
-    name = "maven_deps",
+java_binary(
+    name = "module",
+    srcs = glob(["src/main/java/**/*.java"]),
+    data = ["//:resource"],
+    main_class = "io.harness.notification.NotificationClientApplication",
+    resources = [
+        "//940-notification-client/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
-    exports = [
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "//:lombok",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
+        "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
         "//960-persistence:module",
         "//970-ng-commons:module",
         "//980-commons:module",
+        "//999-annotations:module",
         "@maven//:aopalliance_aopalliance",
         "@maven//:cglib_cglib_nodep",
         "@maven//:ch_qos_logback_contrib_logback_jackson",
@@ -282,25 +294,6 @@ java_library(
         "@maven//:org_threeten_threetenbp",
         "@maven//:org_yaml_snakeyaml",
         "@maven//:org_zeroturnaround_zt_exec",
-    ],
-)
-
-java_binary(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    data = ["//:resource"],
-    main_class = "io.harness.notification.NotificationClientApplication",
-    resources = [
-        "//940-notification-client/src/main/resources:resource",
-    ],
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-        "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
     ],
 )
 

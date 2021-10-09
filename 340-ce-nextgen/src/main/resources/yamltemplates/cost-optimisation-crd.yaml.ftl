@@ -1,3 +1,85 @@
+  - apiGroups:
+      - lightwing.lightwing.io
+    resources:
+      - autostoppingrules
+      - autostoppingrules/status
+    verbs:
+      - get
+      - list
+      - watch
+      - delete
+      - create
+      - patch
+      - update
+      - deletecollection
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+      - delete
+      - create
+      - patch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - patch
+      - update
+  - apiGroups:
+      - apps
+      - extensions
+    resources:
+      - deployments
+    verbs:
+      - patch
+      - update
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: autostopping-secret-reader-role
+  namespace: harness-autostopping
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - patch
+      - delete
+      - update
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ce-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ce-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: ${serviceAccountName}
+    namespace: ${serviceAccountNamespace}
+
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -51,6 +133,7 @@ spec:
                 type: string
             type: object
           status:
+            x-kubernetes-preserve-unknown-fields: true
             description: AutoStoppingRuleStatus defines the observed state of AutoStoppingRule
             type: object
         type: object
@@ -64,11 +147,13 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: as-controller-config
+  namespace: harness-autostopping
 data:
   envoy.yaml: >
     admin:
@@ -79,6 +164,7 @@ data:
     node:
       cluster: test-cluster
       id: test-id
+
     dynamic_resources:
       lds_config:
         resource_api_version: V3
@@ -96,6 +182,7 @@ data:
           grpc_services:
             - envoy_grpc:
                 cluster_name: xds_cluster
+
     static_resources:
       clusters:
       - name: xds_cluster
@@ -119,6 +206,24 @@ data:
                   socket_address:
                     address: harness-operator.harness-autostopping.svc.cluster.local
                     port_value: 18000
+      - name: harness_api_endpoint
+        connect_timeout: 0.25s
+        type: LOGICAL_DNS
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: harness_api_endpoint
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: ${envoyHarnessHostname}
+                    port_value: 443
+        transport_socket:
+          name: envoy.transport_sockets.tls
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -126,7 +231,7 @@ metadata:
   labels:
     app: ascontroller
   name: ascontroller
-  namespace: default
+  namespace: harness-autostopping
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -166,12 +271,13 @@ spec:
           defaultMode: 420
           name: as-controller-config
         name: as-controller-config
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: ascontroller
-  namespace: default
+  namespace: harness-autostopping
 spec:
   ports:
   - port: 80
@@ -180,6 +286,7 @@ spec:
   selector:
     app: ascontroller
   type: ClusterIP
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -200,13 +307,19 @@ spec:
     spec:
       containers:
       - name: harness-operator
-        image: registry.gitlab.com/lightwing/lightwing/operator:latest
+        image: navaneethknharness/autostopping-operator:latest
         imagePullPolicy: Always
+        env:
+        - name: HARNESS_API
+          value: "${harnessHostname}/gateway/lw/api"
+        - name: CONNECTOR_ID
+          value: ${connectorIdentifier}
+        - name: REMOTE_ACCOUNT_ID
+          value: ${accountId}
         ports:
         - containerPort: 18000
-      imagePullSecrets:
-      - name: gitlab-auth
       serviceAccountName: harness-autostopping-sa
+
 ---
 apiVersion: v1
 kind: Service
@@ -221,12 +334,14 @@ spec:
     protocol: TCP
   selector:
     app: harness-operator
+
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: harness-autostopping-sa
   namespace: harness-autostopping
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -235,11 +350,26 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cluster-admin
+  name: ce-clusterrole
 subjects:
   - kind: ServiceAccount
     name: harness-autostopping-sa
     namespace: harness-autostopping
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: harness-autostopping-secret-reader-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: autostopping-secret-reader-role
+subjects:
+  - kind: ServiceAccount
+    name: harness-autostopping-sa
+    namespace: harness-autostopping
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -260,12 +390,14 @@ spec:
     spec:
       containers:
       - name: harness-progress
-        image: registry.gitlab.com/lightwing/lightwing/httpproxy:latest
+        image: navaneethknharness/autostopping-progress:latest
         imagePullPolicy: Always
+        env:
+        - name: HARNESS_API_URL
+          value: "${harnessHostname}/gateway/lw/api/"
         ports:
         - containerPort: 8093
-      imagePullSecrets:
-      - name: gitlab-auth
+
 ---
 apiVersion: v1
 kind: Service

@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-common-entities</artifactId>
+            <artifactId>959-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

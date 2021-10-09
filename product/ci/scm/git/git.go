@@ -55,6 +55,44 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 	return out, nil
 }
 
+func FindPR(ctx context.Context, request *pb.FindPRRequest, log *zap.SugaredLogger) (out *pb.FindPRResponse, err error) {
+	start := time.Now()
+	log.Infow("FindPR starting", "slug", request.GetSlug())
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("FindPR failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	pr, response, err := client.PullRequests.Find(ctx, request.GetSlug(), int(request.GetNumber()))
+	if err != nil {
+		log.Errorw("FindPR failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "number", request.GetNumber(),
+			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+
+		// hard error from git
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from git provider
+		out = &pb.FindPRResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+	}
+	log.Infow("FindPR success", "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start))
+
+	protoPR, err := converter.ConvertPR(pr)
+	if err != nil {
+		return nil, err
+	}
+	out = &pb.FindPRResponse{
+		Pr:     protoPR,
+		Status: int32(response.Status),
+	}
+	return out, nil
+}
+
 func FindFilesInPR(ctx context.Context, request *pb.FindFilesInPRRequest, log *zap.SugaredLogger) (out *pb.FindFilesInPRResponse, err error) {
 	start := time.Now()
 	log.Infow("FindFilesInPR starting", "slug", request.GetSlug())
@@ -156,7 +194,7 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		return nil, err
 	}
 
-	ref, err := gitclient.GetValidRef(*request.Provider, "", request.GetBranch())
+	ref, err := gitclient.GetValidRef(*request.Provider, request.GetRef(), request.GetBranch())
 	if err != nil {
 		log.Errorw("GetLatestCommit failure, bad ref/branch", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
@@ -166,23 +204,27 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 	if err != nil {
 		log.Errorw("GetLatestCommit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		// this is a hard error with no response
-		if refResponse == nil {
+		if response == nil {
 			return nil, err
 		}
-
 		// this is an error from the git provider
 		out = &pb.GetLatestCommitResponse{
-			CommitId: refResponse.Sha,
-			Error:    err.Error(),
-			Status:   int32(response.Status),
+			Error:  err.Error(),
+			Status: int32(response.Status),
 		}
 		return out, nil
 	}
 
+	commit, err := converter.ConvertCommit(refResponse)
+	if err != nil {
+		log.Errorw("GetLatestCommit convert commit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
 	log.Infow("GetLatestCommit success", "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.GetLatestCommitResponse{
 		CommitId: refResponse.Sha,
+		Commit:   commit,
 		Status:   int32(response.Status),
 	}
 	return out, nil
@@ -201,7 +243,15 @@ func ListBranches(ctx context.Context, request *pb.ListBranchesRequest, log *zap
 	branchesContent, response, err := client.Git.ListBranches(ctx, request.GetSlug(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
 		log.Errorw("ListBranches failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from the git provider, e.g. authentication.
+		out = &pb.ListBranchesResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+		return out, nil
 	}
 	log.Infow("ListBranches success", "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start))
 	var branches []string
@@ -318,6 +368,11 @@ func GetUserRepos(ctx context.Context, request *pb.GetUserReposRequest, log *zap
 
 	if err != nil {
 		log.Errorw("GetUserRepos failure", "provider", gitclient.GetProvider(*request.GetProvider()), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		// this is a hard error with no response
+		if response == nil {
+			return nil, err
+		}
+
 		out = &pb.GetUserReposResponse{
 			Status: int32(response.Status),
 			Error:  err.Error(),

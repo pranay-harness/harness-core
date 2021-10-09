@@ -1,5 +1,8 @@
 package io.harness.ccm;
 
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.IndexManager;
@@ -57,7 +60,11 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       @Singleton
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
-        return ImmutableMap.<Class, String>builder().build();
+        return ImmutableMap.<Class, String>builder()
+            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
+            .build();
       }
 
       @Provides

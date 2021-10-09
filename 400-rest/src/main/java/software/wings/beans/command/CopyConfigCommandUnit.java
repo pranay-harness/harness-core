@@ -47,7 +47,7 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonTypeName("COPY_CONFIGS")
 @Slf4j
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CopyConfigCommandUnit extends SshCommandUnit implements NestedAnnotationResolver {
   @Attributes(title = "Destination Parent Path")
   @DefaultValue("$WINGS_RUNTIME_PATH")

@@ -39,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.NonNull;
@@ -53,23 +54,14 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  protected Map<String, String> extractMetricContext(NodeResumeEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
-
-  @Override
   protected String getMetricPrefix(NodeResumeEvent message) {
-    return "progress_event";
+    return "resume_event";
   }
 
   @Override
   @NonNull
   protected Map<String, String> extraLogProperties(NodeResumeEvent event) {
-    return ImmutableMap.<String, String>builder().put("eventType", NodeExecutionEventType.PROGRESS.name()).build();
+    return ImmutableMap.<String, String>builder().put("eventType", NodeExecutionEventType.RESUME.name()).build();
   }
 
   @Override
@@ -90,6 +82,7 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
     Preconditions.checkArgument(isNotBlank(nodeExecutionId), "nodeExecutionId is null or empty");
     try {
       if (event.getAsyncError()) {
+        log.info("Async Error for the Event Sending Error Response");
         ErrorResponseData errorResponseData = (ErrorResponseData) response.values().iterator().next();
         StepResponseProto stepResponse =
             StepResponseProto.newBuilder()
@@ -100,20 +93,20 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
                                     .setErrorMessage(errorResponseData.getErrorMessage())
                                     .build())
                 .build();
-        sdkNodeExecutionService.handleStepResponse(nodeExecutionId, stepResponse);
+        sdkNodeExecutionService.handleStepResponse(event.getAmbiance(), stepResponse);
         return;
       }
 
       processor.handleResume(buildResumePackage(event, response));
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
-      sdkNodeExecutionService.handleStepResponse(nodeExecutionId, NodeExecutionUtils.constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(event.getAmbiance(), NodeExecutionUtils.constructStepResponse(ex));
     }
   }
 
   private ResumePackage buildResumePackage(NodeResumeEvent event, Map<String, ResponseData> response) {
     StepParameters stepParameters =
-        RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+        RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
 
     ResumePackageBuilder builder = ResumePackage.builder()
                                        .ambiance(event.getAmbiance())
@@ -121,20 +114,24 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
                                        .stepInputPackage(buildStepInputPackage(event.getResolvedInputList()))
                                        .responseDataMap(response);
 
-    // TODO (prashant) : Change ChildChainResponse Pass through data handling
     if (event.hasChainDetails()) {
       io.harness.pms.contracts.resume.ChainDetails chainDetailsProto = event.getChainDetails();
       ChainDetailsBuilder chainDetailsBuilder = ChainDetails.builder().shouldEnd(calculateIsEnd(event, response));
       if (EmptyPredicate.isNotEmpty(chainDetailsProto.getPassThroughData())) {
-        chainDetailsBuilder.passThroughData(
-            (PassThroughData) kryoSerializer.asObject(chainDetailsProto.getPassThroughData().toByteArray()));
+        ByteString passThroughBytes = chainDetailsProto.getPassThroughData();
+        if (event.getExecutionMode() == ExecutionMode.CHILD_CHAIN) {
+          chainDetailsBuilder.passThroughBytes(passThroughBytes);
+        } else if (event.getExecutionMode() == ExecutionMode.TASK_CHAIN) {
+          chainDetailsBuilder.passThroughData(
+              RecastOrchestrationUtils.fromBytes(passThroughBytes.toByteArray(), PassThroughData.class));
+        }
       }
       builder.chainDetails(chainDetailsBuilder.build());
     }
     return builder.build();
   }
 
-  private boolean calculateIsEnd(NodeResumeEvent event, Map<String, ResponseData> response) {
+  public boolean calculateIsEnd(NodeResumeEvent event, Map<String, ResponseData> response) {
     if (event.getExecutionMode() != ExecutionMode.CHILD_CHAIN) {
       return event.getChainDetails().getIsEnd();
     }

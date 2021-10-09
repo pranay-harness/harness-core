@@ -1,10 +1,12 @@
 package io.harness.beans.yaml.extended.infrastrucutre;
 
-import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
-import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
@@ -24,6 +26,7 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @JsonTypeName("KubernetesDirect")
 @TypeAlias("k8sDirectInfraYaml")
+@OwnedBy(CI)
 public class K8sDirectInfraYaml implements Infrastructure {
   @Builder.Default @NotNull private Type type = Type.KUBERNETES_DIRECT;
   @NotNull private K8sDirectInfraYamlSpec spec;
@@ -45,5 +48,6 @@ public class K8sDirectInfraYaml implements Infrastructure {
     @ApiModelProperty(dataType = INTEGER_CLASSPATH)
     private ParameterField<Integer> runAsUser;
     @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> serviceAccountName;
+    @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> initTimeout;
   }
 }

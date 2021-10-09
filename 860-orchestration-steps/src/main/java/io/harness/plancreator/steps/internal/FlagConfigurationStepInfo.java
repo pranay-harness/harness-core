@@ -1,8 +1,9 @@
 package io.harness.plancreator.steps.internal;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
@@ -29,6 +30,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode
 @JsonTypeName("FlagConfiguration")
 @TypeAlias("flagConfigurationStepInfo")
+@RecasterAlias("io.harness.plancreator.steps.internal.FlagConfigurationStepInfo")
 public class FlagConfigurationStepInfo implements PMSStepInfo {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> feature;

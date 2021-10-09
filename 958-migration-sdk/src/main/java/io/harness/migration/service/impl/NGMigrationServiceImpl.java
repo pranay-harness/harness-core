@@ -12,8 +12,10 @@ import io.harness.exception.GeneralException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.migration.MigrationDetails;
+import io.harness.migration.MigrationException;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigration;
+import io.harness.migration.TimeScaleNotAvailableException;
 import io.harness.migration.beans.MigrationType;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.migration.entities.NGSchema;
@@ -102,14 +104,12 @@ public class NGMigrationServiceImpl implements NGMigrationService {
               serviceName, microservice);
         }
       }
-    } catch (Exception e) {
-      log.error("[Migration] - {} : Migration failed.", microservice, e);
     }
   }
 
   private void runMigrationsInner(boolean isBackground, int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail,
-      Class<? extends NGSchema> schemaClass, String serviceName, Microservice microservice) throws Exception {
+      Class<? extends NGSchema> schemaClass, String serviceName, Microservice microservice) {
     if (currentVersion < maxVersion) {
       if (isBackground) {
         runBackgroundMigrations(
@@ -131,7 +131,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
   private void runForegroundMigrations(int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail,
-      Class<? extends NGSchema> schemaClass, String serviceName) throws Exception {
+      Class<? extends NGSchema> schemaClass, String serviceName) {
     doMigration(false, currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), schemaClass,
         serviceName);
   }
@@ -144,7 +144,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
         MigrationType migrationType = migrationDetail.getMigrationTypeName();
         try (AcquiredLock ignore = persistentLocker.acquireLock(
                  NGSchema.class, "Background-" + NG_SCHEMA_ID + microservice + migrationType, ofMinutes(120 + 1))) {
-          HTimeLimiter.callInterruptible(timeLimiter, Duration.ofHours(2), () -> {
+          HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofHours(2), () -> {
             doMigration(true, currentVersion, maxVersion, migrations, migrationType, schemaClass, serviceName);
             return true;
           });
@@ -158,7 +158,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
   @VisibleForTesting
   void doMigration(boolean isBackground, int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationType migrationTypeName,
-      Class<? extends NGSchema> schemaClass, String serviceName) throws Exception {
+      Class<? extends NGSchema> schemaClass, String serviceName) {
     log.info("[Migration] - {} : Updating {} version from {} to {}", serviceName, migrationTypeName, currentVersion,
         maxVersion);
 
@@ -171,18 +171,19 @@ public class NGMigrationServiceImpl implements NGMigrationService {
       try {
         injector.getInstance(migration).migrate();
       } catch (Exception ex) {
-        if (isBackground) {
+        // There may be some on-prem customers who might not have timescale db available. Hence handling this exception
+        // gracefully and skipping rest of the Timescale migration.
+        if (isBackground || ex instanceof TimeScaleNotAvailableException) {
           log.error("[Migration] - {} : Error while running migration {}", serviceName, migration.getSimpleName(), ex);
           break;
         } else {
-          throw new Exception("Error while running migration", ex);
+          throw new MigrationException(
+              String.format("[Migration] - %s : Error while running migration %s", serviceName, migrationTypeName), ex);
         }
       }
-
       Update update = new Update().set(NGSchemaKeys.migrationDetails + "." + migrationTypeName, i);
       mongoTemplate.updateFirst(new Query(), update, schemaClass);
+      log.info("[Migration] - {} : {} completed", serviceName, migrationTypeName);
     }
-
-    log.info("[Migration] - {} : {} complete", serviceName, migrationTypeName);
   }
 }

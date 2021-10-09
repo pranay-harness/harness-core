@@ -18,6 +18,7 @@ type ConnectionInfo struct {
 	Port        uint   `json:"port" validate:"nonzero"`
 	Engine      string `json:"engine" validate:"nonzero"`
 	EnableSSL   bool   `json:"enable_ssl"`
+	SSLMode     string `json:"ssl_mode"`
 	SSLCertPath string `json:"ssl_cert_path"`
 }
 
@@ -38,11 +39,12 @@ func (ci *ConnectionInfo) String() string {
 
 func (ci *ConnectionInfo) psqlConnectionString() string {
 	if ci.EnableSSL == false {
-		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable application_name=%s",
-			ci.Host, ci.Port, ci.User, ci.Password, ci.DBName, ci.Application)
+		// require mode -- disable doesn't works for onprem as server rejects the connection
+		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s application_name=%s",
+			ci.Host, ci.Port, ci.User, ci.Password, ci.DBName, ci.SSLMode, ci.Application)
 	} else {
-		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=verify-full sslrootcert=%s sslcert= sslkey= application_name=%s",
-			ci.Host, ci.Port, ci.User, ci.Password, ci.DBName, ci.SSLCertPath, ci.Application)
+		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s sslrootcert=%s sslcert= sslkey= application_name=%s",
+			ci.Host, ci.Port, ci.User, ci.Password, ci.DBName, ci.SSLMode, ci.SSLCertPath, ci.Application)
 	}
 
 }

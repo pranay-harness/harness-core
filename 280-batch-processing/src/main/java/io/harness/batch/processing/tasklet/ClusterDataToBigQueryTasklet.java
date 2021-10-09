@@ -6,6 +6,7 @@ import io.harness.avro.ClusterBillingData;
 import io.harness.avro.Label;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.impl.GoogleCloudStorageServiceImpl;
@@ -39,6 +40,7 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -56,7 +58,8 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   @Autowired private HarnessEntitiesService harnessEntitiesService;
 
   private static final String defaultParentWorkingDirectory = "./avro/";
-  private static final String defaultBillingDataFileName = "billing_data_%s_%s_%s.avro";
+  private static final String defaultBillingDataFileNameDaily = "billing_data_%s_%s_%s.avro";
+  private static final String defaultBillingDataFileNameHourly = "billing_data_hourly_%s_%s_%s_%s.avro";
   private static final String gcsObjectNameFormat = "%s/%s";
   public static final long CACHE_SIZE = 10000;
 
@@ -67,16 +70,25 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
+    JobParameters parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
+    BatchJobType batchJobType =
+        CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
     final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
 
     BillingDataReader billingDataReader = new BillingDataReader(billingDataService, jobConstants.getAccountId(),
         Instant.ofEpochMilli(jobConstants.getJobStartTime()), Instant.ofEpochMilli(jobConstants.getJobEndTime()),
-        batchSize, 0);
+        batchSize, 0, batchJobType);
 
     ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(jobConstants.getJobStartTime()), ZoneId.of("GMT"));
-    String billingDataFileName =
-        String.format(defaultBillingDataFileName, zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth());
+    String billingDataFileName = "";
+    if (batchJobType == BatchJobType.CLUSTER_DATA_TO_BIG_QUERY) {
+      billingDataFileName =
+          String.format(defaultBillingDataFileNameDaily, zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth());
+    } else if (batchJobType == BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY) {
+      billingDataFileName = String.format(
+          defaultBillingDataFileNameHourly, zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth(), zdt.getHour());
+    }
 
     List<InstanceBillingData> instanceBillingDataList;
     boolean avroFileWithSchemaExists = false;
@@ -203,6 +215,8 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
         getDoubleValueFromBigDecimal(instanceBillingData.getStorageUnallocatedCost()));
     clusterBillingData.setStorageutilizationvalue(instanceBillingData.getStorageUtilizationValue());
     clusterBillingData.setStoragerequest(instanceBillingData.getStorageRequest());
+    clusterBillingData.setMaxstorageutilizationvalue(instanceBillingData.getMaxStorageUtilizationValue());
+    clusterBillingData.setMaxstoragerequest(instanceBillingData.getMaxStorageRequest());
 
     if (instanceBillingData.getAppId() != null) {
       clusterBillingData.setAppname(entityIdToNameCache.get(

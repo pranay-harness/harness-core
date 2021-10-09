@@ -6,20 +6,20 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.beans.InputSetValidatorType;
 import io.harness.category.element.UnitTests;
 import io.harness.core.Recaster;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.ParameterFieldValueWrapper;
 import io.harness.pms.yaml.validation.InputSetValidator;
-import io.harness.pms.yaml.validation.InputSetValidatorType;
 import io.harness.rule.Owner;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
-import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -28,12 +28,12 @@ public class ParameterFieldRecastTransformerTest extends CategoryTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestParameterFieldWithObsoleteStructure() {
-    Document document = new Document()
-                            .append(Recaster.RECAST_CLASS_KEY, ParameterField.class.getName())
-                            .append("expressionValue", "someValue")
-                            .append("expression", false)
-                            .append("typeString", false);
-    ParameterField recasted = RecastOrchestrationUtils.fromDocument(document, ParameterField.class);
+    Map<String, Object> map = new HashMap<>();
+    map.put(Recaster.RECAST_CLASS_KEY, ParameterField.class.getName());
+    map.put("expressionValue", "someValue");
+    map.put("expression", false);
+    map.put("typeString", false);
+    ParameterField recasted = RecastOrchestrationUtils.fromMap(map, ParameterField.class);
     assertThat(recasted.getExpressionValue()).isEqualTo("someValue");
     assertThat(recasted.isExpression()).isFalse();
     assertThat(recasted.isTypeString()).isFalse();
@@ -44,8 +44,8 @@ public class ParameterFieldRecastTransformerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldTestParameterFieldWithValueField() {
     ParameterField<Object> parameterField = ParameterField.createValueField("Value");
-    Document document = RecastOrchestrationUtils.toDocument(parameterField);
-    ParameterField recasted = RecastOrchestrationUtils.fromDocument(document, ParameterField.class);
+    Map<String, Object> map = RecastOrchestrationUtils.toMap(parameterField);
+    ParameterField recasted = RecastOrchestrationUtils.fromMap(map, ParameterField.class);
     assertThat(recasted).isEqualTo(parameterField);
   }
 
@@ -55,8 +55,8 @@ public class ParameterFieldRecastTransformerTest extends CategoryTest {
   public void shouldTestParameterFieldWithExpressionField() {
     ParameterField<Object> parameterField =
         ParameterField.createExpressionField(true, "<+json.object(httpResponseBody).metaData>", null, true);
-    Document document = RecastOrchestrationUtils.toDocument(parameterField);
-    ParameterField recasted = RecastOrchestrationUtils.fromDocument(document, ParameterField.class);
+    Map<String, Object> map = RecastOrchestrationUtils.toMap(parameterField);
+    ParameterField recasted = RecastOrchestrationUtils.fromMap(map, ParameterField.class);
     assertThat(recasted).isEqualTo(parameterField);
   }
 
@@ -65,8 +65,8 @@ public class ParameterFieldRecastTransformerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldTestParameterFieldWithJsonResponseField() {
     ParameterField<Object> parameterField = ParameterField.createJsonResponseField("{response: \"success\"}");
-    Document document = RecastOrchestrationUtils.toDocument(parameterField);
-    ParameterField recasted = RecastOrchestrationUtils.fromDocument(document, ParameterField.class);
+    Map<String, Object> map = RecastOrchestrationUtils.toMap(parameterField);
+    ParameterField recasted = RecastOrchestrationUtils.fromMap(map, ParameterField.class);
     assertThat(recasted).isEqualTo(parameterField);
   }
 
@@ -76,8 +76,8 @@ public class ParameterFieldRecastTransformerTest extends CategoryTest {
   public void shouldTestParameterFieldWithInputSetValidator() {
     ParameterField<Object> parameterField = ParameterField.createValueFieldWithInputSetValidator(
         "Value", new InputSetValidator(InputSetValidatorType.REGEX, "*"), true);
-    Document document = RecastOrchestrationUtils.toDocument(parameterField);
-    ParameterField recasted = RecastOrchestrationUtils.fromDocument(document, ParameterField.class);
+    Map<String, Object> map = RecastOrchestrationUtils.toMap(parameterField);
+    ParameterField recasted = RecastOrchestrationUtils.fromMap(map, ParameterField.class);
     assertThat(recasted).isEqualTo(parameterField);
   }
 
@@ -92,15 +92,14 @@ public class ParameterFieldRecastTransformerTest extends CategoryTest {
                         .mapVal(Collections.singletonMap("c", 3))
                         .build();
     ParameterFieldValueWrapper<List<DummyB>> l = new ParameterFieldValueWrapper<>(Collections.singletonList(dummyB));
-    Document documentB = RecastOrchestrationUtils.toDocument(l);
-    ParameterFieldValueWrapper recastedB =
-        RecastOrchestrationUtils.fromDocument(documentB, ParameterFieldValueWrapper.class);
+    Map<String, Object> mapB = RecastOrchestrationUtils.toMap(l);
+    ParameterFieldValueWrapper recastedB = RecastOrchestrationUtils.fromMap(mapB, ParameterFieldValueWrapper.class);
     assertThat(recastedB).isNotNull();
     assertThat(recastedB).isEqualTo(l);
 
     DummyA dummyA = DummyA.builder().pf(ParameterField.createValueField(Collections.singletonList(dummyB))).build();
-    Document document = RecastOrchestrationUtils.toDocument(dummyA);
-    DummyA recasted = RecastOrchestrationUtils.fromDocument(document, DummyA.class);
+    Map<String, Object> map = RecastOrchestrationUtils.toMap(dummyA);
+    DummyA recasted = RecastOrchestrationUtils.fromMap(map, DummyA.class);
     assertThat(recasted).isNotNull();
     assertThat(recasted).isEqualTo(dummyA);
   }

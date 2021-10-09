@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -13,9 +13,9 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.k8s.model.KubernetesResource;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.Builder;
@@ -32,33 +32,38 @@ public class K8sBlueGreenDeployTaskParameters extends K8sTaskParameters implemen
   private boolean skipDryRun;
   private Boolean skipVersioningForAllK8sObjects;
   private boolean isPruningEnabled;
+  private boolean exportManifests;
+  private boolean inheritManifests;
+  private List<KubernetesResource> kubernetesResources;
 
   @Builder
   public K8sBlueGreenDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       boolean skipDryRun, HelmVersion helmVersion, Boolean skipVersioningForAllK8sObjects,
-      Set<String> delegateSelectors, boolean isPruningEnabled) {
+      Set<String> delegateSelectors, boolean isPruningEnabled, boolean exportManifests, boolean inheritManifests,
+      List<KubernetesResource> kubernetesResources, boolean useLatestChartMuseumVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.skipDryRun = skipDryRun;
     this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
     this.isPruningEnabled = isPruningEnabled;
+    this.exportManifests = exportManifests;
+    this.inheritManifests = inheritManifests;
+    this.kubernetesResources = kubernetesResources;
   }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities =
         new ArrayList<>(super.fetchRequiredExecutionCapabilities(maskingEvaluator));
-    if (k8sDelegateManifestConfig == null || k8sDelegateManifestConfig.getGitConfig() == null
-        || isEmpty(k8sDelegateManifestConfig.getGitConfig().getDelegateSelectors())) {
-      return capabilities;
+
+    Set<String> delegateSelectors = getDelegateSelectorsFromConfigs(k8sDelegateManifestConfig);
+    if (isNotEmpty(delegateSelectors)) {
+      capabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
     }
-    capabilities.add(SelectorCapability.builder()
-                         .selectors(new HashSet<>(k8sDelegateManifestConfig.getGitConfig().getDelegateSelectors()))
-                         .build());
     return capabilities;
   }
 }

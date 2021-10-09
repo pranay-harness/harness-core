@@ -91,6 +91,7 @@ def get_ec2_data(jsonData):
 
     try:
         print_("Assuming role")
+        jsonData["projectName"] = PROJECTID
         key, secret, token = assumed_role_session(jsonData)
     except Exception as e:
         print_(e, "WARN")

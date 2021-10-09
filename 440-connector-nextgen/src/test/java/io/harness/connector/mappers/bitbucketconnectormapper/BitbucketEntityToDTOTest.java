@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
@@ -30,7 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class BitbucketEntityToDTOTest {
+public class BitbucketEntityToDTOTest extends CategoryTest {
   @InjectMocks BitbucketEntityToDTO bitbucketEntityToDTO;
 
   @Before

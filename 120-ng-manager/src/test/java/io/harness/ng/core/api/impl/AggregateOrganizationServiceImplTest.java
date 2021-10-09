@@ -7,7 +7,6 @@ import static io.harness.utils.PageTestUtils.getPage;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
-import static java.util.stream.Collectors.toList;
 import static junit.framework.TestCase.assertEquals;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
@@ -18,25 +17,25 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.services.ConnectorService;
+import io.harness.ng.core.api.DelegateDetailsService;
+import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,17 +55,12 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     projectService = mock(ProjectService.class);
     organizationService = mock(OrganizationService.class);
     ngUserService = mock(NgUserService.class);
-    aggregateOrganizationService =
-        spy(new AggregateOrganizationServiceImpl(organizationService, projectService, ngUserService));
-  }
-
-  private Project getProject(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return Project.builder()
-        .accountIdentifier(accountIdentifier)
-        .orgIdentifier(orgIdentifier)
-        .identifier(projectIdentifier)
-        .name(randomAlphabetic(10))
-        .build();
+    final NGSecretServiceV2 secretServiceV2 = mock(NGSecretServiceV2.class);
+    final ConnectorService defaultConnectorService = mock(ConnectorService.class);
+    final DelegateDetailsService delegateDetailsService = mock(DelegateDetailsService.class);
+    final ExecutorService executorService = Executors.newFixedThreadPool(1);
+    aggregateOrganizationService = spy(new AggregateOrganizationServiceImpl(organizationService, projectService,
+        secretServiceV2, defaultConnectorService, delegateDetailsService, ngUserService, executorService));
   }
 
   private Organization getOrganization(String accountIdentifier, String orgIdentifier) {
@@ -77,30 +71,12 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
         .build();
   }
 
-  private List<UserInfo> getUsers(List<UserMembership> userMemberships) {
-    List<UserInfo> users = new ArrayList<>();
-    userMemberships.forEach(userMembership -> users.add(UserInfo.builder().uuid(userMembership.getUserId()).build()));
-    return users;
-  }
-
-  private void setupNgUserService(String accountIdentifier, String orgIdentifier) {
-    List<UserMembership> userMembershipList = new ArrayList<>();
-    IntStream.range(0, 8).forEach(e
-        -> userMembershipList.add(
-            UserMembership.builder()
-                .userId(randomAlphabetic(10))
-                .scopes(Collections.singletonList(
-                    Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build()))
-                .build()));
-    when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
-    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(getUsers(userMembershipList));
-    List<String> adminIds =
-        IntStream.range(0, 4).mapToObj(i -> userMembershipList.get(i).getUserId()).collect(toList());
-    List<UserMetadataDTO> adminUserMetadataList =
-        adminIds.stream()
-            .map(userId -> UserMetadataDTO.builder().uuid(userId).name(userId).email(userId).build())
-            .collect(toList());
-    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(adminUserMetadataList);
+  private void setupNgUserService() {
+    List<UserMetadataDTO> userMetadataDTOs = new ArrayList<>();
+    IntStream.range(0, 8).forEach(
+        e -> userMetadataDTOs.add(UserMetadataDTO.builder().uuid(randomAlphabetic(10)).build()));
+    when(ngUserService.listUsers(any())).thenReturn(userMetadataDTOs);
+    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(new ArrayList<>(userMetadataDTOs.subList(0, 4)));
   }
 
   @Test
@@ -116,7 +92,7 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     Map<String, Integer> projectsCount = singletonMap(organization.getIdentifier(), 3);
     when(projectService.getProjectsCountPerOrganization(eq(accountIdentifier), any())).thenReturn(projectsCount);
 
-    setupNgUserService(accountIdentifier, orgIdentifier);
+    setupNgUserService();
 
     OrganizationAggregateDTO organizationAggregateDTO =
         aggregateOrganizationService.getOrganizationAggregateDTO(accountIdentifier, orgIdentifier);
@@ -146,7 +122,7 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
 
     when(projectService.getProjectsCountPerOrganization(eq(accountIdentifier), any())).thenReturn(emptyMap());
 
-    when(ngUserService.listUserMemberships(any())).thenReturn(emptyList());
+    when(ngUserService.listUsers(any())).thenReturn(emptyList());
 
     when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(emptyList());
 
@@ -174,30 +150,6 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     return organizations;
   }
 
-  private List<UserMembership> setupNgUserServiceForList(List<Organization> organizations) {
-    List<UserMembership> userMembershipList = new ArrayList<>();
-    List<String> userIds = IntStream.range(0, 8).mapToObj(e -> randomAlphabetic(10)).collect(toList());
-    for (Organization organization : organizations) {
-      IntStream.range(0, 8).forEach(e
-          -> userMembershipList.add(
-              UserMembership.builder()
-                  .userId(userIds.get(e))
-                  .scopes(Collections.singletonList(Scope.builder()
-                                                        .accountIdentifier(organization.getAccountIdentifier())
-                                                        .orgIdentifier(organization.getIdentifier())
-                                                        .build()))
-                  .build()));
-    }
-    List<UserMetadataDTO> userMetadataList =
-        userIds.stream()
-            .map(userId -> UserMetadataDTO.builder().uuid(userId).name(userId).email(userId).build())
-            .collect(toList());
-    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(userMetadataList.subList(0, 4));
-    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(getUsers(userMembershipList));
-    when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
-    return userMembershipList;
-  }
-
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
@@ -205,13 +157,14 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
 
     List<Organization> organizations = getOrganizations(accountIdentifier, 3);
-    when(organizationService.list(accountIdentifier, Pageable.unpaged(), null)).thenReturn(getPage(organizations, 3));
+    when(organizationService.listPermittedOrgs(accountIdentifier, Pageable.unpaged(), null))
+        .thenReturn(getPage(organizations, 3));
 
     Map<String, Integer> projectsCount = new HashMap<>();
     organizations.forEach(organization -> projectsCount.put(organization.getIdentifier(), 3));
     when(projectService.getProjectsCountPerOrganization(eq(accountIdentifier), any())).thenReturn(projectsCount);
 
-    setupNgUserServiceForList(organizations);
+    setupNgUserService();
 
     Page<OrganizationAggregateDTO> organizationAggregateDTOs =
         aggregateOrganizationService.listOrganizationAggregateDTO(accountIdentifier, Pageable.unpaged(), null);
@@ -237,11 +190,12 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
 
     List<Organization> organizations = getOrganizations(accountIdentifier, 3);
-    when(organizationService.list(accountIdentifier, Pageable.unpaged(), null)).thenReturn(getPage(organizations, 3));
+    when(organizationService.listPermittedOrgs(accountIdentifier, Pageable.unpaged(), null))
+        .thenReturn(getPage(organizations, 3));
 
     when(projectService.getProjectsCountPerOrganization(eq(accountIdentifier), any())).thenReturn(emptyMap());
 
-    when(ngUserService.listUserMemberships(any())).thenReturn(emptyList());
+    when(ngUserService.listUsers(any())).thenReturn(emptyList());
 
     when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(emptyList());
 

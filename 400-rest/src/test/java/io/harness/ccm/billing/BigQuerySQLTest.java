@@ -3,6 +3,7 @@ package io.harness.ccm.billing;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -28,7 +29,7 @@ import org.junit.experimental.categories.Category;
 @Slf4j
 @TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
-public class BigQuerySQLTest {
+public class BigQuerySQLTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)

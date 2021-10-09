@@ -16,14 +16,18 @@ import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.tasks.ResponseData;
@@ -62,6 +66,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
   @Getter @Setter private boolean downsizeOldAsg;
   @Getter @Setter private String newAutoScalingGroupWeightExpr;
@@ -71,6 +76,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
   @Inject protected DelegateService delegateService;
   @Inject private ActivityService activityService;
   @Inject private LogService logService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public AwsAmiTrafficShiftAlbSwitchRoutesState(String name) {
     super(name, StateType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES.name());
@@ -205,6 +211,9 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
         .awsConfig(awsAmiTrafficShiftAlbData.getAwsConfig())
         .encryptionDetails(awsAmiTrafficShiftAlbData.getAwsEncryptedDataDetails())
         .region(awsAmiTrafficShiftAlbData.getRegion())
+        .amiInServiceHealthyStateFFEnabled(false)
+        .amiAsgConfigCopyEnabled(featureFlagService.isEnabled(
+            FeatureName.AMI_ASG_CONFIG_COPY, awsAmiTrafficShiftAlbData.getApp().getAccountId()))
         .build();
   }
 

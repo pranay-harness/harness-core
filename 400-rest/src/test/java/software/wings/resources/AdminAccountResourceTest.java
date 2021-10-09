@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VIKAS;
@@ -14,11 +15,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.services.AdminAccountService;
 import io.harness.datahandler.services.AdminUserService;
-import io.harness.licensing.remote.admin.AdminLicenseHttpClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -34,18 +38,20 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 public class AdminAccountResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private Account account;
 
   private static AdminAccountService adminAccountService = mock(AdminAccountService.class);
   private static AdminUserService adminUserService = mock(AdminUserService.class);
-  private static AdminLicenseHttpClient adminLicenseHttpClient = mock(AdminLicenseHttpClient.class);
+  private static AccessControlAdminClient accessControlAdminClient = mock(AccessControlAdminClient.class);
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(new AdminAccountResource(adminAccountService, adminUserService, adminLicenseHttpClient))
+          .instance(new AdminAccountResource(adminAccountService, adminUserService, accessControlAdminClient))
           .build();
 
   @Before

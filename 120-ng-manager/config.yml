@@ -33,6 +33,8 @@ nextGen:
 
 enableAudit: false
 
+exportMetricsToStackDriver: false
+
 allowedOrigins:
   - https://localhost:8181
   - https://127.0.0.1:8181
@@ -66,6 +68,7 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: false
   aliasDBName: ng-harness
+  traceMode: DISABLED
 
 accountConfig:
   deploymentClusterName: ""
@@ -184,7 +187,7 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: false
+shouldConfigureWithPMS: true
 
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
@@ -195,6 +198,9 @@ ceAwsSetupConfig:
 ceAzureSetupConfig:
   azureAppClientId: azureAppClientIdPlaceholder
   azureAppClientSecret: azureAppClientSecretplaceholder
+
+ceGcpSetupConfig:
+  gcpProjectId: gcpProjectIdPlaceHolder
 
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
@@ -264,6 +270,9 @@ gitGrpcClientConfigs:
   core:
     target: localhost:13001
     authority: localhost
+  templateservice:
+    target: localhost:16001
+    authority: localhost
 
 gitSdkConfiguration:
   gitSdkGrpcServerConfig:
@@ -287,8 +296,6 @@ baseUrls:
   webhookBaseUrl: http://localhost:7457/
 
 ngAuthUIEnabled: false
-
-enableDefaultResourceGroupCreation: true
 
 cfClientConfig:
   apiKey: ""
@@ -329,3 +336,15 @@ cacheConfig:
   cacheBackend: REDIS
   cacheNamespace: ""
   disabledCaches: [ ]
+
+scopeAccessCheckEnabled: true
+
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-""}
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: false
+
+opaServerConfig:
+  baseUrl: http://localhost:3000

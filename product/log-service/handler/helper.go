@@ -9,6 +9,7 @@ const (
 	accountIDParam = "accountID"
 	keyParam       = "key"
 	snapshotParam  = "snapshot"
+	usePrefixParam = "prefix"
 )
 
 // writeBadRequest writes the json-encoded error message

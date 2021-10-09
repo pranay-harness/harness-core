@@ -1,5 +1,8 @@
 package io.harness.governance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -17,6 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(HarnessTeam.CDC)
 public abstract class ApplicationFilter implements BlackoutWindowFilter {
   private BlackoutWindowFilterType filterType;
   private EnvironmentFilter envSelection;

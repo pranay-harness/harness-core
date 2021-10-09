@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
+import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.FdIndex;
 import io.harness.security.encryption.AccessType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -13,8 +15,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.TypeAlias;
@@ -29,7 +33,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("io.harness.connector.entities.embedded.vaultconnector.VaultConnector")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class VaultConnector extends Connector {
+public class VaultConnector extends Connector implements PersistentRegularIterable {
+  String authTokenRef;
   String vaultUrl;
   String secretEngineName;
   String appRoleId;
@@ -37,12 +42,23 @@ public class VaultConnector extends Connector {
   boolean isReadOnly;
   AccessType accessType;
   int secretEngineVersion;
-
-  @Getter(AccessLevel.NONE) Long renewalIntervalMinutes;
-
-  @Getter(AccessLevel.NONE) String basePath;
-
+  String secretIdRef;
+  @FdIndex @NonFinal Long nextTokenRenewIteration;
+  @Getter(AccessLevel.NONE) @NonFinal Long renewalIntervalMinutes;
   @Getter(AccessLevel.NONE) Boolean secretEngineManuallyConfigured;
+  @Getter(AccessLevel.NONE) String basePath;
+  String namespace;
+  String sinkPath;
+
+  @Builder.Default Boolean useVaultAgent = Boolean.FALSE;
+  @Setter @NonFinal Long renewedAt;
+
+  public long getRenewedAt() {
+    if (renewedAt == null) {
+      return 0;
+    }
+    return renewedAt;
+  }
 
   public long getRenewalIntervalMinutes() {
     if (renewalIntervalMinutes == null) {
@@ -57,5 +73,26 @@ public class VaultConnector extends Connector {
 
   public String getBasePath() {
     return Optional.ofNullable(basePath).filter(x -> !x.isEmpty()).orElse("/harness");
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (VaultConnectorKeys.nextTokenRenewIteration.equals(fieldName)) {
+      return nextTokenRenewIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    if (VaultConnectorKeys.nextTokenRenewIteration.equals(fieldName)) {
+      this.nextTokenRenewIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public Boolean isUseVaultAgent() {
+    return useVaultAgent == null ? Boolean.FALSE : useVaultAgent;
   }
 }

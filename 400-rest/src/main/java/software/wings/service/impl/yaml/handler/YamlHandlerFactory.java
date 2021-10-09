@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -52,6 +54,7 @@ import software.wings.service.impl.yaml.handler.deploymentspec.container.Storage
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.DefaultSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.FunctionSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.environment.EnvironmentYamlHandler;
+import software.wings.service.impl.yaml.handler.eventConfig.EventConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.ApplicationFilterYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.CustomAppFilterYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.CustomEnvFilterYamlHandler;
@@ -181,6 +184,7 @@ public class YamlHandlerFactory {
   @Inject private GovernanceConfigYamlHandler governanceConfigYamlHandler;
   @Inject private CustomAppFilterYamlHandler customAppFilterYamlHandler;
   @Inject private CustomEnvFilterYamlHandler customEnvFilterYamlHandler;
+  @Inject private EventConfigYamlHandler eventConfigYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -407,6 +411,10 @@ public class YamlHandlerFactory {
         yamlHandler = environmentFilterYamlHandlerMap.get(subType);
         break;
 
+      case EVENT_RULE:
+        yamlHandler = eventConfigYamlHandler;
+        break;
+
       default:
         break;
     }
@@ -516,7 +524,8 @@ public class YamlHandlerFactory {
     } else if (entity instanceof ManifestFile) {
       return ((ManifestFile) entity).getFileName();
     } else if (entity instanceof ApplicationManifest) {
-      return YamlConstants.INDEX;
+      String name = ((ApplicationManifest) entity).getName();
+      return isNotBlank(name) ? name : YamlConstants.INDEX;
     } else if (entity instanceof CVConfiguration) {
       return ((CVConfiguration) entity).getName();
     } else if (entity instanceof Trigger) {

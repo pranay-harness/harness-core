@@ -1,17 +1,11 @@
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.threading.Morpheus.sleep;
-
-import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -21,8 +15,6 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteSta
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse.CloudFormationCommandExecutionResponseBuilder;
 
-import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
-import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.google.inject.Singleton;
 import java.util.List;
@@ -55,80 +47,6 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
       return builder.build();
     }
 
-    try {
-      long stackEventsTs = System.currentTimeMillis();
-      executionLogCallback.saveExecutionLog(String.format("# Starting to delete stack: %s", stackName));
-      DeleteStackRequest deleteStackRequest = new DeleteStackRequest().withStackName(stackId);
-      if (EmptyPredicate.isNotEmpty(cloudFormationDeleteStackRequest.getCloudFormationRoleArn())) {
-        deleteStackRequest.withRoleARN(cloudFormationDeleteStackRequest.getCloudFormationRoleArn());
-      } else {
-        executionLogCallback.saveExecutionLog(
-            "No specific cloudformation role provided will use the default permissions on delegate.");
-      }
-      awsHelperService.deleteStack(request.getRegion(), deleteStackRequest, awsConfig);
-      executionLogCallback.saveExecutionLog(
-          String.format("# Request to delete stack: %s submitted. Now beginning to poll.", stackName));
-      int timeOutMs = cloudFormationDeleteStackRequest.getTimeoutInMs() > 0
-          ? cloudFormationDeleteStackRequest.getTimeoutInMs()
-          : DEFAULT_TIMEOUT_MS;
-      long endTime = System.currentTimeMillis() + timeOutMs;
-      boolean done = false;
-      while (System.currentTimeMillis() < endTime && !done) {
-        DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackId);
-        List<Stack> stacks = awsHelperService.getAllStacks(request.getRegion(), describeStacksRequest, awsConfig);
-        if (stacks.size() < 1) {
-          String message = String.format(
-              "# Did not get any stacks with id: %s while querying stacks list. Deletion may have completed",
-              stackName);
-          executionLogCallback.saveExecutionLog(message);
-          builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS);
-          done = true;
-          break;
-        }
-        Stack stack = stacks.get(0);
-        switch (stack.getStackStatus()) {
-          case "DELETE_COMPLETE": {
-            executionLogCallback.saveExecutionLog("# Completed deletion of stack");
-            builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS);
-            done = true;
-            break;
-          }
-          case "DELETE_FAILED": {
-            String errorMessage = String.format("# Error: %s when deleting stack", stack.getStackStatusReason());
-            executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
-            builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
-            done = true;
-            break;
-          }
-          case "DELETE_IN_PROGRESS": {
-            stackEventsTs = printStackEvents(request, stackEventsTs, stack, executionLogCallback);
-            break;
-          }
-          default: {
-            String errorMessage = String.format(
-                "# Unexpected status: %s while deleting stack: %s ", stack.getStackStatus(), stack.getStackName());
-            executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
-            builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
-            done = true;
-            break;
-          }
-        }
-        sleep(ofSeconds(10));
-      }
-      if (!done) {
-        String errorMessage = String.format("# Timing out while deleting stack: %s", stackName);
-        executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-        builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
-      } else {
-        executionLogCallback.saveExecutionLog(
-            "Completed deletion of stack", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
-      }
-    } catch (Exception ex) {
-      String errorMessage =
-          String.format("# Exception: %s while deleting stack: %s", ExceptionUtils.getMessage(ex), stackName);
-      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-      builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
-    }
-    return builder.build();
+    return deleteStack(stackId, stackName, request, executionLogCallback);
   }
 }

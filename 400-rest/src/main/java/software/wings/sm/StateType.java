@@ -379,7 +379,9 @@ public enum StateType implements StateTypeDescriptor {
    */
   DATA_DOG_LOG(DatadogLogState.class, VERIFICATIONS, 13, "Datadog Log",
       asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
-
+  // CVNG step needs to be removed. Keeping it so that the old execution that have CVNG step do not fail with error.
+  // Our workflow execution TTL is 6 months so we can remove this after 6 months.
+  @Deprecated
   CVNG(CVNGState.class, VERIFICATIONS, 13, "CVNG verification", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
       ORCHESTRATION_STENCILS),
 

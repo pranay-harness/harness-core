@@ -1,9 +1,14 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 
 import java.util.Collections;
@@ -15,6 +20,8 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class PyWinrmArgs {
   private String username;
   private String hostname;

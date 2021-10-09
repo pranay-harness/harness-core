@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package io.harness.gitsync;
+
+option java_multiple_files = true;
+
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_scope_info.proto";
+
+service FullSyncService {
+  rpc getEntitiesForFullSync(ScopeDetails) returns (FileChanges);
+  rpc performEntitySync(FullSyncChangeSet) returns (FullSyncResponse);
+}
+
+message FileChanges {
+  repeated FileChange file_changes = 1;
+}
+
+message FileChange {
+  string file_path = 1;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 2;
+}
+
+message ScopeDetails {
+  io.harness.eventsframework.schemas.entity.EntityScopeInfo entity_scope = 1;
+  map<string, string> log_context = 2;
+}
+
+message FullSyncResponse {
+  bool success = 1;
+  string error_msg = 2;
+}
+
+message FullSyncChangeSet {
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 1;
+  string file_path = 2;
+  string folder_path = 3;
+  string yaml_git_config_identifier = 4;
+  string branch_name = 5;
+  map<string, string> log_context = 6;
+  string account_identifier = 7;
+}

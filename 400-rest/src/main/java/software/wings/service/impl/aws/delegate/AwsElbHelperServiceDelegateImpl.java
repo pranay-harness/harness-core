@@ -35,6 +35,7 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogLevel;
@@ -42,6 +43,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
@@ -96,9 +98,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@Slf4j
 @OwnedBy(CDP)
 public class AwsElbHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsElbHelperServiceDelegate {
@@ -129,8 +133,10 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public List<String> listClassicLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient>
+             closeableAmazonElasticLoadBalancingClient =
+                 new CloseableAmazonWebServiceClient(getClassicElbClient(Regions.fromName(region), awsConfig))) {
       List<String> result = new ArrayList<>();
       String nextMarker = null;
       do {
@@ -139,8 +145,7 @@ public class AwsElbHelperServiceDelegateImpl
                 .withPageSize(400)
                 .withMarker(nextMarker);
         com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersResult describeLoadBalancersResult =
-            getClassicElbClient(Regions.fromName(region), awsConfig)
-                .describeLoadBalancers(describeLoadBalancersRequest);
+            closeableAmazonElasticLoadBalancingClient.getClient().describeLoadBalancers(describeLoadBalancersRequest);
         tracker.trackClassicELBCall("Get LB descriptions");
         result.addAll(describeLoadBalancersResult.getLoadBalancerDescriptions()
                           .stream()
@@ -153,6 +158,9 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listClassicLoadBalancers", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -177,18 +185,18 @@ public class AwsElbHelperServiceDelegateImpl
 
   private List<AwsLoadBalancerDetails> generateLoadBalancersList(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, Set<String> neededTypes) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
       List<AwsLoadBalancerDetails> result = new ArrayList<>();
       String nextMarker = null;
       do {
-        AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         DescribeLoadBalancersRequest describeLoadBalancersRequest =
             new DescribeLoadBalancersRequest().withMarker(nextMarker).withPageSize(400);
         tracker.trackELBCall("Describe Load Balancers");
         DescribeLoadBalancersResult describeLoadBalancersResult =
-            amazonElasticLoadBalancingClient.describeLoadBalancers(describeLoadBalancersRequest);
+            closeableAmazonElasticLoadBalancingClient.getClient().describeLoadBalancers(describeLoadBalancersRequest);
         result.addAll(describeLoadBalancersResult.getLoadBalancers()
                           .stream()
                           .filter(loadBalancer -> isNeededLoadBalancer(loadBalancer, neededTypes))
@@ -210,6 +218,9 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception generateLoadBalancersList", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -222,16 +233,17 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public Map<String, String> listTargetGroupsForAlb(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
       String loadBalancerArn = null;
       if (isNotBlank(loadBalancerName)) {
         DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
         request.withNames(loadBalancerName);
         tracker.trackELBCall("Describe Load Balancers");
-        loadBalancerArn = amazonElasticLoadBalancingClient.describeLoadBalancers(request)
+        loadBalancerArn = closeableAmazonElasticLoadBalancingClient.getClient()
+                              .describeLoadBalancers(request)
                               .getLoadBalancers()
                               .get(0)
                               .getLoadBalancerArn();
@@ -246,7 +258,7 @@ public class AwsElbHelperServiceDelegateImpl
         }
         tracker.trackELBCall("Describe Target Groups");
         DescribeTargetGroupsResult describeTargetGroupsResult =
-            amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
+            closeableAmazonElasticLoadBalancingClient.getClient().describeTargetGroups(describeTargetGroupsRequest);
         describeTargetGroupsResult.getTargetGroups().forEach(
             group -> result.put(group.getTargetGroupArn(), group.getTargetGroupName()));
         nextMarker = describeTargetGroupsResult.getNextMarker();
@@ -256,6 +268,9 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listTargetGroupsForAlb", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyMap();
   }
@@ -263,15 +278,15 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public Optional<TargetGroup> getTargetGroup(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
       tracker.trackClassicELBCall("Describe Target Group");
       DescribeTargetGroupsResult describeTargetGroupsResult =
-          amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
+          closeableAmazonElasticLoadBalancingClient.getClient().describeTargetGroups(describeTargetGroupsRequest);
 
       if (EmptyPredicate.isNotEmpty(describeTargetGroupsResult.getTargetGroups())) {
         if (describeTargetGroupsResult.getTargetGroups().get(0).getTargetGroupArn().equalsIgnoreCase(targetGroupArn)) {
@@ -282,6 +297,9 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getTargetGroup", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
 
     return Optional.empty();
@@ -290,15 +308,15 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public Optional<TargetGroup> getTargetGroupByName(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupName) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withNames(targetGroupName);
       tracker.trackELBCall("Describe Target Group");
       DescribeTargetGroupsResult describeTargetGroupsResult =
-          amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
+          closeableAmazonElasticLoadBalancingClient.getClient().describeTargetGroups(describeTargetGroupsRequest);
 
       if (EmptyPredicate.isNotEmpty(describeTargetGroupsResult.getTargetGroups())) {
         return Optional.of(describeTargetGroupsResult.getTargetGroups().get(0));
@@ -311,6 +329,9 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getTargetGroupByName", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
 
     return Optional.empty();
@@ -319,15 +340,15 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public Optional<LoadBalancer> getLoadBalancer(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
       DescribeLoadBalancersRequest describeLoadBalancersRequest =
           new DescribeLoadBalancersRequest().withNames(loadBalancerName);
       tracker.trackELBCall("Desribe Load Balancer");
       DescribeLoadBalancersResult describeLoadBalancersResult =
-          amazonElasticLoadBalancingClient.describeLoadBalancers(describeLoadBalancersRequest);
+          closeableAmazonElasticLoadBalancingClient.getClient().describeLoadBalancers(describeLoadBalancersRequest);
 
       if (EmptyPredicate.isNotEmpty(describeLoadBalancersResult.getLoadBalancers())) {
         return Optional.of(describeLoadBalancersResult.getLoadBalancers().get(0));
@@ -336,6 +357,9 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getLoadBalancer", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
 
     return Optional.empty();
@@ -345,14 +369,15 @@ public class AwsElbHelperServiceDelegateImpl
   public void waitForAsgInstancesToDeRegisterWithClassicLB(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String classicLB, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
-    try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
-        com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getClassicElbClient(Regions.fromName(region), awsConfig);
+    try (CloseableAmazonWebServiceClient<com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient>
+             closeableAmazonElasticLoadBalancingClient =
+                 new CloseableAmazonWebServiceClient(getClassicElbClient(Regions.fromName(region), awsConfig))) {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
             awsConfig, encryptionDetails, region, asgName, false);
         while (true) {
-          if (allInstancesDeRegistered(amazonElasticLoadBalancingClient, instanceIds, classicLB, logCallback)) {
+          if (allInstancesDeRegistered(
+                  closeableAmazonElasticLoadBalancingClient.getClient(), instanceIds, classicLB, logCallback)) {
             logCallback.saveExecutionLog(format("All targets  de  registered for Asg: [%s]", asgName));
             return true;
           }
@@ -395,14 +420,15 @@ public class AwsElbHelperServiceDelegateImpl
   public void waitForAsgInstancesToRegisterWithClassicLB(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String classicLB, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
-    try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
-        com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getClassicElbClient(Regions.fromName(region), awsConfig);
+    try (CloseableAmazonWebServiceClient<com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient>
+             closeableAmazonElasticLoadBalancingClient =
+                 new CloseableAmazonWebServiceClient(getClassicElbClient(Regions.fromName(region), awsConfig))) {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
             awsConfig, encryptionDetails, region, asgName, false);
         while (true) {
-          if (allInstancesRegistered(amazonElasticLoadBalancingClient, instanceIds, classicLB, logCallback)) {
+          if (allInstancesRegistered(
+                  closeableAmazonElasticLoadBalancingClient.getClient(), instanceIds, classicLB, logCallback)) {
             logCallback.saveExecutionLog(format("All targets registered for Asg: [%s]", asgName));
             return true;
           }
@@ -448,14 +474,15 @@ public class AwsElbHelperServiceDelegateImpl
   public void waitForAsgInstancesToDeRegisterWithTargetGroup(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
-    try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
-        AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
             awsConfig, encryptionDetails, region, asgName, false);
         while (true) {
-          if (allTargetsDeRegistered(amazonElasticLoadBalancingClient, instanceIds, targetGroupArn, logCallback)) {
+          if (allTargetsDeRegistered(
+                  closeableAmazonElasticLoadBalancingClient.getClient(), instanceIds, targetGroupArn, logCallback)) {
             logCallback.saveExecutionLog(format("All targets de-registered for Asg: [%s]", asgName));
             return true;
           }
@@ -499,14 +526,15 @@ public class AwsElbHelperServiceDelegateImpl
   public void waitForAsgInstancesToRegisterWithTargetGroup(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
-    try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
-        AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         while (true) {
           List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
               awsConfig, encryptionDetails, region, asgName, false);
-          if (allTargetsRegistered(amazonElasticLoadBalancingClient, instanceIds, targetGroupArn, logCallback)) {
+          if (allTargetsRegistered(
+                  closeableAmazonElasticLoadBalancingClient.getClient(), instanceIds, targetGroupArn, logCallback)) {
             logCallback.saveExecutionLog(format("All targets registered for Asg: [%s]", asgName));
             return true;
           }
@@ -575,162 +603,182 @@ public class AwsElbHelperServiceDelegateImpl
   public List<Rule> getListenerRuleFromListenerRuleArn(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String listenerRuleArn, ExecutionLogCallback logCallback) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      DescribeRulesRequest request = new DescribeRulesRequest().withRuleArns(listenerRuleArn);
 
-    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    DescribeRulesRequest request = new DescribeRulesRequest().withRuleArns(listenerRuleArn);
+      String nextMarker = null;
+      List<Rule> listenerRules = new ArrayList<>();
+      do {
+        tracker.trackELBCall("Describe Listener Rules");
+        DescribeRulesResult result = closeableAmazonElasticLoadBalancingClient.getClient().describeRules(request);
+        if (EmptyPredicate.isNotEmpty(result.getRules())) {
+          listenerRules.addAll(result.getRules());
+        }
+        nextMarker = result.getNextMarker();
+      } while (nextMarker != null);
 
-    String nextMarker = null;
-    List<Rule> listenerRules = new ArrayList<>();
-    do {
-      tracker.trackELBCall("Describe Listener Rules");
-      DescribeRulesResult result = amazonElasticLoadBalancingClient.describeRules(request);
-      if (EmptyPredicate.isNotEmpty(result.getRules())) {
-        listenerRules.addAll(result.getRules());
-      }
-      nextMarker = result.getNextMarker();
-    } while (nextMarker != null);
+      logCallback.saveExecutionLog(format(
+          "[%d] rules found when searching the given listener rule arn: [%s]", listenerRules.size(), listenerRuleArn));
 
-    logCallback.saveExecutionLog(format(
-        "[%d] rules found when searching the given listener rule arn: [%s]", listenerRules.size(), listenerRuleArn));
-
-    return listenerRules;
+      return listenerRules;
+    } catch (Exception e) {
+      log.error("Exception getListenerRuleFromListenerRuleArn", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
   public List<Rule> getListenerRulesFromListenerArn(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String listenerArn, ExecutionLogCallback logCallback) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      DescribeRulesRequest request = new DescribeRulesRequest().withListenerArn(listenerArn);
 
-    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    DescribeRulesRequest request = new DescribeRulesRequest().withListenerArn(listenerArn);
+      String nextMarker = null;
+      List<Rule> listenerRules = new ArrayList<>();
+      do {
+        tracker.trackELBCall("Describe Listener Rules");
+        DescribeRulesResult result = closeableAmazonElasticLoadBalancingClient.getClient().describeRules(request);
+        if (EmptyPredicate.isNotEmpty(result.getRules())) {
+          listenerRules.addAll(result.getRules());
+        }
+        nextMarker = result.getNextMarker();
+      } while (nextMarker != null);
 
-    String nextMarker = null;
-    List<Rule> listenerRules = new ArrayList<>();
-    do {
-      tracker.trackELBCall("Describe Listener Rules");
-      DescribeRulesResult result = amazonElasticLoadBalancingClient.describeRules(request);
-      if (EmptyPredicate.isNotEmpty(result.getRules())) {
-        listenerRules.addAll(result.getRules());
-      }
-      nextMarker = result.getNextMarker();
-    } while (nextMarker != null);
+      logCallback.saveExecutionLog(
+          format("[%d] rules found when searching the given listener arn: [%s]", listenerRules.size(), listenerArn));
 
-    logCallback.saveExecutionLog(
-        format("[%d] rules found when searching the given listener arn: [%s]", listenerRules.size(), listenerArn));
-
-    return listenerRules;
+      return listenerRules;
+    } catch (Exception e) {
+      log.error("Exception getListenerRulesFromListenerArn", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
   public List<AwsElbListener> getElbListenersForLoadBalaner(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest().withNames(loadBalancerName);
 
-    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest().withNames(loadBalancerName);
-
-    tracker.trackELBCall("Describe Load Balancers");
-    DescribeLoadBalancersResult result = amazonElasticLoadBalancingClient.describeLoadBalancers(request);
-    if (EmptyPredicate.isEmpty(result.getLoadBalancers())) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "Invalid Load Balancer Name Provided. Could not be found", WingsException.USER)
-          .addParam("message", "Invalid Load Balancer Name Provided. Could not be found");
-    }
-
-    String elbArn = result.getLoadBalancers().get(0).getLoadBalancerArn();
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-
-    List<Listener> listeners = new ArrayList<>();
-    DescribeListenersRequest describeListenersRequest = new DescribeListenersRequest().withLoadBalancerArn(elbArn);
-    String nextMarker = null;
-    do {
-      describeListenersRequest.setMarker(nextMarker);
-      tracker.trackELBCall("Describe Listeners");
-      DescribeListenersResult describeListenersResult = client.describeListeners(describeListenersRequest);
-      if (EmptyPredicate.isNotEmpty(describeListenersResult.getListeners())) {
-        listeners.addAll(describeListenersResult.getListeners());
+      tracker.trackELBCall("Describe Load Balancers");
+      DescribeLoadBalancersResult result =
+          closeableAmazonElasticLoadBalancingClient.getClient().describeLoadBalancers(request);
+      if (EmptyPredicate.isEmpty(result.getLoadBalancers())) {
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "Invalid Load Balancer Name Provided. Could not be found", WingsException.USER)
+            .addParam("message", "Invalid Load Balancer Name Provided. Could not be found");
       }
-      nextMarker = describeListenersResult.getNextMarker();
-    } while (nextMarker != null);
-    if (EmptyPredicate.isEmpty(listeners)) {
-      return Collections.emptyList();
-    }
 
-    DescribeRulesRequest describeRulesRequest = new DescribeRulesRequest();
-    List<AwsElbListener> listenerDetails = new ArrayList<>();
-    for (Listener listener : listeners) {
-      AwsElbListenerBuilder builder = AwsElbListener.builder();
-      builder.listenerArn(listener.getListenerArn());
-      builder.loadBalancerArn(elbArn);
-      builder.protocol(listener.getProtocol());
-      builder.port(listener.getPort());
-      List<AwsElbListenerRuleData> rules = new ArrayList<>();
+      String elbArn = result.getLoadBalancers().get(0).getLoadBalancerArn();
 
-      describeRulesRequest.setListenerArn(listener.getListenerArn());
-      nextMarker = null;
+      List<Listener> listeners = new ArrayList<>();
+      DescribeListenersRequest describeListenersRequest = new DescribeListenersRequest().withLoadBalancerArn(elbArn);
+      String nextMarker = null;
       do {
-        describeRulesRequest.setMarker(nextMarker);
-        tracker.trackELBCall("Describe Rules");
-        DescribeRulesResult describeRulesResult = client.describeRules(describeRulesRequest);
-        List<Rule> currentRules = describeRulesResult.getRules();
-        if (EmptyPredicate.isNotEmpty(currentRules)) {
-          currentRules.forEach(currentRule -> {
-            AwsElbListenerRuleDataBuilder ruleDataBuilder = AwsElbListenerRuleData.builder();
-            ruleDataBuilder.ruleArn(currentRule.getRuleArn());
-            ruleDataBuilder.rulePriority(currentRule.getPriority());
-            ruleDataBuilder.isDefault(currentRule.isDefault());
-            List<Action> currentRuleActions = currentRule.getActions();
-            if (EmptyPredicate.isNotEmpty(currentRuleActions)) {
-              ruleDataBuilder.ruleTargetGroupArn(currentRuleActions.get(0).getTargetGroupArn());
-            }
-            rules.add(ruleDataBuilder.build());
-          });
+        describeListenersRequest.setMarker(nextMarker);
+        tracker.trackELBCall("Describe Listeners");
+        DescribeListenersResult describeListenersResult =
+            closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(describeListenersRequest);
+        if (EmptyPredicate.isNotEmpty(describeListenersResult.getListeners())) {
+          listeners.addAll(describeListenersResult.getListeners());
         }
-        nextMarker = describeRulesResult.getNextMarker();
+        nextMarker = describeListenersResult.getNextMarker();
       } while (nextMarker != null);
-      builder.rules(rules);
-      listenerDetails.add(builder.build());
+      if (EmptyPredicate.isEmpty(listeners)) {
+        return Collections.emptyList();
+      }
+
+      DescribeRulesRequest describeRulesRequest = new DescribeRulesRequest();
+      List<AwsElbListener> listenerDetails = new ArrayList<>();
+      for (Listener listener : listeners) {
+        AwsElbListenerBuilder builder = AwsElbListener.builder();
+        builder.listenerArn(listener.getListenerArn());
+        builder.loadBalancerArn(elbArn);
+        builder.protocol(listener.getProtocol());
+        builder.port(listener.getPort());
+        List<AwsElbListenerRuleData> rules = new ArrayList<>();
+
+        describeRulesRequest.setListenerArn(listener.getListenerArn());
+        nextMarker = null;
+        do {
+          describeRulesRequest.setMarker(nextMarker);
+          tracker.trackELBCall("Describe Rules");
+          DescribeRulesResult describeRulesResult =
+              closeableAmazonElasticLoadBalancingClient.getClient().describeRules(describeRulesRequest);
+          List<Rule> currentRules = describeRulesResult.getRules();
+          if (EmptyPredicate.isNotEmpty(currentRules)) {
+            currentRules.forEach(currentRule -> {
+              AwsElbListenerRuleDataBuilder ruleDataBuilder = AwsElbListenerRuleData.builder();
+              ruleDataBuilder.ruleArn(currentRule.getRuleArn());
+              ruleDataBuilder.rulePriority(currentRule.getPriority());
+              ruleDataBuilder.isDefault(currentRule.isDefault());
+              List<Action> currentRuleActions = currentRule.getActions();
+              if (EmptyPredicate.isNotEmpty(currentRuleActions)) {
+                ruleDataBuilder.ruleTargetGroupArn(currentRuleActions.get(0).getTargetGroupArn());
+              }
+              rules.add(ruleDataBuilder.build());
+            });
+          }
+          nextMarker = describeRulesResult.getNextMarker();
+        } while (nextMarker != null);
+        builder.rules(rules);
+        listenerDetails.add(builder.build());
+      }
+      return listenerDetails;
+    } catch (Exception e) {
+      log.error("Exception getElbListenersForLoadBalaner", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
-    return listenerDetails;
   }
 
   @Override
   public Listener getElbListener(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String listenerArn) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      tracker.trackELBCall("Describe Listener");
+      DescribeListenersResult listenerResult = closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+          new DescribeListenersRequest().withListenerArns(listenerArn));
+      if (EmptyPredicate.isEmpty(listenerResult.getListeners())) {
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "Invalid ListenerArn. Listener could not be found", WingsException.USER)
+            .addParam("message", "Invalid ListenerArn. Listener could not be found");
+      }
 
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    tracker.trackELBCall("Describe Listener");
-    DescribeListenersResult listenerResult =
-        client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
-    if (EmptyPredicate.isEmpty(listenerResult.getListeners())) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "Invalid ListenerArn. Listener could not be found", WingsException.USER)
-          .addParam("message", "Invalid ListenerArn. Listener could not be found");
+      return listenerResult.getListeners().get(0);
+    } catch (Exception e) {
+      log.error("Exception getElbListener", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
-
-    return listenerResult.getListeners().get(0);
   }
 
   @Override
   public TargetGroup cloneTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String targetGroupArn, String newTargetGroupName) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
       if (isBlank(targetGroupArn)) {
         throw new WingsException(
             ErrorCode.INVALID_ARGUMENT, "TargetGroupArn to be cloned from can not be empty", WingsException.USER)
             .addParam("message", "TargetGroupArn to be cloned from can not be empty");
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonElasticLoadBalancingClient client =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       tracker.trackELBCall("Describe Target Groups");
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
-      DescribeTargetGroupsResult describeTargetGroupsResult = client.describeTargetGroups(describeTargetGroupsRequest);
+      DescribeTargetGroupsResult describeTargetGroupsResult =
+          closeableAmazonElasticLoadBalancingClient.getClient().describeTargetGroups(describeTargetGroupsRequest);
       List<TargetGroup> targetGroups = describeTargetGroupsResult.getTargetGroups();
       if (isEmpty(targetGroups)) {
         throw new WingsException(
@@ -754,13 +802,17 @@ public class AwsElbHelperServiceDelegateImpl
               .withVpcId(sourceTargetGroup.getVpcId())
               .withUnhealthyThresholdCount(sourceTargetGroup.getUnhealthyThresholdCount());
 
-      CreateTargetGroupResult createTargetGroupResult = client.createTargetGroup(createTargetGroupRequest);
+      CreateTargetGroupResult createTargetGroupResult =
+          closeableAmazonElasticLoadBalancingClient.getClient().createTargetGroup(createTargetGroupRequest);
       tracker.trackELBCall("Create Target Group");
       return createTargetGroupResult.getTargetGroups().get(0);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception cloneTargetGroup", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
 
     return null;
@@ -781,12 +833,18 @@ public class AwsElbHelperServiceDelegateImpl
     createListenerRequest.withDefaultActions(new Action().withType(Forward).withTargetGroupArn(targetGroupArn));
 
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      tracker.trackELBCall("Create Listener");
 
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    tracker.trackELBCall("Create Listener");
-
-    CreateListenerResult result = client.createListener(createListenerRequest);
-    return result.getListeners().get(0);
+      CreateListenerResult result =
+          closeableAmazonElasticLoadBalancingClient.getClient().createListener(createListenerRequest);
+      return result.getListeners().get(0);
+    } catch (Exception e) {
+      log.error("Exception createStageListener", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   public void modifyListenerRule(AmazonElasticLoadBalancing client, String listenerArn, String listenerRuleArn,
@@ -807,36 +865,47 @@ public class AwsElbHelperServiceDelegateImpl
       String stageListenerRuleArn, String targetGroupArn1, String targetGroupArn2, String region,
       ExecutionLogCallback logCallback) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      if (isUseSpecificRules) {
+        List<Rule> prodRules =
+            getListenerRuleFromListenerRuleArn(awsConfig, encryptionDetails, region, prodListenerRuleArn, logCallback);
+        List<Rule> stageRules =
+            getListenerRuleFromListenerRuleArn(awsConfig, encryptionDetails, region, stageListenerRuleArn, logCallback);
 
-    if (isUseSpecificRules) {
-      List<Rule> prodRules =
-          getListenerRuleFromListenerRuleArn(awsConfig, encryptionDetails, region, prodListenerRuleArn, logCallback);
-      List<Rule> stageRules =
-          getListenerRuleFromListenerRuleArn(awsConfig, encryptionDetails, region, stageListenerRuleArn, logCallback);
+        String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
+        String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
 
-      String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
-      String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
-
-      modifyListenerRule(client, prodListenerArn, prodListenerRuleArn, stageTargetGroup, logCallback);
-      modifyListenerRule(client, stageListenerArn, stageListenerRuleArn, prodTargetGroup, logCallback);
-    } else {
-      tracker.trackELBCall("Describe Listeners");
-      DescribeListenersResult prodListenerResult =
-          client.describeListeners(new DescribeListenersRequest().withListenerArns(prodListenerArn));
-      tracker.trackELBCall("Describe Listeners");
-      DescribeListenersResult stageListenerResult =
-          client.describeListeners(new DescribeListenersRequest().withListenerArns(stageListenerArn));
-      Listener prodListener = prodListenerResult.getListeners().get(0);
-      Listener stageListener = stageListenerResult.getListeners().get(0);
-      tracker.trackELBCall("Modify Listeners");
-      client.modifyListener(new ModifyListenerRequest()
-                                .withListenerArn(prodListener.getListenerArn())
-                                .withDefaultActions(stageListener.getDefaultActions()));
-      tracker.trackELBCall("Modify Listeners");
-      client.modifyListener(new ModifyListenerRequest()
-                                .withListenerArn(stageListener.getListenerArn())
-                                .withDefaultActions(prodListener.getDefaultActions()));
+        modifyListenerRule(closeableAmazonElasticLoadBalancingClient.getClient(), prodListenerArn, prodListenerRuleArn,
+            stageTargetGroup, logCallback);
+        modifyListenerRule(closeableAmazonElasticLoadBalancingClient.getClient(), stageListenerArn,
+            stageListenerRuleArn, prodTargetGroup, logCallback);
+      } else {
+        tracker.trackELBCall("Describe Listeners");
+        DescribeListenersResult prodListenerResult =
+            closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+                new DescribeListenersRequest().withListenerArns(prodListenerArn));
+        tracker.trackELBCall("Describe Listeners");
+        DescribeListenersResult stageListenerResult =
+            closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+                new DescribeListenersRequest().withListenerArns(stageListenerArn));
+        Listener prodListener = prodListenerResult.getListeners().get(0);
+        Listener stageListener = stageListenerResult.getListeners().get(0);
+        tracker.trackELBCall("Modify Listeners");
+        closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(
+            new ModifyListenerRequest()
+                .withListenerArn(prodListener.getListenerArn())
+                .withDefaultActions(stageListener.getDefaultActions()));
+        tracker.trackELBCall("Modify Listeners");
+        closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(
+            new ModifyListenerRequest()
+                .withListenerArn(stageListener.getListenerArn())
+                .withDefaultActions(prodListener.getDefaultActions()));
+      }
+    } catch (Exception e) {
+      log.error("Exception swapListenersForEcsBG", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -869,48 +938,66 @@ public class AwsElbHelperServiceDelegateImpl
   public void updateDefaultListenersForSpotInstBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String prodListenerArn, String stageListenerArn, String region) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    tracker.trackELBCall("Describe Listeners");
-    DescribeListenersResult prodListenerResult =
-        client.describeListeners(new DescribeListenersRequest().withListenerArns(prodListenerArn));
-    tracker.trackELBCall("Describe Listeners");
-    DescribeListenersResult stageListenerResult =
-        client.describeListeners(new DescribeListenersRequest().withListenerArns(stageListenerArn));
-    Listener prodListener = prodListenerResult.getListeners().get(0);
-    Listener stageListener = stageListenerResult.getListeners().get(0);
-    tracker.trackELBCall("Modify Listeners");
-    client.modifyListener(new ModifyListenerRequest()
-                              .withListenerArn(prodListener.getListenerArn())
-                              .withDefaultActions(stageListener.getDefaultActions()));
-    tracker.trackELBCall("Modify Listeners");
-    client.modifyListener(new ModifyListenerRequest()
-                              .withListenerArn(stageListener.getListenerArn())
-                              .withDefaultActions(prodListener.getDefaultActions()));
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      tracker.trackELBCall("Describe Listeners");
+      DescribeListenersResult prodListenerResult =
+          closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+              new DescribeListenersRequest().withListenerArns(prodListenerArn));
+      tracker.trackELBCall("Describe Listeners");
+      DescribeListenersResult stageListenerResult =
+          closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+              new DescribeListenersRequest().withListenerArns(stageListenerArn));
+      Listener prodListener = prodListenerResult.getListeners().get(0);
+      Listener stageListener = stageListenerResult.getListeners().get(0);
+      tracker.trackELBCall("Modify Listeners");
+      closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(
+          new ModifyListenerRequest()
+              .withListenerArn(prodListener.getListenerArn())
+              .withDefaultActions(stageListener.getDefaultActions()));
+      tracker.trackELBCall("Modify Listeners");
+      closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(
+          new ModifyListenerRequest()
+              .withListenerArn(stageListener.getListenerArn())
+              .withDefaultActions(prodListener.getDefaultActions()));
+    } catch (Exception e) {
+      log.error("Exception updateDefaultListenersForSpotInstBG", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
   public void updateListenersForEcsBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String prodListenerArn, String stageListenerArn, String region) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    tracker.trackELBCall("Describe Listeners");
-    DescribeListenersResult prodListenerResult =
-        client.describeListeners(new DescribeListenersRequest().withListenerArns(prodListenerArn));
-    tracker.trackELBCall("Describe Listeners");
-    DescribeListenersResult stageListenerResult =
-        client.describeListeners(new DescribeListenersRequest().withListenerArns(stageListenerArn));
-    Listener prodListener = prodListenerResult.getListeners().get(0);
-    Listener stageListener = stageListenerResult.getListeners().get(0);
-    tracker.trackELBCall("Modify Listeners");
-    client.modifyListener(new ModifyListenerRequest()
-                              .withListenerArn(prodListener.getListenerArn())
-                              .withDefaultActions(stageListener.getDefaultActions()));
-    tracker.trackELBCall("Modify Listeners");
-    client.modifyListener(new ModifyListenerRequest()
-                              .withListenerArn(stageListener.getListenerArn())
-                              .withDefaultActions(prodListener.getDefaultActions()));
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      tracker.trackELBCall("Describe Listeners");
+      DescribeListenersResult prodListenerResult =
+          closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+              new DescribeListenersRequest().withListenerArns(prodListenerArn));
+      tracker.trackELBCall("Describe Listeners");
+      DescribeListenersResult stageListenerResult =
+          closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+              new DescribeListenersRequest().withListenerArns(stageListenerArn));
+      Listener prodListener = prodListenerResult.getListeners().get(0);
+      Listener stageListener = stageListenerResult.getListeners().get(0);
+      tracker.trackELBCall("Modify Listeners");
+      closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(
+          new ModifyListenerRequest()
+              .withListenerArn(prodListener.getListenerArn())
+              .withDefaultActions(stageListener.getDefaultActions()));
+      tracker.trackELBCall("Modify Listeners");
+      closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(
+          new ModifyListenerRequest()
+              .withListenerArn(stageListener.getListenerArn())
+              .withDefaultActions(prodListener.getDefaultActions()));
+    } catch (Exception e) {
+      log.error("Exception updateListenersForEcsBG", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
@@ -918,41 +1005,52 @@ public class AwsElbHelperServiceDelegateImpl
       List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
       ExecutionLogCallback logCallback) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
+        if (lbDetailsForBGDeployment.isUseSpecificRules()) {
+          List<Rule> prodRules = getListenerRuleFromListenerRuleArn(
+              awsConfig, encryptionDetails, region, lbDetailsForBGDeployment.getProdRuleArn(), logCallback);
+          List<Rule> stageRules = getListenerRuleFromListenerRuleArn(
+              awsConfig, encryptionDetails, region, lbDetailsForBGDeployment.getStageRuleArn(), logCallback);
 
-    lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
-      if (lbDetailsForBGDeployment.isUseSpecificRules()) {
-        List<Rule> prodRules = getListenerRuleFromListenerRuleArn(
-            awsConfig, encryptionDetails, region, lbDetailsForBGDeployment.getProdRuleArn(), logCallback);
-        List<Rule> stageRules = getListenerRuleFromListenerRuleArn(
-            awsConfig, encryptionDetails, region, lbDetailsForBGDeployment.getStageRuleArn(), logCallback);
+          String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
+          String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
 
-        String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
-        String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
-
-        modifyListenerRule(client, lbDetailsForBGDeployment.getProdListenerArn(),
-            lbDetailsForBGDeployment.getProdRuleArn(), stageTargetGroup, logCallback);
-        modifyListenerRule(client, lbDetailsForBGDeployment.getStageListenerArn(),
-            lbDetailsForBGDeployment.getStageRuleArn(), prodTargetGroup, logCallback);
-      } else {
-        tracker.trackELBCall("Describe Listeners");
-        DescribeListenersResult prodListenerResult = client.describeListeners(
-            new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getProdListenerArn()));
-        tracker.trackELBCall("Describe Listeners");
-        DescribeListenersResult stageListenerResult = client.describeListeners(
-            new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getStageListenerArn()));
-        Listener prodListener = prodListenerResult.getListeners().get(0);
-        Listener stageListener = stageListenerResult.getListeners().get(0);
-        tracker.trackELBCall("Modify Listeners");
-        client.modifyListener(new ModifyListenerRequest()
-                                  .withListenerArn(prodListener.getListenerArn())
-                                  .withDefaultActions(stageListener.getDefaultActions()));
-        tracker.trackELBCall("Modify Listeners");
-        client.modifyListener(new ModifyListenerRequest()
-                                  .withListenerArn(stageListener.getListenerArn())
-                                  .withDefaultActions(prodListener.getDefaultActions()));
-      }
-    });
+          modifyListenerRule(closeableAmazonElasticLoadBalancingClient.getClient(),
+              lbDetailsForBGDeployment.getProdListenerArn(), lbDetailsForBGDeployment.getProdRuleArn(),
+              stageTargetGroup, logCallback);
+          modifyListenerRule(closeableAmazonElasticLoadBalancingClient.getClient(),
+              lbDetailsForBGDeployment.getStageListenerArn(), lbDetailsForBGDeployment.getStageRuleArn(),
+              prodTargetGroup, logCallback);
+        } else {
+          tracker.trackELBCall("Describe Listeners");
+          DescribeListenersResult prodListenerResult =
+              closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+                  new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getProdListenerArn()));
+          tracker.trackELBCall("Describe Listeners");
+          DescribeListenersResult stageListenerResult =
+              closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+                  new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getStageListenerArn()));
+          Listener prodListener = prodListenerResult.getListeners().get(0);
+          Listener stageListener = stageListenerResult.getListeners().get(0);
+          tracker.trackELBCall("Modify Listeners");
+          closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(
+              new ModifyListenerRequest()
+                  .withListenerArn(prodListener.getListenerArn())
+                  .withDefaultActions(stageListener.getDefaultActions()));
+          tracker.trackELBCall("Modify Listeners");
+          closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(
+              new ModifyListenerRequest()
+                  .withListenerArn(stageListener.getListenerArn())
+                  .withDefaultActions(prodListener.getDefaultActions()));
+        }
+      });
+    } catch (Exception e) {
+      log.error("Exception updateListenersForBGDeployment", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   private void swapListenerRulesWhenSpecificRulesCase(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -997,25 +1095,38 @@ public class AwsElbHelperServiceDelegateImpl
       List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
       ExecutionLogCallback logCallback) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-
-    lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
-      if (lbDetailsForBGDeployment.isUseSpecificRules()) {
-        swapListenerRulesWhenSpecificRulesCase(
-            awsConfig, encryptionDetails, lbDetailsForBGDeployment, region, client, logCallback);
-      } else {
-        swapListenerRulesWhenBothDefaultRulesCase(client, lbDetailsForBGDeployment);
-      }
-    });
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
+        if (lbDetailsForBGDeployment.isUseSpecificRules()) {
+          swapListenerRulesWhenSpecificRulesCase(awsConfig, encryptionDetails, lbDetailsForBGDeployment, region,
+              closeableAmazonElasticLoadBalancingClient.getClient(), logCallback);
+        } else {
+          swapListenerRulesWhenBothDefaultRulesCase(
+              closeableAmazonElasticLoadBalancingClient.getClient(), lbDetailsForBGDeployment);
+        }
+      });
+    } catch (Exception e) {
+      log.error("Exception updateListenersForSpotInstBGDeployment", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
   public DescribeListenersResult describeListenerResult(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String listenerArn, String region) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-    tracker.trackELBCall("Describe Listeners");
-    return client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      tracker.trackELBCall("Describe Listeners");
+      return closeableAmazonElasticLoadBalancingClient.getClient().describeListeners(
+          new DescribeListenersRequest().withListenerArns(listenerArn));
+    } catch (Exception e) {
+      log.error("Exception describeListenerResult", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
@@ -1066,14 +1177,18 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public void modifySpecificRule(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String ruleArn, String targetGroupArn, ExecutionLogCallback logCallback) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-      modifySpecificRule(client, ruleArn, targetGroupArn, logCallback);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
+      modifySpecificRule(closeableAmazonElasticLoadBalancingClient.getClient(), ruleArn, targetGroupArn, logCallback);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception modifySpecificRule", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -1187,9 +1302,10 @@ public class AwsElbHelperServiceDelegateImpl
   public LbDetailsForAlbTrafficShift loadTrafficShiftTargetGroupData(AwsConfig awsConfig, String region,
       List<EncryptedDataDetail> encryptionDetails, LbDetailsForAlbTrafficShift originalLbDetails,
       ExecutionLogCallback logCallback) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
       logCallback.saveExecutionLog(format("Loading Target group data for Listener: [%s] of Load Balancer: [%s]",
           originalLbDetails.getListenerArn(), originalLbDetails.getLoadBalancerArn()));
       if (originalLbDetails.isUseSpecificRule()) {
@@ -1197,8 +1313,8 @@ public class AwsElbHelperServiceDelegateImpl
       } else {
         logCallback.saveExecutionLog("Using default rules.");
       }
-      Action forwardingAction =
-          getFinalAction(client, originalLbDetails, logCallback, awsConfig, encryptionDetails, region);
+      Action forwardingAction = getFinalAction(closeableAmazonElasticLoadBalancingClient.getClient(), originalLbDetails,
+          logCallback, awsConfig, encryptionDetails, region);
       List<TargetGroupTuple> targetGroups = validateActionAndGetTuples(forwardingAction, logCallback);
       TargetGroupTuple targetGroupTuple0 = targetGroups.get(0);
       TargetGroupTuple targetGroupTuple1 = targetGroups.get(1);
@@ -1240,6 +1356,9 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception loadTrafficShiftTargetGroupData", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
@@ -1248,9 +1367,10 @@ public class AwsElbHelperServiceDelegateImpl
   public void updateRulesForAlbTrafficShift(AwsConfig awsConfig, String region,
       List<EncryptedDataDetail> encryptionDetails, List<LbDetailsForAlbTrafficShift> details,
       ExecutionLogCallback logCallback, int newServiceTrafficWeight, String groupType) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonElasticLoadBalancingClient> closeableAmazonElasticLoadBalancingClient =
+             new CloseableAmazonWebServiceClient(
+                 getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig))) {
       if (newServiceTrafficWeight < MIN_TRAFFIC_SHIFT_WEIGHT) {
         newServiceTrafficWeight = MIN_TRAFFIC_SHIFT_WEIGHT;
       } else if (newServiceTrafficWeight > MAX_TRAFFIC_SHIFT_WEIGHT) {
@@ -1272,20 +1392,25 @@ public class AwsElbHelperServiceDelegateImpl
         oldTuple.setTargetGroupArn(detail.getProdTargetGroupArn());
         newTuple.setTargetGroupArn(detail.getStageTargetGroupArn());
         logCallback.saveExecutionLog(format("Editing listener: [%s]", detail.getListenerArn()));
-        if (detail.isUseSpecificRule() && !checkIfIsDefaultRule(client, detail.getListenerArn(), detail.getRuleArn())) {
+        if (detail.isUseSpecificRule()
+            && !checkIfIsDefaultRule(
+                closeableAmazonElasticLoadBalancingClient.getClient(), detail.getListenerArn(), detail.getRuleArn())) {
           logCallback.saveExecutionLog(format("Editing rule: [%s]", detail.getRuleArn()));
           modifyRuleRequest.setRuleArn(detail.getRuleArn());
-          client.modifyRule(modifyRuleRequest);
+          closeableAmazonElasticLoadBalancingClient.getClient().modifyRule(modifyRuleRequest);
         } else {
           logCallback.saveExecutionLog(format("Editing Default rule: [%s]", detail.getRuleArn()));
           modifyListenerRequest.setListenerArn(detail.getListenerArn());
-          client.modifyListener(modifyListenerRequest);
+          closeableAmazonElasticLoadBalancingClient.getClient().modifyListener(modifyListenerRequest);
         }
       }
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception updateRulesForAlbTrafficShift", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 }

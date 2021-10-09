@@ -18,6 +18,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.LogCallback;
 import io.harness.pcf.CfSdkClient;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -36,6 +37,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -51,6 +53,7 @@ import org.cloudfoundry.operations.applications.GetApplicationRequest;
 import org.cloudfoundry.operations.applications.ListApplicationTasksRequest;
 import org.cloudfoundry.operations.applications.LogsRequest;
 import org.cloudfoundry.operations.applications.PushApplicationManifestRequest;
+import org.cloudfoundry.operations.applications.RenameApplicationRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.cloudfoundry.operations.applications.StartApplicationRequest;
 import org.cloudfoundry.operations.applications.StopApplicationRequest;
@@ -210,6 +213,12 @@ public class CfSdkClientImpl implements CfSdkClient {
     }
   }
 
+  private Optional<ApplicationSummary> getApplicationByGuid(CfRequestConfig cfAppRequest, @NotNull String guid)
+      throws PivotalClientApiException, InterruptedException {
+    List<ApplicationSummary> applications = getApplications(cfAppRequest);
+    return applications.stream().filter(app -> guid.equals(app.getId())).findAny();
+  }
+
   @Override
   public void startApplication(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
@@ -296,6 +305,51 @@ public class CfSdkClientImpl implements CfSdkClient {
       if (exceptionOccurred.get()) {
         throw new PivotalClientApiException(format("Exception occurred while stopping Application: %s, Error: %s",
             pcfRequestConfig.getApplicationName(), errorBuilder.toString()));
+      }
+    }
+  }
+
+  @Override
+  public void renameApplication(CfRenameRequest cfRenameRequest)
+      throws PivotalClientApiException, InterruptedException {
+    Optional<ApplicationSummary> application = getApplicationByGuid(cfRenameRequest, cfRenameRequest.getGuid());
+    if (application.isPresent()) {
+      if (application.get().getName().equals(cfRenameRequest.getNewName())) {
+        return;
+      }
+      cfRenameRequest.setName(application.get().getName());
+      renameApplicationInternal(cfRenameRequest);
+    } else {
+      throw new PivotalClientApiException(
+          format("Failed to rename app %s to %s", cfRenameRequest.getName(), cfRenameRequest.getNewName()));
+    }
+  }
+
+  private void renameApplicationInternal(CfRenameRequest cfRenameRequest)
+      throws PivotalClientApiException, InterruptedException {
+    log.info(
+        format("%s Stopping Application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, cfRenameRequest.getApplicationName()));
+
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+
+    try (CloudFoundryOperationsWrapper operationsWrapper =
+             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRenameRequest)) {
+      RenameApplicationRequest request = RenameApplicationRequest.builder()
+                                             .name(cfRenameRequest.getName())
+                                             .newName(cfRenameRequest.getNewName())
+                                             .build();
+      operationsWrapper.getCloudFoundryOperations().applications().rename(request).subscribe(null, throwable -> {
+        exceptionOccurred.set(true);
+        handleException(throwable, "renameApplication", errorBuilder);
+        latch.countDown();
+      }, latch::countDown);
+
+      waitTillCompletion(latch, cfRenameRequest.getTimeOutIntervalInMins());
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(format("Exception occurred while renaming Application: %s, Error: %s",
+            cfRenameRequest.getApplicationName(), errorBuilder.toString()));
       }
     }
   }
@@ -396,7 +450,7 @@ public class CfSdkClientImpl implements CfSdkClient {
       }
     }
 
-    return builder.buildpack(applicationManifest.getBuildpack())
+    return builder.buildpacks(applicationManifest.getBuildpacks())
         .command(applicationManifest.getCommand())
         .disk(applicationManifest.getDisk())
         .instances(applicationManifest.getInstances())

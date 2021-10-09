@@ -1,6 +1,8 @@
 package io.harness.ccm.views.entities;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -33,6 +35,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceReportSchedule", noClassnameStored = true)
 @StoreIn(DbAliases.CENG)
+@OwnedBy(HarnessTeam.CE)
 public final class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware,
                                                AccountAccess, CreatedByAware, UpdatedByAware {
   public static List<MongoIndex> mongoIndexes() {
@@ -63,6 +66,7 @@ public final class CEReportSchedule implements PersistentEntity, UuidAware, Crea
   String accountId;
   long createdAt;
   long lastUpdatedAt;
+  @Builder.Default String userCronTimeZone = "UTC";
   EmbeddedUser createdBy;
   EmbeddedUser lastUpdatedBy;
   Date nextExecution;

@@ -23,8 +23,6 @@ import software.wings.beans.Service;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.AccountThreadLocal;
 import software.wings.graphql.schema.query.QLPageQueryParameterImpl;
-import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
-import software.wings.graphql.schema.type.aggregation.QLExecutionStatusFilter;
 import software.wings.graphql.schema.type.aggregation.QLExecutionStatusType;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
@@ -50,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -156,6 +155,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testAccountFilteredLimitAndOffset() {
     String otherAccountId = generateUuid();
     for (int i = 0; i < 10; i++) {
@@ -203,6 +203,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testAppRBAC() {
     workflowVerificationResultService.addWorkflowVerificationResult(WorkflowVerificationResult.builder()
                                                                         .accountId(accountId)
@@ -229,6 +230,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testEnvRBAC() {
     workflowVerificationResultService.addWorkflowVerificationResult(WorkflowVerificationResult.builder()
                                                                         .accountId(accountId)
@@ -261,6 +263,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testServiceRBAC() {
     workflowVerificationResultService.addWorkflowVerificationResult(WorkflowVerificationResult.builder()
                                                                         .accountId(accountId)
@@ -293,6 +296,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testWorkflowRBAC() {
     workflowVerificationResultService.addWorkflowVerificationResult(WorkflowVerificationResult.builder()
                                                                         .accountId(accountId)
@@ -325,6 +329,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testAppFilter() {
     int numOfApp = 3;
     int numOfServiceEnv = 4;
@@ -423,6 +428,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testEnvFilter() {
     int numOfApp = 4;
     int numOfServiceEnv = 3;
@@ -451,6 +457,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testServiceFilter() {
     int numOfApp = 4;
     int numOfServiceEnv = 3;
@@ -479,29 +486,19 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testExecutionStatusFilter() {
     int numOfApp = 4;
     int numOfServiceEnv = 3;
     int numOfVerificationResults = 8;
     createAppServiceEnv(numOfApp, numOfServiceEnv, numOfVerificationResults);
     QLVerificationResultConnection verificationResults = verificationResultConnectionDataFetcher.fetchConnection(
-        Lists.newArrayList(QLVerificationResultFilter.builder()
-                               .executionStatus(QLExecutionStatusFilter.builder()
-                                                    .operator(QLEnumOperator.EQUALS)
-                                                    .values(new QLExecutionStatusType[] {
-                                                        QLExecutionStatusType.FAILED, QLExecutionStatusType.SUCCESS})
-                                                    .build())
-                               .build()),
+        Lists.newArrayList(QLVerificationResultFilter.builder().build()),
         QLPageQueryParameterImpl.builder().limit(100000).selectionSet(mockSelectionSet).build(), null);
     assertThat(verificationResults.getNodes().size()).isEqualTo(numOfApp * numOfServiceEnv * numOfVerificationResults);
 
     verificationResults = verificationResultConnectionDataFetcher.fetchConnection(
-        Lists.newArrayList(QLVerificationResultFilter.builder()
-                               .executionStatus(QLExecutionStatusFilter.builder()
-                                                    .operator(QLEnumOperator.IN)
-                                                    .values(new QLExecutionStatusType[] {QLExecutionStatusType.FAILED})
-                                                    .build())
-                               .build()),
+        Lists.newArrayList(QLVerificationResultFilter.builder().build()),
         QLPageQueryParameterImpl.builder().limit(100000).selectionSet(mockSelectionSet).build(), null);
 
     assertThat(verificationResults.getNodes().size())
@@ -513,6 +510,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testRollbackFilter() {
     int numOfApp = 2;
     int numOfServiceEnv = 3;
@@ -530,13 +528,14 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testAnalyzedFilter() {
     int numOfApp = 2;
     int numOfServiceEnv = 3;
     int numOfVerificationResults = 10;
     createAppServiceEnv(numOfApp, numOfServiceEnv, numOfVerificationResults);
     QLVerificationResultConnection verificationResults = verificationResultConnectionDataFetcher.fetchConnection(
-        Lists.newArrayList(QLVerificationResultFilter.builder().analyzed(false).build()),
+        Lists.newArrayList(QLVerificationResultFilter.builder().build()),
         QLPageQueryParameterImpl.builder().limit(100000).selectionSet(mockSelectionSet).build(), null);
     assertThat(verificationResults.getNodes().size())
         .isEqualTo(numOfApp * numOfServiceEnv * numOfVerificationResults / 2);
@@ -548,6 +547,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("This class is not used anymore")
   public void testCompositeFilter() {
     int numOfApp = 3;
     int numOfServiceEnv = 4;
@@ -560,12 +560,7 @@ public class VerificationResultConnectionDataFetcherTest extends AbstractDataFet
                     QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"My App-0"}).build())
                 .environment(QLIdFilter.builder().operator(QLIdOperator.LIKE).values(new String[] {"EnV-1"}).build())
                 .service(QLIdFilter.builder().operator(QLIdOperator.IN).values(new String[] {"mM SeRvIcE-1"}).build())
-                .executionStatus(QLExecutionStatusFilter.builder()
-                                     .operator(QLEnumOperator.EQUALS)
-                                     .values(new QLExecutionStatusType[] {QLExecutionStatusType.SUCCESS})
-                                     .build())
                 .rollback(true)
-                .analyzed(true)
                 .build()),
         QLPageQueryParameterImpl.builder().limit(100000).selectionSet(mockSelectionSet).build(), null);
     verificationResults.getNodes().forEach(verificationResult -> {

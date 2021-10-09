@@ -11,7 +11,9 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -31,6 +33,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("ARTIFACTORY")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -146,6 +149,25 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         throw new InvalidRequestException("Repository Type cannot be empty", USER);
       }
     }
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .repositoryType(repositoryType)
+        .jobname(jobname)
+        .imageName(imageName)
+        .artifactPaths(artifactPaths)
+        .artifactPattern(artifactPattern)
+        .dockerRepositoryServer(dockerRepositoryServer)
+        .useDockerFormat(useDockerFormat)
+        .build();
   }
 
   @Override

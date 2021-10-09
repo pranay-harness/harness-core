@@ -2,6 +2,7 @@ package io.harness.perpetualtask.connector;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
@@ -9,6 +10,9 @@ import static io.harness.eventsframework.schemas.entityactivity.EntityActivityCr
 
 import static software.wings.utils.Utils.emptyIfNull;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
@@ -36,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class ConnectorHearbeatPublisher {
   Producer eventProducer;
   IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;

@@ -20,7 +20,6 @@ import io.grpc.stub.StreamObserver;
 import java.util.Collection;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -48,7 +47,7 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
   private void updatePipelineInfoJson(ExecutionSummaryUpdateRequest request, NodeExecution nodeExecution) {
     String moduleName = request.getModuleName();
     String planExecutionId = request.getPlanExecutionId();
-    Document pipelineInfoDoc = RecastOrchestrationUtils.toDocumentFromJson(request.getPipelineModuleInfoJson());
+    Map<String, Object> pipelineInfoDoc = RecastOrchestrationUtils.fromJson(request.getPipelineModuleInfoJson());
 
     Update update = new Update();
 
@@ -80,7 +79,7 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     if (EmptyPredicate.isEmpty(stageUuid)) {
       return;
     }
-    Document stageInfoDoc = RecastOrchestrationUtils.toDocumentFromJson(stageInfo);
+    Map<String, Object> stageInfoDoc = RecastOrchestrationUtils.fromJson(stageInfo);
 
     Update update = new Update();
     if (stageInfoDoc != null) {

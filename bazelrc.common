@@ -24,6 +24,7 @@ build --workspace_status_command=tools/bazel/workspace_status_command.sh
 build --strict_java_deps=warn
 build --java_header_compilation=false
 build --javacopt='-XepDisableAllChecks'
+build --javacopt='-Xlint:none'
 
 #CV-Nextgen
 build --action_env=VERIFICATION_SERVICE_SECRET=67d9b94d9856665afc21acd3aa745401
@@ -40,8 +41,12 @@ test --define=HARNESS_ARGS=
 build --define=HARNESS_ARGS=
 
 # Bazel SonarQube Integration
-# coverage --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-# coverage --remote_cache=https://storage.googleapis.com/harness-bazel-cache
-# coverage --collect_code_coverage
-# coverage --combined_report=lcov
-# coverage --coverage_report_generator=//tools/bazel/sonarqube:sonarqube_coverage_generator
+coverage --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+coverage --collect_code_coverage
+coverage --combined_report=lcov
+coverage --coverage_report_generator=//tools/bazel/sonarqube:sonarqube_coverage_generator
+coverage --experimental_fetch_all_coverage_outputs
+coverage --strict_java_deps=off
+coverage --cache_test_results=yes
+coverage --test_output=summary
+coverage --build_runfile_links

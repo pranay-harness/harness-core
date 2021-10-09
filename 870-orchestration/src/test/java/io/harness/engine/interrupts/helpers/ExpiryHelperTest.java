@@ -5,6 +5,8 @@ import static io.harness.logging.UnitStatus.EXPIRED;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,8 +15,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionBuilder;
 import io.harness.interrupts.Interrupt;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -43,11 +48,9 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class ExpiryHelperTest extends OrchestrationTestBase {
   @Mock InterruptHelper interruptHelper;
+  @Mock NodeExecutionService nodeExecutionService;
   @Mock OrchestrationEngine engine;
   @Inject @InjectMocks ExpiryHelper expiryHelper;
-
-  private NodeExecution nodeExecution;
-  private Interrupt interrupt;
 
   @Before
   public void setup() {
@@ -63,10 +66,14 @@ public class ExpiryHelperTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldExpireNodeExecutionInstance() {
-    NodeExecution nodeExecution =
+    String planExecutionId = generateUuid();
+    String nodeExecutionId = generateUuid();
+
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build();
+    NodeExecutionBuilder nodeExecutionBuilder =
         NodeExecution.builder()
-            .uuid(generateUuid())
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .uuid(nodeExecutionId)
+            .ambiance(ambiance)
             .status(Status.RUNNING)
             .mode(ExecutionMode.TASK)
             .executableResponse(ExecutableResponse.newBuilder()
@@ -75,18 +82,26 @@ public class ExpiryHelperTest extends OrchestrationTestBase {
                                                  .setTaskCategory(TaskCategory.UNKNOWN_CATEGORY)
                                                  .build())
                                     .build())
-            .startTs(123L)
-            .build();
+            .startTs(123L);
 
     Interrupt interrupt = Interrupt.builder()
                               .uuid(generateUuid())
-                              .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
+                              .planExecutionId(planExecutionId)
                               .type(InterruptType.MARK_EXPIRED)
                               .build();
-    when(interruptHelper.discontinueTaskIfRequired(nodeExecution)).thenReturn(true);
-    String interruptId = expiryHelper.expireMarkedInstance(nodeExecution, interrupt);
+    when(interruptHelper.discontinueTaskIfRequired(nodeExecutionBuilder.build())).thenReturn(true);
+    when(nodeExecutionService.update(eq(nodeExecutionId), any()))
+        .thenReturn(nodeExecutionBuilder
+                        .interruptHistory(InterruptEffect.builder()
+                                              .interruptType(interrupt.getType())
+                                              .tookEffectAt(System.currentTimeMillis())
+                                              .interruptId(interrupt.getUuid())
+                                              .interruptConfig(interrupt.getInterruptConfig())
+                                              .build())
+                        .build());
+    expiryHelper.expireMarkedInstance(nodeExecutionBuilder.build(), interrupt);
 
-    verify(engine).handleStepResponse(nodeExecution.getUuid(),
+    verify(engine).processStepResponse(ambiance,
         StepResponseProto.newBuilder()
             .setStatus(Status.EXPIRED)
             .setFailureInfo(FailureInfo.newBuilder()

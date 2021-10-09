@@ -41,7 +41,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>850-ng-pipeline-commons</artifactId>
+            <artifactId>878-pms-coupling</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -72,6 +72,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>980-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>127-cd-nextgen-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

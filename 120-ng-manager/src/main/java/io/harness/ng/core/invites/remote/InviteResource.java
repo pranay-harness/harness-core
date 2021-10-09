@@ -3,8 +3,9 @@ package io.harness.ng.core.invites.remote;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
-import static io.harness.ng.core.invites.remote.InviteMapper.toInviteList;
+import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.NGCommonEntityConstants;
@@ -12,10 +13,13 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
-import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
@@ -25,12 +29,13 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.CreateInviteDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
+import io.harness.ng.core.invites.mapper.InviteMapper;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 
@@ -40,8 +45,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.util.ArrayList;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -74,17 +80,44 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
   private final InviteService inviteService;
+  private final AccessControlClient accessControlClient;
 
   @Inject
-  InviteResource(InviteService inviteService) {
+  InviteResource(InviteService inviteService, AccessControlClient accessControlClient) {
     this.inviteService = inviteService;
+    this.accessControlClient = accessControlClient;
+  }
+
+  @GET
+  @Path("invite")
+  @ApiOperation(value = "Get invite", nickname = "getInvite")
+  public ResponseDTO<InviteDTO> getInviteWithToken(
+      @QueryParam("inviteId") String inviteId, @QueryParam("jwttoken") String jwtToken) {
+    if ((isBlank(inviteId) && isBlank(jwtToken)) || (!isBlank(inviteId) && !isBlank(jwtToken))) {
+      throw new InvalidRequestException("Specify either inviteId or jwtToken");
+    }
+    Optional<Invite> inviteOpt = Optional.empty();
+    if (!isBlank(inviteId)) {
+      inviteOpt = inviteService.getInvite(inviteId, false);
+    } else if (!isBlank(jwtToken)) {
+      inviteOpt = inviteService.getInviteFromToken(jwtToken, false);
+    }
+    if (inviteOpt.isPresent()) {
+      Invite invite = inviteOpt.get();
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier()),
+          Resource.of("USER", null), VIEW_USER_PERMISSION);
+    }
+    return ResponseDTO.newResponse(writeDTO(inviteOpt.orElse(null)));
   }
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
+  @NGAccessControlCheck(resourceType = USER, permission = VIEW_USER_PERMISSION)
   public ResponseDTO<PageResponse<InviteDTO>> getInvites(
-      @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("accountIdentifier") @NotNull @AccountIdentifier String accountIdentifier,
+      @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
       @BeanParam PageRequest pageRequest) {
     projectIdentifier = stripToNull(projectIdentifier);
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -102,7 +135,8 @@ public class InviteResource {
                             .is(Boolean.FALSE)
                             .and(InviteKeys.deleted)
                             .is(Boolean.FALSE);
-    PageResponse<InviteDTO> invites = inviteService.getInvites(criteria, pageRequest).map(InviteMapper::writeDTO);
+    PageResponse<InviteDTO> invites =
+        inviteService.getInvites(criteria, pageRequest).map(io.harness.ng.core.invites.mapper.InviteMapper::writeDTO);
     return ResponseDTO.newResponse(invites);
   }
 
@@ -123,22 +157,15 @@ public class InviteResource {
 
   @POST
   @ApiOperation(value = "Add a new invite for the specified project/organization", nickname = "sendInvite")
+  @Deprecated
   public ResponseDTO<List<InviteOperationResponse>> createInvitations(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @Valid CreateInviteDTO createInviteDTO) {
     projectIdentifier = stripToNull(projectIdentifier);
     orgIdentifier = stripToNull(orgIdentifier);
-    List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
-    List<Invite> invites = toInviteList(createInviteDTO, accountIdentifier, orgIdentifier, projectIdentifier);
-    for (Invite invite : invites) {
-      try {
-        InviteOperationResponse response = inviteService.create(invite);
-        inviteOperationResponses.add(response);
-      } catch (DuplicateFieldException ex) {
-        log.error("error: ", ex);
-      }
-    }
+    List<InviteOperationResponse> inviteOperationResponses =
+        inviteService.createInvitations(accountIdentifier, orgIdentifier, projectIdentifier, createInviteDTO);
     return ResponseDTO.newResponse(inviteOperationResponses);
   }
 
@@ -158,15 +185,21 @@ public class InviteResource {
   verifyInviteViaNGAuthUi(@QueryParam("token") @NotNull String jwtToken,
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier, @QueryParam("email") @NotNull String email) {
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(jwtToken);
-    URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, email, jwtToken);
-    return Response.seeOther(redirectURL).build();
+    try {
+      String decodedEmail = URLDecoder.decode(email, "UTF-8");
+      URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, email, decodedEmail, jwtToken);
+      return Response.seeOther(redirectURL).build();
+    } catch (UnsupportedEncodingException e) {
+      throw new InvalidRequestException("Unable to decode email");
+    }
   }
 
   @GET
   @Path("complete")
   @ApiOperation(value = "Complete user invite", nickname = "completeInvite", hidden = true)
   public ResponseDTO<Boolean> completeInvite(@QueryParam("token") String token) {
-    return ResponseDTO.newResponse(inviteService.completeInvite(token));
+    Optional<Invite> inviteOpt = inviteService.getInviteFromToken(token, false);
+    return ResponseDTO.newResponse(inviteService.completeInvite(inviteOpt));
   }
 
   @PUT
@@ -178,7 +211,7 @@ public class InviteResource {
     Invite invite = InviteMapper.toInvite(inviteDTO, ngAccess);
     invite.setId(inviteId);
     Optional<Invite> inviteOptional = inviteService.updateInvite(invite);
-    return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
+    return ResponseDTO.newResponse(inviteOptional.map(io.harness.ng.core.invites.mapper.InviteMapper::writeDTO));
   }
 
   @DELETE

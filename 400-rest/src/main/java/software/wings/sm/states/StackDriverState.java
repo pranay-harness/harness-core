@@ -58,7 +58,7 @@ import org.slf4j.Logger;
  */
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @FieldNameConstants(innerTypeName = "StackDriverStateKeys")
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class StackDriverState extends AbstractMetricAnalysisState {

@@ -1,5 +1,10 @@
 package software.wings.beans.yaml;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +13,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(HarnessTeam.DX)
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
 public class GitFetchFilesRequest extends GitCommandRequest {
   private String commitId;
   private List<String> filePaths;

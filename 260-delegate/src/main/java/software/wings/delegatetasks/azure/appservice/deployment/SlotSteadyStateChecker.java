@@ -50,7 +50,7 @@ public class SlotSteadyStateChecker {
         }
       };
 
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(steadyCheckTimeoutInMinutes), objectCallable);
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(steadyCheckTimeoutInMinutes), objectCallable);
     } catch (UncheckedTimeoutException e) {
       String message = format("Timed out waiting for executing operation [%s], %n %s", commandUnitName, e.getMessage());
       logCallback.saveExecutionLog(message, LogLevel.ERROR, FAILURE);

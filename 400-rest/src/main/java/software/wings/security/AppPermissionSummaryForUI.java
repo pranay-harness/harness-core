@@ -21,6 +21,7 @@ public class AppPermissionSummaryForUI {
   private boolean canCreateEnvironment;
   private boolean canCreateWorkflow;
   private boolean canCreatePipeline;
+  private boolean canCreateTemplate;
 
   // Key - entityId, Value - set of actions
   private Map<String, Set<Action>> servicePermissions;
@@ -29,23 +30,27 @@ public class AppPermissionSummaryForUI {
   private Map<String, Set<Action>> workflowPermissions;
   private Map<String, Set<Action>> deploymentPermissions;
   private Map<String, Set<Action>> pipelinePermissions;
+  private Map<String, Set<Action>> templatePermissions;
 
   @Builder
   public AppPermissionSummaryForUI(boolean canCreateService, boolean canCreateProvisioner, boolean canCreateEnvironment,
       boolean canCreateWorkflow, boolean canCreatePipeline, Map<String, Set<Action>> servicePermissions,
       Map<String, Set<Action>> provisionerPermissions, Map<String, Set<Action>> envPermissions,
       Map<String, Set<Action>> workflowPermissions, Map<String, Set<Action>> deploymentPermissions,
-      Map<String, Set<Action>> pipelinePermissions) {
+      Map<String, Set<Action>> pipelinePermissions, boolean canCreateTemplate,
+      Map<String, Set<Action>> templatePermissions) {
     this.canCreateService = canCreateService;
     this.canCreateProvisioner = canCreateProvisioner;
     this.canCreateEnvironment = canCreateEnvironment;
     this.canCreateWorkflow = canCreateWorkflow;
     this.canCreatePipeline = canCreatePipeline;
+    this.canCreateTemplate = canCreateTemplate;
     this.servicePermissions = servicePermissions;
     this.provisionerPermissions = provisionerPermissions;
     this.envPermissions = envPermissions;
     this.workflowPermissions = workflowPermissions;
     this.deploymentPermissions = deploymentPermissions;
     this.pipelinePermissions = pipelinePermissions;
+    this.templatePermissions = templatePermissions;
   }
 }

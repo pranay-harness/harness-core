@@ -5,14 +5,20 @@ import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.task.helm.CustomManifestFetchTaskHelper.unzipManifestFiles;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
+import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.logging.LogLevel.INFO;
-import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
+import static io.harness.pcf.CfCommandUnitConstants.FetchCustomFiles;
+import static io.harness.pcf.CfCommandUnitConstants.FetchGitFiles;
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.CUSTOM_SOURCE_MANIFESTS;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED;
@@ -21,6 +27,7 @@ import static io.harness.pcf.model.PcfConstants.NO_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTE_PLACEHOLDER_TOKEN_DEPRECATED;
+import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
@@ -28,35 +35,47 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FileData;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskDetails;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.pcf.CfCommandRequest;
 import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.pcf.request.CfCommandRouteUpdateRequest;
 import io.harness.deployment.InstanceDetails;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
+import io.harness.manifest.CustomManifestSource;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.pcf.PcfFileTypeChecker;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.ManifestType;
@@ -91,6 +110,7 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
@@ -102,6 +122,7 @@ import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
@@ -125,20 +146,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipInputStream;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -149,6 +180,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Singleton
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfStateHelper {
   public static final String WORKFLOW_STANDARD_PARAMS = "workflowStandardParams";
   public static final String CURRENT_USER = "currentUser";
@@ -168,6 +200,7 @@ public class PcfStateHelper {
   @Inject private LogService logService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private SettingsService settingsService;
+  @Inject private FileService fileService;
 
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
@@ -225,6 +258,7 @@ public class PcfStateHelper {
         .commandName(commandName)
         .pcfRouteUpdateRequestConfigData(requestConfigData)
         .tags(tags)
+        .isRollback(requestConfigData.isRollback())
         .build();
   }
 
@@ -351,7 +385,7 @@ public class PcfStateHelper {
   }
 
   public Activity createActivity(ExecutionContext executionContext, String commandName, String stateType,
-      CommandUnitType commandUnitType, ActivityService activityService) {
+      CommandUnitType commandUnitType, ActivityService activityService, List<CommandUnit> commandUnitList) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     notNullCheck("Application does not exist", app, USER);
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
@@ -366,7 +400,7 @@ public class PcfStateHelper {
                                                              .executionContext(executionContext)
                                                              .commandType(stateType)
                                                              .commandUnitType(commandUnitType)
-                                                             .commandUnits(emptyList())
+                                                             .commandUnits(commandUnitList)
                                                              .build());
 
     return activityService.save(activityBuilder.build());
@@ -391,27 +425,32 @@ public class PcfStateHelper {
   }
 
   public PcfManifestsPackage getFinalManifestFilesMap(Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
-      GitFetchFilesFromMultipleRepoResult fetchFilesResult) {
+      GitFetchFilesFromMultipleRepoResult fetchFilesResult,
+      Map<K8sValuesLocation, Collection<String>> manifestsFromCustomSource) {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();
 
     ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
-    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, K8sValuesLocation.Service, pcfManifestsPackage);
+    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, manifestsFromCustomSource,
+        K8sValuesLocation.Service, pcfManifestsPackage);
 
     applicationManifest = appManifestMap.get(ServiceOverride);
-    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, ServiceOverride, pcfManifestsPackage);
+    updatePcfManifestFilesMap(
+        applicationManifest, fetchFilesResult, manifestsFromCustomSource, ServiceOverride, pcfManifestsPackage);
 
     applicationManifest = appManifestMap.get(EnvironmentGlobal);
-    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, EnvironmentGlobal, pcfManifestsPackage);
+    updatePcfManifestFilesMap(
+        applicationManifest, fetchFilesResult, manifestsFromCustomSource, EnvironmentGlobal, pcfManifestsPackage);
 
     applicationManifest = appManifestMap.get(K8sValuesLocation.Environment);
-    updatePcfManifestFilesMap(
-        applicationManifest, fetchFilesResult, K8sValuesLocation.Environment, pcfManifestsPackage);
+    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, manifestsFromCustomSource,
+        K8sValuesLocation.Environment, pcfManifestsPackage);
 
     return pcfManifestsPackage;
   }
 
   private void updatePcfManifestFilesMap(ApplicationManifest applicationManifest,
-      GitFetchFilesFromMultipleRepoResult fetchFilesResult, K8sValuesLocation k8sValuesLocation,
+      GitFetchFilesFromMultipleRepoResult fetchFilesResult,
+      Map<K8sValuesLocation, Collection<String>> manifestsFromCustomSource, K8sValuesLocation k8sValuesLocation,
       PcfManifestsPackage pcfManifestsPackage) {
     if (applicationManifest == null) {
       return;
@@ -438,6 +477,14 @@ public class PcfStateHelper {
       List<GitFile> files = gitFetchFilesResult.getFiles();
       for (GitFile gitFile : files) {
         addToPcfManifestFilesMap(gitFile.getFileContent(), pcfManifestsPackage);
+      }
+    } else if (StoreType.CUSTOM == applicationManifest.getStoreType()) {
+      if (null == manifestsFromCustomSource || isEmpty(manifestsFromCustomSource.get(k8sValuesLocation))) {
+        return;
+      }
+      Collection<String> files = manifestsFromCustomSource.get(k8sValuesLocation);
+      for (String content : files) {
+        addToPcfManifestFilesMap(content, pcfManifestsPackage);
       }
     }
   }
@@ -512,7 +559,7 @@ public class PcfStateHelper {
   }
 
   public PcfManifestsPackage generateManifestMap(ExecutionContext context,
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, Application app, ServiceElement serviceElement) {
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, ServiceElement serviceElement, String activityId) {
     PcfManifestsPackage pcfManifestsPackage;
 
     Service service = serviceResourceService.get(serviceElement.getUuid());
@@ -521,14 +568,30 @@ public class PcfStateHelper {
     PcfSetupStateExecutionData pcfSetupStateExecutionData =
         (PcfSetupStateExecutionData) context.getStateExecutionData();
 
+    String zippedManifestFileId = null;
+    if (context.getStateExecutionData() != null) {
+      zippedManifestFileId = ((PcfSetupStateExecutionData) context.getStateExecutionData()).getZippedManifestFileId();
+    }
+    List<String> customSourceFiles = downloadAndGetCustomSourceManifestFiles(zippedManifestFileId, activityId);
+
     GitFetchFilesFromMultipleRepoResult filesFromMultipleRepoResult = null;
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = null;
     // Null means locally hosted files
     if (pcfSetupStateExecutionData != null) {
       filesFromMultipleRepoResult = pcfSetupStateExecutionData.getFetchFilesResult();
+      valuesFiles = pcfSetupStateExecutionData.getValuesFiles();
+      // newly extracted customSourceFiles being appended in Service Location of valuesFiles map.
+      if (isNotEmpty(customSourceFiles)) {
+        if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
+          valuesFiles.get(K8sValuesLocation.Service).addAll(customSourceFiles);
+        } else {
+          valuesFiles.put(K8sValuesLocation.Service, customSourceFiles);
+        }
+      }
       appManifestMap = pcfSetupStateExecutionData.getAppManifestMap();
     }
 
-    pcfManifestsPackage = getFinalManifestFilesMap(appManifestMap, filesFromMultipleRepoResult);
+    pcfManifestsPackage = getFinalManifestFilesMap(appManifestMap, filesFromMultipleRepoResult, valuesFiles);
     String manifestYml = pcfManifestsPackage.getManifestYml();
     notNullCheck("Application Manifest Can not be null/blank", manifestYml);
     evaluateExpressionsInManifestTypes(context, pcfManifestsPackage);
@@ -538,6 +601,7 @@ public class PcfStateHelper {
   @VisibleForTesting
   void evaluateExpressionsInManifestTypes(ExecutionContext context, PcfManifestsPackage pcfManifestsPackage) {
     // evaluate expression in variables.yml
+    context.resetPreparedCache();
     List<String> varYmls = pcfManifestsPackage.getVariableYmls();
     if (isNotEmpty(varYmls)) {
       varYmls = varYmls.stream().map(context::renderExpression).collect(toList());
@@ -690,7 +754,7 @@ public class PcfStateHelper {
     fetchFilesTaskParams.setActivityId(activityId);
     fetchFilesTaskParams.setFinalState(true);
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.PCF_OVERRIDE);
-    fetchFilesTaskParams.setExecutionLogName(FetchFiles);
+    fetchFilesTaskParams.setExecutionLogName(FetchGitFiles);
 
     String waitId = generateUuid();
     return DelegateTask.builder()
@@ -948,5 +1012,152 @@ public class PcfStateHelper {
   public CfCliVersion getCfCliVersionOrDefault(final String appId, final String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
     return service != null && service.getCfCliVersion() != null ? service.getCfCliVersion() : CfCliVersion.V6;
+  }
+
+  public boolean isValuesInCustomSource(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
+      ApplicationManifest applicationManifest = entry.getValue();
+      if (StoreType.CUSTOM == applicationManifest.getStoreType()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context, List<String> delegateSelectors) {
+    context.resetPreparedCache();
+    if (isEmpty(delegateSelectors)) {
+      return emptySet();
+    }
+    List<String> renderedSelectors = delegateSelectors.stream().map(context::renderExpression).collect(toList());
+    List<String> trimmedSelectors = trimStrings(renderedSelectors);
+    return new HashSet<>(trimmedSelectors);
+  }
+
+  private Set<String> getDelegateSelectors(ApplicationManifest applicationManifest, ExecutionContext context) {
+    final Set<String> result = new HashSet<>();
+    if (applicationManifest == null || applicationManifest.getCustomSourceConfig() == null) {
+      return result;
+    }
+
+    result.addAll(
+        getRenderedAndTrimmedSelectors(context, applicationManifest.getCustomSourceConfig().getDelegateSelectors()));
+    return result;
+  }
+
+  public DelegateTask createCustomFetchValuesTask(ExecutionContext context,
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId,
+      boolean selectionLogsTrackingEnabled, int timeoutInMillis) {
+    Application app = context.getApp();
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+    notNullCheck("Environment is null", env, USER);
+    InfrastructureMapping infraMapping = infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
+    notNullCheck("InfraStructureMapping is null", infraMapping, USER);
+    CustomManifestValuesFetchParams fetchValuesParams =
+        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap, VARS_YML);
+    fetchValuesParams.setActivityId(activityId);
+    fetchValuesParams.setCommandUnitName(FetchCustomFiles);
+    fetchValuesParams.setAppId(context.getAppId());
+    fetchValuesParams.setDelegateSelectors(
+        getDelegateSelectors(appManifestMap.get(K8sValuesLocation.Service), context));
+
+    ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
+    CustomSourceConfig customSourceConfig = null;
+    if (applicationManifest != null) {
+      customSourceConfig = applicationManifest.getCustomSourceConfig();
+    }
+    fetchValuesParams.setCustomManifestSource(customSourceConfig == null
+            ? null
+            : CustomManifestSource.builder()
+                  .filePaths(Arrays.asList(customSourceConfig.getPath()))
+                  .script(customSourceConfig.getScript())
+                  .build());
+
+    return DelegateTask.builder()
+        .accountId(app.getAccountId())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .data(TaskData.builder()
+                  .async(true)
+                  .taskType(TaskType.CUSTOM_MANIFEST_FETCH_TASK.name())
+                  .parameters(new Object[] {fetchValuesParams})
+                  .timeout(timeoutInMillis)
+                  .build())
+        .selectionLogsTrackingEnabled(selectionLogsTrackingEnabled)
+        .build();
+  }
+
+  public List<String> downloadAndGetCustomSourceManifestFiles(String zippedManifestFileId, String activityId) {
+    if (isEmpty(zippedManifestFileId)) {
+      return new ArrayList<>();
+    }
+    try {
+      InputStream inputStream = fileService.openDownloadStream(zippedManifestFileId, FileBucket.CUSTOM_MANIFEST);
+      ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+      File tempDir = Files.createTempDir();
+      String fileName = CUSTOM_SOURCE_MANIFESTS + activityId;
+      createDirectoryIfDoesNotExist(tempDir + fileName);
+      File file = new File(tempDir, fileName);
+      unzipManifestFiles(file, zipInputStream);
+      List<FileData> customManifestFiles = readManifestFilesFromDirectory(file.getAbsolutePath());
+      FileIo.deleteDirectoryAndItsContentIfExists(file.getAbsolutePath());
+      return customManifestFiles.stream().map(FileData::getFileContent).collect(toList());
+    } catch (IOException e) {
+      throw new UnexpectedException("Failed to get custom source manifest files", e);
+    }
+  }
+
+  public List<FileData> readManifestFilesFromDirectory(String manifestFilesDirectory) {
+    List<FileData> fileDataList;
+    Path directory = Paths.get(manifestFilesDirectory);
+
+    try {
+      fileDataList = getFilesUnderPath(directory.toString());
+    } catch (Exception ex) {
+      log.error(ExceptionUtils.getMessage(ex));
+      throw new UnexpectedException("Failed to get files. Error: " + ExceptionUtils.getMessage(ex));
+    }
+
+    List<FileData> manifestFiles = new ArrayList<>();
+    for (FileData fileData : fileDataList) {
+      String filePath = fileData.getFilePath();
+      try {
+        String fileContent = new String(fileData.getFileBytes(), UTF_8);
+        if (isValidManifest(fileContent)) {
+          manifestFiles.add(FileData.builder().fileName(filePath).fileContent(fileContent).build());
+        }
+      } catch (Exception ex) {
+        throw new UnexpectedException(String.format("Failed to read content of file %s. Error: %s",
+            new File(filePath).getName(), ExceptionUtils.getMessage(ex)));
+      }
+    }
+
+    checkDuplicateManifests(manifestFiles);
+
+    return manifestFiles;
+  }
+
+  private void checkDuplicateManifests(List<FileData> manifestFiles) {
+    Map<ManifestType, Long> fileTypeCount =
+        manifestFiles.stream()
+            .map(FileData::getFileContent)
+            .collect(Collectors.groupingBy(pcfFileTypeChecker::getManifestType, counting()));
+    verifyMultipleCount(AUTOSCALAR_MANIFEST, fileTypeCount);
+    verifyMultipleCount(APPLICATION_MANIFEST, fileTypeCount);
+  }
+
+  private void verifyMultipleCount(ManifestType manifestType, Map<ManifestType, Long> fileTypeCount) {
+    if (fileTypeCount.getOrDefault(manifestType, 0L) > 1) {
+      throw new UnexpectedException(String.format("Found more than %d counts of %s", 1, manifestType.getDescription()));
+    }
+  }
+
+  public boolean isValidManifest(String fileContent) {
+    ManifestType manifestType = pcfFileTypeChecker.getManifestType(fileContent);
+    return null != manifestType;
   }
 }

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.licensing.remote.admin.AdminLicenseHttpClient;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -22,6 +23,7 @@ import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.ResourceTestRule;
@@ -51,6 +53,8 @@ public class AccountResourceTest extends CategoryTest {
   private static PersistentScheduler jobScheduler = mock(PersistentScheduler.class);
   private static GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler = mock(GcpMarketPlaceApiHandler.class);
   private static SampleDataProviderService sampleDataProviderService = mock(SampleDataProviderService.class);
+  private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
+  private static AdminLicenseHttpClient adminLicenseHttpClient = mock(AdminLicenseHttpClient.class);
   private static Provider<SampleDataProviderService> sampleDataProviderServiceProvider =
       (Provider<SampleDataProviderService>) mock(Provider.class);
 
@@ -59,7 +63,7 @@ public class AccountResourceTest extends CategoryTest {
       ResourceTestRule.builder()
           .instance(new AccountResource(accountService, userService, licenseServiceProvider, accountPermissionUtils,
               featureService, jobScheduler, gcpMarketPlaceApiHandler, sampleDataProviderServiceProvider,
-              mock(AuthService.class)))
+              mock(AuthService.class), harnessUserGroupService, adminLicenseHttpClient))
           .build();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 

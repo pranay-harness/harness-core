@@ -3,6 +3,7 @@ package io.harness.plan;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -10,8 +11,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
+import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -53,11 +57,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("plan")
 @Entity(value = "plans")
 @StoreIn(DbAliases.PMS)
-public class Plan implements PersistentEntity {
+public class Plan implements PersistentEntity, Node {
   static final long TTL_MONTHS = 6;
 
   @Default @Wither @Id @org.mongodb.morphia.annotations.Id String uuid = generateUuid();
-  @Singular List<PlanNodeProto> nodes;
+  @Singular @Deprecated List<PlanNodeProto> nodes;
+  @Singular List<Node> planNodes;
 
   @NotNull String startingNodeId;
 
@@ -68,6 +73,9 @@ public class Plan implements PersistentEntity {
 
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
+
+  @Builder.Default boolean valid = true;
+  ErrorResponse errorResponse;
 
   public boolean isEmpty() {
     return EmptyPredicate.isEmpty(nodes);
@@ -83,5 +91,52 @@ public class Plan implements PersistentEntity {
       return optional.get();
     }
     throw new InvalidRequestException("No node found with Id :" + nodeId);
+  }
+
+  public Node fetchStartingPlanNode() {
+    return fetchPlanNode(startingNodeId);
+  }
+
+  public Node fetchPlanNode(String nodeId) {
+    Optional<Node> optional = planNodes.stream().filter(pn -> pn.getUuid().equals(nodeId)).findFirst();
+    if (optional.isPresent()) {
+      return optional.get();
+    }
+    throw new InvalidRequestException("No node found with Id :" + nodeId);
+  }
+
+  @Override
+  public NodeType getNodeType() {
+    return NodeType.PLAN;
+  }
+
+  @Override
+  public String getIdentifier() {
+    return getUuid();
+  }
+
+  @Override
+  public String getName() {
+    return getIdentifier();
+  }
+
+  @Override
+  public StepType getStepType() {
+    return StepType.newBuilder().setType("PLAN").build();
+  }
+
+  @Override
+  public String getGroup() {
+    return "PLAN";
+  }
+
+  @Override
+  public PmsStepParameters getStepParameters() {
+    return null;
+  }
+
+  @Override
+  public String getServiceName() {
+    return ModuleType.PMS.name();
   }
 }

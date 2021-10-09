@@ -11,6 +11,8 @@ import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO.AwsKmsConnectorDTOBuilder;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
 
 @OwnedBy(PL)
@@ -33,8 +35,12 @@ public class AwsKmsEntityToDTO implements ConnectorEntityToDTOMapper<AwsKmsConne
         throw new InvalidRequestException("Invalid Credential type.");
     }
 
-    AwsKmsConnectorDTO awsKmsConnectorDTO =
-        builder.kmsArn(connector.getKmsArn()).region(connector.getRegion()).isDefault(connector.isDefault()).build();
+    SecretRefData kmsArn = SecretRefHelper.createSecretRef(connector.getKmsArn());
+    AwsKmsConnectorDTO awsKmsConnectorDTO = builder.kmsArn(kmsArn)
+                                                .region(connector.getRegion())
+                                                .isDefault(connector.isDefault())
+                                                .delegateSelectors(connector.getDelegateSelectors())
+                                                .build();
     awsKmsConnectorDTO.setHarnessManaged(Boolean.TRUE.equals(connector.getHarnessManaged()));
 
     return awsKmsConnectorDTO;

@@ -28,17 +28,7 @@ public class CDNGPipelineConfigurationHelperTest extends CategoryTest {
   public void testGetExecutionStrategyList() {
     Map<ServiceDefinitionType, List<ExecutionStrategyType>> result =
         cdngPipelineConfigurationHelper.getExecutionStrategyList();
-    assertThat(result.size()).isEqualTo(2);
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
-  public void testGetStepsNativeHelm() {
-    StepCategory result = cdngPipelineConfigurationHelper.getSteps(ServiceDefinitionType.NATIVE_HELM);
-    assertThat(result.getName()).isEqualTo(CDNGPipelineConfigurationHelper.LIBRARY);
-    assertThat(result.getStepsData()).isEqualTo(new ArrayList<>());
-    assertThat(result.getStepCategories().size()).isEqualTo(5);
+    assertThat(result.size()).isEqualTo(1);
   }
 
   @Test

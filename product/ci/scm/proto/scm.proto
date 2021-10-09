@@ -446,7 +446,10 @@ message CreateBranchResponse {
 
 message GetLatestCommitRequest {
   string slug = 1;
-  string branch = 2;
+  oneof type {
+    string branch = 2;
+    string ref = 4;
+  }
   Provider provider = 3;
 }
 
@@ -454,6 +457,7 @@ message GetLatestCommitResponse {
   string commit_id = 1;
   int32 status = 2;
   string error = 3;
+  Commit commit = 4;
 }
 
 message ListBranchesRequest {
@@ -465,6 +469,8 @@ message ListBranchesRequest {
 message ListBranchesResponse {
   repeated string branches = 1;
   PageResponse pagination = 2;
+  int32 status = 3;
+  string error = 4;
 }
 
 message CompareCommitsRequest {
@@ -634,6 +640,18 @@ message GetUserReposResponse {
   string error = 4;
 }
 
+message FindPRRequest {
+  int64 number = 1;
+  string slug = 2;
+  Provider provider = 3;
+}
+
+message FindPRResponse {
+  PullRequest pr = 1;
+  int32 status = 2;
+  string error = 3;
+}
+
 service SCM {
   // RPC to stop tailing on a file.
   rpc ParseWebhook(ParseWebhookRequest) returns (ParseWebhookResponse);
@@ -653,6 +671,7 @@ service SCM {
 
   // Git functions. branch and commits
   rpc CreatePR(CreatePRRequest) returns (CreatePRResponse);
+  rpc FindPR(FindPRRequest) returns (FindPRResponse);
   rpc FindFilesInPR(FindFilesInPRRequest) returns (FindFilesInPRResponse);
   rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse);
   rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);

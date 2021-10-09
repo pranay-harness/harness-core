@@ -1,31 +1,31 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
-import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
-import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
+import static io.harness.pms.merger.helpers.InputSetMergeHelper.mergeInputSets;
+import static io.harness.pms.merger.helpers.InputSetTemplateHelper.createTemplateFromPipeline;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
-import io.harness.pms.inputset.helpers.MergeUtils;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
+import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
-import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,21 +40,17 @@ public class ValidateAndMergeHelper {
 
   public InputSetErrorWrapperDTOPMS validateInputSet(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, String yaml, String pipelineBranch, String pipelineRepoID) {
-    String identifier = PMSInputSetElementMapper.getStringField(yaml, "identifier", "inputSet");
+    String identifier = InputSetYamlHelper.getStringField(yaml, "identifier", "inputSet");
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
-    confirmPipelineIdentifier(yaml, pipelineIdentifier);
-    confirmOrgAndProjectIdentifier(yaml, orgIdentifier, projectIdentifier);
+    InputSetYamlHelper.confirmPipelineIdentifierInInputSet(yaml, pipelineIdentifier);
+    InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml, "inputSet", orgIdentifier, projectIdentifier);
 
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
 
-    try {
-      return MergeUtils.getErrorMap(pipelineYaml, yaml);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Invalid input set yaml");
-    }
+    return InputSetErrorsHelper.getErrorMap(pipelineYaml, yaml);
   }
 
   private String getPipelineYaml(String accountId, String orgIdentifier, String projectIdentifier,
@@ -77,20 +73,46 @@ public class ValidateAndMergeHelper {
     return pipelineYaml;
   }
 
-  public Map<String, String> validateOverlayInputSet(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, InputSetEntity entity) {
-    if (EmptyPredicate.isEmpty(entity.getIdentifier())) {
+  public Map<String, String> validateOverlayInputSet(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String yaml) {
+    String identifier = InputSetYamlHelper.getStringField(yaml, "identifier", "overlayInputSet");
+    if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
-    List<String> inputSetReferences = entity.getInputSetReferences();
+    List<String> inputSetReferences = InputSetYamlHelper.getReferencesFromOverlayInputSetYaml(yaml);
     if (inputSetReferences.isEmpty()) {
       throw new InvalidRequestException("Input Set References can't be empty");
     }
+
+    InputSetYamlHelper.confirmPipelineIdentifierInOverlayInputSet(yaml, pipelineIdentifier);
+    InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml, "overlayInputSet", orgIdentifier, projectIdentifier);
+
+    List<Optional<InputSetEntity>> inputSets;
+    if (GitContextHelper.isUpdateToNewBranch()) {
+      String baseBranch = Objects.requireNonNull(GitContextHelper.getGitEntityInfo()).getBaseBranch();
+      String repoIdentifier = GitContextHelper.getGitEntityInfo().getYamlGitConfigId();
+      GitSyncBranchContext branchContext =
+          GitSyncBranchContext.builder()
+              .gitBranchInfo(GitEntityInfo.builder().branch(baseBranch).yamlGitConfigId(repoIdentifier).build())
+              .build();
+      try (PmsGitSyncBranchContextGuard ignored = new PmsGitSyncBranchContextGuard(branchContext, true)) {
+        inputSets = findAllReferredInputSets(
+            inputSetReferences, accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+      }
+    } else {
+      inputSets =
+          findAllReferredInputSets(inputSetReferences, accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+    }
+    return InputSetErrorsHelper.getInvalidInputSetReferences(inputSets, inputSetReferences);
+  }
+
+  private List<Optional<InputSetEntity>> findAllReferredInputSets(List<String> referencesInOverlay, String accountId,
+      String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
     List<Optional<InputSetEntity>> inputSets = new ArrayList<>();
-    inputSetReferences.forEach(identifier
+    referencesInOverlay.forEach(identifier
         -> inputSets.add(pmsInputSetService.get(
             accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
-    return MergeUtils.getInvalidInputSetReferences(inputSets, inputSetReferences);
+    return inputSets;
   }
 
   public String getPipelineTemplate(
@@ -99,11 +121,7 @@ public class ValidateAndMergeHelper {
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (optionalPipelineEntity.isPresent()) {
       String pipelineYaml = optionalPipelineEntity.get().getYaml();
-      try {
-        return createTemplateFromPipeline(pipelineYaml);
-      } catch (IOException e) {
-        throw new InvalidRequestException("Could not convert pipeline to template");
-      }
+      return createTemplateFromPipeline(pipelineYaml);
     } else {
       throw new InvalidRequestException("Could not find pipeline");
     }
@@ -113,11 +131,7 @@ public class ValidateAndMergeHelper {
       String pipelineIdentifier, String pipelineBranch, String pipelineRepoID) {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
-    try {
-      return createTemplateFromPipeline(pipelineYaml);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not convert pipeline to template");
-    }
+    return createTemplateFromPipeline(pipelineYaml);
   }
 
   public String getMergeInputSetFromPipelineTemplate(String accountId, String orgIdentifier, String projectIdentifier,
@@ -150,46 +164,13 @@ public class ValidateAndMergeHelper {
         });
       }
     });
-    try {
-      return mergeInputSets(pipelineTemplate, inputSetYamlList, false);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
-    }
+    return mergeInputSets(pipelineTemplate, inputSetYamlList, false);
   }
 
   public String mergeInputSetIntoPipeline(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, String mergedRuntimeInputYaml, String pipelineBranch, String pipelineRepoID) {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
-    try {
-      return io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline(
-          pipelineYaml, mergedRuntimeInputYaml, false);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
-    }
-  }
-
-  private void confirmPipelineIdentifier(String inputSetYaml, String pipelineIdentifier) {
-    if (PMSInputSetElementMapper.isPipelineAbsent(inputSetYaml)) {
-      throw new InvalidRequestException(
-          "Input Set provides no values for any runtime input, or the pipeline has no runtime input");
-    }
-    String pipelineComponent = getPipelineComponent(inputSetYaml);
-    String identifierInYaml = PMSInputSetElementMapper.getStringField(pipelineComponent, "identifier", "pipeline");
-    if (!pipelineIdentifier.equals(identifierInYaml)) {
-      throw new InvalidRequestException("Pipeline identifier in input set does not match");
-    }
-  }
-
-  private void confirmOrgAndProjectIdentifier(String yaml, String orgIdentifier, String projectIdentifier) {
-    String orgIdInYaml = PMSInputSetElementMapper.getStringField(yaml, "orgIdentifier", "inputSet");
-    String projectIdInYaml = PMSInputSetElementMapper.getStringField(yaml, "projectIdentifier", "inputSet");
-
-    if (!orgIdentifier.equals(orgIdInYaml)) {
-      throw new InvalidRequestException("Org identifier in input set does not match");
-    }
-    if (!projectIdentifier.equals(projectIdInYaml)) {
-      throw new InvalidRequestException("Project identifier in input set does not match");
-    }
+    return InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYaml, mergedRuntimeInputYaml, false);
   }
 }

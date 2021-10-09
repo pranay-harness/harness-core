@@ -77,6 +77,7 @@ public class WorkflowServiceTemplateHelper {
   private static final String GIT_CONFIG_VAR_DESC = "Variable for Git connector configuration entity";
   private static final String JENKINS_SERVER_VAR_DESC = "Variable for Jenkins server configuration entity";
   private static final String TIMEOUT_PROPERTY_KEY = "timeoutMillis";
+  private static final String ARTIFACT_SOURCE_VAR_DESC = "Variable for Artifact source configuration entity";
 
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
@@ -641,6 +642,8 @@ public class WorkflowServiceTemplateHelper {
           return GIT_CONFIG_VAR_DESC + " in " + stateName;
         case JENKINS_SERVER:
           return JENKINS_SERVER_VAR_DESC + " in " + stateName;
+        case ARTIFACT_STREAM:
+          return ARTIFACT_SOURCE_VAR_DESC + " in " + stateName;
         default:
           return "";
       }

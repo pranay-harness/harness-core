@@ -2,6 +2,7 @@ package io.harness.pms.sdk.core.adviser.retry;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 import static io.harness.pms.execution.utils.StatusUtils.retryableStatuses;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -58,7 +59,8 @@ public class RetryAdviser implements Adviser {
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
-    boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus());
+    boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus())
+        && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     FailureInfo failureInfo = advisingEvent.getFailureInfo();
     io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters parameters = extractParameters(advisingEvent);
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {

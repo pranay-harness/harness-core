@@ -19,9 +19,10 @@ resource "google_logging_metric" "ccm_failed_cloudfunction_runs_metric" {
 
 resource "google_monitoring_alert_policy" "ccm_failed_cloudfunction_runs_policy" {
   project = "${var.projectId}"
-  notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}", "${local.email_prod_channel}"] :
-  ((var.deployment == "qa" || var.deployment == "qa_free" || var.deployment == "stress") ? ["${local.slack_qa_channel}", "${local.email_qa_channel}"] :
-  ["${local.slack_dev_channel}", "${local.email_dev_channel}"]))
+  notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}"] :
+  ((var.deployment == "qa" || var.deployment == "qa_free" || var.deployment == "stress") ? ["${local.slack_qa_channel}"] :
+  ((var.deployment == "ceqa") ? ["${local.slack_ceqa_channel}"] :
+  ["${local.slack_dev_channel}"])))
 
   enabled      = true
   display_name = join("_", [local.name_prefix, "ccm_failed_cloudfunction_runs_policy"])

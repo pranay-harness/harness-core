@@ -13,8 +13,12 @@ public class StackdriverDataCollectionInfoMapper
   @Override
   public StackdriverDataCollectionInfo toDataCollectionInfo(StackdriverCVConfig cvConfig) {
     List<StackDriverMetricDefinition> metricDefinitions = new ArrayList<>();
-    cvConfig.getMetricInfoList().forEach(metricInfo
-        -> metricDefinitions.add(StackDriverMetricDefinition.extractFromJson(metricInfo.getJsonMetricDefinition())));
+    cvConfig.getMetricInfoList().forEach(metricInfo -> {
+      StackDriverMetricDefinition metricDefinition =
+          StackDriverMetricDefinition.extractFromJson(metricInfo.getJsonMetricDefinition());
+      metricDefinition.setServiceInstanceField(metricInfo.getServiceInstanceField());
+      metricDefinitions.add(metricDefinition);
+    });
     StackdriverDataCollectionInfo dataCollectionInfo =
         StackdriverDataCollectionInfo.builder().metricDefinitions(metricDefinitions).build();
     dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());

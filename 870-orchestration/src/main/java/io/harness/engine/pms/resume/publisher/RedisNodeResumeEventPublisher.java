@@ -2,16 +2,17 @@ package io.harness.engine.pms.resume.publisher;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.engine.pms.data.PmsTransputHelper;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.resume.ChainDetails;
 import io.harness.pms.contracts.resume.NodeResumeEvent;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -26,29 +27,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
   @Inject private PmsEventSender eventSender;
+  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PmsTransputHelper transputHelper;
 
   @Override
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
-    String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
-    NodeResumeEvent.Builder resumeEventBuilder =
-        NodeResumeEvent.newBuilder()
-            .setAmbiance(nodeExecution.getAmbiance())
-            .setExecutionMode(nodeExecution.getMode())
-            .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-            .addAllResolvedInput(
-                transputHelper.resolveInputs(nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
-            .setAsyncError(isError)
-            .putAllResponse(responseMap);
+    PlanNode planNode = nodeExecution.getNode();
+    String serviceName = planNode.getServiceName();
+    NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
+                                                     .setAmbiance(nodeExecution.getAmbiance())
+                                                     .setExecutionMode(nodeExecution.getMode())
+                                                     .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+        .addAllResolvedInput(
+            transputHelper.resolveInputs(nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
+                                                     .setAsyncError(isError)
+                                                     .putAllResponse(responseMap);
 
     ChainDetails chainDetails = buildChainDetails(nodeExecution);
     if (chainDetails != null) {
       resumeEventBuilder.setChainDetails(chainDetails);
     }
 
-    eventSender.sendEvent(
-        resumeEventBuilder.build().toByteString(), PmsEventCategory.NODE_RESUME, serviceName, accountId, true);
+    eventSender.sendEvent(nodeExecution.getAmbiance(), resumeEventBuilder.build().toByteString(),
+        PmsEventCategory.NODE_RESUME, serviceName, true);
   }
 
   public ChainDetails buildChainDetails(NodeExecution nodeExecution) {

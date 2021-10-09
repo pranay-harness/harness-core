@@ -1,8 +1,11 @@
 package io.harness.cdng.manifest.yaml;
 
+import static io.harness.cdng.manifest.yaml.ManifestAttributes.ManifestAttributeStepParameters;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestConfigType;
@@ -30,6 +33,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @SimpleVisitorHelper(helperClass = ManifestConfigVisitorHelper.class)
 @TypeAlias("manifestConfig")
+@RecasterAlias("io.harness.cdng.manifest.yaml.ManifestConfig")
 public class ManifestConfig implements Visitable {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
@@ -77,16 +81,17 @@ public class ManifestConfig implements Visitable {
 
   @Value
   public static class ManifestConfigStepParameters {
+    String identifier;
     String type;
-    ManifestAttributes spec;
+    ManifestAttributeStepParameters spec;
 
     public static ManifestConfigStepParameters fromManifestConfig(ManifestConfig manifestConfig) {
       if (manifestConfig == null) {
         return null;
       }
-      return new ManifestConfigStepParameters(
+      return new ManifestConfigStepParameters(manifestConfig.getIdentifier(),
           manifestConfig.getType() == null ? null : manifestConfig.getType().getDisplayName(),
-          manifestConfig.getSpec());
+          manifestConfig.getSpec().getManifestAttributeStepParameters());
     }
   }
 }

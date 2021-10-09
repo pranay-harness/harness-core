@@ -196,7 +196,7 @@ public class AwsCodeCommitDataObtainerTest extends CategoryTest {
         .when(webhookEventPayloadParser)
         .convertWebhookResponse(eq(obtainedParseWebhookResponse), any());
 
-    awsCodeCommitDataObtainer.acquireProviderData(filterRequestData);
+    awsCodeCommitDataObtainer.acquireProviderData(filterRequestData, triggerDetailsList);
 
     assertThat(filterRequestData).isNotNull();
     assertThat(filterRequestData.getWebhookPayloadData()).isNotNull();

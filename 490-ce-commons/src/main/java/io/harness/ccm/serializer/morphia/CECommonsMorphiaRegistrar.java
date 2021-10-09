@@ -3,6 +3,8 @@ package io.harness.ccm.serializer.morphia;
 import io.harness.ccm.budget.ApplicationBudgetScope;
 import io.harness.ccm.budget.ClusterBudgetScope;
 import io.harness.ccm.budget.PerspectiveBudgetScope;
+import io.harness.ccm.commons.entities.AWSConnectorToBucketMapping;
+import io.harness.ccm.commons.entities.ClusterRecord;
 import io.harness.ccm.commons.entities.batch.BatchJobInterval;
 import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
@@ -15,6 +17,7 @@ import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.commons.entities.billing.CECluster;
+import io.harness.ccm.commons.entities.billing.CEGcpServiceAccount;
 import io.harness.ccm.commons.entities.billing.CloudBillingTransferRun;
 import io.harness.ccm.commons.entities.events.CeExceptionRecord;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
@@ -46,7 +49,9 @@ public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Budget.class);
     set.add(CECloudAccount.class);
     set.add(CECluster.class);
+    set.add(CEGcpServiceAccount.class);
     set.add(CloudBillingTransferRun.class);
+    set.add(AWSConnectorToBucketMapping.class);
 
     // events
     set.add(CeExceptionRecord.class);
@@ -55,6 +60,8 @@ public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
     // k8s
     set.add(K8sWorkload.class);
     set.add(K8sYaml.class);
+    set.add(ClusterRecord.class);
+
     // k8s.recommendation
     set.add(K8sNodeRecommendation.class);
     set.add(K8sWorkloadRecommendation.class);

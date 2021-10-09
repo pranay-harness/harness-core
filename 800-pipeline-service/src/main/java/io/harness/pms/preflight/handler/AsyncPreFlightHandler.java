@@ -5,12 +5,11 @@ import static java.lang.String.format;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.merger.fqn.FQN;
-import io.harness.pms.merger.helpers.FQNUtils;
+import io.harness.pms.merger.helpers.FQNMapGenerator;
 import io.harness.pms.preflight.PreFlightStatus;
 import io.harness.pms.preflight.PreflightCommonUtils;
 import io.harness.pms.preflight.connector.ConnectorCheckResponse;
@@ -42,7 +41,7 @@ public class AsyncPreFlightHandler implements Runnable {
       Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
       try {
         Map<FQN, Object> fqnObjectMap =
-            FQNUtils.generateFQNMap(YamlUtils.readTree(entity.getPipelineYaml()).getNode().getCurrJsonNode());
+            FQNMapGenerator.generateFQNMap(YamlUtils.readTree(entity.getPipelineYaml()).getNode().getCurrJsonNode());
         fqnObjectMap.keySet().forEach(
             fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
       } catch (IOException e) {
@@ -59,10 +58,12 @@ public class AsyncPreFlightHandler implements Runnable {
       List<ConnectorCheckResponse> connectorCheckResponses =
           preflightService.updateConnectorCheckResponses(entity.getAccountIdentifier(), entity.getOrgIdentifier(),
               entity.getProjectIdentifier(), entity.getUuid(), fqnToObjectMapMergedYaml, connectorUsages);
-      preflightService.updateStatus(
-          entity.getUuid(), PreflightCommonUtils.getOverallStatus(connectorCheckResponses), null);
-    } catch (EventsFrameworkDownException e) {
-      log.error("Error occurred while handling preflight check. Event Framework Down", e);
+      PreFlightStatus overallStatus =
+          PreflightCommonUtils.getOverallStatus(connectorCheckResponses, entity.getPipelineInputResponse());
+      preflightService.updateStatus(entity.getUuid(), overallStatus, null);
+      log.info("Preflight Check with id " + entity.getUuid() + " completed with status: " + overallStatus);
+    } catch (Exception e) {
+      log.error("Error occurred while handling preflight check", e);
       preflightService.updateStatus(
           entity.getUuid(), PreFlightStatus.FAILURE, PreflightCommonUtils.getInternalIssueErrorInfo());
     }

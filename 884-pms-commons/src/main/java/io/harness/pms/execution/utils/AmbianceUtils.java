@@ -1,11 +1,17 @@
 package io.harness.pms.execution.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 
@@ -14,23 +20,32 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(PIPELINE)
 public class AmbianceUtils {
   public static Ambiance cloneForFinish(@NonNull Ambiance ambiance) {
     return clone(ambiance, ambiance.getLevelsList().size() - 1);
   }
 
-  public static Ambiance cloneForChild(@NonNull Ambiance ambiance) {
-    return clone(ambiance, ambiance.getLevelsList().size());
+  public static Ambiance cloneForFinish(@NonNull Ambiance ambiance, Level level) {
+    Ambiance.Builder builder = cloneBuilder(ambiance, ambiance.getLevelsList().size() - 1);
+    if (level.getStepType().getStepCategory() == StepCategory.STAGE) {
+      builder.setStageExecutionId(level.getRuntimeId());
+    }
+    return builder.addLevels(level).build();
   }
 
   public static Ambiance cloneForChild(@NonNull Ambiance ambiance, @NonNull Level level) {
     Ambiance.Builder builder = cloneBuilder(ambiance, ambiance.getLevelsList().size());
+    if (level.getStepType().getStepCategory() == StepCategory.STAGE) {
+      builder.setStageExecutionId(level.getRuntimeId());
+    }
     return builder.addLevels(level).build();
   }
 
@@ -114,5 +129,31 @@ public class AmbianceUtils {
   public static String getCurrentGroup(Ambiance ambiance) {
     Level level = obtainCurrentLevel(ambiance);
     return level == null || level.getGroup() == null ? null : level.getGroup();
+  }
+
+  public static long getCurrentLevelStartTs(Ambiance ambiance) {
+    Level currLevel = obtainCurrentLevel(ambiance);
+    if (currLevel == null) {
+      throw new InvalidRequestException("Ambiance.levels is empty");
+    }
+    return currLevel.getStartTs();
+  }
+
+  public NGAccess getNgAccess(Ambiance ambiance) {
+    return BaseNGAccess.builder()
+        .accountIdentifier(getAccountId(ambiance))
+        .orgIdentifier(getOrgIdentifier(ambiance))
+        .projectIdentifier(getProjectIdentifier(ambiance))
+        .build();
+  }
+
+  public Optional<Level> getStageLevelFromAmbiance(Ambiance ambiance) {
+    Optional<Level> stageLevel = Optional.empty();
+    for (Level level : ambiance.getLevelsList()) {
+      if (level.getStepType().getStepCategory() == StepCategory.STAGE) {
+        stageLevel = Optional.of(level);
+      }
+    }
+    return stageLevel;
   }
 }

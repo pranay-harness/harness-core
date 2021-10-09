@@ -13,10 +13,10 @@ import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
@@ -29,7 +29,8 @@ public class PMSStepPlanCreator extends GenericStepPMSPlanCreator {
   public Set<String> getSupportedStepTypes() {
     return Sets.newHashSet(StepSpecTypeConstants.BARRIER, StepSpecTypeConstants.HTTP,
         StepSpecTypeConstants.HARNESS_APPROVAL, StepSpecTypeConstants.JIRA_APPROVAL, StepSpecTypeConstants.JIRA_CREATE,
-        StepSpecTypeConstants.JIRA_UPDATE, StepSpecTypeConstants.FLAG_CONFIGURATION);
+        StepSpecTypeConstants.JIRA_UPDATE, StepSpecTypeConstants.FLAG_CONFIGURATION,
+        StepSpecTypeConstants.SHELL_SCRIPT);
   }
 
   @Override

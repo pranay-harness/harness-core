@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -55,6 +56,14 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
                  .field(HeatMapKeys.heatMapBucketStartTime)
                  .field(HeatMapKeys.heatMapBucketEndTime)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(HeatMapKeys.accountId)
+                 .field(HeatMapKeys.orgIdentifier)
+                 .field(HeatMapKeys.projectIdentifier)
+                 .field(HeatMapKeys.heatMapResolution)
+                 .field(HeatMapKeys.heatMapBucketEndTime)
+                 .build())
         .build();
   }
 
@@ -99,9 +108,26 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
     private Instant endTime;
     private double riskScore;
 
+    /**
+     * Additional metadata to summarize anomalous data
+     */
+    private long anomalousMetricsCount;
+    private long anomalousLogsCount;
+
     @Override
     public int compareTo(HeatMapRisk o) {
       return this.startTime.compareTo(o.startTime);
+    }
+
+    public Integer getHealthScore() {
+      if (riskScore < 0) {
+        return null;
+      }
+      return Integer.valueOf(100 - (int) Math.round(100 * riskScore));
+    }
+
+    public Risk getRiskStatus() {
+      return Risk.getRiskFromRiskScore(riskScore);
     }
   }
 
@@ -109,6 +135,7 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
     FIVE_MIN(Duration.ofMinutes(5), Duration.ofHours(4)),
     FIFTEEN_MINUTES(Duration.ofMinutes(15), Duration.ofHours(12)),
     THIRTY_MINUTES(Duration.ofMinutes(30), Duration.ofDays(1)),
+    ONE_HOUR_THIRTY_MINUTES(Duration.ofMinutes(90), Duration.ofDays(3)),
     THREE_HOURS_THIRTY_MINUTES(Duration.ofMinutes(210), Duration.ofDays(7)),
     FIFTEEN_HOURS(Duration.ofHours(15), Duration.ofDays(30));
 

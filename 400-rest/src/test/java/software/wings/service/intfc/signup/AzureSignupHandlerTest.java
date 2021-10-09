@@ -11,6 +11,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.rule.Owner;
@@ -34,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class AzureSignupHandlerTest extends WingsBaseTest {
   private static final String EMAIL = "abc@harness.io";
   private static final String UUID = "uuid";

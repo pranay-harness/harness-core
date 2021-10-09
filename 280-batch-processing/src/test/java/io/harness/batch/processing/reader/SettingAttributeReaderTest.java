@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -18,7 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class SettingAttributeReaderTest {
+public class SettingAttributeReaderTest extends CategoryTest {
   @Inject @InjectMocks private SettingAttributeReader settingAttributeReader;
   @Mock AtomicBoolean runOnlyOnce;
 

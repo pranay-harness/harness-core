@@ -33,6 +33,7 @@ public final class CEMetadataRecord implements PersistentEntity, UuidAware, Acco
   }
   @Id private String uuid;
   private String accountId;
+  private Boolean clusterConnectorConfigured;
   private Boolean clusterDataConfigured;
   private Boolean awsConnectorConfigured;
   private Boolean azureConnectorConfigured;

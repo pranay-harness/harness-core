@@ -7,7 +7,9 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.exception.InvalidRequestException;
@@ -25,9 +27,12 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.utils.Utils;
 import software.wings.yaml.BaseEntityYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
@@ -45,6 +50,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 
 // TODO: ASR: add compound index with setting_id + name
@@ -59,7 +65,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "artifactStream")
 @HarnessEntity(exportable = true)
 public abstract class ArtifactStream
-    extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
+    extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware,
+                            NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -157,6 +164,8 @@ public abstract class ArtifactStream
 
   public void validateRequiredFields() {}
 
+  public abstract ArtifactStream cloneInternal();
+
   public boolean artifactSourceChanged(ArtifactStream artifactStream) {
     return !this.sourceName.equals(artifactStream.getSourceName());
   }
@@ -217,6 +226,12 @@ public abstract class ArtifactStream
     Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, sourceName, artifactStreamType));
     return keywords;
+  }
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getType() {
+    return NGMigrationEntityType.ARTIFACT_STREAM;
   }
 
   @Data

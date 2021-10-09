@@ -2,6 +2,7 @@ package io.harness.ngtriggers.resource;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.constants.Constants.UNRECOGNIZED_WEBHOOK;
+import static io.harness.ngtriggers.Constants.TRIGGER_KEY;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
@@ -27,7 +28,7 @@ import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.security.annotations.PublicApi;
-import io.harness.yaml.utils.YamlPipelineUtils;
+import io.harness.utils.YamlPipelineUtils;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -167,6 +168,34 @@ public class NGTriggerWebhookConfigResource {
     TriggerWebhookEvent eventEntity =
         ngTriggerElementMapper
             .toNGTriggerWebhookEvent(accountIdentifier, orgIdentifier, projectIdentifier, eventPayload, headerConfigs)
+            .build();
+    if (eventEntity != null) {
+      TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);
+      return ResponseDTO.newResponse(newEvent.getUuid());
+    } else {
+      return ResponseDTO.newResponse(UNRECOGNIZED_WEBHOOK);
+    }
+  }
+
+  @POST
+  @Path("/custom")
+  @ApiOperation(value = "accept custom webhook event", nickname = "customWebhookEndpoint")
+  @PublicApi
+  public ResponseDTO<String> processWebhookEvent(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @QueryParam(TRIGGER_KEY) String triggerIdentifier, @NotNull String eventPayload,
+      @Context HttpHeaders httpHeaders) {
+    List<HeaderConfig> headerConfigs = new ArrayList<>();
+    httpHeaders.getRequestHeaders().forEach(
+        (k, v) -> headerConfigs.add(HeaderConfig.builder().key(k).values(v).build()));
+
+    TriggerWebhookEvent eventEntity =
+        ngTriggerElementMapper
+            .toNGTriggerWebhookEventForCustom(accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier,
+                triggerIdentifier, eventPayload, headerConfigs)
             .build();
     if (eventEntity != null) {
       TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);

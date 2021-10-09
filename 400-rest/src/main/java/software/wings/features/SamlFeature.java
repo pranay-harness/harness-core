@@ -1,13 +1,18 @@
 package software.wings.features;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.OauthProviderType;
+
 import software.wings.beans.AccountType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.features.api.AbstractPremiumFeature;
 import software.wings.features.api.ComplianceByRemovingUsage;
 import software.wings.features.api.FeatureRestrictions;
 import software.wings.features.api.Usage;
-import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
@@ -19,6 +24,8 @@ import java.util.Collections;
 import java.util.EnumSet;
 
 @Singleton
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
+@OwnedBy(HarnessTeam.PL)
 public class SamlFeature extends AbstractPremiumFeature implements ComplianceByRemovingUsage {
   public static final String FEATURE_NAME = "SAML";
 

@@ -1,0 +1,16 @@
+monitoredService:
+  identifier:
+  type: Application
+  name:
+  desc:
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  serviceRef:
+  environmentRef:
+  sources:
+    healthSources:
+    changeSources:
+      - name: Harness CD Next Gen
+        identifier: harness_cd_next_gen
+        type: HarnessCDNextGen
+        enabled : true

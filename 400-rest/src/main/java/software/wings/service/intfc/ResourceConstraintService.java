@@ -2,10 +2,12 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.ResourceConstraint;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintRegistry;
 import io.harness.validation.Update;
@@ -21,10 +23,13 @@ import javax.validation.constraints.NotNull;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface ResourceConstraintService extends OwnedByAccount {
   PageResponse<ResourceConstraint> list(PageRequest<ResourceConstraint> pageRequest);
 
   @ValidationGroups(Update.class) void update(@Valid ResourceConstraint resourceConstraint);
+
+  ResourceConstraint getById(String id);
 
   ResourceConstraint getByName(@NotNull String accountId, @NotNull String resourceConstraintName);
 
@@ -71,4 +76,8 @@ public interface ResourceConstraintService extends OwnedByAccount {
   }
 
   int getAllCurrentlyAcquiredPermits(String holdingScope, String releaseEntityId, String appId);
+
+  ResourceConstraint get(String ownerId, String id);
+
+  ResourceConstraint save(@Valid ResourceConstraint resourceConstraint);
 }

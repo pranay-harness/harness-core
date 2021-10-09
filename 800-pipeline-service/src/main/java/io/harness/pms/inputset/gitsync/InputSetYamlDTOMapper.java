@@ -30,4 +30,12 @@ public class InputSetYamlDTOMapper {
         inputSetInfo.getProjectIdentifier(), inputSetInfo.getPipelineInfoConfig().getIdentifier(),
         NGYamlUtils.getYamlString(dto));
   }
+
+  public InputSetYamlDTO toDTO(String yaml) {
+    try {
+      return YamlUtils.read(yaml, InputSetYamlDTO.class);
+    } catch (IOException ex) {
+      throw new InvalidRequestException("Cannot create input set yaml: " + ex.getMessage(), ex);
+    }
+  }
 }

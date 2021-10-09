@@ -56,7 +56,9 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 import static java.util.Arrays.stream;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -79,6 +81,8 @@ import io.harness.yaml.BaseYaml;
 
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
@@ -105,6 +109,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 @Data
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
@@ -113,7 +118,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 public class SettingAttribute
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
-               ApplicationAccess, NameAccess, PersistentRegularIterable, AccountAccess {
+               ApplicationAccess, NameAccess, PersistentRegularIterable, AccountAccess, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
@@ -234,6 +239,11 @@ public class SettingAttribute
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public NGMigrationEntityType getType() {
+    return NGMigrationEntityType.CONNECTOR;
   }
 
   public enum SettingCategory {

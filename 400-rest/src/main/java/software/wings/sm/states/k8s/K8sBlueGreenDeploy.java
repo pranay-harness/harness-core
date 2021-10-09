@@ -1,8 +1,10 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 
@@ -11,22 +13,24 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.beans.Activity;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters.K8sBlueGreenDeployTaskParametersBuilder;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
@@ -47,14 +51,14 @@ import software.wings.utils.ApplicationManifestUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDP)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class K8sBlueGreenDeploy extends AbstractK8sState {
@@ -74,6 +78,8 @@ public class K8sBlueGreenDeploy extends AbstractK8sState {
 
   @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
+  @Getter @Setter @Attributes(title = "Export manifests") private boolean exportManifests;
+  @Getter @Setter @Attributes(title = "Inherit manifests") private boolean inheritManifests;
 
   @Override
   public Integer getTimeoutMillis() {
@@ -99,6 +105,11 @@ public class K8sBlueGreenDeploy extends AbstractK8sState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId()) && inheritManifests) {
+      Activity activity = createK8sActivity(
+          context, commandName(), stateType(), activityService, commandUnitList(false, context.getAccountId()));
+      return executeK8sTask(context, activity.getUuid());
+    }
     return executeWrapperWithManifest(this, context, K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
@@ -108,9 +119,23 @@ public class K8sBlueGreenDeploy extends AbstractK8sState {
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
     storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
 
+    K8sBlueGreenDeployTaskParametersBuilder builder = K8sBlueGreenDeployTaskParameters.builder();
+
+    if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId())) {
+      builder.exportManifests(exportManifests);
+      if (inheritManifests) {
+        List<KubernetesResource> kubernetesResources =
+            k8sStateHelper.getResourcesFromSweepingOutput(context, getStateType());
+        if (isEmpty(kubernetesResources)) {
+          throw new InvalidRequestException("No kubernetes resources found to inherit", USER);
+        }
+        builder.inheritManifests(inheritManifests);
+        builder.kubernetesResources(kubernetesResources);
+      }
+    }
+
     K8sTaskParameters k8sTaskParameters =
-        K8sBlueGreenDeployTaskParameters.builder()
-            .activityId(activityId)
+        builder.activityId(activityId)
             .releaseName(fetchReleaseName(context, infraMapping))
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY)
@@ -156,6 +181,16 @@ public class K8sBlueGreenDeploy extends AbstractK8sState {
     K8sBlueGreenDeployResponse k8sBlueGreenDeployResponse =
         (K8sBlueGreenDeployResponse) executionResponse.getK8sTaskResponse();
 
+    if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId())
+        && k8sBlueGreenDeployResponse.getResources() != null) {
+      k8sStateHelper.saveResourcesToSweepingOutput(context, k8sBlueGreenDeployResponse.getResources(), getStateType());
+      stateExecutionData.setExportManifests(true);
+      return ExecutionResponse.builder()
+          .executionStatus(executionStatus)
+          .stateExecutionData(stateExecutionData)
+          .build();
+    }
+
     stateExecutionData.setReleaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber());
     stateExecutionData.setHelmChartInfo(k8sBlueGreenDeployResponse.getHelmChartInfo());
     stateExecutionData.setBlueGreenStageColor(k8sBlueGreenDeployResponse.getStageColor());
@@ -191,21 +226,15 @@ public class K8sBlueGreenDeploy extends AbstractK8sState {
 
   @Override
   public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
-    List<CommandUnit> blueGreenCommandUnits = new ArrayList<>();
+    return k8sStateHelper.getCommandUnits(remoteStoreType, accountId, isInheritManifests(), isExportManifests(), true);
+  }
 
-    if (remoteStoreType) {
-      blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (exportManifests && inheritManifests) {
+      invalidFields.put("Export manifests & inherit manifests", "Can't export and inherit manifests at the same time");
     }
-
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
-    if (featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, accountId)) {
-      blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prune));
-    }
-
-    return blueGreenCommandUnits;
+    return invalidFields;
   }
 }

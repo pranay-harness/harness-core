@@ -1,5 +1,6 @@
 package io.harness.cdng.infra.beans;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromOverridesVisitorHelper;
@@ -21,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @SimpleVisitorHelper(helperClass = InfraUseFromStageVisitorHelper.class)
 @TypeAlias("infraUseFromStage")
+@RecasterAlias("io.harness.cdng.infra.beans.InfraUseFromStage")
 public class InfraUseFromStage implements Serializable, Visitable {
   // Stage identifier of the stage to select from.
   @NotNull String stage;
@@ -41,6 +43,7 @@ public class InfraUseFromStage implements Serializable, Visitable {
   @ApiModel(value = "InfraOverrides")
   @SimpleVisitorHelper(helperClass = InfraUseFromOverridesVisitorHelper.class)
   @TypeAlias("infraUseFromStage_overrides")
+  @RecasterAlias("io.harness.cdng.infra.beans.InfraUseFromStage$Overrides")
   public static class Overrides implements Serializable, Visitable {
     EnvironmentYaml environment;
     InfrastructureDef infrastructureDefinition;

@@ -7,5 +7,11 @@ import io.harness.pms.pipeline.PipelineEntity;
 
 @OwnedBy(PIPELINE)
 public interface PipelineActionObserver {
-  void onDelete(PipelineEntity pipelineEntity);
+  default void onDelete(PipelineEntity pipelineEntity) {
+    // do nothing
+  }
+
+  default void onUpdate(PipelineEntity pipelineEntity) {
+    // do nothing
+  }
 }

@@ -74,10 +74,17 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
 
       Instant syncEventTime = HTimestamps.toInstant(k8SClusterSyncEvent.getLastProcessedTimestamp());
 
-      instanceInfoTimescaleDAO.stopInactiveNodesAtTime(
-          jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime, k8SClusterSyncEvent.getActiveNodeUidsList());
-      instanceInfoTimescaleDAO.stopInactivePodsAtTime(
-          jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime, k8SClusterSyncEvent.getActivePodUidsList());
+      if (k8SClusterSyncEvent.getVersion() == 2) {
+        instanceInfoTimescaleDAO.stopInactiveNodesAtTime(jobConstants, k8SClusterSyncEvent.getClusterId(),
+            syncEventTime, new ArrayList<>(k8SClusterSyncEvent.getActiveNodeUidsMapMap().keySet()));
+        instanceInfoTimescaleDAO.stopInactivePodsAtTime(jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime,
+            new ArrayList<>(k8SClusterSyncEvent.getActivePodUidsMapMap().keySet()));
+      } else {
+        instanceInfoTimescaleDAO.stopInactiveNodesAtTime(jobConstants, k8SClusterSyncEvent.getClusterId(),
+            syncEventTime, k8SClusterSyncEvent.getActiveNodeUidsList());
+        instanceInfoTimescaleDAO.stopInactivePodsAtTime(jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime,
+            k8SClusterSyncEvent.getActivePodUidsList());
+      }
     }
   }
 
@@ -107,9 +114,16 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       log.info("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds.size());
 
       Set<String> activeInstanceArns = new HashSet<>();
-      activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsList());
-      activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePodUidsList());
-      activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsList());
+
+      if (k8SClusterSyncEvent.getVersion() == 2) {
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsMapMap().keySet());
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePodUidsMapMap().keySet());
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsMapMap().keySet());
+      } else {
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsList());
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePodUidsList());
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsList());
+      }
 
       final SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
 

@@ -2,17 +2,23 @@ package io.harness.accesscontrol.clients;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.remote.client.NGRestUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import lombok.NoArgsConstructor;
 
 @OwnedBy(HarnessTeam.PL)
-@NoArgsConstructor
-public class NonPrivilegedAccessControlClientImpl extends PrivilegedAccessControlClientImpl {
+public class NonPrivilegedAccessControlClientImpl extends AbstractAccessControlClient {
+  private final AccessControlHttpClient accessControlHttpClient;
+
   @Inject
   public NonPrivilegedAccessControlClientImpl(
       @Named("NON_PRIVILEGED") AccessControlHttpClient accessControlHttpClient) {
-    super(accessControlHttpClient);
+    this.accessControlHttpClient = accessControlHttpClient;
+  }
+
+  @Override
+  protected AccessCheckResponseDTO checkForAccess(AccessCheckRequestDTO accessCheckRequestDTO) {
+    return NGRestUtils.getResponse(accessControlHttpClient.checkForAccess(accessCheckRequestDTO));
   }
 }

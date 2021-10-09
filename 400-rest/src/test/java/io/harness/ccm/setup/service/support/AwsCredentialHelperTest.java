@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.config.CESetUpConfig;
@@ -25,7 +26,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 @OwnedBy(CDP)
-public class AwsCredentialHelperTest {
+public class AwsCredentialHelperTest extends CategoryTest {
   @Mock MainConfiguration configuration;
   @InjectMocks AwsCredentialHelper awsCredentialHelper;
 

@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
+import static io.harness.beans.FeatureName.SKIP_BASED_ON_STACK_STATUSES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -73,6 +74,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.GitUtilsManager;
 
 import com.amazonaws.services.cloudformation.model.Parameter;
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -95,17 +97,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String CREATE_STACK_COMMAND_UNIT = "Create Stack";
   private static final String FETCH_FILES_COMMAND_UNIT = "Fetch Files";
   private static final String CF_PARAMETERS = "Cloud Formation parameters";
-  private static final String BUCKET_KEY_DELIMITER = "\\.s3\\.amazonaws\\.com/";
-  private static final String PROTOCOL_DELIMITER = ".*//";
-  private static final String PARAMETERS_FILE_PATH_PATTERN = PROTOCOL_DELIMITER + ".*" + BUCKET_KEY_DELIMITER + ".*";
   @Inject private transient AppService appService;
   @Inject private transient GitUtilsManager gitUtilsManager;
+  @Inject private S3UriParser s3UriParser;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -113,8 +113,18 @@ public class CloudFormationCreateStackState extends CloudFormationState {
 
   @Attributes(title = "Parameters file path") @Getter @Setter protected List<String> parametersFilePaths;
   @Attributes(title = "Use parameters file") @Getter @Setter protected boolean useParametersFile;
+  @Attributes(title = "Should skip on reaching given stack statuses")
+  @Getter
+  @Setter
+  protected boolean skipBasedOnStackStatus;
+  @Attributes(title = "Stack status to ignore") @Getter @Setter protected List<String> stackStatusesToMarkAsSuccess;
 
   @Setter @JsonIgnore @SchemaIgnore private boolean fileFetched;
+  @Getter @Setter private boolean specifyCapabilities;
+  @Getter @Setter private List<String> capabilities;
+  @Getter @Setter private boolean addTags;
+  // tag list as JSON text
+  @Getter @Setter private String tags;
 
   @JsonIgnore
   @SchemaIgnore
@@ -152,6 +162,15 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     CloudFormationInfrastructureProvisioner provisioner = getProvisioner(context);
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
+
+    if (featureFlagService.isEnabled(SKIP_BASED_ON_STACK_STATUSES, context.getAccountId())) {
+      if (skipBasedOnStackStatus == false || isEmpty(stackStatusesToMarkAsSuccess)) {
+        stackStatusesToMarkAsSuccess = new ArrayList<>();
+      }
+    } else {
+      stackStatusesToMarkAsSuccess = new ArrayList<>();
+    }
+
     if (provisioner.provisionByGit() && useParametersFile && !isFileFetched()) {
       return buildAndQueueGitCommandTask(executionContext, provisioner, activityId);
     }
@@ -164,8 +183,26 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
 
     String roleArnRendered = executionContext.renderExpression(getCloudFormationRoleArn());
+    if (isEmpty(getStackStatusesToMarkAsSuccess())) {
+      setStackStatusesToMarkAsSuccess(new ArrayList<>());
+    }
+
+    List<String> stackStatusesToMarkAsSuccessRendered = getStackStatusesToMarkAsSuccess()
+                                                            .stream()
+                                                            .map(status -> executionContext.renderExpression(status))
+                                                            .collect(Collectors.toList());
     String regionRendered = executionContext.renderExpression(getRegion());
     builder.cloudFormationRoleArn(roleArnRendered).region(regionRendered);
+    builder.stackStatusesToMarkAsSuccess(stackStatusesToMarkAsSuccessRendered.stream()
+                                             .map(status -> StackStatus.fromValue(status))
+                                             .collect(Collectors.toList()));
+
+    if (isSpecifyCapabilities()) {
+      builder.capabilities(capabilities);
+    }
+    if (isAddTags()) {
+      builder.tags(executionContext.renderExpression(tags));
+    }
 
     if (provisioner.provisionByUrl()) {
       if (useParametersFile && !isFileFetched()) {
@@ -357,8 +394,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       ExecutionContextImpl executionContext, AwsConfig awsConfig, String activityId) {
     setParametersFilePaths(
         getParametersFilePaths().stream().map(executionContext::renderExpression).collect(Collectors.toList()));
-    validateFilePaths();
-    Map<String, List<String>> buckets = getBucketsFilesMap();
+    Map<String, List<String>> buckets = s3UriParser.getBucketsFilesMap(getParametersFilePaths());
     List<S3FileRequest> s3FileRequests = new ArrayList<>();
     buckets.forEach(
         (bucketName,
@@ -374,30 +410,6 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .executionLogName(FETCH_FILES_COMMAND_UNIT)
         .s3FileRequests(s3FileRequests)
         .build();
-  }
-
-  @NotNull
-  private Map<String, List<String>> getBucketsFilesMap() {
-    Map<String, List<String>> buckets = new HashMap<>();
-    getParametersFilePaths().forEach(parametersFilePath -> {
-      String[] s3Details = parametersFilePath.split(BUCKET_KEY_DELIMITER);
-      String bucketName = s3Details[0].split(PROTOCOL_DELIMITER)[1];
-      String fileKey = s3Details[1];
-      if (buckets.get(bucketName) == null) {
-        buckets.put(bucketName, new ArrayList<>(Collections.singletonList(fileKey)));
-      } else {
-        buckets.get(bucketName).add(fileKey);
-      }
-    });
-    return buckets;
-  }
-
-  private void validateFilePaths() {
-    getParametersFilePaths().forEach(parametersFilePath -> {
-      if (!parametersFilePath.matches(PARAMETERS_FILE_PATH_PATTERN)) {
-        throw new InvalidRequestException(String.format("The %s format is not valid", parametersFilePath));
-      }
-    });
   }
 
   public DelegateTask createGitFetchFileAsyncTask(
@@ -434,8 +446,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
                                                       gitConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
                                                   .build();
 
-    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap =
-        Collections.singletonMap(CF_PARAMETERS, gitFetchFilesConfig);
+    HashMap<String, GitFetchFilesConfig> gitFetchFileConfigMap = new HashMap();
+    gitFetchFileConfigMap.put(CF_PARAMETERS, gitFetchFilesConfig);
 
     return GitFetchFilesTaskParams.builder()
         .appId(app.getAppId())
@@ -492,6 +504,11 @@ public class CloudFormationCreateStackState extends CloudFormationState {
               .region(context.renderExpression(region))
               .stackNameSuffix(getStackNameSuffix((ExecutionContextImpl) context, provisionerId))
               .customStackName(useCustomStackName ? context.renderExpression(customStackName) : StringUtils.EMPTY)
+              .skipBasedOnStackStatus(
+                  ((CloudFormationCreateStackResponse) commandResponse).getRollbackInfo().isSkipBasedOnStackStatus())
+              .stackStatusesToMarkAsSuccess(((CloudFormationCreateStackResponse) commandResponse)
+                                                .getRollbackInfo()
+                                                .getStackStatusesToMarkAsSuccess())
               .oldStackBody(context.renderExpression(existingStackInfo.getOldStackBody()))
               .oldStackParameters(renderedOldStackParams)
               .build();
@@ -562,7 +579,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     } else {
       setParametersFilePaths(
           getParametersFilePaths().stream().map(context::renderExpression).collect(Collectors.toList()));
-      Map<String, List<String>> buckets = getBucketsFilesMap();
+      Map<String, List<String>> buckets = s3UriParser.getBucketsFilesMap(getParametersFilePaths());
       executionResponse.getS3FetchFileResult().getS3Buckets().forEach(s3Bucket -> {
         if (buckets.get(s3Bucket.getName()) != null) {
           s3Bucket.getS3Files()

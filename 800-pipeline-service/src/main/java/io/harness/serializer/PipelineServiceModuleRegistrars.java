@@ -1,5 +1,6 @@
 package io.harness.serializer;
 
+import io.harness.accesscontrol.serializer.AccessControlClientRegistrars;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.serializer.morphia.FiltersMorphiaRegistrar;
@@ -9,6 +10,7 @@ import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGPipelineKryoRegistrar;
 import io.harness.serializer.kryo.PipelineServiceKryoRegistrar;
+import io.harness.serializer.kryo.WatcherBeansKryoRegister;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.PMSPipelineMorphiaRegistrar;
 
@@ -26,10 +28,12 @@ public class PipelineServiceModuleRegistrars {
           .add(PipelineServiceKryoRegistrar.class)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
+          .addAll(AccessControlClientRegistrars.kryoRegistrars)
           .addAll(NGTriggerRegistrars.kryoRegistrars)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(DelegateAgentBeansKryoRegister.class)
+          .add(WatcherBeansKryoRegister.class)
           .add(NGPipelineKryoRegistrar.class)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .build();

@@ -2,7 +2,7 @@
 #
 # Build the ci-scm docker image using:
 # > bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //product/ci/scm/...
-# > docker build -t harness/ci-scm:<tag> -f product/ci/scm/Dockerfile bazel-bin/product/ci/scm/linux_amd64_pure_stripped
+# > docker build -t harness/ci-scm:<tag> -f product/ci/scm/Dockerfile $(bazel info bazel-bin)/product/ci/scm/
 
 # First stage
 FROM alpine:3.12
@@ -14,7 +14,7 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.3.3 && \
 FROM alpine:3.12
 COPY --from=0 /bin/grpc_health_probe ./grpc_health_probe
 # Copy ci-scm binary
-COPY linux_amd64_pure_stripped/scm /usr/local/bin/scm
+COPY scm_/scm /usr/local/bin/scm
 RUN addgroup -S 65534 && adduser -S 65534 -G 65534
 RUN chown -R 65534:65534 /usr/local/bin ./grpc_health_probe
 USER 65534

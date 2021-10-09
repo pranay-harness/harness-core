@@ -1,5 +1,7 @@
 package io.harness.logging;
 
+import static io.harness.configuration.DeployMode.DEPLOY_MODE;
+import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
@@ -77,6 +79,10 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   public void start() {
     synchronized (this) {
       if (started) {
+        return;
+      }
+      if (isOnPrem(System.getenv().get(DEPLOY_MODE))) {
+        log.info("Log will not be initiated for mode ONPREM");
         return;
       }
 

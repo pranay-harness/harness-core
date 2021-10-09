@@ -31,6 +31,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -45,6 +46,12 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
   private final MongoTemplate mongoTemplate;
   private final OutboxService outboxService;
   private final GitSyncSdkService gitSyncSdkService;
+
+  @Override
+  public List<InputSetEntity> findAll(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.find(query, InputSetEntity.class);
+  }
 
   @Override
   public Page<InputSetEntity> findAll(
@@ -93,7 +100,7 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
   }
 
   @Override
-  public InputSetEntity update(InputSetEntity entityToUpdate, InputSetYamlDTO yamlDTO) {
+  public InputSetEntity update(InputSetEntity entityToUpdate, InputSetYamlDTO yamlDTO, ChangeType changeType) {
     Supplier<OutboxEvent> functor = null;
     if (!gitSyncSdkService.isGitSyncEnabled(entityToUpdate.getAccountIdentifier(), entityToUpdate.getOrgIdentifier(),
             entityToUpdate.getProjectIdentifier())) {
@@ -119,7 +126,18 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
     }
 
     return gitAwarePersistence.save(
-        entityToUpdate, entityToUpdate.getYaml(), ChangeType.MODIFY, InputSetEntity.class, functor);
+        entityToUpdate, entityToUpdate.getYaml(), changeType, InputSetEntity.class, functor);
+  }
+
+  @Override
+  public InputSetEntity switchValidationFlag(Criteria criteria, Update update) {
+    Query query = new Query(criteria);
+    RetryPolicy<Object> retryPolicy = getRetryPolicy(
+        "[Retrying]: Failed updating Input Set; attempt: {}", "[Failed]: Failed updating Input Set; attempt: {}");
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), InputSetEntity.class));
   }
 
   @Override

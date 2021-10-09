@@ -1,3 +1,6 @@
+# Any edit in this file should accompany an increment in version.
+name: permissionsConfiguration
+version: 10
 permissions:
   - identifier: core_project_delete
     name: Delete Project
@@ -10,7 +13,6 @@ permissions:
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
-      - organization
       - project
   - identifier: core_project_edit
     name: Edit a Project
@@ -35,7 +37,6 @@ permissions:
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
-      - account
       - organization
   - identifier: core_organization_edit
     name: Edit an Organization
@@ -47,6 +48,18 @@ permissions:
     name: Create an Organization
     status: ACTIVE
     includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+  - identifier: core_account_edit
+    name: Edit Account
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+  - identifier: core_account_view
+    name: View Account
+    status: ACTIVE
+    includeInAllRoles: true
     allowedScopeLevels:
       - account
   - identifier: core_secret_delete
@@ -357,18 +370,32 @@ permissions:
     includeInAllRoles: true
     allowedScopeLevels:
       - account
+      - organization
+      - project
   - identifier: core_serviceaccount_edit
     name: Create or Edit ServiceAccount
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
       - account
+      - organization
+      - project
   - identifier: core_serviceaccount_delete
     name: Delete ServiceAccount
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
       - account
+      - organization
+      - project
+  - identifier: core_serviceaccount_manageapikey
+    name: Manage API keys for Service Account
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
   - identifier: core_authsetting_view
     name: View Auth setting
     status: ACTIVE
@@ -499,3 +526,35 @@ permissions:
     allowedScopeLevels:
       - account
       - organization
+  - identifier: core_template_view
+    name: View Templates
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_template_edit
+    name: Edit a Template
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_template_delete
+    name: Delete Template
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_template_access
+    name: Access a Template
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+    - account
+    - organization
+    - project

@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.SneakyThrows;
 
 @OwnedBy(PIPELINE)
 @TargetModule(HarnessModule._882_PMS_SDK_CORE)
@@ -65,6 +66,7 @@ public abstract class GenericStagePlanCreator extends ChildrenPlanCreator<StageE
     return Collections.singletonMap(YAMLFieldNameConstants.STAGE, stageTypes);
   }
 
+  @SneakyThrows
   @Override
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
@@ -89,9 +91,13 @@ public abstract class GenericStagePlanCreator extends ChildrenPlanCreator<StageE
         .build();
   }
 
+  /**
+   * Adds the nextStepAdviser to the given node if it is not the end stage
+   */
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField stageField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (stageField != null && stageField.getNode() != null) {
+      // if parent is parallel, then we need not add nextStepAdvise as all the executions will happen in parallel
       if (stageField.checkIfParentIsParallel(STAGES)) {
         return adviserObtainments;
       }

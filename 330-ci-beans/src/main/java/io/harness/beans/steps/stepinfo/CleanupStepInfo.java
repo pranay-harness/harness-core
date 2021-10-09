@@ -1,14 +1,16 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -30,6 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @YamlSchemaIgnoreSubtype
 @TypeAlias("CleanupStepInfo")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.beans.steps.stepinfo.CleanupStepInfo")
 public class CleanupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
@@ -37,7 +40,7 @@ public class CleanupStepInfo implements CIStepInfo {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.CLEANUP).build();
   @JsonIgnore
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.CLEANUP.getDisplayName()).build();
+      StepType.newBuilder().setType(CIStepInfoType.CLEANUP.getDisplayName()).setStepCategory(StepCategory.STEP).build();
   @JsonIgnore @Builder.Default int timeout = DEFAULT_TIMEOUT;
 
   @NotNull @EntityIdentifier private String identifier;

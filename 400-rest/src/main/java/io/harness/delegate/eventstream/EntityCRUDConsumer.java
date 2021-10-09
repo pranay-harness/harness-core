@@ -11,6 +11,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -31,13 +32,16 @@ public class EntityCRUDConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListeners;
+  private final QueueController queueController;
 
   @Inject
   public EntityCRUDConsumer(@Named(ENTITY_CRUD) Consumer redisConsumer,
       @Named(ORGANIZATION_ENTITY + ENTITY_CRUD) MessageListener organizationEntityCRUDStreamListener,
-      @Named(PROJECT_ENTITY + ENTITY_CRUD) MessageListener projectEntityCRUDStreamListener) {
+      @Named(PROJECT_ENTITY + ENTITY_CRUD) MessageListener projectEntityCRUDStreamListener,
+      QueueController queueController) {
     this.redisConsumer = redisConsumer;
     this.messageListeners = Lists.newArrayList(organizationEntityCRUDStreamListener, projectEntityCRUDStreamListener);
+    this.queueController = queueController;
   }
 
   @Override
@@ -46,6 +50,11 @@ public class EntityCRUDConsumer implements Runnable {
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info("Entity crud consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         pollAndProcessMessages();
       }
     } catch (InterruptedException ex) {

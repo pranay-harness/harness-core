@@ -2,7 +2,9 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 
 import software.wings.sm.ContextElement;
@@ -12,6 +14,7 @@ import java.util.Map;
 import lombok.Builder;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class SkipStateExecutionData extends StateExecutionData {
   private String skipAssertionExpression;
   private String workflowId;

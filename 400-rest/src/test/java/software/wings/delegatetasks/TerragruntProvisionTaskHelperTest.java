@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -71,7 +72,7 @@ import org.mockito.Mock;
 
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
-public class TerragruntProvisionTaskHelperTest {
+public class TerragruntProvisionTaskHelperTest extends CategoryTest {
   @Mock private GitClient gitClient;
   @Mock private GitClientHelper gitClientHelper;
   @Mock private EncryptionService encryptionService;
@@ -153,7 +154,7 @@ public class TerragruntProvisionTaskHelperTest {
     verify(logCallback, times(2)).saveExecutionLog(any(), any(), any());
     verify(encryptionService, times(1))
         .decrypt(tfVarGitSource.getGitConfig(), tfVarGitSource.getEncryptedDataDetails(), false);
-    verify(gitClient).downloadFiles(any(GitConfig.class), requestArgumentCaptor.capture(), anyString());
+    verify(gitClient).downloadFiles(any(GitConfig.class), requestArgumentCaptor.capture(), anyString(), eq(false));
     GitFetchFilesRequest gitFetchFilesRequest = requestArgumentCaptor.getValue();
     assertThat(gitFetchFilesRequest.getBranch()).isEqualTo(gitFileConfig.getBranch());
     assertThat(gitFetchFilesRequest.getCommitId()).isEqualTo(gitFileConfig.getCommitId());
@@ -242,6 +243,31 @@ public class TerragruntProvisionTaskHelperTest {
     assertThat(new String(Files.readAllBytes(tfStateFile.toPath()))).isEqualTo("fileContent");
     // clean up
     Files.deleteIfExists(tfStateFile.toPath());
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testDownloadTfStateFileForRemoteStateFile() throws IOException {
+    TerragruntProvisionParameters provisionParameters = TerragruntProvisionParameters.builder()
+                                                            .workspace("default")
+                                                            .currentStateFileId("stateFileId")
+                                                            .accountId(ACCOUNT_ID)
+                                                            .build();
+
+    InputStream fileContent = IOUtils.toInputStream("", Charset.defaultCharset());
+    doReturn(fileContent).when(delegateFileManager).downloadByFileId(any(), any(), any());
+
+    File tfStateFile = Paths
+                           .get(TERRAFORM_CONFIG_FILE_DIRECTORY,
+                               format(WORKSPACE_STATE_FILE_PATH_FORMAT, provisionParameters.getWorkspace()))
+                           .toFile();
+
+    terragruntProvisionTaskHelper.downloadTfStateFile(provisionParameters, "configFileDirectory");
+    verify(delegateFileManager)
+        .downloadByFileId(
+            TERRAFORM_STATE, provisionParameters.getCurrentStateFileId(), provisionParameters.getAccountId());
+    assertThat(tfStateFile).doesNotExist();
   }
 
   @Test

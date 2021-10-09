@@ -4,6 +4,7 @@ public interface CVAnalysisConstants {
   int MAX_RETRIES = 2;
   String LEARNING_RESOURCE = "learning";
   String TIMESERIES_ANALYSIS_RESOURCE = "timeseries-analysis";
+  String LE_DEV_RESOURCE = "learning-engine-dev";
 
   String LOG_CLUSTER_RESOURCE = "log-cluster";
 

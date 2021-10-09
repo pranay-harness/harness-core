@@ -1,5 +1,10 @@
 package io.harness.datahandler.utils;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -16,6 +21,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
+@TargetModule(_955_ACCOUNT_MGMT)
 public class AccountSummaryHelperImpl implements AccountSummaryHelper {
   @Inject private LimitConfigurationService limitConfigurationService;
   @Inject private CVConfigurationService cvConfigurationService;
@@ -34,6 +41,7 @@ public class AccountSummaryHelperImpl implements AccountSummaryHelper {
                                         .twoFactorAdminEnforced(account.isTwoFactorAdminEnforced())
                                         .povEnabled(account.isPovAccount())
                                         .ceAutoCollectK8sEventsEnabled(account.isCeAutoCollectK8sEvents())
+                                        .nextgenEnabled(account.isNextGenEnabled())
                                         .build();
 
     if (Objects.nonNull(account.getWhitelistedDomains())) {

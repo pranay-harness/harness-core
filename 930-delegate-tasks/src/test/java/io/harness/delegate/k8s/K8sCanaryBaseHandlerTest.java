@@ -1,9 +1,8 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.k8s.K8sTestConstants.DAEMON_SET_YAML;
-import static io.harness.delegate.k8s.K8sTestConstants.DEPLOYMENT_DIRECT_APPLY_YAML;
 import static io.harness.delegate.k8s.K8sTestConstants.DEPLOYMENT_YAML;
-import static io.harness.delegate.k8s.K8sTestConstants.STATEFUL_SET_YAML;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -23,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -56,6 +56,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public class K8sCanaryBaseHandlerTest extends CategoryTest {
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @InjectMocks private K8sCanaryBaseHandler k8sCanaryBaseHandler;
@@ -84,17 +85,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     boolean result =
         k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
     assertInvalidWorkloadsInManifest(result,
-        "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.");
-
-    kubernetesResources.addAll(ManifestHelper.processYaml(STATEFUL_SET_YAML));
-    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_DIRECT_APPLY_YAML));
-    k8sCanaryHandlerConfig.setResources(kubernetesResources);
-    reset(k8sTaskHelperBase);
-    reset(logCallback);
-
-    result = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
-    assertInvalidWorkloadsInManifest(result,
-        "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.");
+        "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.");
 
     kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
     kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
@@ -112,7 +103,6 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     k8sCanaryHandlerConfig.setReleaseHistory(ReleaseHistory.createNew());
     reset(k8sTaskHelperBase);
     reset(logCallback);
-
     doNothing().when(k8sTaskHelperBase).cleanup(any(), any(), any(), any());
     result = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
     assertThat(result).isTrue();
@@ -128,13 +118,13 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     K8sCanaryHandlerConfig k8sCanaryHandlerConfig = new K8sCanaryHandlerConfig();
 
     List<KubernetesResource> kubernetesResources = new ArrayList<>();
-    kubernetesResources.addAll(ManifestHelper.processYaml(STATEFUL_SET_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DAEMON_SET_YAML));
     k8sCanaryHandlerConfig.setResources(kubernetesResources);
 
     boolean result =
         k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
     assertInvalidWorkloadsInManifest(result,
-        "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.");
+        "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.");
   }
 
   @Test

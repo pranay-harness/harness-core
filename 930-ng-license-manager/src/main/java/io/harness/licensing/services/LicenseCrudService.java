@@ -1,6 +1,6 @@
 package io.harness.licensing.services;
 
-import io.harness.licensing.ModuleType;
+import io.harness.ModuleType;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 

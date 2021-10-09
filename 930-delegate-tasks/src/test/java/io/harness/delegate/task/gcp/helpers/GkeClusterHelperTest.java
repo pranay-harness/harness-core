@@ -1,6 +1,7 @@
 package io.harness.delegate.task.gcp.helpers;
 
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
+import static io.harness.rule.OwnerRule.ABHINAV2;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -19,7 +20,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.concurrent.HFakeTimeLimiter;
+import io.harness.exception.GcpServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -41,6 +42,7 @@ import com.google.api.services.container.model.Operation;
 import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -132,7 +134,7 @@ public class GkeClusterHelperTest extends CategoryTest {
     notFoundException = new GoogleJsonResponseException(
         new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "not found", httpHeaders),
         googleJsonError);
-    on(gkeClusterHelper).set("timeLimiter", new HFakeTimeLimiter());
+    on(gkeClusterHelper).set("timeLimiter", new FakeTimeLimiter());
   }
 
   @Test
@@ -317,9 +319,24 @@ public class GkeClusterHelperTest extends CategoryTest {
   public void shouldNotListClustersIfError() throws Exception {
     when(clustersList.execute()).thenThrow(new IOException());
 
-    List<String> result = gkeClusterHelper.listClusters(serviceAccountKey, false);
+    assertThatThrownBy(() -> gkeClusterHelper.listClusters(serviceAccountKey, false))
+        .isInstanceOf(GcpServerException.class);
 
     verify(clusters).list(anyString());
-    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void shouldNotListClustersIfResponseException() throws IOException {
+    GoogleJsonError googleJsonError = new GoogleJsonError();
+    googleJsonError.setMessage("Simulated Google Json Error");
+
+    GoogleJsonResponseException responseException = new GoogleJsonResponseException(
+        new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_BAD_REQUEST, "Forbidden", httpHeaders),
+        googleJsonError);
+    when(clustersList.execute()).thenThrow(responseException);
+    assertThatThrownBy(() -> gkeClusterHelper.listClusters(serviceAccountKey, false))
+        .isInstanceOf(GcpServerException.class);
   }
 }

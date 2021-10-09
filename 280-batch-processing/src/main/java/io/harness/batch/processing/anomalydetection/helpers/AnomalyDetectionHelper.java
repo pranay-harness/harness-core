@@ -131,7 +131,7 @@ public class AnomalyDetectionHelper {
   }
 
   public static void logProcessingTimeSeries(String model) {
-    log.info("Processing time series using {}", model);
+    log.debug("Processing time series using {}", model);
   }
 
   public static void logUnsuccessfulHttpCall(Integer code, String error) {

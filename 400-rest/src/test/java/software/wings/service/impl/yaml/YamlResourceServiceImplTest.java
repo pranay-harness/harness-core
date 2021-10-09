@@ -1,8 +1,11 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
@@ -21,32 +24,57 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SE
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.yaml.BaseYaml;
 
-import software.wings.WingsBaseTest;
+import software.wings.beans.PhysicalDataCenterConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.PhysicalDataCenterConfigYamlHandler;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingVariableTypes;
+import software.wings.yaml.YamlPayload;
 
 import com.google.inject.Inject;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
-public class YamlResourceServiceImplTest extends WingsBaseTest {
+@OwnedBy(DX)
+public class YamlResourceServiceImplTest extends CategoryTest {
   @Mock ApplicationManifestService applicationManifestService;
+  @Mock SettingsService settingsService;
+  @Mock YamlHandlerFactory yamlHandlerFactory;
   @InjectMocks @Inject YamlResourceServiceImpl yamlResourceService;
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = ADWAIT)
@@ -199,6 +227,36 @@ public class YamlResourceServiceImplTest extends WingsBaseTest {
     testGetYamlTypeFromAppManifestForPCFKind();
     shouldThrowExceptionForNullKind();
     shouldThrowExceptionForUnknownKind();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetSettingAttribute() {
+    String uuid = "uuid";
+    SettingAttribute setting = aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                                   .withName("NAME")
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                                                  .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                                                  .build())
+                                   .build();
+
+    PhysicalDataCenterConfigYamlHandler yamlHandler = Mockito.mock(PhysicalDataCenterConfigYamlHandler.class);
+    doReturn(yamlHandler).when(yamlHandlerFactory).getYamlHandler(eq(YamlType.CLOUD_PROVIDER), any());
+    BaseYaml yamlOutput = PhysicalDataCenterConfig.Yaml.builder()
+                              .harnessApiVersion("version")
+                              .type(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                              .build();
+    doReturn(yamlOutput).when(yamlHandler).toYaml(eq(setting), anyString());
+    doReturn(setting).when(settingsService).get(uuid);
+
+    RestResponse<YamlPayload> payload = yamlResourceService.getSettingAttribute(ACCOUNT_ID, uuid);
+    YamlPayload resource = payload.getResource();
+    assertThat(resource).isNotNull();
+    assertThat(resource.getName()).isEqualTo("NAME.yaml");
+    assertThat(resource.getYaml()).isNotEmpty();
   }
 
   private void shouldThrowExceptionForUnknownKind() {

@@ -8,10 +8,9 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
-import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 
 import software.wings.beans.sso.SSOType;
 
@@ -30,6 +29,8 @@ public interface UserGroupService {
 
   List<UserGroup> getUserGroupsBySsoId(String accountIdentifier, String ssoId);
 
+  List<UserGroup> getUserGroupsBySsoId(String ssoId);
+
   UserGroup update(UserGroupDTO userGroupDTO);
 
   Page<UserGroup> list(
@@ -42,21 +43,27 @@ public interface UserGroupService {
 
   UserGroup delete(Scope scope, String identifier);
 
+  boolean deleteByScope(Scope scope);
+
   boolean checkMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier);
 
   UserGroup addMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier);
 
-  void addUserToUserGroups(String accountIdentifier, UserInfo userInfo, List<UserGroup> userGroups);
+  void addUserToUserGroups(String accountIdentifier, String userId, List<UserGroup> userGroups);
+
+  void addUserToUserGroups(Scope scope, String userId, List<String> userGroups);
 
   UserGroup removeMember(Scope scope, String userGroupIdentifier, String userIdentifier);
 
   void removeMemberAll(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
       @NotNull String userIdentifier);
 
-  UserGroup linkToSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, @NotNull SSOType ssoType,
-      @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName);
+  UserGroup linkToSsoGroup(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      @NotBlank String userGroupId, @NotNull SSOType ssoType, @NotBlank String ssoId, @NotBlank String ssoGroupId,
+      @NotBlank String ssoGroupName);
 
-  UserGroup unlinkSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, boolean retainMembers);
+  UserGroup unlinkSsoGroup(@NotBlank String accountId, String orgIdentifier, String projectIdentifier,
+      @NotBlank String userGroupId, boolean retainMembers);
 }

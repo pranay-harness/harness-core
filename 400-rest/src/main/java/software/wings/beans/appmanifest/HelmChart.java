@@ -1,7 +1,9 @@
 package software.wings.beans.appmanifest;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -25,11 +27,11 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @OwnedBy(HarnessTeam.CDC)
-
 @Data
 @Builder
 @Entity(value = "helmCharts", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "HelmChartKeys")
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class HelmChart implements AccountAccess, NameAccess, PersistentEntity, UuidAware, CreatedAtAware,
                                   UpdatedAtAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {

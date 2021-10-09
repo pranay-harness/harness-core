@@ -11,6 +11,7 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(PIPELINE)
 public enum NGTriggerType {
   @JsonProperty("Webhook") WEBHOOK,
-  // @JsonProperty("NewArtifact") NEW_ARTIFACT,
+  @JsonProperty("Artifact") ARTIFACT,
+  @JsonProperty("Manifest") MANIFEST,
   @JsonProperty("Scheduled") SCHEDULED
 }

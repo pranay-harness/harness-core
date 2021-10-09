@@ -11,7 +11,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
-import static software.wings.metrics.TimeSeriesDataRecord.shouldLogForBuildDotCom;
+import static software.wings.metrics.TimeSeriesDataRecord.shouldLogDetailedInfoForDebugging;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import static java.lang.Integer.max;
@@ -139,7 +139,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return false;
     }
     String serviceId = metricData.get(0).getServiceId();
-    if (shouldLogForBuildDotCom(accountId, serviceId)) {
+    if (shouldLogDetailedInfoForDebugging(accountId, serviceId)) {
       log.info("for {} received metric data {}", stateExecutionId, metricData);
     }
     if (!learningEngineService.isStateValid(appId, stateExecutionId)) {
@@ -168,7 +168,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     final List<TimeSeriesDataRecord> dataRecords =
         TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricData);
     // TODO: remove this once CV-5770 is root caused and fixed
-    if (shouldLogForBuildDotCom(accountId, serviceId)) {
+    if (shouldLogDetailedInfoForDebugging(accountId, serviceId)) {
       log.info("for {} the data records are {}", stateExecutionId, dataRecords);
     }
     dataRecords.forEach(TimeSeriesDataRecord::compress);
@@ -447,7 +447,19 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private double computeRiskScore(MetricAnalysisRecord mlAnalysisResponse) {
-    return mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(-1.0);
+    double keyScore = -1.0;
+    if (isNotEmpty(mlAnalysisResponse.getKeyTransactionMetricScores())) {
+      keyScore =
+          mlAnalysisResponse.getKeyTransactionMetricScores()
+              .values()
+              .stream()
+              .mapToDouble(metricKeys -> metricKeys.values().stream().mapToDouble(value -> value).max().orElse(-1.0))
+              .max()
+              .orElse(-1.0);
+    }
+    double overallScore =
+        mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(value -> value).max().orElse(-1.0);
+    return Math.max(keyScore, overallScore);
   }
 
   @Override

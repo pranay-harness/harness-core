@@ -14,6 +14,7 @@ import io.harness.migrations.timescaledb.AddIdleUnallocatedColumns;
 import io.harness.migrations.timescaledb.AddIndexToInstanceV2Migration;
 import io.harness.migrations.timescaledb.AddIndicesForCostEvents;
 import io.harness.migrations.timescaledb.AddInstancesDeployedToDeployment;
+import io.harness.migrations.timescaledb.AddMaxStorageColumns;
 import io.harness.migrations.timescaledb.AddMaxUtilColumns;
 import io.harness.migrations.timescaledb.AddNewIndexToAnomalies;
 import io.harness.migrations.timescaledb.AddNewentityToAnomalies;
@@ -28,6 +29,7 @@ import io.harness.migrations.timescaledb.AddSystemCostBillingData;
 import io.harness.migrations.timescaledb.AddingToCVDeploymentMetrics;
 import io.harness.migrations.timescaledb.AlterCEUtilizationDataTables;
 import io.harness.migrations.timescaledb.ChangeToTimeStampTZ;
+import io.harness.migrations.timescaledb.CreateAccountTables;
 import io.harness.migrations.timescaledb.CreateAggregatedBillingTable;
 import io.harness.migrations.timescaledb.CreateAnomaliesData;
 import io.harness.migrations.timescaledb.CreateBillingData;
@@ -36,6 +38,7 @@ import io.harness.migrations.timescaledb.CreateBudgetAlerts;
 import io.harness.migrations.timescaledb.CreateCeRecommendationTable;
 import io.harness.migrations.timescaledb.CreateDeploymentParentTable;
 import io.harness.migrations.timescaledb.CreateDeploymentStageTable;
+import io.harness.migrations.timescaledb.CreateIndexOnKubernetesUtilizationData;
 import io.harness.migrations.timescaledb.CreateInstanceStatsDayTable;
 import io.harness.migrations.timescaledb.CreateInstanceStatsHourTable;
 import io.harness.migrations.timescaledb.CreateKubernetesUtilizationData;
@@ -117,6 +120,9 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(50, RecommendationsRelatedTables.class))
         .add(Pair.of(51, CreateCeRecommendationTable.class))
         .add(Pair.of(52, CreateNodeInfoTableAndIsAliveFunction.class))
+        .add(Pair.of(53, CreateAccountTables.class))
+        .add(Pair.of(54, CreateIndexOnKubernetesUtilizationData.class))
+        .add(Pair.of(55, AddMaxStorageColumns.class))
         .build();
   }
 }

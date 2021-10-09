@@ -14,13 +14,11 @@ import io.harness.rule.Owner;
 
 import java.io.File;
 import java.io.IOException;
-import javax.ws.rs.core.Response;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
-import org.springframework.scheduling.support.CronSequenceGenerator;
 
 public class PerspectiveReportResourceTest extends CategoryTest {
   private CEReportScheduleService ceReportScheduleService = mock(CEReportScheduleService.class);
@@ -56,8 +54,8 @@ public class PerspectiveReportResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
-  public void testGet() throws IOException {
-    Response response = perspectiveReportResource.getReportSetting(null, REPORT_ID, ACCOUNT_ID);
+  public void testGet() {
+    perspectiveReportResource.getReportSetting(null, REPORT_ID, ACCOUNT_ID);
     verify(ceReportScheduleService).get(REPORT_ID, ACCOUNT_ID);
   }
 
@@ -66,8 +64,7 @@ public class PerspectiveReportResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateReportSetting() {
     perspectiveReportResource.createReportSetting(ACCOUNT_ID, reportSchedule);
-    CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(reportSchedule.getUserCron());
-    verify(ceReportScheduleService).createReportSetting(cronSequenceGenerator, ACCOUNT_ID, reportSchedule);
+    verify(ceReportScheduleService).createReportSetting(ACCOUNT_ID, reportSchedule);
   }
 
   @Test
@@ -76,9 +73,7 @@ public class PerspectiveReportResourceTest extends CategoryTest {
   public void testModifyRecipients() {
     reportSchedule.setRecipients(RECIPIENTS2);
     perspectiveReportResource.updateReportSetting(ACCOUNT_ID, reportSchedule);
-
-    CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(reportSchedule.getUserCron());
-    verify(ceReportScheduleService).update(cronSequenceGenerator, ACCOUNT_ID, reportSchedule);
+    verify(ceReportScheduleService).update(ACCOUNT_ID, reportSchedule);
   }
 
   @Test

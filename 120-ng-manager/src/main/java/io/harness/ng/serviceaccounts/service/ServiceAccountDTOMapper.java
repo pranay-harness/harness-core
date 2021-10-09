@@ -33,7 +33,7 @@ public class ServiceAccountDTOMapper {
         .name(serviceAccountDTO.getName())
         .identifier(serviceAccountDTO.getIdentifier())
         .description(serviceAccountDTO.getDescription())
-        .email(serviceAccountDTO.getEmail())
+        .email(serviceAccountDTO.getEmail().toLowerCase())
         .tags(TagMapper.convertToList(serviceAccountDTO.getTags()))
         .build();
   }

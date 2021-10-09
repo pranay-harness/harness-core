@@ -1,4 +1,4 @@
-FROM us.gcr.io/platform-205701/alpine:safe-alpine3.12-sec1096-apm
+FROM us.gcr.io/platform-205701/alpine:safe-alpine3.12-sec1338-apm
 
 WORKDIR /code
 RUN apk add --no-cache python3 py3-pip

@@ -24,7 +24,8 @@ public interface ConnectorCrudService {
       Boolean getDistinctFromBranches);
 
   Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category);
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category,
+      ConnectorCategory sourceCategory);
 
   Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
@@ -41,6 +42,8 @@ public interface ConnectorCrudService {
 
   ConnectorResponseDTO update(ConnectorDTO connectorRequestDTO, String accountIdentifier);
 
+  ConnectorResponseDTO update(ConnectorDTO connectorRequestDTO, String accountIdentifier, ChangeType gitChangeType);
+
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
   ConnectorCatalogueResponseDTO getConnectorCatalogue();
@@ -52,4 +55,9 @@ public interface ConnectorCrudService {
       String identifier, ConnectorValidationResult connectorValidationResult, Long activityTime);
 
   List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorsFQN);
+
+  long count(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  void deleteBatch(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifiersList);
 }

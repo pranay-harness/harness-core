@@ -2,6 +2,7 @@ package io.harness.delegate.beans.connector.awskmsconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper.populateDelegateSelectorCapability;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -45,7 +46,7 @@ public class AwsKmsValidationParams implements ConnectorValidationParams, Execut
       executionCapabilities.add(
           SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
     }
-
+    populateDelegateSelectorCapability(executionCapabilities, awsKmsConnectorDTO.getDelegateSelectors());
     return executionCapabilities;
   }
 

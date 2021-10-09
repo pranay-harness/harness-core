@@ -52,15 +52,11 @@ KUBECTL_VERSION=v1.13.2
 KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$KUBECTL_VERSION/"
 KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$KUBECTL_VERSION/"
 
-
 echo "$KUBECTL_MAC_DIR"
 echo "$KUBECTL_LINUX_DIR"
 
-
 KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/linux/amd64/kubectl
 KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/darwin/amd64/kubectl
-
-
 
 OC_VERSION=v4.2.16
 OC_LINUX_DIR="${IMAGES_DIR}/oc/linux/$OC_VERSION/"
@@ -71,7 +67,6 @@ echo "$OC_LINUX_DIR"
 
 OC_LINUX_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/linux/amd64/oc
 OC_MAC_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/darwin/amd64/oc
-
 
 rm -f "${INSTALLER_COMPRESSED_FILE}"
 
@@ -105,10 +100,10 @@ mkdir -p $OC_LINUX_DIR
 mkdir -p $OC_MAC_DIR
 
 if [[ -z $1 ]]; then
-   echo "No license file supplied, skipping setting the license file in the installer"
+  echo "No license file supplied, skipping setting the license file in the installer"
 else
-   echo "License file supplied, generating installer with license file $1"
-   sed -i "s|harness_license|$1|g" "${CONFIG_PROPERTIES_FILE}"
+  echo "License file supplied, generating installer with license file $1"
+  sed -i "s|harness_license|$1|g" "${CONFIG_PROPERTIES_FILE}"
 fi
 
 docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
@@ -124,27 +119,27 @@ docker pull "${CADVISOR_IMAGE}"
 docker pull "${GRAFANA_IMAGE}"
 docker pull "${ALERT_MANAGER_IMAGE}"
 
-docker save "${MANAGER_IMAGE}" > "${MANAGER_IMAGE_TAR}"
-docker save "${VERIFICATION_SERVICE_IMAGE}" > "${VERIFICATION_SERVICE_IMAGE_TAR}"
-docker save "${LEARNING_ENGINE_IMAGE}" > "${LEARNING_ENGINE_IMAGE_TAR}"
-docker save "${UI_IMAGE}" > "${UI_IMAGE_TAR}"
-docker save "${PROXY_IMAGE}" > "${PROXY_IMAGE_TAR}"
-docker save "${MONGO_IMAGE}" > "${MONGO_IMAGE_TAR}"
-docker save "${TIMESCALE_IMAGE}" > "${TIMESCALE_IMAGE_TAR}"
-docker save "${PROM_IMAGE}" > "${PROM_IMAGE_TAR}"
-docker save "${GRAFANA_IMAGE}" > "${GRAFANA_TAR}"
-docker save "${CADVISOR_IMAGE}" > "${CADVISOR_TAR}"
-docker save "${ALERT_MANAGER_IMAGE}" > "${ALERT_MANAGER_TAR}"
+docker save "${MANAGER_IMAGE}" >"${MANAGER_IMAGE_TAR}"
+docker save "${VERIFICATION_SERVICE_IMAGE}" >"${VERIFICATION_SERVICE_IMAGE_TAR}"
+docker save "${LEARNING_ENGINE_IMAGE}" >"${LEARNING_ENGINE_IMAGE_TAR}"
+docker save "${UI_IMAGE}" >"${UI_IMAGE_TAR}"
+docker save "${PROXY_IMAGE}" >"${PROXY_IMAGE_TAR}"
+docker save "${MONGO_IMAGE}" >"${MONGO_IMAGE_TAR}"
+docker save "${TIMESCALE_IMAGE}" >"${TIMESCALE_IMAGE_TAR}"
+docker save "${PROM_IMAGE}" >"${PROM_IMAGE_TAR}"
+docker save "${GRAFANA_IMAGE}" >"${GRAFANA_TAR}"
+docker save "${CADVISOR_IMAGE}" >"${CADVISOR_TAR}"
+docker save "${ALERT_MANAGER_IMAGE}" >"${ALERT_MANAGER_TAR}"
 
-curl "${JRE_SOURCE_URL_1}/${JRE_SOLARIS_1}" > "${JRE_SOLARIS_1}"
-curl "${JRE_SOURCE_URL_1}/${JRE_MACOSX_1}" > "${JRE_MACOSX_1}"
-curl "${JRE_SOURCE_URL_1}/${JRE_LINUX_1}" > "${JRE_LINUX_1}"
+curl "${JRE_SOURCE_URL_1}/${JRE_SOLARIS_1}" >"${JRE_SOLARIS_1}"
+curl "${JRE_SOURCE_URL_1}/${JRE_MACOSX_1}" >"${JRE_MACOSX_1}"
+curl "${JRE_SOURCE_URL_1}/${JRE_LINUX_1}" >"${JRE_LINUX_1}"
 
-curl "${JRE_SOURCE_URL_2}/${JRE_SOLARIS_2}" > "${JRE_SOLARIS_2}"
-curl "${JRE_SOURCE_URL_2}/${JRE_MACOSX_2}" > "${JRE_MACOSX_2}"
-curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" > "${JRE_LINUX_2}"
+curl "${JRE_SOURCE_URL_2}/${JRE_SOLARIS_2}" >"${JRE_SOLARIS_2}"
+curl "${JRE_SOURCE_URL_2}/${JRE_MACOSX_2}" >"${JRE_MACOSX_2}"
+curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" >"${JRE_LINUX_2}"
 
-curl "${ALPN_BOOT_JAR_URL}/${ALPN_BOOT_JAR}" > "${ALPN_BOOT_JAR}"
+curl "${ALPN_BOOT_JAR_URL}/${ALPN_BOOT_JAR}" >"${ALPN_BOOT_JAR}"
 
 curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
 curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
@@ -153,78 +148,78 @@ curl -L -o "${OC_MAC_DIR}oc" "${OC_MAC_URL}"
 curl -L -o "${OC_LINUX_DIR}oc" "${OC_LINUX_URL}"
 
 for goversion in v0.2 v0.3 v0.4; do
-    echo "Adding goversion $goversion"
-    GOTEMPLATE_LINUX_DIR="${IMAGES_DIR}/go-template/linux/$goversion/"
-    GOTEMPLATE_MAC_DIR="${IMAGES_DIR}/go-template/darwin/$goversion/"
+  echo "Adding goversion $goversion"
+  GOTEMPLATE_LINUX_DIR="${IMAGES_DIR}/go-template/linux/$goversion/"
+  GOTEMPLATE_MAC_DIR="${IMAGES_DIR}/go-template/darwin/$goversion/"
 
-    GOTEMPLATE_LINUX_URL=https://app.harness.io/storage/harness-download/snapshot-go-template/release/"$goversion"/bin/linux/amd64/go-template
-    GOTEMPLATE_MAC_URL=https://app.harness.io/storage/harness-download/snapshot-go-template/release/"$goversion"/bin/darwin/amd64/go-template
+  GOTEMPLATE_LINUX_URL=https://app.harness.io/storage/harness-download/snapshot-go-template/release/"$goversion"/bin/linux/amd64/go-template
+  GOTEMPLATE_MAC_URL=https://app.harness.io/storage/harness-download/snapshot-go-template/release/"$goversion"/bin/darwin/amd64/go-template
 
-    echo "$GOTEMPLATE_MAC_DIR"
-    echo "$GOTEMPLATE_LINUX_DIR"
+  echo "$GOTEMPLATE_MAC_DIR"
+  echo "$GOTEMPLATE_LINUX_DIR"
 
-    mkdir -p $GOTEMPLATE_LINUX_DIR
-    mkdir -p $GOTEMPLATE_MAC_DIR
+  mkdir -p $GOTEMPLATE_LINUX_DIR
+  mkdir -p $GOTEMPLATE_MAC_DIR
 
-    curl -L -o "${GOTEMPLATE_LINUX_DIR}go-template" "${GOTEMPLATE_LINUX_URL}"
-    curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
+  curl -L -o "${GOTEMPLATE_LINUX_DIR}go-template" "${GOTEMPLATE_LINUX_URL}"
+  curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
 done
 
-    for harnesspywinrm in v0.1-dev v0.2-dev v0.3-dev v0.4-dev; do
-      echo "Adding harness-pywinrm $harnesspywinrm"
-      HARNESSPYWINRM_LINUX_DIR="${IMAGES_DIR}/harness-pywinrm/linux/$harnesspywinrm/"
-      HARNESSPYWINRM_MAC_DIR="${IMAGES_DIR}/harness-pywinrm/darwin/$harnesspywinrm/"
+for harnesspywinrm in v0.1-dev v0.2-dev v0.3-dev v0.4-dev; do
+  echo "Adding harness-pywinrm $harnesspywinrm"
+  HARNESSPYWINRM_LINUX_DIR="${IMAGES_DIR}/harness-pywinrm/linux/$harnesspywinrm/"
+  HARNESSPYWINRM_MAC_DIR="${IMAGES_DIR}/harness-pywinrm/darwin/$harnesspywinrm/"
 
-      HARNESSPYWINRM_LINUX_URL=https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/"$harnesspywinrm"/bin/linux/amd64/harness-pywinrm
-      HARNESSPYWINRM_MAC_URL=https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/"$harnesspywinrm"/bin/darwin/amd64/harness-pywinrm
+  HARNESSPYWINRM_LINUX_URL=https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/"$harnesspywinrm"/bin/linux/amd64/harness-pywinrm
+  HARNESSPYWINRM_MAC_URL=https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/"$harnesspywinrm"/bin/darwin/amd64/harness-pywinrm
 
-      echo "$HARNESSPYWINRM_MAC_DIR"
-      echo "$HARNESSPYWINRM_LINUX_DIR"
+  echo "$HARNESSPYWINRM_MAC_DIR"
+  echo "$HARNESSPYWINRM_LINUX_DIR"
 
-      mkdir -p $HARNESSPYWINRM_LINUX_DIR
-      mkdir -p $HARNESSPYWINRM_MAC_DIR
+  mkdir -p $HARNESSPYWINRM_LINUX_DIR
+  mkdir -p $HARNESSPYWINRM_MAC_DIR
 
-      curl -L -o "${HARNESSPYWINRM_LINUX_DIR}harness-pywinrm" "${HARNESSPYWINRM_LINUX_URL}"
-      curl -L -o "${HARNESSPYWINRM_MAC_DIR}harness-pywinrm" "${HARNESSPYWINRM_MAC_URL}"
-  done
+  curl -L -o "${HARNESSPYWINRM_LINUX_DIR}harness-pywinrm" "${HARNESSPYWINRM_LINUX_URL}"
+  curl -L -o "${HARNESSPYWINRM_MAC_DIR}harness-pywinrm" "${HARNESSPYWINRM_MAC_URL}"
+done
 
 for helmversion in v2.13.1 v3.0.2 v3.1.2; do
-    echo "Adding helmversion $helmversion"
-    HELM_LINUX_DIR="${IMAGES_DIR}/helm/linux/$helmversion/"
-    HELM_MAC_DIR="${IMAGES_DIR}/helm/darwin/$helmversion/"
+  echo "Adding helmversion $helmversion"
+  HELM_LINUX_DIR="${IMAGES_DIR}/helm/linux/$helmversion/"
+  HELM_MAC_DIR="${IMAGES_DIR}/helm/darwin/$helmversion/"
 
-    HELM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-helm/release/"$helmversion"/bin/linux/amd64/helm
-    HELM_MAC_URL=https://app.harness.io/storage/harness-download/harness-helm/release/"$helmversion"/bin/darwin/amd64/helm
+  HELM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-helm/release/"$helmversion"/bin/linux/amd64/helm
+  HELM_MAC_URL=https://app.harness.io/storage/harness-download/harness-helm/release/"$helmversion"/bin/darwin/amd64/helm
 
-    echo "$HELM_MAC_DIR"
-    echo "$HELM_LINUX_DIR"
+  echo "$HELM_MAC_DIR"
+  echo "$HELM_LINUX_DIR"
 
-    mkdir -p $HELM_LINUX_DIR
-    mkdir -p $HELM_MAC_DIR
+  mkdir -p $HELM_LINUX_DIR
+  mkdir -p $HELM_MAC_DIR
 
-    curl -L -o "${HELM_LINUX_DIR}helm" "${HELM_LINUX_URL}"
-    curl -L -o "${HELM_MAC_DIR}helm" "${HELM_MAC_URL}"
+  curl -L -o "${HELM_LINUX_DIR}helm" "${HELM_LINUX_URL}"
+  curl -L -o "${HELM_MAC_DIR}helm" "${HELM_MAC_URL}"
 done
 
-for chartmuseumversion in v0.8.2; do
-    echo "Adding chartmuseumversion $chartmuseumversion"
-    CHARTMUSEUM_LINUX_DIR="${IMAGES_DIR}/chartmuseum/linux/$chartmuseumversion/"
-    CHARTMUSEUM_MAC_DIR="${IMAGES_DIR}/chartmuseum/darwin/$chartmuseumversion/"
+for chartmuseumversion in v0.8.2 v0.13.0; do
+  echo "Adding chartmuseumversion $chartmuseumversion"
+  CHARTMUSEUM_LINUX_DIR="${IMAGES_DIR}/chartmuseum/linux/$chartmuseumversion/"
+  CHARTMUSEUM_MAC_DIR="${IMAGES_DIR}/chartmuseum/darwin/$chartmuseumversion/"
 
-    CHARTMUSEUM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-chartmuseum/release/"$chartmuseumversion"/bin/linux/amd64/chartmuseum
-    CHARTMUSEUM_MAC_URL=https://app.harness.io/storage/harness-download/harness-chartmuseum/release/"$chartmuseumversion"/bin/darwin/amd64/chartmuseum
+  CHARTMUSEUM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-chartmuseum/release/"$chartmuseumversion"/bin/linux/amd64/chartmuseum
+  CHARTMUSEUM_MAC_URL=https://app.harness.io/storage/harness-download/harness-chartmuseum/release/"$chartmuseumversion"/bin/darwin/amd64/chartmuseum
 
-    echo "$CHARTMUSEUM_MAC_DIR"
-    echo "$CHARTMUSEUM_LINUX_DIR"
+  echo "$CHARTMUSEUM_MAC_DIR"
+  echo "$CHARTMUSEUM_LINUX_DIR"
 
-    mkdir -p $CHARTMUSEUM_LINUX_DIR
-    mkdir -p $CHARTMUSEUM_MAC_DIR
+  mkdir -p $CHARTMUSEUM_LINUX_DIR
+  mkdir -p $CHARTMUSEUM_MAC_DIR
 
-    curl -L -o "${CHARTMUSEUM_LINUX_DIR}chartmuseum" "${CHARTMUSEUM_LINUX_URL}"
-    curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
+  curl -L -o "${CHARTMUSEUM_LINUX_DIR}chartmuseum" "${CHARTMUSEUM_LINUX_URL}"
+  curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
 done
 
-for tfConfigInspectVersion in v1.0; do
+for tfConfigInspectVersion in v1.0 v1.1; do
   echo "Adding terraform-config-inspect" $tfConfigInspectVersion
 
   TF_CONFIG_INSPECT_LINUX_DIR="${IMAGES_DIR}/tf-config-inspect/linux/$tfConfigInspectVersion/"
@@ -241,7 +236,6 @@ for tfConfigInspectVersion in v1.0; do
 
   curl -L -o "${TF_CONFIG_INSPECT_LINUX_DIR}terraform-config-inspect" "$TF_CONFIG_INSPECT_LINUX_URL"
   curl -L -o "${TF_CONFIG_INSPECT_MAC_DIR}terraform-config-inspect" "$TF_CONFIG_INSPECT_MAC_URL"
-
 
 done
 
@@ -263,10 +257,9 @@ for kustomizeVersion in v3.5.4; do
   curl -L -o "${KUSTOMIZE_LINUX_DIR}kustomize" "$KUSTOMIZE_LINUX_URL"
   curl -L -o "${KUSTOMIZE_MAC_DIR}kustomize" "$KUSTOMIZE_MAC_URL"
 
-
 done
 
-for scmVersion in 77c318c1; do
+for scmVersion in 87448d72; do
   echo "Adding scm" $scmVersion
 
   SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"

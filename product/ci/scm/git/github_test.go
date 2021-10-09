@@ -73,8 +73,10 @@ func TestGetLatestCommitGithub(t *testing.T) {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetLatestCommitRequest{
-		Slug:   "tphoney/scm-test",
-		Branch: "main",
+		Slug: "tphoney/scm-test",
+		Type: &pb.GetLatestCommitRequest_Branch{
+			Branch: "main",
+		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
@@ -90,7 +92,7 @@ func TestGetLatestCommitGithub(t *testing.T) {
 	got, err := GetLatestCommit(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
-	assert.NotNil(t, got.CommitId, "There is a commit id")
+	assert.NotNil(t, got.Commit.Sha, "There is a commit id")
 }
 
 func TestListCommitsGithub(t *testing.T) {

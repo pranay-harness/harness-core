@@ -29,4 +29,9 @@ public class SecretRepositoryCustomImpl implements SecretRepositoryCustom {
     return PageableExecutionUtils.getPage(
         projects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Secret.class));
   }
+
+  @Override
+  public long count(Criteria criteria) {
+    return mongoTemplate.count(new Query(criteria), Secret.class);
+  }
 }

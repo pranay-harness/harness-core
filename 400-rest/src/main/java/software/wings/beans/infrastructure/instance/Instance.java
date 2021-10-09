@@ -1,6 +1,10 @@
 package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -31,11 +35,13 @@ import org.mongodb.morphia.annotations.Entity;
  * We enforce unique constraint in code based on the instance key sub class.
  * @author rktummala
  */
+@OwnedBy(HarnessTeam.DX)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Instance extends Base implements AccountAccess, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -107,6 +113,12 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
                  .field(InstanceKeys.accountId)
                  .field(InstanceKeys.createdAt)
                  .field(InstanceKeys.isDeleted)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index13")
+                 .field(InstanceKeys.appId)
+                 .field(InstanceKeys.isDeleted)
+                 .field(InstanceKeys.envId)
                  .build())
         .build();
   }
@@ -210,5 +222,13 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
     public static final String isDeleted = "isDeleted";
     public static final String instanceInfoPodName = "instanceInfo.podName";
     public static final String instanceInfoNamespace = "instanceInfo.namespace";
+    public static final String deploymentType = "deploymentType";
+    public static final String serviceId = "serviceId";
+    public static final String envId = "envId";
+    public static final String lastArtifactBuildNum = "lastArtifactBuildNum";
+    public static final String lastWorkflowExecutionId = "lastWorkflowExecutionId";
+    public static final String lastWorkflowExecutionName = "lastWorkflowExecutionName";
+    public static final String infraMappingId = "infraMappingId";
+    public static final String infraMappingName = "infraMappingName";
   }
 }

@@ -3,7 +3,6 @@ package io.harness.migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.event.handler.impl.MarketoHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.migrations.Migration;

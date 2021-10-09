@@ -36,8 +36,7 @@ public class StackdriverLogSampleDataRequest extends StackdriverLogRequest {
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential, LOG_SCOPE);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(getConnectorConfigDTO(), LOG_SCOPE);
 
     dslEnvVariables.put(StackdriverLogSampleDataRequestKeys.query, query);
 

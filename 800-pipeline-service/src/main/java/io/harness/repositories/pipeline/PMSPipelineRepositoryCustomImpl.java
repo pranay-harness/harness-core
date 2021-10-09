@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.common.helper.EntityDistinctElementHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
@@ -50,8 +50,13 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   OutboxService outboxService;
 
   @Override
-  public Page<PipelineEntity> findAll(
-      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public Page<PipelineEntity> findAll(Criteria criteria, Pageable pageable, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, boolean getDistinctFromBranches) {
+    if (getDistinctFromBranches) {
+      return EntityDistinctElementHelper.getDistinctElementPage(mongoTemplate, criteria, pageable, PipelineEntity.class,
+          PipelineEntityKeys.accountId, PipelineEntityKeys.orgIdentifier, PipelineEntityKeys.projectIdentifier,
+          PipelineEntityKeys.identifier);
+    }
     List<PipelineEntity> pipelineEntities = gitAwarePersistence.find(
         criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, PipelineEntity.class);
     return PageableExecutionUtils.getPage(pipelineEntities, pageable,
@@ -86,26 +91,18 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   }
 
   @Override
-  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
+  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity,
+      PipelineConfig yamlDTO, ChangeType changeType) {
     Supplier<OutboxEvent> supplier = null;
     if (!gitSyncSdkService.isGitSyncEnabled(pipelineToUpdate.getAccountId(), pipelineToUpdate.getOrgIdentifier(),
             pipelineToUpdate.getProjectIdentifier())) {
-      Optional<PipelineEntity> pipelineEntityOptional =
-          findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(pipelineToUpdate.getAccountId(),
-              pipelineToUpdate.getOrgIdentifier(), pipelineToUpdate.getProjectIdentifier(),
-              pipelineToUpdate.getIdentifier(), true);
-      if (pipelineEntityOptional.isPresent()) {
-        PipelineEntity oldPipeline = pipelineEntityOptional.get();
-        supplier = ()
-            -> outboxService.save(
-                new PipelineUpdateEvent(pipelineToUpdate.getAccountIdentifier(), pipelineToUpdate.getOrgIdentifier(),
-                    pipelineToUpdate.getProjectIdentifier(), pipelineToUpdate, oldPipeline));
-      } else {
-        throw new InvalidRequestException("No such pipeline exist", WingsException.USER);
-      }
+      supplier = ()
+          -> outboxService.save(
+              new PipelineUpdateEvent(pipelineToUpdate.getAccountIdentifier(), pipelineToUpdate.getOrgIdentifier(),
+                  pipelineToUpdate.getProjectIdentifier(), pipelineToUpdate, oldPipelineEntity));
     }
     return gitAwarePersistence.save(
-        pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.MODIFY, PipelineEntity.class, supplier);
+        pipelineToUpdate, pipelineToUpdate.getYaml(), changeType, PipelineEntity.class, supplier);
   }
 
   @Override

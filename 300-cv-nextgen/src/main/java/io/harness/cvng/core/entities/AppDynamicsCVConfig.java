@@ -12,10 +12,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("APP_DYNAMICS")
 @Data
+@SuperBuilder
 @FieldNameConstants(innerTypeName = "AppDynamicsCVConfigKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

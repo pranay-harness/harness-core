@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -9,6 +12,9 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
@@ -16,6 +22,9 @@ import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.iterator.PersistentCronIterable;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 
@@ -40,10 +49,10 @@ import software.wings.features.api.GetAccountId;
 import software.wings.features.api.RestrictedApi;
 import software.wings.features.extractors.LdapSettingsAccountIdExtractor;
 import software.wings.features.extractors.SamlSettingsAccountIdExtractor;
+import software.wings.scheduler.LdapGroupScheduledHandler;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.scheduler.LdapGroupSyncJobHelper;
-import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.OauthProviderType;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -58,6 +67,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -68,11 +78,15 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.query.Query;
 
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
+@OwnedBy(HarnessTeam.PL)
 public class SSOSettingServiceImpl implements SSOSettingService {
+  private static final long MIN_INTERVAL = 900;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SecretManager secretManager;
   @Inject private UserGroupService userGroupService;
@@ -85,7 +99,9 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private OauthOptions oauthOptions;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
+  @Inject private LdapGroupScheduledHandler ldapGroupScheduledHandler;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private LdapSyncJobConfig ldapSyncJobConfig;
   static final int ONE_DAY = 86400000;
 
   @Override
@@ -220,9 +236,13 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   }
 
   @Override
-  public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin) {
-    return new HIterator(
-        wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin).fetch());
+  public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin, String accountId) {
+    Query<SamlSettings> query =
+        wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin);
+    if (isNotEmpty(accountId)) {
+      query.field("accountId").equal(accountId);
+    }
+    return new HIterator(query.fetch());
   }
 
   @Override
@@ -233,9 +253,13 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       throw new InvalidRequestException("Ldap settings already exist for this account.");
     }
     settings.encryptFields(secretManager);
+    if (isEmpty(settings.getCronExpression())) {
+      settings.setCronExpression(ldapSyncJobConfig.getDefaultCronExpression());
+    }
+    updateNextIterations(settings);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
-    ldapGroupSyncJobHelper.syncJob(savedSettings);
+    ldapGroupScheduledHandler.wakeup();
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
     log.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
     eventPublishHelper.publishSSOEvent(settings.getAccountId());
@@ -258,12 +282,15 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     oldSettings.setUserSettingsList(settings.getUserSettingsList());
     oldSettings.setGroupSettingsList(settings.getGroupSettingsList());
     oldSettings.encryptFields(secretManager);
+    oldSettings.setDefaultCronExpression(ldapSyncJobConfig.getDefaultCronExpression());
+    oldSettings.setCronExpression(settings.getCronExpression());
+    updateNextIterations(oldSettings);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, oldSettings);
     auditServiceHelper.reportForAuditingUsingAccountId(
         settings.getAccountId(), oldSettings, savedSettings, Event.Type.UPDATE);
     log.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
-    ldapGroupSyncJobHelper.syncJob(savedSettings);
+    ldapGroupScheduledHandler.wakeup();
     return savedSettings;
   }
 
@@ -293,7 +320,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public LdapSettings getLdapSettingsByAccountId(@NotBlank String accountId) {
-    if (EmptyPredicate.isEmpty(accountId)) {
+    if (isEmpty(accountId)) {
       return null;
     }
     return wingsPersistence.createQuery(LdapSettings.class)
@@ -415,5 +442,60 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         .disableValidation()
         .filter(SSOSettings.ACCOUNT_ID_KEY2, accountId)
         .asList();
+  }
+
+  @Override
+  public List<Long> getIterationsFromCron(String accountId, String cron) {
+    List<Long> nextIterations = new ArrayList<>();
+    try {
+      getPersistentCronIterableObject().expandNextIterations(true, 0, cron, nextIterations);
+    } catch (Exception ex) {
+      String message = "Given cron expression doesn't evaluate to a valid time. Please check the expression provided";
+      log.error(message, ex);
+      throw new InvalidRequestException(message);
+    }
+
+    return validateIterationsAndRemoveCurrentTime(nextIterations);
+  }
+
+  private void updateNextIterations(LdapSettings ldapSettings) {
+    ldapSettings.getNextIterations().clear();
+    ldapSettings.recalculateNextIterations(SSOSettingsKeys.nextIterations, true, 0);
+    ldapSettings.setNextIterations(validateIterationsAndRemoveCurrentTime(ldapSettings.getNextIterations()));
+  }
+
+  private List<Long> validateIterationsAndRemoveCurrentTime(List<Long> nextIterations) {
+    // Removing automatically added current timestamp from the list
+    if (EmptyPredicate.isNotEmpty(nextIterations)) {
+      nextIterations = nextIterations.subList(1, nextIterations.size());
+    }
+    if (nextIterations.size() > 1 && ((nextIterations.get(1) - nextIterations.get(0)) / 1000 < MIN_INTERVAL)) {
+      throw new InvalidRequestException(
+          "Cron Expression should evaluate to time intervals of at least " + MIN_INTERVAL + " seconds.");
+    }
+    if (isEmpty(nextIterations)) {
+      throw new InvalidRequestException(
+          "Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
+    }
+    return nextIterations;
+  }
+
+  private PersistentCronIterable getPersistentCronIterableObject() {
+    return new PersistentCronIterable() {
+      @Override
+      public String getUuid() {
+        return null;
+      }
+
+      @Override
+      public Long obtainNextIteration(String fieldName) {
+        return null;
+      }
+
+      @Override
+      public List<Long> recalculateNextIterations(String fieldName, boolean skipMissed, long throttled) {
+        return null;
+      }
+    };
   }
 }

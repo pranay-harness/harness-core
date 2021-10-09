@@ -30,5 +30,8 @@ public class QLCEOverviewStatsData {
   Boolean inventoryDataPresent;
   Boolean clusterDataPresent;
   String defaultAzurePerspectiveId;
+  String defaultAwsPerspectiveId;
+  String defaultGcpPerspectiveId;
+  String defaultClusterPerspectiveId;
   @Builder.Default Boolean isSampleClusterPresent = false;
 }

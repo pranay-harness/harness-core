@@ -33,10 +33,14 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   public RoleAssignment create(RoleAssignment roleAssignment) {
     RoleAssignmentValidationResult result = roleAssignmentValidator.validate(RoleAssignmentValidationRequest.builder()
                                                                                  .roleAssignment(roleAssignment)
+                                                                                 .validateScope(true)
                                                                                  .validatePrincipal(true)
                                                                                  .validateRole(true)
                                                                                  .validateResourceGroup(true)
                                                                                  .build());
+    if (!result.getScopeValidationResult().isValid()) {
+      throw new InvalidRequestException(result.getScopeValidationResult().getErrorMessage());
+    }
     if (!result.getPrincipalValidationResult().isValid()) {
       throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
     }

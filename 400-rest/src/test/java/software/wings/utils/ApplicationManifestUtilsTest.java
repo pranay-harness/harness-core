@@ -14,6 +14,7 @@ import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRI
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
 import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
@@ -28,7 +29,9 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -37,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -46,6 +50,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -107,6 +115,8 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Mock private DeploymentExecutionContext context;
   @Mock private ApplicationManifestService applicationManifestService;
@@ -133,6 +143,28 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     when(context.renderExpression(anyString())).thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
     when(context.renderExpression(anyString(), any(StateExecutionContext.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testGetMapK8sValuesLocationToNonEmptyContents() {
+    ApplicationManifestUtils applicationManifestUtilsMock = mock(ApplicationManifestUtils.class);
+    Map<String, List<String>> mapK8sValuesLocationToContents = new HashMap<>();
+    mapK8sValuesLocationToContents.put(
+        ServiceOverride.name(), asList("ServiceOverrideValuesYaml1", "ServiceOverrideValuesYaml2"));
+    mapK8sValuesLocationToContents.put(Environment.name(), asList("", ""));
+    mapK8sValuesLocationToContents.put(EnvironmentGlobal.name(), asList("EnvGlobalValuesYaml1", ""));
+
+    when(applicationManifestUtilsMock.getMapK8sValuesLocationToNonEmptyContents(anyMap())).thenCallRealMethod();
+
+    Map<K8sValuesLocation, List<String>> k8sValuesLocationToNonEmptyContentsMap =
+        applicationManifestUtilsMock.getMapK8sValuesLocationToNonEmptyContents(mapK8sValuesLocationToContents);
+
+    assertThat(k8sValuesLocationToNonEmptyContentsMap.get(ServiceOverride))
+        .isEqualTo(asList("ServiceOverrideValuesYaml1", "ServiceOverrideValuesYaml2"));
+    assertThat(k8sValuesLocationToNonEmptyContentsMap.get(EnvironmentGlobal)).isEqualTo(asList("EnvGlobalValuesYaml1"));
+    assertThat(k8sValuesLocationToNonEmptyContentsMap.containsKey(Environment)).isEqualTo(false);
   }
 
   @Test
@@ -964,26 +996,6 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testGetApplicationManifestWithPollForChangesEnabled() {
-    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
-    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
-                                                         .storeType(HelmChartRepo)
-                                                         .pollForChanges(true)
-                                                         .helmChartConfig(chartConfig)
-                                                         .build();
-    HelmChart helmChartInContextForService = HelmChart.builder().version("contextChartVersion").build();
-
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
-    doReturn(serviceApplicationManifest).when(applicationManifestService).getManifestByServiceId(APP_ID, SERVICE_ID);
-    doReturn(helmChartInContextForService).when(context).getHelmChartForService(SERVICE_ID);
-
-    ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
-    assertThat(applicationManifest.getHelmChartConfig().getChartVersion()).isEqualTo("contextChartVersion");
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
   public void testGetApplicationManifestWithPollForChangesDisabled() {
     HelmChartConfig chartConfig =
         HelmChartConfig.builder().chartName("chartName").chartVersion("chartVersion").chartUrl("chartUrl").build();
@@ -1005,25 +1017,6 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testGetApplicationManifestWithPollForChangesMissingHelmChart() {
-    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
-    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
-                                                         .storeType(HelmChartRepo)
-                                                         .pollForChanges(true)
-                                                         .helmChartConfig(chartConfig)
-                                                         .build();
-
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
-    doReturn(serviceApplicationManifest).when(applicationManifestService).getManifestByServiceId(APP_ID, SERVICE_ID);
-
-    assertThatThrownBy(() -> applicationManifestUtils.getApplicationManifestForService(context))
-        .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessageContaining("INVALID_ARGUMENT");
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
   public void testIsPollForChangesEnabled() {
     ApplicationManifestBuilder builder = ApplicationManifest.builder().storeType(HelmChartRepo);
     ApplicationManifest appManifestNullPollForChanges = builder.pollForChanges(null).build();
@@ -1034,6 +1027,84 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestNullPollForChanges)).isFalse();
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestFalsePollForChanges)).isFalse();
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestTruePollForChanges)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithHelmChartFromContext() {
+    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
+    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
+                                                         .storeType(HelmChartRepo)
+                                                         .pollForChanges(true)
+                                                         .helmChartConfig(chartConfig)
+                                                         .build();
+    HelmChart helmChartInContextForService =
+        HelmChart.builder().version("contextChartVersion").applicationManifestId(MANIFEST_ID).build();
+
+    doReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactFromManifest(true).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID, false);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(serviceApplicationManifest).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
+    doReturn(helmChartInContextForService).when(context).getHelmChartForService(SERVICE_ID);
+    assertThat(applicationManifestUtils.getApplicationManifestForService(context)).isSameAs(serviceApplicationManifest);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithHelmChartAsArtifactDisabled() {
+    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
+    ApplicationManifest serviceAppManifestUsingManifestId = ApplicationManifest.builder()
+                                                                .name("serviceAppManifestUsingManifestId")
+                                                                .storeType(HelmChartRepo)
+                                                                .pollForChanges(true)
+                                                                .helmChartConfig(chartConfig)
+                                                                .build();
+    ApplicationManifest serviceAppManifestUsingServiceId = ApplicationManifest.builder()
+                                                               .name("serviceAppManifestUsingServiceId")
+                                                               .storeType(HelmChartRepo)
+                                                               .helmChartConfig(chartConfig)
+                                                               .build();
+
+    doReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactFromManifest(true).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID, false);
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(serviceAppManifestUsingManifestId).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
+    doReturn(serviceAppManifestUsingServiceId)
+        .when(applicationManifestService)
+        .getManifestByServiceId(APP_ID, SERVICE_ID);
+
+    assertThat(applicationManifestUtils.getApplicationManifestForService(context))
+        .isSameAs(serviceAppManifestUsingServiceId);
+    verify(context, never()).getHelmChartForService(SERVICE_ID);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithHelmChartFromContextFail() {
+    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
+    HelmChart helmChartInContextForService =
+        HelmChart.builder().version("contextChartVersion").applicationManifestId(MANIFEST_ID).build();
+
+    doReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactFromManifest(true).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID, false);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(null).when(context).getHelmChartForService(SERVICE_ID);
+
+    assertThatThrownBy(() -> applicationManifestUtils.getApplicationManifestForService(context))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("INVALID_ARGUMENT");
+
+    doReturn(helmChartInContextForService).when(context).getHelmChartForService(SERVICE_ID);
+    doReturn(null).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
+    assertThatThrownBy(() -> applicationManifestUtils.getApplicationManifestForService(context))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("INVALID_ARGUMENT");
   }
 
   @Test
@@ -1071,8 +1142,8 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
 
     doReturn(multiplePath).when(context).renderExpression(expressionMultiplePath, stateExecutionContext);
 
-    CustomManifestValuesFetchParams params =
-        applicationManifestUtils.createCustomManifestValuesFetchParams(context, applicationManifestMap);
+    CustomManifestValuesFetchParams params = applicationManifestUtils.createCustomManifestValuesFetchParams(
+        context, applicationManifestMap, VALUES_YAML_KEY);
     assertThat(params.getFetchFilesList()).isNotEmpty();
     assertThat(params.getFetchFilesList()).hasSize(4);
     for (CustomManifestFetchConfig fetchConfig : params.getFetchFilesList()) {
@@ -1123,8 +1194,8 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
         ImmutableMap.of(ServiceOverride, customAppManifest(singlePath, script, CUSTOM), K8sValuesLocation.Service,
             customAppManifest(singlePath, script, CUSTOM_OPENSHIFT_TEMPLATE));
 
-    CustomManifestValuesFetchParams params =
-        applicationManifestUtils.createCustomManifestValuesFetchParams(context, applicationManifestMap);
+    CustomManifestValuesFetchParams params = applicationManifestUtils.createCustomManifestValuesFetchParams(
+        context, applicationManifestMap, VALUES_YAML_KEY);
     assertThat(params.getFetchFilesList()).isNotEmpty();
     assertThat(params.getFetchFilesList()).hasSize(2);
 
@@ -1178,7 +1249,8 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     doReturn(multiplePath).when(context).renderExpression(expressionMultiplePath, stateExecutionContext);
 
     Map<K8sValuesLocation, Collection<String>> result =
-        applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, fetchResponse);
+        applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
+            context, appManifestMap, fetchResponse, VALUES_YAML_KEY);
     assertThat(result.get(ServiceOverride)).containsExactly("service-override");
     assertThat(result.get(Environment)).containsExactly("env-1", "env-2");
     assertThat(result.get(EnvironmentGlobal)).containsExactly("env-global-1", "env-global-2");

@@ -1,6 +1,5 @@
 package io.harness.batch.processing.writer;
 
-import static io.harness.beans.FeatureName.CE_AZURE_BILLING_CONNECTOR_DETAIL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
@@ -9,9 +8,11 @@ import static software.wings.settings.SettingVariableTypes.CE_AZURE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.ccm.AzureStorageSyncRecord;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.service.impl.AzureStorageSyncServiceImpl;
+import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
@@ -23,6 +24,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.ff.FeatureFlagService;
+import io.harness.filter.FilterType;
 import io.harness.ng.beans.PageResponse;
 
 import software.wings.beans.SettingAttribute;
@@ -56,13 +58,16 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
   @Override
   public void write(List<? extends SettingAttribute> dummySettingAttributeList) {
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    syncCurrentGenAzureContainers(accountId);
-    if (featureFlagService.isEnabled(CE_AZURE_BILLING_CONNECTOR_DETAIL, accountId)) {
-      syncNextGenContainers(accountId);
+    boolean areAllSyncSuccessful = true;
+    areAllSyncSuccessful = areAllSyncSuccessful && syncCurrentGenAzureContainers(accountId);
+    areAllSyncSuccessful = areAllSyncSuccessful && syncNextGenContainers(accountId);
+
+    if (!areAllSyncSuccessful) {
+      throw new BatchProcessingException("Azure sync failed", null);
     }
   }
 
-  public void syncCurrentGenAzureContainers(String accountId) {
+  public boolean syncCurrentGenAzureContainers(String accountId) {
     List<ConnectorResponseDTO> currentGenConnectorResponses = new ArrayList<>();
     List<SettingAttribute> ceConnectorsList =
         cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId, CE_CONNECTOR, CE_AZURE);
@@ -91,33 +96,36 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
         currentGenConnectorResponses.add(connectorResponse);
       }
     });
-    syncAzureContainers(currentGenConnectorResponses, accountId);
+    return syncAzureContainers(currentGenConnectorResponses, accountId);
   }
 
-  public void syncNextGenContainers(String accountId) {
+  public boolean syncNextGenContainers(String accountId) {
     List<ConnectorResponseDTO> nextGenConnectors = new ArrayList<>();
     PageResponse<ConnectorResponseDTO> response = null;
+    ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
+        ConnectorFilterPropertiesDTO.builder()
+            .types(Arrays.asList(ConnectorType.CE_AZURE))
+            .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
+            .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS))
+            .build();
+    connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;
     int size = 100;
     do {
-      response = execute(connectorResourceClient.listConnectors(accountId, null, null, page, size,
-          ConnectorFilterPropertiesDTO.builder()
-              .types(Arrays.asList(ConnectorType.CE_AZURE))
-              .ccmConnectorFilter(
-                  CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-              .build(),
-          false));
+      response = execute(connectorResourceClient.listConnectors(
+          accountId, null, null, page, size, connectorFilterPropertiesDTO, false));
       if (response != null && isNotEmpty(response.getContent())) {
         nextGenConnectors.addAll(response.getContent());
       }
       page++;
     } while (response != null && isNotEmpty(response.getContent()));
     log.info("Processing batch size of {} in AzureStorageSyncEventWriter (From NG)", nextGenConnectors.size());
-    syncAzureContainers(nextGenConnectors, accountId);
+    return syncAzureContainers(nextGenConnectors, accountId);
   }
 
-  public void syncAzureContainers(List<ConnectorResponseDTO> connectorResponses, String accountId) {
-    connectorResponses.forEach(connector -> {
+  public boolean syncAzureContainers(List<ConnectorResponseDTO> connectorResponses, String accountId) {
+    boolean areAllSyncSuccessful = true;
+    for (ConnectorResponseDTO connector : connectorResponses) {
       CEAzureConnectorDTO ceAzureConnectorDTO = (CEAzureConnectorDTO) connector.getConnector().getConnectorConfig();
       if (ceAzureConnectorDTO != null && ceAzureConnectorDTO.getBillingExportSpec() != null) {
         AzureStorageSyncRecord azureStorageSyncRecord =
@@ -129,9 +137,13 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
                 .subscriptionId(ceAzureConnectorDTO.getSubscriptionId())
                 .storageAccountName(ceAzureConnectorDTO.getBillingExportSpec().getStorageAccountName())
                 .tenantId(ceAzureConnectorDTO.getTenantId())
+                .reportName(ceAzureConnectorDTO.getBillingExportSpec().getReportName())
                 .build();
-        azureStorageSyncService.syncContainer(azureStorageSyncRecord);
+        log.info("azureStorageSyncRecord {}", azureStorageSyncRecord);
+        areAllSyncSuccessful = areAllSyncSuccessful && azureStorageSyncService.syncContainer(azureStorageSyncRecord);
       }
-    });
+    }
+    log.info("syncAzureContainers areAllSyncSuccessful: {}", areAllSyncSuccessful);
+    return areAllSyncSuccessful;
   }
 }

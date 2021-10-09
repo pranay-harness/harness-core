@@ -45,7 +45,6 @@ public class CgOrchestrationModule extends AbstractModule implements ServersModu
         return false;
       }
     });
-    install(CgNgSharedOrchestrationModule.getInstance());
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
   }
 

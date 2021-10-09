@@ -1,7 +1,7 @@
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
+import static io.harness.remote.client.NGRestUtils.getResponseWithRetry;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -26,11 +26,12 @@ import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
 import io.harness.pms.merger.fqn.FQN;
-import io.harness.pms.merger.helpers.FQNUtils;
+import io.harness.pms.merger.helpers.FQNMapGenerator;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -78,17 +79,18 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
     try {
       Map<FQN, Object> fqnObjectMap =
-          FQNUtils.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
+          FQNMapGenerator.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
       fqnObjectMap.keySet().forEach(fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid merged pipeline yaml");
     }
 
     List<EntitySetupUsageDTO> allReferredUsages =
-        execute(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
-            FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-                accountIdentifier, orgIdentifier, projectIdentifier, pipelineId),
-            entityType, null));
+        getResponseWithRetry(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
+                                 FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+                                     accountIdentifier, orgIdentifier, projectIdentifier, pipelineId),
+                                 entityType, null),
+            "Could not extract setup usage of pipeline with id " + pipelineId + " after {} attempts.");
     List<EntityDetail> entityDetails = new ArrayList<>();
     for (EntitySetupUsageDTO referredUsage : allReferredUsages) {
       IdentifierRef ref = (IdentifierRef) referredUsage.getReferredEntity().getEntityRef();
@@ -104,6 +106,9 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
         String finalValue = ((TextNode) fqnToObjectMapMergedYaml.get(fqn)).asText();
         if (NGExpressionUtils.isRuntimeOrExpressionField(finalValue)) {
           continue;
+        }
+        if (ParameterField.containsInputSetValidator(finalValue)) {
+          finalValue = ParameterField.getValueFromParameterFieldWithInputSetValidator(finalValue);
         }
         IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
             finalValue, accountIdentifier, orgIdentifier, projectIdentifier, metadata);

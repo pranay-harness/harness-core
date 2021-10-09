@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.contracts.execution.Status.NO_OP;
 import static io.harness.pms.contracts.execution.Status.SKIPPED;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
 import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
@@ -27,12 +26,13 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 
 import com.google.inject.Inject;
-import java.util.Collections;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(PIPELINE)
+@Slf4j
 public class TaskStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
@@ -56,23 +56,16 @@ public class TaskStrategy extends ProgressableStrategy {
       stepResponse = taskExecutable.handleTaskResult(
           ambiance, resumePackage.getStepParameters(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
     } catch (Exception e) {
+      log.error("Exception occurred while calling handleTaskResult", e);
       stepResponse = strategyHelper.handleException(e);
     }
-    sdkNodeExecutionService.handleStepResponse(
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
+    sdkNodeExecutionService.handleStepResponse(ambiance, StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, TaskRequest taskRequest) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (RequestCase.SKIPTASKREQUEST == taskRequest.getRequestCase()) {
-      sdkNodeExecutionService.addExecutableResponse(nodeExecutionId, NO_OP,
-          ExecutableResponse.newBuilder()
-              .setSkipTask(SkipTaskExecutableResponse.newBuilder()
-                               .setMessage(taskRequest.getSkipTaskRequest().getMessage())
-                               .build())
-              .build(),
-          Collections.emptyList());
-      sdkNodeExecutionService.handleStepResponse(nodeExecutionId,
+      sdkNodeExecutionService.handleStepResponse(ambiance,
           StepResponseMapper.toStepResponseProto(
               StepResponse.builder()
                   .status(SKIPPED)
@@ -82,7 +75,12 @@ public class TaskStrategy extends ProgressableStrategy {
                           .outcome(
                               StringOutcome.builder().message(taskRequest.getSkipTaskRequest().getMessage()).build())
                           .build())
-                  .build()));
+                  .build()),
+          ExecutableResponse.newBuilder()
+              .setSkipTask(SkipTaskExecutableResponse.newBuilder()
+                               .setMessage(taskRequest.getSkipTaskRequest().getMessage())
+                               .build())
+              .build());
       return;
     }
 
@@ -98,13 +96,12 @@ public class TaskStrategy extends ProgressableStrategy {
             .build();
 
     QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
-                                            .setNodeExecutionId(nodeExecutionId)
                                             .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
                                             .setTaskRequest(taskRequest)
                                             .setExecutableResponse(executableResponse)
                                             .setStatus(TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskRequest(queueTaskRequest);
+    sdkNodeExecutionService.queueTaskRequest(ambiance, queueTaskRequest);
   }
 
   @Override

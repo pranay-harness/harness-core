@@ -3,6 +3,7 @@ package io.harness.pms.ngpipeline.inputset.service;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.git.model.ChangeType;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.pipeline.PipelineEntity;
 
@@ -18,7 +19,9 @@ public interface PMSInputSetService {
   Optional<InputSetEntity> get(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, String identifier, boolean deleted);
 
-  InputSetEntity update(InputSetEntity inputSetEntity);
+  InputSetEntity update(InputSetEntity inputSetEntity, ChangeType changeType);
+
+  boolean switchValidationFlag(InputSetEntity entity, boolean isInvalid);
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String identifier, Long version);

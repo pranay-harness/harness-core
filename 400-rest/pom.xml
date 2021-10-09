@@ -167,8 +167,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <classifier>standalone</classifier>
+            <artifactId>wiremock-jre8-standalone</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.zafarkhaja</groupId>
@@ -576,9 +575,9 @@
             <artifactId>httpcore</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.ibatis</groupId>
-            <artifactId>ibatis-core</artifactId>
-            <version>${ibatis.core.version}</version>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>${mybatis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -785,6 +784,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>865-cg-events</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>870-cg-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -855,17 +859,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-cg-ng-shared-orchestration-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>950-command-library-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-common-entities</artifactId>
+            <artifactId>959-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -925,11 +924,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-recaster</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>970-api-services-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -941,6 +935,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>970-rbac-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>980-recaster</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

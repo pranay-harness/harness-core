@@ -8,5 +8,5 @@ import software.wings.beans.artifact.ArtifactStream;
 
 @OwnedBy(CDC)
 public interface ArtifactCleanupService {
-  void cleanupArtifactsAsync(ArtifactStream artifactStream);
+  void cleanupArtifacts(ArtifactStream artifactStream, String accountId);
 }

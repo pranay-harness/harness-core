@@ -185,7 +185,7 @@ public class EventsStatsDataFetcher
   @Override
   protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLEventsDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLEventsSortCriteria> sort, Integer limit,
-      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+      Integer offset, boolean skipRoundOff, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 

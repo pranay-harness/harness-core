@@ -9,7 +9,6 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_V3_INS
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V4_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_V3_INSTALL_PATH;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.migrations.SeedDataMigration;

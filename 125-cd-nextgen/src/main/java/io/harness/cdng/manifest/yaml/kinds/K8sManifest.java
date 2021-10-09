@@ -1,9 +1,11 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -21,10 +23,12 @@ import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -39,9 +43,15 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = K8sManifestVisitorHelper.class)
 @TypeAlias("k8sManifest")
 @OwnedBy(CDC)
+@RecasterAlias("io.harness.cdng.manifest.yaml.kinds.K8sManifest")
 public class K8sManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper store;
+  @Wither
+  @JsonProperty("store")
+  @ApiModelProperty(dataType = "io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper")
+  @SkipAutoEvaluation
+  ParameterField<StoreConfigWrapper> store;
+
   @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
   // For Visitor Framework Impl
   String metadata;
@@ -50,8 +60,9 @@ public class K8sManifest implements ManifestAttributes, Visitable {
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     K8sManifest k8sManifest = (K8sManifest) overrideConfig;
     K8sManifest resultantManifest = this;
-    if (k8sManifest.getStore() != null) {
-      resultantManifest = resultantManifest.withStore(store.applyOverrides(k8sManifest.getStore()));
+    if (k8sManifest.getStore() != null && k8sManifest.getStore().getValue() != null) {
+      resultantManifest = resultantManifest.withStore(
+          ParameterField.createValueField(store.getValue().applyOverrides(k8sManifest.getStore().getValue())));
     }
     if (k8sManifest.getSkipResourceVersioning() != null) {
       resultantManifest = resultantManifest.withSkipResourceVersioning(k8sManifest.getSkipResourceVersioning());
@@ -67,13 +78,26 @@ public class K8sManifest implements ManifestAttributes, Visitable {
 
   @Override
   public StoreConfig getStoreConfig() {
-    return store.getSpec();
+    return store.getValue().getSpec();
   }
 
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add(YAMLFieldNameConstants.STORE, store);
+    children.add(YAMLFieldNameConstants.STORE, store.getValue());
     return children;
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new K8sManifestStepParameters(
+        identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store.getValue()), skipResourceVersioning);
+  }
+
+  @Value
+  public static class K8sManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<Boolean> skipResourceVersioning;
   }
 }

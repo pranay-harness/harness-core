@@ -9,6 +9,7 @@ import static io.harness.logging.LogLevel.INFO;
 import static io.harness.pcf.CfCommandUnitConstants.Downsize;
 import static io.harness.pcf.CfCommandUnitConstants.Upsize;
 import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
+import static io.harness.pcf.PcfUtils.encodeColor;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
 import static software.wings.beans.LogColor.White;
@@ -17,10 +18,8 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
@@ -56,7 +55,6 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 @NoArgsConstructor
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
 public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
   /**
@@ -94,21 +92,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       CfInternalConfig pcfConfig = cfCommandRequest.getPcfConfig();
       secretDecryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
 
-      CfRequestConfig cfRequestConfig =
-          CfRequestConfig.builder()
-              .userName(String.valueOf(pcfConfig.getUsername()))
-              .password(String.valueOf(pcfConfig.getPassword()))
-              .endpointUrl(pcfConfig.getEndpointUrl())
-              .orgName(cfCommandDeployRequest.getOrganization())
-              .spaceName(cfCommandDeployRequest.getSpace())
-              .timeOutIntervalInMins(cfCommandDeployRequest.getTimeoutIntervalInMin())
-              .useCFCLI(cfCommandDeployRequest.isUseCfCLI())
-              .cfCliPath(pcfCommandTaskBaseHelper.getCfCliPathOnDelegate(
-                  cfCommandDeployRequest.isUseCfCLI(), cfCommandDeployRequest.getCfCliVersion()))
-              .cfCliVersion(cfCommandDeployRequest.getCfCliVersion())
-              .limitPcfThreads(cfCommandDeployRequest.isLimitPcfThreads())
-              .ignorePcfConnectionContextCache(cfCommandDeployRequest.isIgnorePcfConnectionContextCache())
-              .build();
+      CfRequestConfig cfRequestConfig = getCfRequestConfig(cfCommandDeployRequest, pcfConfig);
 
       // This will be CF_HOME for any cli related operations
       workingDirectory = pcfCommandTaskBaseHelper.generateWorkingDirectoryForDeployment();
@@ -165,13 +149,9 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       cfDeployCommandResponse.setInstanceDataUpdated(cfServiceDataUpdated);
       cfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElementsForVerification);
 
-    } catch (PivotalClientApiException | IOException e) {
+    } catch (Exception e) {
       exceptionOccured = true;
       exception = e;
-      logException(executionLogCallback, cfCommandDeployRequest, exception);
-    } catch (Exception ex) {
-      exceptionOccured = true;
-      exception = ex;
       logException(executionLogCallback, cfCommandDeployRequest, exception);
     } finally {
       try {
@@ -196,6 +176,24 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
         .commandExecutionStatus(cfDeployCommandResponse.getCommandExecutionStatus())
         .errorMessage(cfDeployCommandResponse.getOutput())
         .pcfCommandResponse(cfDeployCommandResponse)
+        .build();
+  }
+
+  private CfRequestConfig getCfRequestConfig(
+      CfCommandDeployRequest cfCommandDeployRequest, CfInternalConfig pcfConfig) {
+    return CfRequestConfig.builder()
+        .userName(String.valueOf(pcfConfig.getUsername()))
+        .password(String.valueOf(pcfConfig.getPassword()))
+        .endpointUrl(pcfConfig.getEndpointUrl())
+        .orgName(cfCommandDeployRequest.getOrganization())
+        .spaceName(cfCommandDeployRequest.getSpace())
+        .timeOutIntervalInMins(cfCommandDeployRequest.getTimeoutIntervalInMin())
+        .useCFCLI(cfCommandDeployRequest.isUseCfCLI())
+        .cfCliPath(pcfCommandTaskBaseHelper.getCfCliPathOnDelegate(
+            cfCommandDeployRequest.isUseCfCLI(), cfCommandDeployRequest.getCfCliVersion()))
+        .cfCliVersion(cfCommandDeployRequest.getCfCliVersion())
+        .limitPcfThreads(cfCommandDeployRequest.isLimitPcfThreads())
+        .ignorePcfConnectionContextCache(cfCommandDeployRequest.isIgnorePcfConnectionContextCache())
         .build();
   }
 
@@ -231,7 +229,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback.saveExecutionLog(
           new StringBuilder(128)
               .append("# Failed to fetch InstanceDetails for existing Application: ")
-              .append(downsizeAppDetail.getApplicationName())
+              .append(encodeColor(downsizeAppDetail.getApplicationName()))
               .append(", Verification may be able to use older instances to compare data")
               .toString());
     }

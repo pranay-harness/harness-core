@@ -1,5 +1,9 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.CgEventConfig;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -35,6 +39,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -42,6 +47,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  *
  * @author bsollish
  */
+@OwnedBy(HarnessTeam.PL)
 public interface YamlDirectoryService {
   /**
    * Find by account id.
@@ -70,7 +76,7 @@ public interface YamlDirectoryService {
       String path, boolean includeFiles, boolean failFast, Optional<List<String>> listOfYamlErrors);
 
   FolderNode doTemplateLibrary(String accountId, DirectoryPath directoryPath, String appId,
-      String templateLibraryFolderName, YamlVersion.Type type);
+      String templateLibraryFolderName, YamlVersion.Type type, boolean applyPermissions, Set<String> allowedTemplates);
 
   String getRootPath();
 
@@ -124,6 +130,8 @@ public interface YamlDirectoryService {
 
   String getRootPathByTemplate(Template template);
 
+  String getRootPathByEventConfig(CgEventConfig cgEventConfig);
+
   void getGitFileChange(DirectoryNode dn, String path, String accountId, boolean includeFiles,
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
       boolean gitSyncPath);
@@ -143,7 +151,8 @@ public interface YamlDirectoryService {
   DirectoryNode getApplicationManifestYamlFolderNode(
       @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String serviceId);
 
-  FolderNode doTemplateLibraryForApp(Application app, DirectoryPath directoryPath);
+  FolderNode doTemplateLibraryForApp(
+      Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedTemplates);
 
   FolderNode generateManifestFileFolderNode(
       String accountId, Service service, List<ManifestFile> manifestFiles, DirectoryPath manifestFilePath);

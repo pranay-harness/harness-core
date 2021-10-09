@@ -9,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +19,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidAccessRequestException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
@@ -62,6 +64,8 @@ public class AccessRequestServiceTest extends WingsBaseTest {
   private String userId2 = UUIDGenerator.generateUuid();
   private String userName1 = "USER1";
   private String userName2 = "USER2";
+  private String USER_NOT_PART_OF_HARNESS_USER_GROUP = "userNotPartOfHarnessUserGroup";
+  private String USER_NOT_PART_OF_HARNESS = "userNotPartOfHarness";
   private String userEmailId1 = "user1@harness.io";
   private String userEmailId2 = "user2@harness.io";
   private String emailIds = userEmailId1 + ", " + userEmailId2;
@@ -71,6 +75,13 @@ public class AccessRequestServiceTest extends WingsBaseTest {
       User.Builder.anUser().uuid(userId1).appId(APP_ID).email(userEmailId1).name(userName1).password(PASSWORD).build();
   private User user2 =
       User.Builder.anUser().uuid(userId2).appId(APP_ID).email(userEmailId2).name(userName2).password(PASSWORD).build();
+  private User userNotPartOfHarnessUserGroup = User.Builder.anUser()
+                                                   .uuid(USER_NOT_PART_OF_HARNESS_USER_GROUP)
+                                                   .appId(USER_NOT_PART_OF_HARNESS_USER_GROUP)
+                                                   .email(USER_NOT_PART_OF_HARNESS_USER_GROUP)
+                                                   .name(USER_NOT_PART_OF_HARNESS_USER_GROUP)
+                                                   .password(PASSWORD)
+                                                   .build();
 
   private HarnessUserGroup harnessUserGroup =
       HarnessUserGroup.builder()
@@ -86,9 +97,13 @@ public class AccessRequestServiceTest extends WingsBaseTest {
     account1.setHarnessSupportAccessAllowed(false);
     when(accountService.get(anyString())).thenReturn(account1);
     when(userService.get(userId1)).thenReturn(user1);
+    when(userService.get(USER_NOT_PART_OF_HARNESS_USER_GROUP)).thenReturn(userNotPartOfHarnessUserGroup);
     when(userService.getUserByEmail(userEmailId1)).thenReturn(user1);
     when(userService.getUserByEmail(userEmailId2)).thenReturn(user2);
+    when(userService.getUserByEmail(USER_NOT_PART_OF_HARNESS_USER_GROUP)).thenReturn(userNotPartOfHarnessUserGroup);
     when(harnessUserGroupService.get(harnessUserGroup.getUuid())).thenReturn(harnessUserGroup);
+    when(harnessUserGroupService.isHarnessSupportUser(userId1)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportUser(userId2)).thenReturn(true);
   }
 
   @Test
@@ -135,6 +150,71 @@ public class AccessRequestServiceTest extends WingsBaseTest {
     assertThat(accessRequest.getAccessStartAt()).isEqualTo(accessStartAt);
     assertThat(accessRequest.getAccessEndAt()).isEqualTo(accessEndAt);
     assertThat(accessRequest.getAccessType()).isEqualTo(AccessRequest.AccessType.MEMBER_ACCESS);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testAccessRequest_createMemberAccessRequesForNonHarnessSupportGroupUser() {
+    long accessStartAt = Instant.now().toEpochMilli();
+    long accessEndAt = Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli();
+    AccessRequestDTO accessRequestDTO = AccessRequestDTO.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .emailIds(Sets.newHashSet(USER_NOT_PART_OF_HARNESS_USER_GROUP))
+                                            .accessStartAt(accessStartAt)
+                                            .accessEndAt(accessEndAt)
+                                            .build();
+
+    try {
+      AccessRequest accessRequest = accessRequestService.createAccessRequest(accessRequestDTO);
+      failBecauseExceptionWasNotThrown(InvalidAccessRequestException.class);
+    } catch (Exception ex) {
+      assertThat(ex).isInstanceOf(InvalidAccessRequestException.class);
+    }
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testAccessRequest_createMemberAccessRequesForNonHarnessUser() {
+    long accessStartAt = Instant.now().toEpochMilli();
+    long accessEndAt = Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli();
+    AccessRequestDTO accessRequestDTO = AccessRequestDTO.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .emailIds(Sets.newHashSet(USER_NOT_PART_OF_HARNESS))
+                                            .accessStartAt(accessStartAt)
+                                            .accessEndAt(accessEndAt)
+                                            .build();
+
+    try {
+      AccessRequest accessRequest = accessRequestService.createAccessRequest(accessRequestDTO);
+      failBecauseExceptionWasNotThrown(InvalidAccessRequestException.class);
+    } catch (Exception ex) {
+      assertThat(ex).isInstanceOf(GeneralException.class);
+      assertThat(ex.getMessage()).contains("No User present with emailId");
+    }
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testAccessRequest_createMemberAccessRequestWithoutMembers() {
+    long accessStartAt = Instant.now().toEpochMilli();
+    long accessEndAt = Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli();
+    AccessRequestDTO accessRequestDTO = AccessRequestDTO.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .emailIds(Sets.newHashSet())
+                                            .accessStartAt(accessStartAt)
+                                            .accessEndAt(accessEndAt)
+                                            .build();
+
+    try {
+      AccessRequest accessRequest = accessRequestService.createAccessRequest(accessRequestDTO);
+      failBecauseExceptionWasNotThrown(InvalidAccessRequestException.class);
+    } catch (Exception ex) {
+      assertThat(ex).isInstanceOf(InvalidAccessRequestException.class);
+      assertThat(ex.getMessage()).contains("without members specified");
+    }
   }
 
   @Test

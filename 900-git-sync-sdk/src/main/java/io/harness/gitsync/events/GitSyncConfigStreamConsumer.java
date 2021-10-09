@@ -2,6 +2,7 @@ package io.harness.gitsync.events;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
+import static io.harness.gitsync.AbstractGitSyncSdkModule.GIT_SYNC_SDK;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,6 +10,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -28,12 +30,14 @@ public class GitSyncConfigStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
   AuthorizationServiceHeader authorizationServiceHeader;
+  private final QueueController queueController;
 
   @Inject
-  public GitSyncConfigStreamConsumer(@Named(GIT_CONFIG_STREAM) Consumer redisConsumer,
-      @Named(GIT_CONFIG_STREAM) MessageListener gitSyncConfigStreamCConsumer,
-      @Named("git-msvc") AuthorizationServiceHeader authorizationServiceHeader) {
+  public GitSyncConfigStreamConsumer(@Named(GIT_CONFIG_STREAM + GIT_SYNC_SDK) Consumer redisConsumer,
+      @Named(GIT_CONFIG_STREAM + GIT_SYNC_SDK) MessageListener gitSyncConfigStreamCConsumer,
+      @Named("git-msvc") AuthorizationServiceHeader authorizationServiceHeader, QueueController queueController) {
     this.redisConsumer = redisConsumer;
+    this.queueController = queueController;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(gitSyncConfigStreamCConsumer);
     this.authorizationServiceHeader = authorizationServiceHeader;
@@ -45,6 +49,11 @@ public class GitSyncConfigStreamConsumer implements Runnable {
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(authorizationServiceHeader.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info("Git sync config consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
     } catch (InterruptedException ex) {

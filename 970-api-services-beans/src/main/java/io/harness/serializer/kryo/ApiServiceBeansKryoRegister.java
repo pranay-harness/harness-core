@@ -21,6 +21,7 @@ import io.harness.beans.NGInstanceUnitType;
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
+import io.harness.exception.HelmClientException;
 import io.harness.git.UsernamePasswordAuthRequest;
 import io.harness.git.model.AuthInfo;
 import io.harness.git.model.ChangeType;
@@ -35,6 +36,7 @@ import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraActionNG;
@@ -69,6 +71,7 @@ import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
@@ -100,8 +103,29 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.ExecutionCredential;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
+import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
+import software.wings.helpers.ext.gcb.models.BuildOptions;
+import software.wings.helpers.ext.gcb.models.BuiltImage;
+import software.wings.helpers.ext.gcb.models.GcbArtifactObjects;
+import software.wings.helpers.ext.gcb.models.GcbArtifacts;
+import software.wings.helpers.ext.gcb.models.GcbBuildSource;
+import software.wings.helpers.ext.gcb.models.GcbResult;
+import software.wings.helpers.ext.gcb.models.LogStreamingOption;
+import software.wings.helpers.ext.gcb.models.LoggingMode;
+import software.wings.helpers.ext.gcb.models.MachineType;
+import software.wings.helpers.ext.gcb.models.SourceProvenance;
+import software.wings.helpers.ext.gcb.models.StorageSource;
+import software.wings.helpers.ext.gcb.models.SubstitutionOption;
+import software.wings.helpers.ext.gcb.models.TimeSpan;
+import software.wings.helpers.ext.gcb.models.VerifyOption;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.internal.SdkInternalList;
@@ -110,6 +134,7 @@ import com.amazonaws.services.ec2.model.CapacityReservationSpecificationResponse
 import com.amazonaws.services.ec2.model.CapacityReservationTargetResponse;
 import com.amazonaws.services.ec2.model.CpuOptions;
 import com.amazonaws.services.ec2.model.EbsInstanceBlockDevice;
+import com.amazonaws.services.ec2.model.EnclaveOptions;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.GroupIdentifier;
 import com.amazonaws.services.ec2.model.HibernationOptions;
@@ -141,7 +166,6 @@ import com.google.api.services.monitoring.v3.model.Point;
 import com.google.api.services.monitoring.v3.model.TimeInterval;
 import com.google.api.services.monitoring.v3.model.TimeSeries;
 import com.google.api.services.monitoring.v3.model.TypedValue;
-import com.hazelcast.spi.exception.TargetNotMemberException;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.sumologic.client.SumoServerException;
@@ -178,7 +202,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(CapacityReservationTargetResponse.class, 1024);
     kryo.register(KubernetesClientException.class, 2000);
     kryo.register(JSONException.class, 2001);
-    kryo.register(TargetNotMemberException.class, 2002);
     kryo.register(SumoServerException.class, 2003);
     kryo.register(ListTimeSeriesResponse.class, 2004);
     kryo.register(TimeSeries.class, 2005);
@@ -281,6 +304,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(NexusRequest.class, 1441);
     kryo.register(RepositoryFormat.class, 7204);
+    kryo.register(RepositoryType.class, 7171);
 
     kryo.register(AzureAppServiceApplicationSetting.class, 1442);
     kryo.register(AzureAppServiceConnectionString.class, 1443);
@@ -319,5 +343,31 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(EntityOperationIdentifier.EntityOperation.class, 97022);
     kryo.register(CfCliVersion.class, 97023);
     kryo.register(KubernetesResourceId.class, 97031);
+    kryo.register(HelmClientException.class, 97032);
+    kryo.register(HelmCliCommandType.class, 97033);
+    kryo.register(EnclaveOptions.class, 97034);
+    kryo.register(KubernetesResource.class, 97035);
+
+    kryo.register(BuildOptions.class, 7414);
+    kryo.register(BuiltImage.class, 7426);
+    kryo.register(GcbArtifactObjects.class, 7464);
+    kryo.register(GcbArtifacts.class, 7413);
+    kryo.register(GcbBuildSource.class, 7420);
+    kryo.register(GcbResult.class, 7424);
+    kryo.register(LoggingMode.class, 7416);
+    kryo.register(MachineType.class, 7417);
+    kryo.register(LogStreamingOption.class, 7415);
+    kryo.register(VerifyOption.class, 7418);
+    kryo.register(SubstitutionOption.class, 7419);
+    kryo.register(StorageSource.class, 7421);
+    kryo.register(SourceProvenance.class, 7422);
+    kryo.register(TimeSpan.class, 7425);
+    kryo.register(AzureImageGallery.class, 40017);
+    kryo.register(AzureImageDefinition.class, 40018);
+    kryo.register(ExecutionCredential.ExecutionType.class, 5023);
+    kryo.register(JobDetails.JobParameter.class, 5241);
+    kryo.register(JobDetails.class, 5121);
+    kryo.register(AzureDevopsProject.class, 7285);
+    kryo.register(AzureArtifactsPackage.class, 7287);
   }
 }

@@ -28,7 +28,7 @@ public class GraphVertexDTOConverter {
              .failureInfo(FailureInfoDTOConverter.toFailureInfoDTO(graphVertex.getFailureInfo()))
              .skipInfo(graphVertex.getSkipInfo())
              .nodeRunInfo(graphVertex.getNodeRunInfo())
-             .stepParameters(graphVertex.getStepParameters())
+             .stepParameters(graphVertex.getPmsStepParameters())
              .mode(graphVertex.getMode())
              .executableResponses(CollectionUtils.emptyIfNull(graphVertex.getExecutableResponses()))
              .graphDelegateSelectionLogParams(
@@ -36,8 +36,9 @@ public class GraphVertexDTOConverter {
              .interruptHistories(graphVertex.getInterruptHistories())
              .retryIds(graphVertex.getRetryIds())
              .skipType(graphVertex.getSkipType())
-             .outcomes(graphVertex.getOutcomeDocuments())
+             .outcomes(graphVertex.getPmsOutcomes())
              .unitProgresses(graphVertex.getUnitProgresses())
-             .progressData(graphVertex.getProgressData())
+             .progressData(graphVertex.getPmsProgressData())
+             .stepDetails(graphVertex.getStepDetails())
              .build();
 }

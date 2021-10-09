@@ -12,13 +12,14 @@ shared_dependencies = [
     "//330-ci-beans:module",
     "//870-cg-orchestration:module",
     "//940-primary-version-manager:module",
-    "//950-common-entities:module",
+    "//959-common-entities:module",
     "//955-delegate-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
+    "//965-api-key-filter:module",
     "//product/ci/engine/proto:ciengine_java_proto",
     "//product/ci/scm/proto:ciscm_java_proto",
-    "@jira_client//jar",
+    "@maven//:net_rcarz_jira_client",
     "@maven//:aopalliance_aopalliance",
     "@maven//:cglib_cglib_nodep",
     "@maven//:ch_qos_logback_contrib_logback_jackson",
@@ -221,12 +222,6 @@ shared_dependencies = [
     "@maven//:io_dropwizard_metrics_metrics_jvm",
     "@maven//:io_dropwizard_metrics_metrics_logback",
     "@maven//:io_dropwizard_metrics_metrics_servlets",
-    "@maven//:io_fabric8_fabric8_utils",
-    "@maven//:io_fabric8_kubernetes_api",
-    "@maven//:io_fabric8_kubernetes_client",
-    "@maven//:io_fabric8_kubernetes_model",
-    "@maven//:io_fabric8_openshift_client",
-    "@maven//:io_fabric8_zjsonpatch",
     "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
     "@maven//:io_github_resilience4j_resilience4j_core",
     "@maven//:io_github_resilience4j_resilience4j_ratelimiter",
@@ -254,6 +249,8 @@ shared_dependencies = [
     "@maven//:io_netty_netty_resolver",
     "@maven//:io_netty_netty_resolver_dns",
     "@maven//:io_netty_netty_transport",
+    "@maven//:io_opencensus_opencensus_impl",
+    "@maven//:io_opencensus_opencensus_exporter_stats_stackdriver",
     "@maven//:io_opencensus_opencensus_api",
     "@maven//:io_opencensus_opencensus_contrib_http_util",
     "@maven//:io_perfmark_perfmark_api",
@@ -416,7 +413,7 @@ shared_dependencies = [
 java_binary(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     data = ["//:resource"],
     main_class = "io.harness.app.CIManagerApplication",
@@ -455,3 +452,8 @@ java_library(
 run_tests()
 
 run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "ci-manager-config.yml",
+])

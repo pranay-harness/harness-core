@@ -19,42 +19,52 @@ public class AzureKeyVaultConfigDTOMapper {
       ConnectorDTO connectorRequestDTO, AzureKeyVaultConnectorDTO azureKeyVaultConnectorDTO) {
     azureKeyVaultConnectorDTO.validate();
     ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
-    return AzureKeyVaultConfigUpdateDTO.builder()
-        .clientId(azureKeyVaultConnectorDTO.getClientId())
-        .secretKey(azureKeyVaultConnectorDTO.getSecretKey())
-        .subscription(azureKeyVaultConnectorDTO.getSubscription())
-        .tenantId(azureKeyVaultConnectorDTO.getTenantId())
-        .azureEnvironmentType(azureKeyVaultConnectorDTO.getAzureEnvironmentType())
-        .vaultName(azureKeyVaultConnectorDTO.getVaultName())
-        .isDefault(false)
-        .name(connector.getName())
-        .encryptionType(EncryptionType.AZURE_VAULT)
-        .tags(connector.getTags())
-        .description(connector.getDescription())
-        .build();
+    AzureKeyVaultConfigUpdateDTO azureKeyVaultConfigUpdateDTO =
+        AzureKeyVaultConfigUpdateDTO.builder()
+            .clientId(azureKeyVaultConnectorDTO.getClientId())
+            .subscription(azureKeyVaultConnectorDTO.getSubscription())
+            .tenantId(azureKeyVaultConnectorDTO.getTenantId())
+            .azureEnvironmentType(azureKeyVaultConnectorDTO.getAzureEnvironmentType())
+            .vaultName(azureKeyVaultConnectorDTO.getVaultName())
+            .isDefault(false)
+            .name(connector.getName())
+            .encryptionType(EncryptionType.AZURE_VAULT)
+            .tags(connector.getTags())
+            .description(connector.getDescription())
+            .build();
+    if (null != azureKeyVaultConnectorDTO.getSecretKey().getDecryptedValue()) {
+      azureKeyVaultConfigUpdateDTO.setSecretKey(
+          String.valueOf(azureKeyVaultConnectorDTO.getSecretKey().getDecryptedValue()));
+    }
+    return azureKeyVaultConfigUpdateDTO;
   }
 
   public static AzureKeyVaultConfigDTO getAzureKeyVaultConfigDTO(
       String accountIdentifier, ConnectorDTO connectorRequestDTO, AzureKeyVaultConnectorDTO azureKeyVaultConnectorDTO) {
     azureKeyVaultConnectorDTO.validate();
     ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
-    return AzureKeyVaultConfigDTO.builder()
-        .clientId(azureKeyVaultConnectorDTO.getClientId())
-        .secretKey(azureKeyVaultConnectorDTO.getSecretKey())
-        .subscription(azureKeyVaultConnectorDTO.getSubscription())
-        .tenantId(azureKeyVaultConnectorDTO.getTenantId())
-        .azureEnvironmentType(azureKeyVaultConnectorDTO.getAzureEnvironmentType())
-        .vaultName(azureKeyVaultConnectorDTO.getVaultName())
-        .isDefault(false)
-        .encryptionType(EncryptionType.AZURE_VAULT)
+    AzureKeyVaultConfigDTO azureKeyVaultConfigDTO =
+        AzureKeyVaultConfigDTO.builder()
+            .clientId(azureKeyVaultConnectorDTO.getClientId())
+            .subscription(azureKeyVaultConnectorDTO.getSubscription())
+            .tenantId(azureKeyVaultConnectorDTO.getTenantId())
+            .azureEnvironmentType(azureKeyVaultConnectorDTO.getAzureEnvironmentType())
+            .vaultName(azureKeyVaultConnectorDTO.getVaultName())
+            .isDefault(false)
+            .encryptionType(EncryptionType.AZURE_VAULT)
+            .delegateSelectors(azureKeyVaultConnectorDTO.getDelegateSelectors())
 
-        .name(connector.getName())
-        .accountIdentifier(accountIdentifier)
-        .orgIdentifier(connector.getOrgIdentifier())
-        .projectIdentifier(connector.getProjectIdentifier())
-        .tags(connector.getTags())
-        .identifier(connector.getIdentifier())
-        .description(connector.getDescription())
-        .build();
+            .name(connector.getName())
+            .accountIdentifier(accountIdentifier)
+            .orgIdentifier(connector.getOrgIdentifier())
+            .projectIdentifier(connector.getProjectIdentifier())
+            .tags(connector.getTags())
+            .identifier(connector.getIdentifier())
+            .description(connector.getDescription())
+            .build();
+    if (null != azureKeyVaultConnectorDTO.getSecretKey().getDecryptedValue()) {
+      azureKeyVaultConfigDTO.setSecretKey(String.valueOf(azureKeyVaultConnectorDTO.getSecretKey().getDecryptedValue()));
+    }
+    return azureKeyVaultConfigDTO;
   }
 }

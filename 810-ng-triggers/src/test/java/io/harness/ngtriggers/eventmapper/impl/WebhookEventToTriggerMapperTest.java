@@ -21,6 +21,7 @@ import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
 import io.harness.ngtriggers.beans.source.webhook.v2.custom.CustomTriggerSpec;
+import io.harness.ngtriggers.eventmapper.filters.impl.AccountCustomTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.AccountTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.HeaderTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.JexlConditionsTriggerFilter;
@@ -52,6 +53,7 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
   @Mock private NGTriggerService ngTriggerService;
   @Mock private NGTriggerElementMapper ngTriggerElementMapper;
   @InjectMocks @Inject AccountTriggerFilter accountTriggerFilter;
+  @InjectMocks @Inject AccountCustomTriggerFilter accountCustomTriggerFilter;
   @InjectMocks @Inject PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
   @InjectMocks @Inject HeaderTriggerFilter headerTriggerFilter;
   @InjectMocks @Inject JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
@@ -66,6 +68,7 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
         Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
     FieldUtils.writeField(customWebhookEventToTriggerMapper, "triggerFilterStore", triggerFilterStore, true);
     FieldUtils.writeField(triggerFilterStore, "accountTriggerFilter", accountTriggerFilter, true);
+    FieldUtils.writeField(triggerFilterStore, "accountCustomTriggerFilter", accountCustomTriggerFilter, true);
     FieldUtils.writeField(triggerFilterStore, "payloadConditionsTriggerFilter", payloadConditionsTriggerFilter, true);
     FieldUtils.writeField(triggerFilterStore, "jexlConditionsTriggerFilter", jexlConditionsTriggerFilter, true);
     FieldUtils.writeField(triggerFilterStore, "headerTriggerFilter", headerTriggerFilter, true);
@@ -97,7 +100,7 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
                                                         .build())
                                             .build();
 
-    when(ngTriggerService.findTriggersForWehbookBySourceRepoType(event, false, true)).thenReturn(ngTriggerEntityList);
+    when(ngTriggerService.findTriggersForCustomWehbook(event, false, true)).thenReturn(ngTriggerEntityList);
     doReturn(ngTriggerConfig).when(ngTriggerElementMapper).toTriggerConfigV2(ngTriggerCustomYaml);
     WebhookEventMappingResponse webhookEventMappingResponse =
         customWebhookEventToTriggerMapper.mapWebhookEventToTriggers(

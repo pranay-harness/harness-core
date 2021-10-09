@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCondition;

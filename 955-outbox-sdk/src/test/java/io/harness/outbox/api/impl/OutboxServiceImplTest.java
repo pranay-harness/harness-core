@@ -86,6 +86,6 @@ public class OutboxServiceImplTest extends CategoryTest {
     verify(outboxDao, times(1)).list(outboxEventFilterArgumentCaptor.capture());
     OutboxEventFilter outboxEventFilter = outboxEventFilterArgumentCaptor.getValue();
     assertNotNull(outboxEventFilter);
-    assertEquals(50, outboxEventFilter.getMaximumEventsPolled());
+    assertEquals(100, outboxEventFilter.getMaximumEventsPolled());
   }
 }

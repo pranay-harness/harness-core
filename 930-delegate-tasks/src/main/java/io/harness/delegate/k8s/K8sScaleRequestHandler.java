@@ -17,6 +17,7 @@ import static io.harness.validation.Validator.nullCheckForInvalidRequest;
 
 import static software.wings.beans.LogColor.Cyan;
 import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
@@ -147,6 +148,8 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
   boolean init(K8sScaleRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, String namespace,
       LogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    executionLogCallback.saveExecutionLog(
+        color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
 
     try {
       client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());

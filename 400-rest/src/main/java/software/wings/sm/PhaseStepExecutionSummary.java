@@ -2,15 +2,15 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by rishi on 2/6/17.
- */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PhaseStepExecutionSummary extends StepExecutionSummary {
   private List<StepExecutionSummary> stepExecutionSummaryList = new ArrayList<>();
 

@@ -1,6 +1,7 @@
 package io.harness.jackson;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,6 +9,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,7 +17,10 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,5 +74,28 @@ public class JsonNodeUtilsTest extends CategoryTest {
     });
     assertThat(jsonNode.get("newNode")).isInstanceOf(TextNode.class);
     assertThat(jsonNode.get("newNode1")).isInstanceOf(ArrayNode.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testArrayMerge() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    ArrayNode firstArray = objectMapper.createArrayNode();
+    for (int i = 1; i <= 5; ++i) {
+      firstArray.add(i);
+    }
+
+    ArrayNode secondArray = objectMapper.createArrayNode();
+    for (int i = 10; i >= 1; --i) {
+      secondArray.add(i);
+    }
+
+    JsonNodeUtils.merge(firstArray, secondArray);
+
+    List<JsonNode> list = (List<JsonNode>) IteratorUtils.toList(firstArray.iterator());
+
+    assertThat(list.stream().map(JsonNode::intValue).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
   }
 }

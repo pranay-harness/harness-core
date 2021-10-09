@@ -2,11 +2,14 @@ package io.harness.ng.core.entitysetupusage.entity;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.EntityDetail.EntityDetailKeys;
 import io.harness.ng.core.NGAccountAccess;
@@ -22,6 +25,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -38,20 +42,23 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("entitySetupUsage")
 @TypeAlias("io.harness.ng.core.entityReference.entity.EntitySetupUsage")
 @OwnedBy(DX)
+@Entity(value = "entitySetupUsage", noClassnameStored = true)
+@StoreIn(DbAliases.NG_MANAGER)
+@StoreIn(DbAliases.PMS)
 public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("ReferredByEntityIndex")
+                 .field(EntitySetupUsageKeys.accountIdentifier)
                  .field(EntitySetupUsageKeys.referredByEntityType)
                  .field(EntitySetupUsageKeys.referredByEntityFQN)
-                 .field(EntitySetupUsageKeys.accountIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ReferredEntityIndex")
+                 .field(EntitySetupUsageKeys.accountIdentifier)
                  .field(EntitySetupUsageKeys.referredEntityType)
                  .field(EntitySetupUsageKeys.referredEntityFQN)
-                 .field(EntitySetupUsageKeys.accountIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("EntitySetupUsage_unique_index")
@@ -65,6 +72,38 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
                  .field(EntitySetupUsageKeys.referredEntityBranch)
                  .field(EntitySetupUsageKeys.accountIdentifier)
                  .unique(true)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("account_referredBy_createdAt_index")
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.referredByEntityType)
+                 .field(EntitySetupUsageKeys.referredEntityType)
+                 .field(EntitySetupUsageKeys.referredByEntityIsDefault)
+                 .descSortField(EntitySetupUsageKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("account_referredByFQN_referredByIsDefault_createdAt_index")
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.referredByEntityIsDefault)
+                 .descSortField(EntitySetupUsageKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_referredBy_referred_index")
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.referredByEntityType)
+                 .field(EntitySetupUsageKeys.referredEntityFQN)
+                 .field(EntitySetupUsageKeys.referredEntityType)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_referredBy_referred_type_index")
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.referredByEntityType)
+                 .field(EntitySetupUsageKeys.referredEntityType)
+                 .field(EntitySetupUsageKeys.createdAt)
                  .build())
         .build();
   }

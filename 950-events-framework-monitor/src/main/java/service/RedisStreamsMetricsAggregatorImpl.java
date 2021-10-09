@@ -22,7 +22,6 @@ import org.redisson.api.StreamMessageId;
 import org.redisson.client.RedisClient;
 import org.redisson.client.RedisConnection;
 import org.redisson.client.codec.StringCodec;
-import org.redisson.client.protocol.RedisCommands;
 
 @OwnedBy(HarnessTeam.PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -42,9 +41,21 @@ public class RedisStreamsMetricsAggregatorImpl implements RedisStreamsMetricsAgg
     return stream.size();
   }
 
-  private double getTotalMemoryUsage(RedisConnection lowLevelConnection, String streamName) {
-    Long bytes = lowLevelConnection.sync(StringCodec.INSTANCE, RedisCommands.MEMORY_USAGE, streamName, "samples", "0");
-    return bytes / 1024.0 / 1024.0;
+  private double getAverageMessageSize(String streamName) {
+    RStream<String, String> stream = getRedisStream(streamName);
+    int batchSize = 100;
+    Map<StreamMessageId, Map<String, String>> randomSample =
+        stream.rangeReversed(batchSize, StreamMessageId.MAX, StreamMessageId.MIN);
+    double total = 0;
+    for (Map.Entry<StreamMessageId, Map<String, String>> streamMessageEntry : randomSample.entrySet()) {
+      total += streamMessageEntry.getKey().toString().length();
+      for (Map.Entry<String, String> messageAttributeEntry : streamMessageEntry.getValue().entrySet()) {
+        total += messageAttributeEntry.getKey().length();
+        total += messageAttributeEntry.getValue().length();
+      }
+    }
+
+    return total / batchSize / 1024;
   }
 
   private int getConsumerBehindCount(
@@ -77,7 +88,7 @@ public class RedisStreamsMetricsAggregatorImpl implements RedisStreamsMetricsAgg
 
   @Override
   public AggregateRedisStreamMetricsDTO getStreamStats() {
-    Iterator<String> keysIterator = redisClient.getKeys().getKeysByPattern("*streams:*", 1000).iterator();
+    Iterator<String> keysIterator = redisClient.getKeys().getKeysByPattern("*:streams:*", 1000).iterator();
     RedisConnection lowLevelConnection = lowLevelClient.connect();
 
     try {
@@ -93,12 +104,8 @@ public class RedisStreamsMetricsAggregatorImpl implements RedisStreamsMetricsAgg
         RStream<String, String> currentStream = getRedisStream(streamName);
 
         long streamLength = getStreamLength(currentStream);
-        double memoryUsageInMBs = getTotalMemoryUsage(lowLevelConnection, streamName);
-        double averageMessageSize = 0;
-
-        if (streamLength != 0) {
-          averageMessageSize = memoryUsageInMBs * 1024.0 / streamLength;
-        }
+        double averageMessageSize = getAverageMessageSize(streamName);
+        double memoryUsageInMBs = averageMessageSize * streamLength / 1024;
 
         long deadletterQueueLength = getDeadletterQueueLength(redisStreamDTO);
         List<StreamGroup> groups = redisClient.getStream(streamName).listGroups();

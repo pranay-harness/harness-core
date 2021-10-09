@@ -4,6 +4,8 @@ import static software.wings.settings.SettingVariableTypes.GCP;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -40,6 +42,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = {"serviceAccountKeyFileContent", "encryptedServiceAccountKeyFileContent"})
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class GcpConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   @Encrypted(fieldName = "service_account_key_file") private char[] serviceAccountKeyFileContent;
 

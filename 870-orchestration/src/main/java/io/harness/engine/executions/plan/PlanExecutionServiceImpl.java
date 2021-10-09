@@ -27,7 +27,6 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.PlanExecutionRepository;
-import io.harness.serializer.ProtoUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -170,7 +169,6 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
                                .setAmbiance(ambiance)
                                .setEventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
                                .setStatus(planExecution.getStatus())
-                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .build());
     planStatusUpdateSubject.fireInform(PlanStatusUpdateObxxxxxxxx:onPlanStatusUpdate, ambiance);
   }

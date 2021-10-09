@@ -23,6 +23,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -46,6 +48,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Created by anubhaw on 5/23/16.
  */
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceResourceTest extends CategoryTest {
   private static final ServiceResourceService RESOURCE_SERVICE = mock(ServiceResourceService.class);
 

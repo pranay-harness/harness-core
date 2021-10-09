@@ -53,7 +53,7 @@ import software.wings.service.InstanceSyncConstants;
 import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
 import com.google.inject.Inject;
@@ -85,7 +85,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private DelegateService delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
@@ -113,7 +113,11 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .acceptableNoAlertDelay(ofSeconds(45))
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this::assign)
-            .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED))
+            .filterExpander(query
+                -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
+                       .or(query.criteria(PerpetualTaskRecordKeys.assignAfterMs).doesNotExist(),
+                           query.criteria(PerpetualTaskRecordKeys.assignAfterMs)
+                               .lessThanOrEq(System.currentTimeMillis())))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)
@@ -147,7 +151,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
       DelegateTask validationTask = getValidationTask(taskRecord);
 
       try {
-        DelegateResponseData response = delegateService.executeTask(validationTask);
+        DelegateResponseData response = delegateTaskServiceClassic.executeTask(validationTask);
 
         if (response instanceof DelegateTaskNotifyResponseData) {
           if (response instanceof PerpetualTaskCapabilityCheckResponse) {
@@ -155,7 +159,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
                 ((PerpetualTaskCapabilityCheckResponse) response).isAbleToExecutePerpetualTask();
             if (!isAbleToExecutePerpetualTask) {
               perpetualTaskService.updateTaskUnassignedReason(
-                  taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES);
+                  taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES, taskRecord.getAssignTryCount());
 
               raiseAlert(
                   taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
@@ -178,7 +182,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
 
         } else if ((response instanceof RemoteMethodReturnValueData)
             && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
-          perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES);
+          perpetualTaskService.updateTaskUnassignedReason(
+              taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES, taskRecord.getAssignTryCount());
 
           raiseAlert(
               taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
@@ -190,11 +195,13 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
         }
       } catch (NoInstalledDelegatesException exception) {
         ignoredOnPurpose(exception);
-        perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_INSTALLED);
+        perpetualTaskService.updateTaskUnassignedReason(
+            taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_INSTALLED, taskRecord.getAssignTryCount());
         raiseAlert(taskRecord, NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK);
       } catch (NoAvailableDelegatesException exception) {
         ignoredOnPurpose(exception);
-        perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE);
+        perpetualTaskService.updateTaskUnassignedReason(
+            taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE, taskRecord.getAssignTryCount());
         raiseAlert(
             taskRecord, format(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
       } catch (WingsException exception) {
@@ -211,7 +218,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   }
 
   public void rebalance(PerpetualTaskRecord taskRecord) {
-    if (delegateService.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
+    if (delegateTaskServiceClassic.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
       perpetualTaskService.appointDelegate(taskRecord.getAccountId(), taskRecord.getUuid(), taskRecord.getDelegateId(),
           taskRecord.getClientContext().getLastContextUpdated());
       return;
@@ -249,6 +256,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
     }
 
     return DelegateTask.builder()
+        .executionCapabilities(executionCapabilityList)
         .accountId(taskRecord.getAccountId())
         .data(TaskData.builder()
                   .async(false)

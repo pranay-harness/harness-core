@@ -10,10 +10,13 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
@@ -42,11 +45,13 @@ import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
@@ -55,6 +60,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -80,6 +86,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private LearningEngineTaskService learningEngineTaskService;
@@ -90,6 +97,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
+  @Inject private HeatMapService heatMapService;
+  @Mock private NextGenService nextGenService;
 
   private String cvConfigId;
   private String verificationTaskId;
@@ -99,8 +108,11 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   private Instant instant;
   private String orgIdentifier;
   private String projectIdentifier;
+  private BuilderFactory builderFactory;
+
   @Before
   public void setUp() throws Exception {
+    builderFactory = BuilderFactory.getDefault();
     accountId = generateUuid();
     instant = Instant.parse("2020-07-27T10:44:06.390Z");
     projectIdentifier = generateUuid();
@@ -119,6 +131,10 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
     learningEngineTaskId = learningEngineTaskService.createLearningEngineTask(timeSeriesLearningEngineTask);
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
+
+    FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
+    FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", heatMapService, true);
   }
 
   @Test
@@ -261,9 +277,10 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testSaveAnalysis_serviceGuard() throws IllegalAccessException {
-    HeatMapService heatMapService = mock(HeatMapService.class);
-    FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", heatMapService, true);
+  public void testSaveAnalysis_serviceGuard() {
+    doReturn(builderFactory.environmentResponseDTOBuilder().type(EnvironmentType.Production).build())
+        .when(nextGenService)
+        .getEnvironment(any(), any(), any(), any());
     timeSeriesAnalysisService.saveAnalysis(learningEngineTaskId, buildServiceGuardMetricAnalysisDTO());
 
     TimeSeriesCumulativeSums cumulativeSums =
@@ -277,14 +294,18 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
                                                       .filter("verificationTaskId", verificationTaskId)
                                                       .get();
     assertThat(shortTermHistory).isNotNull();
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    heatMaps.forEach(
+        heatMap -> assertThat(heatMap.getHeatMapRisks().iterator().next().getAnomalousMetricsCount()).isEqualTo(9));
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testSaveAnalysis_serviceGuard_withoutCumulativeSums() throws IllegalAccessException {
-    HeatMapService heatMapService = mock(HeatMapService.class);
-    FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", heatMapService, true);
+  public void testSaveAnalysis_serviceGuard_withoutCumulativeSums() {
+    doReturn(builderFactory.environmentResponseDTOBuilder().type(EnvironmentType.Production).build())
+        .when(nextGenService)
+        .getEnvironment(any(), any(), any(), any());
     timeSeriesAnalysisService.saveAnalysis(
         learningEngineTaskId, buildServiceGuardMetricAnalysisDTO_emptyCumulativeSums(verificationTaskId));
 
@@ -300,6 +321,9 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
                                                       .filter("verificationTaskId", verificationTaskId)
                                                       .get();
     assertThat(shortTermHistory).isNotNull();
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    heatMaps.forEach(
+        heatMap -> assertThat(heatMap.getHeatMapRisks().iterator().next().getAnomalousMetricsCount()).isEqualTo(9));
   }
 
   @Test
@@ -311,6 +335,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
         deploymentTimeSeriesAnalysisService.getAnalysisResults(verificationTaskId);
     assertThat(results).hasSize(1);
     assertThat(results.get(0).getVerificationTaskId()).isEqualTo(verificationTaskId);
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    assertThat(heatMaps.size()).isEqualTo(0);
   }
 
   private ServiceGuardTimeSeriesAnalysisDTO buildServiceGuardMetricAnalysisDTO() {
@@ -339,7 +365,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
                                                      .build()))
                 .lastSeenTime(0)
                 .metricType(TimeSeriesMetricType.ERROR)
-                .risk(1)
+                .risk(2)
                 .build();
         metricMap.put(metric, txnMetricData);
       });
@@ -420,7 +446,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
                                                      .build()))
                 .lastSeenTime(0)
                 .metricType(TimeSeriesMetricType.ERROR)
-                .risk(1)
+                .risk(2)
                 .build();
         metricMap.put(metric, txnMetricData);
       });

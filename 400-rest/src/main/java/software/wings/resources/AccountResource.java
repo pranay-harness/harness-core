@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -21,11 +22,16 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.datahandler.models.AccountDetails;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.licensing.beans.modules.AccountLicenseDTO;
+import io.harness.licensing.beans.modules.ModuleLicenseDTO;
+import io.harness.licensing.remote.admin.AdminLicenseHttpClient;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.rest.RestResponse;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -42,6 +48,7 @@ import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.Service;
 import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;
+import software.wings.beans.User;
 import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.ServiceInstanceUsageCheckerJob;
@@ -52,11 +59,13 @@ import software.wings.service.impl.LicenseUtils;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -107,13 +116,16 @@ public class AccountResource {
   private final GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
   private final Provider<SampleDataProviderService> sampleDataProviderServiceProvider;
   private final AuthService authService;
+  private final HarnessUserGroupService harnessUserGroupService;
+  private final AdminLicenseHttpClient adminLicenseHttpClient;
 
   @Inject
   public AccountResource(AccountService accountService, UserService userService,
       Provider<LicenseService> licenseServiceProvider, AccountPermissionUtils accountPermissionUtils,
       FeatureService featureService, @Named("BackgroundJobScheduler") PersistentScheduler jobScheduler,
       GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler,
-      Provider<SampleDataProviderService> sampleDataProviderServiceProvider, AuthService authService) {
+      Provider<SampleDataProviderService> sampleDataProviderServiceProvider, AuthService authService,
+      HarnessUserGroupService harnessUserGroupService, AdminLicenseHttpClient adminLicenseHttpClient) {
     this.accountService = accountService;
     this.userService = userService;
     this.licenseServiceProvider = licenseServiceProvider;
@@ -123,6 +135,8 @@ public class AccountResource {
     this.gcpMarketPlaceApiHandler = gcpMarketPlaceApiHandler;
     this.sampleDataProviderServiceProvider = sampleDataProviderServiceProvider;
     this.authService = authService;
+    this.harnessUserGroupService = harnessUserGroupService;
+    this.adminLicenseHttpClient = adminLicenseHttpClient;
   }
 
   @GET
@@ -286,6 +300,16 @@ public class AccountResource {
     return response;
   }
 
+  @PUT
+  @Path("{accountId}/defaultExperience")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Void> updateDefaultExperience(
+      @PathParam("accountId") @NotEmpty String accountId, Account account) {
+    return new RestResponse<>(accountService.setDefaultExperience(accountId, account.getDefaultExperience()));
+  }
+
   @GET
   @Path("delegate/active")
   @Timed
@@ -331,6 +355,9 @@ public class AccountResource {
     RestResponse<Account> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to create account");
     if (response == null) {
       account.setAppId(GLOBAL_APP_ID);
+      if (account.getDefaultExperience() == null) {
+        account.setDefaultExperience(DefaultExperience.CG);
+      }
       response = new RestResponse<>(accountService.save(account, false));
     }
     return response;
@@ -405,7 +432,7 @@ public class AccountResource {
   @Path("{accountId}/details")
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<AccountDetails> getAccountDetails(@PathParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(accountService.getDetails(accountId));
+    return new RestResponse<>(accountService.getAccountDetails(accountId));
   }
 
   // Fetches account info from DB & not from local manager cache to avoid inconsistencies in UI when account is updated
@@ -543,5 +570,62 @@ public class AccountResource {
   public RestResponse<Boolean> disableHarnessUserGroupAccessWorkflow(
       @PathParam("accountId") String accountId, @PathParam("disableAccountId") String disableAccountId) {
     return new RestResponse<>(accountService.disableHarnessUserGroupAccess(disableAccountId));
+  }
+
+  @POST
+  @Path("{accountId}/ng/license")
+  public RestResponse<ModuleLicenseDTO> createNgLicense(
+      @PathParam("accountId") String accountId, @Body ModuleLicenseDTO moduleLicenseDTO) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse<>(getResponse(adminLicenseHttpClient.createAccountLicense(accountId, moduleLicenseDTO)));
+    } else {
+      return RestResponse.Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.builder().message("User not allowed to create module license").build()))
+          .build();
+    }
+  }
+
+  @PUT
+  @Path("{accountId}/ng/license")
+  public RestResponse<ModuleLicenseDTO> updateNgLicense(
+      @PathParam("accountId") String accountId, @Body ModuleLicenseDTO moduleLicenseDTO) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse<>(getResponse(
+          adminLicenseHttpClient.updateModuleLicense(moduleLicenseDTO.getId(), accountId, moduleLicenseDTO)));
+    } else {
+      return RestResponse.Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.builder().message("User not allowed to update module license").build()))
+          .build();
+    }
+  }
+
+  @GET
+  @Path("{accountId}/ng/license")
+  public RestResponse<AccountLicenseDTO> getNgAccountLicense(@PathParam("accountId") String accountId) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse<>(getResponse(adminLicenseHttpClient.getAccountLicense(accountId)));
+    } else {
+      return RestResponse.Builder.aRestResponse()
+          .withResponseMessages(
+              Lists.newArrayList(ResponseMessage.builder().message("User not allowed to query licenses").build()))
+          .build();
+    }
   }
 }

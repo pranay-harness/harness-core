@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromDefaultKubeConfigFile;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
 import static io.harness.k8s.KubernetesHelperService.isRunningInCluster;
@@ -8,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.data.structure.EmptyPredicate;
@@ -59,6 +61,7 @@ import org.mongodb.morphia.annotations.Transient;
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken",
               "oidcClientId", "oidcSecret", "oidcPassword"})
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(_957_CG_BEANS)
 public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private boolean useKubernetesDelegate;
   private String delegateName;

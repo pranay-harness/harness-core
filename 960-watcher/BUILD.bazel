@@ -1,0 +1,86 @@
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "java_binary", "java_library")
+
+HarnessTeam = "DEL"
+
+java_binary(
+    name = "module",
+    srcs = glob([
+        "src/main/java/**/*.java",
+    ]),
+    data = ["//:resource"],
+    main_class = "io.harness.watcher.app.WatcherApplication",
+    resources = [
+        "//960-watcher/src/main/resources:resource",
+    ],
+    sign = True,
+    tags = [
+        "oss",
+    ],
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//960-watcher/src/main/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "//:lombok",
+        "//970-grpc:module",
+        "//970-watcher-beans:module",
+        "//980-commons:module",
+        "//999-annotations:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",
+        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",
+        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jsr310",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:com_squareup_retrofit2_converter_jackson",
+        "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:commons_collections_commons_collections",
+        "@maven//:commons_io_commons_io",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_jul_to_slf4j",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_zeroturnaround_zt_exec",
+    ],
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    data = [
+        "//960-watcher/src/test/resources:resource",
+    ],
+    resources = [
+        "//960-watcher/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//970-grpc:module",
+        "//970-watcher-beans:module",
+        "//980-commons:module",
+        "//990-commons-test:module",
+        "//999-annotations:module",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:com_google_cloud_google_cloud_logging",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:commons_io_commons_io",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_awaitility_awaitility",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+run_tests()
+
+run_analysis()

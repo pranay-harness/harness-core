@@ -44,8 +44,8 @@ public class SignupNotificationHelper {
                                       .team(Team.GTM)
                                       .recipients(Lists.newArrayList(userInfo.getEmail()))
                                       .templateId(templateId)
-                                      .templateData(ImmutableMap.of("name", userInfo.getName(), "url", url))
-                                      .userGroupIds(Collections.emptyList());
+                                      .templateData(ImmutableMap.of("url", url))
+                                      .userGroups(Collections.emptyList());
     notificationClient.sendNotificationAsync(builder.build());
   }
 
@@ -56,11 +56,11 @@ public class SignupNotificationHelper {
       if (cache.get(emailType)) {
         currentId = emailInfo.getTemplateId();
       } else {
-        log.error("Template id {} is not saved in notification service, use {} instead.", emailInfo.getTemplateId(),
+        log.warn("Template id {} is not saved in notification service, use {} instead.", emailInfo.getTemplateId(),
             defaultTemplateId);
       }
     } catch (ExecutionException e) {
-      log.error(
+      log.warn(
           String.format("Failed to get template %s from cache, fall over to use %s", emailType, defaultTemplateId), e);
     }
     return currentId;

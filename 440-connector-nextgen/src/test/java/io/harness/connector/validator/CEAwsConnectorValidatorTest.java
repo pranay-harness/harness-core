@@ -10,6 +10,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
@@ -39,6 +41,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Mock AwsClient awsClient;
   @Mock CEAwsSetupConfig ceAwsSetupConfig;
@@ -163,19 +166,17 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void testValidateBucketNotPresent() {
+  public void testValidateBucketIsPresentIgnoringObjects() {
     ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
-    ObjectListing s3Object = new ObjectListing();
     ReportDefinition report = createReportDefinition();
 
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
-    doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
+    doReturn(null).when(awsClient).getBucket(any(), any(), any());
 
     ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
-    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
-    assertThat(result.getErrors()).hasSize(1);
-    assertThat(result.getErrors().get(0).getReason()).isEqualTo("The bucket might not be existing.");
+    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
+    assertThat(result.getErrors()).isNull();
     assertThat(result.getTestedAt()).isLessThanOrEqualTo(Instant.now().toEpochMilli());
   }
 

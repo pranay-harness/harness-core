@@ -72,6 +72,9 @@ public class BuildEnvironmentUtils {
         BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
         envVarMap.putAll(getBaseEnvVars(branchWebhookEvent.getBaseAttributes()));
         envVarMap.putAll(getBuildRepoEnvvars(branchWebhookEvent.getRepository()));
+        if (branchWebhookEvent.getBranchName().startsWith("refs/tags/")) {
+          envVarMap.put(DRONE_TAG, branchWebhookEvent.getBranchName().replaceFirst("refs/tags/", ""));
+        }
         envVarMap.put(DRONE_BUILD_EVENT, "push");
       }
       if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
@@ -91,6 +94,9 @@ public class BuildEnvironmentUtils {
       if (!isEmpty(manualExecutionSource.getTag())) {
         envVarMap.put(DRONE_TAG, manualExecutionSource.getTag());
         envVarMap.put(DRONE_BUILD_EVENT, "tag");
+      }
+      if (!isEmpty(manualExecutionSource.getCommitSha())) {
+        envVarMap.put(DRONE_COMMIT_SHA, manualExecutionSource.getCommitSha());
       }
     } else if (ciExecutionArgs.getExecutionSource().getType() == Type.CUSTOM) {
       CustomExecutionSource customExecutionSource = (CustomExecutionSource) ciExecutionArgs.getExecutionSource();

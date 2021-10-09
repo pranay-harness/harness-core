@@ -1,9 +1,9 @@
 package software.wings.service.impl.aws.model;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
-@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
+@OwnedBy(HarnessTeam.CDP)
 public interface AwsConstants {
   String AWS_SIMPLE_HTTP_CONNECTIVITY_URL = "https://aws.amazon.com/";
   int DEFAULT_AMI_ASG_MAX_INSTANCES = 10;

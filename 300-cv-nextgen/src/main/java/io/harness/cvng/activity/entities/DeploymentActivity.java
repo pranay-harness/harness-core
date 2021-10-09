@@ -1,7 +1,6 @@
 package io.harness.cvng.activity.entities;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -22,6 +21,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("DEPLOYMENT")
 @FieldNameConstants(innerTypeName = "DeploymentActivityKeys")
@@ -67,14 +68,7 @@ public class DeploymentActivity extends Activity {
 
   @Override
   public void validateActivityParams() {
-    Preconditions.checkNotNull(getVerificationJobRuntimeDetails(),
-        "Verification job details cannot be "
-            + "empty for a deployment activity");
     Preconditions.checkNotNull(deploymentTag, "Deployment tag can not be null");
-    getVerificationJobRuntimeDetails().forEach(verificationJob -> {
-      Preconditions.checkNotNull(isEmpty(verificationJob.getVerificationJobIdentifier()),
-          "The verification job identifier is a required parameter for deployment activities");
-    });
   }
 
   @Override
@@ -94,5 +88,24 @@ public class DeploymentActivity extends Activity {
   @JsonIgnore
   public Instant getVerificationStartTime() {
     return Instant.ofEpochMilli(this.verificationStartTime);
+  }
+
+  public static class DeploymentActivityUpdatableEntity
+      extends ActivityUpdatableEntity<DeploymentActivity, DeploymentActivity> {
+    @Override
+    public Class getEntityClass() {
+      return DeploymentActivity.class;
+    }
+
+    @Override
+    public Query<DeploymentActivity> populateKeyQuery(Query<DeploymentActivity> query, DeploymentActivity changeEvent) {
+      throw new UnsupportedOperationException("DeploymentActivity events have no unique key");
+    }
+
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<DeploymentActivity> updateOperations, DeploymentActivity activity) {
+      setCommonUpdateOperations(updateOperations, activity);
+    }
   }
 }

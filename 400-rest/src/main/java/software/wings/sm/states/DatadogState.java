@@ -81,7 +81,7 @@ import org.slf4j.Logger;
 @Slf4j
 @FieldNameConstants(innerTypeName = "DatadogStateKeys")
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class DatadogState extends AbstractMetricAnalysisState {
   @Inject @SchemaIgnore private transient DatadogService datadogService;
@@ -232,7 +232,15 @@ public class DatadogState extends AbstractMetricAnalysisState {
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION,
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
+        DataCollectionCallback.builder()
+            .appId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .dataCollectionStartTime(dataCollectionStartTimeStamp)
+            .dataCollectionEndTime(
+                dataCollectionStartTimeStamp + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
+            .executionData(executionData)
+            .build(),
+        waitId);
 
     return delegateService.queueTask(delegateTask);
   }

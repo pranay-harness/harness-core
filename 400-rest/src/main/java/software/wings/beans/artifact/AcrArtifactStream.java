@@ -6,7 +6,10 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ff.FeatureFlagService;
 
@@ -21,6 +24,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
+@BreakDependencyOn("io.harness.ff.FeatureFlagService")
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("ACR")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -52,6 +57,22 @@ public class AcrArtifactStream extends ArtifactStream {
   public String fetchArtifactDisplayName(String buildNo) {
     return format("%s_%s_%s", getRegistryName() + "/" + getRepositoryName(), buildNo,
         new SimpleDateFormat(dateFormat).format(new Date()));
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .subscriptionId(subscriptionId)
+        .registryHostName(registryHostName)
+        .registryName(registryName)
+        .repositoryName(repositoryName)
+        .build();
   }
 
   @Override

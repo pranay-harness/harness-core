@@ -273,4 +273,19 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   public List<YamlChangeSet> list(String queueKey, String accountId, YamlChangeSetStatus status) {
     return yamlChangeSetRepository.findByAccountIdAndQueueKeyAndStatus(accountId, queueKey, status.name());
   }
+
+  @Override
+  public void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(int maxRetryCount) {
+    Update update = new Update()
+                        .set(YamlChangeSetKeys.status, SKIPPED)
+                        .set(YamlChangeSetKeys.messageCode, MAX_RETRY_COUNT_EXCEEDED_CODE);
+    Query query = new Query().addCriteria(new Criteria()
+                                              .and(YamlChangeSetKeys.status)
+                                              .is(YamlChangeSetStatus.QUEUED)
+                                              .and(YamlChangeSetKeys.retryCount)
+                                              .gt(maxRetryCount));
+    final UpdateResult status = yamlChangeSetRepository.update(query, update);
+    log.info(
+        "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getModifiedCount());
+  }
 }

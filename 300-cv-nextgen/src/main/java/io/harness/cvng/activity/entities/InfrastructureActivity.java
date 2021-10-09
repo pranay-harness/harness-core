@@ -6,6 +6,8 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Verifica
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @SuperBuilder
 @JsonTypeName("INFRASTRUCTURE")
@@ -33,5 +35,25 @@ public class InfrastructureActivity extends Activity {
   @Override
   public boolean deduplicateEvents() {
     return true;
+  }
+
+  public static class InfrastructureActivityUpdatableEntity
+      extends ActivityUpdatableEntity<InfrastructureActivity, InfrastructureActivity> {
+    @Override
+    public Class getEntityClass() {
+      return InfrastructureActivity.class;
+    }
+
+    @Override
+    public Query<InfrastructureActivity> populateKeyQuery(
+        Query<InfrastructureActivity> query, InfrastructureActivity changeEvent) {
+      throw new UnsupportedOperationException("InfrastructureActivity have no unique key");
+    }
+
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<InfrastructureActivity> updateOperations, InfrastructureActivity activity) {
+      setCommonUpdateOperations(updateOperations, activity);
+    }
   }
 }

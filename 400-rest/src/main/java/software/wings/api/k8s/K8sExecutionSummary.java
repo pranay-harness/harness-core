@@ -1,6 +1,6 @@
 package software.wings.api.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -20,7 +20,7 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 @OwnedBy(CDP)
 @EqualsAndHashCode(callSuper = true)
 public class K8sExecutionSummary extends StepExecutionSummary {
@@ -33,4 +33,5 @@ public class K8sExecutionSummary extends StepExecutionSummary {
   private String blueGreenStageColor;
   private Set<String> delegateSelectors;
   private List<KubernetesResourceId> prunedResourcesIds;
+  private boolean exportManifests;
 }

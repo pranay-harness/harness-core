@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "stream",
     srcs = ["stream.go"],
     importpath = "github.com/wings-software/portal/product/log-service/stream",
     visibility = ["//visibility:public"],

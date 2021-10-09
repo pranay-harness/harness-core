@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.PRABU;
@@ -18,6 +19,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -26,6 +30,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.Application;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Service;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.template.Template;
@@ -46,6 +51,7 @@ import software.wings.yaml.handler.YamlHandlerTestBase;
 import software.wings.yaml.workflow.StepYaml;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -54,6 +60,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class StepYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private StepYamlHandler stepYamlHandler;
   @Mock private FeatureFlagService featureFlagService;
@@ -177,6 +185,40 @@ public class StepYamlHandlerTest extends YamlHandlerTestBase {
       assertThat(e).isInstanceOf(InvalidRequestException.class);
       assertThat(e.getMessage()).contains("runtime values not provided");
     }
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testToBeanWithoutArtifactStreamId() {
+    Map<String, Object> properties = new HashMap<>();
+    Map<String, Object> templateExpressions = new HashMap<>();
+    templateExpressions.put("expression", "${ArtS");
+    templateExpressions.put("fieldName", "artifactStreamId");
+    properties.put("templateExpressions", Collections.singletonList(templateExpressions));
+    ChangeContext<StepYaml> changeContext =
+        ChangeContext.Builder.aChangeContext()
+            .withYamlType(YamlType.WORKFLOW)
+            .withYaml(StepYaml.builder()
+                          .name("Artifact Collection")
+                          .properties(properties)
+                          .templateExpressions(asList(TemplateExpression.Yaml.Builder.aYaml()
+                                                          .withExpression("${ArtS")
+                                                          .withFieldName("artifactStreamId")
+                                                          .build()))
+                          .type(StateType.ARTIFACT_COLLECTION.name())
+                          .build())
+            .withChange(GitFileChange.Builder.aGitFileChange()
+                            .withFilePath("Setup/Applications/a1/Workflows/build.yaml")
+                            .withAccountId(ACCOUNT_ID)
+                            .build())
+            .build();
+
+    when(artifactStreamService.getArtifactStreamParameters(ARTIFACT_STREAM_ID)).thenReturn(asList("repo", "package"));
+    assertThatThrownBy(() -> stepYamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Template variable:[${ArtS] is not valid, should start with ${ and end with }, can have a-z,A-Z,0-9,-_");
   }
 
   private NexusArtifactStream getNexusArtifactStream() {

@@ -1,10 +1,15 @@
 package software.wings.beans.loginSettings;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
+
+import io.harness.annotations.dev.TargetModule;
+
 import org.passay.CharacterRule;
 import org.passay.EnglishCharacterData;
 import org.passay.PasswordData;
 import org.passay.PasswordValidator;
 
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public enum PasswordStrengthChecks {
   MUST_HAVE_UPPERCASE_LETTERS() {
     @Override

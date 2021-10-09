@@ -6,7 +6,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.InfrastructureMapping.SERVICE_ID_KEY;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 
 import software.wings.api.DeploymentType;

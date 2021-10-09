@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static io.harness.marketplace.gcp.GcpMarketPlaceConstants.ENTITLEMENT_ACTIVATED;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.migrations.Migration;
 

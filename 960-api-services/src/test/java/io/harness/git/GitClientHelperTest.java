@@ -1,5 +1,6 @@
 package io.harness.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.git.Constants.GIT_DEFAULT_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_TERRAFORM_LOG_PREFIX;
@@ -13,6 +14,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.JAMIE;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +27,7 @@ import static org.eclipse.jgit.diff.DiffEntry.ChangeType.MODIFY;
 import static org.eclipse.jgit.diff.DiffEntry.ChangeType.RENAME;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GitClientException;
 import io.harness.exception.GitConnectionDelegateException;
@@ -59,6 +62,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @Slf4j
+@OwnedBy(CI)
 public class GitClientHelperTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Inject @InjectMocks GitClientHelper gitClientHelper;
@@ -161,7 +165,7 @@ public class GitClientHelperTest extends CategoryTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void testGetOwnerFromHTTPURL() {
-    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software/portal.git");
+    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software/portal.git", false);
     assertThat(repoName).isEqualTo("wings-software");
   }
 
@@ -186,7 +190,31 @@ public class GitClientHelperTest extends CategoryTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void testGetOwnerFromSSHURL() {
-    final String repoName = GitClientHelper.getGitOwner("git@github.com:wings-software/portal.git");
+    final String repoName = GitClientHelper.getGitOwner("git@github.com:wings-software/portal.git", false);
+    assertThat(repoName).isEqualTo("wings-software");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetOwnerFromSSHAccountURL() {
+    final String repoName = GitClientHelper.getGitOwner("git@github.com:wings-software", true);
+    assertThat(repoName).isEqualTo("wings-software");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetOwnerFromAccountURL() {
+    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software", true);
+    assertThat(repoName).isEqualTo("wings-software");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetOwnerFromAccountURLWithSlash() {
+    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software/", true);
     assertThat(repoName).isEqualTo("wings-software");
   }
 
@@ -196,6 +224,110 @@ public class GitClientHelperTest extends CategoryTest {
   public void testGetREPOFromSSHURL() {
     final String repoName = GitClientHelper.getGitRepo("git@github.com:wings-software/portal.git");
     assertThat(repoName).isEqualTo("portal");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithoutRepo() {
+    final String scmName = GitClientHelper.getGitSCM("ghttps://github.com/");
+    assertThat(scmName).isEqualTo("github.com");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithRepo() {
+    final String scmName = GitClientHelper.getGitSCM("ghttps://github.com/repo.git");
+    assertThat(scmName).isEqualTo("github.com");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithRepoAtEnd() {
+    final String scmName = GitClientHelper.getGitSCM("ghttps://github.com@/repo.git");
+    assertThat(scmName).isEqualTo("github.com");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithSSHRepo() {
+    final String scmName = GitClientHelper.getGitSCM("ssh://git@1.1.1.1:7999/admin/springboot.git");
+    assertThat(scmName).isEqualTo("1.1.1.1");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithGITRepo() {
+    final String scmName = GitClientHelper.getGitSCM("git@bitbucket.org:foo/bar.git");
+    assertThat(scmName).isEqualTo("bitbucket.org");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithGitLabRepo() {
+    final String scmName = GitClientHelper.getGitSCM("https://gitlab.com/autouser");
+    assertThat(scmName).isEqualTo("gitlab.com");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithGerritRepo() {
+    final String scmName = GitClientHelper.getGitSCM("ssh://admin@192.168.1.40:29418/All-Projects");
+    assertThat(scmName).isEqualTo("192.168.1.40");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithGerritRepoDoubleAt() {
+    final String scmName = GitClientHelper.getGitSCM("ssh://admin@admin.com@192.168.1.40:29418/All-Projects");
+    assertThat(scmName).isEqualTo("192.168.1.40");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMPortWithRepo() {
+    final String scmName = GitClientHelper.getGitSCMPort("ghttps://github.com/repo.git");
+    assertThat(scmName).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMPortWithSSHRepo() {
+    final String scmName = GitClientHelper.getGitSCMPort("ssh://git@1.1.1.1:7999/admin/springboot.git");
+    assertThat(scmName).isEqualTo("7999");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMPortWithGITRepo() {
+    final String scmName = GitClientHelper.getGitSCMPort("git@bitbucket.org:foo/bar.git");
+    assertThat(scmName).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMPortWithGitLabRepo() {
+    final String scmName = GitClientHelper.getGitSCMPort("https://gitlab.com/autouser");
+    assertThat(scmName).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMPortWithGerritRepo() {
+    final String scmName = GitClientHelper.getGitSCMPort("ssh://admin@192.168.1.40:29418/All-Projects");
+    assertThat(scmName).isEqualTo("29418");
   }
 
   @Test

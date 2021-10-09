@@ -11,9 +11,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
+import io.harness.steps.barriers.beans.BarrierPositionInfo.BarrierPosition;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.beans.StageDetail;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
@@ -21,7 +23,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.junit.Before;
@@ -79,6 +83,11 @@ public class BarrierVisitorTest extends OrchestrationStepsTestBase {
     YamlNode yamlNode = YamlUtils.extractPipelineField(yaml).getNode();
     barrierVisitor.walkElementTree(yamlNode);
 
+    assertBarrierIdentifierMap();
+    assertBarrierPositionInfoMap();
+  }
+
+  private void assertBarrierIdentifierMap() {
     String vbStage = "VBStage";
     String sampleStage = "SampleStage";
     Map<String, BarrierSetupInfo> expectedMap = ImmutableMap.of("myBarrierId1",
@@ -100,5 +109,23 @@ public class BarrierVisitorTest extends OrchestrationStepsTestBase {
     assertThat(barrierVisitor.getBarrierIdentifierMap()).isNotEmpty();
     assertThat(barrierVisitor.getBarrierIdentifierMap().size()).isEqualTo(3);
     assertThat(barrierVisitor.getBarrierIdentifierMap()).containsAllEntriesOf(expectedMap);
+  }
+
+  private void assertBarrierPositionInfoMap() {
+    Map<String, List<BarrierPosition>> expectedMap = new HashMap<>();
+    expectedMap.put("myBarrierId1",
+        ImmutableList.of(BarrierPosition.builder().stepSetupId("barrier1").build(),
+            BarrierPosition.builder().stepSetupId("barrier3").build()));
+    expectedMap.put("myBarrierId2", ImmutableList.of(BarrierPosition.builder().stepSetupId("barrier2").build()));
+    expectedMap.put("myBarrierId3", ImmutableList.of());
+
+    assertThat(barrierVisitor.getBarrierPositionInfoMap()).isNotEmpty();
+    assertThat(barrierVisitor.getBarrierPositionInfoMap().size()).isEqualTo(3);
+    assertThat(barrierVisitor.getBarrierPositionInfoMap().get("myBarrierId2"))
+        .isEqualTo(expectedMap.get("myBarrierId2"));
+    assertThat(barrierVisitor.getBarrierPositionInfoMap().get("myBarrierId3"))
+        .isEqualTo(expectedMap.get("myBarrierId3"));
+    assertThat(barrierVisitor.getBarrierPositionInfoMap().get("myBarrierId1"))
+        .containsExactlyInAnyOrderElementsOf(expectedMap.get("myBarrierId1"));
   }
 }

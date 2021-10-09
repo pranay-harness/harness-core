@@ -234,7 +234,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
       String region, String deploymentId, int timeout) {
     try {
       Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         while (!deploymentCompleted(awsConfig, encryptedDataDetails, region, deploymentId, finalDeploymentStatus)) {
           sleep(ofSeconds(10));
         }

@@ -5,8 +5,13 @@ import static io.harness.persistence.HQuery.QueryChecks.AUTHORITY;
 import static io.harness.persistence.HQuery.QueryChecks.COUNT;
 import static io.harness.persistence.HQuery.QueryChecks.VALIDATE;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.CollectionLogContext;
+import io.harness.mongo.tracing.TraceMode;
+import io.harness.mongo.tracing.Tracer;
+import io.harness.observer.Subject;
 
 import com.google.common.collect.Sets;
 import com.mongodb.DBCollection;
@@ -30,6 +35,7 @@ import org.mongodb.morphia.query.QueryImpl;
  *
  * @param <T> the type parameter
  */
+@OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class HQuery<T> extends QueryImpl<T> {
   public enum QueryChecks { VALIDATE, AUTHORITY, COUNT }
@@ -40,9 +46,11 @@ public class HQuery<T> extends QueryImpl<T> {
   public static final Set<QueryChecks> excludeCount = EnumSet.<QueryChecks>of(AUTHORITY, VALIDATE);
   public static final Set<QueryChecks> excludeAuthorityCount = EnumSet.<QueryChecks>of(QueryChecks.VALIDATE);
 
+  private final TraceMode traceMode;
+  private final Subject<Tracer> tracerSubject;
   private Set<QueryChecks> queryChecks = allChecks;
 
-  private static Set<String> requiredFilterArgs = Sets.newHashSet("accountId", "accounts", "appId", "accountIds");
+  private static final Set<String> requiredFilterArgs = Sets.newHashSet("accountId", "accounts", "appId", "accountIds");
 
   public void setQueryChecks(Set<QueryChecks> queryChecks) {
     this.queryChecks = queryChecks;
@@ -56,12 +64,16 @@ public class HQuery<T> extends QueryImpl<T> {
   /**
    * Creates a Query for the given type and collection
    *
-   * @param clazz the type to return
-   * @param coll  the collection to query
-   * @param ds    the Datastore to use
+   * @param clazz         the type to return
+   * @param coll          the collection to query
+   * @param ds            the Datastore to use
+   * @param traceMode     the trace mode
+   * @param tracerSubject the trace subject used in case trace mode is ENABLED
    */
-  public HQuery(Class<T> clazz, DBCollection coll, Datastore ds) {
+  public HQuery(Class<T> clazz, DBCollection coll, Datastore ds, TraceMode traceMode, Subject<Tracer> tracerSubject) {
     super(clazz, coll, ds);
+    this.traceMode = traceMode;
+    this.tracerSubject = tracerSubject;
   }
 
   public MorphiaIterator<T, T> iterator() {
@@ -109,6 +121,7 @@ public class HQuery<T> extends QueryImpl<T> {
   @Override
   public List<Key<T>> asKeyList(FindOptions options) {
     enforceHarnessRules();
+    traceQuery();
     return HPersistence.retry(() -> {
       final List<Key<T>> list = super.asKeyList(options);
       checkKeyListSize(list);
@@ -121,6 +134,7 @@ public class HQuery<T> extends QueryImpl<T> {
   public List<T> asList(FindOptions options) {
     try (AutoLogContext ignore = new CollectionLogContext(super.getCollection().getName(), OVERRIDE_ERROR)) {
       enforceHarnessRules();
+      traceQuery();
       return HPersistence.retry(() -> {
         final List<T> list = super.asList(options);
         checkListSize(list);
@@ -142,30 +156,35 @@ public class HQuery<T> extends QueryImpl<T> {
   @Override
   public MorphiaIterator<T, T> fetch() {
     enforceHarnessRules();
+    traceQuery();
     return super.fetch();
   }
 
   @Override
   public MorphiaIterator<T, T> fetchEmptyEntities(FindOptions options) {
     enforceHarnessRules();
+    traceQuery();
     return HPersistence.retry(() -> { return super.fetchEmptyEntities(options); });
   }
 
   @Override
   public MorphiaKeyIterator<T> fetchKeys(FindOptions options) {
     enforceHarnessRules();
-    return HPersistence.retry(() -> { return super.fetchKeys(options); });
+    traceQuery();
+    return HPersistence.retry(() -> super.fetchKeys(options));
   }
 
   @Override
   public Query<T> search(String search) {
     enforceHarnessRules();
+    traceQuery();
     return super.search(search);
   }
 
   @Override
   public Query<T> search(String search, String language) {
     enforceHarnessRules();
+    traceQuery();
     return super.search(search, language);
   }
 
@@ -177,6 +196,12 @@ public class HQuery<T> extends QueryImpl<T> {
     if (!this.getChildren().stream().map(Criteria::getFieldName).anyMatch(requiredFilterArgs::contains)) {
       log.error("QUERY-ENFORCEMENT: appId or accountId must be present in List(Object/Key)/Get/Count/Search query",
           new Exception(""));
+    }
+  }
+
+  private void traceQuery() {
+    if (traceMode == TraceMode.ENABLED) {
+      tracerSubject.fireInform(Tracer::traceMorphiaQuery, this);
     }
   }
 

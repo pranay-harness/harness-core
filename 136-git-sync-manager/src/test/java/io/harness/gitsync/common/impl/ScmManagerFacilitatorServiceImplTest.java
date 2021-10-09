@@ -1,5 +1,6 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HARI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +24,9 @@ import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
+import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.rule.Owner;
 import io.harness.service.ScmClient;
@@ -37,6 +40,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -124,5 +128,20 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
     List<Boolean> actual = new ArrayList<>();
     repoURLs.forEach(repoURL -> actual.add(GitUtils.isSaasGit(repoURL).isSaasGit()));
     assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testGetLatestCommit() {
+    String commitId = "commitId";
+    ArgumentCaptor<String> branchNameCapture = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> ref = ArgumentCaptor.forClass(String.class);
+    when(scmClient.getLatestCommit(any(), branchNameCapture.capture(), ref.capture()))
+        .thenReturn(
+            GetLatestCommitResponse.newBuilder().setCommit(Commit.newBuilder().setSha(commitId).build()).build());
+    YamlGitConfigDTO yamlGitConfigDTO = YamlGitConfigDTO.builder().branch("default").build();
+    final Commit returnedCommit = scmManagerFacilitatorService.getLatestCommit(yamlGitConfigDTO, "branch1");
+    assertThat(returnedCommit.getSha()).isEqualTo(commitId);
   }
 }

@@ -2,6 +2,7 @@ package io.harness.migrations;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.migrations.all.AccountNextGenEnabledMigration;
 import io.harness.migrations.all.AddAccountIdToActivityCollection;
 import io.harness.migrations.all.AddAccountIdToBarrierInstanceCollection;
 import io.harness.migrations.all.AddAccountIdToCloudFormationRollBackConfig;
@@ -37,6 +38,7 @@ import io.harness.migrations.all.AddAccountIdToWorkflowExecutionBaselines;
 import io.harness.migrations.all.AddAccountToCVFeedbackRecordMigration;
 import io.harness.migrations.all.AddAccountidToTimeSeriesMLScores;
 import io.harness.migrations.all.AddAnalysisStatusMigration;
+import io.harness.migrations.all.AddAppManifestName;
 import io.harness.migrations.all.AddArtifactIdentityMigration;
 import io.harness.migrations.all.AddCeFullTrialLicenseToCurrentAccounts;
 import io.harness.migrations.all.AddEnableIteratorsToGovernanceConfig;
@@ -57,10 +59,14 @@ import io.harness.migrations.all.CleanupSyncStatusForDeletedEntities;
 import io.harness.migrations.all.ConvertHttpHeadersStringTypeToList;
 import io.harness.migrations.all.CreateNgPrimaryProfileForExistingAccounts;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
+import io.harness.migrations.all.DefaultExperienceMigration;
+import io.harness.migrations.all.DelegateGroupIdentifierMigration;
 import io.harness.migrations.all.DelegateNgDetailsToDelegateGroupMigration;
+import io.harness.migrations.all.DelegateProfileIdentifierMigration;
 import io.harness.migrations.all.DelegateTokenMigration;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
+import io.harness.migrations.all.DeleteInvalidArtifactStreams;
 import io.harness.migrations.all.DeleteInvalidServiceGuardConfigs;
 import io.harness.migrations.all.DeleteOrphanNotificationGroups;
 import io.harness.migrations.all.DeleteOrphanPerpetualTaskMigration;
@@ -116,6 +122,7 @@ import io.harness.migrations.all.UpdateWorkflowExecutionAccountId;
 import io.harness.migrations.all.UpdateWorkflowExecutionDuration;
 import io.harness.migrations.all.WFEAddDeploymentMetaData;
 import io.harness.migrations.all.WorkflowExecutionAddCDPageCandidateMigration;
+import io.harness.migrations.apppermission.ManageApplicationTemplatePermissionMigration;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -329,6 +336,14 @@ public class MigrationBackgroundList {
         .add(Pair.of(195, DelegateTokenMigration.class))
         .add(Pair.of(196, ExecuteWorkflowRollbackActionMigration.class))
         .add(Pair.of(197, DelegateNgDetailsToDelegateGroupMigration.class))
+        .add(Pair.of(198, DefaultExperienceMigration.class))
+        .add(Pair.of(199, AddAppManifestName.class))
+        .add(Pair.of(200, DelegateProfileIdentifierMigration.class))
+        .add(Pair.of(201, DelegateGroupIdentifierMigration.class))
+        .add(Pair.of(202, DeleteInvalidArtifactStreams.class))
+        .add(Pair.of(203, AccountNextGenEnabledMigration.class))
+        .add(Pair.of(204, DeleteOrphanPerpetualTaskMigration.class))
+        .add(Pair.of(205, ManageApplicationTemplatePermissionMigration.class))
         .build();
   }
 }

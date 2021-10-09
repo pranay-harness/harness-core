@@ -37,13 +37,16 @@ import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROU
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
@@ -134,6 +137,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -148,6 +152,7 @@ import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 @FieldNameConstants(innerTypeName = "ApprovalStateKeys")
 public class ApprovalState extends State implements SweepingOutputStateMixin {
@@ -459,6 +464,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   private ExecutionResponse executeShellScriptApproval(ExecutionContext context, String accountId, String appId,
       String approvalId, ShellScriptApprovalParams parameters, ApprovalStateExecutionData executionData) {
     parameters.setScriptString(context.renderExpression(parameters.getScriptString()));
+    parameters.setDelegateSelectors(getDelegateSelectors(context, parameters.fetchDelegateSelectors()));
+
     String activityId = createActivity(context);
     executionData.setActivityId(activityId);
 
@@ -473,6 +480,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .activityId(activityId)
             .scriptString(parameters.getScriptString())
+            .delegateSelectors(parameters.fetchDelegateSelectors())
             .approvalType(approvalStateType)
             .retryInterval(parameters.getRetryInterval())
             .build();
@@ -600,6 +608,18 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
               .errorMessage("Failed to schedule Approval" + e.getMessage())
               .stateExecutionData(executionData));
     }
+  }
+
+  @NotNull
+  private List<String> getDelegateSelectors(ExecutionContext context, List<String> delegateSelectors) {
+    List<String> renderedSelectorsSet = new ArrayList<>();
+
+    if (EmptyPredicate.isNotEmpty(delegateSelectors)) {
+      for (String selector : delegateSelectors) {
+        renderedSelectorsSet.add(context.renderExpression(selector));
+      }
+    }
+    return renderedSelectorsSet;
   }
 
   private void validateRequiredFields(ExecutionContext context, JiraApprovalParams jiraApprovalParams) {
@@ -994,6 +1014,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         (ApprovalStateExecutionData) response.values().iterator().next();
 
     boolean isApprovalFromSlack = approvalNotifyResponse.isApprovalFromSlack();
+    boolean isApprovalFromGraphQL = approvalNotifyResponse.isApprovalFromGraphQL();
+
     if (isNotEmpty(approvalNotifyResponse.getVariables())) {
       setVariables(approvalNotifyResponse.getVariables());
     }
@@ -1012,6 +1034,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     executionData.setComments(approvalNotifyResponse.getComments());
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(approvalNotifyResponse.getCurrentStatus());
+    executionData.setApprovalFromGraphQL(isApprovalFromGraphQL);
+    executionData.setApprovalViaApiKey(approvalNotifyResponse.isApprovalViaApiKey());
 
     Map<String, String> placeholderValues;
     if (approvalNotifyResponse.getApprovedBy() != null) {
@@ -1076,6 +1100,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
           output.put(ApprovalStateExecutionDataKeys.userGroups,
               userGroupService.fetchUserGroupNamesFromIds(executionData.getUserGroups()));
         }
+        // Via GraphQL Approval
+        output.put(ApprovalStateExecutionDataKeys.approvalFromGraphQL, executionData.isApprovalFromGraphQL());
         break;
       case JIRA:
         output.put(ApprovalStateExecutionDataKeys.issueUrl, executionData.getIssueUrl());
@@ -1373,5 +1399,13 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       default:
         unhandled(workflowType);
     }
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    if (approvalStateType == ApprovalStateType.SHELL_SCRIPT) {
+      return true;
+    }
+    return false;
   }
 }

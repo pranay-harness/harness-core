@@ -7,6 +7,10 @@ import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INF
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.exception.InvalidRequestException;
@@ -32,6 +36,8 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GcpKubernetesInfrastructureMappingKeys")
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Namespace") @Blueprint private String namespace;
   @Trimmed private String releaseName = INFRA_KUBERNETES_INFRAID_EXPRESSION;

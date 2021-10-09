@@ -1,7 +1,5 @@
 package software.wings.beans.yaml;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.PersistentEntity;
 import io.harness.yaml.BaseYaml;
 
@@ -11,10 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
 
-/**
- * @author rktummala on 10/17/17
- */
-@TargetModule(HarnessModule._870_YAML_BEANS)
 @Data
 public class ChangeContext<Y extends BaseYaml> {
   private Change change;

@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
@@ -91,6 +92,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
@@ -162,6 +164,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class WorkflowServiceHelperTest extends WingsBaseTest {
   private static String envId = generateUuid();
 
@@ -537,29 +540,25 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     PipelineStageElement pipelineStageElement = PipelineStageElement.builder().name(stageName).build();
 
     // No required variables.
-    assertThatCode(
-        () -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(pipelineStageElement, null, null, null, false))
+    assertThatCode(() -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(pipelineStageElement, null, null, null))
         .doesNotThrowAnyException();
 
     List<Variable> variables1 = singletonList(aVariable().name("v1").type(VariableType.TEXT).build());
-    assertThatCode(()
-                       -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                           pipelineStageElement, variables1, null, null, false))
+    assertThatCode(
+        () -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(pipelineStageElement, variables1, null, null))
         .doesNotThrowAnyException();
 
     List<Variable> variables2 =
         singletonList(aVariable().type(VariableType.TEXT).name("v1").mandatory(true).fixed(true).value("val").build());
-    assertThatCode(()
-                       -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                           pipelineStageElement, variables2, null, null, false))
+    assertThatCode(
+        () -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(pipelineStageElement, variables2, null, null))
         .doesNotThrowAnyException();
 
     // Required variables.
     List<Variable> variables3 =
         singletonList(aVariable().type(VariableType.TEXT).name("v1").mandatory(true).fixed(false).build());
-    assertThatThrownBy(()
-                           -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                               pipelineStageElement, variables3, null, null, false))
+    assertThatThrownBy(
+        () -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(pipelineStageElement, variables3, null, null))
         .isInstanceOf(InvalidRequestException.class);
 
     // Correct set of variables and overrides.
@@ -598,14 +597,14 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         ImmutableMap.of("v1", "${pv1}", "pv3", "val3", "pv5", "val5", "pv6", "val6");
     assertThatCode(()
                        -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                           pipelineStageElement, variables4, workflowStepVariables1, pipelineVariables1, false))
+                           pipelineStageElement, variables4, workflowStepVariables1, pipelineVariables1))
         .doesNotThrowAnyException();
 
     // Missing pipeline variable pv6.
     Map<String, String> pipelineVariables2 = ImmutableMap.of("pv3", "val3", "pv5", "val5");
     assertThatThrownBy(()
                            -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                               pipelineStageElement, variables4, workflowStepVariables1, pipelineVariables2, false))
+                               pipelineStageElement, variables4, workflowStepVariables1, pipelineVariables2))
         .isInstanceOf(InvalidRequestException.class);
 
     // Correct set of variables and overrides. v4 moves from pipeline stage element to pipeline variables.
@@ -619,13 +618,13 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     Map<String, String> pipelineVariables3 = ImmutableMap.of("pv3", "val3", "pv5", "val5", "pv6", "val6", "v4", "val4");
     assertThatCode(()
                        -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                           pipelineStageElement, variables4, workflowStepVariables2, pipelineVariables3, false))
+                           pipelineStageElement, variables4, workflowStepVariables2, pipelineVariables3))
         .doesNotThrowAnyException();
 
     // Missing variable v4 in both pipeline stage element and pipeline variables.
     assertThatThrownBy(()
                            -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                               pipelineStageElement, variables4, workflowStepVariables2, pipelineVariables1, false))
+                               pipelineStageElement, variables4, workflowStepVariables2, pipelineVariables1))
         .isInstanceOf(InvalidRequestException.class);
 
     // Ignore variable values with '.' for non-entity required variables.
@@ -640,7 +639,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     Map<String, String> pipelineVariables4 = ImmutableMap.of("pv3", "val3", "pv5", "val5");
     assertThatCode(()
                        -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                           pipelineStageElement, variables4, workflowStepVariables3, pipelineVariables4, false))
+                           pipelineStageElement, variables4, workflowStepVariables3, pipelineVariables4))
         .doesNotThrowAnyException();
 
     // Ignore variable values with '.' for non-entity required variables.
@@ -657,7 +656,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     Map<String, String> pipelineVariables5 = ImmutableMap.of("workflow.variables.v3", "val3", "pv5", "val5");
     assertThatThrownBy(()
                            -> WorkflowServiceHelper.checkWorkflowVariablesOverrides(
-                               pipelineStageElement, variables4, workflowStepVariables4, pipelineVariables5, false))
+                               pipelineStageElement, variables4, workflowStepVariables4, pipelineVariables5))
         .isInstanceOf(InvalidRequestException.class);
   }
 

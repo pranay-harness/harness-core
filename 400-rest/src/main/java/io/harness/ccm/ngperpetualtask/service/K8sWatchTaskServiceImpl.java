@@ -1,5 +1,9 @@
 package io.harness.ccm.ngperpetualtask.service;
 
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.ccm.K8sEventCollectionBundle;
 import io.harness.connector.ConnectorDTO;
@@ -36,6 +40,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -44,6 +49,7 @@ import org.jetbrains.annotations.NotNull;
  * Ref: CVDataCollectionTaskServiceImpl
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private PerpetualTaskService perpetualTaskService;
@@ -54,11 +60,13 @@ public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
   public String create(String accountId, K8sEventCollectionBundle bundle) {
     PerpetualTaskExecutionBundle executionBundle = createExecutionBundle(accountId, bundle);
 
-    PerpetualTaskClientContext clientContext =
-        PerpetualTaskClientContext.builder().executionBundle(executionBundle.toByteArray()).build();
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder()
+                                                   .clientId(bundle.getCloudProviderId() + "/" + bundle.getClusterId())
+                                                   .executionBundle(executionBundle.toByteArray())
+                                                   .build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromMinutes(1))
+                                         .setInterval(Durations.fromMinutes(2))
                                          .setTimeout(Durations.fromHours(3))
                                          .build();
 
@@ -89,7 +97,12 @@ public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
 
     Any perpetualTaskPack =
         getTaskParams((KubernetesClusterConfigDTO) k8sConnectorConfigDTO, encryptedDataDetailList, bundle);
-    return createPerpetualTaskExecutionBundle(perpetualTaskPack, executionCapabilities);
+
+    final Map<String, String> ngTaskSetupAbstractionsWithOwner =
+        getNGTaskSetupAbstractionsWithOwner(accountId, bundle.getOrgIdentifier(), bundle.getProjectIdentifier());
+
+    return createPerpetualTaskExecutionBundle(
+        perpetualTaskPack, executionCapabilities, ngTaskSetupAbstractionsWithOwner);
   }
 
   private List<EncryptedDataDetail> getEncryptedDataDetail(String accountId, String orgIdentifier,
@@ -139,8 +152,8 @@ public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
   }
 
   @NotNull
-  private PerpetualTaskExecutionBundle createPerpetualTaskExecutionBundle(
-      Any perpetualTaskPack, List<ExecutionCapability> executionCapabilities) {
+  private PerpetualTaskExecutionBundle createPerpetualTaskExecutionBundle(Any perpetualTaskPack,
+      List<ExecutionCapability> executionCapabilities, Map<String, String> ngTaskSetupAbstractionsWithOwner) {
     PerpetualTaskExecutionBundle.Builder builder = PerpetualTaskExecutionBundle.newBuilder();
     executionCapabilities.forEach(executionCapability
         -> builder
@@ -149,7 +162,7 @@ public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
                        .setKryoCapability(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(executionCapability)))
                        .build())
                .build());
-    return builder.setTaskParams(perpetualTaskPack).build();
+    return builder.setTaskParams(perpetualTaskPack).putAllSetupAbstractions(ngTaskSetupAbstractionsWithOwner).build();
   }
 
   // TODO(UTSAV): Move it to sharable module, currently k8s connector validator also uses below implementation

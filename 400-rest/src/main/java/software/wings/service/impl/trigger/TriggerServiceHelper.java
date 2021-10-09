@@ -104,7 +104,7 @@ import org.quartz.CronScheduleBuilder;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceHelper {
   public static final String EXECUTION_TYPE = "EXECUTION_TYPE";
   public static final String TRIGGER_NAME = "TRIGGER_NAME";
@@ -372,6 +372,7 @@ public class TriggerServiceHelper {
         artifacts.put("buildNumber", service + "_BUILD_NUMBER_PLACE_HOLDER");
         helmCharts.put("versionNumber", service + "_VERSION_NUMBER_PLACE_HOLDER");
         artifacts.put("artifactSourceName", service + "_ARTIFACT_SOURCE_NAME_PLACE_HOLDER");
+        helmCharts.put("appManifestName", service + "_APPLICATION_MANIFEST_NAME_PLACE_HOLDER");
         manifestList.add(helmCharts);
         artifactList.add(artifacts);
       }

@@ -36,7 +36,7 @@ public class RoleFilterValidator implements ConstraintValidator<ValidRoleFilter,
       return false;
     }
     if (isEmpty(value.getScopeIdentifier()) && !ManagedFilter.ONLY_MANAGED.equals(value.getManagedFilter())
-        && isEmpty(value.getAllowedScopeLevelsFilter())) {
+        && isEmpty(value.getScopeLevelsFilter())) {
       context.disableDefaultConstraintViolation();
       context
           .buildConstraintViolationWithTemplate(

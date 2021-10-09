@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.polling;
+
+option java_multiple_files = true;
+
+message ManifestCollectionTaskParamsNg {
+  string account_id = 1;
+  string polling_doc_id = 2;
+  bytes manifest_collection_params = 3;
+}

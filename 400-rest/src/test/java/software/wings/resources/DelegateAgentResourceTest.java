@@ -8,6 +8,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -31,8 +32,11 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.category.element.UnitTests;
@@ -45,7 +49,6 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -59,6 +62,8 @@ import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
+import io.harness.perpetualtask.instancesync.InstanceSyncResponsePublisher;
+import io.harness.polling.client.PollingResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -107,7 +112,8 @@ import org.mockito.ArgumentCaptor;
 @RunWith(Parameterized.class)
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
-public class DelegateAgentResourceTest {
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+public class DelegateAgentResourceTest extends CategoryTest {
   private static final DelegateService delegateService = mock(DelegateService.class);
   private static final software.wings.service.intfc.DelegateTaskServiceClassic delegateTaskServiceClassic =
       mock(software.wings.service.intfc.DelegateTaskServiceClassic.class);
@@ -122,6 +128,8 @@ public class DelegateAgentResourceTest {
   private static final InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static final ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
   private static final DelegateTaskService delegateTaskService = mock(DelegateTaskService.class);
+  private static final InstanceSyncResponsePublisher instanceSyncResponsePublisher =
+      mock(InstanceSyncResponsePublisher.class);
 
   static {
     artifactCollectionResponseHandler = mock(ArtifactCollectionResponseHandler.class);
@@ -131,6 +139,7 @@ public class DelegateAgentResourceTest {
   private static final ConnectorHearbeatPublisher connectorHearbeatPublisher = mock(ConnectorHearbeatPublisher.class);
   private static final KryoSerializer kryoSerializer = mock(KryoSerializer.class);
   private static final FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+  private static final PollingResourceClient pollResourceClient = mock(PollingResourceClient.class);
 
   @Parameter public String apiUrl;
 
@@ -145,7 +154,8 @@ public class DelegateAgentResourceTest {
           .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
               delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
               instanceSyncResponseHandler, manifestCollectionResponseHandler, connectorHearbeatPublisher,
-              kryoSerializer, configurationController, featureFlagService, delegateTaskServiceClassic))
+              kryoSerializer, configurationController, featureFlagService, delegateTaskServiceClassic,
+              pollResourceClient, instanceSyncResponsePublisher))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -210,22 +220,6 @@ public class DelegateAgentResourceTest {
             new GenericType<RestResponse<String>>() {});
     verify(delegateService, atLeastOnce())
         .registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, delegateConnectionHeartbeat, ConnectionMode.POLLING);
-  }
-
-  @Test
-  @Owner(developers = ROHITKARELIA)
-  @Category(UnitTests.class)
-  public void shouldClearCache() {
-    Delegate delegate = Delegate.builder().build();
-    when(delegateService.update(any(Delegate.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
-
-    RESOURCES.client()
-        .target(
-            "/agent/delegates/" + DELEGATE_ID + "/clear-cache?delegateId=" + DELEGATE_ID + "&accountId=" + ACCOUNT_ID)
-        .request()
-        .put(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
-    verify(delegateService, atLeastOnce()).clearCache(ACCOUNT_ID, DELEGATE_ID);
   }
 
   @Test
@@ -332,8 +326,8 @@ public class DelegateAgentResourceTest {
     String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
         + httpServletRequest.getServerPort();
     DelegateScripts delegateScripts = DelegateScripts.builder().build();
-    when(delegateService.getDelegateScripts(
-             ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+    when(delegateService.getDelegateScripts(ACCOUNT_ID, version,
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null))
         .thenReturn(delegateScripts);
     RestResponse<DelegateScripts> restResponse = RESOURCES.client()
                                                      .target("/agent/delegates/" + DELEGATE_ID + "/upgrade?delegateId="
@@ -343,8 +337,8 @@ public class DelegateAgentResourceTest {
                                                      .get(new GenericType<RestResponse<DelegateScripts>>() {});
 
     verify(delegateService, atLeastOnce())
-        .getDelegateScripts(
-            ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+        .getDelegateScripts(ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID),
+            verificationUrl, null);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
   }
 
@@ -418,7 +412,7 @@ public class DelegateAgentResourceTest {
                                           .stopScript("stopScript")
                                           .build();
     when(delegateService.getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, DelegateSize.LAPTOP))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
         .thenReturn(delegateScripts);
 
     RestResponse<DelegateScripts> restResponse =
@@ -430,7 +424,7 @@ public class DelegateAgentResourceTest {
 
     verify(delegateService, atLeastOnce())
         .getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, DelegateSize.LAPTOP);
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull().isEqualTo(delegateScripts);
   }
 
@@ -443,7 +437,7 @@ public class DelegateAgentResourceTest {
         + httpServletRequest.getServerPort();
     DelegateScripts delegateScripts = DelegateScripts.builder().build();
     when(delegateService.getDelegateScripts(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null))
         .thenReturn(delegateScripts);
 
     RestResponse<DelegateScripts> restResponse =
@@ -454,7 +448,33 @@ public class DelegateAgentResourceTest {
 
     verify(delegateService, atLeastOnce())
         .getDelegateScripts(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null);
+    assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void getdelegateScripts() throws IOException {
+    String delegateVersion = "0.0.0";
+    String delegateName = "TEST_DELEGATE";
+    String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
+        + httpServletRequest.getServerPort();
+    DelegateScripts delegateScripts = DelegateScripts.builder().build();
+    when(delegateService.getDelegateScripts(ACCOUNT_ID, delegateVersion,
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, delegateName))
+        .thenReturn(delegateScripts);
+
+    RestResponse<DelegateScripts> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/delegateScripts?accountId=" + ACCOUNT_ID + "&delegateVersion=" + delegateVersion
+                + "&delegateName=" + delegateName)
+            .request()
+            .get(new GenericType<RestResponse<DelegateScripts>>() {});
+
+    verify(delegateService, atLeastOnce())
+        .getDelegateScripts(ACCOUNT_ID, delegateVersion,
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, delegateName);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
   }
 
@@ -501,10 +521,11 @@ public class DelegateAgentResourceTest {
   public void shouldFailIfAllDelegatesFailed() {
     String taskId = generateUuid();
     RESOURCES.client()
-        .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/fail?accountId=" + ACCOUNT_ID)
+        .target(String.format("/agent/delegates/%s/tasks/%s/fail?accountId=%s&areClientToolsInstalled=%s", DELEGATE_ID,
+            taskId, ACCOUNT_ID, true))
         .request()
         .get(new GenericType<RestResponse<String>>() {});
-    verify(delegateTaskServiceClassic, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId);
+    verify(delegateTaskServiceClassic, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId, true);
   }
 
   @Test

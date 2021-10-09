@@ -35,6 +35,7 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: false
   aliasDBName:  pms-harness
+  traceMode: DISABLED
 
 grpcServerConfig:
   connectors:
@@ -125,7 +126,14 @@ ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
+
+pipelineServiceClientConfig:
+  baseUrl: http://localhost:12001/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
 jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
 
@@ -143,16 +151,21 @@ accessControlClient:
 pipelineServiceBaseUrl: https://localhost:8181/#
 pmsApiBaseUrl: http://localhost:12001/api/
 
+triggerConfig:
+  webhookBaseUrl: http://localhost:7457/api/
+  customBaseUrl: http://localhost:12001/api/
+
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+opaServerConfig:
+  baseUrl: http://localhost:3000
 
 iteratorsConfig:
   approvalInstanceIteratorConfig:
     enabled: true
     targetIntervalInSeconds: 60
-
-enableAuth: true
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
@@ -191,3 +204,25 @@ auditClientConfig:
   readTimeOutSeconds: 15
 
 enableAudit: false
+
+cacheConfig:
+  cacheBackend: REDIS
+  cacheNamespace: ""
+  disabledCaches: [ ]
+
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-}
+
+delegatePollingConfig:
+  syncDelay: 2000
+  asyncDelay: 2000
+  progressDelay: 2000
+
+segmentConfiguration:
+  enabled: false
+  url: https://api.segment.io/v1/
+  apiKey: ""
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: false

@@ -20,6 +20,8 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -46,6 +48,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ExecutionInputsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock ServiceResourceService serviceResourceService;
   @Mock AppService appService;
@@ -161,6 +164,70 @@ public class ExecutionInputsDataFetcherTest extends AbstractDataFetcherTestBase 
     QLExecutionInputs executionInputs = executionInputsDataFetcher.fetch(params, ACCOUNT_ID);
     assertThat(executionInputs).isNotNull();
     assertThat(executionInputs.getServiceInputs().stream().map(QLService::getId).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(SERVICE_ID, SERVICE_ID + 2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void populateManifestNeededServiceIds() {
+    QLServiceInputsForExecutionParams params = QLServiceInputsForExecutionParams.builder()
+                                                   .executionType(QLExecutionType.WORKFLOW)
+                                                   .applicationId(APP_ID)
+                                                   .entityId(WORKFLOW_ID)
+                                                   .build();
+
+    Workflow workflow =
+        aWorkflow().uuid(WORKFLOW_ID).orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.fetchDeploymentMetadata(eq(APP_ID), eq(workflow), any(), eq(null), eq(null), eq(false),
+             eq(null), eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(
+            DeploymentMetadata.builder().manifestRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2)).build());
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    PageResponse<Service> response = aPageResponse()
+                                         .withResponse(asList(Service.builder().uuid(SERVICE_ID).build(),
+                                             Service.builder().uuid(SERVICE_ID + 2).build()))
+                                         .build();
+    when(serviceResourceService.list(any(), eq(true), eq(false), eq(false), eq(null))).thenReturn(response);
+
+    QLExecutionInputs executionInputs = executionInputsDataFetcher.fetch(params, ACCOUNT_ID);
+    assertThat(executionInputs).isNotNull();
+    assertThat(executionInputs.getServiceInputs()).isEmpty();
+    assertThat(executionInputs.getServiceManifestInputs().stream().map(QLService::getId).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(SERVICE_ID, SERVICE_ID + 2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void populateManifestAndArtifactServiceIds() {
+    QLServiceInputsForExecutionParams params = QLServiceInputsForExecutionParams.builder()
+                                                   .executionType(QLExecutionType.PIPELINE)
+                                                   .applicationId(APP_ID)
+                                                   .entityId(PIPELINE_ID)
+                                                   .build();
+
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(pipelineService.fetchDeploymentMetadata(eq(APP_ID), eq(pipeline), any()))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2))
+                        .manifestRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2))
+                        .build());
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    PageResponse<Service> response = aPageResponse()
+                                         .withResponse(asList(Service.builder().uuid(SERVICE_ID).build(),
+                                             Service.builder().uuid(SERVICE_ID + 2).build()))
+                                         .build();
+    when(serviceResourceService.list(any(), eq(true), eq(false), eq(false), eq(null))).thenReturn(response);
+
+    QLExecutionInputs executionInputs = executionInputsDataFetcher.fetch(params, ACCOUNT_ID);
+    assertThat(executionInputs).isNotNull();
+    assertThat(executionInputs.getServiceInputs().stream().map(QLService::getId).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(SERVICE_ID, SERVICE_ID + 2);
+    assertThat(executionInputs.getServiceManifestInputs().stream().map(QLService::getId).collect(Collectors.toList()))
         .containsExactlyInAnyOrder(SERVICE_ID, SERVICE_ID + 2);
   }
 }

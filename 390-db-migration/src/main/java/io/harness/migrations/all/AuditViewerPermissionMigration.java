@@ -5,7 +5,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

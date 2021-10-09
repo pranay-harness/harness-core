@@ -4,10 +4,9 @@ import (
 	"io"
 	"net/http"
 
-	"go.uber.org/zap"
-
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 
 	"github.com/go-chi/chi"
@@ -15,7 +14,7 @@ import (
 
 // Handler returns an http.Handler that exposes the
 // service resources.
-func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLogger) http.Handler {
+func Handler(db db.Db, tidb tidb.TiDB, config config.Config) http.Handler {
 	r := chi.NewRouter()
 
 	// Token generation endpoints
@@ -38,26 +37,42 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 		if !config.Secrets.DisableAuth {
 			sr.Use(AuthMiddleware(config))
 		}
+		// use the logging middleware
+		sr.Use(logger.Middleware)
 
-		sr.Get("/info", HandleReportsInfo(db, log))
-		sr.Post("/write", HandleWrite(db, log))
-		sr.Get("/summary", HandleSummary(db, log))
-		sr.Get("/test_cases", HandleTestCases(db, log))
-		sr.Get("/test_suites", HandleTestSuites(db, log))
+		sr.Get("/info", HandleReportsInfo(db))
+		sr.Post("/write", HandleWrite(db))
+		sr.Get("/summary", HandleSummary(db))
+		sr.Get("/test_cases", HandleTestCases(db))
+		sr.Get("/test_suites", HandleTestSuites(db))
 		return sr
 	}())
 
 	r.Mount("/tests", func() http.Handler {
+		sr := chi.NewRouter()
+		// use the logging middleware
+		sr.Use(logger.Middleware)
+		// Validate the accountId in URL with the token generated above and authorize the request
+		if !config.Secrets.DisableAuth {
+			sr.Use(AuthMiddleware(config))
+		}
+
+		sr.Get("/info", HandleIntelligenceInfo(db))
+		sr.Post("/select", HandleSelect(tidb, db, config))
+		sr.Get("/overview", HandleOverview(db))
+		sr.Post("/uploadcg", HandleUploadCg(tidb, db))
+		return sr
+	}())
+
+	r.Mount("/vg", func() http.Handler {
 		sr := chi.NewRouter()
 		// Validate the accountId in URL with the token generated above and authorize the request
 		if !config.Secrets.DisableAuth {
 			sr.Use(AuthMiddleware(config))
 		}
 
-		sr.Get("/info", HandleIntelligenceInfo(db, log))
-		sr.Post("/select", HandleSelect(tidb, db, log))
-		sr.Get("/overview", HandleOverview(db, log))
-		sr.Post("/uploadcg", HandleUploadCg(tidb, db, log))
+		sr.Get("/", HandleVgSearch(tidb, db))
+
 		return sr
 	}())
 
@@ -69,7 +84,7 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 	// Readiness check
 	r.Mount("/ready/healthz", func() http.Handler {
 		sr := chi.NewRouter()
-		sr.Get("/", HandlePing(db, log))
+		sr.Get("/", HandlePing(db))
 
 		return sr
 	}())

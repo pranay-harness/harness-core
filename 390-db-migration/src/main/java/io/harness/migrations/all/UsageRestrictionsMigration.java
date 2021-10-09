@@ -5,7 +5,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;

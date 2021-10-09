@@ -26,7 +26,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Ignore
 public class DelegateDataCollectionResourceTest extends VerificationIntegrationBase {
   @Inject CVActivityLogService cvActivityLogService;
   @Override
@@ -38,6 +37,7 @@ public class DelegateDataCollectionResourceTest extends VerificationIntegrationB
   @Test
   @Owner(developers = KAMAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("TODO: provide proper description why this test is disabled")
   public void testPostCVActivityLog() {
     WebTarget target =
         client.target(VERIFICATION_API_BASE + "/delegate-data-collection/save-cv-activity-logs?accountId=" + accountId);

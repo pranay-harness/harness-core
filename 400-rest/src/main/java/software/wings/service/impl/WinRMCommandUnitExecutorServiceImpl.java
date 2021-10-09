@@ -88,7 +88,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
     WinRmExecutor winRmExecutor =
         winRmExecutorFactory.getExecutor(winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet());
     FileBasedWinRmExecutor fileBasedWinRmExecutor = winRmExecutorFactory.getFiledBasedWinRmExecutor(
-        winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet(), context.isWinrmCopyConfigOptimize());
+        winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet());
 
     ShellCommandExecutionContext shellCommandExecutionContext = new ShellCommandExecutionContext(context);
     shellCommandExecutionContext.setExecutor(winRmExecutor);
@@ -98,7 +98,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
 
     try {
       long timeoutMs = context.getTimeout() == null ? TimeUnit.MINUTES.toMillis(10) : context.getTimeout().longValue();
-      commandExecutionStatus = HTimeLimiter.callInterruptible(
+      commandExecutionStatus = HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMillis(timeoutMs), () -> commandUnit.execute(shellCommandExecutionContext));
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),

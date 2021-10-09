@@ -7,8 +7,6 @@ import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.shared.ResourceRestraint;
-import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.ConstraintRegistry;
@@ -19,6 +17,7 @@ import io.harness.distribution.constraint.UnableToLoadConstraintException;
 import io.harness.distribution.constraint.UnableToSaveConstraintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.utils.PmsConstants;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceBuilder;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
@@ -39,8 +38,8 @@ import org.springframework.dao.DuplicateKeyException;
 @Singleton
 @Slf4j
 public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry {
-  @Inject private RestraintService restraintService;
   @Inject private ResourceRestraintService resourceRestraintService;
+  @Inject private ResourceRestraintInstanceService resourceRestraintInstanceService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   public ConstraintRegistry getRegistry() {
@@ -54,16 +53,17 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
 
   @Override
   public Constraint load(ConstraintId id) throws UnableToLoadConstraintException {
-    final ResourceRestraint resourceRestraint = restraintService.get(null, id.getValue());
-    return resourceRestraintService.createAbstraction(resourceRestraint);
+    final ResourceRestraint resourceRestraint = resourceRestraintService.get(null, id.getValue());
+    return resourceRestraintInstanceService.createAbstraction(resourceRestraint);
   }
 
   @Override
   public List<Consumer> loadConsumers(ConstraintId id, ConstraintUnit unit) {
     List<Consumer> consumers = new ArrayList<>();
 
-    List<ResourceRestraintInstance> instances = resourceRestraintService.getAllByRestraintIdAndResourceUnitAndStates(
-        id.getValue(), unit.getValue(), new ArrayList<>(Arrays.asList(ACTIVE, BLOCKED)));
+    List<ResourceRestraintInstance> instances =
+        resourceRestraintInstanceService.getAllByRestraintIdAndResourceUnitAndStates(
+            id.getValue(), unit.getValue(), new ArrayList<>(Arrays.asList(ACTIVE, BLOCKED)));
 
     instances.forEach(instance
         -> consumers.add(Consumer.builder()
@@ -79,7 +79,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
 
   @Override
   public boolean registerConsumer(ConstraintId id, ConstraintUnit unit, Consumer consumer, int currentlyRunning) {
-    ResourceRestraint resourceRestraint = restraintService.get(null, id.getValue());
+    ResourceRestraint resourceRestraint = resourceRestraintService.get(null, id.getValue());
     if (resourceRestraint == null) {
       throw new InvalidRequestException(format("There is no resource constraint with id: %s", id.getValue()));
     }
@@ -100,7 +100,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
     }
 
     try {
-      resourceRestraintService.save(builder.build());
+      resourceRestraintInstanceService.save(builder.build());
     } catch (DuplicateKeyException e) {
       log.info("Failed to add ResourceRestraintInstance", e);
       return false;
@@ -111,7 +111,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
 
   @Override
   public boolean adjustRegisterConsumerContext(ConstraintId id, Map<String, Object> context) {
-    final int order = resourceRestraintService.getMaxOrder(id.getValue()) + 1;
+    final int order = resourceRestraintInstanceService.getMaxOrder(id.getValue()) + 1;
     if (order == (int) context.get(ResourceRestraintInstanceKeys.order)) {
       return false;
     }
@@ -122,7 +122,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
   @Override
   public boolean consumerUnblocked(
       ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
-    resourceRestraintService.activateBlockedInstance(consumerId.getValue(), unit.getValue());
+    resourceRestraintInstanceService.activateBlockedInstance(consumerId.getValue(), unit.getValue());
     waitNotifyEngine.doneWith(consumerId.getValue(), ResourceRestraintResponseData.builder().build());
     return true;
   }
@@ -131,7 +131,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
   public boolean consumerFinished(
       ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
     try {
-      resourceRestraintService.finishInstance(consumerId.getValue(), unit.getValue());
+      resourceRestraintInstanceService.finishInstance(consumerId.getValue(), unit.getValue());
     } catch (InvalidRequestException e) {
       log.error("The attempt to finish Constraint with id {} failed for resource unit {} with Resource restraint id {}",
           id.getValue(), unit.getValue(), consumerId.getValue(), e);

@@ -1,6 +1,6 @@
 package software.wings.beans.appmanifest;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotation.HarnessEntity;
@@ -38,13 +38,12 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
 @OwnedBy(CDP)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class ApplicationManifest extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("appManifestIdx")
-                 .unique(true)
+                 .name("appManifestIdx2")
                  .field(BaseKeys.appId)
                  .field(ApplicationManifestKeys.envId)
                  .field(ApplicationManifestKeys.serviceId)
@@ -54,10 +53,12 @@ public class ApplicationManifest extends Base implements AccountAccess {
   }
 
   public static final String ID = "_id";
+  public static final String CREATED_AT = "createdAt";
 
   @FdIndex private String accountId;
   private String serviceId;
   private String envId;
+  private String name;
   private AppManifestKind kind;
   @NonNull private StoreType storeType;
   private GitFileConfig gitFileConfig;
@@ -65,6 +66,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private KustomizeConfig kustomizeConfig;
   private CustomSourceConfig customSourceConfig;
   @Nullable private HelmCommandFlagConfig helmCommandFlag;
+  private String helmValuesYamlFilePaths;
 
   private Boolean pollForChanges;
   @Transient private String serviceName;
@@ -73,6 +75,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private String perpetualTaskId;
   private int failedAttempts;
   private Boolean skipVersioningForAllK8sObjects;
+  private String validationMessage;
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()
@@ -88,6 +91,8 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .pollForChanges(this.pollForChanges)
                                        .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
                                        .helmCommandFlag(HelmCommandFlagConfig.cloneFrom(this.helmCommandFlag))
+                                       .helmValuesYamlFilePaths(this.helmValuesYamlFilePaths)
+                                       .name(this.name)
                                        .build();
     manifest.setAppId(this.appId);
     return manifest;
@@ -104,23 +109,23 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private HelmChartConfig helmChartConfig;
     private KustomizeConfig kustomizeConfig;
     private CustomSourceConfig customSourceConfig;
-    private Boolean pollForChanges;
     private Boolean skipVersioningForAllK8sObjects;
     private HelmCommandFlagConfig helmCommandFlag;
+    private String helmValuesYamlFilePaths;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
         HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, CustomSourceConfig customSourceConfig,
-        Boolean pollForChanges, HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
+        HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects, String helmValuesYamlFilePaths) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
       this.helmChartConfig = helmChartConfig;
       this.kustomizeConfig = kustomizeConfig;
       this.customSourceConfig = customSourceConfig;
-      this.pollForChanges = pollForChanges;
       this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
       this.helmCommandFlag = helmCommandFlag;
+      this.helmValuesYamlFilePaths = helmValuesYamlFilePaths;
     }
   }
 }

@@ -6,6 +6,7 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -22,9 +23,8 @@ import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.entities.NotificationSettingConfig;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
-import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -71,8 +71,9 @@ public class AggregateUserGroupServiceImplTest extends CategoryTest {
     List<String> users2 = Lists.newArrayList("u3", "u4", "u5", "u6", "u7", "u8");
     List<String> users3 = Lists.newArrayList("u2");
     List<String> users4 = Lists.newArrayList();
-    List<UserInfo> userInfoList = Lists.newArrayList(getUserInfo("u1"), getUserInfo("u2"), getUserInfo("u3"),
-        getUserInfo("u4"), getUserInfo("u5"), getUserInfo("u6"), getUserInfo("u7"), getUserInfo("u8"));
+    List<UserMetadataDTO> users =
+        Lists.newArrayList(getUserMetadata("u1"), getUserMetadata("u2"), getUserMetadata("u3"), getUserMetadata("u4"),
+            getUserMetadata("u5"), getUserMetadata("u6"), getUserMetadata("u7"), getUserMetadata("u8"));
 
     doReturn(new PageImpl<>(Lists.newArrayList(
                  UserGroup.builder().identifier("UG1").users(users1).notificationConfigs(notificationConfigs).build(),
@@ -82,7 +83,7 @@ public class AggregateUserGroupServiceImplTest extends CategoryTest {
         .when(userGroupService)
         .list(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, null, getPageRequest(pageRequest));
 
-    doReturn(userInfoList).when(ngUserService).listCurrentGenUsers(any(), any());
+    doReturn(users).when(ngUserService).getUserMetadata(anyList());
 
     Call<RestResponse<SecretManagerConfigDTO>> request = mock(Call.class);
     doReturn(request)
@@ -116,7 +117,7 @@ public class AggregateUserGroupServiceImplTest extends CategoryTest {
     assertThat(response.getContent().get(3).getUsers().size()).isEqualTo(0);
   }
 
-  private static UserInfo getUserInfo(String user) {
-    return UserInfo.builder().name(user).uuid(user).build();
+  private static UserMetadataDTO getUserMetadata(String user) {
+    return UserMetadataDTO.builder().name(user).email(user).uuid(user).build();
   }
 }

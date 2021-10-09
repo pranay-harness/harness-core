@@ -90,7 +90,13 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>870-yaml-beans</artifactId>
+            <artifactId>882-pms-sdk-core</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>889-yaml-commons</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

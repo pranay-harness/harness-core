@@ -7,13 +7,14 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, JavaClass, populate_internal_info, UNKNOWN_LOCATION};
+use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass, UNKNOWN_LOCATION};
 use crate::repo::GIT_REPO_ROOT_DIR;
 use crate::team::SHARED_BETWEEN_TEAMS;
 
 lazy_static! {
     pub static ref TEAM_OWNER_PATTERN: Regex = Regex::new(r#"\nHarnessTeam = "([A-Z]+)"\n"#).unwrap();
     pub static ref DEPRECATED_PATTERN: Regex = Regex::new(r"\nDeprecated = True\n").unwrap();
+    pub static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"breakDependencyOn\("([^"]+)"\)"#).unwrap();
 }
 
 #[derive(Debug)]
@@ -26,6 +27,7 @@ pub struct JavaModule {
     pub jar: String,
     pub srcs: HashMap<String, JavaClass>,
     pub dependencies: HashSet<String>,
+    pub break_dependencies_on: HashSet<String>,
 }
 
 pub trait JavaModuleTraits {
@@ -78,6 +80,7 @@ pub fn model_names() -> HashMap<String, String> {
                 target.split_whitespace().nth(0).unwrap().to_string(),
             )
         })
+        .filter(|(name, _)| name.rfind("/").unwrap_or(0) == 1)
         .collect::<HashMap<String, String>>()
 }
 
@@ -87,11 +90,19 @@ pub fn modules() -> HashMap<String, JavaModule> {
     let modules = module_rules.iter().map(|(k, _)| k.clone()).collect::<HashSet<String>>();
 
     let data_collection_dsl = populate_from_external(
-        "https/harness.jfrog.io/harness/harness-public",
+        "https/harness.jfrog.io/artifactory/portal-maven",
         "io/harness/cv",
         "data-collection-dsl",
-        "0.26-RELEASE",
+        "0.27-RELEASE",
         Some("CV".to_string()),
+    );
+
+    let ff_java_server_sdk = populate_from_external(
+        "https/harness.jfrog.io/artifactory/portal-maven",
+        "io/harness",
+        "ff-java-server-sdk",
+        "1.0.3",
+        Some("CE".to_string()),
     );
 
     let mut result: HashMap<String, JavaModule> = modules
@@ -105,6 +116,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         .collect::<HashMap<String, JavaModule>>();
 
     result.insert("data-collection-dsl".to_string(), data_collection_dsl);
+    result.insert("ff_java_server_sdk".to_string(), ff_java_server_sdk);
 
     result
 }
@@ -149,6 +161,18 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
     let prefix = &format!("{}:", chunk);
     let directory = &format!("{}/", chunk.strip_prefix("//").unwrap());
 
+    let annotations_filename = &format!(
+        "{}/{}{}_srcs_annotations.txt",
+        BAZEL_BAZEL_GENFILES_DIR.as_str(),
+        directory,
+        module_type
+    );
+
+    if Path::new(annotations_filename).exists() {
+        // TODO: load the systemized file and read the annotations for the class from there
+        //       this should be significantly faster than processing the whole java file
+    }
+
     let filename = &format!(
         "{}/.aeriform/{}_aeriform_sources.txt",
         BAZEL_BAZEL_GENFILES_DIR.as_str(),
@@ -161,6 +185,7 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
         .lines()
         .par_bridge()
         .map(|line| line.to_string())
+        .filter(|ln| ln.ends_with(".java"))
         .map(|line| line.replace(prefix, directory))
         .map(|line| (class(&line), line))
         .map(|tuple| {
@@ -222,6 +247,9 @@ fn is_harness_class(class: &String) -> bool {
 const GOOGLE_PROTO_BASE_CLASSES: &'static [&'static str] = &[
     "com.google.protobuf.UnknownFieldSet",
     "com.google.protobuf.ProtocolMessageEnum",
+    "com.google.protobuf.MessageOrBuilder",
+    "com.google.protobuf.GeneratedMessageV3",
+    "com.google.protobuf.ExtensionRegistry",
     "io.grpc.stub.AbstractStub",
 ];
 
@@ -299,7 +327,6 @@ lazy_static! {
     .unwrap()
     .trim()
     .to_string();
-
     static ref BAZEL_OUTPUT_BASE_DIR: String = String::from_utf8(
         Command::new("bazel")
             .args(&["info", "output_base"])
@@ -310,7 +337,6 @@ lazy_static! {
     .unwrap()
     .trim()
     .to_string();
-
     static ref BAZEL_BIN_BASE_DIR: String = String::from_utf8(
         Command::new("bazel")
             .args(&["info", "bazel-bin"])
@@ -348,8 +374,15 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
     };
 
     let deprecated = DEPRECATED_PATTERN.is_match(&build);
-
     let module_dependencies = populate_module_dependencies(name, modules);
+
+    // TODO: this is not very correct because it will detect the mark from any target and
+    //       apply to all, but that is good enough for now.
+    let break_dependency_on_modules: HashSet<String> = BREAK_DEPENDENCY_ON_PATTERN
+        .captures_iter(&build)
+        .map(|m| m.get(1).unwrap().as_str().to_string())
+        .filter(|module| module_dependencies.contains(module))
+        .collect();
 
     let (dependencies, maybe_protos) = populate_dependencies(name);
 
@@ -371,12 +404,13 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
             .take(3)
             .collect::<String>()
             .parse::<f32>()
-            .expect("the model index was ot resolved")
+            .expect("the model index was not resolved")
             + index_fraction(name),
         directory: directory,
         jar: jar,
         srcs: srcs,
         dependencies: module_dependencies,
+        break_dependencies_on: break_dependency_on_modules,
     }
 }
 
@@ -442,5 +476,6 @@ fn populate_from_external(
         jar: jar,
         srcs: srcs,
         dependencies: HashSet::new(),
+        break_dependencies_on: HashSet::new(),
     }
 }

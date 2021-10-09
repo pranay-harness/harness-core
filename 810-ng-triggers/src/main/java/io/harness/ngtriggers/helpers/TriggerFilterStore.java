@@ -7,14 +7,19 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHU
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.AccountCustomTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.AccountTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.EventActionTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.FilepathTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GitWebhookTriggerRepoFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GithubIssueCommentTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.HeaderTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.JexlConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.PayloadConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.SourceRepoTypeTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.buildtrigger.BuildTriggerEventConditionsFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.buildtrigger.BuildTriggerSignatureFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.buildtrigger.BuildTriggerValidationFilter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,17 +35,22 @@ import lombok.extern.slf4j.Slf4j;
 public class TriggerFilterStore {
   private final GitWebhookTriggerRepoFilter gitWebhookTriggerRepoFilter;
   private final AccountTriggerFilter accountTriggerFilter;
+  private final AccountCustomTriggerFilter accountCustomTriggerFilter;
   private final SourceRepoTypeTriggerFilter sourceRepoTypeTriggerFilter;
   private final EventActionTriggerFilter eventActionTriggerFilter;
   private final PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
   private final GithubIssueCommentTriggerFilter githubIssueCommentTriggerFilter;
   private final HeaderTriggerFilter headerTriggerFilter;
   private final JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
+  private final FilepathTriggerFilter filepathTriggerFilter;
+  private final BuildTriggerEventConditionsFilter buildConditionsTriggerFilter;
+  private final BuildTriggerValidationFilter buildTriggerValidationFilter;
+  private final BuildTriggerSignatureFilter buildTriggerSignatureFilter;
 
   public List<TriggerFilter> getWebhookTriggerFilters(WebhookPayloadData webhookPayloadData) {
     if (CUSTOM.name().equals(webhookPayloadData.getOriginalEvent().getSourceRepoType())) {
       return Arrays.asList(
-          accountTriggerFilter, payloadConditionsTriggerFilter, headerTriggerFilter, jexlConditionsTriggerFilter);
+          accountCustomTriggerFilter, payloadConditionsTriggerFilter, headerTriggerFilter, jexlConditionsTriggerFilter);
     }
 
     // When it github and comment on a pr event
@@ -56,13 +66,18 @@ public class TriggerFilterStore {
     return getWebhookGitTriggerFiltersDefaultList();
   }
 
+  public List<TriggerFilter> getBuildTriggerFiltersDefaultList() {
+    return Arrays.asList(buildTriggerSignatureFilter, buildConditionsTriggerFilter, buildTriggerValidationFilter);
+  }
+
   List<TriggerFilter> getWebhookGitTriggerFiltersDefaultList() {
     return Arrays.asList(accountTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-        payloadConditionsTriggerFilter, headerTriggerFilter, jexlConditionsTriggerFilter, gitWebhookTriggerRepoFilter);
+        payloadConditionsTriggerFilter, headerTriggerFilter, jexlConditionsTriggerFilter, gitWebhookTriggerRepoFilter,
+        filepathTriggerFilter);
   }
 
   List<TriggerFilter> getTriggerFiltersGithubIssueCommentList() {
     return Arrays.asList(accountTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-        headerTriggerFilter, gitWebhookTriggerRepoFilter, githubIssueCommentTriggerFilter);
+        headerTriggerFilter, gitWebhookTriggerRepoFilter, githubIssueCommentTriggerFilter, filepathTriggerFilter);
   }
 }

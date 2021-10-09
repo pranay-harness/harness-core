@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
@@ -26,6 +25,7 @@ const (
 	pluginCmdExitWaitTime   time.Duration = time.Duration(0)
 	imageSecretEnv                        = "HARNESS_IMAGE_SECRET" // Docker image secret for plugin image
 	settingEnvPrefix                      = "PLUGIN_"
+	pluginArtifactFileEnv                 = "PLUGIN_ARTIFACT_FILE"
 )
 
 var (
@@ -104,17 +104,14 @@ func (t *pluginTask) resolveExprInEnv(ctx context.Context) (map[string]string, e
 	for k, v := range t.environment {
 		envVarMap[k] = v
 	}
-	m, err := resolver.ResolveJEXLInMapValues(ctx, envVarMap, t.id, t.prevStepOutputs, t.log)
+
+	// Resolves secret in environment variables e.g. foo-${ngSecretManager.obtain("secret", 1234)}
+	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(envVarMap)
 	if err != nil {
 		return nil, err
 	}
 
-	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(m)
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.ResolveEnvInMapValues(resolvedSecretMap), nil
+	return resolvedSecretMap, nil
 }
 
 func (t *pluginTask) execute(ctx context.Context, retryCount int32) (*pb.Artifact, error) {
@@ -147,7 +144,12 @@ func (t *pluginTask) execute(ctx context.Context, retryCount int32) (*pb.Artifac
 		return nil, err
 	}
 
-	artifactProto, artifactErr := artifact.GetArtifactProtoFromFile(t.artifactFilePath)
+	artifactFilePath := t.artifactFilePath
+	if artifactFilePath == "" {
+		artifactFilePath = envVarsMap[pluginArtifactFileEnv]
+	}
+
+	artifactProto, artifactErr := artifact.GetArtifactProtoFromFile(artifactFilePath)
 	if artifactErr != nil {
 		logPluginErr(t.addonLogger, "failed to retrieve artifacts from the plugin step", t.id, commands, retryCount, start, artifactErr)
 	}
@@ -189,18 +191,4 @@ func logPluginErr(log *zap.SugaredLogger, errMsg, stepID string, cmds []string, 
 		"elapsed_time_ms", utils.TimeSince(startTime),
 		zap.Error(err),
 	)
-}
-
-// Returns environment variables as a map with key as environment variable name
-// and value as environment variable value.
-func getEnvVars() map[string]string {
-	m := make(map[string]string)
-	// os.Environ returns a copy of strings representing the environment in form
-	// "key=value". Converting it into a map.
-	for _, e := range os.Environ() {
-		if i := strings.Index(e, "="); i >= 0 {
-			m[e[:i]] = e[i+1:]
-		}
-	}
-	return m
 }

@@ -24,7 +24,6 @@ import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreat
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -65,18 +64,9 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     String secretName = "secretName";
     String identifier = "identifier";
     String secretManager = "secretManager";
-    String secretManagerName = "secretManagerName";
-    EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder()
-                                            .account(account)
-                                            .org(org)
-                                            .project(project)
-                                            .name(secretName)
-                                            .identifier(identifier)
-                                            .secretManager(secretManager)
-                                            .secretManagerName(secretManagerName)
-                                            .build();
     when(entityReferenceHelper.createEntityReference(anyString(), any(), any())).thenCallRealMethod();
-    secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedDataDTO);
+    secretEntityReferenceHelper.createSetupUsageForSecretManager(
+        account, org, project, identifier, secretName, secretManager);
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
     try {
       verify(eventProducer, times(1)).send(argumentCaptor.capture());
@@ -89,7 +79,6 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     } catch (Exception ex) {
       log.error("Unexpected error :", ex);
     }
-    assertThat(entityReferenceDTO.getReferredEntity().getName()).isEqualTo(secretManagerName);
     assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(CONNECTORS.name());
     assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(account);
     assertThat(entityReferenceDTO.getReferredByEntity().getName()).isEqualTo(secretName);
@@ -106,18 +95,9 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     String secretName = "secretName";
     String identifier = "identifier";
     String secretManager = "secretManager";
-    String secretManagerName = "secretManagerName";
-    EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder()
-                                            .account(account)
-                                            .org(org)
-                                            .project(project)
-                                            .name(secretName)
-                                            .identifier(identifier)
-                                            .secretManager(secretManager)
-                                            .secretManagerName(secretManagerName)
-                                            .build();
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
-    secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedDataDTO);
+    secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(
+        account, org, project, identifier, secretManager);
     try {
       verify(eventProducer, times(1)).send(argumentCaptor.capture());
     } catch (EventsFrameworkDownException e) {

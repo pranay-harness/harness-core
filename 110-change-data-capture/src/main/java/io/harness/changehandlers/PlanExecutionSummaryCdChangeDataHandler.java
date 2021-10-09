@@ -1,5 +1,7 @@
 package io.harness.changehandlers;
 
+import static java.util.Arrays.asList;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.changestreamsframework.ChangeEvent;
@@ -8,6 +10,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanEx
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,6 +61,14 @@ public class PlanExecutionSummaryCdChangeDataHandler extends AbstractChangeDataH
     if (((BasicDBObject) dbObject.get("moduleInfo")).get("cd") != null) {
       columnValueMapping.put("moduleInfo_type", "CD");
       // this is a cd deployment pipeline
+
+      // TriggerTypeInfo
+      PlanExecutionSummaryChangeDataHandler.commonHandlerTriggerInfo(columnValueMapping, dbObject);
+
+      // CI-relatedInfo
+      if (((BasicDBObject) dbObject.get("moduleInfo")).get("ci") != null) {
+        PlanExecutionSummaryChangeDataHandler.commonHandlerRepoInfo(columnValueMapping, dbObject);
+      }
     } else {
       return null;
     }
@@ -69,5 +80,10 @@ public class PlanExecutionSummaryCdChangeDataHandler extends AbstractChangeDataH
     }
 
     return columnValueMapping;
+  }
+
+  @Override
+  public List<String> getPrimaryKeys() {
+    return asList("id", "startts");
   }
 }

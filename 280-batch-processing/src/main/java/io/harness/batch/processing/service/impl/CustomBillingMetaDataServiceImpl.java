@@ -4,9 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
+import io.harness.batch.processing.pricing.vmpricing.VMInstanceBillingData;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
@@ -35,6 +36,7 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   private final BigQueryHelperService bigQueryHelperService;
   private final CEMetadataRecordDao ceMetadataRecordDao;
   private final CloudBillingHelper cloudBillingHelper;
+  private final BatchMainConfig mainConfig;
 
   private LoadingCache<String, String> awsBillingMetaDataCache =
       Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAwsBillingMetaData);
@@ -57,12 +59,13 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   @Autowired
   public CustomBillingMetaDataServiceImpl(CloudToHarnessMappingService cloudToHarnessMappingService,
       BillingDataPipelineRecordDao billingDataPipelineRecordDao, BigQueryHelperService bigQueryHelperService,
-      CEMetadataRecordDao ceMetadataRecordDao, CloudBillingHelper cloudBillingHelper) {
+      CEMetadataRecordDao ceMetadataRecordDao, CloudBillingHelper cloudBillingHelper, BatchMainConfig mainConfig) {
     this.cloudToHarnessMappingService = cloudToHarnessMappingService;
     this.billingDataPipelineRecordDao = billingDataPipelineRecordDao;
     this.bigQueryHelperService = bigQueryHelperService;
     this.ceMetadataRecordDao = ceMetadataRecordDao;
     this.cloudBillingHelper = cloudBillingHelper;
+    this.mainConfig = mainConfig;
   }
 
   @Override
@@ -85,7 +88,7 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
     String awsDataSetId = getAwsDataSetId(accountId);
     // For 4 days before date always return true; If CUR data is not present it will use public api
     Instant bufferTime = Instant.now().minus(4, ChronoUnit.DAYS);
-    if (awsDataSetId != null && startTime.isAfter(bufferTime)) {
+    if (mainConfig.isAwsCurBilling() && awsDataSetId != null && startTime.isAfter(bufferTime)) {
       Instant startAt = endTime.minus(1, ChronoUnit.HOURS);
       Map<String, VMInstanceBillingData> awsEC2BillingData =
           bigQueryHelperService.getAwsBillingData(startAt, endTime, awsDataSetId);

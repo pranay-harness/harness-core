@@ -9,7 +9,8 @@ public enum DataCollectionExecutionStatus {
   RUNNING,
   WAITING,
   EXPIRED,
-  SUCCESS;
+  SUCCESS,
+  ABORTED;
   public static List<DataCollectionExecutionStatus> getFailedStatuses() {
     return Arrays.asList(FAILED, EXPIRED);
   }

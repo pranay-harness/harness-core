@@ -99,6 +99,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
   private static Integer LIMIT = Integer.MAX_VALUE - 1;
   private static Integer OFFSET = 0;
   private static boolean INCLUDE_OTHERS = true;
+  private static boolean SKIP_ROUND_OFF = false;
   private static long ONE_DAY_MILLIS = 86400000;
   private List<String> selectedFields = new ArrayList<>();
   private static final String SELECT = "select";
@@ -163,10 +164,10 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
   public void testGetBillingTrendWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
     List<QLCEAggregation> aggregationFunction = Arrays.asList(makeCostAggregation(QLCECost.TOTALCOST));
-    assertThatThrownBy(
-        ()
-            -> ceClusterBillingDataDataFetcher.fetchSelectedFields(ACCOUNT1_ID, aggregationFunction,
-                Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET, environment))
+    assertThatThrownBy(()
+                           -> ceClusterBillingDataDataFetcher.fetchSelectedFields(ACCOUNT1_ID, aggregationFunction,
+                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET,
+                               SKIP_ROUND_OFF, environment))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -189,7 +190,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
     List<QLCESort> sortCriteria = Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.TOTALCOST));
 
     QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, SKIP_ROUND_OFF, environment);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getHarness().getApplication()).isEqualTo(APP1_ID_ACCOUNT1);
@@ -223,7 +224,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
     List<QLCESort> sortCriteria = Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.IDLECOST));
 
     QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, SKIP_ROUND_OFF, environment);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getCluster()).isEqualTo(CLUSTER1_ID);
@@ -259,7 +260,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
         Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
     QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, SKIP_ROUND_OFF, environment);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getEcs().getService()).isEqualTo(CLOUD_SERVICE_NAME_ACCOUNT1);
@@ -288,7 +289,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
         Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
     QLCEData data = ceClusterBillingDataDataFetcher.getData(ACCOUNT1_ID, filters, aggregationFunction,
-        Collections.emptyList(), sortCriteria, LIMIT, OFFSET, selectedFields, Collections.emptyList());
+        Collections.emptyList(), sortCriteria, LIMIT, OFFSET, SKIP_ROUND_OFF, selectedFields, Collections.emptyList());
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getCluster()).isEqualTo(CLUSTER1_ID);
@@ -316,8 +317,8 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
     List<QLCESort> sortCriteria =
         Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
-    QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
-        ACCOUNT1_ID, aggregationFunction, filters, Collections.emptyList(), sortCriteria, LIMIT, OFFSET, environment);
+    QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(ACCOUNT1_ID, aggregationFunction,
+        filters, Collections.emptyList(), sortCriteria, LIMIT, OFFSET, SKIP_ROUND_OFF, environment);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
@@ -345,7 +346,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
         Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
     QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, SKIP_ROUND_OFF, environment);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getK8s().getWorkload()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
@@ -378,7 +379,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
     List<QLCESort> sortCriteria = Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.TOTALCOST));
 
     QLCEData data = ceClusterBillingDataDataFetcher.getData(ACCOUNT1_ID, filters, aggregationFunction, groupBy,
-        sortCriteria, LIMIT, OFFSET, Collections.emptyList(), Collections.singletonList(LABEL_NAME));
+        sortCriteria, LIMIT, OFFSET, SKIP_ROUND_OFF, Collections.emptyList(), Collections.singletonList(LABEL_NAME));
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getK8s().getNamespace()).isEqualTo(NAMESPACE1);

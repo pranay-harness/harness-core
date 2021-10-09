@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -21,6 +22,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.ArtifactServerException;
@@ -88,6 +90,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
  * The Class JenkinsImpl.
  */
 @OwnedBy(CDC)
+@TargetModule(_960_API_SERVICES)
 @Slf4j
 public class JenkinsImpl implements Jenkins {
   private final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
@@ -149,7 +152,7 @@ public class JenkinsImpl implements Jenkins {
   public JobWithDetails getJobWithDetails(String jobname) {
     log.info("Retrieving job {}", jobname);
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           if (jobname == null) {
             sleep(ofSeconds(1L));
@@ -189,7 +192,7 @@ public class JenkinsImpl implements Jenkins {
   public Job getJob(String jobname, JenkinsConfig jenkinsConfig) {
     log.info("Retrieving job {}", jobname);
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           if (jobname == null) {
             sleep(ofSeconds(1L));
@@ -224,7 +227,7 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public List<JobDetails> getJobs(String parentJob) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           List<JobDetails> details = getJobDetails(parentJob);
           if (details != null) {
@@ -601,7 +604,7 @@ public class JenkinsImpl implements Jenkins {
 
     log.info("Retrieving environment variables for job {}", buildUrl);
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(30), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
         while (true) {
           String path = buildUrl;
           if (path.charAt(path.length() - 1) != '/') {

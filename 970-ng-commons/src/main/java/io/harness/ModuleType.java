@@ -17,7 +17,8 @@ public enum ModuleType {
 
   // Internal
   @JsonProperty("CORE") CORE("Core", true),
-  @JsonProperty("PMS") PMS("Pipelines", true);
+  @JsonProperty("PMS") PMS("Pipelines", true),
+  @JsonProperty("TEMPLATESERVICE") TEMPLATESERVICE("TemplateService", true);
 
   String displayName;
   boolean internal;
@@ -43,5 +44,9 @@ public enum ModuleType {
 
   public String getDisplayName() {
     return displayName;
+  }
+
+  public boolean isInternal() {
+    return internal;
   }
 }

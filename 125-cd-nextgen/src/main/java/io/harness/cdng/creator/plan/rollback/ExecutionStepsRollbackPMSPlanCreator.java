@@ -2,6 +2,7 @@ package io.harness.cdng.creator.plan.rollback;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.rollback.steps.RollbackStepsStep;
 import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -12,10 +13,10 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Preconditions;
@@ -44,11 +45,11 @@ public class ExecutionStepsRollbackPMSPlanCreator {
     }
 
     PlanCreationResponseBuilder planCreationResponseBuilder = PlanCreationResponse.builder();
+    Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
     for (YamlField stepYamlField : stepsArrayFields) {
-      Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      planCreationResponseBuilder.dependencies(stepYamlFieldMap);
     }
+    planCreationResponseBuilder.dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap));
 
     StepParameters stepParameters = NGSectionStepParameters.builder()
                                         .childNodeId(stepsArrayFields.get(0).getNode().getUuid())
@@ -59,7 +60,7 @@ public class ExecutionStepsRollbackPMSPlanCreator {
             .uuid(rollbackStepsField.getNode().getUuid() + OrchestrationConstants.ROLLBACK_STEPS_NODE_ID_SUFFIX)
             .name(OrchestrationConstants.ROLLBACK_NODE_NAME)
             .identifier(YAMLFieldNameConstants.ROLLBACK_STEPS)
-            .stepType(NGSectionStep.STEP_TYPE)
+            .stepType(RollbackStepsStep.STEP_TYPE)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder()

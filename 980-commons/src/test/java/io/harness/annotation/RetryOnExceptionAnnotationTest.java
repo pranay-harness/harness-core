@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.PIYUSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.retry.IMethodWrapper;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.category.element.UnitTests;
@@ -19,7 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.mockito.invocation.Invocation;
 
-public class RetryOnExceptionAnnotationTest {
+public class RetryOnExceptionAnnotationTest extends CategoryTest {
   private MethodExecutionHelper methodExecutionHelper = new MethodExecutionHelper();
 
   private IMethodWrapper<Object> methodWrapper;

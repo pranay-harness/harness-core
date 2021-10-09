@@ -1,9 +1,12 @@
 package io.harness.accesscontrol.roleassignments.validation;
 
-import static io.harness.accesscontrol.principals.PrincipalType.USER;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.accesscontrol.common.validation.ValidationResult;
 import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
+import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.accesscontrol.principals.usergroups.UserGroup;
+import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter.RoleAssignmentFilterBuilder;
@@ -11,14 +14,22 @@ import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.List;
+import java.util.Optional;
 
+@OwnedBy(HarnessTeam.PL)
+@Singleton
 public class RoleAssignmentActionValidator implements HarnessActionValidator<RoleAssignment> {
   private final RoleAssignmentService roleAssignmentService;
+  private final UserGroupService userGroupService;
   private final ScopeService scopeService;
   private static final String PROJECT_ADMIN = "_project_admin";
   private static final String ORG_ADMIN = "_organization_admin";
@@ -26,8 +37,10 @@ public class RoleAssignmentActionValidator implements HarnessActionValidator<Rol
   private static final String RESOURCE_GROUP_IDENTIFIER = "_all_resources";
 
   @Inject
-  public RoleAssignmentActionValidator(RoleAssignmentService roleAssignmentService, ScopeService scopeService) {
+  public RoleAssignmentActionValidator(
+      RoleAssignmentService roleAssignmentService, UserGroupService userGroupService, ScopeService scopeService) {
     this.roleAssignmentService = roleAssignmentService;
+    this.userGroupService = userGroupService;
     this.scopeService = scopeService;
   }
 
@@ -40,9 +53,8 @@ public class RoleAssignmentActionValidator implements HarnessActionValidator<Rol
     if (!RESOURCE_GROUP_IDENTIFIER.equals(roleAssignment.getResourceGroupIdentifier())) {
       return ValidationResult.builder().valid(true).build();
     }
-    RoleAssignmentFilterBuilder builder = RoleAssignmentFilter.builder()
-                                              .resourceGroupFilter(Sets.newHashSet(RESOURCE_GROUP_IDENTIFIER))
-                                              .principalTypeFilter(Sets.newHashSet(USER));
+    RoleAssignmentFilterBuilder builder =
+        RoleAssignmentFilter.builder().resourceGroupFilter(Sets.newHashSet(RESOURCE_GROUP_IDENTIFIER));
     RoleAssignmentFilter roleAssignmentFilter;
     if (HarnessScopeLevel.ACCOUNT.equals(scope.getLevel())
         && ACCOUNT_ADMIN.equals(roleAssignment.getRoleIdentifier())) {
@@ -59,9 +71,9 @@ public class RoleAssignmentActionValidator implements HarnessActionValidator<Rol
     } else {
       return ValidationResult.builder().valid(true).build();
     }
-    PageResponse<RoleAssignment> response =
-        roleAssignmentService.list(PageRequest.builder().pageSize(1).build(), roleAssignmentFilter);
-    if (response.getTotalItems() < 2) {
+    Optional<RoleAssignment> alternateAdminRoleAssignment =
+        fetchAlternateAdminRoleAssignment(roleAssignmentFilter, roleAssignment);
+    if (!alternateAdminRoleAssignment.isPresent()) {
       return ValidationResult.builder()
           .valid(false)
           .errorMessage(
@@ -79,5 +91,35 @@ public class RoleAssignmentActionValidator implements HarnessActionValidator<Rol
   @Override
   public ValidationResult canUpdate(RoleAssignment object) {
     return ValidationResult.builder().valid(true).build();
+  }
+
+  private Optional<RoleAssignment> fetchAlternateAdminRoleAssignment(
+      RoleAssignmentFilter roleAssignmentFilter, RoleAssignment roleAssignment) {
+    int pageIndex = 0;
+    long totalPages;
+    do {
+      PageResponse<RoleAssignment> response = roleAssignmentService.list(
+          PageRequest.builder().pageSize(50).pageIndex(pageIndex).build(), roleAssignmentFilter);
+      pageIndex++;
+      totalPages = response.getTotalPages();
+      List<RoleAssignment> roleAssignmentList = response.getContent();
+      Optional<RoleAssignment> altRoleAssignment =
+          roleAssignmentList.stream()
+              .filter(r -> !r.getIdentifier().equals(roleAssignment.getIdentifier()) && isEffective(r))
+              .findAny();
+      if (altRoleAssignment.isPresent()) {
+        return altRoleAssignment;
+      }
+    } while (pageIndex < totalPages);
+    return Optional.empty();
+  }
+
+  private boolean isEffective(RoleAssignment roleAssignment) {
+    if (!PrincipalType.USER_GROUP.equals(roleAssignment.getPrincipalType())) {
+      return true;
+    }
+    Optional<UserGroup> userGroup =
+        userGroupService.get(roleAssignment.getPrincipalIdentifier(), roleAssignment.getScopeIdentifier());
+    return userGroup.isPresent() && isNotEmpty(userGroup.get().getUsers());
   }
 }

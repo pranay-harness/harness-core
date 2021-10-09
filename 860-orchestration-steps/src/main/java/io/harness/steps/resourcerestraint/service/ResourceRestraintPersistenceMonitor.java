@@ -1,6 +1,6 @@
 package io.harness.steps.resourcerestraint.service;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -26,17 +26,17 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRestraintInstance> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private ResourceRestraintService resourceRestraintService;
+  @Inject private ResourceRestraintInstanceService resourceRestraintInstanceService;
   @Inject MongoTemplate mongoTemplate;
 
   public void registerIterators() {
     PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()
                                               .name("ResourceRestraintInstance-Monitor")
-                                              .poolSize(2)
+                                              .poolSize(5)
                                               .interval(ofSeconds(60))
                                               .build();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(executorOptions,
@@ -62,7 +62,7 @@ public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRest
       if (BLOCKED == instance.getState()) {
         toUnblock = true;
       } else if (ACTIVE == instance.getState()) {
-        if (resourceRestraintService.updateActiveConstraintsForInstance(instance)) {
+        if (resourceRestraintInstanceService.updateActiveConstraintsForInstance(instance)) {
           log.info("The following resource constraint needs to be unblocked: {}", constraintId);
           toUnblock = true;
         }
@@ -70,7 +70,7 @@ public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRest
 
       if (toUnblock) {
         // unblock the constraints
-        resourceRestraintService.updateBlockedConstraints(ImmutableSet.of(constraintId));
+        resourceRestraintInstanceService.updateBlockedConstraints(ImmutableSet.of(constraintId));
       }
 
     } catch (WingsException e) {

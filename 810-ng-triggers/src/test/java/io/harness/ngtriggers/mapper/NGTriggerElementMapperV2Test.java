@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.SCHEDULED;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.CONTAINS;
@@ -33,6 +34,13 @@ import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
+import io.harness.ngtriggers.beans.source.artifact.ArtifactTriggerConfig;
+import io.harness.ngtriggers.beans.source.artifact.ArtifactType;
+import io.harness.ngtriggers.beans.source.artifact.ArtifactTypeSpec;
+import io.harness.ngtriggers.beans.source.artifact.BuildAware;
+import io.harness.ngtriggers.beans.source.artifact.DockerRegistrySpec;
+import io.harness.ngtriggers.beans.source.artifact.EcrSpec;
+import io.harness.ngtriggers.beans.source.artifact.GcrSpec;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerSpec;
@@ -89,6 +97,10 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
   private String ngTriggerYaml_awscodecommit_push;
   private String ngTriggerYaml_custom;
   private String ngTriggerYaml_cron;
+  private String ngTriggerYaml_artifact_gcr;
+  private String ngTriggerYaml_artifact_ecr;
+  private String ngTriggerYaml_artifact_dockerregistry;
+  private String ngTriggerYaml_manifest;
 
   private List<TriggerEventDataCondition> payloadConditions;
   private List<TriggerEventDataCondition> headerConditions;
@@ -136,6 +148,17 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     ngTriggerYaml_cron = Resources.toString(
         Objects.requireNonNull(classLoader.getResource("ng-trigger-cron-v2.yaml")), StandardCharsets.UTF_8);
 
+    ngTriggerYaml_artifact_gcr = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-artifact-gcr.yaml")), StandardCharsets.UTF_8);
+    ngTriggerYaml_artifact_ecr = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-artifact-ecr.yaml")), StandardCharsets.UTF_8);
+    ngTriggerYaml_artifact_dockerregistry =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource("ng-trigger-artifact-dockerregistry.yaml")),
+            StandardCharsets.UTF_8);
+
+    ngTriggerYaml_manifest = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-manifest.yaml")), StandardCharsets.UTF_8);
+
     payloadConditions = asList(TriggerEventDataCondition.builder().key("k1").operator(EQUALS).value("v1").build(),
         TriggerEventDataCondition.builder().key("k2").operator(NOT_EQUALS).value("v2").build(),
         TriggerEventDataCondition.builder().key("k3").operator(IN).value("v3,c").build(),
@@ -145,12 +168,15 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
         TriggerEventDataCondition.builder().key("k7").operator(CONTAINS).value("v7").build());
     headerConditions = asList(TriggerEventDataCondition.builder().key("h1").operator(EQUALS).value("v1").build());
 
-    doReturn("https://app.harness.io/pipeline/api")
-        .doReturn("https://app.harness.io/pipeline/api/")
-        .doReturn("https://app.harness.io/pipeline/api/#")
+    doReturn("https://app.harness.io/ng/api")
+        .doReturn("https://app.harness.io/ng/api/")
+        .doReturn("https://app.harness.io/ng/api/#")
+        .doReturn("https://app.harness.io/ng/api")
         .doReturn(null)
         .when(webhookConfigProvider)
-        .getPmsApiBaseUrl();
+        .getWebhookApiBaseUrl();
+
+    doReturn("https://app.harness.io/pipeline/api").when(webhookConfigProvider).getCustomApiBaseUrl();
   }
 
   @Test
@@ -424,6 +450,91 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
+  public void testArtifactGcr() throws Exception {
+    NGTriggerConfigV2 ngTriggerConfigV2 = ngTriggerElementMapper.toTriggerConfigV2(ngTriggerYaml_artifact_gcr);
+
+    assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
+
+    NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
+    assertCommonPathForBuildTriggers(ngTriggerSourceV2, ArtifactType.GCR);
+
+    ArtifactTriggerConfig artifactTriggerConfig = (ArtifactTriggerConfig) ngTriggerSourceV2.getSpec();
+    ArtifactTypeSpec artifactTypeSpec = artifactTriggerConfig.getSpec();
+    GcrSpec gcrSpec = (GcrSpec) artifactTypeSpec;
+    assertThat(gcrSpec.getImagePath()).isEqualTo("test1");
+    assertThat(gcrSpec.getRegistryHostname()).isEqualTo("us.gcr.io");
+    assertThat(gcrSpec.getTag()).isEqualTo("<+trigger.artifact.build>");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testArtifactEcr() throws Exception {
+    NGTriggerConfigV2 ngTriggerConfigV2 = ngTriggerElementMapper.toTriggerConfigV2(ngTriggerYaml_artifact_ecr);
+
+    assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
+
+    NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
+    assertCommonPathForBuildTriggers(ngTriggerSourceV2, ArtifactType.ECR);
+
+    ArtifactTriggerConfig artifactTriggerConfig = (ArtifactTriggerConfig) ngTriggerSourceV2.getSpec();
+    ArtifactTypeSpec artifactTypeSpec = artifactTriggerConfig.getSpec();
+    EcrSpec ecrSpec = (EcrSpec) artifactTypeSpec;
+    assertThat(ecrSpec.getImagePath()).isEqualTo("test1");
+    assertThat(ecrSpec.getRegion()).isEqualTo("us-east-1");
+    assertThat(ecrSpec.getTag()).isEqualTo("<+trigger.artifact.build>");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testArtifactDockerRegistry() throws Exception {
+    NGTriggerConfigV2 ngTriggerConfigV2 =
+        ngTriggerElementMapper.toTriggerConfigV2(ngTriggerYaml_artifact_dockerregistry);
+
+    assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
+
+    NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
+    assertCommonPathForBuildTriggers(ngTriggerSourceV2, ArtifactType.DOCKER_REGISTRY);
+
+    ArtifactTriggerConfig artifactTriggerConfig = (ArtifactTriggerConfig) ngTriggerSourceV2.getSpec();
+    ArtifactTypeSpec artifactTypeSpec = artifactTriggerConfig.getSpec();
+    DockerRegistrySpec dockerRegistrySpec = (DockerRegistrySpec) artifactTypeSpec;
+    assertThat(dockerRegistrySpec.getImagePath()).isEqualTo("test1");
+    assertThat(dockerRegistrySpec.getTag()).isEqualTo("<+trigger.artifact.build>");
+  }
+
+  private void assertCommonPathForBuildTriggers(NGTriggerSourceV2 ngTriggerSourceV2, ArtifactType artifactType) {
+    assertThat(ngTriggerSourceV2).isNotNull();
+    assertThat(ngTriggerSourceV2.getType()).isEqualTo(ARTIFACT);
+    NGTriggerSpecV2 ngTriggerSpecV2 = ngTriggerSourceV2.getSpec();
+
+    assertThat(BuildAware.class.isAssignableFrom(ngTriggerSpecV2.getClass())).isTrue();
+    BuildAware buildAware = (BuildAware) ngTriggerSpecV2;
+    assertThat(buildAware.fetchbuildRef()).isEqualTo("primary");
+    assertThat(buildAware.fetchStageRef()).isEqualTo("dev");
+    assertThat(buildAware.fetchBuildType()).isEqualTo(artifactType.getValue());
+
+    assertThat(ArtifactTriggerConfig.class.isAssignableFrom(ngTriggerSpecV2.getClass())).isTrue();
+    ArtifactTriggerConfig artifactTriggerConfig = (ArtifactTriggerConfig) ngTriggerSpecV2;
+    assertThat(artifactTriggerConfig.getArtifactRef()).isEqualTo("primary");
+    assertThat(artifactTriggerConfig.getStageIdentifier()).isEqualTo("dev");
+    assertThat(artifactTriggerConfig.getType() == artifactType).isTrue();
+
+    ArtifactTypeSpec artifactTypeSpec = artifactTriggerConfig.getSpec();
+    assertThat(artifactTypeSpec.fetchConnectorRef()).isEqualTo("account.conn");
+    assertThat(artifactTypeSpec.fetchBuildType()).isEqualTo(artifactType.getValue());
+    List<TriggerEventDataCondition> triggerEventDataConditions = artifactTypeSpec.fetchEventDataConditions();
+    assertThat(triggerEventDataConditions).isNotEmpty();
+    assertThat(triggerEventDataConditions.size()).isEqualTo(1);
+    assertThat(triggerEventDataConditions.get(0).getKey()).isEqualTo("build");
+    assertThat(triggerEventDataConditions.get(0).getOperator().getValue()).isEqualTo("Regex");
+    assertThat(triggerEventDataConditions.get(0).getValue()).isEqualTo("release.*");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
   public void testYamlConversion() throws Exception {
     String yamlV0 = Resources.toString(
         Objects.requireNonNull(getClass().getClassLoader().getResource("ng-trigger-v0.yaml")), StandardCharsets.UTF_8);
@@ -546,27 +657,54 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
         ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     // baseUrl: "https://app.harness.io/pipeline/api"
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
-        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+        .isEqualTo("https://app.harness.io/ng/api/webhook?accountIdentifier=accId");
 
     // baseUrl: "https://app.harness.io/pipeline/api/"
     ngTriggerEntity = ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerYaml_gitlab_pr)
                           .getNgTriggerEntity();
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
-        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+        .isEqualTo("https://app.harness.io/ng/api/webhook?accountIdentifier=accId");
 
     // baseUrl: "https://app.harness.io/pipeline/api/#"
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
-        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+        .isEqualTo("https://app.harness.io/ng/api/webhook?accountIdentifier=accId");
 
-    // baseUrl: null
+    ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_custom).getNgTriggerEntity();
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
-    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
+    // baseUrl: "https://app.harness.io/pipeline/api"
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
+        .isEqualTo(
+            "https://app.harness.io/pipeline/api/webhook/custom?accountIdentifier=accId&orgIdentifier=org&projectIdentifier=proj&pipelineIdentifier=pipeline&triggerIdentifier=first_trigger");
 
     ngTriggerEntity.setType(SCHEDULED);
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
-    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testArtifactTriggerToResponseDTO() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_artifact_gcr)
+            .getNgTriggerEntity();
+    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
+    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testManifestTriggerToResponseDTO() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_manifest).getNgTriggerEntity();
+    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
+    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
   }
 
   private TriggerEventHistory generateEventHistoryWithTimestamp(SimpleDateFormat formatter6, String sDate1)
@@ -583,5 +721,15 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     assertThat(ngTriggerConfigV2.getOrgIdentifier()).isEqualTo("org");
     assertThat(ngTriggerConfigV2.getProjectIdentifier()).isEqualTo("proj");
     assertThat(ngTriggerConfigV2.getName()).isEqualTo("first trigger");
+  }
+
+  private void assertRootLevelPropertiesForBuildTriggers(NGTriggerConfigV2 ngTriggerConfigV2) {
+    assertThat(ngTriggerConfigV2).isNotNull();
+    assertThat(ngTriggerConfigV2.getIdentifier()).isEqualTo("first_trigger");
+    assertThat(ngTriggerConfigV2.getName()).isEqualTo("first trigger");
+    assertThat(ngTriggerConfigV2.getEnabled()).isTrue();
+    assertThat(ngTriggerConfigV2.getPipelineIdentifier()).isEqualTo("pipeline");
+    assertThat(ngTriggerConfigV2.getOrgIdentifier()).isEqualTo("org");
+    assertThat(ngTriggerConfigV2.getProjectIdentifier()).isEqualTo("proj");
   }
 }

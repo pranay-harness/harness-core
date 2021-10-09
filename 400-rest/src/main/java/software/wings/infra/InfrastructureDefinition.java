@@ -1,6 +1,6 @@
 package software.wings.infra;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotation.HarnessEntity;
@@ -45,7 +45,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "InfrastructureDefinitionKeys")
 @Entity(value = "infrastructureDefinitions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 @OwnedBy(CDP)
 public class InfrastructureDefinition
     implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,

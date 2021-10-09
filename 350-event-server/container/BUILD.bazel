@@ -1,0 +1,84 @@
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit_layer")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+container_image(
+    name = "event_server",
+    base = "//dockerization/base-jdk:base_jdk",
+    cmd = ["./run.sh"],
+    layers = [
+        ":grpc_health_probe_layer",
+    ],
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    tars = [
+        ":files",
+        ":scripts",
+    ],
+)
+
+container_run_and_commit_layer(
+    name = "grpc_health_probe_layer",
+    commands = [
+        "wget https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.3.0/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe",
+        "chmod 755 /bin/grpc_health_probe",
+    ],
+    image = "@openjdk_8u242//image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+pkg_tar(
+    name = "files",
+    srcs = [
+        "//350-event-xxxxxxxxcert.pem",
+        "//350-event-xxxxxxxxevent-service-config.yml",
+        "//350-event-xxxxxxxxkey.pem",
+    ],
+    files = {
+        "//350-event-xxxxxxxxmodule_deploy.jar": "event-server-capsule.jar",
+    },
+    mode = "0600",
+    owner = "65534.65534",
+    package_dir = "/opt/harness",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+pkg_tar(
+    name = "scripts",
+    srcs = glob([
+        "scripts/*",
+    ]),
+    mode = "0500",
+    owner = "65534.65534",
+    package_dir = "/opt/harness",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+container_push(
+    name = "push",
+    format = "Docker",
+    image = "event_server",
+    registry = "us.gcr.io",
+    repository = "platform-205701/harness/event-server",
+    tag = "{STABLE_BUILD_NUMBER}",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)

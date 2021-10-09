@@ -10,10 +10,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
 import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScaling;
@@ -49,8 +52,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
+@Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class AwsAppAutoScalingHelperServiceDelegateImpl
@@ -114,15 +119,19 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     if (EmptyPredicate.isEmpty(alarms)) {
       return Collections.EMPTY_LIST;
     }
-
-    tracker.trackCloudWatchCall("Fetch Alarm by Name");
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    AmazonCloudWatchClient amazonCloudWatchClient = getAmazonCloudWatchClient(region, awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonCloudWatchClient> closeableAmazonCloudWatchClient =
+             new CloseableAmazonWebServiceClient(getAmazonCloudWatchClient(region, awsConfig))) {
+      tracker.trackCloudWatchCall("Fetch Alarm by Name");
 
-    DescribeAlarmsResult describeAlarmsResult = amazonCloudWatchClient.describeAlarms(
-        new DescribeAlarmsRequest().withAlarmNames(alarms.stream().map(Alarm::getAlarmName).collect(toList())));
+      DescribeAlarmsResult describeAlarmsResult = closeableAmazonCloudWatchClient.getClient().describeAlarms(
+          new DescribeAlarmsRequest().withAlarmNames(alarms.stream().map(Alarm::getAlarmName).collect(toList())));
 
-    return describeAlarmsResult.getMetricAlarms();
+      return describeAlarmsResult.getMetricAlarms();
+    } catch (Exception e) {
+      log.error("Exception fetchAlarmsByName", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
@@ -131,33 +140,37 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     if (alarm == null) {
       return null;
     }
-
-    tracker.trackCloudWatchCall("Put Metric Alarm");
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    AmazonCloudWatchClient amazonCloudWatchClient = getAmazonCloudWatchClient(region, awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonCloudWatchClient> closeableAmazonCloudWatchClient =
+             new CloseableAmazonWebServiceClient(getAmazonCloudWatchClient(region, awsConfig))) {
+      tracker.trackCloudWatchCall("Put Metric Alarm");
 
-    return amazonCloudWatchClient.putMetricAlarm(
-        new PutMetricAlarmRequest()
-            .withActionsEnabled(alarm.getActionsEnabled())
-            .withAlarmActions(alarm.getAlarmActions())
-            .withAlarmDescription(alarm.getAlarmDescription())
-            .withAlarmName(alarm.getAlarmName())
-            .withComparisonOperator(alarm.getComparisonOperator())
-            .withDatapointsToAlarm(alarm.getDatapointsToAlarm())
-            .withDimensions(alarm.getDimensions())
-            .withEvaluateLowSampleCountPercentile(alarm.getEvaluateLowSampleCountPercentile())
-            .withEvaluationPeriods(alarm.getEvaluationPeriods())
-            .withExtendedStatistic(alarm.getExtendedStatistic())
-            .withInsufficientDataActions(alarm.getInsufficientDataActions())
-            .withMetricName(alarm.getMetricName())
-            .withMetrics(alarm.getMetrics())
-            .withNamespace(alarm.getNamespace())
-            .withOKActions(alarm.getOKActions())
-            .withPeriod(alarm.getPeriod())
-            .withStatistic(alarm.getStatistic())
-            .withThreshold(alarm.getThreshold())
-            .withTreatMissingData(alarm.getTreatMissingData())
-            .withUnit(alarm.getUnit()));
+      return closeableAmazonCloudWatchClient.getClient().putMetricAlarm(
+          new PutMetricAlarmRequest()
+              .withActionsEnabled(alarm.getActionsEnabled())
+              .withAlarmActions(alarm.getAlarmActions())
+              .withAlarmDescription(alarm.getAlarmDescription())
+              .withAlarmName(alarm.getAlarmName())
+              .withComparisonOperator(alarm.getComparisonOperator())
+              .withDatapointsToAlarm(alarm.getDatapointsToAlarm())
+              .withDimensions(alarm.getDimensions())
+              .withEvaluateLowSampleCountPercentile(alarm.getEvaluateLowSampleCountPercentile())
+              .withEvaluationPeriods(alarm.getEvaluationPeriods())
+              .withExtendedStatistic(alarm.getExtendedStatistic())
+              .withInsufficientDataActions(alarm.getInsufficientDataActions())
+              .withMetricName(alarm.getMetricName())
+              .withMetrics(alarm.getMetrics())
+              .withNamespace(alarm.getNamespace())
+              .withOKActions(alarm.getOKActions())
+              .withPeriod(alarm.getPeriod())
+              .withStatistic(alarm.getStatistic())
+              .withThreshold(alarm.getThreshold())
+              .withTreatMissingData(alarm.getTreatMissingData())
+              .withUnit(alarm.getUnit()));
+    } catch (Exception e) {
+      log.error("Exception putMetricAlarm", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override

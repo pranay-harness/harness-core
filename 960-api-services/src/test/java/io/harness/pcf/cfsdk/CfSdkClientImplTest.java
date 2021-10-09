@@ -2,10 +2,12 @@ package io.harness.pcf.cfsdk;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -16,11 +18,14 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,6 +41,19 @@ public class CfSdkClientImplTest extends CategoryTest {
   @Spy private CloudFoundryClientProvider cloudFoundryClientProvider;
   @InjectMocks @Spy private CloudFoundryOperationsProvider cloudFoundryOperationsProvider;
   @InjectMocks @Spy private CfSdkClientImpl cfSdkClient;
+
+  private static ApplicationSummary getApplicationSummary(String name, String id, int instanceCount) {
+    return ApplicationSummary.builder()
+        .name(name)
+        .diskQuota(1)
+        .requestedState("RUNNING")
+        .id(id)
+        .urls(new String[] {"url" + id, "url4" + id})
+        .instances(instanceCount)
+        .memoryLimit(1)
+        .runningInstances(0)
+        .build();
+  }
 
   @Test
   @Owner(developers = ANSHUL)
@@ -303,5 +321,31 @@ public class CfSdkClientImplTest extends CategoryTest {
 
   private CfRequestConfig getCfRequestConfig() {
     return CfRequestConfig.builder().timeOutIntervalInMins(1).orgName("org").applicationName("app").build();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testRenameApplication() throws PivotalClientApiException, InterruptedException {
+    CfRequestConfig cfRequestConfig = getCfRequestConfig();
+    cfRequestConfig.setUserName("username");
+    cfRequestConfig.setPassword("password");
+    cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+
+    CfRenameRequest request = new CfRenameRequest(cfRequestConfig, "id", "app", "app_new");
+
+    doReturn(new ArrayList<>()).when(cfSdkClient).getApplications(any());
+    assertThatThrownBy(() -> cfSdkClient.renameApplication(request))
+        .isInstanceOf(PivotalClientApiException.class)
+        .hasMessageContaining("Failed to rename app");
+
+    doReturn(Arrays.asList(getApplicationSummary("app", "id", 1))).when(cfSdkClient).getApplications(any());
+    try {
+      cfSdkClient.renameApplication(request);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while renaming Application: app, Error: No space targeted");
+    }
   }
 }

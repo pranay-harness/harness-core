@@ -6,6 +6,5 @@ import io.harness.annotations.dev.OwnedBy;
 @OwnedBy(HarnessTeam.PL)
 public interface ScopeLevel {
   int getRank();
-  String getParamName();
   String getResourceType();
 }

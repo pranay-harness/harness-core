@@ -14,4 +14,6 @@ message Level {
   string group = 5;
   int32 retryIndex = 6;
   bool skipExpressionChain = 7;
+  int64 startTs = 8;
+  string nodeType = 9;
 }

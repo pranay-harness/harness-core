@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.k8s.K8sTaskNG.KUBECONFIG_FILENAME;
 import static io.harness.rule.OwnerRule.ABOSII;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -13,10 +14,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -290,6 +293,30 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
+  public void testRunHelmChartManifestDelegateConfigS3InheritFromDelegate() {
+    final List<EncryptedDataDetail> encryptedDataDetails = emptyList();
+    final HelmChartManifestDelegateConfig manifestConfig =
+        HelmChartManifestDelegateConfig.builder()
+            .storeDelegateConfig(
+                S3HelmStoreDelegateConfig.builder()
+                    .awsConnector(AwsConnectorDTO.builder()
+                                      .credential(AwsCredentialDTO.builder()
+                                                      .awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
+                                                      .build())
+                                      .build())
+                    .encryptedDataDetails(encryptedDataDetails)
+                    .build())
+            .helmVersion(HelmVersion.V3)
+            .build();
+
+    testRunWithManifest(manifestConfig, HelmVersion.V3);
+
+    verify(decryptionService, never()).decrypt(any(DecryptableEntity.class), eq(encryptedDataDetails));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
   public void testRunHelmChartManifestDelegateConfigGcsV2() {
     final GcpManualDetailsDTO manualDetailsDTO = GcpManualDetailsDTO.builder().build();
     final List<EncryptedDataDetail> encryptedDataDetails = singletonList(EncryptedDataDetail.builder().build());
@@ -311,6 +338,30 @@ public class K8sTaskNGTest extends CategoryTest {
     testRunWithManifest(manifestConfig, HelmVersion.V2);
 
     verify(decryptionService).decrypt(manualDetailsDTO, encryptedDataDetails);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRunHelmChartManifestDelegateConfigGcsInheritFromDelegate() {
+    final List<EncryptedDataDetail> encryptedDataDetails = emptyList();
+    final HelmChartManifestDelegateConfig manifestConfig =
+        HelmChartManifestDelegateConfig.builder()
+            .storeDelegateConfig(
+                GcsHelmStoreDelegateConfig.builder()
+                    .gcpConnector(GcpConnectorDTO.builder()
+                                      .credential(GcpConnectorCredentialDTO.builder()
+                                                      .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
+                                                      .build())
+                                      .build())
+                    .encryptedDataDetails(encryptedDataDetails)
+                    .build())
+            .helmVersion(HelmVersion.V2)
+            .build();
+
+    testRunWithManifest(manifestConfig, HelmVersion.V2);
+
+    verify(decryptionService, never()).decrypt(any(DecryptableEntity.class), eq(encryptedDataDetails));
   }
 
   private void testRunWithManifest(ManifestDelegateConfig manifest, HelmVersion usedHelmVersion) {

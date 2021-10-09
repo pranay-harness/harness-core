@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -35,6 +37,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity("containerTasks")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ContainerTaskKeys")
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class ContainerTask extends DeploymentSpecification implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

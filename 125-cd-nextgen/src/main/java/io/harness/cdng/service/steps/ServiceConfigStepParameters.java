@@ -1,5 +1,6 @@
 package io.harness.cdng.service.steps;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
@@ -15,15 +16,17 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("serviceConfigStepParameters")
+@RecasterAlias("io.harness.cdng.service.steps.ServiceConfigStepParameters")
 public class ServiceConfigStepParameters implements StepParameters {
   ServiceUseFromStage useFromStage;
   ParameterField<String> serviceRef;
 
   String childNodeId;
 
+  // Todo(Alexei) Remove this when @RecastIgnore annotation is added
   @Override
   public String toViewJson() {
-    return RecastOrchestrationUtils.toDocumentJson(
+    return RecastOrchestrationUtils.toJson(
         ServiceConfigStepParameters.builder().useFromStage(useFromStage).serviceRef(serviceRef).build());
   }
 }

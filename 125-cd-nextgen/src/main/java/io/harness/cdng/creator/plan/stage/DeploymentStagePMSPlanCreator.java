@@ -21,23 +21,18 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
-import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 @OwnedBy(CDC)
 public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
@@ -63,7 +58,6 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, StageElementConfig field) {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
-    Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
 
     // Validate Stage Failure strategy.
     validateFailureStrategy(field);
@@ -77,8 +71,18 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       throw new InvalidRequestException("ServiceConfig Section cannot be absent in a pipeline");
     }
 
-    PlanCreationResponse servicePlanCreationResponse = ServicePMSPlanCreator.createPlanForServiceNode(
-        serviceField, ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer);
+    YamlField infraField = specField.getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
+    if (infraField == null) {
+      throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
+    }
+
+    PipelineInfrastructure pipelineInfrastructure = ((DeploymentStageConfig) field.getStageType()).getInfrastructure();
+    PipelineInfrastructure actualInfraConfig =
+        InfrastructurePmsPlanCreator.getActualInfraConfig(pipelineInfrastructure, infraField);
+
+    PlanCreationResponse servicePlanCreationResponse = ServicePMSPlanCreator.createPlanForServiceNode(serviceField,
+        ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer,
+        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""));
     planCreationResponseMap.put(servicePlanCreationResponse.getStartingNodeId(),
         PlanCreationResponse.builder().nodes(servicePlanCreationResponse.getNodes()).build());
 
@@ -89,15 +93,6 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
         specPlanNode.getUuid(), PlanCreationResponse.builder().node(specPlanNode.getUuid(), specPlanNode).build());
 
     // Adding infrastructure node
-    YamlField infraField = specField.getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
-    if (infraField == null) {
-      throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
-    }
-
-    PipelineInfrastructure pipelineInfrastructure = ((DeploymentStageConfig) field.getStageType()).getInfrastructure();
-    PipelineInfrastructure actualInfraConfig =
-        InfrastructurePmsPlanCreator.getActualInfraConfig(pipelineInfrastructure, infraField);
-
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(pipelineInfrastructure, infraField);
     planCreationResponseMap.put(
         infraStepNode.getUuid(), PlanCreationResponse.builder().node(infraStepNode.getUuid(), infraStepNode).build());
@@ -117,23 +112,8 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
         PlanCreationResponse.builder().node(infraDefPlanNode.getUuid(), infraDefPlanNode).build());
 
     YamlNode infraNode = infraField.getNode();
-
-    YamlField rcYamlField = constructResourceConstraintYamlField(infraNode);
-
-    PlanNode infraSectionPlanNode = InfrastructurePmsPlanCreator.getInfraSectionPlanNode(
-        infraNode, infraDefPlanNode.getUuid(), pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
-    planCreationResponseMap.put(
-        infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
-
-    // Add dependency for resource constraint
-    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
-        pipelineInfrastructure.getAllowSimultaneousDeployments(), rcYamlField);
-
-    if (!allowSimultaneousDeployments && rcYamlField != null) {
-      dependenciesNodeMap.put(rcYamlField.getNode().getUuid(), rcYamlField);
-      planCreationResponseMap.put(
-          rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
-    }
+    planCreationResponseMap.putAll(InfrastructurePmsPlanCreator.createPlanForInfraSection(
+        infraNode, infraDefPlanNode.getUuid(), pipelineInfrastructure, kryoSerializer, infraField));
 
     // Add dependency for execution
     YamlField executionField = specField.getNode().getField(YAMLFieldNameConstants.EXECUTION);
@@ -144,26 +124,6 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     planCreationResponseMap.put(executionField.getNode().getUuid(), planForExecution);
 
     return planCreationResponseMap;
-  }
-
-  @Nullable
-  private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
-    String resourceUnit = obtainResourceUnitFromInfrastructure(infraNode);
-    if (resourceUnit == null) {
-      return null;
-    }
-    JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
-    return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
-  }
-
-  @Nullable
-  private String obtainResourceUnitFromInfrastructure(YamlNode infraNode) {
-    JsonNode infrastructureKey = infraNode.getCurrJsonNode().get("infrastructureKey");
-    if (infrastructureKey == null || EmptyPredicate.isEmpty(infrastructureKey.asText())) {
-      return null;
-    }
-
-    return infrastructureKey.asText();
   }
 
   private void validateFailureStrategy(StageElementConfig stageElementConfig) {

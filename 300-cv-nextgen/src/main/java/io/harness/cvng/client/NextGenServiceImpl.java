@@ -6,10 +6,12 @@ import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -19,6 +21,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hazelcast.util.Preconditions;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -57,10 +60,13 @@ public class NextGenServiceImpl implements NextGenService {
           .build(new CacheLoader<EntityKey, ServiceResponseDTO>() {
             @Override
             public ServiceResponseDTO load(EntityKey entityKey) {
-              return requestExecutor
-                  .execute(nextGenClient.getService(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
-                      entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
-                  .getData();
+              ServiceResponse serviceResponse =
+                  requestExecutor
+                      .execute(nextGenClient.getService(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
+                          entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
+                      .getData();
+              Preconditions.checkNotNull(serviceResponse, "Service Response from Ng Manager cannot be null");
+              return serviceResponse.getService();
             }
           });
 
@@ -139,6 +145,28 @@ public class NextGenServiceImpl implements NextGenService {
     } catch (ExecutionException ex) {
       throw new RuntimeException(ex);
     }
+  }
+
+  @Override
+  public List<EnvironmentResponse> listEnvironment(
+      String accountId, String orgIdentifier, String projectIdentifier, List<String> environmentIdentifiers) {
+    PageResponse<EnvironmentResponse> environmentsResponse =
+        requestExecutor
+            .execute(nextGenClient.listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers))
+            .getData();
+
+    return environmentsResponse.getContent();
+  }
+
+  @Override
+  public List<ServiceResponse> listService(
+      String accountId, String orgIdentifier, String projectIdentifier, List<String> serviceIdentifiers) {
+    PageResponse<ServiceResponse> servicesResponse =
+        requestExecutor
+            .execute(nextGenClient.listService(accountId, orgIdentifier, projectIdentifier, serviceIdentifiers))
+            .getData();
+
+    return servicesResponse.getContent();
   }
 
   @Override

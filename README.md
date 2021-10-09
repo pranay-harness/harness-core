@@ -5,12 +5,12 @@ Portal Project Dev environment setup instructions
 ### Prerequisities
 1. Install Homebrew:
 ```
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
 2. Download and Install Java 8
 
-NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team.
+NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team. 
 
 Download OpenJDK 1.8-242 (jdk8u242-b08) JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME` and `PATH` accordingly.
 
@@ -55,7 +55,7 @@ brew install buf
 
 To check if your protobuf files are according to the coding standards execute in the root of the repo
 ```
-buf check lint
+buf lint
 ```
 
 8. Download the data-collection-dsl username and password from [vault](https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/credentials/artifactory-internal-read) and add following lines in your `~/.bashrc` file
@@ -106,6 +106,9 @@ NOTE: the data from it is used for every git operation github does on you behave
 
 ### Build
 
+#### Some Bazel Best Practices you can follow before building portal locally.
+`https://harness.atlassian.net/wiki/spaces/BT/pages/1910047082/Bazel+best+practices+for+faster+and+efficient+builds.`
+
 1. Clone form git repository: https://github.com/wings-software/portal
 
    (Optional) Follow https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
@@ -146,9 +149,9 @@ NOTE: the data from it is used for every git operation github does on you behave
 
 5. If Global Search is not required:
 
-    Install and start MongoDB Docker Image (v3.6):
+    Install and start MongoDB Docker Image (v4.2):
     ```
-    $ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
+    $ docker run -p 127.0.0.1:27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:4.2
     ```
     Verify the container is running using `docker ps`
 
@@ -226,7 +229,7 @@ cd to `portal` directory
 
 3. Start Delegate
 
-   * `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar 260-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml &`
+   * `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar 260-delegate/target/delegate-capsule.jar 260-delegate/config-delegate.yml &`
 
 4. Start Verification service (Optional)
 
@@ -268,6 +271,12 @@ Untar the downloaded file and add it to your PATH in `~/.bashrc` or `~/.zshrc`
 echo "export PATH="$PATH:$HOME/<path-to-above-directory>/bin" >> ~/.zshrc
 ```
 
+to format .graphql files: you can follow these steps:
+
+* `npm install --global prettier@1.19.1`
+
+* `prettier --write --print-width=120 <filename>` - formats given graphql file
+
 helper shell scripts:
 
 * `git clang-format` - makes sure all staged in git files are reformatted
@@ -300,8 +309,8 @@ helper shell scripts:
 5. Install SonarLint plugin:
    - This plugin is really helpful to analyze your code for issues as you code.
    - Go to `Preferences -> Plugins` ->  type SonarLint -> Install plugin. (Will need to restart Intellij)
-   - Go to `Preferences -> Other settings -> Sonarlint general settings`. Check "Automatically trigger analysis". Add a connection to `https://sonar.harness.io`. You'll need to create a custom token.
-   - Go to `Preferences -> Other settings -> Sonarlint project settings`. Check "Bind project to sonarqube", and select the connection, and set project as `portal_bazel`. This is so that we use the same rules locally instead of the default rules.
+   - Go to `Preferences -> Tools -> SonarLint`. Check "Automatically trigger analysis". Add a connection to `https://sonar.harness.io`. You'll need to create a custom token.
+   - Go to `Preferences -> Tools -> SonarLint -> Project Settings`. Check "Bind project to sonarqube", and select the connection, and set project as `portal_bazel`. This is so that we use the same rules locally instead of the default rules.
     ![config image](img/sonar-config.png).
    - Go to `Preferences -> Editor -> Colorscheme -> Sonarlint`. For Blocker, Critical & Major, untick "Inherit values from" checkbox and configure a different highlighting style. These violations are treated as release blockers and this configuration is to highlight them differently from regular warnings.
     ![config image](img/sonar-highlight-config.png).
@@ -313,11 +322,11 @@ helper shell scripts:
       mvn -f tools/ clean install -DskipTests
       ```
 
-   1. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`. In case Intellij complains about missing Harness rule files add following jar to Third-Party Checks `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar`. Additionally, check version of Checkstyle plugin to be 8.20 `Preferences > Tools > Checkstyle > Checkstyle Version:`    
+   1. Setup Checkstyle plugin. In `Preferences -> Tools -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`. In case Intellij complains about missing Harness rule files add following jar to Third-Party Checks `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar`. Additionally, check version of Checkstyle plugin to be 8.20 `Preferences > Tools > Checkstyle > Checkstyle Version:`
    *  ![config image](img/checkstyle-config-pre.png).
    *  ![config image](img/checkstyle-config.png).
-7. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
-   Annotations > Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
+7. Change settings to mark injected fields as assigned. (Preferences -> Editor -> Inspections -> Java -> Declaration Redundancy -> Unused Declarations -> Entry Points ->
+   Annotations -> Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
    *  ![config image](img/annotation_config.png).
 
 8. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future)
@@ -629,6 +638,19 @@ gazelle  # generates, updates BUILD.bazel
 ```lang=bash
 portal/tools/go/update_bazel_repo.sh go.mod
 ```
+
+* Using GOPATH
+
+Some editors like vscode requires the code to be structured in a `GOPATH` directory tree.
+In this case, you may use the `:gopath` target to generate a directory tree with
+symlinks to the original source files.
+
+```
+bazelisk build :gopath
+```
+
+You can then set the `GOPATH` in your editor to `bazel-bin/gopath`. If `bazel-bin` folder is not present in the root folder, use `$(bazel info bazel-bin)/gopath`.
+
 # How to enable aws sdk logging in Manager/Delegate app locally
 NOTE: Below changes are only recommended in local environment and changes shall not be pushed.
 
@@ -637,3 +659,11 @@ AWS SDK library internal logging is done using SLF4J. SLF4J serves as a simple f
 We are already using logback framework in our application, so it is simple to enable logging as it is already supported in SLF4J.
 * Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
 * Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager. 
+
+
+### Hotfix instructions
+
+1. Create a new JIRA ticket(Don't use the feature branch).
+2. Checkout the branch to hotfix on and make the changes.
+3. Bump up the build number in the build.properties.
+4. Create a pull request on this branch and master as well, make sure you merge them on master within the next 3 4 hours.

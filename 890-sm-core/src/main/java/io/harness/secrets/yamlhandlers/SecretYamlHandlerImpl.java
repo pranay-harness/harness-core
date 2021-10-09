@@ -45,11 +45,16 @@ public class SecretYamlHandlerImpl implements SecretYamlHandler {
 
   @Override
   public String toYaml(String accountId, String secretId) {
-    EncryptedData encryptedData =
-        secretsDao.getSecretById(accountId, secretId).<SecretManagementException>orElseThrow(() -> {
-          throw new SecretManagementException(
-              SECRET_MANAGEMENT_ERROR, "The secret does not exist or you are unauthorized to view the secret", USER);
-        });
+    EncryptedData encryptedData;
+    Optional<EncryptedData> optionalEncryptedData = secretsDao.getSecretById(accountId, secretId);
+    if (optionalEncryptedData.isPresent()) {
+      encryptedData = optionalEncryptedData.get();
+    } else {
+      encryptedData = secretsDao.getSecretByName(accountId, secretId).<SecretManagementException>orElseThrow(() -> {
+        throw new SecretManagementException(
+            SECRET_MANAGEMENT_ERROR, "The secret does not exist or you are unauthorized to view the secret", USER);
+      });
+    }
     return toYaml(encryptedData);
   }
 
@@ -58,7 +63,7 @@ public class SecretYamlHandlerImpl implements SecretYamlHandler {
     if (encryptedData.getEncryptionType() == VAULT) {
       return encryptedData.getEncryptionType().getYamlName() + ":" + getVaultSecretRefUrl(encryptedData);
     } else {
-      return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedData.getUuid();
+      return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedData.getName();
     }
   }
 
@@ -93,10 +98,15 @@ public class SecretYamlHandlerImpl implements SecretYamlHandler {
           () -> createNewSecretTextFromVaultPathReference(vaultSecretRef, accountId));
     } else {
       // This is an old id based reference
-      return secretsDao.getSecretById(accountId, encryptedDataRef).<SecretManagementException>orElseThrow(() -> {
-        throw new SecretManagementException(RESOURCE_NOT_FOUND,
-            String.format("Could not find secret with id %s in account %s", encryptedDataRef, accountId), USER);
-      });
+      Optional<EncryptedData> optionalEncryptedData = secretsDao.getSecretById(accountId, encryptedDataRef);
+      if (optionalEncryptedData.isPresent()) {
+        return optionalEncryptedData.get();
+      } else {
+        return secretsDao.getSecretByName(accountId, encryptedDataRef).<SecretManagementException>orElseThrow(() -> {
+          throw new SecretManagementException(RESOURCE_NOT_FOUND,
+              String.format("Could not find secret: %s in account: %s", encryptedDataRef, accountId), USER);
+        });
+      }
     }
   }
 

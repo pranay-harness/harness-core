@@ -5,6 +5,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -42,6 +44,7 @@ import org.slf4j.Logger;
 /**
  * Created by rsingh on 9/11/17.
  */
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegateRunnableTask {
   public static final String HARNESS_HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
   public static final int PREDECTIVE_HISTORY_MINUTES = 120;
@@ -151,14 +154,13 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     }
     int retrySave = 0;
     do {
-      boolean response =
-          metricStoreService.saveNewRelicMetrics(accountId, appId, stateExecutionId, getTaskId(), records);
-      if (response) {
-        return true;
+      try {
+        return metricStoreService.saveNewRelicMetrics(accountId, appId, stateExecutionId, getTaskId(), records);
+      } catch (Exception e) {
+        getLogger().error(
+            "error saving new apm metrics StateExecutionId: {}, Size: {}, {}", stateExecutionId, records.size(), e);
+        sleep(DATA_COLLECTION_RETRY_SLEEP);
       }
-      getLogger().warn("Unable to save metrics to Harness manger {}. Retrying in {} ", stateExecutionId,
-          DATA_COLLECTION_RETRY_SLEEP);
-      sleep(DATA_COLLECTION_RETRY_SLEEP);
     } while (++retrySave != RETRIES);
     return false;
   }

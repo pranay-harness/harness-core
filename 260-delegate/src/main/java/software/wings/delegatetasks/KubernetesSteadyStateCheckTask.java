@@ -78,7 +78,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
 
     List<ContainerInfo> containerInfos = new ArrayList<>();
     try {
-      HTimeLimiter.callInterruptible(timeLimiter,
+      HTimeLimiter.callInterruptible21(timeLimiter,
           Duration.ofMillis(kubernetesSteadyStateCheckParams.getTimeoutMillis()),
           () -> containerInfos.addAll(doSteadyStateCheck(kubernetesSteadyStateCheckParams, executionLogCallback)));
 

@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -37,7 +37,8 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
-import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.switchaccount.SwitchAccountResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
@@ -55,6 +56,7 @@ import software.wings.beans.LoginTypeRequest;
 import software.wings.beans.PublicUser;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.marketplace.MarketPlaceType;
@@ -87,6 +89,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -141,7 +144,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AuthRule(permissionType = LOGGED_IN)
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(_970_RBAC_CORE)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserResource {
   private UserService userService;
   private AuthService authService;
@@ -583,6 +586,34 @@ public class UserResource {
         authenticationManager.switchAccount(authenticationManager.extractToken(authorization, "Bearer"), accountId));
   }
 
+  @Data
+  public static class SwitchAccountRequest {
+    @NotBlank private String accountId;
+  }
+
+  @POST
+  @Path("switch-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> newSwitchAccount(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
+      @Valid @NotNull SwitchAccountRequest switchAccountRequest) {
+    return new RestResponse<>(
+        authenticationManager.switchAccount(
+            authenticationManager.extractToken(authorization, "Bearer"), switchAccountRequest.getAccountId())
+        != null);
+  }
+
+  @POST
+  @Path("restricted-switch-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SwitchAccountResponse> restrictedSwitchAccount(
+      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, @QueryParam("routingId") String accountId,
+      @Valid @NotNull SwitchAccountRequest switchAccountRequest) {
+    // Adding this endpoint for UI swagger generation
+    return new RestResponse<>(SwitchAccountResponse.builder().requiresReAuthentication(false).build());
+  }
+
   /**
    * Explicitly set default account for a logged in user. This means the user will be landed in the default account
    * after logged in next time.
@@ -636,9 +667,10 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> forceLoginUsingHarnessPassword(LoginRequest loginBody) {
+  public RestResponse<User> forceLoginUsingHarnessPassword(
+      @QueryParam("accountId") String accountId, LoginRequest loginBody) {
     return new RestResponse<>(authenticationManager.loginUsingHarnessPassword(
-        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC)));
+        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId));
   }
 
   @POST
@@ -834,10 +866,11 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public javax.ws.rs.core.Response samlLogin(@FormParam(value = "SAMLResponse") String samlResponse,
-      @Context HttpServletRequest request, @Context HttpServletResponse response) {
+      @FormParam(value = "RelayState") String relayState, @Context HttpServletRequest request,
+      @Context HttpServletResponse response, @QueryParam("accountId") String accountId) {
     try {
       return authenticationManager.samlLogin(
-          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse);
+          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse, accountId, relayState);
     } catch (URISyntaxException e) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
     }
@@ -1155,9 +1188,65 @@ public class UserResource {
   @Path("invites/ngsignin")
   @Timed
   @ExceptionMetered
-  public RestResponse<User> completeInviteAndSignIn(
-      @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInviteDTO userInvite) {
-    return new RestResponse<>(userService.completeNGInviteAndSignIn(userInvite));
+  public RestResponse<User> completeInviteAndSignIn(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("generation") Generation gen, @NotNull UserInviteDTO userInviteDTO) {
+    if (gen != null && gen.equals(Generation.CG)) {
+      Account account = accountService.get(accountId);
+      String inviteId = userService.getInviteIdFromToken(userInviteDTO.getToken());
+      UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                  .withAccountId(accountId)
+                                  .withEmail(userInviteDTO.getEmail())
+                                  .withName(userInviteDTO.getName())
+                                  .withAccountName(account.getAccountName())
+                                  .withCompanyName(account.getCompanyName())
+                                  .withUuid(inviteId)
+                                  .build();
+      userInvite.setAccountId(accountId);
+      userInvite.setUuid(inviteId);
+      userInvite.setPassword(userInviteDTO.getPassword().toCharArray());
+      return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
+    } else {
+      return new RestResponse<>(userService.completeNGInviteAndSignIn(userInviteDTO));
+    }
+  }
+
+  /**
+   * The backend URL for invite which will be added in
+   *
+   * @param accountId the account ID
+   * @param jwtToken JWT token corresponding to the invite
+   * @param email Email id for the user
+   * @return the rest response
+   */
+  @PublicApi
+  @GET
+  @Path("invites/verify")
+  @Timed
+  @ExceptionMetered
+  public Response acceptInviteAndRedirect(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("token") @NotNull String jwtToken, @QueryParam("email") @NotNull String email) {
+    UserInvite userInvite = new UserInvite();
+    String decodedEmail = email;
+    try {
+      decodedEmail = URLDecoder.decode(email, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      log.error("Unsupported encoding exception for " + accountId, e);
+      throw new InvalidRequestException("Malformed email received");
+    }
+
+    String inviteId = userService.getInviteIdFromToken(jwtToken);
+    userInvite.setAccountId(accountId);
+    userInvite.setEmail(decodedEmail);
+    userInvite.setUuid(inviteId);
+    InviteOperationResponse inviteResponse = userService.checkInviteStatus(userInvite, Generation.CG);
+    URI redirectURL = null;
+    try {
+      redirectURL = userService.getInviteAcceptRedirectURL(inviteResponse, userInvite, jwtToken);
+      return Response.seeOther(redirectURL).build();
+    } catch (URISyntaxException e) {
+      log.error("Unable to create redirect url for invite", e);
+      throw new InvalidRequestException("URI syntax error");
+    }
   }
 
   @PublicApi

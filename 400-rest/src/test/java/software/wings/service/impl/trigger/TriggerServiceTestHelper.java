@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -40,6 +41,10 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static java.util.Arrays.asList;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureConfig;
@@ -82,6 +87,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceTestHelper {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   public static Artifact artifact = anArtifact()
@@ -186,6 +193,7 @@ public class TriggerServiceTestHelper {
   public static WorkflowAction getWorkflowAction() {
     return WorkflowAction.builder().workflowId(WORKFLOW_ID).triggerArgs(getTriggerArgs()).build();
   }
+
   public static TriggerArgs getTriggerArgs() {
     return TriggerArgs.builder()
         .triggerArtifactVariables(asList(TriggerArtifactVariable.builder()
@@ -223,6 +231,7 @@ public class TriggerServiceTestHelper {
   public static PipelineAction getPipelineAction() {
     return PipelineAction.builder().pipelineId(PIPELINE_ID).triggerArgs(getTriggerArgs()).build();
   }
+
   public static Trigger buildWorkflowScheduledCondTrigger() {
     return Trigger.builder()
         .workflowId(WORKFLOW_ID)

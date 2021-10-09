@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.sso.LdapGroupSettings;
 import software.wings.beans.sso.LdapSearchConfig;
+import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapUserSettings;
 import software.wings.helpers.ext.ldap.LdapConnectionConfig;
 import software.wings.helpers.ext.ldap.LdapConstants;
@@ -243,7 +244,8 @@ public class LdapHelper {
     return listGroups(groupConfig, String.format("*%s*", name), LdapConstants.MAX_GROUP_SEARCH_SIZE);
   }
 
-  List<LdapGetUsersResponse> listGroupUsers(List<? extends LdapUserConfig> ldapUserConfigs, List<String> groupDnList) {
+  List<LdapGetUsersResponse> listGroupUsers(LdapSettings ldapSettings, List<String> groupDnList) {
+    List<? extends LdapUserConfig> ldapUserConfigs = ldapSettings.getUserSettingsList();
     List<LdapGetUsersResponse> ldapGetUsersResponse = new ArrayList<>();
     List<LdapGetUsersRequest> ldapGetUsersRequests;
     if (!Collections.isEmpty(ldapUserConfigs)) {
@@ -255,7 +257,8 @@ public class LdapHelper {
                                         .fallBackSearchFilter(userConfig.getFallbackGroupMembershipFilter(groupDn))
                                         .build();
                 return new LdapGetUsersRequest(userConfig, search,
-                    connectionConfig.getConnectTimeout() + connectionConfig.getResponseTimeout(), groupDn);
+                    connectionConfig.getConnectTimeout() + connectionConfig.getResponseTimeout(), groupDn,
+                    ldapSettings.getConnectionSettings().getUseRecursiveGroupMembershipSearch());
               }))
               .collect(Collectors.toList());
 
@@ -268,10 +271,10 @@ public class LdapHelper {
     return ldapGetUsersResponse;
   }
 
-  void populateGroupSize(SearchResult groups, List<? extends LdapUserConfig> configs) throws LdapException {
+  void populateGroupSize(SearchResult groups, LdapSettings ldapSettings) throws LdapException {
     long startTime = System.currentTimeMillis();
     List<String> groupDnList = groups.getEntries().stream().map(LdapEntry::getDn).collect(Collectors.toList());
-    List<LdapGetUsersResponse> ldapGetUsersResponses = listGroupUsers(configs, groupDnList);
+    List<LdapGetUsersResponse> ldapGetUsersResponses = listGroupUsers(ldapSettings, groupDnList);
 
     groups.getEntries().forEach(ldapEntry -> {
       log.info("Ldap Entry = [{}]", ldapEntry.toString());

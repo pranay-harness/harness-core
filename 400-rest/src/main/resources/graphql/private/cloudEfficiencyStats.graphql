@@ -1,4 +1,5 @@
 extend type Query {
+  #Get statistics about Cloud Time Series
   cloudTimeSeriesStats(
     limit: Int
     offset: Int
@@ -9,6 +10,7 @@ extend type Query {
     sortCriteria: [CloudSortCriteria]
   ): CloudTimeSeriesStats @dataFetcher(name: cloudTimeSeriesStats)
 
+  # Get statistics about Cloud Entity
   cloudEntityStats(
     limit: Int
     offset: Int
@@ -19,6 +21,7 @@ extend type Query {
     sortCriteria: [CloudSortCriteria]
   ): CloudEntityStats @dataFetcher(name: cloudEntityStats)
 
+  # Get statistics about Cloud Trend
   cloudTrendStats(
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
@@ -26,6 +29,7 @@ extend type Query {
     sortCriteria: [CloudSortCriteria]
   ): CloudTrendStats @dataFetcher(name: cloudTrendStats)
 
+  # Get values for Cloud Filter
   cloudFilterValues(
     limit: Int
     offset: Int
@@ -35,6 +39,7 @@ extend type Query {
     sortCriteria: [CloudSortCriteria]
   ): CloudFilterData @dataFetcher(name: cloudFilterValues)
 
+  # Get Cloud Overview info
   cloudOverview(
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
@@ -43,14 +48,17 @@ extend type Query {
   ): CloudOverviewData @dataFetcher(name: cloudOverview)
 }
 
+# Define Cloud Time Series Stats type
 type CloudTimeSeriesStats {
   stats: [TimeSeriesDataPoints]
 }
 
+# Define Cloud Entity Stats type
 type CloudEntityStats {
   stats: [CloudEntityData]
 }
 
+# Define Cloud Entity Data type
 type CloudEntityData {
   id: String
   region: String
@@ -73,27 +81,32 @@ type CloudEntityData {
   costTrend: Number
 }
 
+# Define Cloud Trends Stats type
 type CloudTrendStats {
   cost: BillingStatsInfo
   unBlendedCost: BillingStatsInfo
   blendedCost: BillingStatsInfo
 }
 
+# Define Cloud Filter Data type
 type CloudFilterData {
   data: [CloudFilterDataPoint]
 }
 
+# Define Cloud Overview Data type
 type CloudOverviewData {
   totalCost: Number
   data: [CloudOverviewDataPoint]
 }
 
+# Define Cloud Overview Data Point
 type CloudOverviewDataPoint {
   name: String
   cost: Number
   trend: Number
 }
 
+# Define Cloud Filter Data Point type
 type CloudFilterDataPoint {
   region: [EntityData]
   awsLinkedAccount: [EntityData]
@@ -108,34 +121,57 @@ type CloudFilterDataPoint {
   awsTags: [K8sLabel]
 }
 
+# Set Cloud Billing filter criteria
 input CloudBillingFilter {
+  # Filter by start time
   startTime: TimeFilter
+  # Filter by end type
   endTime: TimeFilter
+  # Filter by preAggregated Table start time
   preAggregatedTableStartTime: TimeFilter
+  # Filter by preAggregated Table end time
   preAggregatedTableEndTime: TimeFilter
+  # Filter by Billing Account id
   billingAccountId: IdFilter
+  # Filter by Billing Account id
   projectId: IdFilter
+  # Filter by Product id
   product: IdFilter
+  # Filter by sku id
   sku: IdFilter
+  # Filter by Region id
   region: IdFilter
+  # Filter by AWS Linked Account id
   awsLinkedAccount: IdFilter
+  # Filter by AWS usage type id
   awsUsageType: IdFilter
+  # Filter by AWS Instance Type id
   awsInstanceType: IdFilter
+  # Filter by AWS Service id
   awsService: IdFilter
+  # Filter by Cloud Provider
   cloudProvider: IdFilter
+  # Filter by Labels Key id
   labelsKey: IdFilter
+  # Filter by Labels Value id
   labelsValue: IdFilter
+  # Filter by Tags Key id
   tagsKey: IdFilter
+  # Filter by Tags Value id
   tagsValue: IdFilter
+  # Filter by Labels id
   labels: IdFilter
+  # Filter by Tags id
   tags: IdFilter
 }
 
+# Set Cloud Billing Group By
 input CloudBillingGroupBy {
   entityGroupBy: CloudEntityGroupBy
   timeTruncGroupby: CETimeTruncGroupby
 }
 
+# Possible values for Cloud Entity Group By
 enum CloudEntityGroupBy {
   billingAccountId
   projectId
@@ -157,11 +193,13 @@ enum CloudEntityGroupBy {
   cloudProvider
 }
 
+# Set Cloud Sort Criteria
 input CloudSortCriteria {
   sortType: CloudSortType
   sortOrder: SortOrder
 }
 
+# Possible values for Cloud Sort Type
 enum CloudSortType {
   Time
   gcpCost

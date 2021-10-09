@@ -19,7 +19,7 @@ def checkstyle():
             "com.puppycrawl.tools.checkstyle.Main",
             "-c $(location " + checkstyle_xml + ")",
             "-f xml",
-            "-x 'src/generated'",
+            "-x \"src/generated\"",
             "--",
             module_name,
             "> \"$@\"",

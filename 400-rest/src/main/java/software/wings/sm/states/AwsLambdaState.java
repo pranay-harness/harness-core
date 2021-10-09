@@ -20,7 +20,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -107,6 +109,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AwsLambdaState extends State {
   @Inject protected transient SettingsService settingsService;
   @Inject protected transient ServiceResourceService serviceResourceService;
@@ -487,10 +490,8 @@ public class AwsLambdaState extends State {
     wfRequestBuilder.commandName(getCommandName());
     wfRequestBuilder.artifactStreamAttributes(artifactStreamAttributes);
     wfRequestBuilder.roleArn(infrastructureMapping.getRole());
+    wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
 
-    if (isNotEmpty(aliases)) {
-      wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
-    }
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
     Map<String, String> serviceVariables =
         serviceTemplateService

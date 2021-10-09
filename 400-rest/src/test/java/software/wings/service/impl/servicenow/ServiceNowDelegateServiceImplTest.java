@@ -1,10 +1,13 @@
 package software.wings.service.impl.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.ServiceNowException;
 import io.harness.rule.Owner;
@@ -19,16 +22,19 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
+@OwnedBy(CDC)
 @RunWith(MockitoJUnitRunner.class)
-public class ServiceNowDelegateServiceImplTest {
+public class ServiceNowDelegateServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnHttpClientWithIncreasedTimeout() {
     OkHttpClient httpClientWithIncreasedTimeout =
         ServiceNowDelegateServiceImpl.getHttpClientWithIncreasedTimeout("url.com", false);
-    assertThat(httpClientWithIncreasedTimeout.connectTimeoutMillis()).isEqualTo(45000);
-    assertThat(httpClientWithIncreasedTimeout.readTimeoutMillis()).isEqualTo(45000);
+    assertThat(httpClientWithIncreasedTimeout.connectTimeoutMillis())
+        .isEqualTo(ServiceNowDelegateServiceImpl.TIME_OUT * 1000);
+    assertThat(httpClientWithIncreasedTimeout.readTimeoutMillis())
+        .isEqualTo(ServiceNowDelegateServiceImpl.TIME_OUT * 1000);
   }
 
   @Test

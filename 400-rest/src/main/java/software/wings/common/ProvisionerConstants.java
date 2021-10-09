@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._871_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public interface ProvisionerConstants {
   String ROLLBACK_TERRAFORM_NAME = "Terraform Rollback";
   String PROVISION_SHELL_SCRIPT = "Shell Script Provision";

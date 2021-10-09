@@ -18,6 +18,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.instance.info.InstanceInfoService;
+import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
@@ -30,6 +32,7 @@ import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
+import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
@@ -45,7 +48,8 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
-import java.util.LinkedList;
+import java.util.Collection;
+import java.util.Collections;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,6 +68,7 @@ public class K8sScaleStepTest extends CategoryTest {
   @Mock private ManifestDelegateConfig manifestDelegateConfig;
   @Mock StoreConfig storeConfig;
   @Mock ServiceOutcome serviceOutcome;
+  @Mock private InstanceInfoService instanceInfoService;
   private final ManifestOutcome manifestOutcome = K8sManifestOutcome.builder().store(storeConfig).build();
   private final Ambiance ambiance = Ambiance.newBuilder().build();
   private final StepInputPackage stepInputPackage = StepInputPackage.builder().build();
@@ -183,8 +188,8 @@ public class K8sScaleStepTest extends CategoryTest {
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-    doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
+    doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(Collection.class));
 
     scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
@@ -204,6 +209,10 @@ public class K8sScaleStepTest extends CategoryTest {
 
     // We need this null as K8sScaleStep does not depend upon Manifests
     assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo("test-scale-count-release");
   }
 
   @Test
@@ -238,8 +247,8 @@ public class K8sScaleStepTest extends CategoryTest {
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-    doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
+    doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(Collection.class));
 
     scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
@@ -259,6 +268,9 @@ public class K8sScaleStepTest extends CategoryTest {
 
     // We need this null as K8sScaleStep does not depend upon Manifests
     assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo("test-scale-percentage-release");
   }
 
   @SneakyThrows
@@ -270,13 +282,22 @@ public class K8sScaleStepTest extends CategoryTest {
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
-    K8sDeployResponse responseData = K8sDeployResponse.builder()
-                                         .commandExecutionStatus(SUCCESS)
-                                         .commandUnitsProgress(UnitProgressData.builder().build())
-                                         .build();
+    K8sDeployResponse responseData =
+        K8sDeployResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .commandUnitsProgress(UnitProgressData.builder().build())
+            .k8sNGTaskResponse(K8sScaleResponse.builder().k8sPodList(Collections.emptyList()).build())
+            .build();
+    StepResponse.StepOutcome stepOutcome = StepResponse.StepOutcome.builder()
+                                               .name(OutcomeExpressionConstants.DEPLOYMENT_INFO_OUTCOME)
+                                               .outcome(DeploymentInfoOutcome.builder().build())
+                                               .build();
+    doReturn(stepOutcome).when(instanceInfoService).saveServerInstancesIntoSweepingOutput(any(), any());
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        scaleStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
+    assertThat(response.getStepOutcomes()).contains(stepOutcome);
   }
 
   @Test
@@ -293,7 +314,8 @@ public class K8sScaleStepTest extends CategoryTest {
                                          .commandUnitsProgress(UnitProgressData.builder().build())
                                          .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        scaleStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
   }

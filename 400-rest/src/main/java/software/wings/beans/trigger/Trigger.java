@@ -8,7 +8,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
@@ -64,7 +66,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "TriggerKeys")
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
-
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class Trigger extends Base
     implements NameAccess, TagAware, AccountAccess, ApplicationAccess, EncryptableSetting, PersistentCronIterable {
   public static List<MongoIndex> mongoIndexes() {
@@ -207,7 +209,7 @@ public class Trigger extends Base
     ScheduledTriggerCondition scheduledCondition = (ScheduledTriggerCondition) condition;
     if (expandNextIterations(skipMissed, throttled, ScheduledTriggerJob.PREFIX + scheduledCondition.getCronExpression(),
             nextIterations)) {
-      return nextIterations;
+      return isNotEmpty(nextIterations) ? nextIterations : Collections.singletonList(Long.MAX_VALUE);
     }
 
     return Collections.singletonList(Long.MAX_VALUE);

@@ -43,8 +43,8 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.ResourceConstraint;
 import io.harness.beans.WorkflowType;
-import io.harness.beans.shared.ResourceConstraint;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;

@@ -50,7 +50,6 @@ import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.getRen
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.getRenderedTfVarFiles;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.handleDefaultWorkspace;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.isSecretManagerRequired;
-import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.parseTerragruntOutputs;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.resolveTargets;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.validateTerragruntVariables;
 
@@ -141,9 +140,11 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 
+@FieldNameConstants(onlyExplicitlyIncluded = true, innerTypeName = "TerragruntProvisionStateKeys")
 @OwnedBy(CDP)
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
@@ -171,11 +172,15 @@ public abstract class TerragruntProvisionState extends State {
   @Inject protected TerragruntStateHelper terragruntStateHelper;
   @Inject protected TerraformPlanHelper terraformPlanHelper;
 
-  @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
+  @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
-  @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
-  @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
-  @Getter @Setter private List<NameValuePair> environmentVariables;
+  @Attributes(title = "Variables") @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
+  @Attributes(title = "Backend Configs")
+  @FieldNameConstants.Include
+  @Getter
+  @Setter
+  private List<NameValuePair> backendConfigs;
+  @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> environmentVariables;
   @Getter @Setter private List<String> targets;
 
   @Getter @Setter private List<String> tfVarFiles;
@@ -664,7 +669,7 @@ public abstract class TerragruntProvisionState extends State {
     saveUserInputs(context, terragruntExecutionData, terragruntProvisioner);
 
     if (terragruntExecutionData.getOutputs() != null) {
-      Map<String, Object> outputs = parseTerragruntOutputs(terragruntExecutionData.getOutputs());
+      Map<String, Object> outputs = terragruntStateHelper.parseTerragruntOutputs(terragruntExecutionData.getOutputs());
       terragruntStateHelper.saveOutputs(context, outputs);
 
       ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
@@ -877,5 +882,15 @@ public abstract class TerragruntProvisionState extends State {
   @Override
   public boolean isSelectionLogsTrackingForTasksEnabled() {
     return true;
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> results = new HashMap<>();
+    if (isEmpty(provisionerId)) {
+      results.put("Provisioner", "Provisioner must be provided.");
+    }
+    // if more fields need to validated, please make sure templatized fields are not broken.
+    return results;
   }
 }

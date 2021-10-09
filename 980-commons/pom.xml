@@ -236,6 +236,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>999-annotations</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>

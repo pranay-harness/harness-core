@@ -155,7 +155,7 @@ public abstract class AzureVMSSTaskHandler {
       int autoScalingSteadyStateTimeout, ExecutionLogCallback logCallBack,
       AzureRestCallBack<VirtualMachineScaleSet> restCallBack) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
         logCallBack.saveExecutionLog(
             format("Checking the status of VMSS: [%s] VM instances", virtualMachineScaleSet.name()), INFO);
         while (true) {

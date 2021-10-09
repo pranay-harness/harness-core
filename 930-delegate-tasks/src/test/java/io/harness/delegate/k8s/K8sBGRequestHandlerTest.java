@@ -425,7 +425,7 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
     assertThat(result).isFalse();
     verify(logCallback)
         .saveExecutionLog(
-            "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+            "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Blue/Green workflow type.",
             ERROR, FAILURE);
   }
 
@@ -439,7 +439,7 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
     assertThat(result).isFalse();
     verify(logCallback)
         .saveExecutionLog(
-            "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment or DeploymentConfig (OpenShift) workload only. To deploy additional workloads in Manifests, annotate them with "
+            "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only. To deploy additional workloads in Manifests, annotate them with "
                 + HarnessAnnotations.directApply + ": true",
             ERROR, FAILURE);
   }

@@ -79,19 +79,34 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
         Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString());
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
-    K8sApplyResponse k8sApplyResponse = K8sApplyResponse.builder().build();
+    boolean success;
+    if (k8sApplyTaskParameters.isInheritManifests()) {
+      success = k8sTaskHelper.restore(k8sApplyTaskParameters.getKubernetesResources(),
+          k8sApplyTaskParameters.getK8sClusterConfig(), k8sDelegateTaskParams, k8sApplyHandlerConfig,
+          k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Init));
+      if (!success) {
+        return getFailureResponse();
+      }
+    } else {
+      success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
+          k8sApplyTaskParameters.getK8sDelegateManifestConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
+          k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, FetchFiles), timeoutInMillis);
+      if (!success) {
+        return getFailureResponse();
+      }
 
-    boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
-        k8sApplyTaskParameters.getK8sDelegateManifestConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, FetchFiles), timeoutInMillis);
-    if (!success) {
-      return getFailureResponse();
-    }
+      success = init(k8sApplyTaskParameters, k8sDelegateTaskParams,
+          k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Init));
+      if (!success) {
+        return getFailureResponse();
+      }
 
-    success = init(k8sApplyTaskParameters, k8sDelegateTaskParams,
-        k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Init));
-    if (!success) {
-      return getFailureResponse();
+      if (k8sApplyTaskParameters.isExportManifests()) {
+        return K8sTaskExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .k8sTaskResponse(K8sApplyResponse.builder().resources(k8sApplyHandlerConfig.getResources()).build())
+            .build();
+      }
     }
 
     success = k8sApplyBaseHandler.prepare(k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Prepare),
@@ -118,7 +133,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
 
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-        .k8sTaskResponse(k8sApplyResponse)
+        .k8sTaskResponse(K8sApplyResponse.builder().build())
         .build();
   }
 
@@ -153,9 +168,13 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       k8sApplyHandlerConfig.setResources(k8sTaskHelper.getResourcesFromManifests(k8sDelegateTaskParams,
           k8sApplyTaskParameters.getK8sDelegateManifestConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
           applyFilePaths, k8sApplyTaskParameters.getValuesYamlList(), k8sApplyHandlerConfig.getReleaseName(),
-          k8sApplyHandlerConfig.getKubernetesConfig().getNamespace(), executionLogCallback, k8sApplyTaskParameters));
+          k8sApplyHandlerConfig.getKubernetesConfig().getNamespace(), executionLogCallback, k8sApplyTaskParameters,
+          k8sApplyTaskParameters.isSkipRendering()));
 
-      executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
+      executionLogCallback.saveExecutionLog(
+          color(String.format(
+                    "%nManifests %s:%n", k8sApplyTaskParameters.isSkipRendering() ? "" : "[Post template rendering] "),
+              White, Bold));
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(k8sApplyHandlerConfig.getResources()));
 
       if (k8sApplyTaskParameters.isSkipDryRun()) {

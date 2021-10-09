@@ -13,17 +13,12 @@ shared_dependencies = [
     "//970-rbac-core:module",
     "//:lombok",
     "@maven//:com_openpojo_openpojo",
-    "@maven//:de_bwaldvogel_mongo_java_server_core",
-    "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
     "@maven//:io_prometheus_simpleclient_servlet",
 ]
 
 java_binary(
     name = "module",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
-    ]),
+    srcs = glob(["src/main/java/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.app.VerificationServiceApplication",
     resources = [
@@ -65,7 +60,9 @@ java_library(
 
 run_tests()
 
-run_analysis(
-    run_checkstyle = False,
-    run_pmd = False,
-)
+run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "verification-config.yml",
+])

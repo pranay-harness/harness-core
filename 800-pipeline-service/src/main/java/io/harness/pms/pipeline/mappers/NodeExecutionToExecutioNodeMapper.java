@@ -10,16 +10,17 @@ import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.dto.converter.FailureInfoDTOConverter;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
+import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -28,8 +29,8 @@ public class NodeExecutionToExecutioNodeMapper {
   @Inject private DelegateInfoHelper delegateInfoHelper;
 
   public ExecutionNode mapNodeExecutionToExecutionNode(NodeExecution nodeExecution) {
-    Map<String, Document> outcomes =
-        PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
+    Map<String, PmsOutcome> outcomes =
+        PmsOutcomeMapper.convertJsonToOrchestrationMap(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
             nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid()));
 
     List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
@@ -48,7 +49,7 @@ public class NodeExecutionToExecutioNodeMapper {
         .setupId(nodeExecution.getNode().getUuid())
         .name(nodeExecution.getNode().getName())
         .identifier(nodeExecution.getNode().getIdentifier())
-        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .stepParameters(nodeExecution.getPmsStepParameters())
         .startTs(nodeExecution.getStartTs())
         .endTs(nodeExecution.getEndTs())
         .stepType(nodeExecution.getNode().getStepType().getType())
@@ -59,8 +60,8 @@ public class NodeExecutionToExecutioNodeMapper {
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
         .executableResponses(nodeExecution.getExecutableResponses())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(nodeExecution.getProgressData())
-        .outcomes(outcomes)
+        .progressData(nodeExecution.getPmsProgressData())
+        .outcomes(OrchestrationMapBackwardCompatibilityUtils.convertToOrchestrationMap(outcomes))
         .baseFqn(null)
         .delegateInfoList(delegateInfoList)
         .build();

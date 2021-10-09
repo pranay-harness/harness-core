@@ -31,6 +31,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -80,7 +81,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class CreateConnectorDataFetcherTest {
+public class CreateConnectorDataFetcherTest extends CategoryTest {
   @Mock private SettingsService settingsService;
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private software.wings.graphql.datafetcher.connector.ConnectorsController connectorsController;

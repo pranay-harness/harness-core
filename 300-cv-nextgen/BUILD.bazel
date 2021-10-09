@@ -22,6 +22,7 @@ shared_dependencies = [
     "//960-continuous-features:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
+    "//965-api-key-filter:module",
     "//980-commons:module",
     "//860-orchestration-steps:module",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
@@ -92,10 +93,7 @@ shared_dependencies = [
 
 java_binary(
     name = "module",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
-    ]),
+    srcs = glob(["src/main/java/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.cvng.VerificationApplication",
     resources = [
@@ -143,3 +141,8 @@ java_library(
 run_tests()
 
 run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "cv-nextgen-config.yml",
+])

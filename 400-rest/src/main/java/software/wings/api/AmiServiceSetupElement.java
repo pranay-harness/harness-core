@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
@@ -26,6 +29,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("amiServiceSetupElement")
+@TargetModule(_957_CG_BEANS)
 public class AmiServiceSetupElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
@@ -42,6 +46,7 @@ public class AmiServiceSetupElement implements ContextElement, SweepingOutput {
   private boolean blueGreen;
   private ResizeStrategy resizeStrategy;
   private List<String> baseScalingPolicyJSONs;
+  private List<String> baseAsgScheduledActionJSONs;
 
   @Override
   public ContextElementType getElementType() {

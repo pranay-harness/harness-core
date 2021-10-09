@@ -10,12 +10,15 @@ import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyJson;
 import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyStatement;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
@@ -84,30 +87,35 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
   @Override
   public boolean updateBucketPolicy(CEAwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider = awsCredentialHelper.constructBasicAwsCredentials();
-    AmazonS3Client amazonS3Client = getAmazonS3Client(credentialsProvider);
-    String crossAccountRoleArn = awsConfig.getAwsCrossAccountAttributes().getCrossAccountRoleArn();
-    String awsS3Bucket = awsCredentialHelper.getAWSS3Bucket();
+    try (CloseableAmazonWebServiceClient<AmazonS3Client> closeableAmazonS3Client =
+             new CloseableAmazonWebServiceClient(getAmazonS3Client(credentialsProvider))) {
+      String crossAccountRoleArn = awsConfig.getAwsCrossAccountAttributes().getCrossAccountRoleArn();
+      String awsS3Bucket = awsCredentialHelper.getAWSS3Bucket();
 
-    BucketPolicy bucketPolicy = amazonS3Client.getBucketPolicy(awsS3Bucket);
-    String policyText = bucketPolicy.getPolicyText();
-    BucketPolicyJson policyJson = new Gson().fromJson(policyText, BucketPolicyJson.class);
-    List<BucketPolicyStatement> listStatements = new ArrayList<>();
-    for (BucketPolicyStatement statement : policyJson.getStatement()) {
-      Map<String, List<String>> principal = statement.getPrincipal();
-      List<String> rolesList = principal.get(aws);
-      rolesList = rolesList.stream().filter(roleArn -> roleArn.contains(rolePrefix)).collect(Collectors.toList());
-      if (rolesList.contains(crossAccountRoleArn)) {
-        return true;
+      BucketPolicy bucketPolicy = closeableAmazonS3Client.getClient().getBucketPolicy(awsS3Bucket);
+      String policyText = bucketPolicy.getPolicyText();
+      BucketPolicyJson policyJson = new Gson().fromJson(policyText, BucketPolicyJson.class);
+      List<BucketPolicyStatement> listStatements = new ArrayList<>();
+      for (BucketPolicyStatement statement : policyJson.getStatement()) {
+        Map<String, List<String>> principal = statement.getPrincipal();
+        List<String> rolesList = principal.get(aws);
+        rolesList = rolesList.stream().filter(roleArn -> roleArn.contains(rolePrefix)).collect(Collectors.toList());
+        if (rolesList.contains(crossAccountRoleArn)) {
+          return true;
+        }
+        rolesList.add(crossAccountRoleArn);
+        principal.put(aws, rolesList);
+        statement.setPrincipal(principal);
+        listStatements.add(statement);
       }
-      rolesList.add(crossAccountRoleArn);
-      principal.put(aws, rolesList);
-      statement.setPrincipal(principal);
-      listStatements.add(statement);
+      policyJson = BucketPolicyJson.builder().Version(policyJson.getVersion()).Statement(listStatements).build();
+      String updatedBucketPolicy = new Gson().toJson(policyJson);
+      closeableAmazonS3Client.getClient().setBucketPolicy(awsS3Bucket, updatedBucketPolicy);
+      return true;
+    } catch (Exception e) {
+      log.error("Exception updateBucketPolicy", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
-    policyJson = BucketPolicyJson.builder().Version(policyJson.getVersion()).Statement(listStatements).build();
-    String updatedBucketPolicy = new Gson().toJson(policyJson);
-    amazonS3Client.setBucketPolicy(awsS3Bucket, updatedBucketPolicy);
-    return true;
   }
 
   protected AmazonS3Client getAmazonS3Client(AWSCredentialsProvider credentialsProvider) {

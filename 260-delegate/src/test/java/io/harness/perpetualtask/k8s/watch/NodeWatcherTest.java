@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_START;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.UTSAV;
@@ -18,15 +18,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
 
-import com.github.tomakehurst.wiremock.client.UrlMatchingStrategy;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
@@ -56,6 +58,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDP)
 public class NodeWatcherTest extends CategoryTest {
   private static final String UID = UUID.randomUUID().toString();
   private static final String NAME = "test-node";
@@ -69,7 +72,7 @@ public class NodeWatcherTest extends CategoryTest {
   private EventPublisher eventPublisher;
   private SharedInformerFactory sharedInformerFactory;
 
-  private static final UrlMatchingStrategy NODE_URL_MATCHING = urlMatching("^/api/v1/nodes.*");
+  private static final UrlPattern NODE_URL_MATCHING = urlMatching("^/api/v1/nodes.*");
 
   @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
   @Rule public WireMockRule wireMockRule = new WireMockRule(65223);
@@ -137,6 +140,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
 
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
@@ -145,6 +149,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
     });
 
     sharedInformerFactory.stopAllRegisteredInformers();
@@ -198,6 +203,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
 
     // invoked because we are initializing with one node.
@@ -207,6 +213,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
     });
 
     assertThat(captor.getAllValues().get(2)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
@@ -215,6 +222,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.plusMillis(100).getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
     });
 
     sharedInformerFactory.stopAllRegisteredInformers();
@@ -268,6 +276,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
 
     // invoked because we are initializing with one node
@@ -277,6 +286,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
     });
 
     sharedInformerFactory.stopAllRegisteredInformers();
@@ -298,6 +308,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
   }
 
@@ -318,6 +329,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
   }
 

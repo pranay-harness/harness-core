@@ -1,23 +1,31 @@
 package io.harness.delegate.beans.connector.vaultconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.AccessType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModelProperty;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,12 +36,12 @@ import lombok.ToString;
 @Getter
 @Setter
 @Builder
-@ToString(exclude = {"authToken", "secretId"})
+@ToString(exclude = {"authToken", "secretId", "sinkPath"})
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-public class VaultConnectorDTO extends ConnectorConfigDTO {
-  private String authToken;
+public class VaultConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
+  @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData authToken;
   private String basePath;
   private String vaultUrl;
   private boolean isReadOnly;
@@ -41,17 +49,25 @@ public class VaultConnectorDTO extends ConnectorConfigDTO {
   private boolean secretEngineManuallyConfigured;
   private String secretEngineName;
   private String appRoleId;
-  private String secretId;
+  @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData secretId;
   private boolean isDefault;
   private int secretEngineVersion;
+  private Set<String> delegateSelectors;
+  private String namespace;
+  private String sinkPath;
+  private boolean useVaultAgent;
 
   public AccessType getAccessType() {
-    return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
+    if (useVaultAgent) {
+      return AccessType.VAULT_AGENT;
+    } else {
+      return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
+    }
   }
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {
-    return null;
+    return Collections.singletonList(this);
   }
 
   @Override
@@ -71,6 +87,16 @@ public class VaultConnectorDTO extends ConnectorConfigDTO {
     }
     if (isReadOnly && isDefault) {
       throw new InvalidRequestException("Read only secret manager cannot be set as default", INVALID_REQUEST, USER);
+    }
+    if (isUseVaultAgent()) {
+      if (isBlank(getSinkPath())) {
+        throw new InvalidRequestException(
+            "You must provide a sink path to read token if you are using VaultAgent", INVALID_REQUEST, USER);
+      }
+      if (isEmpty(getDelegateSelectors())) {
+        throw new InvalidRequestException(
+            "You must provide a delegate selector to read token if you are using VaultAgent", INVALID_REQUEST, USER);
+      }
     }
   }
 }

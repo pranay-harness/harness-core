@@ -1,5 +1,8 @@
 package io.harness.cdng.service.beans;
 
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
@@ -24,6 +27,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ServiceSpecType.KUBERNETES)
 @SimpleVisitorHelper(helperClass = KubernetesServiceSpecVisitorHelper.class)
 @TypeAlias("kubernetesServiceSpec")
+@RecasterAlias("io.harness.cdng.service.beans.KubernetesServiceSpec")
+@OwnedBy(HarnessTeam.CDP)
 public class KubernetesServiceSpec implements ServiceSpec, Visitable {
   List<NGVariable> variables;
   ArtifactListConfig artifacts;

@@ -1,24 +1,26 @@
 package io.harness.gitsync.sdk;
 
+import static io.harness.AuthorizationServiceHeader.GIT_SYNC_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
-import io.harness.exception.WingsException;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.gitsync.BranchDetails;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceImplBase;
-import io.harness.gitsync.InfoForPush;
 import io.harness.gitsync.IsGitSyncEnabled;
+import io.harness.gitsync.Principal;
+import io.harness.gitsync.PushFileResponse;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.PushResponse;
 import io.harness.gitsync.RepoDetails;
-import io.harness.gitsync.common.beans.InfoForGitPush;
+import io.harness.gitsync.ServicePrincipal;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.logging.MdcContextSetter;
 import io.harness.manage.GlobalContextManager;
-import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.UserPrincipal;
@@ -26,9 +28,6 @@ import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.BytesValue;
-import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,82 +43,81 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
   @Override
   public void pushFromHarness(PushInfo request, StreamObserver<PushResponse> responseObserver) {
     try (MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
-      log.info("Grpc request received for pushFromHarness");
+      log.debug("Grpc request received for pushFromHarness");
       harnessToGitHelperService.postPushOperation(request);
       responseObserver.onNext(PushResponse.newBuilder().build());
       responseObserver.onCompleted();
-      log.info("Grpc request completed for pushFromHarness");
+      log.debug("Grpc request completed for pushFromHarness");
     }
   }
 
   @Override
-  public void getConnectorInfo(FileInfo request, StreamObserver<InfoForPush> responseObserver) {
-    final EntityDetail entityDetailDTO = entityDetailProtoToRestMapper.createEntityDetailDTO(request.getEntityDetail());
-    final InfoForPush.Builder pushInfoBuilder = InfoForPush.newBuilder().setStatus(true);
+  public void pushFile(FileInfo request, StreamObserver<PushFileResponse> responseObserver) {
+    PushFileResponse pushFileResponse;
     try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
          MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
-      log.info("Grpc request received for getConnectorInfo");
-      setUserPrincipal(request);
-
-      InfoForGitPush infoForPush =
-          harnessToGitHelperService.getInfoForPush(request, entityDetailDTO.getEntityRef(), entityDetailDTO.getType());
-      final ByteString connector = ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getScmConnector()));
-      pushInfoBuilder.setConnector(BytesValue.newBuilder().setValue(connector).build())
-          .setFilePath(StringValue.newBuilder().setValue(infoForPush.getFilePath()).build())
-          .setFolderPath(StringValue.newBuilder().setValue(request.getFolderPath()).build())
-          .setOrgIdentifier(StringValue.of(infoForPush.getOrgIdentifier()))
-          .setProjectIdentifier(StringValue.of(infoForPush.getProjectIdentifier()))
-          .setAccountId(infoForPush.getAccountId())
-          .setYamlGitConfigId(infoForPush.getYamlGitConfigId())
-          .setIsDefault(infoForPush.isDefault())
-          .setDefaultBranchName(infoForPush.getDefaultBranchName())
-          .setExecuteOnDelegate(infoForPush.isExecuteOnDelegate());
-      if (infoForPush.isExecuteOnDelegate()) {
-        final ByteString encryptedDataDetails =
-            ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getEncryptedDataDetailList()));
-        pushInfoBuilder.setEncryptedDataDetails(BytesValue.of(encryptedDataDetails));
-      }
+      log.debug("Grpc request received for pushFile");
+      setPrincipal(request);
+      pushFileResponse = harnessToGitHelperService.pushFile(request);
+      log.debug("Grpc request completed for pushFile");
     } catch (Exception e) {
-      log.info("Encountered exception while getting connector info", e);
-      // Using exception Manager to get kryo serializable wings exception out of catched exception.
-      final WingsException wingsException = exceptionManager.processException(e);
-      final ByteString exceptionBytesString = ByteString.copyFrom(kryoSerializer.asBytes(wingsException));
-      pushInfoBuilder.setException(BytesValue.of(exceptionBytesString));
-      pushInfoBuilder.setStatus(false);
+      log.error("Push to git failed with exception", e);
+      final String message = ExceptionUtils.getMessage(e);
+      pushFileResponse = PushFileResponse.newBuilder()
+                             .setDefaultBranchName("")
+                             .setIsDefault(false)
+                             .setScmResponseCode(-1)
+                             .setCommitId("")
+                             .setError(message)
+                             .setStatus(0)
+                             .setDefaultBranchName("")
+                             .build();
     }
-    responseObserver.onNext(pushInfoBuilder.build());
+    responseObserver.onNext(pushFileResponse);
     responseObserver.onCompleted();
-    log.info("Grpc request completed for getConnectorInfo");
   }
 
-  private void setUserPrincipal(FileInfo request) {
-    final UserPrincipal userPrincipal = getUserPrincipal(request);
-    GlobalContextManager.upsertGlobalContextRecord(PrincipalContextData.builder().principal(userPrincipal).build());
+  private void setPrincipal(FileInfo request) {
+    final io.harness.security.dto.Principal principal = getPrincipal(request);
+    GlobalContextManager.upsertGlobalContextRecord(PrincipalContextData.builder().principal(principal).build());
   }
 
-  private UserPrincipal getUserPrincipal(FileInfo request) {
-    final io.harness.gitsync.UserPrincipal principalFromProto = request.getUserPrincipal();
-    return new UserPrincipal(principalFromProto.getUserId().getValue(), principalFromProto.getEmail().getValue(),
-        principalFromProto.getUserName().getValue(), request.getAccountId());
+  private io.harness.security.dto.Principal getPrincipal(FileInfo request) {
+    final Principal principalFromProto = request.getPrincipal();
+    if (principalFromProto.hasUserPrincipal()) {
+      final io.harness.gitsync.UserPrincipal userPrincipal = principalFromProto.getUserPrincipal();
+      return new UserPrincipal(userPrincipal.getUserId().getValue(), userPrincipal.getEmail().getValue(),
+          userPrincipal.getUserName().getValue(), request.getAccountId());
+    } else if (principalFromProto.hasServicePrincipal()) {
+      checkIfServicePrincipalIsValid(request.getPrincipal().getServicePrincipal());
+      return new io.harness.security.dto.ServicePrincipal(request.getPrincipal().getServicePrincipal().getName());
+    }
+    throw new InvalidRequestException("Only service or user principal allowed");
+  }
+
+  private void checkIfServicePrincipalIsValid(ServicePrincipal servicePrincipal) {
+    if (!GIT_SYNC_SERVICE.getServiceId().equals(servicePrincipal.getName())) {
+      throw new InvalidRequestException("Only git sync service principal is allowed for push");
+    }
   }
 
   @Override
   public void isGitSyncEnabledForScope(EntityScopeInfo request, StreamObserver<IsGitSyncEnabled> responseObserver) {
-    log.info("Grpc request received for isGitSyncEnabledForScope");
+    log.debug("Grpc request received for isGitSyncEnabledForScope");
     final Boolean gitSyncEnabled = harnessToGitHelperService.isGitSyncEnabled(request);
     responseObserver.onNext(IsGitSyncEnabled.newBuilder().setEnabled(gitSyncEnabled).build());
     responseObserver.onCompleted();
-    log.info("Grpc request completed for isGitSyncEnabledForScope");
+    log.debug("Grpc request completed for isGitSyncEnabledForScope");
   }
 
   @Override
   public void getDefaultBranch(RepoDetails request, StreamObserver<BranchDetails> responseObserver) {
     try (MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
-      log.info("Grpc request received for getDefaultBranch");
+      log.debug("Grpc request received for getDefaultBranch");
       final BranchDetails branchDetails = harnessToGitHelperService.getBranchDetails(request);
       responseObserver.onNext(branchDetails);
       responseObserver.onCompleted();
-      log.info("Grpc request completed for getDefaultBranch");
+      log.debug("Grpc request completed for getDefaultBranch");
     }
   }
 }

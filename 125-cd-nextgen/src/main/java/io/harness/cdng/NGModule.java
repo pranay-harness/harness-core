@@ -2,6 +2,7 @@ package io.harness.cdng;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.NGBeanModule;
 import io.harness.NGPipelineCommonsModule;
 import io.harness.WalkTreeModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,19 +18,23 @@ import io.harness.cdng.buckets.resources.s3.S3ResourceService;
 import io.harness.cdng.buckets.resources.s3.S3ResourceServiceImpl;
 import io.harness.cdng.buckets.resources.service.GcsResourceService;
 import io.harness.cdng.buckets.resources.service.GcsResourceServiceImpl;
+import io.harness.cdng.instance.info.InstanceInfoService;
+import io.harness.cdng.instance.info.InstanceInfoServiceImpl;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
 import io.harness.cdng.k8s.resources.gcp.service.GcpResourceService;
 import io.harness.cdng.k8s.resources.gcp.service.impl.GcpResourceServiceImpl;
+import io.harness.cdng.usage.impl.CDLicenseUsageImpl;
 import io.harness.cdng.yaml.CdYamlSchemaService;
 import io.harness.cdng.yaml.CdYamlSchemaServiceImpl;
+import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
 import io.harness.ng.core.NGCoreModule;
-import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
-import io.harness.registrars.NGStageTypeToStageExecutionSummaryMapperRegistrar;
-import io.harness.registrars.StageTypeToStageExecutionMapperRegistrar;
+import io.harness.ng.core.service.services.ServiceEntityService;
+import io.harness.ng.core.service.services.impl.ServiceEntityServiceImpl;
+import io.harness.service.instance.InstanceService;
+import io.harness.service.instance.InstanceServiceImpl;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +55,7 @@ public class NGModule extends AbstractModule {
     install(NGCoreModule.getInstance());
     install(WalkTreeModule.getInstance());
     install(NGPipelineCommonsModule.getInstance());
-    install(StageTypeToStageExecutionMapperRegistryModule.getInstance());
+    install(NGBeanModule.getInstance());
 
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
@@ -61,10 +66,9 @@ public class NGModule extends AbstractModule {
     bind(GcpResourceService.class).to(GcpResourceServiceImpl.class);
     bind(S3ResourceService.class).to(S3ResourceServiceImpl.class);
     bind(GcsResourceService.class).to(GcsResourceServiceImpl.class);
-
-    MapBinder<String, StageTypeToStageExecutionMapperRegistrar> stageExecutionHelperRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, StageTypeToStageExecutionMapperRegistrar.class);
-    stageExecutionHelperRegistrarMapBinder.addBinding(NGStageTypeToStageExecutionSummaryMapperRegistrar.class.getName())
-        .to(NGStageTypeToStageExecutionSummaryMapperRegistrar.class);
+    bind(InstanceInfoService.class).to(InstanceInfoServiceImpl.class);
+    bind(LicenseUsageInterface.class).to(CDLicenseUsageImpl.class);
+    bind(InstanceService.class).to(InstanceServiceImpl.class);
+    bind(ServiceEntityService.class).to(ServiceEntityServiceImpl.class);
   }
 }

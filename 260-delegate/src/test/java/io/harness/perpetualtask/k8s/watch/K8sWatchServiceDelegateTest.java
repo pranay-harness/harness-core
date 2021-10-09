@@ -136,7 +136,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
     String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams, KUBERNETES_CONFIG);
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
-    assertThat(K8sClusterHelper.isSeen(CLUSTER_ID, KUBE_UID)).isTrue();
+    assertThat(K8sClusterHelper.isSeen(CLUSTER_ID, KUBE_UID)).isFalse();
   }
 
   @Test

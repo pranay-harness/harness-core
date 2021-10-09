@@ -12,7 +12,9 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.gitsync.common.dtos.GitEnabledDTO;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
+import io.harness.gitsync.common.helper.GitEnabledHelper;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 
@@ -44,7 +46,7 @@ public class YamlGitConfigResource {
   private final YamlGitConfigService yamlGitConfigService;
   private final HarnessToGitHelperService harnessToGitHelperService;
   private final AccessControlClient accessControlClient;
-
+  private final GitEnabledHelper gitEnabledHelper;
   @POST
   @ApiOperation(value = "Create a Git Sync", nickname = "postGitSync")
   public GitSyncConfigDTO create(
@@ -95,9 +97,10 @@ public class YamlGitConfigResource {
   @GET
   @Path("/git-sync-enabled")
   @ApiOperation(value = "Is Git Sync EnabledForProject", nickname = "isGitSyncEnabled")
-  public Boolean isGitSyncEnabled(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
+  public GitEnabledDTO isGitSyncEnabled(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationIdentifier) {
-    return yamlGitConfigService.isGitSyncEnabled(accountIdentifier, organizationIdentifier, projectIdentifier);
+    return gitEnabledHelper.getGitEnabledDTO(projectIdentifier, organizationIdentifier, accountIdentifier);
   }
 }

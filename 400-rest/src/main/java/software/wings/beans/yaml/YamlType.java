@@ -11,6 +11,7 @@ import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_STREAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.AZURE_APP_SETTINGS_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.AZURE_CONN_STRINGS_OVERRIDES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.CG_EVENT_CONFIG_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
@@ -51,6 +52,9 @@ import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXPRESSION;
 import static software.wings.utils.Utils.generatePath;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.CgEventConfig;
 import io.harness.governance.ApplicationFilter;
 import io.harness.governance.EnvironmentFilter;
 import io.harness.governance.GovernanceFreezeConfig;
@@ -116,6 +120,7 @@ import java.util.regex.Pattern;
 /**
  * @author rktummala on 10/17/17
  */
+@OwnedBy(HarnessTeam.DX)
 public enum YamlType {
   CLOUD_PROVIDER(SettingCategory.CLOUD_PROVIDER.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER, YAML_EXPRESSION),
@@ -148,8 +153,8 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY), Service.class),
   APPLICATION_MANIFEST(EntityType.APPLICATION_MANIFEST.name(),
-      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
-          INDEX_YAML),
+      generatePath(
+          PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER, ANY),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER),
       Service.class),
   APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE(YamlConstants.VALUES,
@@ -446,6 +451,12 @@ public enum YamlType {
   GLOBAL_TEMPLATE_LIBRARY(EntityType.TEMPLATE.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, GLOBAL_TEMPLATE_LIBRARY_FOLDER, MULTIPLE_ANY, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, GLOBAL_TEMPLATE_LIBRARY_FOLDER), Template.class),
+
+  EVENT_RULE(EntityType.EVENT_RULE.name(),
+      generatePath(
+          PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, CG_EVENT_CONFIG_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, CG_EVENT_CONFIG_FOLDER, ANY),
+      CgEventConfig.class),
 
   APPLICATION_TEMPLATE_LIBRARY(EntityType.TEMPLATE.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, APPLICATION_TEMPLATE_LIBRARY_FOLDER,

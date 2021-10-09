@@ -42,9 +42,12 @@ import software.wings.utils.ArtifactType;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -181,8 +184,10 @@ public class HelmChartAsArtifactFunctionalTest extends AbstractFunctionalTest {
   }
 
   private HelmChart createHelmChartsAndGetWithVersion(Service service, String version) {
-    List<HelmChart> existing =
-        helmChartService.listHelmChartsForService(application.getUuid(), service.getUuid(), new PageRequest<>());
+    Map<String, List<HelmChart>> helmChartMap =
+        helmChartService.listHelmChartsForService(application.getUuid(), service.getUuid(), null, new PageRequest<>());
+    List<HelmChart> existing = helmChartMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+
     Set<String> existingVersion = new HashSet<>();
     // Expect to not have different names, only versions
     existing.stream().map(HelmChart::getVersion).forEach(existingVersion::add);

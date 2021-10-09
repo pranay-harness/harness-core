@@ -15,7 +15,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -26,30 +25,11 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-class ManagerClientX509TrustManager implements X509TrustManager {
-  @Override
-  public X509Certificate[] getAcceptedIssuers() {
-    return new X509Certificate[] {
-        // internal network
-    };
-  }
-
-  @Override
-  public void checkClientTrusted(X509Certificate[] certs, String authType) {
-    // internal network so no need to check
-  }
-
-  @Override
-  public void checkServerTrusted(X509Certificate[] certs, String authType) {
-    // internal network so no need to check
-  }
-}
-
 @Singleton
 @OwnedBy(HarnessTeam.CV)
 public class VerificationManagerClientFactory implements Provider<VerificationManagerClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
-      ImmutableList.of(new ManagerClientX509TrustManager());
+      ImmutableList.of(new VerificationManagerClientX509TrustManager());
 
   private String baseUrl;
   private ServiceTokenGenerator tokenGenerator;

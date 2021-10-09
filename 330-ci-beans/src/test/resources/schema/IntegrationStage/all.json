@@ -187,7 +187,10 @@
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Service"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -417,6 +420,9 @@
         "connectorRef": {
           "type": "string"
         },
+        "initTimeout": {
+          "type": "string"
+        },
         "labels": {
           "oneOf": [
             {
@@ -464,7 +470,8 @@
           ]
         },
         "memory": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(([0-9]*[.])?[0-9]+)([GM]i?)$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -767,7 +774,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
+          "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
         },
         "type": {
           "type": "string"
@@ -798,12 +805,6 @@
         "name": {
           "type": "string",
           "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-        },
-        "rollbackSteps": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
         },
         "steps": {
           "type": "array",

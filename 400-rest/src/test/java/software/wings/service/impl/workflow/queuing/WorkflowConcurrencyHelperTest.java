@@ -14,7 +14,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.ResourceConstraint;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.rule.Owner;

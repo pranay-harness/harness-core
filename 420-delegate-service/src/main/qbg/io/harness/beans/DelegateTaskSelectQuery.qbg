@@ -1,4 +1,4 @@
 query Select for io.harness.beans.DelegateTask {
-  filter accountId as String;
-  filter uuid as String;
+  accountId equal String;
+  uuid equal String;
 }

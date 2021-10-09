@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -18,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
       @JsonSubTypes.Type(value = TriggerArtifactSelectionFromPipelineSource.class, name = "PIPELINE_SOURCE"),
       @JsonSubTypes.Type(value = TriggerArtifactSelectionWebhook.class, name = "WEBHOOK_VARIABLE")
 })
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public interface TriggerArtifactSelectionValue {
   enum ArtifactSelectionType { ARTIFACT_SOURCE, LAST_COLLECTED, LAST_DEPLOYED, PIPELINE_SOURCE, WEBHOOK_VARIABLE }
 

@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -14,7 +15,7 @@ import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class YamlTypeTest {
+public class YamlTypeTest extends CategoryTest {
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)

@@ -9,6 +9,9 @@ import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
+import io.harness.pms.contracts.governance.PolicyMetadata;
+import io.harness.pms.contracts.governance.PolicySetMetadata;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptEffectProto;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -16,6 +19,7 @@ import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.serializer.json.ExecutableResponseSerializer;
@@ -24,14 +28,18 @@ import io.harness.serializer.json.ExecutionMetadataSerializer;
 import io.harness.serializer.json.ExecutionPrincipalInfoSerializer;
 import io.harness.serializer.json.ExecutionTriggerInfoSerializer;
 import io.harness.serializer.json.FailureInfoSerializer;
+import io.harness.serializer.json.GovernanceMetadataSerializer;
 import io.harness.serializer.json.InterruptConfigSerializer;
 import io.harness.serializer.json.InterruptEffectJsonSerializer;
 import io.harness.serializer.json.LayoutNodeInfoSerializer;
 import io.harness.serializer.json.NodeRunInfoSerializer;
+import io.harness.serializer.json.PolicyMetadataSerializer;
+import io.harness.serializer.json.PolicySetMetadataSerializer;
 import io.harness.serializer.json.SkipInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.serializer.json.TriggeredBySerializer;
 import io.harness.serializer.json.UnitProgressSerializer;
+import io.harness.serializer.json.YamlOutputPropertiesSerializer;
 import io.harness.serializer.json.YamlPropertiesSerializer;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -47,6 +55,7 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(TriggeredBy.class, new TriggeredBySerializer());
     addSerializer(ExecutionMetadata.class, new ExecutionMetadataSerializer());
     addSerializer(YamlProperties.class, new YamlPropertiesSerializer());
+    addSerializer(YamlOutputProperties.class, new YamlOutputPropertiesSerializer());
     addSerializer(ExecutableResponse.class, new ExecutableResponseSerializer());
     addSerializer(SkipInfo.class, new SkipInfoSerializer());
     addSerializer(UnitProgress.class, new UnitProgressSerializer());
@@ -54,5 +63,8 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(NodeRunInfo.class, new NodeRunInfoSerializer());
     addSerializer(ExecutionPrincipalInfo.class, new ExecutionPrincipalInfoSerializer());
     addSerializer(InterruptEffectProto.class, new InterruptEffectJsonSerializer());
+    addSerializer(PolicyMetadata.class, new PolicyMetadataSerializer());
+    addSerializer(PolicySetMetadata.class, new PolicySetMetadataSerializer());
+    addSerializer(GovernanceMetadata.class, new GovernanceMetadataSerializer());
   }
 }

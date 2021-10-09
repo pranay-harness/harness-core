@@ -3,8 +3,8 @@ package io.harness.delegate.task.citasks.cik8handler;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -13,11 +13,14 @@ import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.task.citasks.CICleanupTaskHandler;
+import io.harness.delegate.task.citasks.cik8handler.k8java.CIK8JavaClientHandler;
+import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.models.V1StatusBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +33,9 @@ import org.mockito.MockitoAnnotations;
 
 public class CIK8CleanupTaskHandlerTest extends CategoryTest {
   @Mock private K8sConnectorHelper k8sConnectorHelper;
-  @Mock private CIK8CtlHandler kubeCtlHandler;
+  @Mock private ApiClientFactory apiClientFactory;
+  @Mock private ApiClient apiClient;
+  @Mock private CIK8JavaClientHandler cik8JavaClientHandler;
   @InjectMocks private CIK8CleanupTaskHandler cik8DeleteSetupTaskHandler;
 
   private static final String namespace = "default";
@@ -68,27 +73,12 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskWithSuccess() {
-    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
+  public void executeTaskWithFailure() throws ApiException {
     CIK8CleanupTaskParams taskParams = getTaskParams();
 
-    when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
-    when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
-    when(kubeCtlHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
+    on(cik8DeleteSetupTaskHandler).set("cik8JavaClientHandler", cik8JavaClientHandler);
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
-    assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
-  }
-
-  @Test
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  public void executeTaskWithFailure() {
-    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
-    CIK8CleanupTaskParams taskParams = getTaskParams();
-
-    when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
-    when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.FALSE);
+    when(cik8JavaClientHandler.deletePodWithRetries(any(), any(), any())).thenThrow(new ApiException());
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
@@ -97,12 +87,14 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskWithDeleteException() {
-    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
+  public void executeTaskWithDeleteException() throws ApiException {
     CIK8CleanupTaskParams taskParams = getTaskParams();
 
-    when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
-    when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenThrow(KubernetesClientException.class);
+    on(cik8DeleteSetupTaskHandler).set("cik8JavaClientHandler", cik8JavaClientHandler);
+
+    when(cik8JavaClientHandler.deletePodWithRetries(any(), any(), any())).thenThrow(new ApiException());
+    when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.TRUE);
+    when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
@@ -111,14 +103,15 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskWithServiceSuccess() {
-    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
+  public void executeTaskWithServiceSuccess() throws ApiException {
     CIK8CleanupTaskParams taskParams = getTaskParamsWithService();
 
-    when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
-    when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
-    when(kubeCtlHandler.deleteService(kubernetesClient, namespace, serviceName)).thenReturn(Boolean.TRUE);
-    when(kubeCtlHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
+    on(cik8DeleteSetupTaskHandler).set("cik8JavaClientHandler", cik8JavaClientHandler);
+
+    when(cik8JavaClientHandler.deletePodWithRetries(any(), any(), any()))
+        .thenReturn(new V1StatusBuilder().withStatus("Success").build());
+    when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.TRUE);
+    when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
@@ -127,13 +120,15 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskWithServiceFailure() {
-    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
+  public void executeTaskWithServiceFailure() throws ApiException {
     CIK8CleanupTaskParams taskParams = getTaskParamsWithService();
 
-    when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
-    when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
-    when(kubeCtlHandler.deleteService(kubernetesClient, namespace, serviceName)).thenReturn(Boolean.FALSE);
+    on(cik8DeleteSetupTaskHandler).set("cik8JavaClientHandler", cik8JavaClientHandler);
+
+    when(cik8JavaClientHandler.deletePodWithRetries(any(), any(), any()))
+        .thenReturn(new V1StatusBuilder().withStatus("Failure").build());
+    when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.FALSE);
+    when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.FALSE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());

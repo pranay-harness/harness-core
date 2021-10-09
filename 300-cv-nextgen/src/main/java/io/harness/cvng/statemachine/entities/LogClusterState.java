@@ -42,7 +42,7 @@ public abstract class LogClusterState extends AnalysisState {
       log.error(
           "Executing ServiceGuardLogClusterState for input: {}. No clustering tasks were created. This is an error state",
           getInputs());
-      throw new IllegalStateException("ServiceGuardLogClusterState for input: " + getInputs()
+      throw new IllegalStateException("LogClusterState for input: " + getInputs()
           + ". No clustering tasks were created."
           + " This is an error state");
     }

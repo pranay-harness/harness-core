@@ -11,12 +11,13 @@ import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome;
 import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome.ArtifactsOutcomeBuilder;
 import io.harness.ngpipeline.artifact.bean.SidecarsOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.steps.common.NGForkStep;
 import io.harness.steps.fork.ForkStepParameters;
+import io.harness.steps.fork.NGForkStep;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -26,7 +27,8 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class ArtifactsStep extends NGForkStep {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.ARTIFACTS.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.ARTIFACTS.getName()).setStepCategory(StepCategory.FORK).build();
 
   @Inject private ServiceStepsHelper serviceStepsHelper;
 

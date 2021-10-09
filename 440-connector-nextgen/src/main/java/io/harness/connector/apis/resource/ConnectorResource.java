@@ -92,6 +92,7 @@ public class ConnectorResource {
   private final ConnectorHeartbeatService connectorHeartbeatService;
   private final CEAwsSetupConfig ceAwsSetupConfig;
   private static final String CATEGORY_KEY = "category";
+  private static final String SOURCE_CATEGORY_KEY = "source_category";
   private final AccessControlClient accessControlClient;
   private ConnectorRbacHelper connectorRbacHelper;
 
@@ -143,8 +144,8 @@ public class ConnectorResource {
   }
 
   @GET
-  @Deprecated
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
+  @Deprecated
   public ResponseDTO<PageResponse<ConnectorResponseDTO>> list(
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
@@ -153,11 +154,13 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(NGResourceFilterConstants.TYPE_KEY) ConnectorType type,
-      @QueryParam(CATEGORY_KEY) ConnectorCategory category, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+      @QueryParam(CATEGORY_KEY) ConnectorCategory category,
+      @QueryParam(SOURCE_CATEGORY_KEY) ConnectorCategory sourceCategory,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
-        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
+        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category, sourceCategory)));
   }
 
   @POST

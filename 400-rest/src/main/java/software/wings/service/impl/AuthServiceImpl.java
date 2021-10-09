@@ -29,9 +29,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
@@ -133,7 +131,6 @@ import org.mongodb.morphia.Key;
 @Singleton
 @Slf4j
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AuthServiceImpl implements AuthService {
   private GenericDbCache dbCache;
   private HPersistence persistence;
@@ -298,13 +295,29 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private void authorize(String accountId, String appId, String entityId, User user,
-      List<PermissionAttribute> permissionAttributes, boolean accountNullCheck) {
+      List<PermissionAttribute> permissionAttributes, boolean accountNullCheck, boolean matchesAny) {
     UserPermissionInfo userPermissionInfo = authorizeAndGetUserPermissionInfo(accountId, appId, user, accountNullCheck);
 
-    for (PermissionAttribute permissionAttribute : permissionAttributes) {
-      if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
+    if (matchesAny) {
+      boolean authorised = false;
+      for (PermissionAttribute permissionAttribute : permissionAttributes) {
+        if (authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
+          authorised = true;
+          break;
+        }
+      }
+
+      if (!authorised) {
         log.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
         throw new AccessDeniedException("Not authorized", USER);
+      }
+
+    } else {
+      for (PermissionAttribute permissionAttribute : permissionAttributes) {
+        if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
+          log.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
+          throw new AccessDeniedException("Not authorized", USER);
+        }
       }
     }
   }
@@ -346,7 +359,13 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void authorize(
       String accountId, String appId, String entityId, User user, List<PermissionAttribute> permissionAttributes) {
-    authorize(accountId, appId, entityId, user, permissionAttributes, true);
+    authorize(accountId, appId, entityId, user, permissionAttributes, true, false);
+  }
+
+  @Override
+  public void authorize(String accountId, String appId, String entityId, User user,
+      List<PermissionAttribute> permissionAttributes, boolean matchesAny) {
+    authorize(accountId, appId, entityId, user, permissionAttributes, true, matchesAny);
   }
 
   @Override
@@ -359,7 +378,7 @@ public class AuthServiceImpl implements AuthService {
 
     if (appIds != null) {
       for (String appId : appIds) {
-        authorize(accountId, appId, entityId, user, permissionAttributes, false);
+        authorize(accountId, appId, entityId, user, permissionAttributes, false, false);
       }
     }
   }
@@ -758,6 +777,8 @@ public class AuthServiceImpl implements AuthService {
         return appPermissionSummary.isCanCreateWorkflow();
       } else if (requiredPermissionType == PermissionType.PIPELINE) {
         return appPermissionSummary.isCanCreatePipeline();
+      } else if (requiredPermissionType == PermissionType.APP_TEMPLATE) {
+        return appPermissionSummary.isCanCreateTemplate();
       } else {
         String msg = "Unsupported app permission entity type: " + requiredPermissionType;
         log.error(msg);
@@ -791,6 +812,8 @@ public class AuthServiceImpl implements AuthService {
       actionEntityIdMap = appPermissionSummary.getPipelinePermissions();
     } else if (requiredPermissionType == PermissionType.DEPLOYMENT) {
       actionEntityIdMap = appPermissionSummary.getDeploymentPermissions();
+    } else if (requiredPermissionType == PermissionType.APP_TEMPLATE) {
+      actionEntityIdMap = appPermissionSummary.getTemplatePermissions();
     } else {
       String msg = "Unsupported app permission entity type: " + requiredPermissionType;
       log.error(msg);
@@ -1073,6 +1096,7 @@ public class AuthServiceImpl implements AuthService {
     if (workflow == null) {
       return;
     }
+
     boolean envTemplatized = authHandler.isEnvTemplatized(workflow);
     String envId = workflow.getEnvId();
 
@@ -1087,6 +1111,13 @@ public class AuthServiceImpl implements AuthService {
 
     AppPermissionSummary appPermissionSummary =
         user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(appId);
+
+    // Do not check environment if update access is defined by workflow entity itself
+    if (UPDATE.equals(action) && isNotEmpty(appPermissionSummary.getWorkflowUpdatePermissionsByEntity())
+        && appPermissionSummary.getWorkflowUpdatePermissionsByEntity().contains(workflow.getUuid())) {
+      return;
+    }
+
     if (envTemplatized) {
       if (appPermissionSummary.isCanCreateTemplatizedWorkflow()) {
         return;
@@ -1146,6 +1177,13 @@ public class AuthServiceImpl implements AuthService {
 
     AppPermissionSummary appPermissionSummary =
         user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(appId);
+
+    // Do not check environment if RBAC is defined by pipeline entity itself
+    if (UPDATE.equals(action) && isNotEmpty(appPermissionSummary.getPipelineUpdatePermissionsByEntity())
+        && appPermissionSummary.getPipelineUpdatePermissionsByEntity().contains(pipeline.getUuid())) {
+      return;
+    }
+
     Set<String> allowedEnvIds;
 
     switch (action) {

@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.connector.scm.GitCapabilityHelper;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
@@ -20,6 +23,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CI)
 public class GitCommandParams extends ConnectorTaskParams implements TaskParameters, ExecutionCapabilityDemander {
   GitConfigDTO gitConfig;
   ScmConnector scmConnector;
@@ -30,6 +34,6 @@ public class GitCommandParams extends ConnectorTaskParams implements TaskParamet
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return GitCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, gitConfig);
+    return GitCapabilityHelper.fetchRequiredExecutionCapabilitiesSimpleCheck(gitConfig);
   }
 }

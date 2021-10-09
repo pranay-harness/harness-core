@@ -15,10 +15,13 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
@@ -29,6 +32,8 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -54,13 +59,20 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
+@TargetModule(HarnessModule._957_CG_BEANS)
+public class Workflow
+    extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
                  .name("accountIdCreatedAt")
                  .field(WorkflowKeys.accountId)
                  .descSortField(WorkflowKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_orchestrationWorkflowTypeIndex")
+                 .field(WorkflowKeys.accountId)
+                 .field(WorkflowKeys.orchestrationWorkflowType)
                  .build())
         .build();
   }
@@ -389,6 +401,11 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     return keywords;
   }
 
+  @Override
+  public NGMigrationEntityType getType() {
+    return NGMigrationEntityType.WORKFLOW;
+  }
+
   public static final class WorkflowBuilder {
     private String name;
     private String description;
@@ -587,5 +604,6 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
     public static final String accountId = "accountId";
+    public static final String orchestrationWorkflowType = "orchestration.orchestrationWorkflowType";
   }
 }

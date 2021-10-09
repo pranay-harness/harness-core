@@ -1,10 +1,12 @@
 package io.harness.beans.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CiBeansTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
@@ -13,9 +15,9 @@ import io.harness.plancreator.stages.StageElementWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.rule.Owner;
+import io.harness.utils.YamlPipelineUtils;
 import io.harness.yaml.core.properties.CIProperties;
 import io.harness.yaml.core.properties.NGProperties;
-import io.harness.yaml.utils.YamlPipelineUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -25,6 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(CI)
 public class CIPmsPipelineYamlTest extends CiBeansTestBase {
   @Test
   @Owner(developers = ALEKSANDAR)

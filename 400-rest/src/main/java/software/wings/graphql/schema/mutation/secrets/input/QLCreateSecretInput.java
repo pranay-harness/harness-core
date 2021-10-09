@@ -1,9 +1,13 @@
 package software.wings.graphql.schema.mutation.secrets.input;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.mutation.QLMutationInput;
+import software.wings.graphql.schema.type.secrets.QLEncryptedFileInput;
 import software.wings.graphql.schema.type.secrets.QLEncryptedTextInput;
 import software.wings.graphql.schema.type.secrets.QLSSHCredentialInput;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
@@ -15,6 +19,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 
+@OwnedBy(PL)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLCreateEncryptedTextInputKeys")
@@ -26,4 +31,5 @@ public class QLCreateSecretInput implements QLMutationInput {
   QLEncryptedTextInput encryptedText;
   QLWinRMCredentialInput winRMCredential;
   QLSSHCredentialInput sshCredential;
+  QLEncryptedFileInput encryptedFile;
 }

@@ -12,6 +12,7 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.DelegateServiceResourceClient;
 import io.harness.delegate.DelegateServiceResourceClientModule;
 import io.harness.environment.EnvironmentResourceClientModule;
+import io.harness.migration.NGMigrationSdkModule;
 import io.harness.organization.OrganizationClientModule;
 import io.harness.organization.remote.OrganizationClient;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -24,16 +25,20 @@ import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
-import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
 import io.harness.resourcegroup.framework.service.impl.ResourceGroupEventHandler;
 import io.harness.resourcegroup.framework.service.impl.ResourceGroupServiceImpl;
-import io.harness.resourcegroup.framework.service.impl.ResourceGroupValidatorServiceImpl;
 import io.harness.resourcegroup.framework.service.impl.ResourceTypeServiceImpl;
+import io.harness.resourcegroupclient.ResourceGroupClientModule;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.service.ServiceResourceClientModule;
 import io.harness.serviceaccount.ServiceAccountClientModule;
+import io.harness.template.TemplateResourceClientModule;
+import io.harness.template.remote.TemplateResourceClient;
+import io.harness.usergroups.UserGroupClient;
+import io.harness.usergroups.UserGroupClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -62,9 +67,9 @@ public class ResourceGroupModule extends AbstractModule {
         resourceGroupServiceConfig.getAccessControlAdminClientConfiguration(), RESOUCE_GROUP_SERVICE.toString()));
     bind(ResourceGroupService.class).to(ResourceGroupServiceImpl.class);
     bind(ResourceTypeService.class).to(ResourceTypeServiceImpl.class);
-    bind(ResourceGroupValidatorService.class).to(ResourceGroupValidatorServiceImpl.class);
     bind(String.class).annotatedWith(Names.named("serviceId")).toInstance(RESOUCE_GROUP_SERVICE.toString());
     bind(OutboxEventHandler.class).to(ResourceGroupEventHandler.class);
+    install(NGMigrationSdkModule.getInstance());
     requireBinding(OutboxService.class);
     installResourceValidators();
     addResourceValidatorConstraints();
@@ -88,8 +93,11 @@ public class ResourceGroupModule extends AbstractModule {
     requireBinding(SecretNGManagerClient.class);
     requireBinding(ConnectorResourceClient.class);
     requireBinding(PipelineServiceClient.class);
+    requireBinding(UserGroupClient.class);
+    requireBinding(ResourceGroupClient.class);
     requireBinding(AccountClient.class);
     requireBinding(DelegateServiceResourceClient.class);
+    requireBinding(TemplateResourceClient.class);
   }
 
   private void installResourceValidators() {
@@ -102,6 +110,10 @@ public class ResourceGroupModule extends AbstractModule {
     install(
         new ServiceAccountClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new OrganizationClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(new UserGroupClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(new ResourceGroupClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getResourceGroupService().getBaseUrl()).build(),
+        resourceClients.getResourceGroupService().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
     install(
         new SecretNGManagerClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new ConnectorResourceClientModule(
@@ -119,5 +131,7 @@ public class ResourceGroupModule extends AbstractModule {
         new ServiceResourceClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new EnvironmentResourceClientModule(
         ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(
+        new TemplateResourceClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
   }
 }

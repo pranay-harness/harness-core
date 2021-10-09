@@ -1,7 +1,7 @@
 package io.harness.repositories;
 
+import io.harness.ModuleType;
 import io.harness.annotation.HarnessRepo;
-import io.harness.licensing.ModuleType;
 import io.harness.licensing.entities.modules.ModuleLicense;
 
 import java.util.List;

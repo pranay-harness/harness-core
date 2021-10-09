@@ -7,6 +7,8 @@ option java_multiple_files = true;
 message ExecutionTriggerInfo {
   TriggerType triggerType = 1;
   TriggeredBy triggeredBy = 2;
+  bool isRerun = 3;
+  RerunInfo rerunInfo = 4;
 }
 
 message TriggeredBy {
@@ -21,4 +23,12 @@ enum TriggerType {
   WEBHOOK = 2;
   WEBHOOK_CUSTOM = 3;
   SCHEDULER_CRON = 4;
+}
+
+message RerunInfo {
+  string rootExecutionId = 1;
+  TriggerType rootTriggerType = 2;
+
+  string prevExecutionId = 3;
+  TriggerType prevTriggerType = 4;
 }

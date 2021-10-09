@@ -7,6 +7,7 @@ import io.harness.logging.LogCallback;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfConfig;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.pcf.model.CfRunPluginScriptRequestData;
 
@@ -26,6 +27,8 @@ public interface CfDeploymentManager {
   ApplicationDetail resizeApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException;
 
   void deleteApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException;
+
+  void renameApplication(CfRenameRequest cfRenameRequest, LogCallback logCallback) throws PivotalClientApiException;
 
   String stopApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException;
 
@@ -64,6 +67,8 @@ public interface CfDeploymentManager {
 
   boolean isActiveApplication(CfRequestConfig cfRequestConfig, LogCallback logCallback)
       throws PivotalClientApiException;
+
+  boolean isInActiveApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException;
 
   void setEnvironmentVariableForAppStatus(
       CfRequestConfig cfRequestConfig, boolean activeStatus, LogCallback logCallback) throws PivotalClientApiException;

@@ -1,0 +1,5 @@
+[
+  {"dropIndexes":  "nodes", "index":  "*"},
+  {"dropIndexes":  "relations", "index":  "*"},
+  {"dropIndexes":  "vis_edges", "index":  "*"}
+]

@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
@@ -24,6 +25,9 @@ import static java.lang.String.format;
 import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.eraro.ResponseMessage;
@@ -54,6 +58,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
   public static final String WINDOWS_TEMPFILE_LOCATION = "%TEMP%";
   public static final String NOT_IMPLEMENTED = "Not implemented";
@@ -68,18 +74,15 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
   protected DelegateFileManager delegateFileManager;
   private boolean disableCommandEncoding;
   private boolean shouldSaveExecutionLogs;
-  private boolean winrmCopyConfigOptimize;
   private final String powershell;
 
   public FileBasedWinRmExecutor(LogCallback logCallback, DelegateFileManager delegateFileManager,
-      boolean shouldSaveExecutionLogs, WinRmSessionConfig config, boolean disableCommandEncoding,
-      boolean winrmCopyConfigOptimize) {
+      boolean shouldSaveExecutionLogs, WinRmSessionConfig config, boolean disableCommandEncoding) {
     this.logCallback = logCallback;
     this.delegateFileManager = delegateFileManager;
     this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
     this.config = config;
     this.disableCommandEncoding = disableCommandEncoding;
-    this.winrmCopyConfigOptimize = winrmCopyConfigOptimize;
 
     if (this.config.isUseNoProfile()) {
       powershell = "Powershell -NoProfile ";
@@ -147,12 +150,8 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
         log.error("Error while downloading config file.", e);
       }
 
-      if (winrmCopyConfigOptimize) {
-        commandExecutionStatus =
-            splitFileAndTransfer(configFileMetaData, session, outputWriter, errorWriter, configFileLength, fileBytes);
-      } else {
-        commandExecutionStatus = transferFileAsIs(configFileMetaData, session, outputWriter, errorWriter, fileBytes);
-      }
+      commandExecutionStatus =
+          splitFileAndTransfer(configFileMetaData, session, outputWriter, errorWriter, configFileLength, fileBytes);
 
     } catch (RuntimeException re) {
       throw re;
@@ -328,45 +327,25 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
   @VisibleForTesting
   public String getCopyConfigCommandBehindFF(
       CopyConfigCommandUnit.ConfigFileMetaData configFileMetaData, byte[] fileBytes) {
-    if (winrmCopyConfigOptimize) {
-      final String breakCharsEscapedStr = escapeWordBreakChars(escapeLineBreakChars(new String(fileBytes)));
-      return "$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-          + configFileMetaData.getFilename() + "\"\n"
-          + "$commandString = @'\n" + breakCharsEscapedStr + "\n'@"
-          + "\n[IO.File]::AppendAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
-          + "Write-Host \"Appended to config file on the host.\"";
-    } else {
-      return "$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-          + configFileMetaData.getFilename() + "\"\n"
-          + "$commandString = {" + new String(fileBytes) + "}"
-          + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
-          + "Write-Host \"Copied config file to the host.\"\n";
-    }
+    final String breakCharsEscapedStr = escapeWordBreakChars(escapeLineBreakChars(new String(fileBytes)));
+    return "$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\" + configFileMetaData.getFilename()
+        + "\"\n"
+        + "$commandString = @'\n" + breakCharsEscapedStr + "\n'@"
+        + "\n[IO.File]::AppendAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
+        + "Write-Host \"Appended to config file on the host.\"";
   }
 
   @VisibleForTesting
   public String getCopyConfigCommand(CopyConfigCommandUnit.ConfigFileMetaData configFileMetaData, String encodedFile) {
-    if (winrmCopyConfigOptimize) {
-      return "#### Convert Base64 string back to config file ####\n"
-          + "\n"
-          + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
-          + encodedFile + "\"))\n"
-          + "Write-Host \"Decoding config file on the host.\"\n"
-          + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-          + configFileMetaData.getFilename() + "\'\n"
-          + "[IO.File]::AppendAllText($decodedFile, $DecodedString) \n"
-          + "Write-Host \"Appended to config file on the host.\"\n";
-    } else {
-      return "#### Convert Base64 string back to config file ####\n"
-          + "\n"
-          + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
-          + encodedFile + "\"))\n"
-          + "Write-Host \"Decoding config file on the host.\"\n"
-          + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-          + configFileMetaData.getFilename() + "\'\n"
-          + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
-          + "Write-Host \"Copied config file to the host.\"\n";
-    }
+    return "#### Convert Base64 string back to config file ####\n"
+        + "\n"
+        + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\"" + encodedFile
+        + "\"))\n"
+        + "Write-Host \"Decoding config file on the host.\"\n"
+        + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
+        + configFileMetaData.getFilename() + "\'\n"
+        + "[IO.File]::AppendAllText($decodedFile, $DecodedString) \n"
+        + "Write-Host \"Appended to config file on the host.\"\n";
   }
 
   private String getDeleteFileCommandBehindFF(CopyConfigCommandUnit.ConfigFileMetaData configFileMetaData) {

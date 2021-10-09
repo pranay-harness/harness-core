@@ -2,9 +2,7 @@ package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
@@ -16,7 +14,6 @@ import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpServiceAccount;
-import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
@@ -26,7 +23,6 @@ import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage;
 import io.harness.mongo.index.migrator.AggregateResult;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.notifications.NotificationReceiverInfo;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
@@ -122,8 +118,10 @@ import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.api.k8s.K8sApplicationManifestSourceInfo;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
+import software.wings.api.k8s.K8sGitConfigMapInfo;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.lambda.AwsLambdaDeploymentInfo;
@@ -255,7 +253,6 @@ import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.Schema;
-import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceNowConfig;
@@ -270,7 +267,6 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.StringValue;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SystemCatalog;
-import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerragruntInfrastructureProvisioner;
 import software.wings.beans.User;
@@ -334,6 +330,7 @@ import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.depricated.CECloudAccountOld;
+import software.wings.beans.ce.depricated.GcpServiceAccountOld;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.AzureARMCommandUnit;
@@ -387,7 +384,6 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
-import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
@@ -483,11 +479,9 @@ import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
-import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
-import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
@@ -587,7 +581,6 @@ import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFaile
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.InfraMappingWithOnlyAuditNeededData;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.ProvisionerWithOnlyAuditNeededData;
 import software.wings.sm.AwsLambdaVerification;
-import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionResumeAllCallback;
@@ -806,7 +799,6 @@ import java.security.Principal;
 import java.util.Set;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
 
@@ -918,6 +910,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(GcpKubernetesInfrastructureMapping.class);
     set.add(GcpOrganization.class);
     set.add(GcpServiceAccount.class);
+    set.add(GcpServiceAccountOld.class);
     set.add(GCPUsageReport.class);
     set.add(GcrArtifactStream.class);
     set.add(GcsArtifactStream.class);
@@ -947,7 +940,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InstanceStatsSnapshot.class);
     set.add(InstanceSyncPerpetualTaskInfo.class);
     set.add(JenkinsArtifactStream.class);
-    set.add(KeywordsAware.class);
     set.add(KubernetesContainerTask.class);
     set.add(LabeledLogRecord.class);
     set.add(LambdaSpecification.class);
@@ -974,7 +966,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Notification.class);
     set.add(NotificationBatch.class);
     set.add(NotificationGroup.class);
-    set.add(NotificationReceiverInfo.class);
     set.add(NotificationRulesStatus.class);
     set.add(OauthSettings.class);
     set.add(PcfInfrastructureMapping.class);
@@ -992,8 +983,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PricingProfile.class);
     set.add(PrometheusCVServiceConfiguration.class);
     set.add(ProvisionerWithOnlyAuditNeededData.class);
-    set.add(PruneEvent.class);
     set.add(ResourceConstraintInstance.class);
+    set.add(PruneEvent.class);
     set.add(ResourceConstraintNotification.class);
     set.add(ResourceLookup.class);
     set.add(Role.class);
@@ -1031,7 +1022,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TemplateVersion.class);
     set.add(TerraformConfig.class);
     set.add(TerraformInfrastructureProvisioner.class);
-    set.add(TerraGroupProvisioners.class);
     set.add(TerragruntConfig.class);
     set.add(TerragruntInfrastructureProvisioner.class);
     set.add(ThirdPartyApiCallLog.class);
@@ -1060,11 +1050,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlHistory.class);
     set.add(YamlSuccessfulChange.class);
     set.add(YamlVersion.class);
-    set.add(SecretManagerRuntimeParameters.class);
     set.add(HelmChart.class);
     set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
-    set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
     set.add(AccessRequest.class);
   }
@@ -1131,7 +1119,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.JenkinsExecutionData", JenkinsExecutionData.class);
     w.put("api.jira.JiraExecutionData", JiraExecutionData.class);
     w.put("api.JiraExecutionData", JiraExecutionData.class);
+    w.put("api.k8s.k8sApplicationManifestInfo", K8sApplicationManifestSourceInfo.class);
     w.put("api.k8s.K8sContextElement", K8sContextElement.class);
+    w.put("api.k8s.k8sGitConfigMapInfo", K8sGitConfigMapInfo.class);
     w.put("api.k8s.K8sHelmElement", K8sHelmDeploymentElement.class);
     w.put("api.k8s.K8sExecutionSummary", K8sExecutionSummary.class);
     w.put("api.k8s.K8sStateExecutionData", K8sStateExecutionData.class);
@@ -1360,13 +1350,11 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse", EcsBGRoute53ServiceSetupResponse.class);
     w.put("helpers.ext.ecs.response.EcsCommandExecutionResponse", EcsCommandExecutionResponse.class);
     w.put("helpers.ext.ecs.response.EcsListenerUpdateCommandResponse", EcsListenerUpdateCommandResponse.class);
-    w.put("helpers.ext.ecs.response.EcsServiceDeployResponse", EcsServiceDeployResponse.class);
     w.put("helpers.ext.ecs.response.EcsRunTaskDeployResponse", EcsRunTaskDeployResponse.class);
     w.put("helpers.ext.ecs.response.EcsRunTaskDeployRequest", EcsRunTaskDeployRequest.class);
     w.put("helpers.ext.ecs.response.EcsServiceSetupResponse", EcsServiceSetupResponse.class);
     w.put("helpers.ext.external.comm.CollaborationProviderResponse", CollaborationProviderResponse.class);
     w.put("helpers.ext.helm.HelmCommandExecutionResponse", HelmCommandExecutionResponse.class);
-    w.put("helpers.ext.helm.response.HelmInstallCommandResponse", HelmInstallCommandResponse.class);
     w.put("helpers.ext.helm.response.HelmValuesFetchTaskResponse", HelmValuesFetchTaskResponse.class);
     w.put("helpers.ext.k8s.response.K8sApplyResponse", K8sApplyResponse.class);
     w.put("helpers.ext.k8s.response.K8sBlueGreenDeployResponse", K8sBlueGreenDeployResponse.class);
@@ -1427,7 +1415,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.WorkflowExecutionUpdate", WorkflowExecutionUpdate.class);
     w.put("service.impl.yaml.GitCommandCallback", GitCommandCallback.class);
     w.put("sm.AwsLambdaVerification", AwsLambdaVerification.class);
-    w.put("sm.BarrierStatusData", BarrierStatusData.class);
     w.put("sm.ElementNotifyResponseData", ElementNotifyResponseData.class);
     w.put("sm.ExecutionResumeAllCallback", ExecutionResumeAllCallback.class);
     w.put("sm.ExecutionStatusData", ExecutionStatusData.class);

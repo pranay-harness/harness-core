@@ -32,6 +32,7 @@ public class BatchMainConfig {
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
   @JsonProperty("reportScheduleConfig") private ReportScheduleConfig reportScheduleConfig;
   @JsonProperty("baseUrl") private String baseUrl;
+  @JsonProperty("awsCurBilling") private boolean awsCurBilling;
   @JsonProperty("scheduler-jobs-config") private SchedulerJobsConfig schedulerJobsConfig;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;

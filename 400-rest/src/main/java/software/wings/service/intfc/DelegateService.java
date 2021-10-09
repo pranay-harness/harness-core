@@ -21,9 +21,9 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.exception.InvalidRequestException;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
@@ -45,8 +45,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
-
-  boolean checkDelegateConnected(String accountId, String delegateId);
 
   List<String> getKubernetesDelegateNames(String accountId);
 
@@ -75,15 +73,16 @@ public interface DelegateService extends OwnedByAccount {
 
   Delegate updateDescription(String accountId, String delegateId, String newDescription);
 
-  Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action);
+  Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action)
+      throws InvalidRequestException;
 
   Delegate updateScopes(@Valid Delegate delegate);
 
-  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
-      DelegateSize delegateSize) throws IOException;
-
-  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
+  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost)
       throws IOException;
+
+  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost,
+      String delegateName) throws IOException;
 
   String getLatestDelegateVersion(String accountId);
 
@@ -103,11 +102,13 @@ public interface DelegateService extends OwnedByAccount {
       String hostname, String delegateGroupName, String delegateProfile, String tokenName) throws IOException;
   Delegate add(Delegate delegate);
 
-  void delete(String accountId, String delegateId, boolean forceDelete);
+  void delete(String accountId, String delegateId);
 
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
 
-  void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete);
+  void deleteDelegateGroup(String accountId, String delegateGroupId);
+
+  void deleteDelegateGroupV2(String accountId, String orgId, String projectId, String identifier);
 
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
@@ -135,9 +136,9 @@ public interface DelegateService extends OwnedByAccount {
 
   List<String> obtainDelegateIds(String accountId, String sessionIdentifier);
 
-  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
+  List<String> obtainDelegateIdsUsingName(String accountId, String delegateName);
 
-  void clearCache(String accountId, String delegateId);
+  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
   boolean filter(String accountId, String delegateId);
 
@@ -167,4 +168,8 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  boolean sampleDelegateExists(String accountId);
+
+  List<Delegate> getNonDeletedDelegatesForAccount(String accountId);
 }

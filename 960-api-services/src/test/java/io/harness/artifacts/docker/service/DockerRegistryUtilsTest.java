@@ -12,8 +12,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
+import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -32,19 +35,22 @@ import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.CDC)
 public class DockerRegistryUtilsTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private DockerRegistryRestClient dockerRegistryRestClient;
   @InjectMocks DockerRegistryUtils dockerRegistryUtils = new DockerRegistryUtils();
   private static final String AUTH_HEADER = "AUTH_HEADER";
   private static final String IMAGE_NAME = "IMAGE_NAME";
+  private static final DockerInternalConfig dockerConfig =
+      DockerInternalConfig.builder().dockerRegistryUrl("https://registry.hub.docker.com/v2/").build();
 
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldNotGetLabelsIfEmptyTags() {
     List<Map<String, String>> labelsMap =
-        dockerRegistryUtils.getLabels(dockerRegistryRestClient, null, AUTH_HEADER, IMAGE_NAME, asList());
+        dockerRegistryUtils.getLabels(dockerConfig, dockerRegistryRestClient, null, AUTH_HEADER, IMAGE_NAME, asList());
     assertThat(labelsMap).isEmpty();
   }
 
@@ -56,8 +62,8 @@ public class DockerRegistryUtilsTest extends CategoryTest {
     when(requestCall.execute()).thenReturn(Response.success(getDockerImageManifestResponse(null)));
     when(dockerRegistryRestClient.getImageManifest(any(), any(), any())).thenReturn(requestCall);
 
-    List<Map<String, String>> labelsMap =
-        dockerRegistryUtils.getLabels(dockerRegistryRestClient, null, AUTH_HEADER, IMAGE_NAME, asList("abc", "abc1"));
+    List<Map<String, String>> labelsMap = dockerRegistryUtils.getLabels(
+        dockerConfig, dockerRegistryRestClient, null, AUTH_HEADER, IMAGE_NAME, asList("abc", "abc1"));
     assertThat(labelsMap).isNotEmpty();
   }
 
@@ -76,7 +82,7 @@ public class DockerRegistryUtilsTest extends CategoryTest {
     when(dockerRegistryRestClient.getImageManifest(any(), any(), any())).thenReturn(requestCall);
 
     List<Map<String, String>> labelsMap = dockerRegistryUtils.getLabels(
-        dockerRegistryRestClient, null, AUTH_HEADER, IMAGE_NAME, asList("abc", "abc1", "abc3"));
+        dockerConfig, dockerRegistryRestClient, null, AUTH_HEADER, IMAGE_NAME, asList("abc", "abc1", "abc3"));
     assertThat(labelsMap).isNotEmpty();
     assertThat(labelsMap).hasSize(3);
 

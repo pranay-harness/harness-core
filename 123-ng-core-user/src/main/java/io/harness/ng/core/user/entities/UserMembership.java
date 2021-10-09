@@ -1,13 +1,11 @@
 package io.harness.ng.core.user.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
-import static lombok.AccessLevel.NONE;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.Scope.ScopeKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -17,18 +15,18 @@ import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.List;
-import javax.validation.Valid;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -37,36 +35,37 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @FieldNameConstants(innerTypeName = "UserMembershipKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(value = "userMemberships", noClassnameStored = true)
-@Document("userMemberships")
-@TypeAlias("userMemberships")
+@Entity(value = "userMembershipsV2", noClassnameStored = true)
+@Document("userMembershipsV2")
+@TypeAlias("userMembershipsV2")
 @StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(PL)
 public class UserMembership implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("userMembershipAccountOrgProject")
-                 .field(UserMembershipKeys.scopes + "."
-                     + "accountIdentifier")
-                 .field(UserMembershipKeys.scopes + "."
-                     + "orgIdentifier")
-                 .field(UserMembershipKeys.scopes + "."
-                     + "projectIdentifier")
+                 .name("uniqueUserMembershipV2UserAccountOrgProject")
+                 .field(UserMembershipKeys.userId)
+                 .field(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                 .unique(true)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("uniqueUserMembershipUserId")
-                 .field(UserMembershipKeys.userId)
-                 .unique(true)
+                 .name("userMembershipV2AccountOrgProjectList")
+                 .field(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
                  .build())
         .build();
   }
 
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String userId;
-  @NotEmpty String emailId;
-  String name;
-  @Getter(NONE) @Valid @Builder.Default List<Scope> scopes = new ArrayList<>();
+  Scope scope;
+
+  @CreatedDate Long createdAt;
+  @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
 
   @FdIndex private Long nextIteration;
@@ -84,10 +83,13 @@ public class UserMembership implements PersistentRegularIterable, PersistentEnti
   @JsonIgnore
   @Override
   public String getUuid() {
-    return this.userId;
+    return this.uuid;
   }
 
-  public List<Scope> getScopes() {
-    return isEmpty(scopes) ? new ArrayList<>() : scopes;
+  @UtilityClass
+  public static final class UserMembershipKeys {
+    public static final String ACCOUNT_IDENTIFIER_KEY = UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier;
+    public static final String ORG_IDENTIFIER_KEY = UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier;
+    public static final String PROJECT_IDENTIFIER_KEY = UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier;
   }
 }

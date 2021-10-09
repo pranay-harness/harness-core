@@ -30,9 +30,9 @@ public class GraphQLUtils {
     return getContextValue(env, NGCommonEntityConstants.PROJECT_KEY);
   }
 
-  private String getContextValue(@NonNull ResolutionEnvironment env, @NonNull String key) {
+  private static String getContextValue(@NonNull ResolutionEnvironment env, @NonNull String key) {
     checkNotNull(env.dataFetchingEnvironment, "dataFetchingEnvironment is null");
-    checkNotNull(env.dataFetchingEnvironment.getContext(), "dataFetchingEnvironment");
+    checkNotNull(env.dataFetchingEnvironment.getContext(), "dataFetchingEnvironment context is null");
     return ((graphql.GraphQLContext) env.dataFetchingEnvironment.getContext()).get(key);
   }
 

@@ -40,7 +40,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.TimeoutException;
@@ -62,6 +61,7 @@ import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Injector;
 import java.net.SocketException;
@@ -119,7 +119,7 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    on(winRMCommandUnitExecutorService).set("timeLimiter", new HFakeTimeLimiter());
+    on(winRMCommandUnitExecutorService).set("timeLimiter", new FakeTimeLimiter());
   }
 
   /**

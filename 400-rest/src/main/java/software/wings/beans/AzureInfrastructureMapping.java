@@ -2,6 +2,10 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
@@ -20,6 +24,8 @@ import lombok.experimental.FieldNameConstants;
 
 @JsonTypeName("AZURE_INFRA")
 @FieldNameConstants(innerTypeName = "AzureInfrastructureMappingKeys")
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AzureInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Subscription Id") private String subscriptionId;
   @Attributes(title = "Resource Group") private String resourceGroup;

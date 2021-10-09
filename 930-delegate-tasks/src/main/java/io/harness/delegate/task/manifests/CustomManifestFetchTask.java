@@ -15,10 +15,8 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -55,7 +53,6 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CustomManifestFetchTask extends AbstractDelegateRunnableTask {
   private static final String ZIPPED_CUSTOM_MANIFEST_FILE_NAME = "zippedCustomManifestFiles";
   @Inject private CustomManifestService customManifestService;
@@ -182,7 +179,8 @@ public class CustomManifestFetchTask extends AbstractDelegateRunnableTask {
     CustomManifestSource customManifestSource = fetchParams.getCustomManifestSource();
     final String destZippedManifestDirectory = customManifestService.getWorkingDirectory();
     final Path destZippedManifestFile = Paths.get(destZippedManifestDirectory, "destZipManifestFile.zip");
-    final Path pathToManifestFiles = Paths.get(manifestFilesDirectory, customManifestSource.getFilePaths().get(0));
+    final Path pathToManifestFiles =
+        Paths.get(manifestFilesDirectory, customManifestSource.getFilePaths().get(0)).normalize();
 
     zipManifestFiles(pathToManifestFiles.toString(), destZippedManifestFile.toString());
 

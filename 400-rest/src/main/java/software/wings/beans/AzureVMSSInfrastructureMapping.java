@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
@@ -26,7 +26,7 @@ import lombok.experimental.FieldNameConstants;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AzureVMSSInfrastructureMappingKeys")
 @OwnedBy(CDP)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class AzureVMSSInfrastructureMapping extends InfrastructureMapping {
   private String baseVMSSName;
   private String userName;

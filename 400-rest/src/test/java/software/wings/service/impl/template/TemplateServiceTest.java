@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.AADITI;
@@ -8,6 +9,7 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static io.harness.shell.ScriptType.BASH;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -44,7 +46,10 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_DEC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_NAME;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.USER_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.EMPTY_LIST;
@@ -53,6 +58,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -64,6 +70,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
+import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.VariableType;
@@ -85,6 +92,11 @@ import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.beans.template.dto.ImportedCommandVersion;
 import software.wings.exception.TemplateException;
+import software.wings.security.AppPermissionSummary;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.intfc.template.ImportedTemplateService;
@@ -97,13 +109,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.validation.ConstraintViolationException;
 import org.junit.Test;
 import org.junit.Test.None;
 import org.junit.experimental.categories.Category;
-
+@OwnedBy(PL)
 public class TemplateServiceTest extends TemplateBaseTestHelper {
   private static final String MY_START_COMMAND = "My Start Command";
   private static final String MY_START_COMMAND_APP = "My Start Command App";
@@ -439,7 +453,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
                                             .templateId(savedTemplate.getUuid())
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .executeOnDelegate(true)
                                             .customSecretsManagerShellScript(script)
                                             .testVariables(new HashSet<>())
@@ -993,6 +1007,68 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     assertThat(savedTemplate.getName()).isEqualTo("Ping Response");
 
     assertThat(templateService.deleteByFolder(appLevelFolder)).isTrue();
+  }
+
+  private void setupTemplatePermissions(Set<String> templateIds) {
+    User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
+    user.setUserRequestContext(
+        UserRequestContext.builder()
+            .accountId(ACCOUNT_ID)
+            .userPermissionInfo(UserPermissionInfo.builder()
+                                    .appPermissionMapInternal(new HashMap<String, AppPermissionSummary>() {
+                                      {
+                                        put(APP_ID,
+                                            AppPermissionSummary.builder()
+                                                .templatePermissions(
+                                                    new HashMap<PermissionAttribute.Action, Set<String>>() {
+                                                      { put(PermissionAttribute.Action.DELETE, templateIds); }
+                                                    })
+                                                .build());
+                                      }
+                                    })
+                                    .build())
+            .build());
+    UserThreadLocal.set(user);
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void shouldFailDeleteByFolderIfApplicationPermissionsAreMissing() {
+    TemplateGallery templateGallery =
+        templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
+    TemplateFolder parentFolder =
+        templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, templateGallery.getUuid());
+    TemplateFolder appLevelFolder = templateFolderService.save(TemplateFolder.builder()
+                                                                   .name(TEMPLATE_FOLDER_NAME)
+                                                                   .description(TEMPLATE_FOLDER_DEC)
+                                                                   .parentId(parentFolder.getUuid())
+                                                                   .appId(APP_ID)
+                                                                   .accountId(GLOBAL_ACCOUNT_ID)
+                                                                   .build(),
+        templateGallery.getUuid());
+    assertThat(appLevelFolder).isNotNull();
+    assertThat(appLevelFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
+    assertThat(appLevelFolder.getAppId()).isEqualTo(APP_ID);
+
+    Template httpTemplate =
+        Template.builder()
+            .name("Ping Response")
+            .appId(APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .folderPath("Harness/My Template Folder")
+            .folderId(appLevelFolder.getUuid())
+            .templateObject(
+                HttpTemplate.builder().assertion("200 ok").url("http://harness.io").header("header").build())
+            .build();
+    Template savedTemplate = templateService.save(httpTemplate);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isEqualTo(APP_ID);
+    assertThat(savedTemplate.getName()).isEqualTo("Ping Response");
+    setupTemplatePermissions(new HashSet<>(Arrays.asList("templateId1", "templateId2")));
+    assertThatThrownBy(() -> templateService.deleteByFolder(appLevelFolder))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(String.format("User not allowed to delete template folder with id %s", appLevelFolder.getUuid()));
   }
 
   @Test(expected = None.class)

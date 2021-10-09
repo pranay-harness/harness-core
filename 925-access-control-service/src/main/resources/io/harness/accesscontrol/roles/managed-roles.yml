@@ -1,3 +1,6 @@
+# Any edit in this file should accompany an increment in version.
+name: rolesConfiguration
+version: 12
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -41,9 +44,31 @@ roles:
         - core_role_view
         - core_role_edit
         - core_role_delete
+        - core_serviceaccount_view
+        - core_serviceaccount_edit
+        - core_serviceaccount_delete
+        - core_serviceaccount_manageapikey
         - core_resourcegroup_view
         - core_resourcegroup_edit
         - core_resourcegroup_delete
+        - ff_featureflag_delete
+        - ff_featureflag_edit
+        - ff_featureflag_view
+        - ff_targetgroup_delete
+        - ff_targetgroup_view
+        - ff_targetgroup_edit
+        - ff_environment_targetGroupEdit
+        - ff_target_view
+        - ff_environment_apiKeyView
+        - ff_environment_apiKeyCreate
+        - ff_environment_apiKeyDelete
+        - ff_environment_edit
+        - ff_environment_view
+        - ff_featureflag_toggle
+        - core_template_access
+        - core_template_delete
+        - core_template_edit
+        - core_template_view
       allowedScopeLevels:
         - project
       managed: true
@@ -64,6 +89,8 @@ roles:
         - core_user_view
         - core_role_view
         - core_resourcegroup_view
+        - core_serviceaccount_view
+        - core_template_view
       allowedScopeLevels:
         - project
       managed: true
@@ -75,7 +102,6 @@ roles:
         - core_organization_view
         - core_organization_edit
         - core_organization_delete
-        - core_project_view
         - core_project_create
         - core_secret_view
         - core_secret_edit
@@ -107,9 +133,17 @@ roles:
         - core_role_view
         - core_role_edit
         - core_role_delete
+        - core_serviceaccount_view
+        - core_serviceaccount_edit
+        - core_serviceaccount_delete
+        - core_serviceaccount_manageapikey
         - core_resourcegroup_view
         - core_resourcegroup_edit
         - core_resourcegroup_delete
+        - core_template_access
+        - core_template_delete
+        - core_template_edit
+        - core_template_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -118,8 +152,6 @@ roles:
       description: View an organization
       permissions:
         - core_organization_view
-        - core_project_view
-        - core_project_create
         - core_secret_view
         - core_connector_view
         - core_delegate_view
@@ -131,6 +163,8 @@ roles:
         - core_user_view
         - core_role_view
         - core_resourcegroup_view
+        - core_serviceaccount_view
+        - core_template_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -139,7 +173,6 @@ roles:
       description: Administer an account
       permissions:
         - core_user_invite
-        - core_organization_view
         - core_organization_create
         - core_secret_view
         - core_secret_edit
@@ -181,6 +214,15 @@ roles:
         - core_serviceaccount_view
         - core_serviceaccount_edit
         - core_serviceaccount_delete
+        - core_serviceaccount_manageapikey
+        - core_account_view
+        - core_account_edit
+        - core_dashboards_view
+        - core_dashboards_edit
+        - core_template_access
+        - core_template_delete
+        - core_template_edit
+        - core_template_view
       allowedScopeLevels:
         - account
       managed: true
@@ -188,7 +230,6 @@ roles:
       name: Account Viewer
       description: View an account
       permissions:
-        - core_organization_view
         - core_secret_view
         - core_connector_view
         - core_delegate_view
@@ -202,6 +243,9 @@ roles:
         - core_resourcegroup_view
         - core_license_view
         - core_authsetting_view
+        - core_account_view
+        - core_serviceaccount_view
+        - core_template_view
       allowedScopeLevels:
         - account
       managed: true
@@ -228,43 +272,6 @@ roles:
       allowedScopeLevels:
         - project
       managed: true
-    - identifier: _feature_flag_admin
-      name: Feature Flag Admin
-      description: Can perform all actions for feature flags in a existing project
-      permissions:
-        - ff_featureflag_delete
-        - ff_featureflag_edit
-        - ff_featureflag_view
-        - ff_targetgroup_delete
-        - ff_targetgroup_view
-        - ff_targetgroup_edit
-        - ff_environment_targetGroupEdit
-        - ff_target_view
-        - ff_environment_apiKeyView
-        - ff_environment_apiKeyCreate
-        - ff_environment_apiKeyDelete
-        - ff_environment_edit
-        - ff_environment_view
-        - ff_featureflag_toggle
-      managed: true
-      allowedScopeLevels:
-        - account
-        - organization
-        - project
-    - identifier: _feature_flag_viewer
-      name: Feature Flag View Only Role
-      description: Can view existing feature flags
-      permissions:
-        - ff_featureflag_view
-        - ff_environment_view
-        - ff_environment_apiKeyView
-        - ff_targetgroup_view
-        - ff_target_view
-      managed: true
-      allowedScopeLevels:
-        - account
-        - organization
-        - project
     - identifier: _feature_flag_manage_role
       name: Feature Flag Manage Role
       description: Can edit and view existing feature flags

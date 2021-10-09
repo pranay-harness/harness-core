@@ -15,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.manifests.request.ManifestCollectionParams;
 import io.harness.exception.HelmClientException;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
@@ -244,7 +245,7 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTestBase {
 
     if (throwErrorWhileCollection) {
       when(manifestRepositoryService.collectManifests(any(ManifestCollectionParams.class)))
-          .thenThrow(new HelmClientException("COLLECTION_ERROR"));
+          .thenThrow(new HelmClientException("COLLECTION_ERROR", HelmCliCommandType.FETCH_ALL_VERSIONS));
     } else {
       when(manifestRepositoryService.collectManifests(any(ManifestCollectionParams.class))).thenReturn(helmCharts);
     }

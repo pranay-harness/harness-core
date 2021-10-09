@@ -23,4 +23,5 @@ import lombok.experimental.FieldNameConstants;
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLExecutionInputs {
   List<QLService> serviceInputs;
+  List<QLService> serviceManifestInputs;
 }

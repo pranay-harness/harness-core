@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
+import io.harness.beans.NGTemplateReference;
 import io.harness.beans.TriggerReference;
 import io.harness.common.EntityReference;
 import io.harness.common.EntityTypeConstants;
@@ -72,8 +73,17 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.FEATURE_FLAG_STAGE)
   FEATURE_FLAG_STAGE(ModuleType.CF, EntityTypeConstants.FEATURE_FLAG_STAGE, IdentifierRef.class,
       EntityYamlRootNames.FEATURE_FLAG_STAGE),
+  @JsonProperty(EntityTypeConstants.TEMPLATE)
+  TEMPLATE(ModuleType.TEMPLATESERVICE, EntityTypeConstants.TEMPLATE, NGTemplateReference.class,
+      EntityYamlRootNames.TEMPLATE),
   @JsonProperty(EntityTypeConstants.TRIGGERS)
-  TRIGGERS(ModuleType.CD, EntityTypeConstants.TRIGGERS, TriggerReference.class, EntityYamlRootNames.TRIGGERS);
+  TRIGGERS(ModuleType.CD, EntityTypeConstants.TRIGGERS, TriggerReference.class, EntityYamlRootNames.TRIGGERS),
+  @JsonProperty(EntityTypeConstants.MONITORED_SERVICE)
+  MONITORED_SERVICE(
+      ModuleType.CV, EntityTypeConstants.MONITORED_SERVICE, IdentifierRef.class, EntityYamlRootNames.MONITORED_SERVICE),
+  @JsonProperty(EntityTypeConstants.GIT_REPOSITORIES)
+  GIT_REPOSITORIES(
+      ModuleType.CORE, EntityTypeConstants.GIT_REPOSITORIES, IdentifierRef.class, EntityYamlRootNames.GIT_REPOSITORY);
 
   private final ModuleType moduleType;
   String yamlName;

@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTOMapper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
@@ -67,9 +68,9 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
   }
 
   @Override
-  public InputSetEntity update(InputSetEntity inputSetEntity) {
+  public InputSetEntity update(InputSetEntity inputSetEntity, ChangeType changeType) {
     if (GitContextHelper.getGitEntityInfo() != null && GitContextHelper.getGitEntityInfo().isNewBranch()) {
-      return makeInputSetUpdateCall(inputSetEntity);
+      return makeInputSetUpdateCall(inputSetEntity, changeType);
     }
     Optional<InputSetEntity> optionalOriginalEntity =
         get(inputSetEntity.getAccountId(), inputSetEntity.getOrgIdentifier(), inputSetEntity.getProjectIdentifier(),
@@ -94,12 +95,38 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
                                         .withTags(inputSetEntity.getTags())
                                         .withInputSetReferences(inputSetEntity.getInputSetReferences());
 
-    return makeInputSetUpdateCall(entityToUpdate);
+    return makeInputSetUpdateCall(entityToUpdate, changeType);
   }
 
-  private InputSetEntity makeInputSetUpdateCall(InputSetEntity entity) {
+  @Override
+  public boolean switchValidationFlag(InputSetEntity entity, boolean isInvalid) {
+    Criteria criteria = new Criteria();
+    criteria.and(InputSetEntityKeys.accountId)
+        .is(entity.getAccountId())
+        .and(InputSetEntityKeys.orgIdentifier)
+        .is(entity.getOrgIdentifier())
+        .and(InputSetEntityKeys.projectIdentifier)
+        .is(entity.getProjectIdentifier())
+        .and(InputSetEntityKeys.pipelineIdentifier)
+        .is(entity.getPipelineIdentifier())
+        .and(InputSetEntityKeys.identifier)
+        .is(entity.getIdentifier());
+    if (entity.getYamlGitConfigRef() != null) {
+      criteria.and(InputSetEntityKeys.yamlGitConfigRef)
+          .is(entity.getYamlGitConfigRef())
+          .and(InputSetEntityKeys.branch)
+          .is(entity.getBranch());
+    }
+
+    Update update = new Update();
+    update.set(InputSetEntityKeys.isInvalid, isInvalid);
+    InputSetEntity inputSetEntity = inputSetRepository.switchValidationFlag(criteria, update);
+    return inputSetEntity != null;
+  }
+
+  private InputSetEntity makeInputSetUpdateCall(InputSetEntity entity, ChangeType changeType) {
     try {
-      InputSetEntity updatedEntity = inputSetRepository.update(entity, InputSetYamlDTOMapper.toDTO(entity));
+      InputSetEntity updatedEntity = inputSetRepository.update(entity, InputSetYamlDTOMapper.toDTO(entity), changeType);
 
       if (updatedEntity == null) {
         throw new InvalidRequestException(

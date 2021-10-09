@@ -7,11 +7,14 @@ import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
+import io.harness.ng.core.user.SignupAction;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.user.remote.UserClient;
@@ -42,6 +45,8 @@ public class SignupValidator {
   public void validateSignup(SignupDTO dto) {
     validateEmail(dto.getEmail());
     validatePassword(dto.getPassword());
+    validateIntent(dto);
+    validateSignupAction(dto);
   }
 
   public void validateEmail(String email) {
@@ -98,6 +103,40 @@ public class SignupValidator {
     if (password.length() > 64) {
       throw new WeakPasswordException("Password should be less than or equal to 64 characters.", null,
           PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
+    }
+  }
+
+  private void validateIntent(SignupDTO dto) {
+    if (dto.getIntent() == null) {
+      dto.setIntent("");
+    } else {
+      try {
+        ModuleType.fromString(dto.getIntent());
+      } catch (IllegalArgumentException e) {
+        throw new InvalidRequestException("Invalid intent", e);
+      }
+    }
+  }
+
+  private void validateSignupAction(SignupDTO dto) {
+    if (SignupAction.SUBSCRIBE.equals(dto.getSignupAction())) {
+      if (isBlank(dto.getIntent())) {
+        throw new SignupException("No module was specified for the trial. email=" + dto.getEmail());
+      }
+
+      if (dto.getBillingFrequency() == null) {
+        throw new SignupException("No billing frequency was specified for the subscription. email=" + dto.getEmail());
+      }
+    }
+
+    if (SignupAction.TRIAL.equals(dto.getSignupAction())) {
+      if (isBlank(dto.getIntent())) {
+        throw new SignupException("No module was specified for the trial. email=" + dto.getEmail());
+      }
+
+      if (dto.getEdition() == null) {
+        throw new SignupException("No edition was specified for the trial. email=" + dto.getEmail());
+      }
     }
   }
 }

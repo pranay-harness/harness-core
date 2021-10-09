@@ -47,4 +47,5 @@ public class DelegateConfiguration {
 
   private String logStreamingServiceBaseUrl;
   private boolean clientToolsDownloadDisabled;
+  private boolean installClientToolsInBackground;
 }

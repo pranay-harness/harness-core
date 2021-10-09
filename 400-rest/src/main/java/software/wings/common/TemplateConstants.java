@@ -1,8 +1,15 @@
 package software.wings.common;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 
+@OwnedBy(HarnessTeam.DX)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public interface TemplateConstants {
   String LATEST_TAG = "latest";
   String DEFAULT_TAG = "default";

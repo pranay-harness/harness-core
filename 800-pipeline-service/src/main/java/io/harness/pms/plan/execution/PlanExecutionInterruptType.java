@@ -9,7 +9,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 
+// TODO: We need to adopt the interrupt type itself and remove this enum
 @OwnedBy(HarnessTeam.PIPELINE)
+@Deprecated
 public enum PlanExecutionInterruptType {
   /**
    * Abort all state event.
@@ -40,6 +42,8 @@ public enum PlanExecutionInterruptType {
   @JsonProperty("MarkAsSuccess")
   MARKASSUCCESS(
       "MarkSuccess execution of paused node in the current workflow", InterruptType.MARK_SUCCESS, "MarkAsSuccess"),
+
+  @JsonProperty("ExpireAll") EXPIREALL("Expire Pipeline", InterruptType.EXPIRE_ALL, "ExpireAll"),
 
   @JsonProperty("Retry") RETRY("Retry execution of  paused node in the current workflow", InterruptType.RETRY, "Retry");
 

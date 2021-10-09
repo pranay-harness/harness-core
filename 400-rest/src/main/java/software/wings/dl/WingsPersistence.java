@@ -1,5 +1,7 @@
 package software.wings.dl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.HPersistence;
@@ -17,6 +19,8 @@ import org.mongodb.morphia.query.Query;
 /**
  * The Interface WingsPersistence.
  */
+@OwnedBy(HarnessTeam.PL)
+@Deprecated
 public interface WingsPersistence extends HPersistence {
   /**
    * Gets the.

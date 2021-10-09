@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.health.HealthStatusService;
+import io.harness.ccm.commons.constants.Constants;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.AggregatedStorage;
 import io.harness.event.payloads.AggregatedUsage;
@@ -149,7 +149,7 @@ public class K8sMetricCollectorTest extends CategoryTest {
     doNothing()
         .when(eventPublisher)
         .publishMessage(messageArgumentCaptor.capture(), any(Timestamp.class),
-            eq(Collections.singletonMap(HealthStatusService.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
+            eq(Collections.singletonMap(Constants.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
     k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now);
     verifyZeroInteractions(eventPublisher);
   }
@@ -269,7 +269,7 @@ public class K8sMetricCollectorTest extends CategoryTest {
     doNothing()
         .when(eventPublisher)
         .publishMessage(messageArgumentCaptor.capture(), any(Timestamp.class),
-            eq(Collections.singletonMap(HealthStatusService.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
+            eq(Collections.singletonMap(Constants.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
     k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now.plus(30, ChronoUnit.SECONDS));
     k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now.plus(30, ChronoUnit.MINUTES));
 

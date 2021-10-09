@@ -3,14 +3,15 @@ package io.harness.steps.approval.step.harness;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.approval.ApprovalFacilitator;
 import io.harness.steps.approval.step.harness.beans.ApproverInputInfo;
 import io.harness.steps.approval.step.harness.beans.Approvers;
 import io.harness.yaml.YamlSchemaTypes;
@@ -31,6 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.HARNESS_APPROVAL)
 @TypeAlias("harnessApprovalStepInfo")
+@RecasterAlias("io.harness.steps.approval.step.harness.HarnessApprovalStepInfo")
 public class HarnessApprovalStepInfo implements PMSStepInfo {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> approvalMessage;
 
@@ -49,7 +51,7 @@ public class HarnessApprovalStepInfo implements PMSStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.ASYNC;
+    return ApprovalFacilitator.APPROVAL_FACILITATOR;
   }
 
   @Override

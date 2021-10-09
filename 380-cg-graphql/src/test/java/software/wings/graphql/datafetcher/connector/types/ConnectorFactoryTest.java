@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.TMACARI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -19,7 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ConnectorFactoryTest {
+public class ConnectorFactoryTest extends CategoryTest {
   @Mock private SecretManager secretManager;
   @Mock private SettingsService settingsService;
   @Mock private ConnectorsController connectorsController;

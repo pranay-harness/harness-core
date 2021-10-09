@@ -31,7 +31,7 @@ spec:
           rollbackSteps:
             - step:
                 name: "Canary Delete"
-                identifier: canaryDelete
+                identifier: rollbackCanaryDelete
                 type: K8sCanaryDelete
                 timeout: 10m
                 spec: {}

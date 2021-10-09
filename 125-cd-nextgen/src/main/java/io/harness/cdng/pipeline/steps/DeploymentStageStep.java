@@ -9,6 +9,7 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -21,8 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class DeploymentStageStep implements ChildExecutable<StageElementParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.DEPLOYMENT_STAGE_STEP.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.DEPLOYMENT_STAGE_STEP.getName())
+                                               .setStepCategory(StepCategory.STAGE)
+                                               .build();
 
   @Override
   public Class<StageElementParameters> getStepParametersClass() {
@@ -35,7 +38,6 @@ public class DeploymentStageStep implements ChildExecutable<StageElementParamete
     log.info("Executing deployment stage with params [{}]", stepParameters);
     DeploymentStageStepParameters stageStepParameters = (DeploymentStageStepParameters) stepParameters.getSpecConfig();
     final String serviceNodeId = stageStepParameters.getChildNodeID();
-
     return ChildExecutableResponse.newBuilder().setChildNodeId(serviceNodeId).build();
   }
 

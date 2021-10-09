@@ -8,6 +8,7 @@ import io.harness.azure.AzureEnvironmentType;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Set;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +31,7 @@ public class AzureKeyVaultConfigDTO extends SecretManagerConfigDTO {
   private String tenantId;
   private String vaultName;
   private String subscription;
+  private Set<String> delegateSelectors;
 
   @Builder.Default AzureEnvironmentType azureEnvironmentType = AZURE;
 }

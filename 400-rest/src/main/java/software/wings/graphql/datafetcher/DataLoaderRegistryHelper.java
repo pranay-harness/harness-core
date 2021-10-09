@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.app.GraphQLModule;
+import software.wings.app.WingsGraphQLModule;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -30,7 +30,7 @@ public class DataLoaderRegistryHelper {
 
   @Inject
   public void init(Injector injector) {
-    GraphQLModule.getBatchDataLoaderNames().forEach(
+    WingsGraphQLModule.getBatchDataLoaderNames().forEach(
         l -> { batchedDataLoaders.put(l, injector.getInstance(Key.get(MappedBatchLoader.class, Names.named(l)))); });
   }
 

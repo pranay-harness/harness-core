@@ -2,7 +2,9 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -12,6 +14,7 @@ import io.harness.validation.Update;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.Trigger;
@@ -37,6 +40,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
  * Created by sgurubelli on 10/26/17.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public interface TriggerService
     extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream, OwnedByWorkflow, OwnedByApplicationManifest {
   /**
@@ -116,7 +120,7 @@ public interface TriggerService
   void triggerScheduledExecutionAsync(Trigger trigger, Date scheduledFireTime);
 
   WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
-      Map<String, ArtifactSummary> serviceBuildNumbers, Map<String, String> serviceManifestMapping,
+      Map<String, ArtifactSummary> serviceBuildNumbers, Map<String, ManifestSummary> serviceManifestMapping,
       TriggerExecution triggerExecution, Map<String, String> parameters);
 
   /**

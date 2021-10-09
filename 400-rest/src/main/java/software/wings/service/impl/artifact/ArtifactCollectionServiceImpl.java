@@ -93,7 +93,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
       log.info("Collecting build details for artifact stream: [{}], type: [{}] and source name: [{}]",
           artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-      List<BuildDetails> builds = buildSourceService.getBuilds(
+      List<BuildDetails> builds = buildSourceService.getNewBuilds(
           artifactStream.fetchAppId(), artifactStream.getUuid(), artifactStream.getSettingId());
       if (isEmpty(builds)) {
         return new ArrayList<>();

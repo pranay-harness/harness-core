@@ -5,7 +5,7 @@ load("//:tools/bazel/macros.bzl", "run_analysis")
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     visibility = ["//visibility:public"],
     deps = [
@@ -16,11 +16,12 @@ java_library(
         "//930-delegate-tasks:module",
         "//930-ng-core-clients:module",
         "//948-access-control-sdk:module",
-        "//950-timeout-engine:module",
+        "//959-timeout-engine:module",
         "//950-log-client:module",
         "//955-delegate-beans:module",
         "//960-persistence:module",
         "//970-grpc:module",
+        "//970-ng-commons:module",
         "//980-commons:module",
         "@maven//:com_squareup_retrofit2_converter_gson",
         "//:lombok",

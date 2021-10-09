@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.permissions;
 
+import io.harness.accesscontrol.commons.bootstrap.ConfigurationState;
+import io.harness.accesscontrol.commons.bootstrap.ConfigurationStateRepository;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -13,6 +15,7 @@ import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -23,35 +26,41 @@ import lombok.extern.slf4j.Slf4j;
 public class PermissionsManagementJob {
   private static final String PERMISSIONS_YAML_PATH = "io/harness/accesscontrol/permissions/permissions.yml";
 
-  private final Permissions latestPermissions;
-  private final Permissions currentPermissions;
   private final PermissionService permissionService;
+  private final ConfigurationStateRepository configurationStateRepository;
+  private final PermissionsConfig permissionsConfig;
 
   @Inject
-  public PermissionsManagementJob(PermissionService permissionService) {
+  public PermissionsManagementJob(
+      PermissionService permissionService, ConfigurationStateRepository configurationStateRepository) {
+    this.configurationStateRepository = configurationStateRepository;
     ObjectMapper om = new ObjectMapper(new YAMLFactory());
     URL url = getClass().getClassLoader().getResource(PERMISSIONS_YAML_PATH);
     try {
       byte[] bytes = Resources.toByteArray(url);
-      this.latestPermissions = om.readValue(bytes, Permissions.class);
+      this.permissionsConfig = om.readValue(bytes, PermissionsConfig.class);
     } catch (IOException e) {
       throw new InvalidRequestException("Permissions file path is invalid");
     }
-    this.currentPermissions =
-        Permissions.builder()
-            .permissions(new HashSet<>(permissionService.list(PermissionFilter.builder().build())))
-            .build();
     this.permissionService = permissionService;
   }
 
   public void run() {
-    Set<Permission> addedOrUpdatedPermissions =
-        Sets.difference(latestPermissions.getPermissions(), currentPermissions.getPermissions());
+    Optional<ConfigurationState> optional = configurationStateRepository.getByIdentifier(permissionsConfig.getName());
+    if (optional.isPresent() && optional.get().getConfigVersion() >= permissionsConfig.getVersion()) {
+      log.info("Permissions are already updated in the database");
+      return;
+    }
+    log.info("Updating permissions in the database");
+
+    Set<Permission> latestPermissions = permissionsConfig.getPermissions();
+    Set<Permission> currentPermissions = new HashSet<>(permissionService.list(PermissionFilter.builder().build()));
+    Set<Permission> addedOrUpdatedPermissions = Sets.difference(latestPermissions, currentPermissions);
 
     Set<String> latestIdentifiers =
-        latestPermissions.getPermissions().stream().map(Permission::getIdentifier).collect(Collectors.toSet());
+        latestPermissions.stream().map(Permission::getIdentifier).collect(Collectors.toSet());
     Set<String> currentIdentifiers =
-        currentPermissions.getPermissions().stream().map(Permission::getIdentifier).collect(Collectors.toSet());
+        currentPermissions.stream().map(Permission::getIdentifier).collect(Collectors.toSet());
 
     Set<String> addedIdentifiers = Sets.difference(latestIdentifiers, currentIdentifiers);
     Set<String> removedIdentifiers = Sets.difference(currentIdentifiers, latestIdentifiers);
@@ -67,5 +76,10 @@ public class PermissionsManagementJob {
     addedPermissions.forEach(permissionService::create);
     updatedPermissions.forEach(permissionService::update);
     removedIdentifiers.forEach(permissionService::delete);
+
+    ConfigurationState configurationState =
+        optional.orElseGet(() -> ConfigurationState.builder().identifier(permissionsConfig.getName()).build());
+    configurationState.setConfigVersion(permissionsConfig.getVersion());
+    configurationStateRepository.upsert(configurationState);
   }
 }

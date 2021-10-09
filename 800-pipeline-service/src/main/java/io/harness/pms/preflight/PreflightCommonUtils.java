@@ -66,7 +66,12 @@ public class PreflightCommonUtils {
     return PreFlightStatus.SUCCESS;
   }
 
-  public PreFlightStatus getOverallStatus(List<ConnectorCheckResponse> connectorCheckResponse) {
-    return getConnectorCheckStatus(connectorCheckResponse);
+  public PreFlightStatus getOverallStatus(
+      List<ConnectorCheckResponse> connectorCheckResponse, List<PipelineInputResponse> pipelineInputResponses) {
+    if (getConnectorCheckStatus(connectorCheckResponse) == PreFlightStatus.FAILURE
+        || getPipelineInputStatus(pipelineInputResponses) == PreFlightStatus.FAILURE) {
+      return PreFlightStatus.FAILURE;
+    }
+    return PreFlightStatus.SUCCESS;
   }
 }

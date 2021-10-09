@@ -46,7 +46,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Ignore
 @Slf4j
 public class ServiceGuardAlertTest extends VerificationIntegrationBase {
   @Override
@@ -59,6 +58,7 @@ public class ServiceGuardAlertTest extends VerificationIntegrationBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("TODO: provide proper description why this test is disabled")
   public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
     final String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     final String connectorId = wingsPersistence.save(Builder.aSettingAttribute()

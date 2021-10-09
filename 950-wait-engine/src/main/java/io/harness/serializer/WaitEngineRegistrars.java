@@ -21,12 +21,14 @@ public class WaitEngineRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(PersistenceRegistrars.kryoRegistrars)
+          .addAll(TimeoutEngineRegistrars.kryoRegistrars)
           .add(WaitEngineKryoRegister.class)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .addAll(TimeoutEngineRegistrars.morphiaRegistrars)
           .add(WaitEngineMorphiaRegistrar.class)
           .build();
 

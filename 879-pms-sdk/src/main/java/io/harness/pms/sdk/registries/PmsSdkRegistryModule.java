@@ -4,16 +4,20 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.GeneralException;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
+import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
+import io.harness.pms.sdk.core.registries.FunctorRegistry;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
@@ -25,10 +29,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -56,10 +63,31 @@ public class PmsSdkRegistryModule extends AbstractModule {
   StepRegistry providesStateRegistry(Injector injector) {
     StepRegistry stepRegistry = new StepRegistry();
     Map<StepType, Class<? extends Step>> engineSteps = config.getEngineSteps();
+    List<String> stepsMissingStepCategory = new ArrayList<>();
     if (EmptyPredicate.isNotEmpty(engineSteps)) {
-      engineSteps.forEach((k, v) -> stepRegistry.register(k, injector.getInstance(v)));
+      engineSteps.forEach((stepType, v) -> {
+        if (stepType.getStepCategory() == StepCategory.UNKNOWN) {
+          stepsMissingStepCategory.add(stepType.getType());
+        }
+        stepRegistry.register(stepType, injector.getInstance(v));
+      });
     }
-    return stepRegistry;
+    if (stepsMissingStepCategory.isEmpty()) {
+      return stepRegistry;
+    }
+    throw new GeneralException(String.format("Following steps missing step Category, please add the category: [%s]",
+        stepsMissingStepCategory.stream().collect(Collectors.joining(","))));
+  }
+
+  @Provides
+  @Singleton
+  FunctorRegistry providesFunctorRegistry(Injector injector) {
+    FunctorRegistry functorRegistry = new FunctorRegistry();
+    Map<String, Class<? extends SdkFunctor>> sdkFunctors = config.getSdkFunctors();
+    if (EmptyPredicate.isNotEmpty(sdkFunctors)) {
+      sdkFunctors.forEach((functorKey, v) -> { functorRegistry.register(functorKey, injector.getInstance(v)); });
+    }
+    return functorRegistry;
   }
 
   @Provides

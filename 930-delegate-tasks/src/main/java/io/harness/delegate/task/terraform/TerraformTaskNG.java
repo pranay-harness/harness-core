@@ -9,6 +9,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
+import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.terraform.handlers.TerraformAbstractTaskHandler;
@@ -19,8 +20,10 @@ import com.google.inject.Inject;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDP)
+@Slf4j
 public class TerraformTaskNG extends AbstractDelegateRunnableTask {
   @Inject private Map<TFTaskType, TerraformAbstractTaskHandler> tfTaskTypeToHandlerMap;
 
@@ -36,6 +39,7 @@ public class TerraformTaskNG extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
+    log.info("Started executing Terraform Task NG");
     TerraformTaskNGParameters taskParameters = (TerraformTaskNGParameters) parameters;
     CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
 
@@ -48,7 +52,10 @@ public class TerraformTaskNG extends AbstractDelegateRunnableTask {
     }
 
     TerraformAbstractTaskHandler taskHandler = tfTaskTypeToHandlerMap.get(taskParameters.getTaskType());
-    return taskHandler.executeTask(taskParameters, getDelegateId(), getTaskId(), logCallback, commandUnitsProgress);
+    TerraformTaskNGResponse terraformTaskNGResponse =
+        taskHandler.executeTask(taskParameters, getDelegateId(), getTaskId(), logCallback);
+    terraformTaskNGResponse.setUnitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
+    return terraformTaskNGResponse;
   }
 
   public LogCallback getLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName,

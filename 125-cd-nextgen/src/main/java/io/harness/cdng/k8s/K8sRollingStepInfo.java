@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sRollingStepInfoVisitorHelper;
@@ -31,14 +32,15 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
 @SimpleVisitorHelper(helperClass = K8sRollingStepInfoVisitorHelper.class)
 @TypeAlias("k8sRollingStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sRollingStepInfo")
 public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStepInfo, Visitable {
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingStepInfo(
-      ParameterField<Boolean> skipDryRun, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
-    super(skipDryRun, delegateSelectors);
+  public K8sRollingStepInfo(ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String canaryStepFqn) {
+    super(skipDryRun, delegateSelectors, canaryStepFqn);
   }
 
   @Override
@@ -56,6 +58,7 @@ public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStep
     return K8sRollingStepParameters.infoBuilder()
         .skipDryRun(skipDryRun)
         .delegateSelectors(this.getDelegateSelectors())
+        .canaryStepFqn(canaryStepFqn)
         .build();
   }
 }

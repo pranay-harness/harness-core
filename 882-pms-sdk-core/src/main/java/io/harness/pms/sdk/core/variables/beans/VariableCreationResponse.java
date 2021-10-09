@@ -2,10 +2,13 @@ package io.harness.pms.sdk.core.variables.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
+import io.harness.pms.sdk.core.pipeline.creators.CreatorResponse;
 import io.harness.pms.yaml.YamlField;
 
 import java.util.HashMap;
@@ -16,7 +19,8 @@ import lombok.Singular;
 
 @Data
 @Builder
-public class VariableCreationResponse {
+@OwnedBy(HarnessTeam.PIPELINE)
+public class VariableCreationResponse implements CreatorResponse {
   @Singular Map<String, YamlProperties> yamlProperties;
   @Singular Map<String, YamlOutputProperties> yamlOutputProperties;
   @Singular Map<String, YamlField> resolvedDependencies;

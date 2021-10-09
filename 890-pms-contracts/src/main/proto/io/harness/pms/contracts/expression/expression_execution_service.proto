@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.expression;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+option java_multiple_files = true;
+
+service RemoteFunctorService {
+  rpc evaluate(ExpressionRequest) returns (ExpressionResponse);
+}
+
+message ExpressionRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  string functorKey = 2;
+  repeated string args = 3;
+}
+
+message ExpressionResponse {
+  string value = 1;
+  ErrorResponse errorResponse = 2;
+  bool isPrimitive = 3;
+  string primitiveType = 4;
+}
+
+message ErrorResponse {
+  repeated string messages = 1;
+}

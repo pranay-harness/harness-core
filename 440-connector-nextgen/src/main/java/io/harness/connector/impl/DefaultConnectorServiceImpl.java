@@ -13,6 +13,7 @@ import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.EntityType;
@@ -185,9 +186,10 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category,
+      ConnectorCategory sourceCategory) {
     Criteria criteria = filterService.createCriteriaFromConnectorFilter(
-        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
+        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category, sourceCategory);
     Pageable pageable = PageUtils.getPageRequest(
         PageRequest.builder()
             .pageIndex(page)
@@ -339,6 +341,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connectorRequest, String accountIdentifier) {
+    return update(connectorRequest, accountIdentifier, ChangeType.MODIFY);
+  }
+
+  @Override
+  public ConnectorResponseDTO update(
+      ConnectorDTO connectorRequest, String accountIdentifier, ChangeType gitChangeType) {
     assurePredefined(connectorRequest, accountIdentifier);
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
@@ -370,7 +378,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             existingConnector.getIdentifier());
         newConnector.setHeartbeatPerpetualTaskId(
             connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
-      } else {
+      } else if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
         connectorHeartbeatService.resetPerpetualTask(
             accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
         newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
@@ -384,8 +392,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             -> outboxService.save(new ConnectorUpdateEvent(
                 accountIdentifier, oldConnectorDTO.getConnector(), connectorRequest.getConnectorInfo()));
       }
-      Connector updatedConnector =
-          connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY, supplier);
+      Connector updatedConnector = connectorRepository.save(newConnector, connectorRequest, gitChangeType, supplier);
       connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
       return connectorMapper.writeDTO(updatedConnector);
 
@@ -436,6 +443,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     connectorRepository.save(existingConnector, null, ChangeType.DELETE, supplier);
 
     return true;
+  }
+
+  @Override
+  public long count(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = filterService.createCriteriaFromConnectorFilter(
+        accountIdentifier, orgIdentifier, projectIdentifier, null, null, null, null);
+    return connectorRepository.count(criteria);
   }
 
   private void checkThatTheConnectorIsNotUsedByOthers(Connector connector) {
@@ -707,5 +721,35 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Page<Connector> connectors = connectorRepository.findAll(
         Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).in(connectorFQN), pageable, false);
     return connectors.getContent().stream().map(connector -> connectorMapper.writeDTO(connector)).collect(toList());
+  }
+
+  @Override
+  public void deleteBatch(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifiersList) {
+    for (String connectorIdentifier : connectorIdentifiersList) {
+      String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+          fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+      connectorOptional
+          .map(item -> {
+            String heartbeatTaskId = item.getHeartbeatPerpetualTaskId();
+            String connectorFQN = item.getFullyQualifiedIdentifier();
+            if (isNotBlank(heartbeatTaskId)) {
+              boolean perpetualTaskIsDeleted =
+                  connectorHeartbeatService.deletePerpetualTask(accountIdentifier, heartbeatTaskId, connectorFQN);
+              if (perpetualTaskIsDeleted == false) {
+                log.info("{} The perpetual task could not be deleted {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+                return false;
+              }
+            }
+            item.setDeleted(true);
+            connectorRepository.save(item, ChangeType.DELETE);
+            return true;
+          })
+          .orElseThrow(()
+                           -> new ConnectorNotFoundException(
+                               String.format("No connector found with identifier %s", connectorIdentifier), USER));
+    }
   }
 }

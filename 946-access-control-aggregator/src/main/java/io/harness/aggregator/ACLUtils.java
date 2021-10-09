@@ -3,12 +3,15 @@ package io.harness.aggregator;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 
 import io.harness.accesscontrol.Principal;
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.models.SourceMetadata;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.SourceMetadata;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PL)
 @UtilityClass
 public class ACLUtils {
   public static ACL buildACL(

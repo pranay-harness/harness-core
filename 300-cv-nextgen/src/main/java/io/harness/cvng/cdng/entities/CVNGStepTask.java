@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -47,15 +48,24 @@ public class CVNGStepTask
   }
   @Id private String uuid;
   private String accountId;
+  private String orgIdentifier;
+  private String projectIdentifier;
+  private String serviceIdentifier;
+  private String environmentIdentifier;
+  String deploymentTag;
+
   private long createdAt;
   private long lastUpdatedAt;
   private String activityId;
+  @FdIndex private String callbackId;
+  private boolean skip;
   private Status status;
   @EqualsAndHashCode.Exclude
   @FdTtlIndex
   @Builder.Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
   private long asyncTaskIteration;
+  private String verificationJobInstanceId;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -80,7 +90,10 @@ public class CVNGStepTask
   }
   public void validate() {
     Preconditions.checkNotNull(accountId);
-    Preconditions.checkNotNull(activityId);
+    if (!skip) {
+      Preconditions.checkNotNull(activityId);
+    }
+    Preconditions.checkNotNull(callbackId);
     Preconditions.checkNotNull(status);
   }
   public enum Status { IN_PROGRESS, DONE }

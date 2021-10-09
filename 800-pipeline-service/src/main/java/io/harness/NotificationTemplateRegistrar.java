@@ -40,6 +40,7 @@ public class NotificationTemplateRegistrar implements Runnable {
           try {
             notificationClient.saveNotificationTemplate(Team.PIPELINE, template, true);
           } catch (Exception ex) {
+            log.error(String.format("Unable to register tempate with id: %s", template.getIdentifier()), ex);
             unprocessedTemplate.add(template);
           }
         }

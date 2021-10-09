@@ -1,8 +1,10 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HARI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -20,6 +23,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.task.scm.GitFileTaskResponseData;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -109,5 +113,15 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
     assertThat(gitFileContent)
         .isEqualTo(
             GitFileContent.builder().content(fileContent.getContent()).objectId(fileContent.getBlobId()).build());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testCreatePRWithSameSourceTargetBranch() {
+    GitPRCreateRequest createPRRequest =
+        GitPRCreateRequest.builder().sourceBranch("branch").targetBranch("branch").build();
+    assertThatThrownBy(() -> scmDelegateFacilitatorService.createPullRequest(createPRRequest))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }

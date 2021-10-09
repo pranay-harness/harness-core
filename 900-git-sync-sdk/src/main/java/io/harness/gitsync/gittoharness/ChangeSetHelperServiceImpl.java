@@ -4,11 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.UnexpectedException;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.persistance.GitSyncableEntity;
+import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.ng.core.event.EventProtoToEntityHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +30,7 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
   Map<EntityType, GitSyncEntitiesConfiguration> gitSyncEntityConfigurationsMap;
   @Inject @Named("GitSyncObjectMapper") ObjectMapper objectMapper;
   @Inject Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
+  @Inject EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
 
   @Override
   public void process(ChangeSet changeSet) {
@@ -38,14 +42,13 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
     String yaml = changeSet.getYaml();
     switch (changeSet.getChangeType()) {
       case ADD:
-        entityGitPersistenceHelperService.save(changeSet.getAccountId(), yaml);
+      case MODIFY:
+        entityGitPersistenceHelperService.upsert(changeSet.getAccountId(), yaml);
         break;
       case DELETE:
-        // todo @deepak : add the function to get the entity reference for this connector
-        entityGitPersistenceHelperService.delete(null);
-        break;
-      case MODIFY:
-        entityGitPersistenceHelperService.update(changeSet.getAccountId(), yaml);
+        final EntityDetailProtoDTO entityRefForDeletion = changeSet.getEntityRefForDeletion();
+        final EntityDetail entityDetailDTO = entityDetailProtoToRestMapper.createEntityDetailDTO(entityRefForDeletion);
+        entityGitPersistenceHelperService.delete(entityDetailDTO.getEntityRef());
         break;
       case UNRECOGNIZED:
       default:

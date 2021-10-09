@@ -8,10 +8,10 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.InstanceDataServiceImpl;
-import io.harness.ccm.cluster.dao.InstanceDataDao;
 import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.dao.InstanceDataDao;
 import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

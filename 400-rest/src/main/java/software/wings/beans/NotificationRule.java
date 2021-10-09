@@ -2,6 +2,10 @@ package software.wings.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.yaml.BaseYaml;
@@ -19,6 +23,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class NotificationRule {
   private String uuid = generateUuid();
   private List<ExecutionStatus> conditions = new ArrayList<>();
@@ -27,7 +33,7 @@ public class NotificationRule {
   @Getter @Setter private boolean notificationGroupAsExpression;
   @Getter @Setter private boolean userGroupAsExpression;
 
-  @Deprecated @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
+  @NotNull @Size(min = 1) @Deprecated private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
   @NotNull @Setter private List<String> userGroupIds = new ArrayList<>();
 
@@ -354,17 +360,19 @@ public class NotificationRule {
     private String userGroupExpression;
 
     private List<String> userGroupIds = new ArrayList<>();
+    private List<String> userGroupNames = new ArrayList<>();
 
     @Builder
     public Yaml(List<String> conditions, String executionScope, List<String> notificationGroups,
         boolean notificationGroupAsExpression, boolean userGroupAsExpression, List<String> userGroupIds,
-        String userGroupExpression) {
+        String userGroupExpression, List<String> userGroupNames) {
       this.conditions = conditions;
       this.executionScope = executionScope;
       this.notificationGroups = notificationGroups;
       this.notificationGroupAsExpression = notificationGroupAsExpression;
       this.userGroupAsExpression = userGroupAsExpression;
       this.userGroupIds = userGroupIds;
+      this.userGroupNames = userGroupNames;
       this.userGroupExpression = userGroupExpression;
     }
   }

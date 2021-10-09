@@ -1,5 +1,7 @@
 package software.wings.integration;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -14,11 +16,14 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -42,7 +47,6 @@ import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.SecretManager;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
@@ -75,6 +79,8 @@ import org.junit.experimental.categories.Category;
  * Created by rsingh on 4/24/17.
  */
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 public class UserServiceIntegrationTest extends IntegrationTestBase {
   private final String validEmail = "raghu" + System.currentTimeMillis() + "@wings.software";
   @Inject private SecretManager secretManager;

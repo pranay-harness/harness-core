@@ -37,7 +37,7 @@ public class BarrierDropper implements AsyncInformObserver, NodeStatusUpdateObse
         return;
       }
       StepElementParameters stepElementParameters =
-          RecastOrchestrationUtils.fromDocument(nodeExecution.getResolvedStepParameters(), StepElementParameters.class);
+          RecastOrchestrationUtils.fromMap(nodeExecution.getResolvedStepParameters(), StepElementParameters.class);
       BarrierSpecParameters barrierSpecParameters = (BarrierSpecParameters) stepElementParameters.getSpec();
 
       BarrierExecutionInstance barrierExecutionInstance =

@@ -2,7 +2,6 @@ package io.harness.cvng.beans;
 
 import static io.harness.cvng.utils.StackdriverUtils.Scope.LOG_SCOPE;
 
-import io.harness.cvng.beans.stackdriver.StackdriverCredential;
 import io.harness.cvng.beans.stackdriver.StackdriverLogDefinition;
 import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -25,8 +24,7 @@ public class StackdriverLogDataCollectionInfo extends LogDataCollectionInfo<GcpC
 
   @Override
   public Map<String, Object> getDslEnvVariables(GcpConnectorDTO connectorConfigDTO) {
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(connectorConfigDTO);
-    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential, LOG_SCOPE);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(connectorConfigDTO, LOG_SCOPE);
 
     dslEnvVariables.put("query", logDefinition.getQuery());
     dslEnvVariables.put("messageField", logDefinition.getMessageIdentifier());

@@ -1,5 +1,5 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_proto_grpc//java:defs.bzl", "java_proto_library")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
 
 proto_library(
     name = "160_stress_tester_proto",
@@ -11,7 +11,7 @@ proto_library(
     ],
 )
 
-java_proto_library(
+harness_grpc_library(
     name = "160_stress_tester_java_proto",
     visibility = ["//visibility:public"],
     deps = [

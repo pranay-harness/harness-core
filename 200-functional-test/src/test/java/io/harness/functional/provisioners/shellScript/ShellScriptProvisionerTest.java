@@ -16,6 +16,8 @@ import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.exception.InvalidRequestException;
@@ -74,9 +76,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDP)
 public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
   private final Seed seed = new Seed(0);
   @Inject private OwnerManager ownerManager;
@@ -124,6 +128,7 @@ public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void shouldRunShellScriptWorkflow() throws Exception {
     shellScriptInfrastructureProvisioner = buildProvisionerObject();
     shellScriptInfrastructureProvisioner =
@@ -143,6 +148,7 @@ public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ABHINAV, intermittent = true)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void runShellScriptWorkflowWithoutProvisioner() {
     workflow_without_provisioner = buildWorkflowWithoutProvisioner();
     workflow_without_provisioner = workflowGenerator.ensureWorkflow(seed, owners, workflow_without_provisioner);

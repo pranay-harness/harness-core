@@ -2,15 +2,20 @@ package io.harness.engine.pms.data;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.engine.outputs.SweepingOutputException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
@@ -22,10 +27,12 @@ import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummySweepingOutput;
 
 import com.google.inject.Inject;
+import java.util.List;
 import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
   private static final String STEP_RUNTIME_ID = generateUuid();
   private static final String STEP_SETUP_ID = generateUuid();
@@ -45,13 +52,13 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueStep = "testStep";
 
     pmsSweepingOutputService.consume(ambianceSection, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()), null);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     pmsSweepingOutputService.consume(ambianceStep, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()), null);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()), null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueStep);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
@@ -70,13 +77,13 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueStep = "testStep";
 
     pmsSweepingOutputService.consumeInternal(ambianceSection, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()), 2);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), 2, null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     pmsSweepingOutputService.consumeInternal(ambianceStep, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()), 0);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()), 0, null);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
@@ -95,14 +102,13 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueStep = "testStep";
 
     pmsSweepingOutputService.consume(ambianceSection, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()),
-        "SECTION");
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), "SECTION");
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     pmsSweepingOutputService.consume(ambianceStep, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()),
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()),
         ResolverUtils.GLOBAL_GROUP_SCOPE);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
@@ -111,7 +117,7 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     assertThatThrownBy(
         ()
             -> pmsSweepingOutputService.consume(ambianceSection, "randomOutputName",
-                RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test("randomTestValue").build()),
+                RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test("randomTestValue").build()),
                 "RANDOM"))
         .isInstanceOf(GroupNotFoundException.class);
   }
@@ -126,7 +132,7 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
         Level.newBuilder()
             .setRuntimeId(STEP_RUNTIME_ID)
             .setSetupId(STEP_SETUP_ID)
-            .setStepType(StepType.newBuilder().setType("SHELL_SCRIPT").build())
+            .setStepType(StepType.newBuilder().setType("SHELL_SCRIPT").setStepCategory(StepCategory.STEP).build())
             .build());
   }
 
@@ -140,6 +146,14 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
 
     Document output = resolve(ambiance, outputName);
     assertThat(output).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testFetchOutcomeInstanceByRuntimeId() {
+    List<ExecutionSweepingOutputInstance> result = pmsSweepingOutputService.fetchOutcomeInstanceByRuntimeId("abc");
+    assertThat(result.size()).isEqualTo(0);
   }
 
   private Document resolve(Ambiance ambiance, String outputName) {

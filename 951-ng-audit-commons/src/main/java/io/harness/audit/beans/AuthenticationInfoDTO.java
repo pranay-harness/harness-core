@@ -47,6 +47,7 @@ public class AuthenticationInfoDTO {
             .principal(Principal.fromSecurityPrincipal(principal))
             .labels(labels)
             .build();
+      case SERVICE_ACCOUNT:
       case API_KEY:
       case SERVICE:
         return AuthenticationInfoDTO.builder().principal(Principal.fromSecurityPrincipal(principal)).build();

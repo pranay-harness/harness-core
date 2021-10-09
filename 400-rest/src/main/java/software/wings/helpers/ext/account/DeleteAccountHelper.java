@@ -79,7 +79,6 @@ public class DeleteAccountHelper {
     entitiesRemainingForDeletion.addAll(deleteApplicationAccessEntities(accountId));
     entitiesRemainingForDeletion.addAll(deleteAccountAccessEntities(accountId));
     entitiesRemainingForDeletion.addAll(deleteOwnedByAccountEntities(accountId));
-    removeAccountFromFeatureFlagsCollection(accountId);
     removeAccountFromUsageBucketsCollection(accountId);
     removeAccountFromSegmentGroupEventContextCollection(accountId);
     return entitiesRemainingForDeletion;
@@ -264,10 +263,6 @@ public class DeleteAccountHelper {
   private void deletePerpetualTasksForAccount(String accountId) {
     perpetualTaskService.deleteAllTasksForAccount(accountId);
     log.info("Deleted all Perpetual Tasks for account {}", accountId);
-  }
-
-  private void removeAccountFromFeatureFlagsCollection(String accountId) {
-    featureFlagService.removeAccountReferenceFromAllFeatureFlags(accountId);
   }
 
   @VisibleForTesting

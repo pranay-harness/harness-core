@@ -1,8 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -36,6 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = "spotInstToken")
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(_957_CG_BEANS)
 public class SpotInstConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @NotEmpty @SchemaIgnore private String accountId;
   @Encrypted(fieldName = "spot_instance_token") private char[] spotInstToken;

@@ -42,9 +42,11 @@ public abstract class JWTAuthenticationFilter implements ContainerRequestFilter,
 
   @Override
   public void filter(ContainerRequestContext containerRequestContext) {
-    if (predicate.test(Pair.of(resourceInfo, containerRequestContext))) {
-      filter(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
-    }
+    filter(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
+  }
+
+  protected boolean testRequestPredicate(ContainerRequestContext containerRequestContext) {
+    return predicate.test(Pair.of(resourceInfo, containerRequestContext));
   }
 
   public static void setSourcePrincipalInContext(ContainerRequestContext containerRequestContext,

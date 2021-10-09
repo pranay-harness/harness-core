@@ -35,7 +35,6 @@ import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.rule.Owner;
 
@@ -50,7 +49,6 @@ import org.mockito.ArgumentCaptor;
 @OwnedBy(PL)
 public class ProjectResourceTest extends CategoryTest {
   private ProjectService projectService;
-  private OrganizationService organizationService;
   private AccessControlClient accessControlClient;
   private ProjectResource projectResource;
 
@@ -62,9 +60,8 @@ public class ProjectResourceTest extends CategoryTest {
   @Before
   public void setup() {
     projectService = mock(ProjectService.class);
-    organizationService = mock(OrganizationService.class);
     accessControlClient = mock(AccessControlClient.class);
-    projectResource = new ProjectResource(projectService, organizationService, accessControlClient);
+    projectResource = new ProjectResource(projectService);
   }
 
   private ProjectDTO getProjectDTO(String orgIdentifier, String identifier, String name) {
@@ -131,7 +128,8 @@ public class ProjectResourceTest extends CategoryTest {
     project.setVersion((long) 0);
     ArgumentCaptor<ProjectFilterDTO> argumentCaptor = ArgumentCaptor.forClass(ProjectFilterDTO.class);
 
-    when(projectService.list(eq(accountIdentifier), any(), any())).thenReturn(getPage(singletonList(project), 1));
+    when(projectService.listPermittedProjects(eq(accountIdentifier), any(), any()))
+        .thenReturn(getPage(singletonList(project), 1));
 
     when(accessControlClient.checkForAccess(anyList()))
         .thenReturn(AccessCheckResponseDTO.builder()
@@ -146,7 +144,7 @@ public class ProjectResourceTest extends CategoryTest {
     ResponseDTO<PageResponse<ProjectResponse>> response = projectResource.list(
         accountIdentifier, orgIdentifier, true, Collections.EMPTY_LIST, ModuleType.CD, searchTerm, pageRequest);
 
-    verify(projectService, times(1)).list(eq(accountIdentifier), any(), argumentCaptor.capture());
+    verify(projectService, times(1)).listPermittedProjects(eq(accountIdentifier), any(), argumentCaptor.capture());
     ProjectFilterDTO projectFilterDTO = argumentCaptor.getValue();
 
     assertEquals(searchTerm, projectFilterDTO.getSearchTerm());

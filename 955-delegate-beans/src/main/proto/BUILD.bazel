@@ -1,6 +1,6 @@
-load("@rules_proto_grpc//java:defs.bzl", "java_proto_library")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_proto_library")
 
-java_proto_library(
+harness_proto_library(
     name = "955_delegate_beans_java_proto",
     visibility = ["//visibility:public"],
     deps = [

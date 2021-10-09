@@ -6,8 +6,8 @@ import static io.harness.aggregator.ACLUtils.buildACL;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.Principal;
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
@@ -44,9 +44,10 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final RoleRepository roleRepository;
   private final ExecutorService executorService;
+  private final ChangeConsumerService changeConsumerService;
 
   public RoleChangeConsumerImpl(ACLRepository aclRepository, RoleAssignmentRepository roleAssignmentRepository,
-      RoleRepository roleRepository, String executorServiceSuffix) {
+      RoleRepository roleRepository, String executorServiceSuffix, ChangeConsumerService changeConsumerService) {
     this.aclRepository = aclRepository;
     this.roleAssignmentRepository = roleAssignmentRepository;
     this.roleRepository = roleRepository;
@@ -54,6 +55,7 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
     // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
     this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2,
         new ThreadFactoryBuilder().setNameFormat(changeConsumerThreadFactory).build());
+    this.changeConsumerService = changeConsumerService;
   }
 
   @Override
@@ -76,7 +78,8 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
         roleAssignmentRepository.findAll(criteria, Pageable.unpaged())
             .stream()
             .map((RoleAssignmentDBO roleAssignment)
-                     -> new ReProcessRoleAssignmentOnRoleUpdateTask(aclRepository, roleAssignment, role.get()))
+                     -> new ReProcessRoleAssignmentOnRoleUpdateTask(
+                         aclRepository, changeConsumerService, roleAssignment, role.get()))
             .collect(Collectors.toList());
 
     long numberOfACLsCreated = 0;
@@ -105,18 +108,20 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
   }
 
   @Override
-  public long consumeCreateEvent(String id, RoleDBO createdEntity) {
-    return 0;
+  public void consumeCreateEvent(String id, RoleDBO createdEntity) {
+    // we do not consume create event
   }
 
   private static class ReProcessRoleAssignmentOnRoleUpdateTask implements Callable<Result> {
     private final ACLRepository aclRepository;
     private final RoleAssignmentDBO roleAssignmentDBO;
     private final RoleDBO updatedRole;
+    private final ChangeConsumerService changeConsumerService;
 
-    private ReProcessRoleAssignmentOnRoleUpdateTask(
-        ACLRepository aclRepository, RoleAssignmentDBO roleAssignment, RoleDBO updatedRole) {
+    private ReProcessRoleAssignmentOnRoleUpdateTask(ACLRepository aclRepository,
+        ChangeConsumerService changeConsumerService, RoleAssignmentDBO roleAssignment, RoleDBO updatedRole) {
       this.aclRepository = aclRepository;
+      this.changeConsumerService = changeConsumerService;
       this.roleAssignmentDBO = roleAssignment;
       this.updatedRole = updatedRole;
     }
@@ -143,13 +148,15 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
 
       long numberOfACLsCreated = 0;
       List<ACL> aclsToCreate = new ArrayList<>();
-      for (String permissionIdentifier : permissionsAddedToRole) {
-        for (String principalIdentifier : existingPrincipals) {
-          for (String resourceSelector : existingResourceSelectors) {
-            aclsToCreate.add(buildACL(permissionIdentifier, Principal.of(principalType, principalIdentifier),
-                roleAssignmentDBO, resourceSelector));
-          }
-        }
+
+      if (existingResourceSelectors.isEmpty() || existingPrincipals.isEmpty()) {
+        aclsToCreate.addAll(changeConsumerService.getAClsForRoleAssignment(roleAssignmentDBO));
+      } else {
+        permissionsAddedToRole.forEach(permissionIdentifier
+            -> existingPrincipals.forEach(principalIdentifier
+                -> existingResourceSelectors.forEach(resourceSelector
+                    -> aclsToCreate.add(buildACL(permissionIdentifier, Principal.of(principalType, principalIdentifier),
+                        roleAssignmentDBO, resourceSelector)))));
       }
       numberOfACLsCreated += aclRepository.insertAllIgnoringDuplicates(aclsToCreate);
 

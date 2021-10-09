@@ -5,6 +5,8 @@ import static io.harness.encryption.Scope.ACCOUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication;
@@ -22,6 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactoryEntityToDTOTest extends CategoryTest {
   @InjectMocks ArtifactoryEntityToDTO artifactoryEntityToDTO;
 

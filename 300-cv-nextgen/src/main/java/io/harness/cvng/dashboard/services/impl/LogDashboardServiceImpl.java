@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.services.impl;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.LiveMonitoringLogAnalysisClusterDTO;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
@@ -9,6 +10,10 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.LiveMonitoringLogAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -20,6 +25,7 @@ import io.harness.cvng.dashboard.beans.LogDataByTag.CountByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.ng.beans.PageResponse;
+import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -73,6 +79,76 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                                               : Arrays.asList(LogAnalysisTag.values());
     return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, tags,
         Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), cvConfigIds, page, size);
+  }
+
+  @Override
+  public PageResponse<AnalyzedLogDataDTO> getAllLogsData(ServiceEnvironmentParams serviceEnvironmentParams,
+      TimeRangeParams timeRangeParams, LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter,
+      PageParams pageParams) {
+    List<CVConfig> configs = getCVConfigs(serviceEnvironmentParams, liveMonitoringLogAnalysisFilter);
+    List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
+    List<LogAnalysisTag> tags = liveMonitoringLogAnalysisFilter.filterByClusterTypes()
+        ? liveMonitoringLogAnalysisFilter.getClusterTypes()
+        : Arrays.asList(LogAnalysisTag.values());
+    return getLogs(serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+        serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getServiceIdentifier(),
+        serviceEnvironmentParams.getEnvironmentIdentifier(), tags, timeRangeParams.getStartTime(),
+        timeRangeParams.getEndTime(), cvConfigIds, pageParams.getPage(), pageParams.getSize());
+  }
+
+  @Override
+  public List<LiveMonitoringLogAnalysisClusterDTO> getLogAnalysisClusters(
+      ServiceEnvironmentParams serviceEnvironmentParams, TimeRangeParams timeRangeParams,
+      LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter) {
+    List<LiveMonitoringLogAnalysisClusterDTO> liveMonitoringLogAnalysisClusterDTOS = new ArrayList<>();
+    List<String> cvConfigIds = getCVConfigs(serviceEnvironmentParams, liveMonitoringLogAnalysisFilter)
+                                   .stream()
+                                   .map(CVConfig::getUuid)
+                                   .collect(Collectors.toList());
+    List<LogAnalysisTag> tags = liveMonitoringLogAnalysisFilter.filterByClusterTypes()
+        ? liveMonitoringLogAnalysisFilter.getClusterTypes()
+        : Arrays.asList(LogAnalysisTag.values());
+
+    cvConfigIds.forEach(cvConfigId -> {
+      List<AnalysisResult> logAnalysisResults =
+          getAnalysisResultForCvConfigId(cvConfigId, timeRangeParams.getStartTime(), timeRangeParams.getEndTime());
+
+      Map<Long, LogAnalysisTag> labelTagMap = new HashMap<>();
+      logAnalysisResults.forEach(result -> {
+        Long label = result.getLabel();
+        if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label))) {
+          labelTagMap.put(label, result.getTag());
+        }
+      });
+
+      String verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(
+          serviceEnvironmentParams.getAccountIdentifier(), cvConfigId);
+      List<LogAnalysisCluster> clusters =
+          logAnalysisService.getAnalysisClusters(verificationTaskId, labelTagMap.keySet());
+      clusters.forEach(logAnalysisCluster -> {
+        liveMonitoringLogAnalysisClusterDTOS.add(LiveMonitoringLogAnalysisClusterDTO.builder()
+                                                     .x(logAnalysisCluster.getX())
+                                                     .y(logAnalysisCluster.getY())
+                                                     .tag(labelTagMap.get(logAnalysisCluster.getLabel()))
+                                                     .text(logAnalysisCluster.getText())
+                                                     .build());
+      });
+    });
+    return liveMonitoringLogAnalysisClusterDTOS.stream()
+        .filter(cluster -> tags.contains(cluster.getTag()))
+        .collect(Collectors.toList());
+  }
+
+  private List<CVConfig> getCVConfigs(ServiceEnvironmentParams serviceEnvironmentParams,
+      LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter) {
+    List<CVConfig> configs;
+    if (liveMonitoringLogAnalysisFilter.filterByHealthSourceIdentifiers()) {
+      configs =
+          cvConfigService.list(serviceEnvironmentParams, liveMonitoringLogAnalysisFilter.getHealthSourceIdentifiers());
+    } else {
+      configs = cvConfigService.list(serviceEnvironmentParams);
+    }
+    return configs;
   }
 
   private List<String> getCVConfigIdsForActivity(String accountId, String activityId) {
@@ -170,7 +246,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     cvConfigIds.forEach(cvConfigId -> {
       callables.add(() -> {
         Map<String, List<AnalysisResult>> configResult = new HashMap<>();
-        configResult.put(cvConfigId, getAnalysisResultForCvConfigId(cvConfigId, tags, startTime, endTime));
+        configResult.put(cvConfigId, getAnalysisResultForCvConfigId(cvConfigId, startTime, endTime));
         return configResult;
       });
     });
@@ -193,41 +269,41 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     List<List<LogData>> logDataResults = cvngParallelExecutor.executeParallel(logDataCallables);
     logDataResults.forEach(result -> logDataToBeReturned.addAll(result));
 
-    SortedSet<AnalyzedLogDataDTO> sortedList = new TreeSet<>();
+    List<AnalyzedLogDataDTO> sortedList = new ArrayList<>();
     // create the sorted set first. Then form the page response.
-    logDataToBeReturned.forEach(logData -> {
-      sortedList.add(AnalyzedLogDataDTO.builder()
-                         .projectIdentifier(projectIdentifier)
-                         .orgIdentifier(orgIdentifier)
-                         .serviceIdentifier(serviceIdentifier)
-                         .environmentIdentifier(environmentIdentifer)
-                         .logData(logData)
-                         .build());
-    });
-
-    return formPageResponse(page, size, sortedList);
+    logDataToBeReturned.stream()
+        .filter(logData -> tags.contains(logData.getTag()))
+        .forEach(logData
+            -> sortedList.add(AnalyzedLogDataDTO.builder()
+                                  .projectIdentifier(projectIdentifier)
+                                  .orgIdentifier(orgIdentifier)
+                                  .serviceIdentifier(serviceIdentifier)
+                                  .environmentIdentifier(environmentIdentifer)
+                                  .logData(logData)
+                                  .build()));
+    Collections.sort(sortedList);
+    return PageUtils.offsetAndLimit(sortedList, page, size);
   }
 
-  private List<AnalysisResult> getAnalysisResultForCvConfigId(
-      String cvConfigId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime) {
-    List<LogAnalysisResult> analysisResults =
-        logAnalysisService.getAnalysisResults(cvConfigId, tags, startTime, endTime);
+  private List<AnalysisResult> getAnalysisResultForCvConfigId(String cvConfigId, Instant startTime, Instant endTime) {
+    List<LogAnalysisResult> analysisResults = logAnalysisService.getAnalysisResults(cvConfigId, startTime, endTime);
     return analysisResults.stream()
         .map(LogAnalysisResult::getLogAnalysisResults)
         .flatMap(Collection::stream)
-        .filter(a -> tags.contains(a.getTag()))
         .collect(Collectors.toList());
   }
 
   private List<LogData> mergeClusterWithResults(
       List<AnalysisResult> analysisResults, List<LogAnalysisCluster> analysisClusters, Instant start, Instant end) {
-    Map<Long, LogAnalysisTag> labelTagMap = new HashMap<>();
+    Map<Long, AnalysisResult> labelTagMap = new HashMap<>();
+
     analysisResults.forEach(result -> {
       Long label = result.getLabel();
-      if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label))) {
-        labelTagMap.put(label, result.getTag());
+      if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label).getTag())) {
+        labelTagMap.put(label, result);
       }
     });
+
     List<LogData> logDataList = new ArrayList<>();
 
     analysisClusters.forEach(cluster -> {
@@ -247,12 +323,21 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       trendMap.forEach(
           (timestamp, count) -> frequencies.add(FrequencyDTO.builder().timestamp(timestamp).count(count).build()));
 
+      AnalysisResult analysisResult = labelTagMap.get(cluster.getLabel());
+
+      // TODO:going forward this if condition needs to be removed as we are saving high riskScore for unknown and
+      // unexpected tags in the db itself.
+      if (LogAnalysisTag.getAnomalousTags().contains(analysisResult.getTag())) {
+        analysisResult.setRiskScore(1.0);
+      }
       LogData data = LogData.builder()
                          .text(cluster.getText())
                          .label(cluster.getLabel())
                          .count(trendMap.values().stream().collect(Collectors.summingInt(Integer::intValue)))
                          .trend(frequencies)
-                         .tag(labelTagMap.get(cluster.getLabel()))
+                         .tag(analysisResult.getTag())
+                         .riskScore(analysisResult.getRiskScore())
+                         .riskStatus(analysisResult.getRisk())
                          .build();
       logDataList.add(data);
     });

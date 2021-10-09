@@ -8,16 +8,20 @@ import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
+import io.harness.pms.contracts.service.SweepingOutputListRequest;
+import io.harness.pms.contracts.service.SweepingOutputListResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
-import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.utils.PmsGrpcClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -32,38 +36,51 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
   @Override
   public ExecutionSweepingOutput resolve(Ambiance ambiance, RefObject refObject) {
     SweepingOutputResolveBlobResponse resolve =
-        PmsSdkGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolve,
+        PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolve,
             SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-    return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class);
-  }
-
-  @Override
-  public String consumeInternal(Ambiance ambiance, String name, ExecutionSweepingOutput value, int levelsToKeep) {
-    return null;
+    return RecastOrchestrationUtils.fromJson(resolve.getStepTransput(), ExecutionSweepingOutput.class);
   }
 
   @Override
   public String consume(Ambiance ambiance, String name, ExecutionSweepingOutput value, String groupName) {
     SweepingOutputConsumeBlobRequest.Builder builder =
         SweepingOutputConsumeBlobRequest.newBuilder().setAmbiance(ambiance).setName(name).setValue(
-            RecastOrchestrationUtils.toDocumentJson(value));
+            RecastOrchestrationUtils.toJson(value));
     if (EmptyPredicate.isNotEmpty(groupName)) {
       builder.setGroupName(groupName);
     }
 
     SweepingOutputConsumeBlobResponse sweepingOutputConsumeBlobResponse =
-        PmsSdkGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::consume, builder.build());
+        PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::consume, builder.build());
     return sweepingOutputConsumeBlobResponse.getResponse();
   }
 
   @Override
   public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
     OptionalSweepingOutputResolveBlobResponse resolve =
-        PmsSdkGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolveOptional,
+        PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolveOptional,
             SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return OptionalSweepingOutput.builder()
-        .output(RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))
+        .output(RecastOrchestrationUtils.fromJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))
         .found(resolve.getFound())
         .build();
+  }
+
+  @Override
+  public List<OptionalSweepingOutput> listOutputsWithGivenNameAndSetupIds(
+      Ambiance ambiance, String name, List<String> nodeIds) {
+    SweepingOutputListResponse resolve =
+        PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::listOutputsUsingNodeIds,
+            SweepingOutputListRequest.newBuilder().setAmbiance(ambiance).setName(name).addAllNodeIds(nodeIds).build());
+    List<OptionalSweepingOutput> optionalSweepingOutputs = new ArrayList<>();
+    for (OptionalSweepingOutputResolveBlobResponse rawOptionalSweepingOutput :
+        resolve.getSweepingOutputResolveBlobResponsesList()) {
+      optionalSweepingOutputs.add(OptionalSweepingOutput.builder()
+                                      .output(RecastOrchestrationUtils.fromJson(
+                                          rawOptionalSweepingOutput.getStepTransput(), ExecutionSweepingOutput.class))
+                                      .found(rawOptionalSweepingOutput.getFound())
+                                      .build());
+    }
+    return optionalSweepingOutputs;
   }
 }

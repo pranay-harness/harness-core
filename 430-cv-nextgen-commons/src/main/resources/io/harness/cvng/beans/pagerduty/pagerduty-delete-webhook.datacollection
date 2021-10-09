@@ -1,0 +1,5 @@
+Var validationUrl = concat(Env:baseUrl, "webhook_subscriptions/")
+Var webhookUrl = concat(Var:validationUrl, Env:webhookId)
+Var result = sync-call(url=Var:webhookUrl, header=Env:commonHeaders, method=DELETE)
+Var output = "true"
+return Var:output

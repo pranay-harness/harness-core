@@ -1,10 +1,11 @@
 package software.wings.yaml.handler;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -50,7 +51,7 @@ import org.mockito.Mockito;
  */
 @SetupScheduler
 @OwnedBy(CDC)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject AppService appService;
@@ -63,9 +64,10 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   private final String APP_NAME = "app1";
   private Application application;
 
-  private String validYamlContent = "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml";
+  private String validYamlContent =
+      "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml\nisGitSyncEnabled: false";
   private String validYamlContentWithManualTriggerAuthorized =
-      "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml\nisManualTriggerAuthorized: true";
+      "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml\nisGitSyncEnabled: false\nisManualTriggerAuthorized: true";
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Index.yaml";
   private String invalidYamlFilePath = "Setup/ApplicationsInvalid/" + APP_NAME + "/Index.yaml";
 
@@ -77,6 +79,59 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
                       .accountId(ACCOUNT_ID)
                       .description("valid application yaml")
                       .build();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testCRUDAndGetWithGitSyncEnabled() throws IOException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String validYamlContent =
+        "harnessApiVersion: '1.0'\ntype: APPLICATION\nbranchName: master\ndescription: valid application yaml\ngitConnector: Helm Repo\nisGitSyncEnabled: true\nrepoName: test repo name";
+
+    GitFileChange gitFileChange = new GitFileChange();
+    gitFileChange.setFileContent(validYamlContent);
+    gitFileChange.setFilePath(validYamlFilePath);
+    gitFileChange.setAccountId(ACCOUNT_ID);
+
+    ChangeContext<Application.Yaml> changeContext = new ChangeContext<>();
+    changeContext.setChange(gitFileChange);
+    changeContext.setYamlType(YamlType.APPLICATION);
+    changeContext.setYamlSyncHandler(yamlHandler);
+
+    Application.Yaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+    assertThat(yamlObject.getIsGitSyncEnabled()).isTrue();
+    assertThat(yamlObject.getBranchName()).isEqualTo("master");
+    assertThat(yamlObject.getGitConnector()).isEqualTo("Helm Repo");
+    assertThat(yamlObject.getRepoName()).isEqualTo("test repo name");
+
+    Application savedApplication = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareApp(application, savedApplication);
+
+    Yaml yaml = yamlHandler.toYaml(this.application, APP_ID);
+    yaml.setIsGitSyncEnabled(true);
+    yaml.setBranchName("master");
+    yaml.setGitConnector("Helm Repo");
+    yaml.setRepoName("test repo name");
+
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getType()).isNotNull();
+    assertThat(yamlObject.getIsGitSyncEnabled()).isTrue();
+
+    String yamlContent = getYamlContent(yaml);
+    assertThat(yamlContent).isNotNull();
+    yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
+
+    Application applicationFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    compareApp(application, applicationFromGet);
+
+    yamlHandler.delete(changeContext);
+
+    Application application = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    assertThat(application).isNull();
   }
 
   @Test

@@ -25,6 +25,7 @@ import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 
 import com.google.inject.Inject;
 import com.mongodb.WriteConcern;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,11 @@ public class MorphiaPersistenceWrapper implements PersistenceWrapper {
     if (!deleted) {
       throw new GeneralException("Not able to Delete wait instance");
     }
+  }
+
+  @Override
+  public void deleteWaitInstance(WaitInstance entity) {
+    delete(entity);
   }
 
   @Override
@@ -182,6 +188,14 @@ public class MorphiaPersistenceWrapper implements PersistenceWrapper {
         hPersistence.createUpdateOperations(WaitInstance.class)
             .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, waitingOnCorrelationId);
     return hPersistence.findAndModify(query, operations, HPersistence.returnNewOptions);
+  }
+
+  @Override
+  public String saveWithTimeout(WaitInstance waitInstance, Duration timeout) {
+    if (!timeout.isZero()) {
+      log.warn("Timeout Not supported for MORPHIA persistence layer. This argument will have no effect");
+    }
+    return save(waitInstance);
   }
 
   @Override

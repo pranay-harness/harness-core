@@ -41,7 +41,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Artifact extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

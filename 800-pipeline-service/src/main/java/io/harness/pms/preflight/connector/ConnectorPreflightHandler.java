@@ -1,6 +1,6 @@
 package io.harness.pms.preflight.connector;
 
-import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
+import static io.harness.remote.client.NGRestUtils.getResponseWithRetry;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -20,8 +20,8 @@ import io.harness.pms.preflight.PreFlightResolution;
 import io.harness.pms.preflight.PreFlightStatus;
 import io.harness.pms.preflight.PreflightCommonUtils;
 import io.harness.pms.preflight.connector.ConnectorCheckResponse.ConnectorCheckResponseBuilder;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.preflight.PreFlightCheckMetadata;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -80,29 +80,34 @@ public class ConnectorPreflightHandler {
     List<ConnectorResponseDTO> connectorResponses = new ArrayList<>();
     if (scopeToConnectorIdentifiers.containsKey(Scope.ACCOUNT)) {
       PageResponse<ConnectorResponseDTO> response =
-          execute(connectorResourceClient.listConnectors(accountIdentifier, null, null, PAGE, SIZE,
-              ConnectorFilterPropertiesDTO.builder()
-                  .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.ACCOUNT))
-                  .build(),
-              false));
+          getResponseWithRetry(connectorResourceClient.listConnectors(accountIdentifier, null, null, PAGE, SIZE,
+                                   ConnectorFilterPropertiesDTO.builder()
+                                       .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.ACCOUNT))
+                                       .build(),
+                                   false),
+              "Could not get connector response for account: " + accountIdentifier + " after {} attempts.");
       connectorResponses.addAll(response.getContent());
     }
     if (scopeToConnectorIdentifiers.containsKey(Scope.ORG)) {
-      PageResponse<ConnectorResponseDTO> response =
-          execute(connectorResourceClient.listConnectors(accountIdentifier, orgIdentifier, null, PAGE, SIZE,
+      PageResponse<ConnectorResponseDTO> response = getResponseWithRetry(
+          connectorResourceClient.listConnectors(accountIdentifier, orgIdentifier, null, PAGE, SIZE,
               ConnectorFilterPropertiesDTO.builder()
                   .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.ORG))
                   .build(),
-              false));
+              false),
+          "Could not get connector response for account: " + accountIdentifier + ", org: " + orgIdentifier
+              + " after {} attempts.");
       connectorResponses.addAll(response.getContent());
     }
     if (scopeToConnectorIdentifiers.containsKey(Scope.PROJECT)) {
-      PageResponse<ConnectorResponseDTO> response = execute(
+      PageResponse<ConnectorResponseDTO> response = getResponseWithRetry(
           connectorResourceClient.listConnectors(accountIdentifier, orgIdentifier, projectIdentifier, PAGE, SIZE,
               ConnectorFilterPropertiesDTO.builder()
                   .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.PROJECT))
                   .build(),
-              false));
+              false),
+          "Could not get connector response for account: " + accountIdentifier + ", org: " + orgIdentifier
+              + ", project: " + projectIdentifier + " after {} attempts.");
       connectorResponses.addAll(response.getContent());
     }
     return connectorResponses;

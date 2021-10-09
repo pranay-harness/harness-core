@@ -1,0 +1,32 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: http
+      port: 7100
+  adminConnectors:
+    - type: http
+      port: 7101
+
+cdServiceClientConfig:
+  baseUrl: http://localhost:12001/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+ciServiceClientConfig:
+  baseUrl: http://localhost:4457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-""}
+
+ngManagerClientConfig:
+  baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+secrets:
+  ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
+  jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=

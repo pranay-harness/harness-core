@@ -72,17 +72,17 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
 
   @Override
   public <T extends ResponseData> T waitForTask(String taskId, String description, Duration timeout) {
-    DelegateSyncTaskResponse taskResponse;
+    DelegateSyncTaskResponse taskResponse = null;
     try {
       log.info("Executing sync task {}", taskId);
       AtomicLong endAt =
           syncTaskWaitMap.computeIfAbsent(taskId, k -> new AtomicLong(currentTimeMillis() + timeout.toMillis()));
       synchronized (endAt) {
-        while (endAt.get() != 0 && currentTimeMillis() < endAt.get()) {
-          endAt.wait(timeout.toMillis());
-        }
+        do {
+          endAt.wait(Math.min(Duration.ofMillis(200).toMillis(), timeout.toMillis()));
+          taskResponse = persistence.get(DelegateSyncTaskResponse.class, taskId);
+        } while (taskResponse == null && endAt.get() != 0 && currentTimeMillis() < endAt.get());
       }
-      taskResponse = persistence.get(DelegateSyncTaskResponse.class, taskId);
     } catch (Exception e) {
       throw new InvalidArgumentsException(Pair.of("args", "Error while waiting for completion"), e);
     } finally {
@@ -108,7 +108,6 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
       }
     }
 
-    log.info("Deserialize and return the response for task {}", taskId);
     return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());
   }
 }

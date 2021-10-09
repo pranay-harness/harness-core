@@ -8,6 +8,7 @@ import io.harness.EntityType;
 import io.harness.SCMGrpcClientModule;
 import io.harness.ScmConnectionConfig;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
@@ -20,6 +21,7 @@ import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.persistance.GitAwareRepository;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.version.VersionInfoManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
@@ -39,10 +41,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 
 @OwnedBy(DX)
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
-  private static final String GIT_SYNC_SDK = "GitSyncSdk";
+  public static final String GIT_SYNC_SDK = "GitSyncSdk";
   @Override
   protected void configure() {
     install(new SCMGrpcClientModule(getScmConnectionConfig()));
@@ -52,7 +57,7 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM + GIT_SYNC_SDK))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
@@ -63,9 +68,9 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
               EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE,
               getAuthorizationServiceHeader().getServiceId()));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM + GIT_SYNC_SDK))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM,
-              getGitSyncSdkConfiguration().getServiceHeader().getServiceId(),
+              getGitSyncSdkConfiguration().getServiceHeader().getServiceId() + GIT_SYNC_SDK,
               getGitSyncSdkConfiguration().getEventsRedisConfig(),
               EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE));
@@ -80,6 +85,10 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
       final MapBinder<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMapBinder =
           MapBinder.newMapBinder(binder(), String.class, GitSdkEntityHandlerInterface.class);
       gitPersistenceHelperServiceMapBinder.addBinding(entityClass.getCanonicalName()).to(entityHelperClass);
+
+      final MapBinder<EntityType, GitSdkEntityHandlerInterface> gitEntityTypeMapBinder =
+          MapBinder.newMapBinder(binder(), EntityType.class, GitSdkEntityHandlerInterface.class);
+      gitEntityTypeMapBinder.addBinding(gitSyncEntitiesConfig.getEntityType()).to(entityHelperClass);
     });
   }
 
@@ -148,5 +157,14 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
   @Named("GitSyncObjectMapper")
   public ObjectMapper getGitSyncObjectMapper() {
     return getGitSyncSdkConfiguration().getObjectMapper();
+  }
+
+  @Provides
+  @Singleton
+  @Named("gitSyncEnabledCache")
+  public Cache<String, Boolean> gitEnabledCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache("gitEnabledCacheSdk", String.class, Boolean.class,
+        AccessedExpiryPolicy.factoryOf(Duration.FIVE_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 }

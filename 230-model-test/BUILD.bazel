@@ -4,7 +4,7 @@ java_library(
     name = "module",
     testonly = True,
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     resources = [
         "//230-model-test/src/main/resources:resource",
@@ -47,5 +47,6 @@ java_binary(
 )
 
 run_analysis(
+    run_duplicated = False,
     run_sonar = False,
 )

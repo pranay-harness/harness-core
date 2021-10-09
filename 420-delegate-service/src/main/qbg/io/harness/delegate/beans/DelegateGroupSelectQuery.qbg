@@ -1,0 +1,4 @@
+query Select for io.harness.delegate.beans.DelegateGroup {
+  accountId equal String;
+  uuid equal String;
+}

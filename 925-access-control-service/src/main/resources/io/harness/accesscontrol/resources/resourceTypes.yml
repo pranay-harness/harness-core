@@ -1,44 +1,50 @@
-- identifier: ACCOUNT
-  permissionKey: account
-- identifier: ORGANIZATION
-  permissionKey: organization
-- identifier: PROJECT
-  permissionKey: project
-- identifier: CONNECTOR
-  permissionKey: connector
-- identifier: DELEGATE
-  permissionKey: delegate
-- identifier: DELEGATECONFIGURATION
-  permissionKey: delegateconfiguration
-- identifier: SECRET
-  permissionKey: secret
-- identifier: PIPELINE
-  permissionKey: pipeline
-- identifier: SERVICE
-  permissionKey: service
-- identifier: ENVIRONMENT
-  permissionKey: environment
-- identifier: AUDIT
-  permissionKey: audit
-- identifier: USER
-  permissionKey: user
-- identifier: SERVICEACCOUNT
-  permissionKey: serviceaccount
-- identifier: USERGROUP
-  permissionKey: usergroup
-- identifier: ROLE
-  permissionKey: role
-- identifier: RESOURCEGROUP
-  permissionKey: resourcegroup
-- identifier: LICENSE
-  permissionKey: license
-- identifier: AUTHSETTING
-  permissionKey: authsetting
-- identifier: FEATUREFLAG
-  permissionKey: featureflag
-- identifier: TARGET
-  permissionKey: target
-- identifier: TARGETGROUP
-  permissionKey: targetgroup
-- identifier: DASHBOARDS
-  permissionKey: dashboards
+# Any edit in this file should accompany an increment in version.
+name: resourceTypeConfiguration
+version: 2
+resourceTypes:
+  - identifier: ACCOUNT
+    permissionKey: account
+  - identifier: ORGANIZATION
+    permissionKey: organization
+  - identifier: PROJECT
+    permissionKey: project
+  - identifier: CONNECTOR
+    permissionKey: connector
+  - identifier: DELEGATE
+    permissionKey: delegate
+  - identifier: DELEGATECONFIGURATION
+    permissionKey: delegateconfiguration
+  - identifier: SECRET
+    permissionKey: secret
+  - identifier: PIPELINE
+    permissionKey: pipeline
+  - identifier: SERVICE
+    permissionKey: service
+  - identifier: ENVIRONMENT
+    permissionKey: environment
+  - identifier: AUDIT
+    permissionKey: audit
+  - identifier: USER
+    permissionKey: user
+  - identifier: SERVICEACCOUNT
+    permissionKey: serviceaccount
+  - identifier: USERGROUP
+    permissionKey: usergroup
+  - identifier: ROLE
+    permissionKey: role
+  - identifier: RESOURCEGROUP
+    permissionKey: resourcegroup
+  - identifier: LICENSE
+    permissionKey: license
+  - identifier: AUTHSETTING
+    permissionKey: authsetting
+  - identifier: FEATUREFLAG
+    permissionKey: featureflag
+  - identifier: TARGET
+    permissionKey: target
+  - identifier: TARGETGROUP
+    permissionKey: targetgroup
+  - identifier: DASHBOARDS
+    permissionKey: dashboards
+  - identifier: TEMPLATE
+    permissionKey: template

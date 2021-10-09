@@ -2,8 +2,7 @@ package io.harness.ng.authenticationsettings.dtos.mechanisms;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-
-import software.wings.security.authentication.AuthenticationMechanism;
+import io.harness.ng.core.account.AuthenticationMechanism;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

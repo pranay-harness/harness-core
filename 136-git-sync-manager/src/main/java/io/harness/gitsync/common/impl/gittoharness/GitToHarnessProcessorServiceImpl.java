@@ -30,6 +30,7 @@ import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.MsvcProcessingFailureStage;
 import io.harness.gitsync.common.dtos.ChangeSetWithYamlStatusDTO;
 import io.harness.gitsync.common.helper.GitChangeSetMapper;
+import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
@@ -61,6 +62,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   GitToHarnessProgressService gitToHarnessProgressService;
   GitCommitService gitCommitService;
   YamlGitConfigService yamlGitConfigService;
+  GitChangeSetMapper gitChangeSetMapper;
 
   @Override
   public GitToHarnessProgressStatus processFiles(String accountId,
@@ -68,7 +70,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       String gitToHarnessProgressRecordId, String changeSetId) {
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(repoUrl);
     List<ChangeSetWithYamlStatusDTO> changeSetsWithYamlStatus =
-        GitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs, changeSetId);
+        gitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs, changeSetId, branchName);
     final List<ChangeSet> invalidChangeSets = markSkippedFiles(changeSetsWithYamlStatus);
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent =
         createMapOfEntityTypeAndFileContent(changeSetsWithYamlStatus);
@@ -94,7 +96,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       log.info("Sending to microservice {}, request : {}", entry.getKey(), gitToHarnessProcessRequest);
       GitToHarnessProcessingResponseDTO gitToHarnessProcessingResponseDTO = null;
       try {
-        ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);
+        ProcessingResponse processingResponse = GitSyncGrpcClientUtils.retryAndProcessException(
+            gitToHarnessServiceBlockingStub::process, gitToHarnessProcessRequest);
         gitToHarnessProcessingResponseDTO = ProcessingResponseMapper.toProcessingResponseDTO(processingResponse);
         log.info(
             "Got the processing response for the microservice {}, response {}", entry.getKey(), processingResponse);

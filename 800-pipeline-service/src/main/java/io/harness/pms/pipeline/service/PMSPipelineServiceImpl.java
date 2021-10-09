@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import static io.harness.pms.pipeline.service.PMSPipelineServiceStepHelper.LIBRARY;
 
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -14,16 +15,24 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
+import io.harness.exception.ScmException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.observer.Subject;
+import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.pipeline.StepPalleteInfo;
+import io.harness.pms.pipeline.StepPalleteModuleInfo;
 import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -35,6 +44,7 @@ import io.harness.repositories.pipeline.PMSPipelineRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Getter;
@@ -42,7 +52,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -55,7 +67,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private VariableCreatorMergeService variableCreatorMergeService;
   @Inject private PMSPipelineServiceHelper pmsPipelineServiceHelper;
   @Inject private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
+  @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject @Getter private final Subject<PipelineActionObserver> pipelineSubject = new Subject<>();
+  @Inject private CommonStepInfo commonStepInfo;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -82,6 +96,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
       throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
 
+    } catch (ExplanationException | ScmException e) {
+      log.error("Error while updating pipeline " + pipelineEntity.getIdentifier(), e);
+      throw e;
     } catch (Exception e) {
       log.error(String.format("Error while saving pipeline [%s]", pipelineEntity.getIdentifier()), e);
       throw new InvalidRequestException(String.format(
@@ -103,12 +120,14 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity) {
+  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity, ChangeType changeType) {
     PMSPipelineServiceHelper.validatePresenceOfRequiredFields(pipelineEntity.getAccountId(),
         pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
 
     if (GitContextHelper.getGitEntityInfo() != null && GitContextHelper.getGitEntityInfo().isNewBranch()) {
-      return makePipelineUpdateCall(pipelineEntity);
+      // sending old entity as null here because a new mongo entity will be created. If audit trail needs to be added
+      // to git synced projects, a get call needs to be added here to the base branch of this pipeline update
+      return makePipelineUpdateCall(pipelineEntity, null, changeType);
     }
     Optional<PipelineEntity> optionalOriginalEntity =
         pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
@@ -124,20 +143,24 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags());
 
-    return makePipelineUpdateCall(tempEntity);
+    return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
   }
 
-  private PipelineEntity makePipelineUpdateCall(PipelineEntity pipelineEntity) {
+  private PipelineEntity makePipelineUpdateCall(
+      PipelineEntity pipelineEntity, PipelineEntity oldEntity, ChangeType changeType) {
     try {
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
       PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
-          entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
+          entityWithUpdatedInfo, oldEntity, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo), changeType);
 
       if (updatedResult == null) {
         throw new InvalidRequestException(format(
             "Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
+
+      pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onUpdate, updatedResult);
+
       return updatedResult;
     } catch (EventsFrameworkDownException ex) {
       log.error("Events framework is down for Pipeline Service.", ex);
@@ -145,6 +168,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     } catch (IOException ex) {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
       throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    } catch (ExplanationException | ScmException e) {
+      log.error("Error while updating pipeline " + pipelineEntity.getIdentifier(), e);
+      throw e;
     } catch (Exception e) {
       log.error(String.format("Error while updating pipeline [%s]", pipelineEntity.getIdentifier()), e);
       throw new InvalidRequestException(String.format(
@@ -211,9 +237,13 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public Page<PipelineEntity> list(
-      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier) {
-    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier);
+  public Page<PipelineEntity> list(Criteria criteria, Pageable pageable, String accountId, String orgIdentifier,
+      String projectIdentifier, Boolean getDistinctFromBranches) {
+    if (Boolean.TRUE.equals(getDistinctFromBranches)
+        && gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)) {
+      return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, true);
+    }
+    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, false);
   }
 
   @Override
@@ -233,6 +263,37 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
+  public StepCategory getStepsV2(String accountId, StepPalleteFilterWrapper stepPalleteFilterWrapper) {
+    Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps =
+        pmsSdkInstanceService.getModuleNameToStepPalleteInfo();
+    if (stepPalleteFilterWrapper.getStepPalleteModuleInfos().isEmpty()) {
+      // Return all the steps.
+      return pmsPipelineServiceStepHelper.getAllSteps(accountId, serviceInstanceNameToSupportedSteps);
+    }
+    StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
+    for (StepPalleteModuleInfo request : stepPalleteFilterWrapper.getStepPalleteModuleInfos()) {
+      String module = request.getModule();
+      String category = request.getCategory();
+      List<StepInfo> stepInfoList = serviceInstanceNameToSupportedSteps.get(module).getStepTypes();
+      if (EmptyPredicate.isEmpty(stepInfoList)) {
+        continue;
+      }
+      if (EmptyPredicate.isNotEmpty(category)) {
+        stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategoryV2(
+            module, category, stepInfoList, accountId));
+      } else {
+        stepCategory.addStepCategory(
+            pmsPipelineServiceStepHelper.calculateStepsForCategory(module, stepInfoList, accountId));
+      }
+    }
+    if (stepPalleteFilterWrapper.isShouldShowCommonSteps()) {
+      stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForCategory(
+          "Common", commonStepInfo.getCommonSteps(stepPalleteFilterWrapper.getCommonStepCategory()), accountId));
+    }
+    return stepCategory;
+  }
+
+  @Override
   public VariableMergeServiceResponse createVariablesResponse(PipelineEntity pipelineEntity) {
     try {
       return variableCreatorMergeService.createVariablesResponse(pipelineEntity.getYaml());
@@ -241,6 +302,22 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new InvalidRequestException(
           format("Error happened while creating variables for pipeline: %s", ex.getMessage()));
     }
+  }
+
+  // Todo: Remove only if there are no references to the pipeline
+  @Override
+  public boolean deleteAllPipelinesInAProject(String accountId, String orgId, String projectId) {
+    Criteria criteria = formCriteria(
+        accountId, orgId, projectId, null, PipelineFilterPropertiesDto.builder().build(), false, null, null);
+    Pageable pageRequest = PageRequest.of(0, 1000, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
+
+    Page<PipelineEntity> pipelineEntities =
+        pmsPipelineRepository.findAll(criteria, pageRequest, accountId, orgId, projectId, false);
+    for (PipelineEntity pipelineEntity : pipelineEntities) {
+      pmsPipelineRepository.deletePipeline(
+          pipelineEntity.withDeleted(true), PipelineYamlDtoMapper.toDto(pipelineEntity.withDeleted(true)));
+    }
+    return true;
   }
 
   @Override

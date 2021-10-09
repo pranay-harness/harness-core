@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -25,7 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.CV)
-public class CVNGLogTest {
+public class CVNGLogTest extends CategoryTest {
   private Instant requestTime;
   private Instant responseTime;
   private String accountId;

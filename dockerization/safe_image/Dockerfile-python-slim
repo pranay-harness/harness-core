@@ -1,8 +1,8 @@
 # Filename: Dockerfile
-FROM harness/python-slim:safe-python3.6.12.slim-sec1232
+FROM harness/python-slim:safe-python3.6.12.slim-sec1338
 CMD ["/bin/bash"]
 
-#Update BaseOS packages
+#Update BaseOS package
 RUN apt-get clean
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get clean

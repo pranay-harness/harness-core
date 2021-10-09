@@ -1,9 +1,12 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.AzureContainerRegistry;
@@ -33,6 +36,7 @@ import javax.ws.rs.QueryParam;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Scope(SETTING)
+@OwnedBy(CDC)
 public class AzureResource {
   @Inject private AzureResourceService azureResourceService;
 
@@ -42,7 +46,7 @@ public class AzureResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> listSubscriptions(
       @QueryParam("accountId") String accountId, @QueryParam("cloudProviderId") String cloudProviderId) {
-    return new RestResponse(azureResourceService.listSubscriptions(cloudProviderId));
+    return new RestResponse(azureResourceService.listSubscriptions(accountId, cloudProviderId));
   }
 
   @GET
@@ -104,7 +108,7 @@ public class AzureResource {
   public RestResponse<List<AzureResourceGroup>> listResourceGroups(@QueryParam("accountId") String accountId,
       @QueryParam("cloudProviderId") String cloudProviderId,
       @PathParam(value = "subscriptionId") String subscriptionId) {
-    return new RestResponse(azureResourceService.listResourceGroups(cloudProviderId, subscriptionId));
+    return new RestResponse(azureResourceService.listResourceGroups(accountId, cloudProviderId, subscriptionId));
   }
 
   @GET
@@ -115,7 +119,7 @@ public class AzureResource {
       @QueryParam("cloudProviderId") String cloudProviderId, @PathParam(value = "subscriptionId") String subscriptionId,
       @PathParam(value = "resourceGroupName") String resourceGroupName) {
     return new RestResponse(
-        azureResourceService.listImageGalleries(cloudProviderId, subscriptionId, resourceGroupName));
+        azureResourceService.listImageGalleries(accountId, cloudProviderId, subscriptionId, resourceGroupName));
   }
 
   @GET
@@ -128,8 +132,8 @@ public class AzureResource {
       @PathParam(value = "subscriptionId") String subscriptionId,
       @PathParam(value = "resourceGroupName") String resourceGroupName,
       @PathParam(value = "galleryName") String galleryName) {
-    return new RestResponse(
-        azureResourceService.listImageDefinitions(cloudProviderId, subscriptionId, resourceGroupName, galleryName));
+    return new RestResponse(azureResourceService.listImageDefinitions(
+        accountId, cloudProviderId, subscriptionId, resourceGroupName, galleryName));
   }
   /**
    * List Azure regions.

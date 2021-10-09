@@ -5,7 +5,9 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.RepairActionCode;
 
 import software.wings.api.SkipStateExecutionData;
@@ -23,6 +25,7 @@ import org.apache.commons.jexl3.JexlException;
 import org.slf4j.Logger;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface WorkflowState {
   List<String> getRuntimeInputVariables();
   long getTimeout();

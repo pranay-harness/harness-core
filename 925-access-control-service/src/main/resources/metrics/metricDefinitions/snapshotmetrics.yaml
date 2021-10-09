@@ -1,5 +1,6 @@
 name: Aggregator Snapshot Metrics
 identifier: aggregatorSnapshotMetrics
+metricGroup: aggregatorMetricsGroup
 metrics:
   - metricName: aggregator_snapshot_millisSinceLastEvent
     metricDefinition: Milliseconds since last event

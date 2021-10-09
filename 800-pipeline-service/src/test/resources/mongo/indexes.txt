@@ -33,7 +33,8 @@ delayQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 delegateCallbacks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateProfiles {"name": "byAcctNgOwner", "background": true} {"accountId": 1, "ng": 1, "owner": 1}
 delegateProfiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
-delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
+delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1, "owner": 1}
+delegateProfiles {"name": "unique_identification", "unique": true} {"accountId": 1, "owner": 1, "identifier": 1}
 delegateScopes {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateScopes {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
@@ -53,25 +54,46 @@ encryptedRecords {"name": "ngSecretManagerIdx", "background": true} {"ngMetadata
 encryptedRecords {"name": "ngSecretManagerTypeIdx", "background": true} {"accountId": 1, "type": 1, "createdAt": 1}
 encryptedRecords {"name": "parents_1", "background": true} {"parents": 1}
 encryptedRecords {"name": "path_1", "background": true} {"path": 1}
+entitySetupUsage {"name": "EntitySetupUsage_unique_index", "unique": true} {"referredByEntityType": 1, "referredByEntityFQN": 1, "referredByEntityRepoIdentifier": 1, "referredByEntityBranch": 1, "referredEntityType": 1, "referredEntityFQN": 1, "referredEntityRepoIdentifier": 1, "referredEntityBranch": 1, "accountIdentifier": 1}
+entitySetupUsage {"name": "ReferredByEntityIndex", "background": true} {"accountIdentifier": 1, "referredByEntityType": 1, "referredByEntityFQN": 1}
+entitySetupUsage {"name": "ReferredEntityIndex", "background": true} {"accountIdentifier": 1, "referredEntityType": 1, "referredEntityFQN": 1}
+entitySetupUsage {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
+entitySetupUsage {"name": "account_referredByFQN_referredByIsDefault_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
+entitySetupUsage {"name": "account_referredBy_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
+entitySetupUsage {"name": "account_referredBy_referred_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityFQN": 1, "referredEntityType": 1}
+entitySetupUsage {"name": "account_referredBy_referred_type_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "createdAt": 1}
+entitySetupUsage {"name": "referredByEntityFQN_1", "background": true} {"referredByEntityFQN": 1}
+entitySetupUsage {"name": "referredEntityFQN_1", "background": true} {"referredEntityFQN": 1}
+environmentsNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 executionSweepingOutput {"name": "unique_levelRuntimeIdUniqueIdx2", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
 executionSweepingOutput {"name": "validUntil_1", "background": true} {"validUntil": 1}
 featureFlag {"name": "name_1", "background": true} {"name": 1}
 filters {"name": "unique_accountId_orgId_projectId_name_type_Index", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "name": 1, "filterType": 1}
 filters {"name": "unique_accountId_organizationId_projectId_type", "unique": true} {"fullyQualifiedIdentifier": 1, "filterType": 1}
+gitProcessRequestSdk {"name": "accountId_repo_branch_commit_index", "background": true} {"accountId": 1, "repoUrl": 1, "branch": 1, "commitId": 1}
 harnessApiKeys {"name": "clientType_1", "background": true} {"clientType": 1}
 inputSetsPMS {"name": "createdAt_1", "background": true} {"createdAt": 1}
 inputSetsPMS {"name": "unique_accountId_organizationId_projectId_pipelineId_inputSetId_repo_branch", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "pipelineIdentifier": 1, "identifier": 1, "yamlGitConfigRef": 1, "branch": 1}
+interrupts {"name": "planExecutionId_createdAt_idx", "background": true} {"planExecutionId": 1, "createdAt": -1}
+interrupts {"name": "planExecutionId_nodeExecutionId_createdAt_idx", "background": true} {"planExecutionId": 1, "nodeExecutionId": 1, "createdAt": -1}
+interrupts {"name": "planExecutionId_state_type_createdAt_idx", "background": true} {"planExecutionId": 1, "state": 1, "type": 1, "createdAt": -1}
+interrupts {"name": "state_type_monitoring_createdAt_idx", "background": true} {"state": 1, "type": 1, "createdAt": -1}
+interrupts {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 kmsTransitionEvent2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 kmsTransitionEvent2 {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 nodeExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 nodeExecutions {"name": "parentId_status_idx", "background": true} {"parentId": 1, "status": 1, "oldRetry": 1}
 nodeExecutions {"name": "planExecutionId_mode_status_oldRetry_idx", "background": true} {"ambiance.planExecutionId": 1, "mode": 1, "status": 1, "oldRetry": 1}
+nodeExecutions {"name": "planExecutionId_nodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "node.identifier": 1}
 nodeExecutions {"name": "planExecutionId_notifyId_idx", "background": true} {"ambiance.planExecutionId": 1, "notifyId": 1}
 nodeExecutions {"name": "planExecutionId_oldRetry_idx", "background": true} {"ambiance.planExecutionId": 1, "oldRetry": 1}
 nodeExecutions {"name": "planExecutionId_parentId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1, "status": 1}
-nodeExecutions {"name": "planExecutionId_planNodeId_idx", "background": true} {"ambiance.planExecutionId": 1, "node.uuid": 1}
-nodeExecutions {"name": "planExecutionId_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "node.identifier": 1}
+nodeExecutions {"name": "planExecutionId_planNodeId_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.uuid": 1}
+nodeExecutions {"name": "planExecutionId_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.identifier": 1}
+nodeExecutions {"name": "planExecutionId_stageFqn_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.stageFqn": 1}
 nodeExecutions {"name": "planExecutionId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "status": 1}
+nodeExecutions {"name": "planExecutionId_stepCategory_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.stepType.stepCategory": 1, "planNode.identifier": 1}
+nodeExecutions {"name": "planExecutionId_step_category_idx", "background": true} {"ambiance.planExecutionId": 1, "node.stepType.stepCategory": 1}
 nodeExecutions {"name": "previous_id_idx", "background": true} {"previousId": 1}
 nodeExecutions {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 notifyQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
@@ -82,13 +104,13 @@ notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds
 orchestrationEventLog {"name": "createdAt", "background": true} {"createdAt": 1}
 orchestrationEventLog {"name": "planExecutionId_createdAt", "background": true} {"planExecutionId": 1, "createdAt": 1}
 orchestrationEventLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
+outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
+outcomeInstances {"name": "producedByRuntimeIdIdx", "background": true} {"producedBy.runtimeId": 1}
 outcomeInstances {"name": "unique_levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
 outcomeInstances {"name": "unique_producedBySetupIdRuntimeIdIdx", "unique": true} {"planExecutionId": 1, "producedBy.setupId": 1, "producedBy.runtimeId": 1, "name": 1}
 outcomeInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-pipelineExecutionSummary {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+perpetualTaskScheduleConfig {"name": "unique_perpetualTaskScheduleConfig_index1", "unique": true} {"accountId": 1, "perpetualTaskType": 1}
 pipelinesPMS {"name": "accountId_organizationId_projectId_lastUpdatedAt", "background": true} {"accountId": 1, "orgIdentifier": 1, "lastUpdatedAt": 1, "projectIdentifier": 1}
 pipelinesPMS {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pipelinesPMS {"name": "lastUpdatedAt_idx", "background": true} {"lastUpdatedAt": 1}
@@ -114,16 +136,17 @@ primaryVersion {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt":
 progressUpdate {"name": "correlation", "background": true} {"correlationId": 1, "createdAt": -1}
 progressUpdate {"name": "createdAt_1", "background": true} {"createdAt": 1}
 progressUpdate {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-resourceConstraint {"name": "createdAt_1", "background": true} {"createdAt": 1}
-resourceConstraint {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 resourceRestraintInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
 resourceRestraintInstances {"name": "next_iteration_idx", "background": true} {"state": 1, "nextIteration": 1}
 resourceRestraintInstances {"name": "releaseEntityType_releaseEntityId_idx", "background": true} {"releaseEntityType": 1, "releaseEntityId": 1}
 resourceRestraintInstances {"name": "resourceRestraintId_order_idx", "background": true} {"resourceRestraintId": 1, "order": 1}
 resourceRestraintInstances {"name": "resourceRestraintId_resourceUnit_order_idx", "unique": true} {"resourceRestraintId": 1, "resourceUnit": 1, "order": 1}
 resourceRestraintInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+resourceRestraints {"name": "createdAt_1", "background": true} {"createdAt": 1}
+resourceRestraints {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 secretChangeLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
 secretChangeLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
+secretManagerRuntimeParameters {"name": "executionId_1", "background": true} {"executionId": 1}
 secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}
 secretManagers {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretManagers {"name": "identifierCheckIdx", "background": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
@@ -135,8 +158,9 @@ secretUsageLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId
 secretUsageLogs {"name": "appId_1", "background": true} {"appId": 1}
 secretUsageLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretUsageLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-secrets {"name": "unique_identification", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 serviceSecrets {"name": "serviceType_1", "unique": true} {"serviceType": 1}
+stepDetailInstance {"name": "nodeExecutionId_name_unique_idx", "unique": true} {"nodeExecutionId": 1, "name": 1}
+stepDetailInstance {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 taskSelectorMaps {"name": "createdAt_1", "background": true} {"createdAt": 1}
 taskSelectorMaps {"name": "uniqueGroup", "unique": true} {"accountId": 1, "taskGroup": 1}
 timeoutInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -147,6 +171,7 @@ triggerEventHistory {"name": "accountId_eventCorrelationId", "background": true}
 triggerEventHistory {"name": "las", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "triggerIdentifier": 1, "targetIdentifier": 1, "createdAt": -1}
 triggerEventHistory {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 triggerWebhookEvents {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+triggersNG {"name": "accId_signature_index", "background": true} {"accountId": 1, "metadata.buildMetadata.pollingConfig.signature": 1}
 triggersNG {"name": "accId_sourcerepo_index", "background": true} {"accountId": 1, "metadata.webhook.type": 1}
 triggersNG {"name": "nextIterations_1", "background": true} {"nextIterations": 1}
 triggersNG {"name": "type_repoUrl", "background": true} {"type": 1, "metadata.webhook.git.connectorIdentifier": 1, "accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1}

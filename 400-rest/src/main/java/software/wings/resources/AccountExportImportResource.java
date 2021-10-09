@@ -135,7 +135,6 @@ public class AccountExportImportResource {
   private static final String COLLECTION_CONFIG_FILES = "configs.files";
   private static final String COLLECTION_CONFIG_CHUNKS = "configs.chunks";
   private static final String COLLECTION_QUARTZ_JOBS = "quartz_jobs";
-
   private static final String JSON_FILE_SUFFIX = ".json";
   private static final String ZIP_FILE_SUFFIX = ".zip";
 
@@ -229,7 +228,10 @@ public class AccountExportImportResource {
       @QueryParam("entityTypes") List<String> entityTypes,
       @QueryParam("collectionName") String collectionNameToBeExported,
       @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchNumber") int batchNumber,
-      @QueryParam("batchSize") int batchSize, @QueryParam("mongoBatchSize") int mongoBatchSize) throws Exception {
+      @QueryParam("batchSize") int batchSize, @QueryParam("mongoBatchSize") int mongoBatchSize,
+      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter,
+      @QueryParam("exportRecordsCreatedAfter") long exportRecordsCreatedAfter,
+      @QueryParam("identifiers") List<String> identifiers) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
@@ -341,7 +343,8 @@ public class AccountExportImportResource {
             }
             String collectionName = getCollectionName(entityClazz);
             mongoExportImport.exportRecords(zipOutputStream, fileOutputStream, exportFilter, collectionName,
-                batchNumber, batchSize, mongoBatchSize);
+                batchNumber, batchSize, mongoBatchSize, identifiers, exportRecordsUpdatedAfter,
+                exportRecordsCreatedAfter);
           }
         }
       }
@@ -381,7 +384,10 @@ public class AccountExportImportResource {
       @QueryParam("entityTypes") List<String> entityTypes,
       @QueryParam("collectionName") String collectionNameToBeExported,
       @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchSize") int batchSize,
-      @QueryParam("mongoBatchSize") int mongoBatchSize) throws Exception {
+      @QueryParam("mongoBatchSize") int mongoBatchSize,
+      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter,
+      @QueryParam("exportRecordsCreatedAfter") long exportRecordsCreatedAfter,
+      @QueryParam("identifiers") List<String> identifiers) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
@@ -492,8 +498,8 @@ public class AccountExportImportResource {
               exportFilter = accountOrAppIdsFilter;
             }
             String collectionName = getCollectionName(entityClazz);
-            mongoExportImport.exportRecords(
-                zipOutputStream, fileOutputStream, exportFilter, collectionName, batchSize, mongoBatchSize);
+            mongoExportImport.exportRecords(zipOutputStream, fileOutputStream, exportFilter, collectionName, batchSize,
+                mongoBatchSize, identifiers, exportRecordsUpdatedAfter, exportRecordsCreatedAfter);
           }
         }
       }
@@ -1135,7 +1141,16 @@ public class AccountExportImportResource {
         while ((len = zipInputStream.read(buffer)) > 0) {
           outputStream.write(buffer, 0, len);
         }
-        collectionDataMap.put(zipEntry.getName(), new String(outputStream.toByteArray(), Charset.defaultCharset()));
+        if (StringUtils.isNotBlank(zipEntry.getName())) {
+          String[] parts = zipEntry.getName().split("/");
+          String zipEntryName;
+          if (parts.length > 1) {
+            zipEntryName = parts[parts.length - 1];
+          } else {
+            zipEntryName = zipEntry.getName();
+          }
+          collectionDataMap.put(zipEntryName, new String(outputStream.toByteArray(), Charset.defaultCharset()));
+        }
       }
       return collectionDataMap;
     }

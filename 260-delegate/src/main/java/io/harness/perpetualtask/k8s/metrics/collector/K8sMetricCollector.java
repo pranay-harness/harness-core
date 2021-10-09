@@ -12,7 +12,7 @@ import static java.util.Optional.ofNullable;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.health.HealthStatusService;
+import io.harness.ccm.commons.constants.Constants;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.AggregatedStorage;
 import io.harness.event.payloads.AggregatedUsage;
@@ -31,6 +31,7 @@ import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.recommender.ContainerState;
+import io.harness.perpetualtask.k8s.utils.ApiExceptionLogger;
 import io.harness.perpetualtask.k8s.watch.K8sResourceStandardizer;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -39,9 +40,9 @@ import com.google.common.collect.ImmutableMap;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Value;
@@ -65,7 +66,7 @@ public class K8sMetricCollector {
   private final EventPublisher eventPublisher;
   private final ClusterDetails clusterDetails;
   // to make sure that PVMetric is collected only once for a single node in a single window.
-  private final Map<String, Boolean> isNodeProcessed = new HashMap<>();
+  private final Map<String, Boolean> isNodeProcessed = new ConcurrentHashMap<>();
 
   private final Cache<CacheKey, Aggregates> podMetricsCache = Caffeine.newBuilder().build();
   private final Cache<CacheKey, Aggregates> nodeMetricsCache = Caffeine.newBuilder().build();
@@ -122,7 +123,7 @@ public class K8sMetricCollector {
         }
         isNodeProcessed.put(nodeName, Boolean.TRUE);
       } catch (Exception ex) {
-        log.warn("Failed to collect pvMetrics for node:{}", nodeName, ex);
+        ApiExceptionLogger.logWarnIfNotSeenRecently(ex, "Failed to collect pvMetrics for node:" + nodeName);
       }
     });
   }
@@ -195,7 +196,7 @@ public class K8sMetricCollector {
         })
         .forEach(nodeMetric
             -> eventPublisher.publishMessage(nodeMetric, nodeMetric.getTimestamp(),
-                ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
+                ImmutableMap.of(Constants.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
     nodeMetricsCache.invalidateAll();
   }
 
@@ -222,7 +223,7 @@ public class K8sMetricCollector {
         })
         .forEach(pvMetric
             -> eventPublisher.publishMessage(pvMetric, pvMetric.getTimestamp(),
-                ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
+                ImmutableMap.of(Constants.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
     pvMetricsCache.invalidateAll();
   }
 
@@ -250,7 +251,7 @@ public class K8sMetricCollector {
         })
         .forEach(podMetric
             -> eventPublisher.publishMessage(podMetric, podMetric.getTimestamp(),
-                ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
+                ImmutableMap.of(Constants.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
     podMetricsCache.invalidateAll();
   }
 
@@ -281,7 +282,7 @@ public class K8sMetricCollector {
         })
         .forEach(containerStateProto
             -> eventPublisher.publishMessage(containerStateProto, containerStateProto.getFirstSampleStart(),
-                ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
+                ImmutableMap.of(Constants.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
     containerStatesCache.invalidateAll();
   }
 }

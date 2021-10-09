@@ -1,12 +1,17 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.validation.Create;
 
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Iterator;
@@ -18,6 +23,8 @@ import org.hibernate.validator.constraints.NotBlank;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 // TODO: Create settings helper classes such as LdapHelper, SamlHelper, etc.
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
+@OwnedBy(HarnessTeam.PL)
 public interface SSOSettingService extends OwnedByAccount {
   SamlSettings getSamlSettingsByIdpUrl(@NotNull String idpUrl);
 
@@ -35,7 +42,7 @@ public interface SSOSettingService extends OwnedByAccount {
 
   SamlSettings getSamlSettingsByOrigin(@NotNull String origin);
 
-  Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin);
+  Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin, String accountId);
 
   LdapSettings createLdapSettings(@NotNull LdapSettings settings);
 
@@ -95,4 +102,12 @@ public interface SSOSettingService extends OwnedByAccount {
    * @return
    */
   List<SSOSettings> getAllSsoSettings(String accountId);
+
+  /**
+   * Get set of next iterations for a given Cron expressions
+   * @param accountId
+   * @param cron
+   * @return
+   */
+  List<Long> getIterationsFromCron(String accountId, String cron);
 }

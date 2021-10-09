@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPS|PL|SEC|SWAT|GTM|ONP"
+PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPS|PIE|PL|SEC|SWAT|GTM|ONP"
 
 # Check for not merged hot fixes
 git log --remotes=origin/release/* --pretty=oneline --abbrev-commit | grep -iE "\[(${PROJECTS})-[0-9]+]:" -o | sort | uniq > release.txt
@@ -29,6 +29,7 @@ export SHA=`git rev-parse HEAD`
 
 # Update jira issues
 scripts/jenkins/release-branch-update-jiras.sh
+scripts/jenkins/release-branch-update-jira_status.sh
 
 # Prepare new release commit
 git checkout ${BRANCH}

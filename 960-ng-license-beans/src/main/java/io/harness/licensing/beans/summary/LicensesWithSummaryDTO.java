@@ -2,6 +2,7 @@ package io.harness.licensing.beans.summary;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.Edition;
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,8 +36,10 @@ import lombok.experimental.SuperBuilder;
           @JsonSubTypes.Type(value = CVLicenseSummaryDTO.class, name = "CV"),
           @JsonSubTypes.Type(value = CFLicenseSummaryDTO.class, name = "CF"),
     })
+@Schema(name = "LicensesWithSummary", description = "This is the view of a License With Summary defined in Harness")
 public abstract class LicensesWithSummaryDTO {
   Edition edition;
   LicenseType licenseType;
+  ModuleType moduleType;
   long maxExpiryTime;
 }

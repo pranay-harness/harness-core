@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -15,6 +16,7 @@ import static software.wings.settings.SettingVariableTypes.GCP_KMS;
 import static software.wings.utils.Utils.isJSONValid;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
@@ -43,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 @Slf4j
 public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements GcpSecretsManagerService {
   private static final String CREDENTIAL_SUFFIX = "_credentials";
@@ -120,10 +123,11 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
 
     boolean updateCallWithMaskedSecretKey = false;
-
+    savedGcpKmsConfig.setRegion(gcpKmsConfig.getRegion());
     savedGcpKmsConfig.setName(gcpKmsConfig.getName());
     savedGcpKmsConfig.setDefault(gcpKmsConfig.isDefault());
     savedGcpKmsConfig.setUsageRestrictions(gcpKmsConfig.getUsageRestrictions());
+    savedGcpKmsConfig.setDelegateSelectors(gcpKmsConfig.getDelegateSelectors());
 
     if (SECRET_MASK.equals(String.valueOf(gcpKmsConfig.getCredentials()))) {
       updateCallWithMaskedSecretKey = true;

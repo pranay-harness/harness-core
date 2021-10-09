@@ -2,8 +2,9 @@ package io.harness.cdng.service.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceEntityVisitorHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -21,6 +22,7 @@ import lombok.experimental.Wither;
 @Builder
 @SimpleVisitorHelper(helperClass = ServiceEntityVisitorHelper.class)
 @OwnedBy(CDC)
+@RecasterAlias("io.harness.cdng.service.beans.ServiceYaml")
 public class ServiceYaml implements Visitable {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private String identifier;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private String name;

@@ -48,5 +48,11 @@ public class AwsConfigTest extends WingsBaseTest {
     assertThat(requiredExecutionCapabilities.size()).isEqualTo(2);
     assertThat(requiredExecutionCapabilities.get(0) instanceof HttpConnectionExecutionCapability).isTrue();
     assertThat(requiredExecutionCapabilities.get(1) instanceof SelectorCapability).isTrue();
+
+    awsConfig.setUseEc2IamCredentials(false);
+    awsConfig.setUseIRSA(true);
+    assertThat(requiredExecutionCapabilities.size()).isEqualTo(2);
+    assertThat(requiredExecutionCapabilities.get(0) instanceof HttpConnectionExecutionCapability).isTrue();
+    assertThat(requiredExecutionCapabilities.get(1) instanceof SelectorCapability).isTrue();
   }
 }

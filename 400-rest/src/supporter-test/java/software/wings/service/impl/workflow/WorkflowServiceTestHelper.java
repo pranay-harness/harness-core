@@ -80,9 +80,15 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.RepairActionCode;
 import io.harness.beans.WorkflowType;
 
@@ -124,11 +130,12 @@ import software.wings.sm.StateType;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowServiceTestHelper {
   public static Workflow constructCustomWorkflow() {
     Graph graph = aGraph()
@@ -1303,7 +1310,7 @@ public class WorkflowServiceTestHelper {
                                       .infraMappingId(INFRA_MAPPING_ID)
                                       .serviceId(SERVICE_ID)
                                       .deploymentType(AMI)
-                                      .phaseSteps(Collections.singletonList(
+                                      .phaseSteps(singletonList(
                                           aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE, SPOTINST_LISTENER_UPDATE)
                                               .addStep(GraphNode.builder()
                                                            .type(StateType.SPOTINST_LISTENER_ALB_SHIFT.name())
@@ -1311,7 +1318,7 @@ public class WorkflowServiceTestHelper {
                                                            .build())
                                               .build()))
                                       .build())
-                .withRollbackWorkflowPhaseIdMap(Collections.emptyMap())
+                .withRollbackWorkflowPhaseIdMap(emptyMap())
                 .build())
         .build();
   }

@@ -6,8 +6,11 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.security.encryption.EncryptedDataDetail;
 
+import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -16,6 +19,7 @@ import lombok.Value;
 @Builder
 @OwnedBy(HarnessTeam.DX)
 public class ScmPathFilterEvaluationTaskParams implements TaskParameters, ExecutionCapabilityDemander {
+  List<EncryptedDataDetail> encryptedDataDetails;
   ScmConnector scmConnector;
   // file, operator, standard
   String operator;
@@ -29,6 +33,7 @@ public class ScmPathFilterEvaluationTaskParams implements TaskParameters, Execut
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return null;
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        scmConnector.getUrl(), maskingEvaluator));
   }
 }

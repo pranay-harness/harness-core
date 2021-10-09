@@ -9,26 +9,20 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
-import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
@@ -57,10 +51,15 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@BreakDependencyOn("io.harness.beans.Cd1SetupFields")
+@BreakDependencyOn("software.wings.WingsBaseTest")
+@BreakDependencyOn("software.wings.beans.Application")
+@BreakDependencyOn("software.wings.beans.Environment")
+@BreakDependencyOn("software.wings.beans.Service")
+@BreakDependencyOn("software.wings.dl.WingsPersistence")
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
@@ -81,7 +80,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
   private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
 
-  @Mock private FeatureFlagService featureFlagService;
   @Inject protected WingsPersistence wingsPersistence;
   @InjectMocks @Inject DelegateSelectionLogsServiceImpl delegateSelectionLogsService;
 
@@ -116,36 +114,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void shouldNotSaveWhenBatchIsNullOrNoLogs() {
-    delegateSelectionLogsService.save(null);
-    delegateSelectionLogsService.save(BatchDelegateSelectionLog.builder().build());
-
-    verify(featureFlagService, never()).isNotEnabled(eq(FeatureName.DISABLE_DELEGATE_SELECTION_LOG), anyString());
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldNotSaveWhenFFDisabled() {
-    DelegateSelectionLog selectionLog = createDelegateSelectionLogBuilder().uuid(generateUuid()).build();
-    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder().build();
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
-                                          .delegateSelectionLogs(Arrays.asList(selectionLog))
-                                          .taskMetadata(taskMetadata)
-                                          .build();
-    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
-        .thenReturn(true);
-
-    delegateSelectionLogsService.save(batch);
-
-    assertThat(wingsPersistence.get(DelegateSelectionLog.class, selectionLog.getUuid())).isNull();
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldSaveWhenFFEnabled() {
+  public void shouldSaveSelectionLog() {
     DelegateSelectionLog selectionLog =
         createDelegateSelectionLogBuilder().uuid(generateUuid()).message("ffenabled").groupId(generateUuid()).build();
 
@@ -160,8 +129,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
                                           .taskMetadata(taskMetadata)
                                           .build();
-    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
-        .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
 
@@ -181,25 +148,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldNotSave_OnlyLogWhenFFEnabled() {
-    DelegateSelectionLog selectionLog =
-        createDelegateSelectionLogBuilder().uuid(generateUuid()).message("testMessage").groupId(generateUuid()).build();
-    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder().build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
-                                          .delegateSelectionLogs(Arrays.asList(selectionLog))
-                                          .taskMetadata(taskMetadata)
-                                          .build();
-    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
-        .thenReturn(true);
-
-    delegateSelectionLogsService.save(batch);
-
-    assertThat(wingsPersistence.get(DelegateSelectionLog.class, selectionLog.getUuid())).isNull();
-  }
-
-  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldSaveWithoutDuplicates() {
@@ -208,7 +156,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLog.class);
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLogTaskMetadata.class);
-    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
 
     DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
                                                         .taskId(taskId)
@@ -256,20 +203,25 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldCreateBatch() {
-    DelegateTask task = DelegateTask.builder().uuid(generateUuid()).selectionLogsTrackingEnabled(true).build();
+    DelegateTask task = DelegateTask.builder()
+                            .uuid(generateUuid())
+                            .setupAbstraction("ng", "true")
+                            .selectionLogsTrackingEnabled(true)
+                            .build();
     BatchDelegateSelectionLog batchDelegateSelectionLog = delegateSelectionLogsService.createBatch(task);
 
     assertThat(batchDelegateSelectionLog).isNotNull();
     assertThat(batchDelegateSelectionLog.getDelegateSelectionLogs()).isNotNull();
     assertThat(batchDelegateSelectionLog.getDelegateSelectionLogs()).isEmpty();
     assertThat(batchDelegateSelectionLog.getTaskId()).isEqualTo(task.getUuid());
+    assertThat(batchDelegateSelectionLog.isTaskNg()).isTrue();
   }
 
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogCanAssign() {
-    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -300,7 +252,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldNotLogTaskAssigned() {
-    assertThatCode(() -> delegateSelectionLogsService.logTaskAssigned(null, null, null)).doesNotThrowAnyException();
+    assertThatCode(() -> delegateSelectionLogsService.logTaskAssigned(null, null, "")).doesNotThrowAnyException();
   }
 
   @Test
@@ -329,7 +281,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogNoIncludeScopeMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -371,7 +323,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogExcludeScopeMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logExcludeScopeMatched(null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logExcludeScopeMatched(null, null, "", null))
         .doesNotThrowAnyException();
   }
 
@@ -413,7 +365,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldNotLogProfileScopeRuleNotMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logProfileScopeRuleNotMatched(null, null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logProfileScopeRuleNotMatched(null, null, "", null, null))
         .doesNotThrowAnyException();
   }
 
@@ -536,7 +488,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   public void shouldNotLogMissingAllSelectors() {
     DelegateSelectionLogsServiceImpl delegateSelectionLogsService = new DelegateSelectionLogsServiceImpl();
 
-    assertThatCode(() -> delegateSelectionLogsService.logMissingAllSelectors(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMissingAllSelectors(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -578,7 +530,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogMissingSelector() {
-    assertThatCode(() -> delegateSelectionLogsService.logMissingSelector(null, null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMissingSelector(null, null, "", null, null))
         .doesNotThrowAnyException();
   }
 
@@ -999,7 +951,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldNotLogMustExecuteOnDelegateMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateMatched(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateMatched(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -1093,7 +1045,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldNotLogMustExecuteOnDelegateNotMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -1124,11 +1076,11 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void shouldNotLogOwnerRuleNotMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logOwnerRuleNotMatched(null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logOwnerRuleNotMatched(null, null, "", null))
         .doesNotThrowAnyException();
     assertThatCode(()
                        -> delegateSelectionLogsService.logOwnerRuleNotMatched(
-                           BatchDelegateSelectionLog.builder().build(), null, null, null))
+                           BatchDelegateSelectionLog.builder().build(), null, "", null))
         .doesNotThrowAnyException();
   }
 

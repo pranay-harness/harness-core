@@ -2,10 +2,8 @@ package io.harness.delegate.cf;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.task.pcf.CfCommandRequest;
@@ -31,7 +29,6 @@ import org.cloudfoundry.operations.applications.InstanceDetail;
 @NoArgsConstructor
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
 public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandler {
   @Override
@@ -81,12 +78,8 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       cfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       cfInstanceSyncResponse.setOutput(StringUtils.EMPTY);
     } catch (Exception e) {
-      log.warn(new StringBuilder(128)
-                   .append("Failed while collecting PCF Application Details For Application: ")
-                   .append(((CfInstanceSyncRequest) cfCommandRequest).getPcfApplicationName())
-                   .append(", with Error: ")
-                   .append(e)
-                   .toString());
+      log.warn("Failed while collecting PCF Application Details For Application: {}, with Error: {}",
+          ((CfInstanceSyncRequest) cfCommandRequest).getPcfApplicationName(), e);
       cfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       cfInstanceSyncResponse.setOutput(ExceptionUtils.getMessage(e));
     }

@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.notification.PipelineEventType;
 import io.harness.observer.AsyncInformObserver;
@@ -27,7 +28,7 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncInformObs
   @Override
   public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
     NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
-    if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name())) {
+    if (OrchestrationUtils.isStageNode(nodeExecution)) {
       Optional<PipelineEventType> pipelineEventType = notificationHelper.getEventTypeForStage(nodeExecution);
       pipelineEventType.ifPresent(eventType
           -> notificationHelper.sendNotification(
@@ -41,7 +42,7 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncInformObs
         || nodeExecution.getNode().getIdentifier().endsWith(OrchestrationConstants.ROLLBACK_NODE_NAME)) {
       return;
     }
-    if (!Objects.equals(nodeExecution.getNode().getSkipType(), SkipType.SKIP_NODE)
+    if (!Objects.equals(nodeExecution.getNode().getSkipGraphType(), SkipType.SKIP_NODE)
         && StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())) {
       notificationHelper.sendNotification(
           nodeExecution.getAmbiance(), PipelineEventType.STEP_FAILED, nodeExecution, nodeUpdateInfo.getUpdatedTs());

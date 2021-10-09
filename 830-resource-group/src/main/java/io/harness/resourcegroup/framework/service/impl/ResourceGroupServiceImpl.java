@@ -2,125 +2,108 @@ package io.harness.resourcegroup.framework.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.stripToNull;
 
-import io.harness.accesscontrol.AccessControlAdminClient;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 import io.harness.beans.SortOrder;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
-import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.NGObjectMapperHelper;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.framework.events.ResourceGroupCreateEvent;
 import io.harness.resourcegroup.framework.events.ResourceGroupDeleteEvent;
 import io.harness.resourcegroup.framework.events.ResourceGroupUpdateEvent;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.repositories.spring.ResourceGroupRepository;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
-import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
-import io.harness.resourcegroup.model.ResourceSelector;
-import io.harness.resourcegroup.model.StaticResourceSelector;
+import io.harness.resourcegroup.model.StaticResourceSelector.StaticResourceSelectorKeys;
+import io.harness.resourcegroup.remote.dto.ManagedFilter;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
-import io.harness.utils.PaginationUtils;
-import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import javax.validation.executable.ValidateOnExecution;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 @OwnedBy(PL)
+@ValidateOnExecution
 public class ResourceGroupServiceImpl implements ResourceGroupService {
-  private static final String DEFAULT_COLOR = "#0063F7";
   ResourceGroupValidatorServiceImpl resourceGroupValidatorService;
   ResourceGroupRepository resourceGroupRepository;
   OutboxService outboxService;
-  AccessControlAdminClient accessControlAdminClient;
   TransactionTemplate transactionTemplate;
-
-  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
   public ResourceGroupServiceImpl(ResourceGroupValidatorServiceImpl resourceGroupValidatorService,
       ResourceGroupRepository resourceGroupRepository, OutboxService outboxService,
-      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
     this.resourceGroupValidatorService = resourceGroupValidatorService;
     this.resourceGroupRepository = resourceGroupRepository;
     this.outboxService = outboxService;
-    this.accessControlAdminClient = accessControlAdminClient;
     this.transactionTemplate = transactionTemplate;
   }
 
   @Override
-  public ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO) {
+  public ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO, boolean harnessManaged) {
     ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    ResourceGroup createdResourceGroup;
+    resourceGroup.setHarnessManaged(harnessManaged);
+    return ResourceGroupMapper.toResponseWrapper(create(resourceGroup));
+  }
+
+  private ResourceGroup create(ResourceGroup resourceGroup) {
     try {
-      createdResourceGroup = create(resourceGroup);
+      return createInternal(resourceGroup);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           String.format("A resource group with identifier %s already exists at the specified scope",
               resourceGroup.getIdentifier()),
           USER_SRE, ex);
     }
-    return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
   }
 
   @Override
-  public ResourceGroupResponse createManagedResourceGroup(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, ResourceGroupDTO resourceGroupDTO) {
-    ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    resourceGroup.setHarnessManaged(true);
-    ResourceGroup createdResourceGroup = null;
+  public void createManagedResourceGroup(Scope scope) {
     try {
-      createdResourceGroup = create(resourceGroup);
-    } catch (DuplicateKeyException ex) {
-      log.error("Resource group with identifier {}/{} already present",
-          ScopeUtils.toString(accountIdentifier, orgIdentifier, projectIdentifier), resourceGroupDTO.getIdentifier());
+      create(ResourceGroup.getHarnessManagedResourceGroup(scope));
+    } catch (DuplicateFieldException ex) {
+      // Ignore
     }
-    return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
   }
 
-  private ResourceGroup create(ResourceGroup resourceGroup) {
-    preprocessResourceGroup(resourceGroup);
-    resourceGroupValidatorService.validate(resourceGroup);
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+  private ResourceGroup createInternal(ResourceGroup resourceGroup) {
+    boolean sanitized = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
+    if (sanitized && resourceGroup.getResourceSelectors().isEmpty()) {
+      throw new InvalidRequestException("All selected resources are invalid");
+    }
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
       outboxService.save(new ResourceGroupCreateEvent(
           savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(savedResourceGroup)));
@@ -129,8 +112,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      PageRequest pageRequest, String searchTerm) {
+  public Page<ResourceGroupResponse> list(Scope scope, PageRequest pageRequest, String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder harnessManagedOrder =
           SortOrder.Builder.aSortOrder().withField(ResourceGroupKeys.harnessManaged, SortOrder.OrderType.DESC).build();
@@ -139,156 +121,227 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       pageRequest.setSortOrders(ImmutableList.of(harnessManagedOrder, lastModifiedOrder));
     }
     Pageable page = getPageRequest(pageRequest);
-    Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
-                            .in(accountIdentifier)
-                            .and(ResourceGroupKeys.orgIdentifier)
-                            .in(orgIdentifier)
-                            .and(ResourceGroupKeys.projectIdentifier)
-                            .is(projectIdentifier)
-                            .and(ResourceGroupKeys.deleted)
-                            .is(false);
-    if (Objects.nonNull(stripToNull(searchTerm))) {
-      criteria.orOperator(Criteria.where(ResourceGroupKeys.name).regex(searchTerm, "i"),
-          Criteria.where(ResourceGroupKeys.identifier).regex(searchTerm, "i"),
-          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.key).regex(searchTerm, "i"),
-          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.value).regex(searchTerm, "i"));
-    }
+    ResourceGroupFilterDTO resourceGroupFilterDTO = ResourceGroupFilterDTO.builder()
+                                                        .accountIdentifier(scope.getAccountIdentifier())
+                                                        .orgIdentifier(scope.getOrgIdentifier())
+                                                        .projectIdentifier(scope.getProjectIdentifier())
+                                                        .searchTerm(searchTerm)
+                                                        .build();
+    Criteria criteria = getResourceGroupFilterCriteria(resourceGroupFilterDTO);
     return resourceGroupRepository.findAll(criteria, page).map(ResourceGroupMapper::toResponseWrapper);
   }
 
   @Override
-  public boolean delete(String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      boolean forceDeleteRoleAssignments) {
-    Optional<ResourceGroup> resourceGroupOpt =
-        getResourceGroup(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
-    if (resourceGroupOpt.isPresent()) {
-      ResourceGroup resourceGroup = resourceGroupOpt.get();
-      RoleAssignmentFilterDTO roleAssignmentFilterDTO =
-          RoleAssignmentFilterDTO.builder()
-              .resourceGroupFilter(Collections.singleton(resourceGroup.getIdentifier()))
-              .build();
-      PageResponse<RoleAssignmentResponseDTO> pageResponse =
-          NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
-              accountIdentifier, orgIdentifier, projectIdentifier, 0, 10, roleAssignmentFilterDTO));
-      if (pageResponse.getPageItemCount() > 0) {
-        if (!forceDeleteRoleAssignments) {
-          throw new InvalidRequestException(
-              "There exists role assignments with this resource group. Please delete them first and then try again");
-        } else {
-          PaginationUtils.forEachElement(counter
-              -> NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
-                  accountIdentifier, orgIdentifier, projectIdentifier, 0, 20, roleAssignmentFilterDTO)),
-              roleAssignmentResponseDTO
-              -> NGRestUtils.getResponse(accessControlAdminClient.deleteRoleAssignment(
-                  roleAssignmentResponseDTO.getRoleAssignment().getIdentifier(), accountIdentifier, orgIdentifier,
-                  projectIdentifier)));
-        }
-      }
-      resourceGroup.setDeleted(true);
-      Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        resourceGroupRepository.save(resourceGroup);
-        outboxService.save(new ResourceGroupDeleteEvent(accountIdentifier, ResourceGroupMapper.toDTO(resourceGroup)));
-        return true;
-      }));
+  public Page<ResourceGroupResponse> list(ResourceGroupFilterDTO resourceGroupFilterDTO, PageRequest pageRequest) {
+    Criteria criteria = getResourceGroupFilterCriteria(resourceGroupFilterDTO);
+    return resourceGroupRepository.findAll(criteria, getPageRequest(pageRequest))
+        .map(ResourceGroupMapper::toResponseWrapper);
+  }
+
+  private Criteria getResourceGroupFilterCriteria(ResourceGroupFilterDTO resourceGroupFilterDTO) {
+    Criteria criteria = new Criteria();
+    if (isNotEmpty(resourceGroupFilterDTO.getIdentifierFilter())) {
+      criteria.and(ResourceGroupKeys.identifier).in(resourceGroupFilterDTO.getIdentifierFilter());
     }
-    return true;
+    Criteria scopeCriteria = getBaseScopeCriteria(resourceGroupFilterDTO.getAccountIdentifier(),
+        resourceGroupFilterDTO.getOrgIdentifier(), resourceGroupFilterDTO.getProjectIdentifier())
+                                 .and(ResourceGroupKeys.harnessManaged)
+                                 .ne(true);
+    Criteria managedCriteria = getBaseScopeCriteria(null, null, null).and(ResourceGroupKeys.harnessManaged).is(true);
+
+    if (isNotEmpty(resourceGroupFilterDTO.getAccountIdentifier())) {
+      managedCriteria.and(ResourceGroupKeys.allowedScopeLevels)
+          .is(ScopeLevel
+                  .of(resourceGroupFilterDTO.getAccountIdentifier(), resourceGroupFilterDTO.getOrgIdentifier(),
+                      resourceGroupFilterDTO.getProjectIdentifier())
+                  .toString()
+                  .toLowerCase());
+    } else if (isNotEmpty(resourceGroupFilterDTO.getScopeLevelFilter())) {
+      criteria.and(ResourceGroupKeys.allowedScopeLevels).in(resourceGroupFilterDTO.getScopeLevelFilter());
+    }
+
+    if (ManagedFilter.ONLY_MANAGED.equals(resourceGroupFilterDTO.getManagedFilter())) {
+      criteria.andOperator(managedCriteria);
+    } else if (ManagedFilter.ONLY_CUSTOM.equals(resourceGroupFilterDTO.getManagedFilter())) {
+      criteria.andOperator(scopeCriteria);
+    } else {
+      criteria.orOperator(scopeCriteria, managedCriteria);
+    }
+
+    if (isNotEmpty(resourceGroupFilterDTO.getSearchTerm())) {
+      criteria.orOperator(Criteria.where(ResourceGroupKeys.name).regex(resourceGroupFilterDTO.getSearchTerm(), "i"),
+          Criteria.where(ResourceGroupKeys.identifier).regex(resourceGroupFilterDTO.getSearchTerm(), "i"),
+          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.key)
+              .regex(resourceGroupFilterDTO.getSearchTerm(), "i"),
+          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.value)
+              .regex(resourceGroupFilterDTO.getSearchTerm(), "i"));
+    }
+
+    if (isNotEmpty(resourceGroupFilterDTO.getResourceSelectorFilterList())) {
+      List<Criteria> resourceSelectorCriteria = new ArrayList<>();
+      resourceGroupFilterDTO.getResourceSelectorFilterList().forEach(resourceSelectorFilter
+          -> resourceSelectorCriteria.add(Criteria.where(ResourceGroupKeys.resourceSelectors)
+                                              .elemMatch(Criteria.where(StaticResourceSelectorKeys.resourceType)
+                                                             .is(resourceSelectorFilter.getResourceType())
+                                                             .and(StaticResourceSelectorKeys.identifiers)
+                                                             .is(resourceSelectorFilter.getResourceIdentifier()))));
+      criteria.orOperator(resourceSelectorCriteria.toArray(new Criteria[0]));
+    }
+
+    return criteria;
+  }
+
+  @Override
+  public void delete(Scope scope, String identifier) {
+    Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(scope, identifier, ManagedFilter.ONLY_CUSTOM);
+    if (!resourceGroupOpt.isPresent()) {
+      return;
+    }
+
+    ResourceGroup resourceGroup = resourceGroupOpt.get();
+    if (Boolean.TRUE.equals(resourceGroup.getHarnessManaged())) {
+      throw new InvalidRequestException("Managed resource group cannot be deleted");
+    }
+
+    Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+      resourceGroupRepository.delete(resourceGroup);
+      outboxService.save(
+          new ResourceGroupDeleteEvent(scope.getAccountIdentifier(), ResourceGroupMapper.toDTO(resourceGroup)));
+      return true;
+    }));
+  }
+
+  @Override
+  public void deleteManaged(String identifier) {
+    Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(null, identifier, ManagedFilter.ONLY_MANAGED);
+    if (!resourceGroupOpt.isPresent()) {
+      return;
+    }
+    ResourceGroup resourceGroup = resourceGroupOpt.get();
+
+    Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+      resourceGroupRepository.delete(resourceGroup);
+      outboxService.save(new ResourceGroupDeleteEvent(null, ResourceGroupMapper.toDTO(resourceGroup)));
+      return true;
+    }));
+  }
+
+  @Override
+  public void deleteByScope(Scope scope) {
+    if (scope == null || isEmpty(scope.getAccountIdentifier())) {
+      throw new InvalidRequestException("Invalid scope. Cannot proceed with deletion.");
+    }
+    Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+      List<ResourceGroup> deletedResourceGroups =
+          resourceGroupRepository.deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+              scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+      if (isNotEmpty(deletedResourceGroups)) {
+        deletedResourceGroups.forEach(rg
+            -> outboxService.save(
+                new ResourceGroupDeleteEvent(rg.getAccountIdentifier(), ResourceGroupMapper.toDTO(rg))));
+      }
+      return true;
+    }));
   }
 
   @Override
   @SuppressWarnings("PMD")
-  public Optional<ResourceGroupResponse> get(
-      String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Optional<ResourceGroup> resourceGroupOpt =
-        getResourceGroup(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
+  public Optional<ResourceGroupResponse> get(Scope scope, String identifier, ManagedFilter managedFilter) {
+    Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(scope, identifier, managedFilter);
     return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroupOpt.orElse(null)));
   }
 
-  private Optional<ResourceGroup> getResourceGroup(
-      String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return resourceGroupRepository
-        .findOneByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
-            identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
+  private Optional<ResourceGroup> getResourceGroup(Scope scope, String identifier, ManagedFilter managedFilter) {
+    Criteria criteria = new Criteria();
+    criteria.and(ResourceGroupKeys.identifier).is(identifier);
+    if ((scope == null || isEmpty(scope.getAccountIdentifier())) && !ManagedFilter.ONLY_MANAGED.equals(managedFilter)) {
+      throw new InvalidRequestException(
+          "Either managed filter should be set to only managed, or scope filter should be non-empty");
+    }
+
+    Criteria managedCriteria = getBaseScopeCriteria(null, null, null).and(ResourceGroupKeys.harnessManaged).is(true);
+
+    if (ManagedFilter.ONLY_MANAGED.equals(managedFilter)) {
+      if (scope != null && isNotEmpty(scope.getAccountIdentifier())) {
+        managedCriteria.and(ResourceGroupKeys.allowedScopeLevels).is(ScopeLevel.of(scope).toString().toLowerCase());
+      }
+      criteria.andOperator(managedCriteria);
+    } else if (ManagedFilter.ONLY_CUSTOM.equals(managedFilter)) {
+      criteria.andOperator(
+          getBaseScopeCriteria(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier())
+              .and(ResourceGroupKeys.harnessManaged)
+              .ne(true));
+    } else {
+      managedCriteria.and(ResourceGroupKeys.allowedScopeLevels).is(ScopeLevel.of(scope).toString().toLowerCase());
+      criteria.orOperator(
+          getBaseScopeCriteria(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier())
+              .and(ResourceGroupKeys.harnessManaged)
+              .ne(true),
+          managedCriteria);
+    }
+
+    return resourceGroupRepository.find(criteria);
+  }
+
+  private Criteria getBaseScopeCriteria(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return Criteria.where(ResourceGroupKeys.accountIdentifier)
+        .is(accountIdentifier)
+        .and(ResourceGroupKeys.orgIdentifier)
+        .is(orgIdentifier)
+        .and(ResourceGroupKeys.projectIdentifier)
+        .is(projectIdentifier);
   }
 
   @Override
-  public Page<ResourceGroup> list(Criteria criteria, Pageable pageable) {
-    return resourceGroupRepository.findAll(criteria, pageable);
-  }
-
-  @Override
-  public Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO) {
-    ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(resourceGroup.getIdentifier(),
-        resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(), resourceGroup.getProjectIdentifier());
+  public Optional<ResourceGroupResponse> update(
+      ResourceGroupDTO resourceGroupDTO, boolean sanitizeResourceSelectors, boolean harnessManaged) {
+    ManagedFilter managedFilter = harnessManaged ? ManagedFilter.ONLY_MANAGED : ManagedFilter.ONLY_CUSTOM;
+    Optional<ResourceGroup> resourceGroupOpt =
+        getResourceGroup(Scope.of(resourceGroupDTO.getAccountIdentifier(), resourceGroupDTO.getOrgIdentifier(),
+                             resourceGroupDTO.getProjectIdentifier()),
+            resourceGroupDTO.getIdentifier(), managedFilter);
     if (!resourceGroupOpt.isPresent()) {
-      throw new InvalidRequestException(String.format(
-          "Resource group with Identifier [{%s}] in Scope {%s} does not exists", resourceGroupDTO.getIdentifier(),
-          ScopeUtils.toString(resourceGroupDTO.getAccountIdentifier(), resourceGroupDTO.getOrgIdentifier(),
-              resourceGroupDTO.getProjectIdentifier())));
+      throw new InvalidRequestException(
+          String.format("Resource group with Identifier [{%s}] in Scope {%s} does not exist",
+              resourceGroupDTO.getIdentifier(), resourceGroupDTO.getScope()));
+    }
+    ResourceGroup updatedResourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
+    if (sanitizeResourceSelectors) {
+      resourceGroupValidatorService.sanitizeResourceSelectors(updatedResourceGroup);
     }
     ResourceGroup savedResourceGroup = resourceGroupOpt.get();
-    if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {
+    if (savedResourceGroup.getHarnessManaged().equals(TRUE) && !harnessManaged) {
       throw new InvalidRequestException("Can't update managed resource group");
     }
-    preprocessResourceGroup(resourceGroup);
-    resourceGroupValidatorService.validate(resourceGroup);
+
     ResourceGroupDTO oldResourceGroup =
         (ResourceGroupDTO) NGObjectMapperHelper.clone(ResourceGroupMapper.toDTO(savedResourceGroup));
-    savedResourceGroup.setName(resourceGroup.getName());
-    savedResourceGroup.setColor(resourceGroup.getColor());
-    savedResourceGroup.setTags(resourceGroup.getTags());
-    savedResourceGroup.setDescription(resourceGroup.getDescription());
-    savedResourceGroup.setFullScopeSelected(resourceGroup.getFullScopeSelected());
-    savedResourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
-    resourceGroup = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-      ResourceGroup updatedResourceGroup = resourceGroupRepository.save(savedResourceGroup);
-      outboxService.save(new ResourceGroupUpdateEvent(savedResourceGroup.getAccountIdentifier(),
-          ResourceGroupMapper.toDTO(updatedResourceGroup), oldResourceGroup));
-      return updatedResourceGroup;
-    }));
-    return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));
-  }
 
-  void preprocessResourceGroup(ResourceGroup resourceGroup) {
-    resourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
-    if (isBlank(resourceGroup.getColor())) {
-      resourceGroup.setColor(DEFAULT_COLOR);
+    savedResourceGroup.setName(updatedResourceGroup.getName());
+    savedResourceGroup.setColor(updatedResourceGroup.getColor());
+    savedResourceGroup.setTags(updatedResourceGroup.getTags());
+    savedResourceGroup.setDescription(updatedResourceGroup.getDescription());
+    savedResourceGroup.setFullScopeSelected(updatedResourceGroup.getFullScopeSelected());
+    savedResourceGroup.setResourceSelectors(updatedResourceGroup.getResourceSelectors());
+    if (areScopeLevelsUpdated(savedResourceGroup, updatedResourceGroup) && !harnessManaged) {
+      throw new InvalidRequestException("Cannot change the scopes at which this resource group can be used.");
     }
+    savedResourceGroup.setAllowedScopeLevels(updatedResourceGroup.getAllowedScopeLevels());
+
+    updatedResourceGroup =
+        Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+          ResourceGroup resourceGroup = resourceGroupRepository.save(savedResourceGroup);
+          outboxService.save(new ResourceGroupUpdateEvent(
+              savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(resourceGroup), oldResourceGroup));
+          return resourceGroup;
+        }));
+    return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(updatedResourceGroup));
   }
 
-  private static List<ResourceSelector> collectResourceSelectors(List<ResourceSelector> resourceSelectors) {
-    Map<String, List<String>> resources =
-        resourceSelectors.stream()
-            .filter(StaticResourceSelector.class ::isInstance)
-            .map(StaticResourceSelector.class ::cast)
-            .collect(toMap(StaticResourceSelector::getResourceType, StaticResourceSelector::getIdentifiers,
-                (oldResourceIds, newResourceIds) -> {
-                  oldResourceIds.addAll(newResourceIds);
-                  return oldResourceIds;
-                }));
-
-    List<ResourceSelector> condensedResourceSelectors = new ArrayList<>();
-    resources.forEach(
-        (k, v)
-            -> condensedResourceSelectors.add(StaticResourceSelector.builder().resourceType(k).identifiers(v).build()));
-    resourceSelectors.stream()
-        .filter(DynamicResourceSelector.class ::isInstance)
-        .map(DynamicResourceSelector.class ::cast)
-        .distinct()
-        .forEach(condensedResourceSelectors::add);
-    return condensedResourceSelectors;
-  }
-
-  public boolean restoreAll(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(ResourceGroupKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(ResourceGroupKeys.projectIdentifier)
-                            .is(projectIdentifier)
-                            .and(ResourceGroupKeys.deleted)
-                            .is(true);
-    Update update = new Update().set(ResourceGroupKeys.deleted, false);
-    return resourceGroupRepository.update(criteria, update);
+  private boolean areScopeLevelsUpdated(ResourceGroup currentResourceGroup, ResourceGroup resourceGroupUpdate) {
+    if (isEmpty(currentResourceGroup.getAllowedScopeLevels())) {
+      return false;
+    }
+    return !currentResourceGroup.getAllowedScopeLevels().equals(resourceGroupUpdate.getAllowedScopeLevels());
   }
 }

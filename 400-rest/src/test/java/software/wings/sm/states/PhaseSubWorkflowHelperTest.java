@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -8,6 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -34,6 +38,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   private static final String SERVICE_NAME_FOR_NON_TEMPLATIZED = "SERVICE_FOR_NON_TEMPLATIZED";
   private static final String SERVICE_NAME_FOR_TEMPLATIZED = "SERVICE_FOR_TEMPLATIZED";

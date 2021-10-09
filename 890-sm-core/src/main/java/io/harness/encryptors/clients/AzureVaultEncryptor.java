@@ -53,7 +53,7 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(
+        return HTimeLimiter.callInterruptible21(
             timeLimiter, Duration.ofSeconds(15), () -> upsertInternal(accountId, name, plaintext, null, azureConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -74,7 +74,7 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
             () -> upsertInternal(accountId, name, plaintext, existingRecord, azureConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -95,7 +95,7 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
             () -> renameSecretInternal(accountId, name, existingRecord, azureConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -176,7 +176,7 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     while (true) {
       try {
         log.info("Trying to decrypt record {} by {}", encryptedRecord.getEncryptionKey(), azureConfig.getVaultName());
-        return HTimeLimiter.callInterruptible(
+        return HTimeLimiter.callInterruptible21(
             timeLimiter, Duration.ofSeconds(15), () -> fetchSecretValueInternal(encryptedRecord, azureConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -189,6 +189,17 @@ public class AzureVaultEncryptor implements VaultEncryptor {
         sleep(ofMillis(1000));
       }
     }
+  }
+
+  @Override
+  public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    try {
+      createSecret(accountId, AzureVaultConfig.AZURE_VAULT_VALIDATION_URL, Boolean.TRUE.toString(), encryptionConfig);
+    } catch (Exception exception) {
+      log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName());
+      return false;
+    }
+    return true;
   }
 
   private HashMap<String, String> getMetadata() {

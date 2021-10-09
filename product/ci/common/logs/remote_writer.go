@@ -51,26 +51,29 @@ type RemoteWriter struct {
 	close  chan struct{}
 	ready  chan struct{}
 
-	log *zap.SugaredLogger
+	indirectUpload bool
+	log            *zap.SugaredLogger
 }
 
 // NewWriter returns a new writer
-func NewRemoteWriter(client client.Client, key string, nudges []logs.Nudge) (*RemoteWriter, error) {
+// if indirectUpload is true, logs go through log service instead of using an uploadable link.
+func NewRemoteWriter(client client.Client, key string, nudges []logs.Nudge, indirectUpload bool) (*RemoteWriter, error) {
 	l, err := zap.NewProduction()
 	if err != nil {
 		return &RemoteWriter{}, err
 	}
 	defer l.Sync()
 	b := &RemoteWriter{
-		client:   client,
-		key:      key,
-		now:      time.Now(),
-		limit:    defaultLimit,
-		interval: defaultInterval,
-		nudges:   nudges,
-		close:    make(chan struct{}),
-		ready:    make(chan struct{}, 1),
-		log:      l.Sugar(),
+		client:         client,
+		key:            key,
+		now:            time.Now(),
+		limit:          defaultLimit,
+		interval:       defaultInterval,
+		nudges:         nudges,
+		close:          make(chan struct{}),
+		ready:          make(chan struct{}, 1),
+		log:            l.Sugar(),
+		indirectUpload: indirectUpload,
 	}
 	go b.Start()
 	return b, nil
@@ -240,17 +243,26 @@ func (b *RemoteWriter) upload() error {
 		}
 		data.Write(buf.Bytes())
 	}
-	b.log.Infow("calling upload link", "key", b.key)
-	link, err := b.client.UploadLink(context.Background(), b.key)
-	if err != nil {
-		b.log.Errorw("errored while trying to get upload link", zap.Error(err))
-		return err
-	}
-	b.log.Infow("uploading logs", "key", b.key, "num_lines", len(b.history))
-	err = b.client.UploadUsingLink(context.Background(), link.Value, data)
-	if err != nil {
-		b.log.Errorw("failed to upload using link", "key", b.key, "link", link.Value, zap.Error(err))
-		return err
+	if b.indirectUpload {
+		b.log.Infow("uploading logs through log service as indirectUpload is specified as true", "key", b.key)
+		err := b.client.Upload(context.Background(), b.key, data)
+		if err != nil {
+			b.log.Errorw("failed to upload logs", "key", b.key, zap.Error(err))
+			return err
+		}
+	} else {
+		b.log.Infow("calling upload link", "key", b.key)
+		link, err := b.client.UploadLink(context.Background(), b.key)
+		if err != nil {
+			b.log.Errorw("errored while trying to get upload link", zap.Error(err))
+			return err
+		}
+		b.log.Infow("uploading logs", "key", b.key, "num_lines", len(b.history))
+		err = b.client.UploadUsingLink(context.Background(), link.Value, data)
+		if err != nil {
+			b.log.Errorw("failed to upload using link", "key", b.key, "link", link.Value, zap.Error(err))
+			return err
+		}
 	}
 	return nil
 }
@@ -367,6 +379,6 @@ func split(p []byte) []string {
 }
 
 func formatNudge(line *stream.Line, nudge logs.Nudge) error {
-	return fmt.Errorf("Found possible error on line %d\n. Log: %s\n. Possible error: %s\n. Possible resolution: %s.",
+	return fmt.Errorf("Found possible error on line %d.\n Log: %s.\n Possible error: %s.\n Possible resolution: %s.",
 		line.Number+1, line.Message, nudge.GetError(), nudge.GetResolution())
 }

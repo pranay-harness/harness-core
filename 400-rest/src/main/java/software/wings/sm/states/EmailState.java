@@ -11,7 +11,9 @@ import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExe
 
 import static java.util.stream.Collectors.partitioningBy;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 
@@ -50,6 +52,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Attributes
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EmailState extends State {
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
   private static final String EMAIL_NOT_SENT_MESSAGE = "Email was not sent to the following unregistered addresses: %s";

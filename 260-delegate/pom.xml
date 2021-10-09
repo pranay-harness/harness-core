@@ -17,6 +17,10 @@
             <artifactId>caffeine</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock-jre8-standalone</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
         </dependency>
@@ -94,12 +98,27 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>815-cg-triggers</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>820-platform-service</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>835-notification-senders</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>870-yaml-beans</artifactId>
+            <artifactId>867-polling-contracts</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>889-yaml-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -144,7 +163,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>959-cg-beans</artifactId>
+            <artifactId>957-cg-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -182,12 +201,6 @@
             <groupId>software.wings</groupId>
             <artifactId>980-commons</artifactId>
             <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <classifier>standalone</classifier>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>

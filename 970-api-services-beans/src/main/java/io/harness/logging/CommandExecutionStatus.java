@@ -1,8 +1,12 @@
 package io.harness.logging;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 /**
  * The Enum CommandExecutionStatus.
  */
+@OwnedBy(HarnessTeam.CDP)
 public enum CommandExecutionStatus {
   /**
    * Success execution status.
@@ -39,5 +43,15 @@ public enum CommandExecutionStatus {
 
   public UnitStatus getUnitStatus() {
     return unitStatus;
+  }
+
+  public static CommandExecutionStatus getCommandExecutionStatus(UnitStatus unitStatus) {
+    for (CommandExecutionStatus commandExecutionStatus : CommandExecutionStatus.values()) {
+      if (commandExecutionStatus.getUnitStatus().equals(unitStatus)) {
+        return commandExecutionStatus;
+      }
+    }
+
+    return null;
   }
 }

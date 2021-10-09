@@ -16,7 +16,7 @@ message PlanNodeProto {
   string name = 2;
   io.harness.pms.contracts.steps.StepType stepType = 3;
   string identifier = 4;
-  string group = 5;
+  string group = 5 [deprecated = true];  // Use stepType.getStepCategoryInstead instead
   string stepParameters = 6;
   repeated io.harness.pms.contracts.refobjects.RefObject rebObjects = 7;
   repeated io.harness.pms.contracts.advisers.AdviserObtainment adviserObtainments = 8;
@@ -29,4 +29,5 @@ message PlanNodeProto {
   string stepInputs = 15;
   string whenCondition = 16;
   bool skipUnresolvedExpressionsCheck = 17;
+  string stageFqn = 18;
 }

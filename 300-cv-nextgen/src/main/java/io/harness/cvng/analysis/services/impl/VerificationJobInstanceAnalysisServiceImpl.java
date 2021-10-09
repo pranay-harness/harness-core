@@ -19,20 +19,27 @@ import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
+import io.harness.cvng.beans.HostRecordDTO;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo.LoadTestAdditionalInfoBuilder;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
+import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.verificationjob.entities.CanaryBlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +49,11 @@ import java.util.Optional;
 import java.util.Set;
 
 public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJobInstanceAnalysisService {
+  private static final String DEMO_URL_TEMPLATE_PATH =
+      "/io/harness/cvng/analysis/service/impl/$provider_$verification_type_deployment_analysis_demo_template_$status.json";
+  private static final Set<String> DEMO_CONTROL_HOSTS =
+      new HashSet<>(Arrays.asList("harness-deployment-5f67d57589-4jc4c", "harness-deployment-5f67d57589-gp4pd",
+          "harness-deployment-7445f86dbf-h8blt"));
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
@@ -94,9 +106,9 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       String accountId, VerificationJobInstance verificationJobInstance) {
     List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysis =
         deploymentTimeSeriesAnalysisService.getLatestDeploymentTimeSeriesAnalysis(
-            accountId, verificationJobInstance.getUuid());
-    List<DeploymentLogAnalysis> deploymentLogAnalysis =
-        deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(accountId, verificationJobInstance.getUuid());
+            accountId, verificationJobInstance.getUuid(), DeploymentTimeSeriesAnalysisFilter.builder().build());
+    List<DeploymentLogAnalysis> deploymentLogAnalysis = deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(
+        accountId, verificationJobInstance.getUuid(), DeploymentLogAnalysisFilter.builder().build());
 
     Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
@@ -140,6 +152,41 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
         .build();
   }
 
+  @Override
+  public void addDemoAnalysisData(
+      String verificationTaskId, CVConfig cvConfig, VerificationJobInstance verificationJobInstance) {
+    String demoTemplatePath = getDemoTemplatePath(cvConfig, verificationJobInstance);
+    if (cvConfig.getVerificationType() == VerificationType.TIME_SERIES) {
+      deploymentTimeSeriesAnalysisService.addDemoAnalysisData(
+          verificationTaskId, cvConfig, verificationJobInstance, demoTemplatePath);
+    } else {
+      deploymentLogAnalysisService.addDemoAnalysisData(
+          verificationTaskId, cvConfig, verificationJobInstance, demoTemplatePath);
+      Optional<TimeRange> preDeploymentTimeRange =
+          verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
+      if (preDeploymentTimeRange.isPresent()) {
+        hostRecordService.save(HostRecordDTO.builder()
+                                   .verificationTaskId(verificationTaskId)
+                                   .hosts(DEMO_CONTROL_HOSTS)
+                                   .startTime(preDeploymentTimeRange.get().getStartTime())
+                                   .endTime(preDeploymentTimeRange.get().getEndTime())
+                                   .build());
+      }
+    }
+  }
+
+  public String getDemoTemplatePath(CVConfig cvConfig, VerificationJobInstance verificationJobInstance) {
+    String path =
+        DEMO_URL_TEMPLATE_PATH
+            .replace("$status",
+                verificationJobInstance.getVerificationStatus() == ActivityVerificationStatus.VERIFICATION_PASSED
+                    ? "success"
+                    : "failure")
+            .replace("$verification_type", cvConfig.getVerificationType().name().toLowerCase());
+    path = path.replace("$provider", cvConfig.getType().getDemoTemplatePrefix());
+    return path;
+  }
+
   private void populatePrimaryAndCanaryHostInfoForTimeseries(
       List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysisList, Map<String, HostSummaryInfo> controlMap,
       Map<String, HostSummaryInfo> testMap) {
@@ -177,8 +224,10 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       for (HostSummary hostInfo : deploymentLogAnalysis.getHostSummaries()) {
         // In case multiple analysis for a test node (possible when using multiple providers), use the one with higher
         // risk
-        HostSummaryInfo hostSummaryInfo =
-            HostSummaryInfo.builder().hostName(hostInfo.getHost()).risk(hostInfo.getResultSummary().getRisk()).build();
+        HostSummaryInfo hostSummaryInfo = HostSummaryInfo.builder()
+                                              .hostName(hostInfo.getHost())
+                                              .risk(hostInfo.getResultSummary().getRiskLevel())
+                                              .build();
         if (!testMap.keySet().contains(hostInfo.getHost())
             || testMap.get(hostInfo.getHost()).getRisk().isLessThanEq(hostSummaryInfo.getRisk())) {
           testMap.put(hostInfo.getHost(), hostSummaryInfo);
@@ -232,7 +281,7 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
                   hostSummary.getResultSummary()
                       .getTestClusterSummaries()
                       .stream()
-                      .filter(clusterSummary -> clusterSummary.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                      .filter(clusterSummary -> clusterSummary.getRiskLevel().isGreaterThanEq(Risk.MEDIUM))
                       .count());
         }
       }

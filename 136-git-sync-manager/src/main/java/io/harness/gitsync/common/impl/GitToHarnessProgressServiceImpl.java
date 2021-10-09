@@ -42,6 +42,9 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
 
   @Override
   public GitToHarnessProgressDTO update(String uuid, Update update) {
+    // Ideally the JPA should have updated the lastUpdatedAt, but due to some limitations
+    // they don't update this field. https://github.com/spring-projects/spring-data-mongodb/issues/1797
+    update.set(GitToHarnessProgressKeys.lastUpdatedAt, System.currentTimeMillis());
     Criteria criteria = Criteria.where(GitToHarnessProgressKeys.uuid).is(uuid);
     return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgressRepository.findAndModify(criteria, update));
   }
@@ -111,19 +114,26 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   @Override
   public GitToHarnessProgressDTO initProgress(YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType,
       GitToHarnessProcessingStepType stepType, String commitId) {
-    GitToHarnessProgressDTO gitToHarnessProgress = GitToHarnessProgressDTO.builder()
-                                                       .accountIdentifier(yamlChangeSetDTO.getAccountId())
-                                                       .yamlChangeSetId(yamlChangeSetDTO.getChangesetId())
-                                                       .repoUrl(yamlChangeSetDTO.getRepoUrl())
-                                                       .branch(yamlChangeSetDTO.getBranch())
-                                                       .eventType(eventType)
-                                                       .stepType(stepType)
-                                                       .stepStatus(GitToHarnessProcessingStepStatus.TO_DO)
-                                                       .stepStartingTime(System.currentTimeMillis())
-                                                       .commitId(commitId)
-                                                       .gitToHarnessProgressStatus(GitToHarnessProgressStatus.TO_DO)
-                                                       .build();
-    return save(gitToHarnessProgress);
+    // TODO change it to upsert query
+    GitToHarnessProgress gitToHarnessProgress =
+        gitToHarnessProgressRepository.findByYamlChangeSetId(yamlChangeSetDTO.getChangesetId());
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
+    }
+    GitToHarnessProgressDTO gitToHarnessProgressToBeSaved =
+        GitToHarnessProgressDTO.builder()
+            .accountIdentifier(yamlChangeSetDTO.getAccountId())
+            .yamlChangeSetId(yamlChangeSetDTO.getChangesetId())
+            .repoUrl(yamlChangeSetDTO.getRepoUrl())
+            .branch(yamlChangeSetDTO.getBranch())
+            .eventType(eventType)
+            .stepType(stepType)
+            .stepStatus(GitToHarnessProcessingStepStatus.TO_DO)
+            .stepStartingTime(System.currentTimeMillis())
+            .commitId(commitId)
+            .gitToHarnessProgressStatus(GitToHarnessProgressStatus.TO_DO)
+            .build();
+    return save(gitToHarnessProgressToBeSaved);
   }
 
   @Override
@@ -162,5 +172,12 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
       return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
     }
     return null;
+  }
+
+  @Override
+  public GitToHarnessProgressDTO updateProcessingCommitId(String uuid, String processingCommitId) {
+    Update update = new Update();
+    update.set(GitToHarnessProgressKeys.processingCommitId, processingCommitId);
+    return update(uuid, update);
   }
 }

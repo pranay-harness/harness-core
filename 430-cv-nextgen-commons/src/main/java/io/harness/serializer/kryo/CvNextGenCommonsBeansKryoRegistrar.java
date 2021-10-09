@@ -42,11 +42,16 @@ import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
+import io.harness.cvng.beans.pagerduty.PagerDutyRegisterWebhookRequest;
+import io.harness.cvng.beans.pagerduty.PagerDutyServicesRequest;
+import io.harness.cvng.beans.pagerduty.PagerdutyDeleteWebhookRequest;
 import io.harness.cvng.beans.prometheus.PrometheusFetchSampleDataRequest;
 import io.harness.cvng.beans.prometheus.PrometheusLabelNamesFetchRequest;
 import io.harness.cvng.beans.prometheus.PrometheusLabelValuesFetchRequest;
 import io.harness.cvng.beans.prometheus.PrometheusMetricListFetchRequest;
 import io.harness.cvng.beans.splunk.SplunkDataCollectionRequest;
+import io.harness.cvng.beans.splunk.SplunkLatestHistogramDataCollectionRequest;
+import io.harness.cvng.beans.splunk.SplunkSampleDataCollectionRequest;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
@@ -120,5 +125,10 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PrometheusFetchSampleDataRequest.class, 9057);
     kryo.register(StackdriverLogSampleDataRequest.class, 9058);
     kryo.register(StackdriverLogDataCollectionInfo.class, 9059);
+    kryo.register(SplunkSampleDataCollectionRequest.class, 9060);
+    kryo.register(SplunkLatestHistogramDataCollectionRequest.class, 9061);
+    kryo.register(PagerDutyServicesRequest.class, 9062);
+    kryo.register(PagerDutyRegisterWebhookRequest.class, 9063);
+    kryo.register(PagerdutyDeleteWebhookRequest.class, 9064);
   }
 }

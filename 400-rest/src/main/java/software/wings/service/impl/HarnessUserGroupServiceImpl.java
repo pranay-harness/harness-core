@@ -266,15 +266,30 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     List<HarnessUserGroup> harnessUserGroupList = query.asList();
     harnessUserGroupList.forEach(harnessUserGroup -> {
       harnessUserGroup.getMemberIds().forEach(memberId -> {
-        User user = userService.get(memberId);
-        if (user != null) {
-          userSet.add(user);
+        try {
+          User user = userService.get(memberId);
+          if (user != null) {
+            userSet.add(user);
+          }
+        } catch (WingsException e) {
+          log.error("User with id {} is invalid, not adding to the set", memberId, e);
         }
       });
     });
     List<User> userList = new ArrayList<>(userSet);
     Collections.sort(userList, Comparator.comparing(user -> user.getEmail()));
     return userList;
+  }
+
+  @Override
+  public List<User> listAllHarnessSupportUserInternal() {
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+    List<HarnessUserGroup> harnessUserGroupList = query.asList();
+    Set<String> userIds = harnessUserGroupList.stream()
+                              .map(HarnessUserGroup::getMemberIds)
+                              .flatMap(Set::stream)
+                              .collect(Collectors.toSet());
+    return userService.getUsers(userIds);
   }
 
   @Override

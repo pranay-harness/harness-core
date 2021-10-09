@@ -4,6 +4,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENT
 import static io.harness.cvng.core.services.CVNextGenConstants.INFRASTRUCTURE_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.VUK;
@@ -14,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CvNextGenTestBase;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
@@ -106,6 +108,19 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
         assertThat(metricDefinition.getPath()).isNotEmpty();
       });
     });
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetMetricPack_withExistingCategory() {
+    MetricPack metricPack = metricPackService.getMetricPack(
+        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS);
+    assertThat(metricPack.getAccountId()).isEqualTo(accountId);
+    assertThat(metricPack.getOrgIdentifier()).isEqualTo(orgIdentifier);
+    assertThat(metricPack.getProjectIdentifier()).isEqualTo(projectIdentifier);
+    assertThat(metricPack.getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
+    assertThat(metricPack.getMetrics().size()).isEqualTo(1);
   }
 
   @Test

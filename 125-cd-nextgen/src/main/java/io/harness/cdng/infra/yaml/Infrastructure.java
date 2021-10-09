@@ -21,4 +21,5 @@ public interface Infrastructure extends StepParameters, PassThroughData, Overrid
   @JsonIgnore InfraMapping getInfraMapping();
   @JsonIgnore String getKind();
   @JsonIgnore ParameterField<String> getConnectorReference();
+  @JsonIgnore String[] getInfrastructureKeyValues();
 }

@@ -16,6 +16,8 @@ import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
+import io.harness.beans.quantity.unit.DecimalQuantityUnit;
+import io.harness.beans.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
@@ -26,8 +28,6 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.stateutils.buildstate.providers.ServiceContainerUtils;
 import io.harness.util.PortFinder;
 import io.harness.yaml.extended.ci.container.ContainerResource;
-import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import java.util.ArrayList;
 import java.util.Collections;

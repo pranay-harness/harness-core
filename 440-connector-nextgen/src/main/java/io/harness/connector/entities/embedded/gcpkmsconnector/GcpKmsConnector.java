@@ -26,6 +26,7 @@ public class GcpKmsConnector extends Connector {
   String region;
   String keyRing;
   String keyName;
+  String credentialsRef;
   boolean isDefault;
   @Builder.Default Boolean harnessManaged = Boolean.FALSE;
 }

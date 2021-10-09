@@ -119,6 +119,7 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
 
   private boolean init(K8sApplyRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback) {
     logCallback.saveExecutionLog("Initializing..\n");
+    logCallback.saveExecutionLog(color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
 
     k8sApplyHandlerConfig.setKubernetesConfig(
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig()));

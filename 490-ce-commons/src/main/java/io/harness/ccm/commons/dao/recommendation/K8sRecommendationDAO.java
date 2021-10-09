@@ -3,9 +3,8 @@ package io.harness.ccm.commons.dao.recommendation;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.TimeUtils.offsetDateTimeNow;
 import static io.harness.ccm.commons.utils.TimeUtils.toEpocMilli;
-import static io.harness.ccm.commons.utils.TimeUtils.toInstant;
 import static io.harness.ccm.commons.utils.TimeUtils.toOffsetDateTime;
-import static io.harness.ccm.commons.utils.TimescaleUtils.isAliveAtInstant;
+import static io.harness.persistence.HQuery.excludeValidate;
 import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
 import static io.harness.timescaledb.Tables.KUBERNETES_UTILIZATION_DATA;
 import static io.harness.timescaledb.Tables.NODE_INFO;
@@ -32,6 +31,7 @@ import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
@@ -61,6 +61,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -136,33 +137,6 @@ public class K8sRecommendationDAO {
         .from(CE_RECOMMENDATIONS)
         .where(CE_RECOMMENDATIONS.ACCOUNTID.eq(accountId).and(firstNonNull(condition, DSL.noCondition())))
         .fetchOneInto(RecommendationOverviewStats.class);
-  }
-
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  public void insertIntoCeRecommendation(@NonNull String uuid, @NonNull ResourceId workloadId,
-      @Nullable Double monthlyCost, @Nullable Double monthlySaving, boolean shouldShowRecommendation,
-      @NonNull Instant lastReceivedUntilAt) {
-    dslContext.insertInto(CE_RECOMMENDATIONS)
-        .set(CE_RECOMMENDATIONS.ACCOUNTID, workloadId.getAccountId())
-        .set(CE_RECOMMENDATIONS.ID, uuid)
-        // insert cluster-name instead after ClusterRecord from 40-rest is demoted to ce-commons
-        .set(CE_RECOMMENDATIONS.CLUSTERNAME, workloadId.getClusterId())
-        .set(CE_RECOMMENDATIONS.NAME, workloadId.getName())
-        .set(CE_RECOMMENDATIONS.NAMESPACE, workloadId.getNamespace())
-        .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.WORKLOAD.name())
-        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
-        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
-        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
-        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
-        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
-        .onConflictOnConstraint(CE_RECOMMENDATIONS.getPrimaryKey())
-        .doUpdate()
-        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
-        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
-        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
-        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
-        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
-        .execute();
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
@@ -244,6 +218,7 @@ public class K8sRecommendationDAO {
             POD_INFO.CPUREQUEST, POD_INFO.MEMORYREQUEST)
         .from(POD_INFO.innerJoin(NODE_INFO).on(NODE_INFO.INSTANCEID.eq(POD_INFO.PARENTNODEID),
             NODE_INFO.ACCOUNTID.eq(jobConstants.getAccountId()), NODE_INFO.CLUSTERID.eq(nodePoolId.getClusterid()),
+            POD_INFO.ACCOUNTID.eq(jobConstants.getAccountId()), POD_INFO.CLUSTERID.eq(nodePoolId.getClusterid()),
             NODE_INFO.NODEPOOLNAME.eq(nodePoolId.getNodepoolname()),
             TimescaleUtils.isAlive(
                 NODE_INFO.STARTTIME, NODE_INFO.STOPTIME, jobConstants.getJobStartTime(), jobConstants.getJobEndTime()),
@@ -285,10 +260,9 @@ public class K8sRecommendationDAO {
     return dslContext.selectDistinct(tableField).from(jooqTable).where(condition).fetchInto(String.class);
   }
 
-  // Will be used with GraphQL API with custom start and end Time
   @NonNull
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  public TotalResourceUsage aggregateMonthlyResourceRequirement(
+  public TotalResourceUsage aggregateTotalResourceRequirement(
       String accountId, NodePoolId nodePoolId, OffsetDateTime startTime, OffsetDateTime endTime) {
     return dslContext
         .select(max(NODE_POOL_AGGREGATED.SUMCPU).as(SUMCPU), max(NODE_POOL_AGGREGATED.SUMMEMORY).as(SUMMEMORY),
@@ -297,8 +271,8 @@ public class K8sRecommendationDAO {
         .where(NODE_POOL_AGGREGATED.ACCOUNTID.eq(accountId),
             NODE_POOL_AGGREGATED.CLUSTERID.eq(nodePoolId.getClusterid()),
             NODE_POOL_AGGREGATED.NAME.eq(nodePoolId.getNodepoolname()),
-            TimescaleUtils.isAlive(
-                NODE_INFO.STARTTIME, NODE_INFO.STOPTIME, toEpocMilli(startTime), toEpocMilli(endTime)))
+            TimescaleUtils.isAlive(NODE_POOL_AGGREGATED.STARTTIME, NODE_POOL_AGGREGATED.ENDTIME, toEpocMilli(startTime),
+                toEpocMilli(endTime)))
         .fetchOneInto(TotalResourceUsage.class);
   }
 
@@ -353,14 +327,8 @@ public class K8sRecommendationDAO {
   }
 
   public String insertNodeRecommendationResponse(JobConstants jobConstants, NodePoolId nodePoolId,
-      TotalResourceUsage totalResourceUsage, K8sServiceProvider serviceProvider,
+      RecommendClusterRequest recommendClusterRequest, K8sServiceProvider serviceProvider,
       RecommendationResponse recommendation) {
-    // TODO: Any elegant way to do this, i.e., update other fields on duplicate unique key constraint?
-    // on com.mongodb.DuplicateKeyException: Write failed with error code 11000 and error message 'E11000 duplicate key
-    // error collection: events.K8sNodeRecommendation index: unique_accountId_clusterid_nodepoolname dup key: {
-    // accountId: "kmpySmUISimoRrJL6NL73w", nodePoolId.clusterid: "6038e62a82d2f0abd704ba87", nodePoolId.nodepoolname:
-    // "general-preemptible" }'
-
     Query<K8sNodeRecommendation> query =
         hPersistence.createQuery(K8sNodeRecommendation.class)
             .filter(K8sNodeRecommendationKeys.accountId, jobConstants.getAccountId())
@@ -373,20 +341,47 @@ public class K8sRecommendationDAO {
             .set(K8sNodeRecommendationKeys.accountId, jobConstants.getAccountId())
             .set(K8sNodeRecommendationKeys.nodePoolId, nodePoolId)
             .set(K8sNodeRecommendationKeys.recommendation, recommendation)
-            .set(K8sNodeRecommendationKeys.totalResourceUsage, totalResourceUsage)
+            .set(K8sNodeRecommendationKeys.recommendClusterRequest, recommendClusterRequest)
             .set(K8sNodeRecommendationKeys.currentServiceProvider, serviceProvider);
 
     return hPersistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions).getUuid();
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  public void updateCeRecommendation(String entityUuid, JobConstants jobConstants, NodePoolId nodePoolId,
-      RecommendationOverviewStats stats, Instant lastReceivedUntilAt) {
+  public void upsertCeRecommendation(@NonNull String uuid, @NonNull ResourceId workloadId, String clusterName,
+      @Nullable Double monthlyCost, @Nullable Double monthlySaving, boolean shouldShowRecommendation,
+      @NonNull Instant lastReceivedUntilAt) {
+    dslContext.insertInto(CE_RECOMMENDATIONS)
+        .set(CE_RECOMMENDATIONS.ACCOUNTID, workloadId.getAccountId())
+        .set(CE_RECOMMENDATIONS.ID, uuid)
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, clusterName)
+        .set(CE_RECOMMENDATIONS.NAME, workloadId.getName())
+        .set(CE_RECOMMENDATIONS.NAMESPACE, workloadId.getNamespace())
+        .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.WORKLOAD.name())
+        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
+        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
+        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
+        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
+        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
+        .onConflictOnConstraint(CE_RECOMMENDATIONS.getPrimaryKey())
+        .doUpdate()
+        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
+        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
+        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, clusterName) // for updating older rows having clusterId instead
+        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
+        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
+        .execute();
+  }
+
+  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
+  public void upsertCeRecommendation(String entityUuid, @NonNull JobConstants jobConstants,
+      @NonNull NodePoolId nodePoolId, String clusterName, @NonNull RecommendationOverviewStats stats,
+      Instant lastReceivedUntilAt) {
     dslContext.insertInto(CE_RECOMMENDATIONS)
         .set(CE_RECOMMENDATIONS.ACCOUNTID, jobConstants.getAccountId())
         .set(CE_RECOMMENDATIONS.ID, entityUuid)
-        // insert cluster-name instead after ClusterRecord from 40-rest is demoted to ce-commons
-        .set(CE_RECOMMENDATIONS.CLUSTERNAME, nodePoolId.getClusterid())
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, clusterName)
         .set(CE_RECOMMENDATIONS.NAME, nodePoolId.getNodepoolname())
         .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.NODE_POOL.name())
         .set(CE_RECOMMENDATIONS.MONTHLYCOST, stats.getTotalMonthlyCost())
@@ -399,22 +394,44 @@ public class K8sRecommendationDAO {
         .set(CE_RECOMMENDATIONS.MONTHLYCOST, stats.getTotalMonthlyCost())
         .set(CE_RECOMMENDATIONS.MONTHLYSAVING, stats.getTotalMonthlySaving())
         .set(CE_RECOMMENDATIONS.ISVALID, true)
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, clusterName) // for updating older rows having clusterId instead
         .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
         .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
         .execute();
   }
 
+  /**
+   * maximum overlapping problem with given start and end time, but in pure PSQL
+   * https://stackoverflow.com/questions/66416245/postgresql-count-max-number-of-concurrent-user-sessions-per-hour
+   */
   private int getNodeCount(@NonNull JobConstants jobConstants, @NonNull NodePoolId nodePoolId) {
-    // intellij is flagging it as nullptr possibility, since the result of count will always be a number, so it is safe
-    // to assume that the unwrapping of the response will null cause nullptr
+    final Condition condition = TimescaleUtils.isAlive(DSL.field(NODE_INFO.STARTTIME.getName(), OffsetDateTime.class),
+        DSL.field(NODE_INFO.STOPTIME.getName(), OffsetDateTime.class), jobConstants.getJobStartTime(),
+        jobConstants.getJobEndTime());
+
+    final String query =
+        "SELECT max(q.num_overlaps) from( SELECT v.ts, sum(sum(v.inc)) OVER (order by v.ts) AS num_overlaps FROM "
+        + NODE_INFO.getName() + " n CROSS JOIN lateral (values (" + NODE_INFO.STARTTIME.getName() + ", 1), ("
+        + NODE_INFO.STOPTIME.getName() + ", -1)) v(ts, inc) WHERE " + NODE_INFO.ACCOUNTID.getName() + " = '"
+        + jobConstants.getAccountId() + "' AND " + NODE_INFO.CLUSTERID.getName() + " = '" + nodePoolId.getClusterid()
+        + "' AND " + NODE_INFO.NODEPOOLNAME.getName() + " = '" + nodePoolId.getNodepoolname() + "' AND "
+        + condition.toString() + " GROUP BY v.ts ) q;";
+
+    return TimescaleUtils.retryRun(() -> dslContext.fetchOne(query).into(int.class));
+  }
+
+  public Optional<K8sNodeRecommendation> fetchNodeRecommendationById(
+      @NonNull String accountIdentifier, @NonNull String uuid) {
+    return Optional.ofNullable(hPersistence.createQuery(K8sNodeRecommendation.class, excludeValidate)
+                                   .filter(K8sNodeRecommendationKeys.accountId, accountIdentifier)
+                                   .filter(K8sNodeRecommendationKeys.uuid, new ObjectId(uuid))
+                                   .get());
+  }
+
+  public int fetchRecommendationsCount(@NonNull String accountId, Condition condition) {
+    Condition nonNullCondition = firstNonNull(condition, DSL.noCondition());
     return TimescaleUtils.retryRun(()
-                                       -> dslContext.selectCount()
-                                              .from(NODE_INFO)
-                                              .where(NODE_INFO.ACCOUNTID.eq(jobConstants.getAccountId()),
-                                                  NODE_INFO.CLUSTERID.eq(nodePoolId.getClusterid()),
-                                                  NODE_INFO.NODEPOOLNAME.eq(nodePoolId.getNodepoolname()),
-                                                  isAliveAtInstant(NODE_INFO.STARTTIME, NODE_INFO.STOPTIME,
-                                                      toInstant(jobConstants.getJobEndTime())))
-                                              .fetchOne(0, int.class));
+                                       -> dslContext.fetchCount(CE_RECOMMENDATIONS,
+                                           CE_RECOMMENDATIONS.ACCOUNTID.eq(accountId).and(nonNullCondition)));
   }
 }

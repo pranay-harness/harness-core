@@ -13,12 +13,12 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -32,6 +32,7 @@ import io.harness.persistence.HPersistence;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,7 +54,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private NextGenService nextGenService;
   @Inject private VerificationManagerService verificationManagerService;
-  @Inject private CVEventService eventService;
   @Inject private Map<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder;
 
   @Override
@@ -62,14 +62,7 @@ public class CVConfigServiceImpl implements CVConfigService {
     cvConfig.validate();
     hPersistence.save(cvConfig);
     verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getType());
-    sendScopedCreateEvent(cvConfig);
     return cvConfig;
-  }
-
-  private void sendScopedCreateEvent(CVConfig cvConfig) {
-    eventService.sendConnectorCreateEvent(cvConfig);
-    eventService.sendServiceCreateEvent(cvConfig);
-    eventService.sendEnvironmentCreateEvent(cvConfig);
   }
 
   @Override
@@ -122,11 +115,8 @@ public class CVConfigServiceImpl implements CVConfigService {
     if (cvConfig == null) {
       return;
     }
-    deletedCVConfigService.save(DeletedCVConfig.builder()
-                                    .cvConfig(cvConfig)
-                                    .accountId(cvConfig.getAccountId())
-                                    .perpetualTaskId(cvConfig.getPerpetualTaskId())
-                                    .build());
+    deletedCVConfigService.save(
+        DeletedCVConfig.builder().cvConfig(cvConfig).accountId(cvConfig.getAccountId()).build(), Duration.ofHours(2));
     hPersistence.delete(CVConfig.class, cvConfigId);
   }
 
@@ -261,15 +251,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void markFirstTaskCollected(CVConfig cvConfig) {
-    UpdateOperations<CVConfig> updateOperations =
-        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.firstTaskQueued, true);
-    Query<CVConfig> query =
-        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfig.getUuid());
-    hPersistence.update(query, updateOperations);
-  }
-
-  @Override
   public Set<CVMonitoringCategory> getAvailableCategories(String accountId, String orgIdentifier,
       String projectIdentifier, String envIdentifier, String serviceIdentifier) {
     BasicDBObject cvConfigQuery = getQueryWithAccountOrgProjectFiltersSet(
@@ -338,6 +319,28 @@ public class CVConfigServiceImpl implements CVConfigService {
       }
     });
     return configsToReturn;
+  }
+
+  @Override
+  public List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams) {
+    Query<CVConfig> query = createQuery(serviceEnvironmentParams);
+    return query.asList();
+  }
+
+  @Override
+  public List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams, List<String> identifiers) {
+    Query<CVConfig> query = createQuery(serviceEnvironmentParams);
+    query.field(CVConfigKeys.identifier).in(identifiers);
+    return query.asList();
+  }
+
+  @Override
+  public Map<String, DataSourceType> getDataSourceTypeForCVConfigs(
+      ServiceEnvironmentParams serviceEnvironmentParams, List<String> cvConfigIds) {
+    Map<String, DataSourceType> cvConfigIdDataSourceTypeMap = new HashMap<>();
+    Query<CVConfig> query = createQuery(serviceEnvironmentParams);
+    query.asList().forEach(cvConfig -> cvConfigIdDataSourceTypeMap.put(cvConfig.getUuid(), cvConfig.getType()));
+    return cvConfigIdDataSourceTypeMap;
   }
 
   @Override
@@ -410,6 +413,15 @@ public class CVConfigServiceImpl implements CVConfigService {
     return serviceIdentifiers.size();
   }
 
+  private Query createQuery(ServiceEnvironmentParams serviceEnvironmentParams) {
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, serviceEnvironmentParams.getAccountIdentifier())
+        .filter(CVConfigKeys.orgIdentifier, serviceEnvironmentParams.getOrgIdentifier())
+        .filter(CVConfigKeys.projectIdentifier, serviceEnvironmentParams.getProjectIdentifier())
+        .filter(CVConfigKeys.serviceIdentifier, serviceEnvironmentParams.getServiceIdentifier())
+        .filter(CVConfigKeys.envIdentifier, serviceEnvironmentParams.getEnvironmentIdentifier());
+  }
+
   private void deleteConfigsForEntity(
       String accountId, @Nullable String orgIdentifier, @Nullable String projectIdentifier) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class);
@@ -479,22 +491,15 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds) {
-    if (isNotEmpty(cvConfigIds)) {
-      List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
-                                     .filter(CVConfigKeys.accountId, accountId)
-                                     .field(CVConfigKeys.uuid)
-                                     .in(cvConfigIds)
-                                     .asList();
-      List<String> perpetualTaskIds = cvConfigs.stream().map(CVConfig::getPerpetualTaskId).collect(toList());
-      verificationManagerService.deletePerpetualTasks(accountId, perpetualTaskIds);
-      Query<CVConfig> cvConfigQuery = hPersistence.createQuery(CVConfig.class).field(CVConfigKeys.uuid).in(cvConfigIds);
-      UpdateOperations<CVConfig> cvConfigUpdateOperations =
-          hPersistence.createUpdateOperations(CVConfig.class).unset(CVConfigKeys.perpetualTaskId);
-      hPersistence.update(cvConfigQuery, cvConfigUpdateOperations);
-      log.info("Cleaned up perpetual tasks for the following cvConfigs : " + cvConfigIds);
-    }
-    return cvConfigIds;
+  public void setHealthMonitoringFlag(
+      String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers, boolean isEnabled) {
+    hPersistence.update(hPersistence.createQuery(CVConfig.class)
+                            .filter(CVConfigKeys.accountId, accountId)
+                            .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                            .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                            .field(CVConfigKeys.identifier)
+                            .in(identifiers),
+        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.enabled, isEnabled));
   }
 
   @Override

@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "properties": {
+    "testRandomClass1": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "abc"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        {
+          "$ref": "#/definitions/TestRandomClass1"
+        }
+      ]
+    },
+    "testString": {
+      "type": "string"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ClassWithoutApiModelOverride4": {
+      "type": "object",
+      "properties": {
+        "testRandomClass1": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "abc"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "$ref": "#/definitions/TestRandomClass1"
+            }
+          ]
+        },
+        "testString": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TestRandomClass1": {
+      "type": "object",
+      "properties": {
+        "testR11": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "testR12": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

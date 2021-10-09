@@ -9,10 +9,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
-import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -29,7 +29,8 @@ import java.util.Map;
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
 public class SectionChainStep implements ChildChainExecutable<SectionChainStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.SECTION_CHAIN).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(OrchestrationStepTypes.SECTION_CHAIN).setStepCategory(StepCategory.STEP).build();
 
   @Inject KryoSerializer kryoSerializer;
 
@@ -55,9 +56,10 @@ public class SectionChainStep implements ChildChainExecutable<SectionChainStepPa
 
   @Override
   public ChildChainExecutableResponse executeNextChild(Ambiance ambiance,
-      SectionChainStepParameters sectionChainStepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    SectionChainPassThroughData chainPassThroughData = (SectionChainPassThroughData) passThroughData;
+      SectionChainStepParameters sectionChainStepParameters, StepInputPackage inputPackage, ByteString passThroughData,
+      Map<String, ResponseData> responseDataMap) {
+    SectionChainPassThroughData chainPassThroughData =
+        (SectionChainPassThroughData) kryoSerializer.asObject(passThroughData.toByteArray());
     int nextChildIndex = chainPassThroughData.getChildIndex() + 1;
     String previousChildId = responseDataMap.keySet().iterator().next();
     boolean lastLink = nextChildIndex + 1 == sectionChainStepParameters.getChildNodeIds().size();
@@ -73,7 +75,7 @@ public class SectionChainStep implements ChildChainExecutable<SectionChainStepPa
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, SectionChainStepParameters sectionChainStepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      ByteString passThroughData, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     for (ResponseData responseData : responseDataMap.values()) {
       Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();

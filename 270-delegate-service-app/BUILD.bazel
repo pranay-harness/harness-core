@@ -2,10 +2,15 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
+HarnessTeam = "DEL"
+
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
 ] + [
+    "//360-cg-manager:module",
+    "//380-cg-graphql:module",
+    "//390-db-migration:module",
     "//400-rest:module",
     "//420-delegate-agent:module",
     "//420-delegate-service:module",
@@ -17,8 +22,8 @@ shared_dependencies = [
     "//860-orchestration-steps:module",
     "//860-orchestration-visualization:module",
     "//870-orchestration:module",
-    "//870-yaml-beans:module",
     "//876-orchestration-beans:module",
+    "//889-yaml-commons:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
     "//910-delegate-task-grpc-service:module",
@@ -26,15 +31,16 @@ shared_dependencies = [
     "//920-delegate-service-beans:module",
     "//930-delegate-tasks:module",
     "//930-ng-core-clients:module",
+    "//937-persistence-tracer:module",
     "//955-delegate-beans:module",
     "//940-secret-manager-client:module",
     "//950-command-library-common:module",
-    "//950-common-entities:module",
+    "//959-common-entities:module",
     "//950-delegate-tasks-beans:module",
     "//950-events-framework:module",
     "//950-ng-core:module",
     "//950-ng-project-n-orgs:module",
-    "//950-timeout-engine:module",
+    "//959-timeout-engine:module",
     "//950-wait-engine:module",
     "//950-walktree-visitor:module",
     "//960-api-services:module",
@@ -46,7 +52,7 @@ shared_dependencies = [
     "//970-grpc:module",
     "//970-ng-commons:module",
     "//980-commons:module",
-    "@jira_client//jar",
+    "@maven//:net_rcarz_jira_client",
     "@maven//:aopalliance_aopalliance",
     "@maven//:cglib_cglib_nodep",
     "@maven//:ch_qos_logback_contrib_logback_jackson",
@@ -276,13 +282,11 @@ shared_dependencies = [
     "@maven//:commons_net_commons_net",
     "@maven//:commons_pool_commons_pool",
     "@maven//:commons_validator_commons_validator",
-    "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
     "@maven//:dnsjava_dnsjava",
-    "@maven//:dom4j_dom4j",
     "@maven//:es_moki_ratelimitj_ratelimitj_core",
     "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
     "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -409,7 +413,6 @@ shared_dependencies = [
     "@maven//:net_i2p_crypto_eddsa",
     "@maven//:net_java_dev_jna_jna",
     "@maven//:net_java_dev_jna_jna_platform",
-    "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
     "@maven//:net_jcip_jcip_annotations",
     "@maven//:net_jodah_expiringmap",
     "@maven//:net_jodah_failsafe",
@@ -455,7 +458,7 @@ shared_dependencies = [
     "@maven//:org_apache_httpcomponents_httpcore",
     "@maven//:org_apache_httpcomponents_httpcore_nio",
     "@maven//:org_apache_httpcomponents_httpmime",
-    "@maven//:org_apache_ibatis_ibatis_core",
+    "@maven//:org_mybatis_mybatis",
     "@maven//:org_apache_logging_log4j_log4j_api",
     "@maven//:org_apache_logging_log4j_log4j_to_slf4j",
     "@maven//:org_apache_lucene_lucene_analyzers_common",
@@ -482,7 +485,6 @@ shared_dependencies = [
     "@maven//:org_atmosphere_atmosphere_runtime",
     "@maven//:org_atmosphere_wasync",
     "@maven//:org_atteo_evo_inflector",
-    "@maven//:org_awaitility_awaitility",
     "@maven//:org_bitbucket_b_c_jose4j",
     "@maven//:org_bouncycastle_bcpg_jdk15on",
     "@maven//:org_bouncycastle_bcpkix_jdk15on",
@@ -655,7 +657,7 @@ shared_dependencies = [
 
 java_binary(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     main_class = "io.harness.delegate.app.DelegateServiceApplication",
     resources = [
         "//270-delegate-service-app/src/main/resources:resource",
@@ -671,6 +673,7 @@ java_library(
         ["src/test/**/*.java"],
     ),
     data = [
+        "//270-delegate-service-app/src/test/resources:resource",
         "//400-rest/src/test/resources:resource",
     ],
     resources = [
@@ -697,6 +700,7 @@ java_library(
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
         "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:io_dropwizard_dropwizard_testing",
         "@maven//:io_github_benas_random_beans",
         "@maven//:io_grpc_grpc_testing",
         "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
@@ -708,7 +712,9 @@ java_library(
 
 run_tests()
 
-run_analysis(
-    run_checkstyle = False,
-    run_pmd = False,
-)
+run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "delegate-service-config.yml",
+])

@@ -2,6 +2,8 @@ package io.harness.rule;
 
 import static io.harness.lock.DistributedLockImplementation.NOOP;
 
+import static org.mockito.Mockito.mock;
+
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -17,6 +19,7 @@ import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.redis.RedisConfig;
+import io.harness.repositories.FilterRepository;
 import io.harness.serializer.DelegateServiceRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -143,6 +146,7 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(FilterRepository.class).toInstance(mock(FilterRepository.class));
       }
     });
 

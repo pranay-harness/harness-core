@@ -2,7 +2,9 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Environment;
@@ -17,6 +19,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfActivityBuilderCreationData {
   private String appName;
   private String appId;

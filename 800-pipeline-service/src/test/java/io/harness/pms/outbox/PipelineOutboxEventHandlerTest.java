@@ -23,7 +23,6 @@ import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEvent;
 import io.harness.pms.events.PipelineCreateEvent;
 import io.harness.pms.events.PipelineDeleteEvent;
@@ -34,6 +33,7 @@ import io.harness.rule.Owner;
 import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.UserPrincipal;
+import io.harness.utils.NGObjectMapperHelper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,7 +55,7 @@ public class PipelineOutboxEventHandlerTest extends CategoryTest {
 
   @Before
   public void setup() throws IOException {
-    objectMapper = NGPipelineObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER;
+    objectMapper = NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER;
     auditClientService = mock(AuditClientService.class);
     eventHandler = spy(new PipelineOutboxEventHandler(auditClientService, null));
     newYaml = Resources.toString(this.getClass().getClassLoader().getResource("pipeline.yml"), Charsets.UTF_8);

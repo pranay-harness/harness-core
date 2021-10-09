@@ -55,6 +55,7 @@ import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Stack;
+import com.amazonaws.services.cloudformation.model.UpdateStackResult;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
@@ -262,6 +263,9 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(updateCompleteList)
         .when(mockAwsHelperService)
         .getAllStacks(anyString(), any(), any());
+    UpdateStackResult updateStackResult = new UpdateStackResult();
+    updateStackResult.setStackId("StackId1");
+    doReturn(updateStackResult).when(mockAwsHelperService).updateStack(anyString(), any(), any());
     doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);

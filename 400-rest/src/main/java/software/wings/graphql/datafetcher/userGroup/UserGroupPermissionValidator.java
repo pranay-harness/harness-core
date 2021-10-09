@@ -15,7 +15,12 @@ import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.Workflow;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.application.AppFilterController;
 import software.wings.graphql.datafetcher.environment.EnvFilterController;
 import software.wings.graphql.schema.type.QLAppFilter;
@@ -24,7 +29,10 @@ import software.wings.graphql.schema.type.permissions.QLAppPermission;
 import software.wings.graphql.schema.type.permissions.QLPermissionType;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,9 +54,13 @@ import lombok.extern.slf4j.Slf4j;
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UserGroupPermissionValidator {
   @Inject EnvFilterController envFilterController;
+  @Inject WorkflowService workflowService;
+  @Inject PipelineService pipelineService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject TemplateService templateService;
   @Inject AppFilterController appFilterController;
+  @Inject WingsPersistence wingsPersistence;
 
   private void checkForInvalidIds(List<String> idsInput, List<String> idsPresent) {
     idsInput.removeAll(idsPresent);
@@ -74,6 +86,52 @@ public class UserGroupPermissionValidator {
     checkForInvalidIds(ids, idsPresent);
   }
 
+  private void checkTemplatesExists(Set<String> templateIds, String accountId) {
+    if (isEmpty(templateIds)) {
+      return;
+    }
+    List<String> ids = new ArrayList<>(templateIds);
+    final List<Template> templates = wingsPersistence.createQuery(Template.class)
+                                         .filter(TemplateKeys.accountId, accountId)
+                                         .field(TemplateKeys.uuid)
+                                         .in(templateIds)
+                                         .asList();
+    // This Ids are wrong
+    List<String> idsPresent = templates.stream().map(Template::getUuid).collect(Collectors.toList());
+    checkForInvalidIds(ids, idsPresent);
+  }
+
+  private void checkWorkflowExists(Set<String> workflowIds, String accountId) {
+    if (isEmpty(workflowIds)) {
+      return;
+    }
+    List<String> ids = new ArrayList<>(workflowIds);
+    PageRequest<Workflow> req = aPageRequest()
+                                    .addFieldsIncluded("_id")
+                                    .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                    .addFilter("_id", IN, workflowIds.toArray())
+                                    .build();
+    PageResponse<Workflow> res = workflowService.listWorkflows(req);
+    // This Ids are wrong
+    List<String> idsPresent = res.stream().map(Workflow::getUuid).collect(Collectors.toList());
+    checkForInvalidIds(ids, idsPresent);
+  }
+
+  private void checkPipelineExists(Set<String> pipelineIds, String accountId) {
+    if (isEmpty(pipelineIds)) {
+      return;
+    }
+    List<String> ids = new ArrayList<>(pipelineIds);
+    PageRequest<Pipeline> req = aPageRequest()
+                                    .addFieldsIncluded("_id")
+                                    .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                    .addFilter("_id", IN, pipelineIds.toArray())
+                                    .build();
+    PageResponse<Pipeline> res = pipelineService.listPipelines(req);
+    List<String> idsPresent = res.stream().map(Pipeline::getUuid).collect(Collectors.toList());
+    checkForInvalidIds(ids, idsPresent);
+  }
+
   private void checkProvisionerExists(Set<String> provisionersIds, String accountId) {
     if (isEmpty(provisionersIds)) {
       return;
@@ -96,14 +154,19 @@ public class UserGroupPermissionValidator {
       case SERVICE:
         checkServiceExists(appPermissions.getServices().getServiceIds(), accountId);
         break;
+      case TEMPLATE:
+        checkTemplatesExists(appPermissions.getTemplates().getTemplateIds(), accountId);
+        break;
       case ENV:
         envFilterController.checkEnvExists(appPermissions.getEnvironments().getEnvIds(), accountId);
         break;
       case WORKFLOW:
         envFilterController.checkEnvExists(appPermissions.getWorkflows().getEnvIds(), accountId);
+        checkWorkflowExists(appPermissions.getWorkflows().getWorkflowIds(), accountId);
         break;
       case PIPELINE:
         envFilterController.checkEnvExists(appPermissions.getPipelines().getEnvIds(), accountId);
+        checkPipelineExists(appPermissions.getPipelines().getPipelineIds(), accountId);
         break;
       case DEPLOYMENT:
         envFilterController.checkEnvExists(appPermissions.getDeployments().getEnvIds(), accountId);
@@ -158,6 +221,13 @@ public class UserGroupPermissionValidator {
           return;
         }
         break;
+      case TEMPLATE:
+        if (appPermission.getTemplates() != null
+            && (isNotEmpty(appPermission.getTemplates().getTemplateIds())
+                || appPermission.getTemplates().getFilterType() != null)) {
+          return;
+        }
+        break;
       case ENV:
         if (appPermission.getEnvironments() != null
             && (isNotEmpty(appPermission.getEnvironments().getEnvIds())
@@ -168,6 +238,7 @@ public class UserGroupPermissionValidator {
       case WORKFLOW:
         if (appPermission.getWorkflows() != null
             && (isNotEmpty(appPermission.getWorkflows().getEnvIds())
+                || isNotEmpty(appPermission.getWorkflows().getWorkflowIds())
                 || isNotEmpty(appPermission.getWorkflows().getFilterTypes()))) {
           return;
         }
@@ -175,6 +246,7 @@ public class UserGroupPermissionValidator {
       case PIPELINE:
         if (appPermission.getPipelines() != null
             && (isNotEmpty(appPermission.getPipelines().getEnvIds())
+                || isNotEmpty(appPermission.getPipelines().getPipelineIds())
                 || isNotEmpty(appPermission.getPipelines().getFilterTypes()))) {
           return;
         }
@@ -225,18 +297,23 @@ public class UserGroupPermissionValidator {
           return;
         }
         break;
+      case TEMPLATE:
+        if (appPermission.getTemplates().getTemplateIds() == null) {
+          return;
+        }
+        break;
       case ENV:
         if (appPermission.getEnvironments().getEnvIds() == null) {
           return;
         }
         break;
       case WORKFLOW:
-        if (appPermission.getWorkflows().getEnvIds() == null) {
+        if (appPermission.getWorkflows().getEnvIds() == null && appPermission.getWorkflows().getWorkflowIds() == null) {
           return;
         }
         break;
       case PIPELINE:
-        if (appPermission.getPipelines().getEnvIds() == null) {
+        if (appPermission.getPipelines().getEnvIds() == null && appPermission.getPipelines().getPipelineIds() == null) {
           return;
         }
         break;

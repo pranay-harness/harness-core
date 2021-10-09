@@ -31,6 +31,9 @@ public interface AwsAsgHelperServiceDelegate {
   List<String> listAutoScalingGroupInstanceIds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String autoScalingGroupName, boolean isInstanceSync);
 
+  List<com.amazonaws.services.autoscaling.model.Instance> listAutoScalingGroupModelInstances(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, boolean isInstanceSync);
+
   List<Instance> listAutoScalingGroupInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String autoScalingGroupName, boolean isInstanceSync);
 
@@ -52,7 +55,8 @@ public interface AwsAsgHelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs);
   void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
-      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout);
+      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout,
+      boolean amiInServiceHealthyStateFFEnabled);
   void setAutoScalingGroupLimits(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String autoScalingGroupName, Integer desiredCapacity, ExecutionLogCallback logCallback);
   void setMinInstancesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
@@ -71,8 +75,14 @@ public interface AwsAsgHelperServiceDelegate {
       String asgName, ExecutionLogCallback logCallback);
   void clearAllScalingPoliciesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String asgName, ExecutionLogCallback logCallback);
+  void clearAllScheduledActionsForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, ExecutionLogCallback logCallback);
   void attachScalingPoliciesToAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String asgName, List<String> scalingPolicyJSONs, ExecutionLogCallback logCallback);
+  void attachScheduledActionsToAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, List<String> scheduledActionJSONs, ExecutionLogCallback logCallback);
   void addUpdateTagAutoScalingGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String asgName,
       String region, String tagKey, String tagValue, ExecutionLogCallback executionLogCallback);
+  List<String> getScheduledActionJSONs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, ExecutionLogCallback logCallback);
 }

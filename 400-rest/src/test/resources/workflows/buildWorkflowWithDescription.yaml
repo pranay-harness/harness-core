@@ -8,7 +8,7 @@ notificationRules:
   executionScope: WORKFLOW
   notificationGroupAsExpression: false
   userGroupAsExpression: false
-  userGroupIds:
+  userGroupNames:
   - 2Z4yiRojQq2jmMx1JO05Jw
 phases:
 - daemonSet: false

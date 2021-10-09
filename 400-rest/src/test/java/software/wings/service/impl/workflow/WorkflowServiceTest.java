@@ -4307,6 +4307,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldFetchDefaultArtifactFromExecutionArgsIfArtifactVariableAbsent() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
+    workflowExecution.getExecutionArgs().setArtifactVariables(
+        Collections.singletonList(ArtifactVariable.builder().name("name").build()));
+    when(artifactService.get("art1"))
+        .thenReturn(anArtifact().withUuid("art1").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder().name("name2").allowedList(Collections.singletonList(ARTIFACT_STREAM_ID)).build(),
+        workflowExecution);
+    assertThat(artifact).isNotNull();
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCloneWorkflowWithSameName() {

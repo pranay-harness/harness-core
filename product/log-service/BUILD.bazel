@@ -1,18 +1,18 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "log-service_lib",
     srcs = ["main.go"],
     importpath = "github.com/wings-software/portal/product/log-service",
-    visibility = ["//visibility:private"],
+    visibility = ["//:__pkg__"],
     deps = [
-        "//product/log-service/cli:go_default_library",
-        "@com_github_joho_godotenv//autoload:go_default_library",
+        "//product/log-service/cli",
+        "@com_github_joho_godotenv//autoload",
     ],
 )
 
 go_binary(
     name = "log-service",
-    embed = [":go_default_library"],
+    embed = [":log-service_lib"],
     visibility = ["//visibility:public"],
 )

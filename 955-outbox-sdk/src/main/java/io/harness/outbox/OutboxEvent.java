@@ -54,6 +54,11 @@ public class OutboxEvent {
                  .field(OutboxEventKeys.createdAt)
                  .field(OutboxEventKeys.nextUnblockAttemptAt)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("eventType_blocked_outbox_Idx")
+                 .field(OutboxEventKeys.eventType)
+                 .field(OutboxEventKeys.blocked)
+                 .build())
         .build();
   }
 }

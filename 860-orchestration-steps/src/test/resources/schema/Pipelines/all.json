@@ -76,12 +76,29 @@
           "type": "string",
           "enum": [
             "branch",
-            "tag"
+            "tag",
+            "PR"
           ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "PR"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PRBuildSpec"
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {
@@ -152,6 +169,13 @@
         "depth": {
           "type": "integer",
           "format": "int32"
+        },
+        "prCloneStrategy": {
+          "type": "string",
+          "enum": [
+            "MergeCommit",
+            "SourceBranch"
+          ]
         },
         "repoName": {
           "type": "string"
@@ -297,7 +321,8 @@
           ]
         },
         "memory": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(([0-9]*[.])?[0-9]+)([GM]i?)$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -653,6 +678,25 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "PRBuildSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BuildSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "number"
+          ],
+          "properties": {
+            "number": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ParallelStageElementConfig": {
       "type": "object",
       "required": [
@@ -709,6 +753,7 @@
             "PipelineStart",
             "PipelineSuccess",
             "PipelineFailed",
+            "PipelineEnd",
             "PipelinePaused",
             "StageSuccess",
             "StageFailed",
@@ -766,6 +811,10 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "timeout": {
+          "type": "string",
+          "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
         },
         "variables": {
           "type": "array",
@@ -1122,7 +1171,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
+          "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
         },
         "type": {
           "type": "string"
@@ -1153,12 +1202,6 @@
         "name": {
           "type": "string",
           "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-        },
-        "rollbackSteps": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
         },
         "steps": {
           "type": "array",

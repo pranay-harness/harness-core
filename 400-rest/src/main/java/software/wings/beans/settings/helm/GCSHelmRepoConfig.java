@@ -2,7 +2,9 @@ package software.wings.beans.settings.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
@@ -30,23 +32,27 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   @SchemaIgnore @NotEmpty private String accountId;
 
   @NotEmpty private String connectorId;
   @NotEmpty private String bucketName;
   private String folderPath;
+  private boolean useLatestChartMuseumVersion;
 
   public GCSHelmRepoConfig() {
     super(SettingVariableTypes.GCS_HELM_REPO.name());
   }
 
-  public GCSHelmRepoConfig(String accountId, String connectorId, String bucketName, String folderPath) {
+  public GCSHelmRepoConfig(
+      String accountId, String connectorId, String bucketName, String folderPath, boolean useLatestChartMuseumVersion) {
     super(SettingVariableTypes.GCS_HELM_REPO.name());
     this.accountId = accountId;
     this.connectorId = connectorId;
     this.bucketName = bucketName;
     this.folderPath = folderPath;
+    this.useLatestChartMuseumVersion = useLatestChartMuseumVersion;
   }
 
   @Override
@@ -61,7 +67,8 @@ public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
                                     .version(HelmVersion.V3)
                                     .criteria(getType() + ":" + getBucketName())
                                     .build());
-    executionCapabilityList.add(ChartMuseumCapability.builder().build());
+    executionCapabilityList.add(
+        ChartMuseumCapability.builder().useLatestChartMuseumVersion(this.useLatestChartMuseumVersion).build());
     return executionCapabilityList;
   }
 

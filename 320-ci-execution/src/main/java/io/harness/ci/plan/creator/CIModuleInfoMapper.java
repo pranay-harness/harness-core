@@ -18,6 +18,7 @@ import io.harness.ci.pipeline.executions.beans.CIBuildPRHook;
 import io.harness.ci.pipeline.executions.beans.CIWebhookInfoDTO;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
@@ -62,6 +63,7 @@ public class CIModuleInfoMapper {
     if (isNotEmpty(pr.getCommitDetailsList())) {
       pr.getCommitDetailsList().forEach(commit -> commitList.add(convertCommit(commit)));
     }
+    Collections.reverse(commitList);
     return CIBuildPRHook.builder()
         .id(pr.getPullRequestId())
         .link(pr.getPullRequestLink())

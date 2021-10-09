@@ -26,9 +26,9 @@ public class EmailChannel extends NotificationChannel {
   List<String> recipients;
 
   @Builder
-  public EmailChannel(String accountId, List<String> userGroupIds, List<NotificationRequest.UserGroup> userGroups,
-      String templateId, Map<String, String> templateData, Team team, List<String> recipients) {
-    super(accountId, userGroupIds, userGroups, templateId, templateData, team);
+  public EmailChannel(String accountId, List<NotificationRequest.UserGroup> userGroups, String templateId,
+      Map<String, String> templateData, Team team, List<String> recipients) {
+    super(accountId, userGroups, templateId, templateData, team);
     this.recipients = recipients;
   }
 
@@ -43,7 +43,6 @@ public class EmailChannel extends NotificationChannel {
                       .addAllEmailIds(recipients)
                       .setTemplateId(templateId)
                       .putAllTemplateData(templateData)
-                      .addAllUserGroupIds(CollectionUtils.emptyIfNull(userGroupIds))
                       .addAllUserGroup(CollectionUtils.emptyIfNull(userGroups)))
         .build();
   }

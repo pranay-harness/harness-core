@@ -6,6 +6,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
@@ -16,6 +17,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Progress
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface VerificationJobInstanceService {
   String create(VerificationJobInstance verificationJobInstance);
@@ -45,4 +47,9 @@ public interface VerificationJobInstanceService {
   List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob);
   void markTimedOutIfNoProgress(VerificationJobInstance verificationJobInstance);
   CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId);
+  Set<DatasourceTypeDTO> getDataSourcetypes(List<String> verificationJobInstanceIds);
+  void abort(List<String> verificationJobInstanceIds);
+  List<String> getCVConfigIdsForVerificationJobInstance(
+      String verificationJobInstanceId, List<String> filterIdentifiers);
+  List<String> createDemoInstances(List<VerificationJobInstance> verificationJobInstances);
 }

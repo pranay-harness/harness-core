@@ -1,9 +1,12 @@
 package io.harness;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.ChecksumType;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
@@ -18,8 +21,11 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.logging.AccessTokenBean;
 import io.harness.ng.core.dto.ErrorDetail;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.packages.HarnessPackages;
 import io.harness.reflection.ReflectionUtils;
+import io.harness.rest.RestResponse;
+import io.harness.security.annotations.InternalApi;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -29,8 +35,13 @@ import com.esotericsoftware.kryo.util.ObjectMap;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.ProtocolMessageEnum;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,8 +49,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.ws.rs.Path;
 import org.reflections.Reflections;
 
+@OwnedBy(HarnessTeam.CDP)
 class MicroserviceInterfaceTool {
   private static void log(String message) {
     System.out.println(message);
@@ -62,7 +75,7 @@ class MicroserviceInterfaceTool {
     return jsonHashes;
   }
 
-  private static Map<String, String> computeProtoHashes() throws Exception {
+  private static Map<String, String> computeProtoHashes(Set<String> protoDependencies) throws Exception {
     Set<Class> protoClasses = new HashSet<>();
     Reflections reflections =
         new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS, "io.serializer");
@@ -70,19 +83,22 @@ class MicroserviceInterfaceTool {
     protoClasses.addAll(reflections.getSubTypesOf(ProtocolMessageEnum.class));
     Map<String, String> classToHash = new HashMap<>();
     for (Class protoClass : protoClasses) {
-      classToHash.put(protoClass.getCanonicalName(), calculateStringHash(protoClass));
+      if (EmptyPredicate.isEmpty(protoDependencies) || protoDependencies.contains(protoClass.getCanonicalName())) {
+        classToHash.put(protoClass.getCanonicalName(), calculateStringHash(protoClass));
+      }
     }
-
     return classToHash;
   }
 
-  private static Map<String, String> computeKryoHashes() throws Exception {
+  private static Map<String, String> computeKryoHashes(Set<String> kryoDependencies) throws Exception {
     Kryo kryo = new Kryo();
     log("Loading all implementers of Kryo Registrars");
     Set<Class<? extends KryoRegistrar>> registrars = getAllImplementingClasses();
-    log("Found: " + registrars.size() + " registrars");
     for (Class<? extends KryoRegistrar> registrar : registrars) {
-      registrar.newInstance().register(kryo);
+      if (EmptyPredicate.isEmpty(kryoDependencies)
+          || kryoDependencies.stream().anyMatch(dependency -> registrar.getCanonicalName().endsWith(dependency))) {
+        registrar.newInstance().register(kryo);
+      }
     }
 
     DefaultClassResolver classResolver = (DefaultClassResolver) kryo.getClassResolver();
@@ -100,11 +116,102 @@ class MicroserviceInterfaceTool {
     return classToHash;
   }
 
+  private static void parseMicroserviceDependencies(
+      Set<String> kryoDependencies, Set<String> protoDependencies, String[] args) throws Exception {
+    for (String arg : args) {
+      if (arg.startsWith("kryo-file")) {
+        List<String> collect =
+            Files.lines(Paths.get(arg.substring(10)), Charset.defaultCharset()).collect(Collectors.toList());
+        kryoDependencies.addAll(collect.stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toList()));
+      } else if (arg.startsWith("proto-file")) {
+        List<String> collect =
+            Files.lines(Paths.get(arg.substring(11)), Charset.defaultCharset()).collect(Collectors.toList());
+        protoDependencies.addAll(collect.stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toList()));
+      } else if (!arg.equals("ignore-json")) {
+        log("Un recognized option: " + arg);
+      }
+    }
+  }
+
+  private static Map<String, String> computeBEInternalApis() throws Exception {
+    Reflections reflections =
+        new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS, "io.serializer");
+    Set<Class<?>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
+    Map<String, String> classToHash = new HashMap<>();
+    for (Class resourceClass : resourceClasses) {
+      Method[] methods = resourceClass.getMethods();
+      if (EmptyPredicate.isEmpty(methods)) {
+        continue;
+      }
+      for (Method method : methods) {
+        Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
+        if (EmptyPredicate.isEmpty(declaredAnnotations)) {
+          continue;
+        }
+        for (Annotation declaredAnnotation : declaredAnnotations) {
+          if (declaredAnnotation instanceof InternalApi) {
+            /*
+             * The return type information is tricky to find as the types are either
+             * io.harness.rest.RestResponse<T> OR io.harness.ng.core.dto.ResponseDTO<T>
+             * We need to find the type of Type Parameter.
+             * This information is not directly available via reflection,
+             * Hence we use the "toGenericString" and try to extract the information from there
+             */
+            Class<?> returnType = method.getReturnType();
+            String methodString = method.toGenericString();
+            String[] split = methodString.split(" ");
+            String paramClassName = "";
+            if (split.length == 3) {
+              if (RestResponse.class.equals(returnType)) {
+                // Example: public io.harness.rest.RestResponse<io.harness.beans.FeatureFlag>
+                // software.wings.resources.FeatureFlagResource.getFeatureFlag(java.lang.String)
+                paramClassName = split[1].substring(29, split[1].length() - 1);
+              } else if (ResponseDTO.class.equals(returnType)) {
+                // Example: public io.harness.ng.core.dto.ResponseDTO<io.harness.ng.core.dto.TokenDTO>
+                // io.harness.ng.core.remote.TokenResource.getToken(java.lang.String)
+                paramClassName = split[1].substring(35, split[1].length() - 1);
+              }
+            }
+            if (EmptyPredicate.isNotEmpty(paramClassName)) {
+              /*
+               * The String could be a collection also. And in general could be pretty
+               * complicated to parse. Hence we do not fail, if we are not able to parse.
+               */
+              if (paramClassName.startsWith("java.util.List<") && paramClassName.endsWith(">")) {
+                // We return only Lists right now. So adding special handling for the List case.
+                paramClassName = paramClassName.substring(15, paramClassName.length() - 1);
+              }
+              try {
+                Class<?> paramClass = Class.forName(paramClassName);
+                classToHash.put(paramClass.getCanonicalName(), calculateStringHash(paramClass));
+              } catch (Exception ex) {
+                log(ex.getMessage());
+              }
+            }
+            Class<?>[] parameterTypes = method.getParameterTypes();
+            if (EmptyPredicate.isNotEmpty(parameterTypes)) {
+              for (Class parameterType : parameterTypes) {
+                classToHash.put(parameterType.getCanonicalName(), calculateStringHash(parameterType));
+              }
+            }
+          }
+        }
+      }
+    }
+    return classToHash;
+  }
+
   public static void main(String[] args) {
     try {
-      Map<String, String> classToHash = computeKryoHashes();
-      classToHash.putAll(computeProtoHashes());
-      classToHash.putAll(computeJsonHashes());
+      Set<String> kryoDependencies = new HashSet<>();
+      Set<String> protoDependencies = new HashSet<>();
+      parseMicroserviceDependencies(kryoDependencies, protoDependencies, args);
+      Map<String, String> classToHash = computeKryoHashes(kryoDependencies);
+      classToHash.putAll(computeProtoHashes(protoDependencies));
+      if (!Arrays.asList(args).contains("ignore-json")) {
+        classToHash.putAll(computeJsonHashes());
+      }
+      classToHash.putAll(computeBEInternalApis());
       List<String> sortedClasses = classToHash.keySet().stream().sorted(String::compareTo).collect(Collectors.toList());
       List<String> sortedHashes = sortedClasses.stream().map(classToHash::get).collect(Collectors.toList());
       String concatenatedHashes = HarnessStringUtils.join(",", sortedHashes);

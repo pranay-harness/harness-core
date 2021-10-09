@@ -21,7 +21,9 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLO
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.ALLOW_DEPLOYMENTS_DURING_FREEZE;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
+import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
@@ -85,6 +87,7 @@ import software.wings.graphql.schema.type.permissions.QLPipelineFilterType;
 import software.wings.graphql.schema.type.permissions.QLPipelinePermissions;
 import software.wings.graphql.schema.type.permissions.QLProivionerPermissions;
 import software.wings.graphql.schema.type.permissions.QLServicePermissions;
+import software.wings.graphql.schema.type.permissions.QLTemplatePermissions;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.graphql.schema.type.permissions.QLWorkflowFilterType;
 import software.wings.graphql.schema.type.permissions.QLWorkflowPermissions;
@@ -195,6 +198,8 @@ public class UserGroupPermissionsController {
         return MANAGE_IP_WHITELIST;
       case MANAGE_DEPLOYMENT_FREEZES:
         return MANAGE_DEPLOYMENT_FREEZES;
+      case ALLOW_DEPLOYMENTS_DURING_FREEZE:
+        return ALLOW_DEPLOYMENTS_DURING_FREEZE;
       case MANAGE_PIPELINE_GOVERNANCE_STANDARDS:
         return MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
       case VIEW_USER_AND_USER_GROUPS_AND_API_KEYS:
@@ -258,6 +263,8 @@ public class UserGroupPermissionsController {
         return DEPLOYMENT;
       case PROVISIONER:
         return PROVISIONER;
+      case TEMPLATE:
+        return APP_TEMPLATE;
       default:
         log.error("Invalid Permission Type {} given by the user", permissionType.toString());
     }
@@ -285,12 +292,18 @@ public class UserGroupPermissionsController {
     return EnvFilter.builder().ids(envPermissions.getEnvIds()).filterTypes(filterTypes).build();
   }
 
-  private WorkflowFilter createWorkflowFilter(QLWorkflowPermissions workflowPermissions) {
+  private Filter createWorkflowFilter(QLWorkflowPermissions workflowPermissions) {
     if (isNotEmpty(workflowPermissions.getEnvIds()) && isNotEmpty(workflowPermissions.getFilterTypes())) {
       throw new InvalidRequestException("Cannot set both envIds and filterTypes in workflow filter");
     }
+    if (isNotEmpty(workflowPermissions.getWorkflowIds()) && isNotEmpty(workflowPermissions.getFilterTypes())) {
+      throw new InvalidRequestException("Cannot set both workflowIds and filterTypes in workflow filter");
+    }
+    if (isNotEmpty(workflowPermissions.getWorkflowIds()) && isNotEmpty(workflowPermissions.getEnvIds())) {
+      throw new InvalidRequestException("Cannot set both workflowIds and envIds in workflow filter");
+    }
     Set<String> filterTypes = new HashSet<>();
-    if (isNotEmpty(workflowPermissions.getEnvIds())) {
+    if (isNotEmpty(workflowPermissions.getEnvIds()) || isNotEmpty(workflowPermissions.getWorkflowIds())) {
       filterTypes.add(SELECTED);
     } else {
       if (workflowPermissions.getFilterTypes() != null) {
@@ -303,7 +316,16 @@ public class UserGroupPermissionsController {
         if (workflowPermissions.getFilterTypes().contains(QLWorkflowFilterType.WORKFLOW_TEMPLATES)) {
           filterTypes.add(TEMPLATES);
         }
+        if (workflowPermissions.getFilterTypes().contains(QLWorkflowFilterType.ALL_WORKFLOWS)) {
+          filterTypes.add(ALL);
+        }
       }
+    }
+    // If permission given via workflow ids or All Workflows, use Entity filter else Env Filter
+    if (isNotEmpty(workflowPermissions.getWorkflowIds())) {
+      return GenericEntityFilter.builder().filterType(SELECTED).ids(workflowPermissions.getWorkflowIds()).build();
+    } else if (filterTypes.contains(ALL)) {
+      return GenericEntityFilter.builder().filterType(ALL).build();
     }
     return new WorkflowFilter(workflowPermissions.getEnvIds(), filterTypes);
   }
@@ -332,8 +354,14 @@ public class UserGroupPermissionsController {
     if (isNotEmpty(pipelinePermissions.getEnvIds()) && isNotEmpty(pipelinePermissions.getFilterTypes())) {
       throw new InvalidRequestException("Cannot set both envIds and filterTypes in environment filter");
     }
+    if (isNotEmpty(pipelinePermissions.getPipelineIds()) && isNotEmpty(pipelinePermissions.getFilterTypes())) {
+      throw new InvalidRequestException("Cannot set both pipelineIds and filterTypes in Pipeline filter");
+    }
+    if (isNotEmpty(pipelinePermissions.getEnvIds()) && isNotEmpty(pipelinePermissions.getPipelineIds())) {
+      throw new InvalidRequestException("Cannot set both envIds and pipelineIds in Pipeline filter");
+    }
     Set<String> filterTypes = new HashSet<>();
-    if (isNotEmpty(pipelinePermissions.getEnvIds())) {
+    if (isNotEmpty(pipelinePermissions.getEnvIds()) || isNotEmpty(pipelinePermissions.getPipelineIds())) {
       filterTypes.add(SELECTED);
     } else {
       if (pipelinePermissions.getFilterTypes() != null) {
@@ -343,7 +371,16 @@ public class UserGroupPermissionsController {
         if (pipelinePermissions.getFilterTypes().contains(QLPipelineFilterType.NON_PRODUCTION_PIPELINES)) {
           filterTypes.add(NON_PROD);
         }
+        if (pipelinePermissions.getFilterTypes().contains(QLPipelineFilterType.ALL_PIPELINES)) {
+          filterTypes.add(ALL);
+        }
       }
+    }
+    // If permission given via pipeline ids or All Pipelines, use Entity filter else Env based Filter
+    if (isNotEmpty(pipelinePermissions.getPipelineIds())) {
+      return GenericEntityFilter.builder().filterType(SELECTED).ids(pipelinePermissions.getPipelineIds()).build();
+    } else if (filterTypes.contains(ALL)) {
+      return GenericEntityFilter.builder().filterType(ALL).build();
     }
     return WorkflowFilter.builder().ids(pipelinePermissions.getEnvIds()).filterTypes(filterTypes).build();
   }
@@ -392,6 +429,15 @@ public class UserGroupPermissionsController {
         break;
       case PIPELINE:
         entityFilter = createPipelineFilter(permission.getPipelines());
+        break;
+      case TEMPLATE:
+        Set<String> templateIds = permission.getTemplates().getTemplateIds();
+        if (templateIds != null) {
+          filterType = isNotEmpty(templateIds) ? SELECTED : ALL;
+        } else {
+          filterType = ALL;
+        }
+        entityFilter = GenericEntityFilter.builder().filterType(filterType).ids(templateIds).build();
         break;
       case PROVISIONER:
         Set<String> provisionerIds = permission.getProvisioners().getProvisionerIds();
@@ -484,6 +530,8 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
       case MANAGE_DEPLOYMENT_FREEZES:
         return QLAccountPermissionType.MANAGE_DEPLOYMENT_FREEZES;
+      case ALLOW_DEPLOYMENTS_DURING_FREEZE:
+        return QLAccountPermissionType.ALLOW_DEPLOYMENTS_DURING_FREEZE;
       case MANAGE_IP_WHITELIST:
         return QLAccountPermissionType.MANAGE_IP_WHITELIST;
       case MANAGE_AUTHENTICATION_SETTINGS:
@@ -564,6 +612,8 @@ public class UserGroupPermissionsController {
         return QLPermissionType.DEPLOYMENT;
       case PROVISIONER:
         return QLPermissionType.PROVISIONER;
+      case APP_TEMPLATE:
+        return QLPermissionType.TEMPLATE;
       default:
         log.error("Invalid Permission Type {} given by the user", permissionType.toString());
     }
@@ -591,6 +641,21 @@ public class UserGroupPermissionsController {
       return QLWorkflowPermissions.builder().filterTypes(filterTypes).build();
     }
     return QLWorkflowPermissions.builder().envIds(workflowPermissions.getIds()).build();
+  }
+
+  private QLWorkflowPermissions createWorkflowFilterOutputFromEntityFilter(GenericEntityFilter workflowPermissions) {
+    if (isEmpty(workflowPermissions.getIds())) {
+      EnumSet<QLWorkflowFilterType> filterTypes = EnumSet.noneOf(QLWorkflowFilterType.class);
+      if (isEmpty(workflowPermissions.getFilterType())) {
+        filterTypes.add(QLWorkflowFilterType.ALL_WORKFLOWS);
+      } else {
+        if (workflowPermissions.getFilterType().contains(ALL)) {
+          filterTypes.add(QLWorkflowFilterType.ALL_WORKFLOWS);
+        }
+      }
+      return QLWorkflowPermissions.builder().filterTypes(filterTypes).build();
+    }
+    return QLWorkflowPermissions.builder().workflowIds(workflowPermissions.getIds()).build();
   }
 
   private QLEnvPermissions createEnvFilterOutput(EnvFilter envPermissions) {
@@ -651,6 +716,21 @@ public class UserGroupPermissionsController {
     return QLPipelinePermissions.builder().envIds(envPermissions.getIds()).build();
   }
 
+  private QLPipelinePermissions createPipelineFilterOutputFromEntityFilter(GenericEntityFilter pipelinePermissions) {
+    if (isEmpty(pipelinePermissions.getIds())) {
+      EnumSet<QLPipelineFilterType> filterTypes = EnumSet.noneOf(QLPipelineFilterType.class);
+      if (isEmpty(pipelinePermissions.getFilterType())) {
+        filterTypes.add(QLPipelineFilterType.ALL_PIPELINES);
+      } else {
+        if (pipelinePermissions.getFilterType().contains(ALL)) {
+          filterTypes.add(QLPipelineFilterType.ALL_PIPELINES);
+        }
+      }
+      return QLPipelinePermissions.builder().filterTypes(filterTypes).build();
+    }
+    return QLPipelinePermissions.builder().pipelineIds(pipelinePermissions.getIds()).build();
+  }
+
   private List<QLAppPermission> populateUserGroupAppPermissionOutput(Set<AppPermission> appPermissions) {
     List<QLAppPermission> userGroupAppPermissions = null;
     if (appPermissions != null) {
@@ -683,19 +763,28 @@ public class UserGroupPermissionsController {
           servicePermissions = QLServicePermissions.builder().serviceIds(serviceIds).build();
         }
         return builder.permissionType(appPermissionType).services(servicePermissions).build();
+      case APP_TEMPLATE:
+        QLTemplatePermissions templatePermissions;
+        Set<String> templateIds = permission.getEntityFilter().getIds();
+        if (isEmpty(templateIds)) {
+          templatePermissions =
+              QLTemplatePermissions.builder().filterType(QLPermissionsFilterType.ALL).templateIds(templateIds).build();
+        } else {
+          templatePermissions = QLTemplatePermissions.builder().templateIds(templateIds).build();
+        }
+        return builder.permissionType(appPermissionType).templates(templatePermissions).build();
       case ENV:
         QLEnvPermissions envFilter = createEnvFilterOutput((EnvFilter) permission.getEntityFilter());
         return builder.permissionType(appPermissionType).environments(envFilter).build();
       case WORKFLOW:
-        QLWorkflowPermissions workflowFilter =
-            createWorkflowFilterOutput((WorkflowFilter) permission.getEntityFilter());
+        QLWorkflowPermissions workflowFilter = getQlWorkflowPermissions(permission);
         return builder.permissionType(appPermissionType).workflows(workflowFilter).build();
       case DEPLOYMENT:
         QLDeploymentPermissions deploymentFilter =
             createDeploymentFilterOutput((EnvFilter) permission.getEntityFilter());
         return builder.permissionType(appPermissionType).deployments(deploymentFilter).build();
       case PIPELINE:
-        QLPipelinePermissions pipelineFilter = createPipelineFilterOutput((EnvFilter) permission.getEntityFilter());
+        QLPipelinePermissions pipelineFilter = getQlPipelinePermissions(permission);
         return builder.permissionType(appPermissionType).pipelines(pipelineFilter).build();
       case PROVISIONER:
         QLProivionerPermissions provisionerPermissions;
@@ -713,6 +802,27 @@ public class UserGroupPermissionsController {
         log.error("Invalid Application Permission Type {} given by the user", permissionType.toString());
         throw new InvalidRequestException("Invalid Application Permission type given by the user");
     }
+  }
+
+  private QLPipelinePermissions getQlPipelinePermissions(AppPermission permission) {
+    QLPipelinePermissions pipelineFilter;
+    if (permission.getEntityFilter() instanceof GenericEntityFilter) {
+      pipelineFilter = createPipelineFilterOutputFromEntityFilter((GenericEntityFilter) permission.getEntityFilter());
+    } else {
+      pipelineFilter = createPipelineFilterOutput((EnvFilter) permission.getEntityFilter());
+    }
+    return pipelineFilter;
+  }
+
+  private QLWorkflowPermissions getQlWorkflowPermissions(AppPermission permission) {
+    QLWorkflowPermissions workflowFilter;
+    if (permission.getEntityFilter() instanceof GenericEntityFilter) {
+      workflowFilter = createWorkflowFilterOutputFromEntityFilter((GenericEntityFilter) permission.getEntityFilter());
+
+    } else {
+      workflowFilter = createWorkflowFilterOutput((WorkflowFilter) permission.getEntityFilter());
+    }
+    return workflowFilter;
   }
 
   private QLAccountPermissions populateUserGroupAccountPermission(AccountPermissions permissions) {

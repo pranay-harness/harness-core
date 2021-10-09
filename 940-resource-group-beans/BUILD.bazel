@@ -1,23 +1,26 @@
-load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:tools/bazel/harness.bzl", "java_library")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//960-persistence:module",
-        "//970-ng-commons:module",
-    ],
-)
-
-java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
         "//:lombok",
+        "//960-persistence:module",
+        "//970-ng-commons:module",
+        "//980-commons:module",
+        "//999-annotations:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:io_swagger_swagger_annotations",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_mongodb_morphia_morphia",
+        "@maven//:org_springframework_data_spring_data_commons",
+        "@maven//:org_springframework_data_spring_data_mongodb",
     ],
 )
 

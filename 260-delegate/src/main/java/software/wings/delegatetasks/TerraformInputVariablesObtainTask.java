@@ -102,8 +102,8 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
         throw new InvalidRequestException("No Terraform Files Found", WingsException.USER);
       }
 
-      List<String> variables = terraformConfigInspectService.parseFieldsUnderCategory(
-          absoluteModulePath, BLOCK_TYPE.VARIABLES.name().toLowerCase());
+      List<String> variables = terraformConfigInspectService.parseFieldsUnderCategory(absoluteModulePath,
+          BLOCK_TYPE.VARIABLES.name().toLowerCase(), parameters.isUseTfConfigInspectLatestVersion());
 
       if (variables != null) {
         variables.stream()

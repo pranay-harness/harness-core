@@ -1,0 +1,169 @@
+package io.harness.template.mappers;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.rule.OwnerRule.ARCHIT;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.category.element.UnitTests;
+import io.harness.encryption.Scope;
+import io.harness.ng.core.template.TemplateEntityType;
+import io.harness.ng.core.template.TemplateSummaryResponseDTO;
+import io.harness.rule.Owner;
+import io.harness.template.beans.TemplateResponseDTO;
+import io.harness.template.beans.yaml.NGTemplateConfig;
+import io.harness.template.entity.TemplateEntity;
+
+import com.google.common.io.Resources;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+@OwnedBy(CDC)
+public class NGTemplateDtoMapperTest extends CategoryTest {
+  private final String ACCOUNT_ID = "accountId";
+  private final String ORG_IDENTIFIER = "orgId";
+  private final String PROJ_IDENTIFIER = "projId";
+  private final String TEMPLATE_IDENTIFIER = "template1";
+  private final String TEMPLATE_VERSION_LABEL = "version1";
+  private final String TEMPLATE_CHILD_TYPE = "ShellScript";
+
+  private String yaml;
+  TemplateEntity entity;
+
+  @Before
+  public void setUp() throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    String filename = "template.yaml";
+    yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+
+    entity = TemplateEntity.builder()
+                 .accountId(ACCOUNT_ID)
+                 .orgIdentifier(ORG_IDENTIFIER)
+                 .projectIdentifier(PROJ_IDENTIFIER)
+                 .identifier(TEMPLATE_IDENTIFIER)
+                 .name(TEMPLATE_IDENTIFIER)
+                 .versionLabel(TEMPLATE_VERSION_LABEL)
+                 .yaml(yaml)
+                 .templateEntityType(TemplateEntityType.STEP_TEMPLATE)
+                 .childType(TEMPLATE_CHILD_TYPE)
+                 .fullyQualifiedIdentifier("account_id/orgId/projId/template1/version1/")
+                 .templateScope(Scope.PROJECT)
+                 .version(0L)
+                 .build();
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testWriteTemplateResponseDto() {
+    TemplateResponseDTO templateResponseDTO = NGTemplateDtoMapper.writeTemplateResponseDto(entity);
+    assertThat(templateResponseDTO).isNotNull();
+    assertThat(templateResponseDTO.getIdentifier()).isEqualTo(entity.getIdentifier());
+    assertThat(templateResponseDTO.getAccountId()).isEqualTo(entity.getAccountIdentifier());
+    assertThat(templateResponseDTO.getOrgIdentifier()).isEqualTo(entity.getOrgIdentifier());
+    assertThat(templateResponseDTO.getProjectIdentifier()).isEqualTo(entity.getProjectIdentifier());
+    assertThat(templateResponseDTO.getYaml()).isEqualTo(entity.getYaml());
+    assertThat(templateResponseDTO.getName()).isEqualTo(entity.getName());
+    assertThat(templateResponseDTO.getDescription()).isEqualTo(entity.getDescription());
+    assertThat(templateResponseDTO.isStableTemplate()).isEqualTo(entity.isStableTemplate());
+    assertThat(templateResponseDTO.getTemplateEntityType()).isEqualTo(entity.getTemplateEntityType());
+    assertThat(templateResponseDTO.getChildType()).isEqualTo(entity.getChildType());
+    assertThat(templateResponseDTO.getTemplateScope()).isEqualTo(entity.getTemplateScope());
+    assertThat(templateResponseDTO.getVersionLabel()).isEqualTo(entity.getVersionLabel());
+    assertThat(templateResponseDTO.getVersion()).isEqualTo(entity.getVersion());
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testWriteTemplateSummaryResponseDto() {
+    TemplateSummaryResponseDTO templateSummaryResponseDTO =
+        NGTemplateDtoMapper.prepareTemplateSummaryResponseDto(entity);
+    assertThat(templateSummaryResponseDTO).isNotNull();
+    assertThat(templateSummaryResponseDTO.getIdentifier()).isEqualTo(entity.getIdentifier());
+    assertThat(templateSummaryResponseDTO.getAccountId()).isEqualTo(entity.getAccountIdentifier());
+    assertThat(templateSummaryResponseDTO.getOrgIdentifier()).isEqualTo(entity.getOrgIdentifier());
+    assertThat(templateSummaryResponseDTO.getProjectIdentifier()).isEqualTo(entity.getProjectIdentifier());
+    assertThat(templateSummaryResponseDTO.getYaml()).isEqualTo(entity.getYaml());
+    assertThat(templateSummaryResponseDTO.getName()).isEqualTo(entity.getName());
+    assertThat(templateSummaryResponseDTO.getDescription()).isEqualTo(entity.getDescription());
+    assertThat(templateSummaryResponseDTO.isStableTemplate()).isEqualTo(entity.isStableTemplate());
+    assertThat(templateSummaryResponseDTO.getTemplateEntityType()).isEqualTo(entity.getTemplateEntityType());
+    assertThat(templateSummaryResponseDTO.getChildType()).isEqualTo(entity.getChildType());
+    assertThat(templateSummaryResponseDTO.getTemplateScope()).isEqualTo(entity.getTemplateScope());
+    assertThat(templateSummaryResponseDTO.getVersionLabel()).isEqualTo(entity.getVersionLabel());
+    assertThat(templateSummaryResponseDTO.getVersion()).isEqualTo(entity.getVersion());
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testToTemplateEntity() {
+    TemplateEntity entity = NGTemplateDtoMapper.toTemplateEntity(ACCOUNT_ID, yaml);
+    assertThat(entity).isNotNull();
+    assertThat(entity.getIdentifier()).isEqualTo(entity.getIdentifier());
+    assertThat(entity.getAccountId()).isEqualTo(entity.getAccountIdentifier());
+    assertThat(entity.getOrgIdentifier()).isEqualTo(entity.getOrgIdentifier());
+    assertThat(entity.getProjectIdentifier()).isEqualTo(entity.getProjectIdentifier());
+    assertThat(entity.getYaml()).isEqualTo(entity.getYaml());
+    assertThat(entity.getName()).isEqualTo(entity.getName());
+    assertThat(entity.getDescription()).isEqualTo(entity.getDescription());
+    assertThat(entity.isStableTemplate()).isEqualTo(entity.isStableTemplate());
+    assertThat(entity.getTemplateEntityType()).isEqualTo(entity.getTemplateEntityType());
+    assertThat(entity.getChildType()).isEqualTo(entity.getChildType());
+    assertThat(entity.getTemplateScope()).isEqualTo(entity.getTemplateScope());
+    assertThat(entity.getVersionLabel()).isEqualTo(entity.getVersionLabel());
+
+    entity = NGTemplateDtoMapper.toTemplateEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+    assertThat(entity).isNotNull();
+    assertThat(entity.getIdentifier()).isEqualTo(entity.getIdentifier());
+    assertThat(entity.getAccountId()).isEqualTo(entity.getAccountIdentifier());
+    assertThat(entity.getOrgIdentifier()).isEqualTo(entity.getOrgIdentifier());
+    assertThat(entity.getProjectIdentifier()).isEqualTo(entity.getProjectIdentifier());
+    assertThat(entity.getYaml()).isEqualTo(entity.getYaml());
+    assertThat(entity.getName()).isEqualTo(entity.getName());
+    assertThat(entity.getDescription()).isEqualTo(entity.getDescription());
+    assertThat(entity.isStableTemplate()).isEqualTo(entity.isStableTemplate());
+    assertThat(entity.getTemplateEntityType()).isEqualTo(entity.getTemplateEntityType());
+    assertThat(entity.getChildType()).isEqualTo(entity.getChildType());
+    assertThat(entity.getTemplateScope()).isEqualTo(entity.getTemplateScope());
+    assertThat(entity.getVersionLabel()).isEqualTo(entity.getVersionLabel());
+
+    entity = NGTemplateDtoMapper.toTemplateEntity(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, yaml);
+    assertThat(entity).isNotNull();
+    assertThat(entity.getIdentifier()).isEqualTo(entity.getIdentifier());
+    assertThat(entity.getAccountId()).isEqualTo(entity.getAccountIdentifier());
+    assertThat(entity.getOrgIdentifier()).isEqualTo(entity.getOrgIdentifier());
+    assertThat(entity.getProjectIdentifier()).isEqualTo(entity.getProjectIdentifier());
+    assertThat(entity.getYaml()).isEqualTo(entity.getYaml());
+    assertThat(entity.getName()).isEqualTo(entity.getName());
+    assertThat(entity.getDescription()).isEqualTo(entity.getDescription());
+    assertThat(entity.isStableTemplate()).isEqualTo(entity.isStableTemplate());
+    assertThat(entity.getTemplateEntityType()).isEqualTo(entity.getTemplateEntityType());
+    assertThat(entity.getChildType()).isEqualTo(entity.getChildType());
+    assertThat(entity.getTemplateScope()).isEqualTo(entity.getTemplateScope());
+    assertThat(entity.getVersionLabel()).isEqualTo(entity.getVersionLabel());
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testToTemplateDto() {
+    NGTemplateConfig ngTemplateConfig = NGTemplateDtoMapper.toDTO(yaml);
+    assertThat(ngTemplateConfig).isNotNull();
+    assertThat(ngTemplateConfig.getTemplateInfoConfig().getIdentifier()).isEqualTo(entity.getIdentifier());
+    assertThat(ngTemplateConfig.getTemplateInfoConfig().getVersionLabel()).isEqualTo(entity.getVersionLabel());
+
+    ngTemplateConfig = NGTemplateDtoMapper.toDTO(entity);
+    assertThat(ngTemplateConfig).isNotNull();
+    assertThat(ngTemplateConfig.getTemplateInfoConfig().getIdentifier()).isEqualTo(entity.getIdentifier());
+    assertThat(ngTemplateConfig.getTemplateInfoConfig().getVersionLabel()).isEqualTo(entity.getVersionLabel());
+  }
+}

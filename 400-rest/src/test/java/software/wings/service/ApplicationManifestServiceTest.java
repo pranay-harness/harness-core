@@ -1,9 +1,11 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
@@ -17,6 +19,7 @@ import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -24,12 +27,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.manifest.CustomSourceConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -40,6 +47,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -54,8 +62,10 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,16 +74,19 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class ApplicationManifestServiceTest extends WingsBaseTest {
   private static final String GIT_CONNECTOR_ID = "gitConnectorId";
   private static final String BRANCH = "branch";
   private static final String FILE_PATH = "filePath";
   private static final String FILE_NAME = "fileName";
   private static final String FILE_CONTENT = "fileContent";
+  private static final String APP_MANIFEST_NAME = "APP_MANIFEST_NAME";
 
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private YamlPushService yamlPushService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject private HPersistence persistence;
   @Inject private EnvironmentService environmentService;
@@ -88,6 +101,8 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     applicationManifest.setAppId(APP_ID);
     manifestFile.setAppId(APP_ID);
     doReturn(V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(false).build());
   }
 
   private static ApplicationManifest applicationManifest =
@@ -236,6 +251,8 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
                                       .build();
     applicationManifest.setStoreType(Remote);
     applicationManifest.setGitFileConfig(gitFileConfig);
+    Service service = Service.builder().deploymentType(DeploymentType.KUBERNETES).build();
+    doReturn(service).when(serviceResourceService).getWithDetails(any(), any());
     ApplicationManifest savedApplicationManifest = applicationManifestService.update(applicationManifest);
     assertThat(savedApplicationManifest.getUuid()).isNotNull();
     assertThat(savedApplicationManifest.getEnvId()).isNull();
@@ -1088,6 +1105,8 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(VALUES).serviceId(SERVICE_ID).envId(ENV_ID).build();
 
+    when(serviceResourceService.get(null, SERVICE_ID, false))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(false).build());
     applicationManifestService.create(applicationManifest);
     try {
       applicationManifestService.create(applicationManifest);
@@ -1097,5 +1116,155 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
       assertThat(ex.getMessage())
           .isEqualTo("App Manifest already exists for app null with kind VALUES, serviceId SERVICE_ID, envId ENV_ID");
     }
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void getByNameTest() {
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    applicationManifest.setName(APP_MANIFEST_NAME);
+    ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
+
+    ApplicationManifest manifest =
+        applicationManifestService.getAppManifestByName(APP_ID, null, SERVICE_ID, APP_MANIFEST_NAME);
+
+    assertThat(manifest).isEqualTo(savedManifest);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldBeAbleToCreateMultipleApplicationManifest() {
+    when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), any())).thenReturn(true);
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME + 2)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .kind(AppManifestKind.K8S_MANIFEST)
+            .helmChartConfig(HelmChartConfig.builder().connectorId(SETTING_ID).chartName("chartName").build())
+            .build();
+    applicationManifest.setAppId(APP_ID);
+    ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
+    ApplicationManifest applicationManifest2 =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .kind(AppManifestKind.K8S_MANIFEST)
+            .helmChartConfig(HelmChartConfig.builder().connectorId(SETTING_ID).chartName("chartName").build())
+            .build();
+    applicationManifest2.setAppId(APP_ID);
+    ApplicationManifest savedManifest2 = applicationManifestService.create(applicationManifest2);
+
+    List<ApplicationManifest> manifests =
+        applicationManifestService.getManifestsByServiceId(APP_ID, SERVICE_ID, K8S_MANIFEST);
+
+    assertThat(manifests).containsExactlyInAnyOrder(savedManifest, savedManifest2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForApplicationManifestWithSameName() {
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
+    when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), any())).thenReturn(true);
+
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .kind(AppManifestKind.K8S_MANIFEST)
+            .helmChartConfig(HelmChartConfig.builder().connectorId(SETTING_ID).chartName("chartName").build())
+            .build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifestService.create(applicationManifest);
+    ApplicationManifest applicationManifest2 =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .kind(AppManifestKind.K8S_MANIFEST)
+            .helmChartConfig(HelmChartConfig.builder().connectorId(SETTING_ID).chartName("chartName").build())
+            .build();
+    applicationManifest2.setAppId(APP_ID);
+    assertThatThrownBy(() -> applicationManifestService.create(applicationManifest2))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Application Manifest with name APP_MANIFEST_NAME already exists in Service null");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionToAddMultipleWrongKind() {
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
+
+    when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), any())).thenReturn(true);
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .helmChartConfig(HelmChartConfig.builder().connectorId("connector").chartName("name").build())
+            .kind(K8S_MANIFEST)
+            .build();
+
+    applicationManifest.setAppId(APP_ID);
+    applicationManifestService.create(applicationManifest);
+    ApplicationManifest applicationManifest2 = ApplicationManifest.builder()
+                                                   .name(APP_MANIFEST_NAME)
+                                                   .serviceId(SERVICE_ID)
+                                                   .storeType(Local)
+                                                   .kind(AppManifestKind.K8S_MANIFEST)
+                                                   .build();
+    applicationManifest2.setAppId(APP_ID);
+    assertThatThrownBy(() -> applicationManifestService.create(applicationManifest2))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Application Manifest should be of kind Helm Chart from Helm Repo for Service with artifact from manifest enabled");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testGetNamesForIds() {
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
+    when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), anyString())).thenReturn(true);
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME + 2)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .kind(AppManifestKind.K8S_MANIFEST)
+            .helmChartConfig(HelmChartConfig.builder().chartName("name").connectorId(SETTING_ID).build())
+            .build();
+    applicationManifest.setAppId(APP_ID);
+    ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
+    ApplicationManifest applicationManifest2 =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .kind(AppManifestKind.K8S_MANIFEST)
+            .helmChartConfig(HelmChartConfig.builder().chartName("name").connectorId(SETTING_ID).build())
+            .build();
+    applicationManifest2.setAppId(APP_ID);
+    ApplicationManifest savedManifest2 = applicationManifestService.create(applicationManifest2);
+    Map<String, String> appManifestIdNames = applicationManifestService.getNamesForIds(
+        APP_ID, ImmutableSet.of(savedManifest.getUuid(), savedManifest2.getUuid()));
+    assertThat(appManifestIdNames).hasSize(2);
+    assertThat(appManifestIdNames.get(savedManifest.getUuid())).isEqualTo(APP_MANIFEST_NAME + 2);
+    assertThat(appManifestIdNames.get(savedManifest2.getUuid())).isEqualTo(APP_MANIFEST_NAME);
   }
 }

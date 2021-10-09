@@ -1,16 +1,17 @@
 package io.harness.serializer;
 
 import io.harness.EntityType;
+import io.harness.accesscontrol.serializer.AccessControlClientRegistrars;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
+import io.harness.serializer.morphia.FeedbackMorphiaRegistrars;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.MockRoleAssignmentMorphiaRegistrar;
 import io.harness.serializer.morphia.NGMorphiaRegistrars;
-import io.harness.serializer.morphia.NgAccessControlMigrationMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserGroupMorphiaRegistrar;
-import io.harness.serializer.morphia.NgUserMembershipMorphiaRegistrar;
+import io.harness.serializer.morphia.NgUserMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserProfileMorphiaRegistrars;
 import io.harness.serializer.morphia.ServiceAccountMorphiaRegistrars;
 import io.harness.serializer.morphia.WebhookMorphiaRegistrars;
@@ -25,8 +26,10 @@ import org.mongodb.morphia.converters.TypeConverter;
 public class NextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(AccessControlClientRegistrars.kryoRegistrars)
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+          .addAll(GitOpsRegistrars.kryoRegistrars)
           .addAll(CDNGRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
           .addAll(NGFileServiceRegistrars.kryoRegistrars)
@@ -39,10 +42,10 @@ public class NextGenRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
+          .addAll(GitOpsRegistrars.morphiaRegistrars)
           .addAll(CDNGRegistrars.morphiaRegistrars)
           .add(NgUserGroupMorphiaRegistrar.class)
-          .add(NgAccessControlMigrationMorphiaRegistrar.class)
-          .add(NgUserMembershipMorphiaRegistrar.class)
+          .add(NgUserMorphiaRegistrar.class)
           .add(NgUserProfileMorphiaRegistrars.class)
           .add(WebhookMorphiaRegistrars.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
@@ -57,11 +60,14 @@ public class NextGenRegistrars {
           .addAll(SignupRegistrars.morphiaRegistrars)
           .add(ServiceAccountMorphiaRegistrars.class)
           .add(NGMorphiaRegistrars.class)
+          .add(FeedbackMorphiaRegistrars.class)
+          .addAll(InstanceRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
       ImmutableList.<YamlSchemaRootClass>builder()
           .addAll(ConnectorNextGenRegistrars.yamlSchemaRegistrars)
+          .addAll(GitOpsRegistrars.yamlSchemaRegistrars)
           .addAll(CDNGRegistrars.yamlSchemaRegistrars)
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.SECRETS)

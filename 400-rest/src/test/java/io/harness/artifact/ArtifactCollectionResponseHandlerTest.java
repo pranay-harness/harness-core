@@ -21,6 +21,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
@@ -54,6 +56,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String PERPETUAL_TASK_ID = "PERPETUAL_TASK_ID";

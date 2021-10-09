@@ -8,7 +8,6 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParam
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
 import static io.harness.common.CIExecutionConstants.ADDON_VOLUME;
 import static io.harness.common.CIExecutionConstants.ADDON_VOL_MOUNT_PATH;
-import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS;
 import static io.harness.common.CIExecutionConstants.SHARED_VOLUME_PREFIX;
@@ -33,6 +32,8 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.quantity.unit.DecimalQuantityUnit;
+import io.harness.beans.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
@@ -59,13 +60,11 @@ import io.harness.stateutils.buildstate.PluginSettingUtils;
 import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.ExceptionUtility;
 import io.harness.util.PortFinder;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.extended.ci.container.ContainerResource;
-import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -378,7 +377,8 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(IntegrationStageUtils.getImageInfo(runTestsStepInfo.getImage()))
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(resolveStringParameter(
+                                       "Image", "RunTest", identifier, runTestsStepInfo.getImage(), true)))
                                    .connectorIdentifier(resolveStringParameter(
                                        "connectorRef", "RunTest", identifier, runTestsStepInfo.getConnectorRef(), true))
                                    .build())
@@ -400,14 +400,6 @@ public class BuildJobEnvInfoBuilder {
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-    Map<String, String> settings =
-        resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
-    if (!isEmpty(settings)) {
-      for (Map.Entry<String, String> entry : settings.entrySet()) {
-        String key = PLUGIN_ENV_PREFIX + entry.getKey().toUpperCase();
-        envVarMap.put(key, entry.getValue());
-      }
-    }
     if (!isEmpty(pluginStepInfo.getEnvVariables())) {
       envVarMap.putAll(pluginStepInfo.getEnvVariables());
     }

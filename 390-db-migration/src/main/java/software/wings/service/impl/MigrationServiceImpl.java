@@ -128,7 +128,7 @@ public class MigrationServiceImpl implements MigrationService {
         executorService.submit(() -> {
           try (AcquiredLock ignore =
                    persistentLocker.acquireLock(Schema.class, "Background-" + SCHEMA_ID, ofMinutes(120 + 1))) {
-            HTimeLimiter.<Boolean>callInterruptible(timeLimiter, Duration.ofHours(2), () -> {
+            HTimeLimiter.<Boolean>callInterruptible21(timeLimiter, Duration.ofHours(2), () -> {
               log.info("[Migration] - Updating schema background version from {} to {}", currentBackgroundVersion,
                   maxBackgroundVersion);
 
@@ -261,7 +261,7 @@ public class MigrationServiceImpl implements MigrationService {
         executorService.submit(() -> {
           try (AcquiredLock ignore = persistentLocker.acquireLock(
                    Schema.class, "TimeScaleDBBackground-" + SCHEMA_ID, ofMinutes(120 + 1))) {
-            HTimeLimiter.<Boolean>callInterruptible(timeLimiter, Duration.ofHours(2), () -> {
+            HTimeLimiter.<Boolean>callInterruptible21(timeLimiter, Duration.ofHours(2), () -> {
               log.info("[TimeScaleDBDataMigration] - Updating schema background version from {} to {}",
                   currentTimeScaleDBDataMigration, maxTimeScaleDBDataMigration);
 
@@ -340,7 +340,7 @@ public class MigrationServiceImpl implements MigrationService {
     executorService.submit(() -> {
       try (AcquiredLock ignore =
                persistentLocker.acquireLock(Schema.class, "OnPrimaryManager-" + SCHEMA_ID, ofMinutes(120 + 1))) {
-        HTimeLimiter.<Boolean>callInterruptible(timeLimiter, Duration.ofHours(2), () -> {
+        HTimeLimiter.<Boolean>callInterruptible21(timeLimiter, Duration.ofHours(2), () -> {
           final int currentOnPrimaryMigrationVersion = getCurrentOnPrimaryMigrationVersion();
           if (currentOnPrimaryMigrationVersion < maxOnPrimaryManagerMigrationVersion) {
             log.info("[Migration] - Updating schema primary manager version from {} to {}",

@@ -24,6 +24,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -32,6 +33,7 @@ import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -107,6 +109,7 @@ public class AwsAmiServiceSetup extends State {
   @Inject private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
   @Inject private AwsStateHelper awsStateHelper;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private String commandName = AMI_SETUP_COMMAND_NAME;
 
@@ -161,6 +164,10 @@ public class AwsAmiServiceSetup extends State {
             .commandName(commandName)
             .oldAsgNames(amiServiceSetupResponse.getOldAsgNames())
             .preDeploymentData(amiServiceSetupResponse.getPreDeploymentData())
+            .baseAsgScheduledActionJSONs(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId())
+                    ? amiServiceSetupResponse.getBaseAsgScheduledActionJSONs()
+                    : null)
             .build();
 
     sweepingOutputService.save(
@@ -296,7 +303,11 @@ public class AwsAmiServiceSetup extends State {
               .infraMappingTargetGroupArns(targetGroupARNs)
               .artifactRevision(artifact.getRevision())
               .blueGreen(blueGreen)
-              .userData(awsStateHelper.getEncodedUserData(app.getUuid(), serviceId, context));
+              .userData(awsStateHelper.getEncodedUserData(app.getUuid(), serviceId, context))
+              .amiInServiceHealthyStateFFEnabled(
+                  featureFlagService.isEnabled(FeatureName.AMI_IN_SERVICE_HEALTHY_WAIT, activity.getAccountId()))
+              .amiAsgConfigCopyEnabled(
+                  featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, activity.getAccountId()));
 
       String asgNamePrefix = isNotEmpty(autoScalingGroupName)
           ? normalizeExpression(context.renderExpression(autoScalingGroupName))

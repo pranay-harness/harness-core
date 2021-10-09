@@ -13,6 +13,7 @@ const (
 	buildIdParam     = "buildId"
 	stageIdParam     = "stageId"
 	stepIdParam      = "stepId"
+	timeMsParam      = "timeMs"
 	reportParam      = "report"
 	sortParam        = "sort"
 	statusParam      = "status"
@@ -26,6 +27,8 @@ const (
 	repoParam         = "repo"
 	sourceBranchParam = "source"
 	targetBranchParam = "target"
+	classNameParam    = "class"
+	limitParam        = "limit"
 	shaParam          = "sha"
 )
 
@@ -56,6 +59,7 @@ func WriteJSON(w http.ResponseWriter, v interface{}, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	enc := json.NewEncoder(w)
+	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
 	enc.Encode(v)
 }

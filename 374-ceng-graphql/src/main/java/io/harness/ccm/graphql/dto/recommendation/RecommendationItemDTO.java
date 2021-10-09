@@ -12,6 +12,7 @@ import lombok.Value;
 public class RecommendationItemDTO {
   @GraphQLNonNull @NotNull String id;
   String clusterName;
+  String namespace;
   String resourceName;
   Double monthlySaving;
   Double monthlyCost;

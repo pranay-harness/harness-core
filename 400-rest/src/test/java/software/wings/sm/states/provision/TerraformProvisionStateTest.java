@@ -147,7 +147,7 @@ import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private DelegateService delegateService;
@@ -551,6 +551,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     EncryptedRecordData encryptedPlan =
         EncryptedRecordData.builder().name("terraformPlan").encryptedValue("terraformPlan".toCharArray()).build();
     List<ContextElement> terraformProvisionInheritPlanElements = new ArrayList<>();
+    TfVarGitSource tfVarGitSource = TfVarGitSource.builder().gitFileConfig(new GitFileConfig()).build();
     TerraformProvisionInheritPlanElement terraformProvisionInheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
             .provisionerId(PROVISIONER_ID)
@@ -560,6 +561,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
             .environmentVariables(getTerraformEnvironmentVariables())
             .targets(Arrays.asList("target1"))
             .variables(getTerraformVariables())
+            .tfVarSource(tfVarGitSource)
             .encryptedTfPlan(encryptedPlan)
             .build();
     terraformProvisionInheritPlanElements.add(terraformProvisionInheritPlanElement);
@@ -587,17 +589,17 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         .thenReturn(encryptedDataDetails);
     ExecutionResponse executionResponse = state.execute(executionContext);
 
-    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+    verify(gitConfigHelperService, times(2)).convertToRepoGitConfig(any(GitConfig.class), anyString());
     verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
     verify(fileService, times(1)).getLatestFileId(anyString(), any(FileBucket.class));
-    verify(gitUtilsManager, times(1)).getGitConfig(anyString());
+    verify(gitUtilsManager, times(2)).getGitConfig(anyString());
     verify(infrastructureProvisionerService, times(1)).extractTextVariables(anyList(), any(ExecutionContext.class));
     // once for environment variables, once for variables, once for backend configs
     verify(infrastructureProvisionerService, times(3))
         .extractEncryptedTextVariables(anyList(), eq(APP_ID), anyString());
     // once for environment variables, once for variables
     verify(infrastructureProvisionerService, times(2)).extractUnresolvedTextVariables(anyList());
-    verify(secretManager, times(1)).getEncryptionDetails(any(GitConfig.class), anyString(), anyString());
+    verify(secretManager, times(2)).getEncryptionDetails(any(GitConfig.class), anyString(), anyString());
     verify(secretManagerConfigService, times(1)).getSecretManager(anyString(), anyString(), anyBoolean());
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo("uuid");
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
@@ -1596,5 +1598,14 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("").sourceRepoBranch("").build();
     entityId = state.generateEntityId(executionContext, "", infrastructureProvisioner, false);
     assertThat(entityId).isEqualTo(String.format("%s-%s", PROVISIONER_ID, "envId"));
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    assertThat(state.validateFields().size()).isNotEqualTo(0);
+    state.setProvisionerId("test provisioner");
+    assertThat(state.validateFields().size()).isEqualTo(0);
   }
 }

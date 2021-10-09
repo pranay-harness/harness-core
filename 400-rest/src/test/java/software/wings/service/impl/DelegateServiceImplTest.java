@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARPIT;
+import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -13,6 +15,8 @@ import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VUK;
+
+import static software.wings.utils.Utils.uuidToIdentifier;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,6 +52,7 @@ import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateSetupDetails;
+import io.harness.delegate.beans.DelegateSetupDetails.DelegateSetupDetailsBuilder;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -129,6 +134,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String PROJECT_ID = "PROJECT_ID";
   private static final String APP_ID = "APP_ID";
   private static final String DELEGATE_NAME = "delegateName";
+  private static final String DELEGATE_GROUP_IDENTIFIER = "_IdentifierSample";
+  private static final String ORG_IDENTIFIER = "orgId";
+  private static final String PROJECT_IDENTIFIER = "projectId";
 
   private static final String HTTP_VAUTL_URL = "http://vautl.com";
   private static final String GOOGLE_COM = "http://google.com";
@@ -141,7 +149,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String TEST_DELEGATE_PROFILE_ID = generateUuid();
   private static final long TEST_PROFILE_EXECUTION_TIME = System.currentTimeMillis();
 
+  private static final String TEST_DELEGATE_NAME = "testDelegateName";
   private static final String TEST_DELEGATE_GROUP_NAME = "testDelegateGroupName";
+  private static final String TEST_DELEGATE_GROUP_NAME_IDENTIFIER = "_testDelegateGroupName";
 
   @Mock private UsageLimitedFeature delegatesFeature;
   @Mock private Broadcaster broadcaster;
@@ -644,21 +654,21 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = ARPIT)
   @Category(UnitTests.class)
   public void testObtainDelegateIdShouldReturnEmpty() {
-    assertThat(delegateService.obtainDelegateIds(generateUuid(), generateUuid())).isEmpty();
+    assertThat(delegateService.obtainDelegateIdsUsingName(generateUuid(), generateUuid())).isEmpty();
   }
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testObtainDelegateIdShouldReturnDelegateId() {
-    Delegate delegate = createDelegateBuilder().sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
+    Delegate delegate = createDelegateBuilder().delegateName(TEST_DELEGATE_NAME).build();
     String delegateId = persistence.save(delegate);
 
     List<String> delegateIds =
-        delegateService.obtainDelegateIds(delegate.getAccountId(), delegate.getSessionIdentifier());
+        delegateService.obtainDelegateIdsUsingName(delegate.getAccountId(), delegate.getDelegateName());
 
     assertThat(delegateIds).size().isEqualTo(1);
     assertThat(delegateIds.get(0)).isEqualTo(delegateId);
@@ -932,12 +942,14 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN).namespace("namespace").build();
     DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID,
         DelegateSetupDetails.builder()
+            .name(TEST_DELEGATE_GROUP_NAME)
             .orgIdentifier(ORG_ID)
             .projectIdentifier(PROJECT_ID)
             .k8sConfigDetails(k8sConfigDetails)
             .description("description")
             .delegateConfigurationId("delConfigId")
             .size(DelegateSize.LAPTOP)
+            .identifier(DELEGATE_GROUP_IDENTIFIER)
             .build());
 
     assertThat(returnedDelegateGroup).isNotNull();
@@ -950,6 +962,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(returnedDelegateGroup.getDelegateConfigurationId()).isEqualTo("delConfigId");
     assertThat(returnedDelegateGroup.getSizeDetails().getSize()).isEqualTo(DelegateSize.LAPTOP);
     assertThat(returnedDelegateGroup.isNg()).isTrue();
+    assertThat(returnedDelegateGroup.getIdentifier()).isEqualTo(DELEGATE_GROUP_IDENTIFIER);
 
     List<OutboxEvent> outboxEvents = outboxService.list(OutboxEventFilter.builder().maximumEventsPolled(100).build());
     assertThat(outboxEvents.size()).isEqualTo(1);
@@ -968,16 +981,18 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(delegateGroupUpsertEvent.getProjectIdentifier()).isEqualTo(PROJECT_ID);
     assertThat(delegateGroupUpsertEvent.getDelegateSetupDetails())
         .isEqualTo(DelegateSetupDetails.builder()
+                       .name(TEST_DELEGATE_GROUP_NAME)
                        .orgIdentifier(ORG_ID)
                        .projectIdentifier(PROJECT_ID)
                        .k8sConfigDetails(k8sConfigDetails)
                        .description("description")
                        .delegateConfigurationId("delConfigId")
                        .size(DelegateSize.LAPTOP)
+                       .identifier(DELEGATE_GROUP_IDENTIFIER)
                        .build());
 
     // test delete event
-    delegateService.deleteDelegateGroup(ACCOUNT_ID, returnedDelegateGroup.getUuid(), true);
+    delegateService.deleteDelegateGroup(ACCOUNT_ID, returnedDelegateGroup.getUuid());
     outboxEvents = outboxService.list(OutboxEventFilter.builder().maximumEventsPolled(100).build());
     assertThat(outboxEvents.size()).isEqualTo(2);
     outboxEvent = outboxEvents.get(1);
@@ -1002,13 +1017,14 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .description("description")
                        .delegateConfigurationId("delConfigId")
                        .size(DelegateSize.LAPTOP)
+                       .identifier(null)
                        .build());
   }
 
   @Test
   @Owner(developers = NICOLAS)
   @Category(UnitTests.class)
-  public void testAddDelegateToGroup_existingGroup() {
+  public void testAddDelegateToGroup_existingGroupUpdate() {
     DelegateGroup delegateGroup = setUpDefaultDelegateGroupForTests();
 
     DelegateGroup returnedDelegateGroup =
@@ -1022,7 +1038,283 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(returnedDelegateGroup.getName()).isEqualTo(delegateGroup.getName());
     assertThat(returnedDelegateGroup.getK8sConfigDetails()).isNull();
     assertThat(returnedDelegateGroup.isNg()).isFalse();
+    assertThat(returnedDelegateGroup.getIdentifier()).isEqualTo(TEST_DELEGATE_GROUP_NAME_IDENTIFIER);
   }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithExistingIdentifier_DescriptionChange() {
+    String groupIdentifier = "testGroupIdentifier";
+
+    DelegateSetupDetails delegateSetupDetails1 =
+        createDelegateSetupDetails().description("description1").identifier(groupIdentifier).build();
+    DelegateSetupDetails delegateSetupDetails2 =
+        createDelegateSetupDetails().description("description2").identifier(groupIdentifier).build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails1);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
+
+    assertThat(delegateGroup2.getIdentifier()).isEqualTo(groupIdentifier);
+    assertThat(delegateGroup2.getName()).isEqualTo(TEST_DELEGATE_GROUP_NAME);
+    assertThat(delegateGroup2.getDescription()).isEqualTo("description2");
+    assertThat(delegateGroup1.getUuid()).isEqualTo(delegateGroup2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithSameAccountAndName() {
+    DelegateSetupDetails delegateSetupDetails1 = createDelegateSetupDetails().identifier("_123").build();
+    DelegateSetupDetails delegateSetupDetails2 = createDelegateSetupDetails().identifier("_1234").build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails1);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
+
+    assertThat(delegateGroup1.getUuid()).isNotEqualTo(delegateGroup2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithEmptyIdentifier() {
+    DelegateSetupDetails delegateSetupDetails = createDelegateSetupDetails().identifier("").build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails);
+
+    assertThat(delegateGroup2.getUuid()).isEqualTo(delegateGroup1.getUuid());
+    assertThat(delegateGroup2.getIdentifier()).isEqualTo(TEST_DELEGATE_GROUP_NAME_IDENTIFIER);
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithNoIdentifier() {
+    DelegateSetupDetails delegateSetupDetails = createDelegateSetupDetails().build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails);
+
+    assertThat(delegateGroup2.getUuid()).isEqualTo(delegateGroup1.getUuid());
+    assertThat(delegateGroup2.getIdentifier()).isEqualTo(TEST_DELEGATE_GROUP_NAME_IDENTIFIER);
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithNoDelegateSetupDetails() {
+    DelegateGroup delegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, null);
+
+    assertThat(delegateGroup.getIdentifier()).isEqualTo(TEST_DELEGATE_GROUP_NAME_IDENTIFIER);
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithNoDelegateSetupDetails_SameName() {
+    DelegateGroup delegateGroup1 = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, null);
+    DelegateGroup delegateGroup2 = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, null);
+
+    assertThat(delegateGroup1.getIdentifier()).isEqualTo(TEST_DELEGATE_GROUP_NAME_IDENTIFIER);
+    assertThat(delegateGroup2.getIdentifier()).isEqualTo(TEST_DELEGATE_GROUP_NAME_IDENTIFIER);
+    assertThat(delegateGroup2.getUuid()).isEqualTo(delegateGroup1.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithNoDelegateSetupDetails_DifferentName() {
+    DelegateGroup delegateGroup1 = delegateService.upsertDelegateGroup("name1", ACCOUNT_ID, null);
+    DelegateGroup delegateGroup2 = delegateService.upsertDelegateGroup("name2", ACCOUNT_ID, null);
+
+    assertThat(delegateGroup1.getIdentifier()).isEqualTo("_name1");
+    assertThat(delegateGroup2.getIdentifier()).isEqualTo("_name2");
+    assertThat(delegateGroup2.getUuid()).isNotEqualTo(delegateGroup1.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithNoDelegateSetupDetails_DifferentAccount() {
+    DelegateGroup delegateGroup1 = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, "account1", null);
+    DelegateGroup delegateGroup2 = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, "account2", null);
+
+    assertThat(delegateGroup1.getIdentifier()).isEqualTo(TEST_DELEGATE_GROUP_NAME_IDENTIFIER);
+    assertThat(delegateGroup2.getIdentifier()).isEqualTo(TEST_DELEGATE_GROUP_NAME_IDENTIFIER);
+    assertThat(delegateGroup2.getUuid()).isNotEqualTo(delegateGroup1.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithNoDelegateSetupDetails_UpdateWithExistingIdentifierMigratedFromUUID() {
+    String uuid = generateUuid();
+    DelegateGroup delegateGroupAfterMigration = setUpDefaultDelegateGroupAfterMigrationForTests(uuid);
+
+    DelegateGroup delegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, null);
+
+    assertThat(delegateGroup.getIdentifier()).isEqualTo(uuidToIdentifier(uuid));
+    assertThat(delegateGroupAfterMigration.getUuid()).isEqualTo(delegateGroup.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithOwner() {
+    String identifier = "";
+
+    DelegateSetupDetails delegateSetupDetails1 = createDelegateSetupDetails()
+                                                     .identifier(identifier)
+                                                     .orgIdentifier("orgId1")
+                                                     .projectIdentifier("projId1")
+                                                     .build();
+    DelegateSetupDetails delegateSetupDetails2 = createDelegateSetupDetails()
+                                                     .identifier(identifier)
+                                                     .orgIdentifier("orgId2")
+                                                     .projectIdentifier("projId2")
+                                                     .build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails1);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
+
+    assertThat(delegateGroup1.getUuid()).isNotEqualTo(delegateGroup2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithTheSameOwner() {
+    DelegateSetupDetails delegateSetupDetails1 = createDelegateSetupDetails()
+                                                     .identifier(DELEGATE_GROUP_IDENTIFIER)
+                                                     .orgIdentifier("orgId1")
+                                                     .projectIdentifier("projId1")
+                                                     .build();
+    DelegateSetupDetails delegateSetupDetails2 = createDelegateSetupDetails()
+                                                     .identifier(DELEGATE_GROUP_IDENTIFIER)
+                                                     .orgIdentifier("orgId1")
+                                                     .projectIdentifier("projId1")
+                                                     .build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails1);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
+
+    assertThat(delegateGroup1).isEqualTo(delegateGroup2);
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithoutOwnersProjectId() {
+    DelegateSetupDetails delegateSetupDetails1 =
+        createDelegateSetupDetails().identifier(DELEGATE_GROUP_IDENTIFIER).orgIdentifier("orgId1").build();
+    DelegateSetupDetails delegateSetupDetails2 = createDelegateSetupDetails()
+                                                     .identifier(DELEGATE_GROUP_IDENTIFIER)
+                                                     .orgIdentifier("orgId1")
+                                                     .projectIdentifier("projId1")
+                                                     .build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails1);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
+
+    assertThat(delegateGroup1.getUuid()).isNotEqualTo(delegateGroup2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithoutOwnersOrgId() {
+    DelegateSetupDetails delegateSetupDetails1 =
+        createDelegateSetupDetails().identifier(DELEGATE_GROUP_IDENTIFIER).projectIdentifier("projId1").build();
+    DelegateSetupDetails delegateSetupDetails2 = createDelegateSetupDetails()
+                                                     .identifier(DELEGATE_GROUP_IDENTIFIER)
+                                                     .orgIdentifier("orgId1")
+                                                     .projectIdentifier("projId1")
+                                                     .build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails1);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
+
+    assertThat(delegateGroup1.getUuid()).isNotEqualTo(delegateGroup2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testShouldUpsertDelegateGroupWithTheSameOwnerNoIdentifier() {
+    DelegateSetupDetails delegateSetupDetails1 =
+        createDelegateSetupDetails().orgIdentifier("orgId1").projectIdentifier("projId1").build();
+    DelegateSetupDetails delegateSetupDetails2 =
+        createDelegateSetupDetails().orgIdentifier("orgId1").projectIdentifier("projId1").build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails1);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
+
+    assertThat(delegateGroup1.getUuid()).isEqualTo(delegateGroup2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldUpsertDelegateGroupWithoutOwnerAndWithOwner() {
+    String identifier = "_123";
+
+    DelegateSetupDetails delegateSetupDetails1 = createDelegateSetupDetails().identifier(identifier).build();
+    DelegateSetupDetails delegateSetupDetails2 =
+        createDelegateSetupDetails().orgIdentifier(ORG_IDENTIFIER).projectIdentifier(PROJECT_IDENTIFIER).build();
+
+    DelegateGroup delegateGroup1 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails1);
+    DelegateGroup delegateGroup2 =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, delegateSetupDetails2);
+
+    assertThat(delegateGroup1.getUuid()).isNotEqualTo(delegateGroup2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldUpsertDelegateGroupWithIllegalCharactersInName() {
+    String name = "1 ~`!@#$%^&*()_-+={}[]|\\:;\"'<>,.?///";
+
+    DelegateSetupDetails delegateSetupDetails = createDelegateSetupDetails().name(name).build();
+
+    delegateService.upsertDelegateGroup(name, ACCOUNT_ID, delegateSetupDetails);
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldUpsertDelegateGroupDifferentDetailsName() {
+    DelegateSetupDetails delegateSetupDetails = createDelegateSetupDetails().name("name1").build();
+
+    DelegateGroup delegateGroup = delegateService.upsertDelegateGroup("name2", ACCOUNT_ID, delegateSetupDetails);
+
+    assertThat(delegateGroup.getIdentifier()).isEqualTo("_name1");
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void shouldSaveTagsInDelegate_AndDelegateGroupCollection() {}
 
   private List<String> setUpDelegatesForInitializationTest() {
     List<String> delegateIds = new ArrayList<>();
@@ -1095,11 +1387,35 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   private DelegateGroup setUpDefaultDelegateGroupForTests() {
-    DelegateGroup delegateGroup = DelegateGroup.builder().name(TEST_DELEGATE_GROUP_NAME).accountId(ACCOUNT_ID).build();
+    DelegateGroup delegateGroup = DelegateGroup.builder()
+                                      .name(TEST_DELEGATE_GROUP_NAME)
+                                      .accountId(ACCOUNT_ID)
+                                      .identifier(TEST_DELEGATE_GROUP_NAME_IDENTIFIER)
+                                      .build();
 
     String delegateGroupId = persistence.save(delegateGroup);
     delegateGroup.setUuid(delegateGroupId);
 
     return delegateGroup;
+  }
+
+  private DelegateGroup setUpDefaultDelegateGroupAfterMigrationForTests(String uuid) {
+    DelegateGroup delegateGroup = DelegateGroup.builder()
+                                      .uuid(uuid)
+                                      .name(TEST_DELEGATE_GROUP_NAME)
+                                      .accountId(ACCOUNT_ID)
+                                      .identifier(uuidToIdentifier(uuid))
+                                      .build();
+
+    persistence.save(delegateGroup);
+
+    return delegateGroup;
+  }
+
+  private DelegateSetupDetailsBuilder createDelegateSetupDetails() {
+    return DelegateSetupDetails.builder()
+        .name(TEST_DELEGATE_GROUP_NAME)
+        .size(DelegateSize.LAPTOP)
+        .delegateConfigurationId("configId");
   }
 }

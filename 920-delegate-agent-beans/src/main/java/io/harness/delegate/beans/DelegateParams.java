@@ -34,6 +34,7 @@ public class DelegateParams {
   String location;
   long lastHeartBeat;
 
+  boolean ng;
   boolean sampleDelegate;
   boolean keepAlivePacket;
   boolean pollingModeEnabled;
@@ -41,4 +42,5 @@ public class DelegateParams {
   boolean ceEnabled;
 
   List<String> currentlyExecutingDelegateTasks;
+  List<String> tags;
 }

@@ -1,5 +1,7 @@
 package io.harness.ccm.views.service.impl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.dao.CEReportScheduleDao;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
@@ -9,9 +11,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class CEReportScheduleServiceImpl implements CEReportScheduleService {
   @Inject CEReportScheduleDao ceReportScheduleDao;
@@ -32,15 +36,27 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
   }
 
   @Override
-  public CEReportSchedule createReportSetting(
-      CronSequenceGenerator cronTrigger, String accountId, CEReportSchedule schedule) {
+  public CEReportSchedule createReportSetting(String accountId, CEReportSchedule schedule) {
     CEReportSchedule entry = get(schedule.getUuid(), accountId);
+    // ID – the ID for a TimeZone, either an abbreviation such as "PST", a full name such as "America/Los_Angeles",
+    // or a custom ID such as "GMT-8:00". Note that the support of abbreviations is for JDK 1.1.x compatibility only
+    // and full names should be used.
+    String cronTimeZone;
+    if (schedule.getUserCronTimeZone() != null) {
+      cronTimeZone = schedule.getUserCronTimeZone();
+    } else {
+      // Default to UTC
+      cronTimeZone = "UTC";
+    }
+    CronSequenceGenerator cronTrigger =
+        new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(cronTimeZone));
     if (entry == null) {
       Date next = cronTrigger.next(new Date());
-      log.info("Next Execution Time: " + next);
+      log.info("Next Execution Time in user timezone: " + next);
       schedule.setNextExecution(next);
       schedule.setAccountId(accountId);
       schedule.setEnabled(true);
+      schedule.setUserCronTimeZone(cronTimeZone);
       // Remove dupes from these lists
       schedule.setRecipients(new HashSet<>(Arrays.asList(schedule.getRecipients())).toArray(new String[0]));
       schedule.setViewsId(new HashSet<>(Arrays.asList(schedule.getViewsId())).toArray(new String[0]));
@@ -50,9 +66,18 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
   }
 
   @Override
-  public List<CEReportSchedule> update(CronSequenceGenerator cronTrigger, String accountId, CEReportSchedule schedule) {
+  public List<CEReportSchedule> update(String accountId, CEReportSchedule schedule) {
     // validate cron expression during updates as well
-    Date next = cronTrigger.next(new Date());
+    String cronTimeZone;
+    if (schedule.getUserCronTimeZone() != null) {
+      cronTimeZone = schedule.getUserCronTimeZone();
+    } else {
+      // Default to UTC
+      cronTimeZone = "UTC";
+    }
+    CronSequenceGenerator cronSequenceGenerator =
+        new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(cronTimeZone));
+    Date next = cronSequenceGenerator.next(new Date());
     log.info("Updated next Execution Time: " + next);
     schedule.setNextExecution(next);
     if (schedule.getDescription() == null) {
@@ -84,7 +109,15 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
 
   @Override
   public List<CEReportSchedule> updateNextExecution(String accountId, CEReportSchedule schedule) {
-    CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
+    String cronTimeZone;
+    if (schedule.getUserCronTimeZone() != null) {
+      cronTimeZone = schedule.getUserCronTimeZone();
+    } else {
+      // Default to UTC
+      cronTimeZone = "UTC";
+    }
+    CronSequenceGenerator cronSequenceGenerator =
+        new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(cronTimeZone));
     Date next = cronSequenceGenerator.next(new Date());
     log.info("Updated next Execution Time: " + next);
     schedule.setNextExecution(next);

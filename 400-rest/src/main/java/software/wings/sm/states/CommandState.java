@@ -911,10 +911,6 @@ public class CommandState extends State {
       commandParametersBuilder.disableWinRMCommandEncodingFFSet(true);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.WINRM_COPY_CONFIG_OPTIMIZE, accountId)) {
-      commandParametersBuilder.winrmCopyConfigOptimize(true);
-    }
-
     commandParametersBuilder.multiArtifact(
         featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId));
   }

@@ -18,9 +18,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
@@ -30,7 +32,7 @@ public class JsonNodeUtils {
     if (mainNode.isObject() && updateNode.isObject()) {
       mergeInternal(mainNode, updateNode);
     } else if (mainNode.isArray() && updateNode.isArray()) {
-      mergeJsonArray((ArrayNode) mainNode, (ArrayNode) updateNode);
+      mergeJsonArray((ArrayNode) mainNode, (ArrayNode) updateNode, mainNode.size());
     }
     return mainNode;
   }
@@ -43,7 +45,7 @@ public class JsonNodeUtils {
       if (jsonNode != null && jsonNode.isObject()) {
         merge(jsonNode, updateNode.get(fieldName));
       } else if (jsonNode != null && jsonNode.isArray()) {
-        mergeJsonArray((ArrayNode) jsonNode, (ArrayNode) updateNode.get(fieldName));
+        mergeJsonArray((ArrayNode) jsonNode, (ArrayNode) updateNode.get(fieldName), jsonNode.size());
       } else {
         if (mainNode instanceof ObjectNode) {
           JsonNode value = updateNode.get(fieldName);
@@ -54,21 +56,35 @@ public class JsonNodeUtils {
     return mainNode;
   }
 
-  private static void mergeJsonArray(ArrayNode src, ArrayNode other) {
+  private static void mergeJsonArray(ArrayNode src, ArrayNode other, int initialSrcSize) {
+    if (src.equals(other)) {
+      return;
+    }
+
     for (int i = 0; i < other.size(); i++) {
-      JsonNode s = src.get(i);
+      JsonNode s = i >= initialSrcSize ? null : src.get(i);
       JsonNode v = other.get(i);
       if (s == null) {
         src.add(v);
       } else if (v.isObject() && s.isObject()) {
         merge(s, v);
       } else if (v.isArray() && s.isArray()) {
-        mergeJsonArray((ArrayNode) s, (ArrayNode) v);
+        mergeJsonArray((ArrayNode) s, (ArrayNode) v, initialSrcSize);
       } else {
-        src.remove(i);
-        src.insert(i, v);
+        src.add(v);
       }
     }
+    removeDuplicatesFromArrayNode(src);
+  }
+
+  public static void removeDuplicatesFromArrayNode(ArrayNode arrayNode) {
+    Set<JsonNode> set = new HashSet<>();
+    for (int i = 0; i < arrayNode.size(); i++) {
+      set.add(arrayNode.get(i));
+    }
+
+    arrayNode.removeAll();
+    set.forEach(arrayNode::add);
   }
 
   public static JsonNode deletePropertiesInJsonNode(ObjectNode jsonNode, String... properties) {

@@ -7,7 +7,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -22,19 +21,13 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.client.dto.Target;
 import io.harness.configuration.DeployMode;
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
-import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,8 +52,6 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject private HPersistence persistence;
   @Inject(optional = true)
   @Nullable
-  @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM)
-  private Producer eventProducer;
 
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
@@ -88,7 +79,6 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                                                          .setOnInsert(FeatureFlagKeys.obsolete, false)
                                                          .setOnInsert(FeatureFlagKeys.enabled, false);
     FeatureFlag featureFlag = persistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
-    publishEvent(accountId, featureName, true);
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
@@ -96,24 +86,6 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     cfMigrationService.syncFeatureFlagWithCF(featureFlag);
 
     log.info("Enabled feature name :[{}] for account id: [{}]", featureName.name(), accountId);
-  }
-
-  private void publishEvent(String accountId, FeatureName featureName, boolean enable) {
-    try {
-      if (eventProducer != null) {
-        eventProducer.send(Message.newBuilder()
-                               .putAllMetadata(ImmutableMap.of("accountId", accountId))
-                               .setData(FeatureFlagChangeDTO.newBuilder()
-                                            .setAccountId(accountId)
-                                            .setEnable(enable)
-                                            .setFeatureName(featureName.toString())
-                                            .build()
-                                            .toByteString())
-                               .build());
-      }
-    } catch (Exception ex) {
-      log.error("Failed to publish account change event for enabling next gen via event framework.", ex);
-    }
   }
 
   @Override
@@ -131,7 +103,6 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       featureFlag.getAccountIds().remove(accountId);
     }
     persistence.save(featureFlag);
-    publishEvent(accountId, FeatureName.valueOf(featureName), enabled);
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureName), featureFlag);
     }
@@ -403,40 +374,12 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       return Optional.empty();
     }
     persistence.save(featureFlag);
-    FeatureFlag existingFeatureFlag = featureFlagOptional.get();
-    Set<String> existingAccounts =
-        existingFeatureFlag.getAccountIds() != null ? existingFeatureFlag.getAccountIds() : emptySet();
-    Set<String> newAccounts = featureFlag.getAccountIds() != null ? featureFlag.getAccountIds() : emptySet();
-    Set<String> accountsAdded = Sets.difference(newAccounts, existingAccounts);
-    Set<String> accountsRemoved = Sets.difference(existingAccounts, newAccounts);
 
-    // for accounts which have been added, send enabled event
-    accountsAdded.forEach(account -> publishEvent(account, FeatureName.valueOf(featureFlagName), true));
-
-    // for accounts which have been removed, send disabled event
-    accountsRemoved.forEach(account -> publishEvent(account, FeatureName.valueOf(featureFlagName), false));
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureFlagName), featureFlag);
     }
 
     cfMigrationService.syncFeatureFlagWithCF(featureFlag);
     return Optional.of(featureFlag);
-  }
-
-  /**
-   * Removes an account from the FeatureFlags collection
-   * @param accountId
-   */
-  @Override
-  public void removeAccountReferenceFromAllFeatureFlags(String accountId) {
-    List<FeatureFlag> featureFlags = getAllFeatureFlags();
-    for (FeatureFlag featureFlag : featureFlags) {
-      try {
-        updateFeatureFlagForAccount(featureFlag.getName(), accountId, false);
-      } catch (Exception e) {
-        log.error(
-            "Exception occurred while deleting account {} from FeatureFlag {}", accountId, featureFlag.getName(), e);
-      }
-    }
   }
 }

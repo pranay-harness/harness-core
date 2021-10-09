@@ -18,11 +18,11 @@ import java.util.List;
 @OwnedBy(CDP)
 public enum NGStepType {
   // k8s steps
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("APPLY")
   APPLY("Apply", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("SCALE")
   SCALE("Scale", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("STAGE_DEPLOYMENT")
   STAGE_DEPLOYMENT("Stage Deployment", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
       StepSpecTypeConstants.PLACEHOLDER),
   @JsonProperty(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
@@ -57,37 +57,34 @@ public enum NGStepType {
   @JsonProperty(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
   TERRAFORM_ROLLBACK("Terraform Rollback", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_ROLLBACK),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("CREATE_STACK")
   CREATE_STACK("Create Stack", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Cloudformation", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("DELETE_STACK")
   DELETE_STACK("Delete Stack", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Cloudformation", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("SHELL_SCRIPT_PROVISIONER")
   SHELL_SCRIPT_PROVISIONER("Shell Script Provisioner", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Shell Script Provisioner", StepSpecTypeConstants.PLACEHOLDER),
 
   // Issue Tracking
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("JIRA")
   JIRA("Jira", Arrays.asList(ServiceDefinitionType.values()), "Issue Tracking", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("SERVICENOW")
   SERVICENOW(
       "ServiceNow", Arrays.asList(ServiceDefinitionType.values()), "Issue Tracking", StepSpecTypeConstants.PLACEHOLDER),
   // Notifications
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("EMAIL")
   EMAIL("Email", Arrays.asList(ServiceDefinitionType.values()), "Notification", StepSpecTypeConstants.PLACEHOLDER),
   // Flow Control
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("BARRIERS")
   BARRIERS(
       "Barriers", Arrays.asList(ServiceDefinitionType.values()), "Flow Control", StepSpecTypeConstants.PLACEHOLDER),
   // Utilities
-  @JsonProperty(StepSpecTypeConstants.SHELL_SCRIPT)
-  SHELL_SCRIPT("Shell Script", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted",
-      StepSpecTypeConstants.SHELL_SCRIPT),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("NEW_RELIC_DEPLOYMENT_MAKER")
   NEW_RELIC_DEPLOYMENT_MAKER("New Relic Deployment Maker", Arrays.asList(ServiceDefinitionType.values()),
       "Utilites/Non-Scripted/", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty("TEMPLATIZED_SECRET_MANAGER")
   TEMPLATIZED_SECRET_MANAGER("Templatized Secret Manager", Arrays.asList(ServiceDefinitionType.values()),
       "Utilites/Non-Scripted/", StepSpecTypeConstants.PLACEHOLDER);
 

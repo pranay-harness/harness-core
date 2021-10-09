@@ -1,8 +1,13 @@
 package io.harness.pms.sdk.core;
 
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.pms.sdk.core.PmsSdkCoreTestBase.PMS_SDK_CORE_SERVICE_NAME;
 
 import io.harness.PmsCommonsModule;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -13,6 +18,7 @@ import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
+import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -31,6 +37,7 @@ import com.google.inject.Singleton;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +62,15 @@ public class PmsSdkCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleM
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build();
     List<Module> modules = new ArrayList<>();
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.add(cacheModule);
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
                                                  .serviceName(PMS_SDK_CORE_SERVICE_NAME)
@@ -71,6 +87,7 @@ public class PmsSdkCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .add(PmsContractsKryoRegistrar.class)
+            .add(SdkCoreTestKryoRegistrar.class)
             .add(PmsSdkCoreKryoRegistrar.class)
             .build();
       }

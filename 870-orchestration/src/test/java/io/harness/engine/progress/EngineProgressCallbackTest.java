@@ -1,0 +1,101 @@
+package io.harness.engine.progress;
+
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ALEXEI;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.progress.publisher.ProgressEventPublisher;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.BinaryResponseData;
+import io.harness.tasks.ProgressData;
+
+import com.google.inject.Inject;
+import java.util.ArrayList;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+
+@OwnedBy(HarnessTeam.PIPELINE)
+public class EngineProgressCallbackTest extends OrchestrationTestBase {
+  @Mock NodeExecutionService nodeExecutionService;
+  @Inject KryoSerializer kryoSerializer;
+  @Mock ProgressEventPublisher progressEventPublisher;
+
+  private final String nodeExecutionId = generateUuid();
+
+  private EngineProgressCallback engineProgressCallback;
+
+  @Before
+  public void setUp() {
+    engineProgressCallback = EngineProgressCallback.builder()
+                                 .nodeExecutionService(nodeExecutionService)
+                                 .kryoSerializer(kryoSerializer)
+                                 .progressEventPublisher(progressEventPublisher)
+                                 .nodeExecutionId(nodeExecutionId)
+                                 .build();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldThrowUnsupportedExceptionWhenTestNotify() {
+    String correlationId = generateUuid();
+    assertThatThrownBy(() -> engineProgressCallback.notify(correlationId, new TestResponseData()))
+        .isInstanceOf(UnsupportedOperationException.class)
+        .hasMessageContaining("Progress updates are not supported for raw non Binary Response Data");
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestNotifyWithUnitProgressData() {
+    String correlationId = generateUuid();
+    UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(new ArrayList<>()).build();
+    BinaryResponseData binaryResponseData =
+        BinaryResponseData.builder().data(kryoSerializer.asDeflatedBytes(unitProgressData)).build();
+
+    when(progressEventPublisher.publishEvent(nodeExecutionId, binaryResponseData)).thenReturn(null);
+    when(nodeExecutionService.update(anyString(), any())).thenReturn(null);
+
+    engineProgressCallback.notify(correlationId, binaryResponseData);
+
+    verify(progressEventPublisher).publishEvent(nodeExecutionId, binaryResponseData);
+    verify(nodeExecutionService).update(anyString(), any());
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestNotify() {
+    String correlationId = generateUuid();
+    CommandUnitStatusProgress commandUnitStatusProgress =
+        CommandUnitStatusProgress.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    BinaryResponseData binaryResponseData =
+        BinaryResponseData.builder().data(kryoSerializer.asDeflatedBytes(commandUnitStatusProgress)).build();
+
+    when(progressEventPublisher.publishEvent(nodeExecutionId, binaryResponseData)).thenReturn(null);
+
+    engineProgressCallback.notify(correlationId, binaryResponseData);
+
+    verify(progressEventPublisher).publishEvent(nodeExecutionId, binaryResponseData);
+    verify(nodeExecutionService, never()).update(anyString(), any());
+  }
+
+  private static class TestResponseData implements ProgressData {}
+}

@@ -1,19 +1,23 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.ng.core.account.AuthenticationMechanism.LDAP;
+import static io.harness.ng.core.account.AuthenticationMechanism.OAUTH;
+import static io.harness.ng.core.account.AuthenticationMechanism.SAML;
+import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
-import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
-import static software.wings.security.authentication.AuthenticationMechanism.SAML;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.data.structure.EmptyPredicate;
@@ -21,6 +25,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Account;
@@ -41,8 +47,6 @@ import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.security.saml.SamlClientService;
@@ -78,6 +82,8 @@ import org.hibernate.validator.constraints.NotBlank;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class SSOServiceImpl implements SSOService {
   @Inject AccountService accountService;
   @Inject SSOSettingService ssoSettingService;
@@ -159,7 +165,9 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public SSOConfig deleteSamlConfiguration(String accountId) {
     ssoSettingService.deleteSamlSettings(accountId);
-    return setAuthenticationMechanism(accountId, USER_PASSWORD);
+    SSOConfig ssoConfig = setAuthenticationMechanism(accountId, USER_PASSWORD);
+    setOauthIfSetAfterSSODelete(accountId);
+    return ssoConfig;
   }
 
   private void auditSSOActivity(
@@ -312,6 +320,7 @@ public class SSOServiceImpl implements SSOService {
     LdapSettings settings = ssoSettingService.deleteLdapSettings(accountId);
     if (accountService.get(accountId).getAuthenticationMechanism() == AuthenticationMechanism.LDAP) {
       setAuthenticationMechanism(accountId, USER_PASSWORD);
+      setOauthIfSetAfterSSODelete(accountId);
     }
     return settings;
   }
@@ -473,6 +482,11 @@ public class SSOServiceImpl implements SSOService {
     return ssoSettingService.updateOauthSettings(accountId, filter, allowedProviders);
   }
 
+  @Override
+  public List<Long> getIterationsFromCron(String accountId, String cron) {
+    return ssoSettingService.getIterationsFromCron(accountId, cron);
+  }
+
   private boolean deleteSamlSettings(String accountId, String targetAccountType) {
     boolean samlSettingsDeleted = true;
     SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
@@ -491,6 +505,16 @@ public class SSOServiceImpl implements SSOService {
       ldapSettingsDeleted = ssoSettingService.deleteLdapSettings(accountId) != null;
     }
     return ldapSettingsDeleted;
+  }
+
+  private void setOauthIfSetAfterSSODelete(String accountId) {
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+    if (oauthSettings != null) {
+      log.info("Setting Oauth enabled to true for account {} after SSO settings delete", accountId);
+      Account account = accountService.get(accountId);
+      account.setOauthEnabled(true);
+      accountService.update(account);
+    }
   }
 
   private void checkIfOperationIsAllowed(String accountId, AuthenticationMechanism authenticationMechanism) {

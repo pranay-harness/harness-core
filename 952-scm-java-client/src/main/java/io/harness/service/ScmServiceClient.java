@@ -19,6 +19,7 @@ import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
+import io.harness.product.ci.scm.proto.FindPRResponse;
 import io.harness.product.ci.scm.proto.GetAuthenticatedUserResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.GetUserReposResponse;
@@ -65,7 +66,7 @@ public interface ScmServiceClient {
   FindFilesInPRResponse findFilesInPR(ScmConnector scmConnector, int prNumber, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   GetLatestCommitResponse getLatestCommit(
-      ScmConnector scmConnector, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
+      ScmConnector scmConnector, String branch, String ref, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   FindFilesInCommitResponse findFilesInCommit(
       ScmConnector scmConnector, String commitHash, SCMGrpc.SCMBlockingStub scmBlockingStub);
@@ -79,6 +80,9 @@ public interface ScmServiceClient {
 
   FileContentBatchResponse listFiles(
       ScmConnector connector, Set<String> foldersList, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
+
+  FileContentBatchResponse listFoldersFilesByCommitId(
+      ScmConnector connector, Set<String> foldersList, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   FileContentBatchResponse listFilesByFilePaths(
       ScmConnector connector, List<String> filePaths, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
@@ -108,4 +112,6 @@ public interface ScmServiceClient {
   GetAuthenticatedUserResponse getAuthenticatedUser(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   GetUserReposResponse getUserRepos(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub);
+
+  FindPRResponse findPR(ScmConnector scmConnector, long number, SCMGrpc.SCMBlockingStub scmBlockingStub);
 }

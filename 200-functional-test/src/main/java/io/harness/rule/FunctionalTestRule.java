@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.GraphQLModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
@@ -15,7 +16,6 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
-import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -64,7 +64,6 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
-import software.wings.app.GraphQLModule;
 import software.wings.app.IndexMigratorModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -76,6 +75,7 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.service.impl.EventEmitter;
 
@@ -288,8 +288,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(MetricRegistry.class);
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
-        CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
-        bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
     modules.add(new ValidationModule(validatorFactory));
@@ -301,7 +299,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
-    modules.add(new GraphQLModule());
+    modules.add(GraphQLModule.getInstance());
     modules.add(new SSOModule());
     modules.add(new SignupModule());
     modules.add(new SearchModule());
@@ -357,6 +355,10 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
 
+    configuration.setGrpcDMSClientConfig(
+        GrpcClientConfig.builder().target("localhost:15011").authority("localhost").build());
+    configuration.setDmsSecret("dummy_key");
+
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
 
@@ -394,6 +396,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
                                            .org("testOrg")
                                            .project("testProject")
                                            .build());
+    configuration.setLdapSyncJobConfig(
+        LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
     return configuration;
   }
 

@@ -143,6 +143,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -220,7 +221,7 @@ import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
@@ -2829,7 +2830,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(webHookToken.getPayload()).isNotEmpty();
     assertThat(webHookToken.getPayload())
         .isEqualTo(
-            "{\"application\":\"APP_ID\",\"manifests\":[{\"service\":\"Service_PLACEHOLDER\",\"versionNumber\":\"Service_VERSION_NUMBER_PLACE_HOLDER\"}],\"parameters\":{\"Service\":\"Service_placeholder\"},\"artifacts\":[{\"artifactSourceName\":\"Service_ARTIFACT_SOURCE_NAME_PLACE_HOLDER\",\"service\":\"Service_PLACEHOLDER\",\"buildNumber\":\"Service_BUILD_NUMBER_PLACE_HOLDER\"}]}");
+            "{\"application\":\"APP_ID\",\"manifests\":[{\"service\":\"Service_PLACEHOLDER\",\"appManifestName\":\"Service_APPLICATION_MANIFEST_NAME_PLACE_HOLDER\",\"versionNumber\":\"Service_VERSION_NUMBER_PLACE_HOLDER\"}],\"parameters\":{\"Service\":\"Service_placeholder\"},\"artifacts\":[{\"artifactSourceName\":\"Service_ARTIFACT_SOURCE_NAME_PLACE_HOLDER\",\"service\":\"Service_PLACEHOLDER\",\"buildNumber\":\"Service_BUILD_NUMBER_PLACE_HOLDER\"}]}");
   }
 
   @Test
@@ -3317,7 +3318,9 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
 
     ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
-    Map<String, String> serviceManifestMapping = ImmutableMap.of(SERVICE_ID, "1", SERVICE_ID + 2, "5");
+    Map<String, ManifestSummary> serviceManifestMapping =
+        ImmutableMap.of(SERVICE_ID, ManifestSummary.builder().versionNo("1").appManifestName("name").build(),
+            SERVICE_ID + 2, ManifestSummary.builder().versionNo("5").appManifestName("name").build());
     triggerService.triggerExecutionByWebHook(APP_ID, trigger.getWebHookToken(), Collections.emptyMap(),
         serviceManifestMapping, null, Collections.singletonMap("service", SERVICE_NAME));
     verify(workflowExecutionService, times(1))
@@ -3354,7 +3357,9 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID + 2)).thenReturn(appManifest);
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
 
-    Map<String, String> serviceManifestMapping = ImmutableMap.of(SERVICE_ID, "1", SERVICE_ID + 2, "5");
+    Map<String, ManifestSummary> serviceManifestMapping =
+        ImmutableMap.of(SERVICE_ID, ManifestSummary.builder().versionNo("1").appManifestName("name").build(),
+            SERVICE_ID + 2, ManifestSummary.builder().versionNo("5").appManifestName("name").build());
     assertThatThrownBy(
         ()
             -> triggerService.triggerExecutionByWebHook(APP_ID, trigger.getWebHookToken(), Collections.emptyMap(),
@@ -3549,10 +3554,13 @@ public class TriggerServiceTest extends WingsBaseTest {
                    .version(invocationOnMock.getArgumentAt(2, String.class))
                    .build());
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID + 2)).thenReturn(appManifest);
+    when(applicationManifestService.getAppManifestByName(APP_ID, null, SERVICE_ID + 2, "name")).thenReturn(appManifest);
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
 
     ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
-    Map<String, String> serviceManifestMapping = ImmutableMap.of(SERVICE_ID, "1", SERVICE_ID + 2, "5");
+    Map<String, ManifestSummary> serviceManifestMapping =
+        ImmutableMap.of(SERVICE_ID, ManifestSummary.builder().versionNo("1").appManifestName("name").build(),
+            SERVICE_ID + 2, ManifestSummary.builder().versionNo("5").appManifestName("name").build());
     triggerService.triggerExecutionByWebHook(APP_ID, trigger.getWebHookToken(), Collections.emptyMap(),
         serviceManifestMapping, null, Collections.singletonMap("service", SERVICE_NAME));
     verify(workflowExecutionService, times(1))
@@ -3960,5 +3968,25 @@ public class TriggerServiceTest extends WingsBaseTest {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID);
     assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getParents()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotRunDisabledTrigger() {
+    Artifact artifact = prepareArtifact(ARTIFACT_ID);
+    Artifact artifact2 = prepareArtifact(UUIDGenerator.generateUuid());
+
+    scheduledTriggerMocks();
+
+    when(workflowExecutionService.obtainLastGoodDeployedArtifacts(APP_ID, PIPELINE_ID))
+        .thenReturn(asList(artifact, artifact2));
+
+    ScheduledTriggerCondition scheduledTriggerCondition =
+        (ScheduledTriggerCondition) scheduledConditionTrigger.getCondition();
+    scheduledTriggerCondition.setCronExpression("0 5 31 2 ?");
+    assertThatThrownBy(() -> triggerService.save(scheduledConditionTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
   }
 }

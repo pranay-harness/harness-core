@@ -445,8 +445,16 @@ public class EngineExpressionEvaluator {
    * expressions - variables delimited by <+...>.
    */
   protected Object evaluateInternal(@NotNull String expression, @NotNull EngineJexlContext ctx) {
+    return evaluateByCreatingExpression(expression, ctx);
+  }
+
+  protected Object evaluateByCreatingExpression(@NotNull String expression, @NotNull EngineJexlContext ctx) {
     JexlExpression jexlExpression = engine.createExpression(expression);
     return jexlExpression.evaluate(ctx);
+  }
+
+  protected Object evaluateByCreatingScript(@NotNull String expression, @NotNull EngineJexlContext ctx) {
+    return engine.createScript(expression).execute(ctx);
   }
 
   private EngineJexlContext prepareContext(Map<String, Object> ctx) {

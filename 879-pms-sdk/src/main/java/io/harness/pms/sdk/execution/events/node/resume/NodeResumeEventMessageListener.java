@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.execution.events.node.resume;
 
+import static io.harness.pms.sdk.PmsSdkModuleUtils.CORE_EXECUTOR_NAME;
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -20,7 +20,7 @@ public class NodeResumeEventMessageListener
     extends PmsAbstractMessageListener<NodeResumeEvent, NodeResumeEventHandler> {
   @Inject
   public NodeResumeEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      NodeResumeEventHandler nodeResumeEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
+      NodeResumeEventHandler nodeResumeEventHandler, @Named(CORE_EXECUTOR_NAME) ExecutorService executorService) {
     super(serviceName, NodeResumeEvent.class, nodeResumeEventHandler, executorService);
   }
 }

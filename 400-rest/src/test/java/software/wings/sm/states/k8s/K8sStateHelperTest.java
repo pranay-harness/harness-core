@@ -1,15 +1,18 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.KUBERNETES_EXPORT_MANIFESTS;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.infra.InfraDefinitionTestConstants.INFRA_DEFINITION_NAME;
 import static software.wings.settings.SettingVariableTypes.GCP;
+import static software.wings.sm.states.k8s.K8sResourcesSweepingOutput.K8S_RESOURCES_SWEEPING_OUTPUT;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
 import static software.wings.sm.states.k8s.K8sTestConstants.VALUES_YAML_WITH_ARTIFACT_REFERENCE;
 import static software.wings.sm.states.k8s.K8sTestConstants.VALUES_YAML_WITH_COMMENTED_ARTIFACT_REFERENCE;
@@ -39,11 +42,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.K8sPodSyncException;
+import io.harness.ff.FeatureFlagService;
+import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -61,6 +68,7 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -75,8 +83,12 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.ExecutionContext;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -88,7 +100,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDP)
 public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
@@ -96,6 +108,9 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
+  @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private ExecutionContext context;
 
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
@@ -424,5 +439,145 @@ public class K8sStateHelperTest extends WingsBaseTest {
           .isEqualTo(
               "Failed to fetch PodList for release releaseName. Unknown return type software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse");
     }
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testSaveResourcesToSweepingOutputWhenPreviousSweepingOutputInstanceFound() {
+    List<KubernetesResource> resources = new ArrayList<>();
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    doReturn("APP_ID").when(context).getAppId();
+    doReturn(SweepingOutputInquiry.builder()).when(context).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(any());
+    doReturn(SweepingOutputInstance.builder().uuid("UUID").value(K8sResourcesSweepingOutput.builder().build()).build())
+        .when(sweepingOutputService)
+        .find(any());
+
+    k8sStateHelper.saveResourcesToSweepingOutput(context, resources, "test");
+
+    verify(sweepingOutputService, times(1)).deleteById("APP_ID", "UUID");
+    verify(sweepingOutputService, times(1)).save(captor.capture());
+    assertThat(captor.getValue().getName()).isEqualTo(K8S_RESOURCES_SWEEPING_OUTPUT);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testSaveResourcesToSweepingOutputWhenNoPreviousSweepingOutputInstanceFound() {
+    List<KubernetesResource> resources = new ArrayList<>();
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    doReturn("APP_ID").when(context).getAppId();
+    doReturn(SweepingOutputInquiry.builder()).when(context).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(any());
+    doReturn(null).when(sweepingOutputService).find(any());
+
+    k8sStateHelper.saveResourcesToSweepingOutput(context, resources, "test");
+
+    verify(sweepingOutputService, times(0)).deleteById("APP_ID", "UUID");
+    verify(sweepingOutputService, times(1)).save(captor.capture());
+    assertThat(captor.getValue().getName()).isEqualTo(K8S_RESOURCES_SWEEPING_OUTPUT);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetResourcesFromSweepingOutput() {
+    List<KubernetesResource> resources = new ArrayList<>();
+    resources.add(KubernetesResource.builder().build());
+
+    doReturn(SweepingOutputInquiry.builder()).when(context).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()
+                 .uuid("UUID")
+                 .value(K8sResourcesSweepingOutput.builder().stateType("test").resources(resources).build())
+
+                 .build())
+        .when(sweepingOutputService)
+        .find(any());
+
+    List<KubernetesResource> resourcesFromSweepingOutput =
+        k8sStateHelper.getResourcesFromSweepingOutput(context, "test");
+    assertThat(resourcesFromSweepingOutput).isEqualTo(resources);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetResourcesFromSweepingOutputWhenSweepingOutputInstanceIsNull() {
+    doReturn(SweepingOutputInquiry.builder()).when(context).prepareSweepingOutputInquiryBuilder();
+    doReturn(null).when(sweepingOutputService).find(any());
+
+    List<KubernetesResource> resourcesFromSweepingOutput =
+        k8sStateHelper.getResourcesFromSweepingOutput(context, "test");
+    assertThat(resourcesFromSweepingOutput).isNull();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetResourcesFromSweepingOutputWhenK8sResourcesSweepingOutputIsNull() {
+    doReturn(SweepingOutputInquiry.builder()).when(context).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder().uuid("UUID").value(null).build()).when(sweepingOutputService).find(any());
+
+    List<KubernetesResource> resourcesFromSweepingOutput =
+        k8sStateHelper.getResourcesFromSweepingOutput(context, "test");
+    assertThat(resourcesFromSweepingOutput).isNull();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testCommandUnitListFeatureEnabled() {
+    doReturn(true).when(featureFlagService).isEnabled(KUBERNETES_EXPORT_MANIFESTS, "accountId");
+    List<CommandUnit> commandUnits = k8sStateHelper.getCommandUnits(false, "accountId", false, false, true);
+    assertThat(commandUnits).isNotEmpty();
+    assertThat(commandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.Init);
+
+    doReturn(true).when(featureFlagService).isEnabled(KUBERNETES_EXPORT_MANIFESTS, "accountId");
+    commandUnits = k8sStateHelper.getCommandUnits(true, "accountId", false, false, true);
+    assertThat(commandUnits).isNotEmpty();
+    assertThat(commandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
+    assertThat(commandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);
+
+    doReturn(true).when(featureFlagService).isEnabled(KUBERNETES_EXPORT_MANIFESTS, "accountId");
+    commandUnits = k8sStateHelper.getCommandUnits(true, "accountId", false, true, true);
+    assertThat(commandUnits.size()).isEqualTo(2);
+    assertThat(commandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
+    assertThat(commandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);
+
+    doReturn(true).when(featureFlagService).isEnabled(KUBERNETES_EXPORT_MANIFESTS, "accountId");
+    commandUnits = k8sStateHelper.getCommandUnits(true, "accountId", true, false, true);
+    assertThat(commandUnits).isNotEmpty();
+    assertThat(commandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.Init);
+    assertThat(commandUnits.get(commandUnits.size() - 1).getName()).isEqualTo(K8sCommandUnitConstants.WrapUp);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testCommandUnitListFeatureDisabled() {
+    doReturn(false).when(featureFlagService).isEnabled(KUBERNETES_EXPORT_MANIFESTS, "accountId");
+    List<CommandUnit> commandUnits = k8sStateHelper.getCommandUnits(false, "accountId", false, false, true);
+    assertThat(commandUnits.size()).isEqualTo(5);
+    assertThat(commandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.Init);
+    assertThat(commandUnits.get(commandUnits.size() - 1).getName()).isEqualTo(K8sCommandUnitConstants.WrapUp);
+
+    doReturn(false).when(featureFlagService).isEnabled(KUBERNETES_EXPORT_MANIFESTS, "accountId");
+    commandUnits = k8sStateHelper.getCommandUnits(true, "accountId", false, false, true);
+    assertThat(commandUnits.size()).isEqualTo(6);
+    assertThat(commandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
+    assertThat(commandUnits.get(commandUnits.size() - 1).getName()).isEqualTo(K8sCommandUnitConstants.WrapUp);
+
+    doReturn(false).when(featureFlagService).isEnabled(KUBERNETES_EXPORT_MANIFESTS, "accountId");
+    commandUnits = k8sStateHelper.getCommandUnits(true, "accountId", false, true, true);
+    assertThat(commandUnits.size()).isEqualTo(6);
+    assertThat(commandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
+    assertThat(commandUnits.get(commandUnits.size() - 1).getName()).isEqualTo(K8sCommandUnitConstants.WrapUp);
+
+    doReturn(false).when(featureFlagService).isEnabled(KUBERNETES_EXPORT_MANIFESTS, "accountId");
+    commandUnits = k8sStateHelper.getCommandUnits(true, "accountId", true, false, true);
+    assertThat(commandUnits.size()).isEqualTo(6);
+    assertThat(commandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
+    assertThat(commandUnits.get(commandUnits.size() - 1).getName()).isEqualTo(K8sCommandUnitConstants.WrapUp);
   }
 }

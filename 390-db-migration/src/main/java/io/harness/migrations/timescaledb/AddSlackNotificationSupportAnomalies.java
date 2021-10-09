@@ -1,7 +1,5 @@
 package io.harness.migrations.timescaledb;
 
-import io.harness.annotations.dev.HarnessModule;
-
 public class AddSlackNotificationSupportAnomalies extends AbstractTimeScaleDBMigration {
   @Override
   public String getFileName() {

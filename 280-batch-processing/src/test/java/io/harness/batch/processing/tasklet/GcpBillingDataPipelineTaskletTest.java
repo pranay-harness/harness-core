@@ -65,8 +65,7 @@ public class GcpBillingDataPipelineTaskletTest extends BaseTaskletTest {
                                                                    .bqDatasetId(bqDatasetId)
                                                                    .bqDataSetRegion(bqRegion)
                                                                    .build());
-    when(cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(
-             eq(ACCOUNT_ID), eq(START_TIME_MILLIS), eq(END_TIME_MILLIS)))
+    when(cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(eq(ACCOUNT_ID)))
         .thenReturn(gcpBillingAccounts);
     when(billingDataPipelineService.createDataSet(eq(account))).thenReturn(dataSetId);
 
@@ -102,8 +101,7 @@ public class GcpBillingDataPipelineTaskletTest extends BaseTaskletTest {
                                                                    .bqDatasetId(bqDatasetId)
                                                                    .bqDataSetRegion("US")
                                                                    .build());
-    when(cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(
-             eq(ACCOUNT_ID), eq(START_TIME_MILLIS), eq(END_TIME_MILLIS)))
+    when(cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(eq(ACCOUNT_ID)))
         .thenReturn(gcpBillingAccounts);
     gcpBillingDataPipelineTasklet.execute(null, chunkContext);
     verify(billingDataPipelineRecordDao)

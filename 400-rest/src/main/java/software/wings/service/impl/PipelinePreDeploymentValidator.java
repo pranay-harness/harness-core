@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.features.utils.WorkflowUtils.hasApprovalSteps;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.data.structure.CollectionUtils;
 
@@ -25,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class PipelinePreDeploymentValidator {
   public static final String APPROVAL_ERROR_MSG =
       "Pipeline %s is using Professional features (approval integrations, etc.).";

@@ -16,11 +16,12 @@ import static software.wings.sm.states.ResourceConstraintState.AcquireMode.ENSUR
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
-import io.harness.beans.shared.ResourceConstraint;
-import io.harness.beans.shared.RestraintService;
+import io.harness.beans.ResourceConstraint;
 import io.harness.context.ContextElementType;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintException;
@@ -71,11 +72,11 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @FieldNameConstants(innerTypeName = "ResourceConstraintStateKeys")
 public class ResourceConstraintState extends State {
   @Inject @Transient private AppService applicationService;
   @Inject @Transient private ResourceConstraintService resourceConstraintService;
-  @Inject @Transient private RestraintService restraintService;
   @Inject @Transient private NotificationSetupService notificationSetupService;
   @Inject @Transient private NotificationService notificationService;
   @Inject @Transient private WingsPersistence wingsPersistence;
@@ -133,7 +134,7 @@ public class ResourceConstraintState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
-    final ResourceConstraint resourceConstraint = restraintService.get(accountId, resourceConstraintId);
+    final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
 
     if (isNotEmpty(notificationEvents) && notificationEvents.contains(NotificationEvent.UNBLOCKED)) {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION);
@@ -146,7 +147,7 @@ public class ResourceConstraintState extends State {
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
-    final ResourceConstraint resourceConstraint = restraintService.get(accountId, resourceConstraintId);
+    final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
     final Constraint constraint = resourceConstraintService.createAbstraction(resourceConstraint);
 
     if (acquireMode == ENSURE) {

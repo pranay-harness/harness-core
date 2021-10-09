@@ -84,8 +84,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
               .getVaultRetrofit(sshVaultConfig.getVaultUrl(), sshVaultConfig.isCertValidationRequired())
               .create(VaultSysAuthRestClient.class);
 
-      SignedSSHVaultRequest signedSSHVaultRequest =
-          SignedSSHVaultRequest.builder().publicKey(hostConnectionAttributes.getPublicKey()).build();
+      SignedSSHVaultRequest signedSSHVaultRequest = SignedSSHVaultRequest.builder()
+                                                        .publicKey(hostConnectionAttributes.getPublicKey())
+                                                        .validPrincipals(hostConnectionAttributes.getUserName())
+                                                        .build();
 
       Response<SignedSSHVaultResponse> response =
           restClient

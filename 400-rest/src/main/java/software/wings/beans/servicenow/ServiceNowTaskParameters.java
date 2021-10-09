@@ -1,5 +1,11 @@
 package software.wings.beans.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -17,9 +23,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @ToString(exclude = {"encryptionDetails"})
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@BreakDependencyOn("software.wings.service.impl.servicenow.ServiceNowServiceImpl")
 public class ServiceNowTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
   private String accountId;
   private ServiceNowConfig serviceNowConfig;

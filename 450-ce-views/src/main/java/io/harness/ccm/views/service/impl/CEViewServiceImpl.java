@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.dao.CEReportScheduleDao;
 import io.harness.ccm.views.dao.CEViewDao;
+import io.harness.ccm.views.dto.DefaultViewIdDto;
 import io.harness.ccm.views.dto.ViewTimeRangeDto;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.entities.CEView;
@@ -37,12 +38,14 @@ import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -61,8 +64,21 @@ public class CEViewServiceImpl implements CEViewService {
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
   private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(100) has been reached";
   private static final String DEFAULT_AZURE_VIEW_NAME = "Azure";
-  private static final String DEFAULT_AZURE_FIELD_ID = "azureServiceName";
-  private static final String DEFAULT_AZURE_FIELD_NAME = "Service name";
+  private static final String DEFAULT_AZURE_FIELD_ID = "azureSubscriptionGuid";
+  private static final String DEFAULT_AZURE_FIELD_NAME = "Subscription id";
+
+  private static final String DEFAULT_AWS_VIEW_NAME = "Aws";
+  private static final String DEFAULT_AWS_FIELD_ID = "awsUsageAccountId";
+  private static final String DEFAULT_AWS_FIELD_NAME = "Account";
+
+  private static final String DEFAULT_GCP_VIEW_NAME = "Gcp";
+  private static final String DEFAULT_GCP_FIELD_ID = "gcpProjectId";
+  private static final String DEFAULT_GCP_FIELD_NAME = "Project";
+
+  private static final String DEFAULT_CLUSTER_VIEW_NAME = "Cluster";
+  private static final String DEFAULT_CLUSTER_FIELD_ID = "clusterName";
+  private static final String DEFAULT_CLUSTER_FIELD_NAME = "Cluster Name";
+
   private static final int VIEW_COUNT = 100;
   @Override
   public CEView save(CEView ceView) {
@@ -187,8 +203,9 @@ public class CEViewServiceImpl implements CEViewService {
   public List<QLCEView> getAllViews(String accountId, boolean includeDefault) {
     List<CEView> viewList = ceViewDao.findByAccountId(accountId);
     if (!includeDefault) {
-      viewList =
-          viewList.stream().filter(view -> view.getViewType() != ViewType.DEFAULT_AZURE).collect(Collectors.toList());
+      viewList = viewList.stream()
+                     .filter(view -> ImmutableSet.of(ViewType.SAMPLE, ViewType.CUSTOMER).contains(view.getViewType()))
+                     .collect(Collectors.toList());
     }
     List<QLCEView> graphQLViewObjList = new ArrayList<>();
     for (CEView view : viewList) {
@@ -229,41 +246,100 @@ public class CEViewServiceImpl implements CEViewService {
     return ceViewDao.findByAccountIdAndState(accountId, viewState);
   }
 
-  @Override
-  public void createDefaultAzureView(String accountId) {
-    ViewIdCondition condition = ViewIdCondition.builder()
-                                    .viewField(ViewField.builder()
-                                                   .fieldId(DEFAULT_AZURE_FIELD_ID)
-                                                   .fieldName(DEFAULT_AZURE_FIELD_NAME)
-                                                   .identifier(ViewFieldIdentifier.AZURE)
-                                                   .build())
-                                    .viewOperator(ViewIdOperator.NOT_NULL)
-                                    .values(Collections.singletonList(""))
-                                    .build();
+  private ViewIdCondition getDefaultViewIdCondition(String fieldId, String fieldName, ViewFieldIdentifier identifier) {
+    return ViewIdCondition.builder()
+        .viewField(ViewField.builder().fieldId(fieldId).fieldName(fieldName).identifier(identifier).build())
+        .viewOperator(ViewIdOperator.NOT_NULL)
+        .values(Collections.singletonList(""))
+        .build();
+  }
 
-    ViewRule rule = ViewRule.builder().viewConditions(Collections.singletonList(condition)).build();
+  private ViewVisualization getDefaultViewVisualization(
+      String fieldId, String fieldName, ViewFieldIdentifier identifier) {
+    return ViewVisualization.builder()
+        .granularity(ViewTimeGranularity.DAY)
+        .chartType(ViewChartType.STACKED_TIME_SERIES)
+        .groupBy(ViewField.builder()
+                     .fieldId(fieldId)
+                     .fieldName(fieldName)
+                     .identifier(identifier)
+                     .identifierName(identifier.getDisplayName())
+                     .build())
+        .build();
+  }
 
-    CEView defaultAzureView = CEView.builder()
-                                  .accountId(accountId)
-                                  .name(DEFAULT_AZURE_VIEW_NAME)
-                                  .viewVersion("v1")
-                                  .viewType(ViewType.DEFAULT_AZURE)
-                                  .viewState(ViewState.COMPLETED)
-                                  .viewRules(Collections.singletonList(rule))
-                                  .build();
-
-    modifyCEViewAndSetDefaults(defaultAzureView);
-    ceViewDao.save(defaultAzureView);
+  private CEView getDefaultView(String accountId, String viewName) {
+    return CEView.builder()
+        .accountId(accountId)
+        .name(viewName)
+        .viewVersion("v1")
+        .viewType(ViewType.DEFAULT)
+        .viewState(ViewState.COMPLETED)
+        .build();
   }
 
   @Override
-  public String getDefaultAzureViewId(String accountId) {
-    List<CEView> views = ceViewDao.findByAccountIdAndType(accountId, ViewType.DEFAULT_AZURE);
+  public void createDefaultView(String accountId, ViewFieldIdentifier viewFieldIdentifier) {
+    ViewIdCondition condition = null;
+    CEView defaultView = null;
+    ViewVisualization viewVisualization = null;
+    switch (viewFieldIdentifier) {
+      case AZURE:
+        condition = getDefaultViewIdCondition(DEFAULT_AZURE_FIELD_ID, DEFAULT_AZURE_FIELD_NAME, viewFieldIdentifier);
+        viewVisualization =
+            getDefaultViewVisualization(DEFAULT_AZURE_FIELD_ID, DEFAULT_AZURE_FIELD_NAME, viewFieldIdentifier);
+        defaultView = getDefaultView(accountId, DEFAULT_AZURE_VIEW_NAME);
+        break;
+      case AWS:
+        condition = getDefaultViewIdCondition(DEFAULT_AWS_FIELD_ID, DEFAULT_AWS_FIELD_NAME, viewFieldIdentifier);
+        viewVisualization =
+            getDefaultViewVisualization(DEFAULT_AWS_FIELD_ID, DEFAULT_AWS_FIELD_NAME, viewFieldIdentifier);
+        defaultView = getDefaultView(accountId, DEFAULT_AWS_VIEW_NAME);
+        break;
+      case GCP:
+        condition = getDefaultViewIdCondition(DEFAULT_GCP_FIELD_ID, DEFAULT_GCP_FIELD_NAME, viewFieldIdentifier);
+        viewVisualization =
+            getDefaultViewVisualization(DEFAULT_GCP_FIELD_ID, DEFAULT_GCP_FIELD_NAME, viewFieldIdentifier);
+        defaultView = getDefaultView(accountId, DEFAULT_GCP_VIEW_NAME);
+        break;
+      case CLUSTER:
+        condition =
+            getDefaultViewIdCondition(DEFAULT_CLUSTER_FIELD_ID, DEFAULT_CLUSTER_FIELD_NAME, viewFieldIdentifier);
+        viewVisualization =
+            getDefaultViewVisualization(DEFAULT_CLUSTER_FIELD_ID, DEFAULT_CLUSTER_FIELD_NAME, viewFieldIdentifier);
+        defaultView = getDefaultView(accountId, DEFAULT_CLUSTER_VIEW_NAME);
+        break;
+      default:
+        break;
+    }
+
+    if (null != condition && null != defaultView) {
+      ViewRule rule = ViewRule.builder().viewConditions(Collections.singletonList(condition)).build();
+      defaultView.setViewRules(Collections.singletonList(rule));
+      defaultView.setViewVisualization(viewVisualization);
+      modifyCEViewAndSetDefaults(defaultView);
+      ceViewDao.save(defaultView);
+    }
+  }
+
+  @Override
+  public DefaultViewIdDto getDefaultViewIds(String accountId) {
+    List<CEView> views = ceViewDao.findByAccountIdAndType(accountId, ViewType.DEFAULT);
+    return DefaultViewIdDto.builder()
+        .awsViewId(getViewId(views, ViewFieldIdentifier.AWS))
+        .azureViewId(getViewId(views, ViewFieldIdentifier.AZURE))
+        .gcpViewId(getViewId(views, ViewFieldIdentifier.GCP))
+        .clusterViewId(getViewId(views, ViewFieldIdentifier.CLUSTER))
+        .build();
+  }
+
+  private String getViewId(List<CEView> views, ViewFieldIdentifier viewFieldIdentifier) {
     if (views != null && views.size() > 0) {
-      if (views.size() > 1) {
-        log.error("More than 1 default azure perspectives present");
+      Optional<CEView> view =
+          views.stream().filter(ceView -> ceView.getDataSources().contains(viewFieldIdentifier)).findFirst();
+      if (view.isPresent()) {
+        return view.get().getUuid();
       }
-      return views.get(0).getUuid();
     }
     return null;
   }

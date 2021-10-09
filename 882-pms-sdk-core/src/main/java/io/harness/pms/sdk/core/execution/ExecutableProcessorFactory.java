@@ -24,6 +24,8 @@ public class ExecutableProcessorFactory {
     ExecuteStrategy executeStrategy;
     switch (mode) {
       case ASYNC:
+      case APPROVAL:
+      case CONSTRAINT:
         executeStrategy = new AsyncStrategy();
         break;
       case SYNC:

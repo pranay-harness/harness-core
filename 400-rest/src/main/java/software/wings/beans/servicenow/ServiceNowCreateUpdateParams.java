@@ -16,6 +16,7 @@ import lombok.Setter;
 @OwnedBy(CDC)
 public class ServiceNowCreateUpdateParams {
   @Getter @Setter private ServiceNowAction action;
+  @Getter @Setter String snowConnectorName;
   @Getter @Setter String snowConnectorId;
   @Getter @Setter private String ticketType;
   @Setter private Map<ServiceNowFields, String> fields;

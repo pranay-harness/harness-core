@@ -10,6 +10,7 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+import io.harness.plan.NodeType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 
 import com.google.common.collect.ImmutableList;
@@ -20,6 +21,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
@@ -33,7 +35,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("planExecutionsMetadata")
 @TypeAlias("planExecutionMetadata")
 @StoreIn(DbAliases.PMS)
-public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
+public class PlanExecutionMetadata implements PersistentEntity, UuidAware, PmsNodeExecutionMetadata {
   public static final long TTL_MONTHS = 6;
 
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
@@ -43,8 +45,11 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
   private String inputSetYaml;
   private String yaml;
   private String processedYaml;
-  private String triggerJsonPayload;
-  private TriggerPayload triggerPayload;
+
+  private StagesExecutionMetadata stagesExecutionMetadata;
+
+  @Wither private String triggerJsonPayload;
+  @Wither private TriggerPayload triggerPayload;
 
   @Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
@@ -56,5 +61,10 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
                  .unique(true)
                  .build())
         .build();
+  }
+
+  @Override
+  public NodeType forNodeType() {
+    return NodeType.PLAN;
   }
 }

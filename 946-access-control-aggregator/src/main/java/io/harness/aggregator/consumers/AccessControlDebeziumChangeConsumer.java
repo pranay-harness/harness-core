@@ -56,7 +56,7 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
     Optional<OpType> opType =
         getOperationType(((EmbeddedEngineChangeEvent<String, String>) changeEvent).sourceRecord());
     if (opType.isPresent() && collectionName.isPresent()) {
-      log.info("Handling {} event for entity: {}.{}", opType, collectionName, id);
+      log.info("Handling {} event for entity: {}.{}", opType.get(), collectionName.get(), id);
 
       ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName.get());
       changeConsumer.consumeEvent(opType.get(), id, deserialize(collectionName.get(), changeEvent));

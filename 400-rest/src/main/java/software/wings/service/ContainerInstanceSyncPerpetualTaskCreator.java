@@ -17,7 +17,9 @@ import static software.wings.service.impl.ContainerMetadataType.K8S;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -59,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class ContainerInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   static final boolean ALLOW_DUPLICATE = false;
 

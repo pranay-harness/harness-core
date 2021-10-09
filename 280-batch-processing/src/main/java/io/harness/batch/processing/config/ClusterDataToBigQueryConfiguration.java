@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config;
 
+import io.harness.batch.processing.billing.tasklet.BillingDataGeneratedMailTasklet;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.tasklet.ClusterDataToBigQueryTasklet;
 
@@ -24,6 +25,18 @@ public class ClusterDataToBigQueryConfiguration {
   }
 
   @Bean
+  public Tasklet billingDataGeneratedMailTasklet() {
+    return new BillingDataGeneratedMailTasklet();
+  }
+
+  @Bean
+  public Step billingDataGeneratedNotificationStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("billingDataGeneratedNotificationStep")
+        .tasklet(billingDataGeneratedMailTasklet())
+        .build();
+  }
+
+  @Bean
   @Autowired
   @Qualifier(value = "clusterDataToBigQueryJob")
   public Job clusterDataToBigQueryJob(JobBuilderFactory jobBuilderFactory, Step clusterDataToBigQueryStep) {
@@ -36,5 +49,31 @@ public class ClusterDataToBigQueryConfiguration {
   @Bean
   public Step clusterDataToBigQueryStep(StepBuilderFactory stepBuilderFactory) {
     return stepBuilderFactory.get("clusterDataToBigQueryStep").tasklet(clusterDataToBigQueryTasklet()).build();
+  }
+
+  // ------------------------------------------------------------------------------------------
+
+  @Bean
+  public Tasklet clusterDataHourlyToBigQueryTasklet() {
+    return new ClusterDataToBigQueryTasklet();
+  }
+
+  @Bean
+  @Autowired
+  @Qualifier(value = "clusterDataHourlyToBigQueryJob")
+  public Job clusterDataHourlyToBigQueryJob(JobBuilderFactory jobBuilderFactory, Step clusterDataHourlyToBigQueryStep,
+      Step billingDataGeneratedNotificationStep) {
+    return jobBuilderFactory.get(BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY.name())
+        .incrementer(new RunIdIncrementer())
+        .start(clusterDataHourlyToBigQueryStep)
+        .next(billingDataGeneratedNotificationStep)
+        .build();
+  }
+
+  @Bean
+  public Step clusterDataHourlyToBigQueryStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("clusterDataHourlyToBigQueryStep")
+        .tasklet(clusterDataHourlyToBigQueryTasklet())
+        .build();
   }
 }

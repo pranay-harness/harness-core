@@ -53,6 +53,11 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
                  .field(UserGroupKeys.projectIdentifier)
                  .field(UserGroupKeys.identifier)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("user_groups_ssoid_index")
+                 .field(UserGroupKeys.linkedSsoId)
+                 .field(UserGroupKeys.isSsoLinked)
+                 .build())
         .build();
   }
 

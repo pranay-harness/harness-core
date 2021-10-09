@@ -10,7 +10,9 @@ import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAIL
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_WEBHOOK_SOURCE_KEY;
 import static software.wings.utils.GitUtilsManager.fetchCompleteGitRepoUrl;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -49,6 +51,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebhookTriggerProcessor {
   public static final int TRIGGER_TASK_TIMEOUT = 30;
 

@@ -6,14 +6,19 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
+import io.harness.enforcement.client.EnforcementClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.notification.NotificationClientConfiguration;
+import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
@@ -51,13 +56,16 @@ public class PipelineServiceConfiguration extends Configuration {
   public static final String RESOURCE_PACKAGE = "io.harness.pms";
   public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
   public static final String FILTER_PACKAGE = "io.harness.filter";
+  public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
+  @JsonProperty("pipelineServiceClientConfig") private ServiceHttpClientConfig pipelineServiceClientConfig;
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
+  @JsonProperty("pipelineServiceSecret") private String pipelineServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
   @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
@@ -65,7 +73,6 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
   @JsonProperty("pmsApiBaseUrl") private String pmsApiBaseUrl;
-  @JsonProperty("enableAuth") private boolean enableAuth;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
@@ -73,15 +80,25 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("hostname") String hostname;
+  @JsonProperty("basePathPrefix") String basePathPrefix;
+  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
 
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
   private ServiceHttpClientConfig managerClientConfig;
   private LogStreamingServiceConfiguration logStreamingServiceConfig;
+  private TriggerConfiguration triggerConfig;
+  private OpaServiceConfiguration opaServerConfig;
+
   private PipelineServiceIteratorsConfig iteratorsConfig;
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
+  private DelegatePollingConfig delegatePollingConfig;
+
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");
@@ -109,14 +126,16 @@ public class PipelineServiceConfiguration extends Configuration {
     String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
-    defaultSwaggerBundleConfiguration.setHost("{{localhost}}");
+    defaultSwaggerBundleConfiguration.setHost(hostname);
+    defaultSwaggerBundleConfiguration.setUriPrefix(basePathPrefix);
     defaultSwaggerBundleConfiguration.setTitle("PMS API Reference");
     defaultSwaggerBundleConfiguration.setVersion("2.0");
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, FILTER_PACKAGE);
+    Reflections reflections =
+        new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, FILTER_PACKAGE, ENFORCEMENT_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

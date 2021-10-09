@@ -88,6 +88,8 @@ public class RecentlyAddedAccountJobRunner {
             hourlyBillingStartTime);
         runBillingJobs(latestClusterInfo, BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION, hourlyBillingJobEndTime,
             hourlyBillingStartTime);
+        runBillingJobs(latestClusterInfo, BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY, hourlyBillingJobEndTime,
+            hourlyBillingStartTime);
 
         Instant dailyBillingJobEndTime =
             Instant.ofEpochMilli(latestClusterInfo.getCreatedAt()).truncatedTo(ChronoUnit.DAYS);

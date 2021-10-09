@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -17,6 +18,9 @@ import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
@@ -107,6 +111,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 @Slf4j
+@OwnedBy(DX)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class InstanceHelper {
   // This queue is used to asynchronously process all the instance information that the workflow touched upon.
   @Inject private QueuePublisher<DeploymentEvent> deploymentEventQueue;
@@ -704,7 +710,7 @@ public class InstanceHelper {
       return;
     }
 
-    log.info("Handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+    log.debug("Handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
         infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
 
     try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(
@@ -718,7 +724,7 @@ public class InstanceHelper {
       handleInstanceSyncResponseFromPerpetualTask(infrastructureMapping, perpetualTaskRecord, response);
     }
 
-    log.info("Handled Instance sync response successfully. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+    log.debug("Handled Instance sync response successfully. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
         infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
   }
 

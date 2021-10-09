@@ -9,9 +9,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.rule.Owner;
 
@@ -43,14 +43,13 @@ public class HandleStepResponseRequestProcessorTest extends OrchestrationTestBas
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testHandleEvent() {
+    Ambiance ambiance = Ambiance.newBuilder().build();
     HandleStepResponseRequest handleStepResponseRequest = HandleStepResponseRequest.newBuilder().build();
-    handleStepResponseEventHandler.handleEvent(
-        SdkResponseEventProto.newBuilder()
-            .setSdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(handleStepResponseRequest).build())
-            .setSdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
-            .build());
-    verify(engine).handleStepResponse(
-        handleStepResponseRequest.getNodeExecutionId(), handleStepResponseRequest.getStepResponse());
+    handleStepResponseEventHandler.handleEvent(SdkResponseEventProto.newBuilder()
+                                                   .setAmbiance(ambiance)
+                                                   .setHandleStepResponseRequest(handleStepResponseRequest)
+                                                   .setSdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
+                                                   .build());
+    verify(engine).processStepResponse(ambiance, handleStepResponseRequest.getStepResponse());
   }
 }

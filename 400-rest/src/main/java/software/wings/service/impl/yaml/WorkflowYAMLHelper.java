@@ -10,13 +10,16 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.NameAccess;
 import io.harness.persistence.UuidAccess;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.Variable;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -30,10 +33,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
+@TargetModule(HarnessModule._955_CG_YAML)
 public class WorkflowYAMLHelper {
   private static final String ASSOCIATED_TO_GOOGLE_CLOUD_BUILD_STATE_DOES_NOT_EXIST =
       "] associated to Google Cloud Build State does not exist";
@@ -162,9 +169,28 @@ public class WorkflowYAMLHelper {
         return settingsService.get(entryValue);
       case USER_GROUP:
         return userGroupService.get(entryValue);
+      case ARTIFACT_STREAM:
+        return getArtifactStream(appId, entryValue);
       default:
         return null;
     }
+  }
+
+  @Nullable
+  private NameAccess getArtifactStream(String appId, String entryValue) {
+    ArtifactStream artifactStream = artifactStreamService.get(entryValue);
+    if (artifactStream == null) {
+      log.error("Artifact stream with id {} doesn't exist", entryValue);
+      return null;
+    }
+    String serviceName = serviceResourceService.getName(appId, artifactStream.getServiceId());
+    if (isEmpty(serviceName)) {
+      log.error("Service {} associated with artifact stream {} doesn't exist", artifactStream.getServiceId(),
+          artifactStream.getName());
+      return null;
+    }
+    artifactStream.setName(StringUtils.join(artifactStream.getName(), " (", serviceName, ")"));
+    return artifactStream;
   }
 
   @Nullable
@@ -235,6 +261,17 @@ public class WorkflowYAMLHelper {
             settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.JENKINS);
         notNullCheck(
             "Jenkins server [" + variableValue + "] associated to the Jenkins State does not exist", uuidAccess, USER);
+        break;
+      case ARTIFACT_STREAM:
+        ArtifactStream artifactStream = artifactStreamService.fetchByArtifactSourceVariableValue(appId, variableValue);
+        notNullCheck(
+            "Artifact Stream [" + variableValue + "] associated with the Artifact Collection State does not exist",
+            artifactStream, USER);
+        if (artifactStream.isArtifactStreamParameterized()) {
+          throw new InvalidRequestException(
+              "Parameterized Artifact Source cannot be used as a value for Artifact template variable");
+        }
+        uuidAccess = artifactStream;
         break;
       default:
         return null;

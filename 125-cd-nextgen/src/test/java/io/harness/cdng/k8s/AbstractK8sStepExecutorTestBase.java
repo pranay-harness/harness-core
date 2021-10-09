@@ -15,6 +15,7 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
@@ -38,8 +39,10 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
 
   protected K8sManifestOutcome manifestOutcome;
   protected final String accountId = "accountId";
+  protected final String releaseName = "releaseName";
   protected final Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions("accountId", accountId).build();
   protected final K8sManifestDelegateConfig manifestDelegateConfig = K8sManifestDelegateConfig.builder().build();
+  protected final UnitProgressData unitProgressData = UnitProgressData.builder().build();
 
   @Before
   public void prepare() {
@@ -52,6 +55,7 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
     doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(manifestOutcome, ambiance);
     doReturn(true).when(k8sStepHelper).getSkipResourceVersioning(manifestOutcome);
+    doReturn(releaseName).when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
     doReturn(TaskChainResponse.builder().chainEnd(true).build())
         .when(k8sStepHelper)
         .startChainLink(any(), any(), any());
@@ -62,7 +66,7 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
     K8sExecutionPassThroughData passThroughData =
         K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build();
     getK8sStepExecutor().executeK8sTask(
-        manifestOutcome, ambiance, stepElementParameters, emptyList(), passThroughData, true);
+        manifestOutcome, ambiance, stepElementParameters, emptyList(), passThroughData, true, unitProgressData);
     ArgumentCaptor<T> requestCaptor = ArgumentCaptor.forClass(requestType);
     verify(k8sStepHelper, times(1))
         .queueK8sTask(eq(stepElementParameters), requestCaptor.capture(), eq(ambiance), eq(passThroughData));

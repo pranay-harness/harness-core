@@ -4,7 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -51,6 +54,8 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@BreakDependencyOn("software.wings.service.impl.servicenow.ServiceNowServiceImpl")
 public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService {
   private static final String LABEL = "label";
   private static final String STATE = "state";
@@ -58,11 +63,15 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   @Inject private EncryptionService encryptionService;
   private static final String NO_ACCESS_SYS_CHOICE =
       "Can not read field: %s. User might not have explicit read access to sys_choice table";
+  static final long TIME_OUT = 60;
 
   @Override
   public boolean validateConnector(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     final Call<JsonNode> request;
+    if (config.getPassword() == null) {
+      throw new ServiceNowException("Could not decrypt password. Secret might be deleted", SERVICENOW_ERROR, USER);
+    }
     request = getRestClient(taskParameters)
                   .validateConnection(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     Response<JsonNode> response = null;
@@ -441,8 +450,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   public static OkHttpClient getHttpClientWithIncreasedTimeout(String baseUrl, boolean certValidationRequired) {
     return Http.getOkHttpClient(baseUrl, certValidationRequired)
         .newBuilder()
-        .connectTimeout(45, TimeUnit.SECONDS)
-        .readTimeout(45, TimeUnit.SECONDS)
+        .connectTimeout(TIME_OUT, TimeUnit.SECONDS)
+        .readTimeout(TIME_OUT, TimeUnit.SECONDS)
         .build();
   }
 

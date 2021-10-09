@@ -21,7 +21,7 @@ import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.rule.Owner;
-import io.harness.yaml.utils.YamlPipelineUtils;
+import io.harness.utils.YamlPipelineUtils;
 
 import com.google.common.io.Resources;
 import java.io.IOException;

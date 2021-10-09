@@ -5,14 +5,19 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.accesscontrol.acl.ACLPersistenceConfig;
 import io.harness.accesscontrol.commons.outbox.OutboxPersistenceConfig;
 import io.harness.accesscontrol.permissions.persistence.PermissionPersistenceConfig;
-import io.harness.accesscontrol.preference.AccessControlPreferencePersistenceConfig;
+import io.harness.accesscontrol.preference.persistence.AccessControlPreferencePersistenceConfig;
+import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAccountPersistenceConfig;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupPersistenceConfig;
-import io.harness.accesscontrol.principals.users.persistence.ServiceAccountPersistenceConfig;
 import io.harness.accesscontrol.principals.users.persistence.UserPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypePersistenceConfig;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentPersistenceConfig;
+import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentMorphiaRegistrar;
+import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentsPersistenceConfig;
 import io.harness.accesscontrol.roles.persistence.RolePersistenceConfig;
+import io.harness.accesscontrol.scopes.core.persistence.ScopePersistenceConfig;
+import io.harness.accesscontrol.support.persistence.SupportMorphiaRegistrar;
+import io.harness.accesscontrol.support.persistence.SupportPersistenceConfig;
 import io.harness.aggregator.AggregatorPersistenceConfig;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
@@ -24,6 +29,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
+import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.PersistenceModule;
 
@@ -78,26 +85,28 @@ public class AccessControlPersistenceModule extends PersistenceModule {
     install(PrimaryVersionManagerModule.getInstance());
     Multibinder<Class<? extends KryoRegistrar>> kryoRegistrar =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends KryoRegistrar>>() {});
+
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
+    morphiaRegistrars.addBinding().toInstance(OutboxEventMorphiaRegistrar.class);
+    morphiaRegistrars.addBinding().toInstance(PrimaryVersionManagerMorphiaRegistrar.class);
+    morphiaRegistrars.addBinding().toInstance(SupportMorphiaRegistrar.class);
+    morphiaRegistrars.addBinding().toInstance(PrivilegedRoleAssignmentMorphiaRegistrar.class);
+
     Multibinder<Class<? extends TypeConverter>> morphiaConverters =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends TypeConverter>>() {});
     MapBinder<Class, String> morphiaClasses = MapBinder.newMapBinder(
         binder(), new TypeLiteral<Class>() {}, new TypeLiteral<String>() {}, Names.named("morphiaClasses"));
     bind(HPersistence.class).to(MongoPersistence.class);
-    registerRequiredBindings();
   }
 
   @Override
   protected Class<?>[] getConfigClasses() {
     return new Class[] {OutboxPersistenceConfig.class, ResourceTypePersistenceConfig.class,
-        ResourceGroupPersistenceConfig.class, UserPersistenceConfig.class, ServiceAccountPersistenceConfig.class,
-        UserGroupPersistenceConfig.class, PermissionPersistenceConfig.class, RolePersistenceConfig.class,
-        RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class, AggregatorPersistenceConfig.class,
-        AccessControlPreferencePersistenceConfig.class};
-  }
-
-  private void registerRequiredBindings() {
-    requireBinding(MongoConfig.class);
+        ResourceGroupPersistenceConfig.class, ScopePersistenceConfig.class, UserPersistenceConfig.class,
+        ServiceAccountPersistenceConfig.class, UserGroupPersistenceConfig.class, PermissionPersistenceConfig.class,
+        RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class,
+        AggregatorPersistenceConfig.class, AccessControlPreferencePersistenceConfig.class,
+        PrivilegedRoleAssignmentsPersistenceConfig.class, SupportPersistenceConfig.class};
   }
 }

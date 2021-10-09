@@ -20,11 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PipelineEventConsumerController implements Managed {
   private ExecutorService executorService =
       Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("pipeline-event-consumer-%d").build());
-  private List<PmsAbstractRedisConsumer> abstractRedisConsumers = new ArrayList<>();
+  private List<PmsRedisConsumer> redisConsumers = new ArrayList<>();
 
-  public void register(PmsAbstractRedisConsumer consumer, int threads) {
+  public void register(PmsRedisConsumer consumer, int threads) {
     IntStream.rangeClosed(1, threads).forEach(value -> {
-      abstractRedisConsumers.add(consumer);
+      redisConsumers.add(consumer);
       executorService.submit(consumer);
     });
   }
@@ -42,7 +42,7 @@ public class PipelineEventConsumerController implements Managed {
    */
   @Override
   public void stop() throws Exception {
-    abstractRedisConsumers.forEach(PmsAbstractRedisConsumer::shutDown);
+    redisConsumers.forEach(PmsRedisConsumer::shutDown);
     executorService.shutdownNow();
     executorService.awaitTermination(1, TimeUnit.HOURS);
   }

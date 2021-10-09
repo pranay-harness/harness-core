@@ -5,8 +5,8 @@ import static io.harness.aggregator.models.AggregatorSecondarySyncState.Secondar
 import static io.harness.aggregator.models.MongoReconciliationOffset.PRIMARY_COLLECTION;
 import static io.harness.aggregator.models.MongoReconciliationOffset.SECONDARY_COLLECTION;
 
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.aggregator.models.AggregatorSecondarySyncState;
 import io.harness.aggregator.repositories.AggregatorSecondarySyncStateRepository;
 import io.harness.aggregator.repositories.MongoReconciliationOffsetRepository;
@@ -14,6 +14,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.queue.QueueController;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -33,50 +34,55 @@ import lombok.extern.slf4j.Slf4j;
 public class AggregatorController implements Runnable {
   private final AggregatorPrimarySyncController primarySyncController;
   private final AggregatorSecondarySyncController secondarySyncController;
-  private final ExecutorService primarySyncExecutorService;
-  private final ExecutorService secondarySyncExecutorService;
 
   private final AggregatorSecondarySyncStateRepository aggregatorSecondarySyncStateRepository;
   private final ACLRepository secondaryACLRepository;
   private final MongoReconciliationOffsetRepository mongoReconciliationOffsetRepository;
   private final PersistentLocker persistentLocker;
+  private final QueueController queueController;
 
   @Inject
   public AggregatorController(AggregatorSecondarySyncController secondarySyncController,
       AggregatorPrimarySyncController primarySyncJobController,
       AggregatorSecondarySyncStateRepository aggregatorSecondarySyncStateRepository,
       @Named(ACL.SECONDARY_COLLECTION) ACLRepository secondaryACLRepository,
-      MongoReconciliationOffsetRepository mongoReconciliationOffsetRepository, PersistentLocker persistentLocker) {
+      MongoReconciliationOffsetRepository mongoReconciliationOffsetRepository, PersistentLocker persistentLocker,
+      QueueController queueController) {
     this.secondarySyncController = secondarySyncController;
     this.primarySyncController = primarySyncJobController;
     this.aggregatorSecondarySyncStateRepository = aggregatorSecondarySyncStateRepository;
     this.secondaryACLRepository = secondaryACLRepository;
     this.mongoReconciliationOffsetRepository = mongoReconciliationOffsetRepository;
     this.persistentLocker = persistentLocker;
-    this.primarySyncExecutorService = Executors.newSingleThreadExecutor(
-        new ThreadFactoryBuilder().setNameFormat("aggregator-primary-sync-controller").build());
-    this.secondarySyncExecutorService = Executors.newSingleThreadExecutor(
-        new ThreadFactoryBuilder().setNameFormat("aggregator-secondary-sync-controller").build());
+    this.queueController = queueController;
   }
 
   @Override
   public void run() {
+    ExecutorService primarySyncExecutorService = Executors.newSingleThreadExecutor(
+        new ThreadFactoryBuilder().setNameFormat("aggregator-primary-sync-controller").build());
+    ExecutorService secondarySyncExecutorService = Executors.newSingleThreadExecutor(
+        new ThreadFactoryBuilder().setNameFormat("aggregator-secondary-sync-controller").build());
     Future<?> primarySyncFuture = null;
     Future<?> secondarySyncFuture = null;
     log.info("Aggregator Controller has started");
     try {
       while (true) {
-        if (isSwitchToPrimaryRequested()) {
+        if (!isServicePrimaryVersion()) {
           stopChildControllers(primarySyncFuture, secondarySyncFuture);
-          switchToPrimary();
         } else {
-          if (!isControllerRunning(primarySyncFuture)) {
-            log.info("Starting aggregator primary sync controller");
-            primarySyncFuture = primarySyncExecutorService.submit(primarySyncController);
-          }
-          if (!isControllerRunning(secondarySyncFuture)) {
-            log.info("Starting aggregator secondary sync controller");
-            secondarySyncFuture = secondarySyncExecutorService.submit(secondarySyncController);
+          if (isSwitchToPrimaryRequested()) {
+            stopChildControllers(primarySyncFuture, secondarySyncFuture);
+            switchToPrimary();
+          } else {
+            if (!isControllerRunning(primarySyncFuture)) {
+              log.info("Starting aggregator primary sync controller");
+              primarySyncFuture = primarySyncExecutorService.submit(primarySyncController);
+            }
+            if (!isControllerRunning(secondarySyncFuture)) {
+              log.info("Starting aggregator secondary sync controller");
+              secondarySyncFuture = secondarySyncExecutorService.submit(secondarySyncController);
+            }
           }
         }
         TimeUnit.SECONDS.sleep(30);
@@ -152,5 +158,9 @@ public class AggregatorController implements Runnable {
   private void stopController(Future<?> future) throws InterruptedException {
     future.cancel(true);
     TimeUnit.SECONDS.sleep(30);
+  }
+
+  private boolean isServicePrimaryVersion() {
+    return queueController.isPrimary();
   }
 }

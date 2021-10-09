@@ -13,9 +13,9 @@ import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.cf.FlagConfigurationStepParameters;
 import io.harness.steps.fork.ForkStepParameters;
 import io.harness.steps.resourcerestraint.ResourceRestraintSpecParameters;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
-import io.harness.steps.section.SectionStepParameters;
 import io.harness.steps.section.chain.SectionChainPassThroughData;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 
@@ -26,6 +26,7 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(BarrierExecutionInstance.class);
+    set.add(ResourceRestraint.class);
     set.add(ResourceRestraintInstance.class);
     set.add(ApprovalInstance.class);
     set.add(HarnessApprovalInstance.class);
@@ -41,7 +42,6 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.fork.ForkStepParameters", ForkStepParameters.class);
     h.put("steps.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
     h.put("steps.section.chain.SectionStepParameters", SectionChainStepParameters.class);
-    h.put("steps.section.SectionStepParameters", SectionStepParameters.class);
 
     // Feature Flag
     h.put("steps.cf.FlagConfigurationStepParameters", FlagConfigurationStepParameters.class);

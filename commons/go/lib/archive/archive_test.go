@@ -139,33 +139,6 @@ func TestArchiveInvalidSrcPath(t *testing.T) {
 	os.RemoveAll(dstFilePath)
 }
 
-func TestAddToArchive(t *testing.T) {
-	ctrl, _ := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	// create file1
-	srcFile := "/tmp/test_invalid_archive"
-	f := []byte(fileText1)
-	err := ioutil.WriteFile(srcFile, f, 0333)
-	check(err)
-
-	dstFilePath := "/tmp/test_invalid_archive_dst"
-	logger, _ := logs.GetObservedLogger(zap.ErrorLevel)
-	log := logger.Sugar()
-	fs := filesystem.NewOSFileSystem(log)
-
-	a := NewArchiver(TarFormat, fs, log)
-
-	srcFilePaths := []string{srcFile}
-	err = a.Archive(srcFilePaths, dstFilePath)
-	assert.NotEqual(t, err, nil)
-
-	err = os.RemoveAll(srcFile)
-	check(err)
-	err = os.RemoveAll(dstFilePath)
-	check(err)
-}
-
 func TestUnarchiveInvalidSource(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()

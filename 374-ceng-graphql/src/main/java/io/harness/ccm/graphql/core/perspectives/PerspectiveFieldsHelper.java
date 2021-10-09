@@ -2,11 +2,13 @@ package io.harness.ccm.graphql.core.perspectives;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.beans.FeatureName;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.graphql.dto.perspectives.PerspectiveFieldsData;
+import io.harness.ccm.views.businessMapping.service.intf.BusinessMappingService;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
@@ -18,6 +20,7 @@ import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.ccm.views.utils.ViewFieldUtils;
+import io.harness.ff.FeatureFlagService;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -38,8 +41,10 @@ public class PerspectiveFieldsHelper {
   @Inject private CEMetadataRecordDao metadataRecordDao;
   @Inject private CEViewService ceViewService;
   @Inject private ViewsBillingService viewsBillingService;
+  @Inject private BusinessMappingService businessMappingService;
   @Inject BigQueryHelper bigQueryHelper;
   @Inject BigQueryService bigQueryService;
+  @Inject FeatureFlagService featureFlagService;
 
   private static final long CACHE_SIZE = 100;
   public static final String columnView = "COLUMNS";
@@ -48,9 +53,11 @@ public class PerspectiveFieldsHelper {
       Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.DAYS).maximumSize(CACHE_SIZE).build(this::getAzureFields);
 
   public PerspectiveFieldsData fetch(String accountId, List<QLCEViewFilterWrapper> filters) {
+    final boolean isBusinessMappingEnabled = featureFlagService.isEnabled(FeatureName.BUSINESS_MAPPING, accountId);
     List<ViewField> customFields = new ArrayList<>();
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
     boolean isExplorerQuery = false;
+    boolean isClusterPerspective = viewsBillingService.isClusterPerspective(filters);
     String viewId = null;
     if (viewMetadataFilter.isPresent()) {
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
@@ -62,6 +69,9 @@ public class PerspectiveFieldsHelper {
     List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();
     fieldIdentifierData.add(getViewField(ViewFieldUtils.getCommonFields(), ViewFieldIdentifier.COMMON));
     fieldIdentifierData.add(getViewCustomField(customFields));
+    if (isBusinessMappingEnabled) {
+      fieldIdentifierData.add(getBusinessMappingFields(businessMappingService.getBusinessMappingViewFields(accountId)));
+    }
 
     Set<ViewFieldIdentifier> viewFieldIdentifierSetFromCustomFields = new HashSet<>();
     for (ViewField customField : customFields) {
@@ -69,7 +79,7 @@ public class PerspectiveFieldsHelper {
       for (ViewField field : customFieldViewFields) {
         if (field.getIdentifier() == ViewFieldIdentifier.LABEL) {
           for (QLCEViewFieldIdentifierData viewFieldIdentifierData :
-              getFieldIdentifierDataFromCEMetadataRecord(accountId)) {
+              getFieldIdentifierDataFromCEMetadataRecord(accountId, isClusterPerspective)) {
             viewFieldIdentifierSetFromCustomFields.add(viewFieldIdentifierData.getIdentifier());
           }
         } else {
@@ -87,7 +97,8 @@ public class PerspectiveFieldsHelper {
           } else if (viewFieldIdentifier == ViewFieldIdentifier.GCP) {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER) {
-            fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
+            fieldIdentifierData.add(
+                getViewField(ViewFieldUtils.getClusterFields(isClusterPerspective), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.AZURE) {
             fieldIdentifierData.add(getViewField(accountIdToSupportedAzureFields.get(accountId), viewFieldIdentifier));
           }
@@ -102,22 +113,24 @@ public class PerspectiveFieldsHelper {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER
               && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.CLUSTER)) {
-            fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
+            fieldIdentifierData.add(
+                getViewField(ViewFieldUtils.getClusterFields(isClusterPerspective), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.AZURE
               && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.AZURE)) {
             fieldIdentifierData.add(getViewField(accountIdToSupportedAzureFields.get(accountId), viewFieldIdentifier));
           }
         }
       } else {
-        fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId));
+        fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId, isClusterPerspective));
       }
     } else {
-      fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId));
+      fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId, isClusterPerspective));
     }
     return PerspectiveFieldsData.builder().fieldIdentifierData(fieldIdentifierData).build();
   }
 
-  private List<QLCEViewFieldIdentifierData> getFieldIdentifierDataFromCEMetadataRecord(String accountId) {
+  private List<QLCEViewFieldIdentifierData> getFieldIdentifierDataFromCEMetadataRecord(
+      String accountId, boolean isClusterPerspective) {
     List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();
     CEMetadataRecord ceMetadataRecord = metadataRecordDao.getByAccountId(accountId);
     Boolean clusterDataConfigured = true;
@@ -133,7 +146,8 @@ public class PerspectiveFieldsHelper {
     }
 
     if (clusterDataConfigured == null || clusterDataConfigured) {
-      fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), ViewFieldIdentifier.CLUSTER));
+      fieldIdentifierData.add(
+          getViewField(ViewFieldUtils.getClusterFields(isClusterPerspective), ViewFieldIdentifier.CLUSTER));
     }
     if (awsConnectorConfigured == null || awsConnectorConfigured) {
       fieldIdentifierData.add(getViewField(ViewFieldUtils.getAwsFields(), ViewFieldIdentifier.AWS));
@@ -169,6 +183,23 @@ public class PerspectiveFieldsHelper {
     return QLCEViewFieldIdentifierData.builder()
         .identifier(ViewFieldIdentifier.CUSTOM)
         .identifierName(ViewFieldIdentifier.CUSTOM.getDisplayName())
+        .values(ceViewFieldList)
+        .build();
+  }
+
+  private QLCEViewFieldIdentifierData getBusinessMappingFields(List<ViewField> businessMappings) {
+    List<QLCEViewField> ceViewFieldList = businessMappings.stream()
+                                              .map(field
+                                                  -> QLCEViewField.builder()
+                                                         .fieldId(field.getFieldId())
+                                                         .fieldName(field.getFieldName())
+                                                         .identifier(field.getIdentifier())
+                                                         .identifierName(field.getIdentifier().getDisplayName())
+                                                         .build())
+                                              .collect(Collectors.toList());
+    return QLCEViewFieldIdentifierData.builder()
+        .identifier(ViewFieldIdentifier.BUSINESS_MAPPING)
+        .identifierName(ViewFieldIdentifier.BUSINESS_MAPPING.getDisplayName())
         .values(ceViewFieldList)
         .build();
   }

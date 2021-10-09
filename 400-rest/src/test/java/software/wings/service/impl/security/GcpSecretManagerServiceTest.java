@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.alerts.AlertStatus.Pending;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -49,6 +51,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 @Slf4j
 public class GcpSecretManagerServiceTest extends WingsBaseTest {
   @Mock HarnessUserGroupService harnessUserGroupService;
@@ -85,7 +88,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     setup();
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -107,7 +111,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     GcpKmsConfig gcpKmsConfig =
-        new GcpKmsConfig("name", "projectId@!#)(*@!", "region", "keyRing", "keyName", credentials);
+        new GcpKmsConfig("name", "projectId@!#)(*@!", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -132,7 +136,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     GcpKmsConfig gcpKmsConfig =
-        new GcpKmsConfig("name)(*&@!#^)", "projectId", "region", "keyRing", "keyName", credentials);
+        new GcpKmsConfig("name)(*&@!#^)", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -157,7 +161,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     GcpKmsConfig gcpKmsConfig =
-        new GcpKmsConfig("name", "projectId", "region!@#*(&$!@", "keyRing", "keyName", credentials);
+        new GcpKmsConfig("name", "projectId", "region!@#*(&$!@", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -182,7 +186,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     GcpKmsConfig gcpKmsConfig =
-        new GcpKmsConfig("name", "projectId", "region", "keyRingOP@#!I#!@UO", "keyName", credentials);
+        new GcpKmsConfig("name", "projectId", "region", "keyRingOP@#!I#!@UO", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -207,7 +211,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     GcpKmsConfig gcpKmsConfig =
-        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName)_@!#(*", credentials);
+        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName)_@!#(*", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -231,7 +235,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     setup();
     char[] credentials = "{\"credentials\":".toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -256,7 +261,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     setup();
     char[] credentials = "".toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -281,7 +287,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     setup();
     char[] credentials = "".toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -307,7 +314,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     String credentialsString = "{\"credentials\":\"abc\"}";
     char[] credentials = credentialsString.toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -324,7 +332,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     assertThat(savedGcpKmsConfig.getProjectId()).isEqualTo(gcpKmsConfig.getProjectId());
 
     GcpKmsConfig updateGcpKmsConfig = new GcpKmsConfig(
-        "name2", "projectId1", "region1", "keyRing1", "keyName1", SecretString.SECRET_MASK.toCharArray());
+        "name2", "projectId1", "region1", "keyRing1", "keyName1", SecretString.SECRET_MASK.toCharArray(), null);
     updateGcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     updateGcpKmsConfig.setAccountId(account.getUuid());
     updateGcpKmsConfig.setDefault(false);
@@ -361,7 +369,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     String credentialsString = "{\"credentials\":\"abc\"}";
     char[] credentials = credentialsString.toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -386,7 +395,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     String credentialsString = "{\"credentials\":\"abc\"}";
     char[] credentials = credentialsString.toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -412,7 +422,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     String credentialsString = "{\"credentials\":\"abc\"}";
     char[] credentials = credentialsString.toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
@@ -471,7 +482,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     String credentialsString = "{\"credentials\":\"abc\"}";
     char[] credentials = credentialsString.toCharArray();
 
-    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials, null);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);

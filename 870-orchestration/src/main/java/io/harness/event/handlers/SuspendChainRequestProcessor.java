@@ -7,6 +7,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,9 +20,9 @@ public class SuspendChainRequestProcessor implements SdkResponseProcessor {
 
   @Override
   public void handleEvent(SdkResponseEventProto event) {
-    SuspendChainRequest request = event.getSdkResponseEventRequest().getSuspendChainRequest();
-    nodeExecutionService.update(request.getNodeExecutionId(),
+    SuspendChainRequest request = event.getSuspendChainRequest();
+    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
-    engine.resume(request.getNodeExecutionId(), request.getResponseMap(), request.getIsError());
+    engine.resumeNodeExecution(event.getAmbiance(), request.getResponseMap(), request.getIsError());
   }
 }

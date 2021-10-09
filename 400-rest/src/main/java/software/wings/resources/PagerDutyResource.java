@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.service.intfc.pagerduty.PagerDutyService;
@@ -15,6 +17,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Path("/pagerduty")
 @Produces("application/json")
+@OwnedBy(HarnessTeam.CDC)
 public class PagerDutyResource {
   @Inject PagerDutyService pagerDutyService;
 

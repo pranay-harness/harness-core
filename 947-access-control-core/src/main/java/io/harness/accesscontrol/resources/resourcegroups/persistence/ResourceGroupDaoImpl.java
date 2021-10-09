@@ -35,15 +35,19 @@ public class ResourceGroupDaoImpl implements ResourceGroupDao {
   @Override
   public ResourceGroup upsert(ResourceGroup resourceGroupUpdate) {
     ResourceGroupDBO resourceGroupUpdateDBO = toDBO(resourceGroupUpdate);
-    Optional<ResourceGroupDBO> resourceGroupDBO = resourceGroupRepository.findByIdentifierAndScopeIdentifier(
+    Optional<ResourceGroupDBO> resourceGroupOpt = resourceGroupRepository.findByIdentifierAndScopeIdentifier(
         resourceGroupUpdate.getIdentifier(), resourceGroupUpdate.getScopeIdentifier());
-    if (resourceGroupDBO.isPresent()) {
-      resourceGroupUpdateDBO.setId(resourceGroupDBO.get().getId());
-      resourceGroupUpdateDBO.setVersion(resourceGroupDBO.get().getVersion());
-      resourceGroupUpdateDBO.setCreatedAt(resourceGroupDBO.get().getCreatedAt());
-      resourceGroupUpdateDBO.setLastModifiedAt(resourceGroupDBO.get().getCreatedAt());
+    if (resourceGroupOpt.isPresent()) {
+      ResourceGroupDBO currentResourceGroupDBO = resourceGroupOpt.get();
+      if (currentResourceGroupDBO.equals(resourceGroupUpdateDBO)) {
+        return fromDBO(currentResourceGroupDBO);
+      }
+      resourceGroupUpdateDBO.setId(currentResourceGroupDBO.getId());
+      resourceGroupUpdateDBO.setVersion(currentResourceGroupDBO.getVersion());
+      resourceGroupUpdateDBO.setCreatedAt(currentResourceGroupDBO.getCreatedAt());
+      resourceGroupUpdateDBO.setLastModifiedAt(currentResourceGroupDBO.getCreatedAt());
       resourceGroupUpdateDBO.setNextReconciliationIterationAt(
-          resourceGroupDBO.get().getNextReconciliationIterationAt());
+          currentResourceGroupDBO.getNextReconciliationIterationAt());
     }
     return fromDBO(resourceGroupRepository.save(resourceGroupUpdateDBO));
   }

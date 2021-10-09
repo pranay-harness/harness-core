@@ -13,6 +13,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.serializer.kryo.PollingKryoRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -25,6 +26,7 @@ public class NGTriggerRegistrars {
           .add(NGTriggerKryoRegistrar.class)
           .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
+          .add(PollingKryoRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

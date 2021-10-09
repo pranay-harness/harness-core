@@ -54,10 +54,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
-import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.GeneralException;
@@ -99,7 +99,6 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
@@ -113,6 +112,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HelmTestConstants;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.File;
@@ -163,7 +163,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
 
-  private TimeLimiter timeLimiter = new HFakeTimeLimiter();
+  private TimeLimiter timeLimiter = new FakeTimeLimiter();
   private HelmInstallCommandRequest helmInstallCommandRequest;
   private HelmInstallCommandResponse helmInstallCommandResponse;
   private HelmCliResponse helmCliReleaseHistoryResponse;
@@ -182,7 +182,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     when(encryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
-    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
+    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean(), eq(false)))
         .thenReturn(GitFetchFilesResult.builder()
                         .files(asList(GitFile.builder().fileContent(HelmTestConstants.GIT_FILE_CONTENT_1_KEY).build(),
                             GitFile.builder().fileContent(HelmTestConstants.GIT_FILE_CONTENT_2_KEY).build()))
@@ -449,7 +449,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
-    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
+    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean(), eq(false)))
         .thenThrow(new InvalidRequestException("WingsException", USER));
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
 
@@ -859,7 +859,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmDeployService.fetchSourceRepo(request);
 
     verify(encryptionService, times(1)).decrypt(argumentCaptor.capture(), anyList(), eq(false));
-    verify(gitService, times(1)).downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString());
+    verify(gitService, times(1)).downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString(), eq(false));
 
     GitConfig gitConfig = argumentCaptor.getValue();
     assertThat(gitConfig.getBranch()).isNotEmpty();
@@ -1409,7 +1409,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
     doReturn(gitFiles)
         .when(gitService)
-        .fetchFilesByPath(gitConfig, SETTING_ID, COMMIT_REFERENCE, BRANCH_NAME, singletonList(FILE_PATH), true);
+        .fetchFilesByPath(gitConfig, SETTING_ID, COMMIT_REFERENCE, BRANCH_NAME, singletonList(FILE_PATH), true, false);
     doReturn(Optional.empty()).when(helmCommandHelper).generateHelmDeployChartSpecFromYaml("values");
     doReturn(Optional.of(HarnessHelmDeployConfig.builder().helmDeployChartSpec(chartSpec).build()))
         .when(helmCommandHelper)
@@ -1445,7 +1445,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
     doReturn(gitFiles)
         .when(gitService)
-        .fetchFilesByPath(gitConfig, SETTING_ID, COMMIT_REFERENCE, BRANCH_NAME, singletonList(FILE_PATH), true);
+        .fetchFilesByPath(gitConfig, SETTING_ID, COMMIT_REFERENCE, BRANCH_NAME, singletonList(FILE_PATH), true, false);
     doReturn(Optional.of(HarnessHelmDeployConfig.builder().helmDeployChartSpec(chartSpec).build()))
         .when(helmCommandHelper)
         .generateHelmDeployChartSpecFromYaml("chartSpec");

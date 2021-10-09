@@ -1,5 +1,6 @@
 package io.harness.plancreator.steps.resourceconstraint;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
@@ -29,6 +30,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.RESOURCE_CONSTRAINT)
 @TypeAlias("resourceConstraintStepInfo")
 @YamlSchemaIgnoreSubtype
+@RecasterAlias("io.harness.plancreator.steps.resourceconstraint.ResourceConstraintStepInfo")
 public class ResourceConstraintStepInfo implements PMSStepInfo {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String identifier;
 

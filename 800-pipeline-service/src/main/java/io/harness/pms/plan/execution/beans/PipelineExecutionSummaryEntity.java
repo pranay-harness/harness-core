@@ -6,6 +6,8 @@ import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
+import io.harness.dto.FailureInfoDTO;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
@@ -18,6 +20,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
@@ -37,6 +40,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -80,6 +84,8 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   ExecutionStatus status;
 
   String inputSetYaml;
+  String pipelineTemplate; // saving the template here because after an execution, the pipeline can be updated
+
   @Singular @Size(max = 128) List<NGTag> tags;
 
   @Builder.Default Map<String, org.bson.Document> moduleInfo = new HashMap<>();
@@ -88,8 +94,11 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   String startingNodeId;
 
   ExecutionTriggerInfo executionTriggerInfo;
-  ExecutionErrorInfo executionErrorInfo;
-  ByteString gitSyncBranchContext;
+  @Deprecated ExecutionErrorInfo executionErrorInfo;
+  @Deprecated ByteString gitSyncBranchContext;
+  EntityGitDetails entityGitDetails;
+  FailureInfoDTO failureInfo;
+  GovernanceMetadata governanceMetadata;
 
   Long startTs;
   Long endTs;
@@ -141,5 +150,13 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .build())
 
         .build();
+  }
+
+  @UtilityClass
+  public static class PlanExecutionSummaryKeys {
+    public String triggerType = PlanExecutionSummaryKeys.executionTriggerInfo + "."
+        + "triggerType";
+    public String triggeredBy = PlanExecutionSummaryKeys.executionTriggerInfo + "."
+        + "triggeredBy";
   }
 }

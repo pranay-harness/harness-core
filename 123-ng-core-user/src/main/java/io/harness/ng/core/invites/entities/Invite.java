@@ -9,7 +9,8 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.ng.core.invites.remote.RoleBinding;
+import io.harness.ng.core.invites.InviteType;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,7 +24,6 @@ import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -60,6 +60,7 @@ public class Invite implements PersistentEntity {
   String projectIdentifier;
   @NotEmpty String email;
   @Size(min = 1, max = 100) List<RoleBinding> roleBindings;
+  @Size(max = 100) List<String> userGroups;
   String name;
   @NonNull InviteType inviteType;
   @CreatedDate Long createdAt;
@@ -73,19 +74,4 @@ public class Invite implements PersistentEntity {
   @FdTtlIndex
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(30).toInstant());
-
-  @OwnedBy(PL)
-  public enum InviteType {
-    @JsonProperty("USER_INITIATED_INVITE") USER_INITIATED_INVITE("USER_INITIATED_INVITE"),
-    @JsonProperty("ADMIN_INITIATED_INVITE") ADMIN_INITIATED_INVITE("ADMIN_INITIATED_INVITE");
-
-    private final String type;
-    InviteType(String type) {
-      this.type = type;
-    }
-
-    public String getType() {
-      return type;
-    }
-  }
 }

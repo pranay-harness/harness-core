@@ -1,9 +1,10 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._950_DELEGATE_TASKS_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -11,7 +12,9 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -28,20 +31,23 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(_950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(CDP)
-public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, ExecutionCapabilityDemander {
+public class GitFetchFilesTaskParams
+    implements ActivityAccess, TaskParameters, ExecutionCapabilityDemander, NestedAnnotationResolver {
   private String accountId;
   private String appId;
   private String activityId;
   private boolean isFinalState;
   private AppManifestKind appManifestKind;
-  private Map<String, GitFetchFilesConfig> gitFetchFilesConfigMap;
+  @Expression(ALLOW_SECRETS) private Map<String, GitFetchFilesConfig> gitFetchFilesConfigMap;
   private final ContainerServiceParams containerServiceParams;
   private boolean isBindTaskFeatureSet; // BIND_FETCH_FILES_TASK_TO_DELEGATE
   private String executionLogName;
   private Set<String> delegateSelectors;
   private boolean isGitHostConnectivityCheck;
+  private boolean optimizedFilesFetch;
+  private boolean shouldInheritGitFetchFilesConfigMap;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

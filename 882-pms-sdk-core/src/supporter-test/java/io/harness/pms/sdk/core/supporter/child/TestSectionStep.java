@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -17,7 +18,8 @@ import java.util.Map;
 
 @OwnedBy(PIPELINE)
 public class TestSectionStep implements ChildExecutable<TestSectionStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("TEST_CHILD").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("TEST_CHILD").setStepCategory(StepCategory.STEP).build();
 
   @Override
   public Class<TestSectionStepParameters> getStepParametersClass() {

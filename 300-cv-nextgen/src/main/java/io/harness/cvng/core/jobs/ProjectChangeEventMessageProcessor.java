@@ -1,16 +1,11 @@
 package io.harness.cvng.core.jobs;
 
-import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.activity.source.services.api.ActivitySourceService;
-import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
-import io.harness.ng.core.dto.ProjectDTO;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -27,9 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ProjectChangeEventMessageProcessor extends EntityChangeEventMessageProcessor {
   @Inject private Injector injector;
   @Inject private MetricPackService metricPackService;
-  @Inject private ActivitySourceService activitySourceService;
-  @Inject private VerificationJobService verificationJobService;
-  @Inject private NextGenService nextGenService;
 
   @Override
   public void processMessage(Message message) {
@@ -69,16 +61,7 @@ public class ProjectChangeEventMessageProcessor extends EntityChangeEventMessage
 
   @VisibleForTesting
   void processUpdateAction(ProjectEntityChangeDTO projectEntityChangeDTO) {
-    ProjectDTO projectDTO = nextGenService.getProject(projectEntityChangeDTO.getAccountIdentifier(),
-        projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-    if (projectDTO.getModules().contains(ModuleType.CD)) {
-      activitySourceService.createDefaultCDNGActivitySource(projectEntityChangeDTO.getAccountIdentifier(),
-          projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-    }
-    if (projectDTO.getModules().contains(ModuleType.CD) || projectDTO.getModules().contains(ModuleType.CV)) {
-      verificationJobService.createDefaultVerificationJobs(projectEntityChangeDTO.getAccountIdentifier(),
-          projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-    }
+    // add code on project update.
   }
 
   @VisibleForTesting

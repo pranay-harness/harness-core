@@ -1,10 +1,13 @@
 package software.wings.delegatetasks.cv;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.service.impl.analysis.MetricElement;
 import software.wings.service.impl.analysis.MetricsDataCollectionInfo;
 
 import java.util.List;
-
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public interface MetricsDataCollector<T extends MetricsDataCollectionInfo> extends DataCollector<T> {
   /**
    * Called with list of hosts. This needs to be thread safe.

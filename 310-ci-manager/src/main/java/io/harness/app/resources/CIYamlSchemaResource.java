@@ -1,11 +1,17 @@
 package io.harness.app.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.intfc.CIYamlSchemaService;
+import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.YamlSchemaResource;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 
@@ -21,6 +27,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(CI)
 @Api("/partial-yaml-schema")
 @Path("/partial-yaml-schema")
 @Produces({"application/json", "text/yaml", "text/html", "text/plain"})
@@ -42,5 +49,31 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
     PartialSchemaDTO schema =
         ciYamlSchemaService.getIntegrationStageYamlSchema(orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(schema);
+  }
+
+  @GET
+  @ApiOperation(value = "dummy api for checking integration stage", nickname = "dummyApiForSwaggerStageSchemaCheck")
+  @Path("/dummyApiForSwaggerStageSchemaCheck")
+  // DO NOT DELETE THIS WITHOUT CONFIRMING WITH UI
+  public ResponseDTO<StageElementConfig> dummyApiForSwaggerSchemaCheckForStage() {
+    return ResponseDTO.newResponse(StageElementConfig.builder().build());
+  }
+
+  @GET
+  @ApiOperation(value = "dummy api for checking integration stage", nickname = "dummyApiForSwaggerStepSchemaCheck")
+  @Path("/dummyApiForSwaggerStepSchemaCheck")
+  // DO NOT DELETE THIS WITHOUT CONFIRMING WITH UI
+  public ResponseDTO<StepElementConfig> dummyApiForSwaggerSchemaCheckForStep() {
+    return ResponseDTO.newResponse(StepElementConfig.builder().build());
+  }
+
+  @GET
+  @ApiOperation(value = "dummy api for checking CIPipelineModuleInfo",
+      nickname = "dummyApiForSwaggerCIPipelineModuleInfoSchemaCheck")
+  @Path("/dummyApiForSwaggerCIPipelineModuleInfoSchemaCheck")
+  // DO NOT DELETE THIS WITHOUT CONFIRMING WITH UI
+  public ResponseDTO<CIPipelineModuleInfo>
+  dummyApiForSwaggerSchemaCheckForCIPipelineModuleInfo() {
+    return ResponseDTO.newResponse(CIPipelineModuleInfo.builder().build());
   }
 }

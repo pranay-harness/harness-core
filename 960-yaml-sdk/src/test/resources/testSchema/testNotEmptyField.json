@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "testString1": {
+      "type": "string",
+      "minLength": 1
+    },
+    "testString2": {
+      "type": "string"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ClassWithNonEmptyField": {
+      "type": "object",
+      "properties": {
+        "testString1": {
+          "type": "string",
+          "minLength": 1
+        },
+        "testString2": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

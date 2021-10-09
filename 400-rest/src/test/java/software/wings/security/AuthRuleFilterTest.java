@@ -64,8 +64,8 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Event;
 import software.wings.beans.User;
 import software.wings.resources.AccountResource;
+import software.wings.resources.UserResourceNG;
 import software.wings.resources.graphql.GraphQLUtils;
-import software.wings.resources.secretsmanagement.SecretsResourceNG;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.AuditServiceHelper;
@@ -363,7 +363,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testFilter_For_NextGenRequest() {
-    Class clazz = SecretsResourceNG.class;
+    Class clazz = UserResourceNG.class;
     when(resourceInfo.getResourceClass()).thenReturn(clazz);
     when(resourceInfo.getResourceMethod()).thenReturn(getNgMockResourceMethod());
     boolean isNextGenRequest = authRuleFilter.isNextGenManagerRequest();
@@ -514,9 +514,9 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   }
 
   private Method getNgMockResourceMethod() {
-    Class mockClass = SecretsResourceNG.class;
+    Class mockClass = UserResourceNG.class;
     try {
-      return mockClass.getMethod("get", String.class, String.class, String.class, String.class);
+      return mockClass.getMethod("getUser", String.class);
     } catch (NoSuchMethodException e) {
       return null;
     }

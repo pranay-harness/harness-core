@@ -1,16 +1,19 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitService;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.yaml.YamlVersion.Type;
 
+@OwnedBy(HarnessTeam.DX)
 public class SettingAttributeYamlNode extends YamlNode {
   private String settingVariableType;
 
   public SettingAttributeYamlNode() {}
 
   public SettingAttributeYamlNode(String accountId, String uuid, String settingVariableType, String name,
-      Class theClass, DirectoryPath directoryPath, YamlGitService yamlGitSyncService) {
-    super(accountId, uuid, name, theClass, directoryPath, yamlGitSyncService, Type.SETTING);
+      Class theClass, DirectoryPath directoryPath) {
+    super(accountId, uuid, name, theClass, directoryPath, Type.SETTING);
     this.settingVariableType = settingVariableType;
   }
 

@@ -15,7 +15,6 @@ import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistor
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
-import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;
@@ -56,15 +55,17 @@ public class TriggerFilterHelper {
 
   public Criteria createCriteriaForCustomWebhookTriggerGetList(
       TriggerWebhookEvent triggerWebhookEvent, String searchTerm, boolean deleted, boolean enabled) {
-    Criteria criteria = createCriteriaForWebhookTriggerGetList(
-        triggerWebhookEvent.getAccountId(), null, null, emptyList(), searchTerm, deleted, enabled);
-    if (triggerWebhookEvent.getSourceRepoType().equalsIgnoreCase(WebhookSourceRepo.CUSTOM.name())) {
-      if (triggerWebhookEvent.getTriggerIdentifier() != null) {
-        criteria.and(NGTriggerEntityKeys.identifier).is(triggerWebhookEvent.getTriggerIdentifier());
-      }
-      criteria.and("metadata.webhook.type").regex("CUSTOM", CASE_INSENSITIVE_MONGO_OPTIONS);
-    }
+    Criteria criteria = createCriteriaForWebhookTriggerGetList(triggerWebhookEvent.getAccountId(),
+        triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), emptyList(), searchTerm,
+        deleted, enabled);
 
+    if (triggerWebhookEvent.getPipelineIdentifier() != null) {
+      criteria.and(NGTriggerEntityKeys.targetIdentifier).is(triggerWebhookEvent.getPipelineIdentifier());
+    }
+    if (triggerWebhookEvent.getTriggerIdentifier() != null) {
+      criteria.and(NGTriggerEntityKeys.identifier).is(triggerWebhookEvent.getTriggerIdentifier());
+    }
+    criteria.and("metadata.webhook.type").regex("CUSTOM", CASE_INSENSITIVE_MONGO_OPTIONS);
     return criteria;
   }
 
@@ -74,6 +75,15 @@ public class TriggerFilterHelper {
         triggerWebhookEvent.getAccountId(), null, null, emptyList(), searchTerm, deleted, enabled);
     criteria.and("metadata.webhook.type")
         .regex(triggerWebhookEvent.getSourceRepoType(), CASE_INSENSITIVE_MONGO_OPTIONS);
+    return criteria;
+  }
+
+  public Criteria createCriteriaFormBuildTriggerUsingAccIdAndSignature(String accountId, List<String> signatures) {
+    Criteria criteria = new Criteria();
+    criteria.and(NGTriggerEntityKeys.accountId).is(accountId);
+    criteria.and("metadata.buildMetadata.pollingConfig.signature").in(signatures);
+    criteria.and(NGTriggerEntityKeys.deleted).is(false);
+    criteria.and(NGTriggerEntityKeys.enabled).is(true);
     return criteria;
   }
 
@@ -88,9 +98,6 @@ public class TriggerFilterHelper {
     }
     if (isNotEmpty(projectIdentifier)) {
       criteria.and(NGTriggerEntityKeys.projectIdentifier).is(projectIdentifier);
-    }
-    if (isNotEmpty(repoURLs)) {
-      criteria.and("metadata.webhook.repoURL").in(repoURLs);
     }
     criteria.and(NGTriggerEntityKeys.deleted).is(deleted);
     criteria.and(NGTriggerEntityKeys.type).is(NGTriggerType.WEBHOOK);
@@ -119,7 +126,7 @@ public class TriggerFilterHelper {
     update.set(NGTriggerEntityKeys.enabled, triggerEntity.getEnabled());
     update.set(NGTriggerEntityKeys.tags, triggerEntity.getTags());
     update.set(NGTriggerEntityKeys.deleted, false);
-    update.set(NGTriggerEntityKeys.ymlVersion, triggerEntity.getYmlVersion());
+    update.set(NGTriggerEntityKeys.triggerStatus, triggerEntity.getTriggerStatus());
     if (triggerEntity.getNextIterations() != null) {
       update.set(NGTriggerEntityKeys.nextIterations, triggerEntity.getNextIterations());
     }

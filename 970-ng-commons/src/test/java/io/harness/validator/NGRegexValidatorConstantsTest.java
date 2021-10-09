@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SAMARTH;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -15,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class NGRegexValidatorConstantsTest {
+public class NGRegexValidatorConstantsTest extends CategoryTest {
   @Test
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
@@ -31,6 +32,8 @@ public class NGRegexValidatorConstantsTest {
     assertTrue(pattern.matcher("<+input>").matches());
     assertTrue(pattern.matcher("<+input>.allowedValues()").matches());
     assertTrue(pattern.matcher("<+input>.regex()").matches());
+    assertTrue(pattern.matcher("<+2+8>s").matches());
+    assertTrue(pattern.matcher("<+random>").matches());
 
     // Invalid cases
     assertFalse(pattern.matcher("1m  20s").matches());
@@ -43,7 +46,6 @@ public class NGRegexValidatorConstantsTest {
     assertFalse(pattern.matcher("1m ").matches());
     assertFalse(pattern.matcher("1 m").matches());
     assertFalse(pattern.matcher("1a").matches());
-    assertFalse(pattern.matcher("<+random>").matches());
     assertFalse(pattern.matcher("random").matches());
   }
 }

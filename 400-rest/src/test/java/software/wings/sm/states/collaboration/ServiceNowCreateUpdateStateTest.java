@@ -25,6 +25,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -62,7 +63,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ServiceNowCreateUpdateStateTest {
+public class ServiceNowCreateUpdateStateTest extends CategoryTest {
   @Mock ActivityHelperService activityHelperService;
   @Mock ExecutionContextImpl context;
   @Mock SettingsService settingsService;

@@ -6,8 +6,11 @@ import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.aws.CloseableAmazonWebServiceClient;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.context.MdcGlobalContextData;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
 import io.harness.globalcontex.ErrorHandlingGlobalContextData;
 import io.harness.manage.GlobalContextManager;
@@ -25,8 +28,10 @@ import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
+@Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelegateBase {
   public AmazonECRClient getAmazonEcrClient(AwsInternalConfig awsConfig, String region) {
@@ -37,9 +42,10 @@ public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelega
 
   private DescribeRepositoriesResult listRepositories(
       AwsInternalConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
-    try {
+    try (CloseableAmazonWebServiceClient<AmazonECRClient> closeableAmazonECRClient =
+             new CloseableAmazonWebServiceClient(getAmazonEcrClient(awsConfig, region))) {
       tracker.trackECRCall("List Repositories");
-      return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
+      return closeableAmazonECRClient.getClient().describeRepositories(describeRepositoriesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       ErrorHandlingGlobalContextData globalContextData =
           GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
@@ -60,6 +66,9 @@ public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelega
         throw amazonClientException;
       }
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listRepositories", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return new DescribeRepositoriesResult();
   }
@@ -80,12 +89,17 @@ public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelega
     return repository != null ? repository.getRepositoryUri() : null;
   }
   public String getAmazonEcrAuthToken(AwsInternalConfig awsConfig, String awsAccount, String region) {
-    AmazonECRClient ecrClient = getAmazonEcrClient(awsConfig, region);
-    tracker.trackECRCall("Get Ecr Auth Token");
-    return ecrClient
-        .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
-        .getAuthorizationData()
-        .get(0)
-        .getAuthorizationToken();
+    try (CloseableAmazonWebServiceClient<AmazonECRClient> closeableAmazonECRClient =
+             new CloseableAmazonWebServiceClient(getAmazonEcrClient(awsConfig, region))) {
+      tracker.trackECRCall("Get Ecr Auth Token");
+      return closeableAmazonECRClient.getClient()
+          .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
+          .getAuthorizationData()
+          .get(0)
+          .getAuthorizationToken();
+    } catch (Exception e) {
+      log.error("Exception getAmazonEcrAuthToken", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 }

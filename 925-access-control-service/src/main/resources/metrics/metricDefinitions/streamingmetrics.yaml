@@ -1,5 +1,6 @@
 name: Aggregator Steaming Metrics
 identifier: aggregatorStreamingMetrics
+metricGroup: aggregatorMetricsGroup
 metrics:
   - metricName: aggregator_streaming_numberOfDisconnects
     metricDefinition: Number of Disconnects of Debezium Engine

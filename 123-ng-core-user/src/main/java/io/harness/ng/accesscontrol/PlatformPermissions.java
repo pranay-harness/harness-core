@@ -28,4 +28,6 @@ public class PlatformPermissions {
   public static final String VIEW_SERVICEACCOUNT_PERMISSION = "core_serviceaccount_view";
   public static final String EDIT_SERVICEACCOUNT_PERMISSION = "core_serviceaccount_edit";
   public static final String DELETE_SERVICEACCOUNT_PERMISSION = "core_serviceaccount_delete";
+  public static final String MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION = "core_serviceaccount_manageapikey";
+  public static final String VIEW_ACCOUNT_PERMISSION = "core_account_view";
 }

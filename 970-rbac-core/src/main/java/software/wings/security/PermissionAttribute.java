@@ -388,9 +388,13 @@ public class PermissionAttribute {
      */
     PROVISIONER,
     /**
-     * Manage templates
+     * Manage Account templates
      */
     TEMPLATE_MANAGEMENT,
+    /**
+     * Manage Application templates
+     */
+    APP_TEMPLATE,
     /**
      * User Permission Read.
      */
@@ -494,6 +498,11 @@ public class PermissionAttribute {
     MANAGE_DEPLOYMENT_FREEZES,
 
     /**
+     * Deploy during Deployment Freezes
+     */
+    ALLOW_DEPLOYMENTS_DURING_FREEZE,
+
+    /**
      * Manage Pipeline Governance Standards
      */
     MANAGE_PIPELINE_GOVERNANCE_STANDARDS,
@@ -507,6 +516,11 @@ public class PermissionAttribute {
      * Manage Tags
      */
     MANAGE_TAGS,
+
+    /**
+     * Manage Account Defaults
+     */
+    MANAGE_ACCOUNT_DEFAULTS,
 
     /**
      * Manage custom dashboard

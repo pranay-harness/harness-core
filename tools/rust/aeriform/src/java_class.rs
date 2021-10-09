@@ -12,9 +12,14 @@ use crate::team::UNKNOWN_TEAM;
 
 pub const UNKNOWN_LOCATION: &str = "n/a";
 
+pub const MODULE_IMPORT: &str = "import io.harness.annotations.dev.HarnessModule;";
+pub const TARGET_MODULE_IMPORT: &str = "import io.harness.annotations.dev.TargetModule;";
+
 lazy_static! {
     pub static ref PACKAGE_PATTERN: Regex = Regex::new(r"package ([a-zA-z.]+);").unwrap();
     pub static ref TEAM_OWNER_PATTERN: Regex = Regex::new(r"@OwnedBy\((HarnessTeam.)?([A-Z]+)\)").unwrap();
+    pub static ref MODULE_IMPORT_STATIC_PATTERN: Regex =
+        Regex::new(r"^import static io.harness.annotations.dev.HarnessModule.[_0-9A-Z]+;").unwrap();
     pub static ref TARGET_MODULE_PATTERN: Regex =
         Regex::new(r"@TargetModule\((HarnessModule.)?_([0-9A-Z_]+)\)").unwrap();
     pub static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
@@ -152,7 +157,7 @@ pub fn populate_internal_info(
 
     let class_name = &location[location.rfind('/').unwrap() + 1..location.len() - 5];
     let deprecated_pattern = Regex::new(&format!(
-        r"@Deprecated[\s\S]+public (class|interface|@interface) {}",
+        r"@Deprecated[^\r\n]*[\r\n]*public (class|interface|@interface) {}",
         class_name
     ))
     .unwrap();

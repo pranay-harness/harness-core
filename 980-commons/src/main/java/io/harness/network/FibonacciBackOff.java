@@ -1,14 +1,27 @@
 package io.harness.network;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.threading.Morpheus.sleep;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import java.io.IOException;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(DEL)
+@Slf4j
 public final class FibonacciBackOff {
   private static final int[] FIBONACCI = new int[] {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144};
 
   private FibonacciBackOff() {}
+
+  public static int getFibonacciElement(int index) {
+    if (index < FIBONACCI.length) {
+      return FIBONACCI[index];
+    }
+    throw new RuntimeException("Index out of bounds");
+  }
 
   public static <T, E extends Exception> T execute(FibonacciBackOffFunction<T> fn) throws IOException {
     for (int attempt = 0; attempt < FIBONACCI.length; attempt++) {
@@ -39,11 +52,8 @@ public final class FibonacciBackOff {
     }
   }
 
-  private static void handleFailure(int attempt, IOException e) throws IOException {
-    IOException ex = peel(e);
-    if (ex.getCause() != null) {
-      throw ex;
-    }
+  private static void handleFailure(int attempt, IOException e) {
+    log.error("error while executing", e);
     sleep(Duration.ofSeconds(FIBONACCI[attempt]));
   }
 

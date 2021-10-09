@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -13,6 +14,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
@@ -46,6 +51,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ARMRollbackStateTest extends WingsBaseTest {
   @Mock private ARMStateHelper helper;
   @Mock private DelegateService delegateService;
@@ -344,5 +351,22 @@ public class ARMRollbackStateTest extends WingsBaseTest {
 
   private ARMInfrastructureProvisioner getArmInfrastructureProvisioner() {
     return ARMInfrastructureProvisioner.builder().uuid(PROVISIONER_ID).name("ARM-Provisioner").build();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    // provision state
+    ARMProvisionState armProvisionState = new ARMProvisionState("ARM Provision");
+    assertThat(armProvisionState.validateFields().size()).isEqualTo(1);
+    armProvisionState.setProvisionerId("test provisioner");
+    assertThat(armProvisionState.validateFields().size()).isEqualTo(0);
+
+    // rollback test
+    ARMRollbackState armRollbackState = new ARMRollbackState("ARM Rollback");
+    assertThat(armRollbackState.validateFields().size()).isEqualTo(1);
+    armRollbackState.setProvisionerId("test provisioner");
+    assertThat(armRollbackState.validateFields().size()).isEqualTo(0);
   }
 }

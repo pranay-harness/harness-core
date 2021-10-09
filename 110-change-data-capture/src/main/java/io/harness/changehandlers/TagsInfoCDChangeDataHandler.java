@@ -2,6 +2,8 @@ package io.harness.changehandlers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.util.Arrays.asList;
+
 import io.harness.changestreamsframework.ChangeEvent;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.entities.Organization;
@@ -15,6 +17,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TagsInfoCDChangeDataHandler extends AbstractChangeDataHandler {
@@ -46,6 +49,11 @@ public class TagsInfoCDChangeDataHandler extends AbstractChangeDataHandler {
     columnValueMapping.put("tags", tagString);
 
     return columnValueMapping;
+  }
+
+  @Override
+  public List<String> getPrimaryKeys() {
+    return asList("id");
   }
 
   private String getParentIdentifier(ChangeEvent<?> changeEvent, DBObject dbObject) {

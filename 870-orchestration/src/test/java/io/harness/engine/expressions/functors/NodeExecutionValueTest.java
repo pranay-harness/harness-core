@@ -17,10 +17,12 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -34,6 +36,7 @@ import java.util.Collections;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlEngine;
 import org.apache.commons.logging.impl.NoOpLog;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,62 +65,71 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
 
   @Before
   public void setup() {
+    String nodeExecution1Id = generateUuid();
+    String nodeExecution2Id = generateUuid();
+    String nodeExecution3Id = generateUuid();
+    String nodeExecution4Id = generateUuid();
+    String nodeExecution5Id = generateUuid();
+    String nodeExecution6Id = generateUuid();
+    String nodeExecution7Id = generateUuid();
+    String nodeExecution8Id = generateUuid();
     engine = new JexlBuilder().logger(new NoOpLog()).create();
     ambiance = AmbianceTestUtils.buildAmbiance();
 
     nodeExecution1 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution1Id)
                          .node(preparePlanNode(false, "a"))
                          .resolvedStepParameters(prepareStepParameters("ao"))
                          .build();
     nodeExecution2 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution2Id)
                          .node(preparePlanNode(false, "b"))
                          .resolvedStepParameters(prepareStepParameters("bo"))
+                         .parentId(nodeExecution1Id)
+                         .nextId(nodeExecution1Id)
                          .build();
     nodeExecution3 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution3Id)
                          .node(preparePlanNode(true, "c"))
                          .resolvedStepParameters(prepareStepParameters("co"))
+                         .parentId(nodeExecution1Id)
+                         .previousId(nodeExecution2Id)
                          .build();
-    nodeExecution4 =
-        NodeExecution.builder().uuid(generateUuid()).node(preparePlanNode(false, "d", "di1", "STAGE")).build();
+    nodeExecution4 = NodeExecution.builder()
+                         .uuid(nodeExecution4Id)
+                         .node(preparePlanNode(false, "d", "di1", "STAGE"))
+                         .parentId(nodeExecution3Id)
+                         .nextId(nodeExecution5Id)
+                         .build();
     nodeExecution5 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution5Id)
                          .node(preparePlanNode(false, "d", "di2"))
                          .resolvedStepParameters(prepareStepParameters("do2"))
+                         .parentId(nodeExecution3Id)
+                         .previousId(nodeExecution4Id)
                          .build();
     nodeExecution6 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution6Id)
                          .node(preparePlanNode(false, "e"))
                          .resolvedStepParameters(prepareStepParameters("eo"))
+                         .parentId(nodeExecution4Id)
                          .build();
 
     nodeExecution7 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution7Id)
                          .node(preparePlanNode(false, "f"))
                          .resolvedStepParameters(prepareStepParameters("eo"))
+                         .parentId(nodeExecution6Id)
+                         .nextId(nodeExecution8Id)
                          .build();
 
     nodeExecution8 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution8Id)
                          .node(preparePlanNode(false, "g"))
                          .resolvedStepParameters(prepareStepParameters("eo"))
+                         .parentId(nodeExecution6Id)
+                         .previousId(nodeExecution7Id)
                          .build();
-
-    nodeExecution2.setParentId(nodeExecution1.getUuid());
-    nodeExecution3.setParentId(nodeExecution1.getUuid());
-    nodeExecution2.setNextId(nodeExecution1.getUuid());
-    nodeExecution3.setPreviousId(nodeExecution2.getUuid());
-    nodeExecution4.setParentId(nodeExecution3.getUuid());
-    nodeExecution5.setParentId(nodeExecution3.getUuid());
-    nodeExecution4.setNextId(nodeExecution5.getUuid());
-    nodeExecution5.setPreviousId(nodeExecution4.getUuid());
-    nodeExecution6.setParentId(nodeExecution4.getUuid());
-    nodeExecution7.setParentId(nodeExecution6.getUuid());
-    nodeExecution7.setNextId(nodeExecution8.getUuid());
-    nodeExecution8.setParentId(nodeExecution6.getUuid());
-    nodeExecution8.setPreviousId(nodeExecution7.getUuid());
 
     when(nodeExecutionService.get(nodeExecution1.getUuid())).thenReturn(nodeExecution1);
     when(nodeExecutionService.get(nodeExecution2.getUuid())).thenReturn(nodeExecution2);
@@ -202,20 +214,20 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     when(nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), nodeExecution4.getUuid(), false))
         .thenReturn(asList(nodeExecution8, nodeExecution7, nodeExecution6));
 
-    nodeExecution4.setStatus(Status.RUNNING);
-    nodeExecution6.setStatus(Status.RUNNING);
-    nodeExecution7.setStatus(Status.SUCCEEDED);
-    nodeExecution8.setStatus(Status.QUEUED);
+    Reflect.on(nodeExecution4).set(NodeExecutionKeys.status, Status.RUNNING);
+    Reflect.on(nodeExecution6).set(NodeExecutionKeys.status, Status.RUNNING);
+    Reflect.on(nodeExecution7).set(NodeExecutionKeys.status, Status.SUCCEEDED);
+    Reflect.on(nodeExecution8).set(NodeExecutionKeys.status, Status.QUEUED);
 
     // Check current status for SUCCEEDED
     assertThat(engine.getProperty(functor, "stage.currentStatus")).isEqualTo("SUCCEEDED");
 
     // Check current status for FAILED
-    nodeExecution7.setStatus(Status.FAILED);
+    Reflect.on(nodeExecution7).set(NodeExecutionKeys.status, Status.FAILED);
     assertThat(engine.getProperty(functor, "stage.currentStatus")).isEqualTo("FAILED");
 
     // Check current status for ERRORED
-    nodeExecution7.setStatus(Status.ERRORED);
+    Reflect.on(nodeExecution7).set(NodeExecutionKeys.status, Status.ERRORED);
     assertThat(engine.getProperty(functor, "stage.currentStatus")).isEqualTo("ERRORED");
   }
 
@@ -250,10 +262,10 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
         PlanNodeProto.newBuilder()
             .setUuid(generateUuid())
             .setName(identifier + "n")
-            .setStepType(StepType.newBuilder().setType("DUMMY").build())
+            .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
             .setIdentifier(identifier)
             .setSkipExpressionChain(skipExpressionChain)
-            .setStepParameters(RecastOrchestrationUtils.toDocumentJson(prepareStepParameters(paramValue)));
+            .setStepParameters(RecastOrchestrationUtils.toJson(prepareStepParameters(paramValue)));
 
     if (!isEmpty(groupName)) {
       builder.setGroup(groupName);

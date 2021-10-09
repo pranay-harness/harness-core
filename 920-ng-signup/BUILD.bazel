@@ -10,8 +10,9 @@ shared_dependencies = [
     "//930-ng-core-clients:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
+    "//945-account-mgmt:module",
+    "//948-access-control-sdk:module",
     "//950-ng-authentication-service:module",
-    "//955-account-mgmt:module",
     "//960-ng-core-beans:module",
     "//960-notification-beans:module",
     "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
@@ -22,7 +23,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = shared_dependencies,
 )
@@ -41,6 +42,7 @@ java_library(
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
         "@maven//:org_powermock_powermock_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_reflections_reflections",

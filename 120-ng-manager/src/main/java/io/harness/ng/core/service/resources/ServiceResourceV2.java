@@ -2,6 +2,8 @@ package io.harness.ng.core.service.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_CREATE_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_UPDATE_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_VIEW_PERMISSION;
@@ -21,10 +23,13 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -37,6 +42,7 @@ import io.harness.ng.core.service.mappers.ServiceElementMapper;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.rbac.NGResourceType;
+import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
@@ -45,11 +51,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -105,8 +111,9 @@ public class ServiceResourceV2 {
 
   @POST
   @ApiOperation(value = "Create a Service", nickname = "createServiceV2")
-  public ResponseDTO<ServiceResponse> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+  public ResponseDTO<ServiceResponse> create(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid ServiceRequestDTO serviceRequestDTO) {
+    throwExceptionForNoRequestDTO(serviceRequestDTO);
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, null), SERVICE_CREATE_PERMISSION);
@@ -121,7 +128,8 @@ public class ServiceResourceV2 {
   @ApiOperation(value = "Create Services", nickname = "createServicesV2")
   public ResponseDTO<PageResponse<ServiceResponse>> createServices(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
+      @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
+    throwExceptionForNoRequestDTO(serviceRequestDTOs);
     for (ServiceRequestDTO serviceRequestDTO : serviceRequestDTOs) {
       accessControlClient.checkForAccessOrThrow(
           ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
@@ -151,8 +159,8 @@ public class ServiceResourceV2 {
   @PUT
   @ApiOperation(value = "Update a service by identifier", nickname = "updateServiceV2")
   public ResponseDTO<ServiceResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid ServiceRequestDTO serviceRequestDTO) {
+    throwExceptionForNoRequestDTO(serviceRequestDTO);
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
@@ -167,8 +175,8 @@ public class ServiceResourceV2 {
   @Path("upsert")
   @ApiOperation(value = "Upsert a service by identifier", nickname = "upsertServiceV2")
   public ResponseDTO<ServiceResponse> upsert(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid ServiceRequestDTO serviceRequestDTO) {
+    throwExceptionForNoRequestDTO(serviceRequestDTO);
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
@@ -205,5 +213,63 @@ public class ServiceResourceV2 {
     Page<ServiceResponse> serviceList =
         serviceEntityService.list(criteria, pageRequest).map(ServiceElementMapper::toResponseWrapper);
     return ResponseDTO.newResponse(getNGPageResponse(serviceList));
+  }
+
+  @GET
+  @Path("/list/access")
+  @ApiOperation(value = "Gets Service Access list ", nickname = "getServiceAccessList")
+  public ResponseDTO<List<ServiceResponse>> listAccessServices(@QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("100") int size,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
+        Resource.of(PROJECT, projectIdentifier), VIEW_PROJECT_PERMISSION, "Unauthorized to list services");
+
+    Criteria criteria =
+        ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false, searchTerm);
+    if (isNotEmpty(serviceIdentifiers)) {
+      criteria.and(ServiceEntityKeys.identifier).in(serviceIdentifiers);
+    }
+    List<ServiceResponse> serviceList = serviceEntityService.listRunTimePermission(criteria)
+                                            .stream()
+                                            .map(ServiceElementMapper::toResponseWrapper)
+                                            .collect(Collectors.toList());
+
+    List<PermissionCheckDTO> permissionCheckDTOS =
+        serviceList.stream().map(CDNGRbacUtility::serviceResponseToPermissionCheckDTO).collect(Collectors.toList());
+    List<AccessControlDTO> accessControlList =
+        accessControlClient.checkForAccess(permissionCheckDTOS).getAccessControlList();
+    return ResponseDTO.newResponse(filterByPermissionAndId(accessControlList, serviceList));
+  }
+
+  private List<ServiceResponse> filterByPermissionAndId(
+      List<AccessControlDTO> accessControlList, List<ServiceResponse> serviceList) {
+    List<ServiceResponse> filteredAccessControlDtoList = new ArrayList<>();
+    for (int i = 0; i < accessControlList.size(); i++) {
+      AccessControlDTO accessControlDTO = accessControlList.get(i);
+      ServiceResponse serviceResponse = serviceList.get(i);
+      if (accessControlDTO.isPermitted()
+          && serviceResponse.getService().getIdentifier().equals(accessControlDTO.getResourceIdentifier())) {
+        filteredAccessControlDtoList.add(serviceResponse);
+      }
+    }
+    return filteredAccessControlDtoList;
+  }
+
+  private void throwExceptionForNoRequestDTO(List<ServiceRequestDTO> dto) {
+    if (dto == null) {
+      throw new InvalidRequestException(
+          "No request body sent in the API. Following field is required: identifier. Other optional fields: name, orgIdentifier, projectIdentifier, tags, description");
+    }
+  }
+
+  private void throwExceptionForNoRequestDTO(ServiceRequestDTO dto) {
+    if (dto == null) {
+      throw new InvalidRequestException(
+          "No request body sent in the API. Following field is required: identifier. Other optional fields: name, orgIdentifier, projectIdentifier, tags, description, version");
+    }
   }
 }

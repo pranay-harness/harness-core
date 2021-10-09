@@ -1,0 +1,301 @@
+[{
+  "startTime" : 1631175720.000000000,
+  "endTime" : 1631175780.000000000,
+  "clusters" : [
+    {
+      "text" : "java.lang.NullPointerException: Null pointer exception  at com.realtime.StreamProcessor.processStreamData(StreamProcessor.java:13)  at inside.RequestException.doGet(RequestException.java:108)  at javax.servlet.http.HttpServlet.service(HttpServlet.java:635)  at javax.servlet.http.HttpServlet.service(HttpServlet.java:742)  at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:231)  at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)  at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)  at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)  at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)  at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)  at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96)  at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:493)  at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:137)  at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:81)  at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:660)  at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:87)  at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)  at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:798)  at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)  at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:808)  at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1498)  at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)  at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)  at java.lang.Thread.run(Thread.java:748) ",
+      "label" : 0
+    },
+    {
+      "text" : "java.lang.RuntimeException: Method throws runtime exception  at com.runtime.RunTimeExceptionGenerator.generateRunTimeException(RunTimeExceptionGenerator.java:16)  at inside.RequestException.doGet(RequestException.java:99)  at javax.servlet.http.HttpServlet.service(HttpServlet.java:635)  at javax.servlet.http.HttpServlet.service(HttpServlet.java:742)  at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:231)  at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)  at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)  at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)  at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)  at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)  at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96)  at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:493)  at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:137)  at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:81)  at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:660)  at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:87)  at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)  at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:798)  at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)  at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:808)  at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1498)  at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)  at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)  at java.lang.Thread.run(Thread.java:748) ",
+      "label" : 1
+    }
+
+  ],
+  "clusterCoordinates" : [
+    {
+      "x" : -0.048462841230324,
+      "y" : 0.105881719699418,
+      "label" : 0,
+      "host" : "dummy"
+    },
+    {
+      "x" : 0.0484169140305585,
+      "y" : -0.105903063507841,
+      "label" : 1,
+      "host" : "dummy"
+    },
+    {
+      "x" : -0.0500061576275494,
+      "y" : 0.105161636284109,
+      "label" : 0,
+      "host" : "harness-deployment-canary-7445f86dbf-ml857"
+    },
+    {
+      "x" : -0.0506762897673462,
+      "y" : 0.104840351020193,
+      "label" : 0,
+      "host" : "harness-deployment-canary-56b5cc7c5b-9rpq7"
+    },
+    {
+      "x" : 0.0506984002113254,
+      "y" : -0.104829998762762,
+      "label" : 1,
+      "host" : "harness-deployment-canary-7445f86dbf-ml857"
+    },
+    {
+      "x" : 0.0500299743833357,
+      "y" : -0.105150644733116,
+      "label" : 1,
+      "host" : "harness-deployment-canary-56b5cc7c5b-9rpq7"
+    }
+  ],
+  "resultSummary" : {
+    "risk" : 0,
+    "score" : 0.0,
+    "controlClusterLabels" : [
+      0,
+      1
+    ],
+    "testClusterSummaries" : [
+      {
+        "label" : 0,
+        "clusterType" : "KNOWN_EVENT",
+        "risk" : 0,
+        "score" : 0.0,
+        "count" : 58,
+        "testFrequencyData" : [
+          10.0,
+          4.0,
+          11.0,
+          9.0,
+          6.0,
+          4.0,
+          10.0,
+          4.0
+        ]
+      },
+      {
+        "label" : 1,
+        "clusterType" : "KNOWN_EVENT",
+        "risk" : 0,
+        "score" : 0.0,
+        "count" : 69,
+        "testFrequencyData" : [
+          8.0,
+          10.0,
+          8.0,
+          20.0,
+          4.0,
+          5.0,
+          5.0,
+          4.0,
+          5.0
+        ]
+      }
+    ],
+    "controlClusterSummaries" : [
+      {
+        "label" : 0,
+        "controlFrequencyData" : [
+          4.0,
+          2.0,
+          7.0,
+          2.0,
+          5.0,
+          6.0,
+          5.0,
+          4.0
+        ]
+      },
+      {
+        "label" : 1,
+        "controlFrequencyData" : [
+          4.0,
+          5.0,
+          5.0,
+          4.0,
+          5.0,
+          4.0,
+          5.0,
+          4.0,
+          2.0
+        ]
+      }
+    ]
+  },
+  "hostSummaries" : [
+    {
+      "host" : "harness-deployment-canary-56b5cc7c5b-9rpq7",
+      "resultSummary" : {
+        "risk" : 0,
+        "score" : 0.0,
+        "testClusterSummaries" : [
+          {
+            "label" : 0,
+            "clusterType" : "KNOWN_EVENT",
+            "risk" : 0,
+            "score" : 0.0,
+            "count" : 58,
+            "testFrequencyData" : [
+              5.0,
+              6.0,
+              5.0,
+              4.0,
+              2.0,
+              5.0,
+              2.0
+            ]
+          },
+          {
+            "label" : 1,
+            "clusterType" : "KNOWN_EVENT",
+            "risk" : 0,
+            "score" : 0.0,
+            "count" : 69,
+            "testFrequencyData" : [
+              4.0,
+              4.0,
+              4.0,
+              16.0,
+              2.0,
+              3.0,
+              2.0,
+              2.0,
+              3.0
+            ]
+          }
+        ],
+        "controlClusterSummaries" : [
+          {
+            "label" : 0,
+            "controlFrequencyData" : [
+              4.0,
+              2.0,
+              7.0,
+              2.0,
+              5.0,
+              6.0,
+              5.0,
+              4.0,
+              5.0
+            ]
+          },
+          {
+            "label" : 1,
+            "controlFrequencyData" : [
+              4.0,
+              5.0,
+              5.0,
+              4.0,
+              5.0,
+              4.0,
+              5.0,
+              4.0,
+              2.0,
+              4.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "host" : "harness-deployment-canary-7445f86dbf-ml857",
+      "resultSummary" : {
+        "risk" : 0,
+        "score" : 0.0,
+        "testClusterSummaries" : [
+          {
+            "label" : 0,
+            "clusterType" : "KNOWN_EVENT",
+            "risk" : 0,
+            "score" : 0.0,
+            "count" : 58,
+            "controlFrequencyData" : [
+              4.0,
+              2.0,
+              7.0,
+              2.0,
+              5.0,
+              6.0,
+              5.0,
+              4.0,
+              5.0
+            ],
+            "testFrequencyData" : [
+              5.0,
+              4.0,
+              5.0,
+              4.0,
+              2.0,
+              2.0,
+              5.0,
+              2.0
+            ]
+          },
+          {
+            "label" : 1,
+            "clusterType" : "KNOWN_EVENT",
+            "risk" : 0,
+            "score" : 0.0,
+            "count" : 69,
+            "controlFrequencyData" : [
+              4.0,
+              5.0,
+              5.0,
+              4.0,
+              5.0,
+              4.0,
+              5.0,
+              4.0,
+              2.0,
+              4.0
+            ],
+            "testFrequencyData" : [
+              4.0,
+              6.0,
+              4.0,
+              4.0,
+              2.0,
+              2.0,
+              3.0,
+              2.0,
+              2.0
+            ]
+          }
+        ],
+        "controlClusterSummaries" : [
+          {
+            "label" : 0,
+            "controlFrequencyData" : [
+              4.0,
+              2.0,
+              7.0,
+              2.0,
+              5.0,
+              6.0,
+              5.0,
+              4.0,
+              5.0
+            ]
+          },
+          {
+            "label" : 1,
+            "controlFrequencyData" : [
+              4.0,
+              5.0,
+              5.0,
+              4.0,
+              5.0,
+              4.0,
+              5.0,
+              4.0,
+              2.0,
+              4.0
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}]

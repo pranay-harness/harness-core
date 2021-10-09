@@ -17,8 +17,8 @@ import org.jooq.ExecuteListener;
 @Slf4j
 public class BatchProcessingTimescaleModule extends AbstractModule {
   private final TimeScaleDBConfig configuration;
-  private static final long slowQuerySeconds = 3;
-  private static final long extremelySlowQuerySeconds = 10;
+  private static final long slowQuerySeconds = 2;
+  private static final long extremelySlowQuerySeconds = 5;
 
   public BatchProcessingTimescaleModule(TimeScaleDBConfig configuration) {
     this.configuration = configuration;

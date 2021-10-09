@@ -11,6 +11,7 @@ proto_library(
         "identifier_ref.proto",
         "input_set_ref.proto",
         "scope.proto",
+        "template_reference.proto",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -26,7 +27,7 @@ go_proto_library(
 )
 
 go_library(
-    name = "go_default_library",
+    name = "entity",
     embed = [":970_ng_commons_go_proto"],
     importpath = "github.com/wings-software/portal/970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity",
     visibility = ["//visibility:public"],

@@ -137,8 +137,9 @@ public class ApiKeyEventHandler implements OutboxEventHandler {
                   EventsFrameworkMetadataConstants.ACTION, action))
               .setData(ApiKeyEntityChangeDTO.newBuilder()
                            .setIdentifier(apiKeyDTO.getIdentifier())
-                           .setOrgIdentifier(apiKeyDTO.getOrgIdentifier())
-                           .setProjectIdentifier(apiKeyDTO.getProjectIdentifier())
+                           .setOrgIdentifier(apiKeyDTO.getOrgIdentifier() != null ? apiKeyDTO.getOrgIdentifier() : "")
+                           .setProjectIdentifier(
+                               apiKeyDTO.getProjectIdentifier() != null ? apiKeyDTO.getProjectIdentifier() : "")
                            .setApiKeyType(apiKeyDTO.getApiKeyType().name())
                            .setParentIdentifier(apiKeyDTO.getParentIdentifier())
                            .setIdentifier(apiKeyDTO.getIdentifier())

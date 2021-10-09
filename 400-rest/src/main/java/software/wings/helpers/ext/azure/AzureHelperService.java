@@ -21,7 +21,9 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.exception.AzureServiceException;
@@ -92,6 +94,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AzureHelperService {
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
   private static final int READ_TIMEOUT = 10;
@@ -124,6 +127,10 @@ public class AzureHelperService {
     try {
       if (isNotEmpty(encryptedDataDetails)) {
         encryptionService.decrypt(azureConfig, encryptedDataDetails, false);
+      }
+
+      if (azureConfig.getKey() == null && azureConfig.getEncryptedKey() != null) {
+        throw new InvalidRequestException("Please input a valid encrypted key.");
       }
 
       ApplicationTokenCredentials credentials =
@@ -720,7 +727,7 @@ public class AzureHelperService {
     return "https://" + acrHostName + (acrHostName.endsWith("/") ? "" : "/");
   }
 
-  private void handleAzureAuthenticationException(Exception e) {
+  public void handleAzureAuthenticationException(Exception e) {
     log.error("HandleAzureAuthenticationException: Exception:" + e);
 
     Throwable e1 = e;

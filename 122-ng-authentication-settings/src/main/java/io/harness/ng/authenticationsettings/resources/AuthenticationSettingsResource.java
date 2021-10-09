@@ -14,6 +14,7 @@ import io.harness.exception.GeneralException;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 import io.harness.ng.authenticationsettings.impl.AuthenticationSettingsService;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
@@ -21,7 +22,6 @@ import io.harness.stream.BoundedInputStream;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.loginSettings.PasswordStrengthPolicy;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SSOConfig;
 
@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -147,6 +148,7 @@ public class AuthenticationSettingsResource {
   @Multipart
   @POST
   @Path("/saml-metadata-upload")
+  @Consumes("multipart/form-data")
   @ApiOperation(value = "Create SAML Config", nickname = "uploadSamlMetaData")
   public RestResponse<SSOConfig> uploadSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,
@@ -172,6 +174,7 @@ public class AuthenticationSettingsResource {
   @Multipart
   @PUT
   @Path("/saml-metadata-upload")
+  @Consumes("multipart/form-data")
   @ApiOperation(value = "Edit SAML Config", nickname = "updateSamlMetaData")
   public RestResponse<SSOConfig> updateSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,

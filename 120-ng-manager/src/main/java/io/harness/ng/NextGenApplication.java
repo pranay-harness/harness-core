@@ -4,6 +4,10 @@ import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassInterMsvcRequests;
+import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassInternalApi;
+import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPaths;
+import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPublicApi;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
@@ -16,12 +20,16 @@ import io.harness.Microservice;
 import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
+import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.filter.NGScopeAccessCheckFilter;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.orchestration.NgStepRegistrar;
+import io.harness.cdng.pipeline.executions.CdngOrchestrationExecutionEventHandlerRegistrar;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -29,6 +37,16 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
+import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
+import io.harness.enforcement.client.example.ExampleCustomImpl;
+import io.harness.enforcement.client.example.ExampleRateLimitUsageImpl;
+import io.harness.enforcement.client.example.ExampleStaticLimitUsageImpl;
+import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
+import io.harness.enforcement.client.usage.RestrictionUsageInterface;
+import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.enforcement.services.FeatureRestrictionLoader;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.gitsync.AbstractGitSyncModule;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
@@ -36,19 +54,27 @@ import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkInitHelper;
+import io.harness.gitsync.core.fullsync.GitFullSyncEntityIterator;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.gitsync.core.webhook.GitSyncEventConsumerService;
+import io.harness.gitsync.migration.GitSyncMigrationProvider;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
+import io.harness.licensing.migrations.LicenseManagerMigrationProvider;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
+import io.harness.migrations.InstanceMigrationProvider;
+import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
+import io.harness.ng.cdOverview.eventGenerator.DeploymentEventGenerator;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -57,44 +83,64 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.handler.NGVaultSecretManagerRenewalHandler;
+import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
-import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
-import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
+import io.harness.ng.core.remote.licenserestriction.OrgRestrictionsUsageImpl;
+import io.harness.ng.core.remote.licenserestriction.ProjectRestrictionsUsageImpl;
+import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
 import io.harness.ng.migration.NGCoreMigrationProvider;
-import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
+import io.harness.ng.migration.SourceCodeManagerMigrationProvider;
+import io.harness.ng.migration.UserMembershipMigrationProvider;
+import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.events.base.PipelineEventConsumerController;
+import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
+import io.harness.polling.service.impl.PollingPerpetualTaskManager;
+import io.harness.polling.service.impl.PollingServiceImpl;
+import io.harness.polling.service.intfc.PollingService;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
 import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
+import io.harness.runnable.InstanceAccountInfoRunnable;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
+import io.harness.service.deploymentevent.DeploymentEventListenerRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.threading.ThreadPoolConfig;
+import io.harness.token.remote.TokenClient;
+import io.harness.tracing.MongoRedisTracer;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -109,6 +155,7 @@ import software.wings.jersey.KryoFeature;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -128,7 +175,16 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
 import java.lang.annotation.Annotation;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -152,6 +208,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PL)
 @Slf4j
@@ -192,7 +249,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
+    NGObjectMapperHelper.configureNGObjectMapper(mapper);
     mapper.registerModule(new PmsBeansJacksonModule());
   }
 
@@ -264,12 +321,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(cacheModule);
 
     Injector injector = Guice.createInjector(modules);
-    if (appConfig.getShouldDeployWithGitSync()) {
-      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
-    }
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
+    intializeGitSync(injector, appConfig);
+    if (appConfig.getShouldDeployWithGitSync()) {
+      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
+    }
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -280,28 +338,45 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
     registerAuthFilters(appConfig, environment, injector);
+    registerScopeAccessCheckFilter(appConfig, environment, injector);
     registerRequestContextFilter(environment);
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
     registerIterators(injector);
     registerJobs(injector);
-    registerMigrations(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
-
-    intializeGitSync(injector, appConfig);
-    //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
-    blockingMigrations(injector, appConfig);
+    initializeMonitoring(appConfig, injector);
+    registerObservers(injector);
+    registerOasResource(appConfig, environment, injector);
     registerManagedBeans(environment, injector);
+    initializeEnforcementService(injector, appConfig);
+    initializeEnforcementSdk(injector);
 
+    registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerOasResource(NextGenConfiguration appConfig, Environment environment, Injector injector) {
+    OpenApiResource openApiResource = injector.getInstance(OpenApiResource.class);
+    openApiResource.setOpenApiConfiguration(getOasConfig(appConfig));
+    environment.jersey().register(openApiResource);
   }
 
   private void registerQueueListeners(Injector injector) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
+  }
+
+  private static void registerObservers(Injector injector) {
+    // register Polling Framework Observer
+    PollingServiceImpl pollingService = (PollingServiceImpl) injector.getInstance(Key.get(PollingService.class));
+    pollingService.getSubject().register(injector.getInstance(Key.get(PollingPerpetualTaskManager.class)));
+
+    HMongoTemplate mongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
+    mongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerMigrations(Injector injector) {
@@ -315,14 +390,21 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
           { add(NGCoreMigrationProvider.class); } // Add all migration provider classes here
           { add(ProjectMigrationProvider.class); }
+          { add(UserMembershipMigrationProvider.class); }
+          { add(NGBeanMigrationProvider.class); }
+          { add(InstanceMigrationProvider.class); }
+          { add(UserMetadataMigrationProvider.class); }
+          { add(LicenseManagerMigrationProvider.class); }
+          { add(SourceCodeManagerMigrationProvider.class); }
+          { add(GitSyncMigrationProvider.class); }
         })
         .build();
   }
 
-  private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
-    //    This is is temporary one time blocking migration
-    if (appConfig.isEnableDefaultResourceGroupCreation()) {
-      injector.getInstance(DefaultResourceGroupCreationService.class).defaultResourceGroupCreationJob();
+  private void initializeMonitoring(NextGenConfiguration appConfig, Injector injector) {
+    if (appConfig.isExportMetricsToStackDriver()) {
+      injector.getInstance(MetricService.class).initializeMetrics();
+      injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
     }
   }
 
@@ -370,8 +452,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public void registerIterators(Injector injector) {
+    injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
-    injector.getInstance(UserMembershipMigrationService.class).registerIterators();
+    injector.getInstance(InstanceStatsIteratorHandler.class).registerIterators();
+    injector.getInstance(GitFullSyncEntityIterator.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
@@ -401,6 +485,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 2);
   }
 
   private void registerYamlSdk(Injector injector) {
@@ -418,7 +503,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       try {
         PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
       } catch (Exception e) {
-        log.error("Failed To register pipeline sdk");
+        log.error("Failed To register pipeline sdk", e);
         System.exit(1);
       }
     }
@@ -429,25 +514,75 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
       remote = true;
     }
+
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .moduleType(ModuleType.CD)
         .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
         .pipelineServiceInfoProviderClass(CDNGPlanCreatorProvider.class)
+        .staticAliases(getStaticAliases())
+        .sdkFunctors(getSdkFunctors())
         .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
+        .engineEventHandlersMap(getOrchestrationEventHandlers())
+        .executionPoolConfig(ThreadPoolConfig.builder().corePoolSize(20).maxPoolSize(100).idleTime(120L).build())
+        .orchestrationEventPoolConfig(
+            ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
+  }
+
+  private Map<String, String> getStaticAliases() {
+    Map<String, String> aliases = new HashMap<>();
+    aliases.put("serviceConfig", "stage.spec.serviceConfig");
+    aliases.put("serviceDefinition", "stage.spec.serviceConfig.serviceDefinition");
+    aliases.put("artifact", "stage.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.output");
+    aliases.put("infra", "stage.spec.infrastructure.output");
+    aliases.put("INFRA_KEY", "stage.spec.infrastructure.output.infrastructureKey");
+    return aliases;
+  }
+
+  private Map<String, Class<? extends SdkFunctor>> getSdkFunctors() {
+    Map<String, Class<? extends SdkFunctor>> sdkFunctorMap = new HashMap<>();
+    sdkFunctorMap.put(ImagePullSecretFunctor.IMAGE_PULL_SECRET, ImagePullSecretFunctor.class);
+    return sdkFunctorMap;
+  }
+
+  private Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getOrchestrationEventHandlers() {
+    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> orchestrationEventTypeSetHashMap =
+        new HashMap<>();
+    List<Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>>> orchestrationEventHandlersList =
+        new ArrayList<>(Arrays.asList(CdngOrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(),
+            DeploymentEventListenerRegistrar.getEngineEventHandlers(),
+            DeploymentEventGenerator.getEngineEventHandlers()));
+    orchestrationEventHandlersList.forEach(
+        orchestrationEventHandlers -> mergeEventHandlers(orchestrationEventTypeSetHashMap, orchestrationEventHandlers));
+    return orchestrationEventTypeSetHashMap;
+  }
+
+  private void mergeEventHandlers(
+      Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> finalHandlers,
+      Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> handlers) {
+    for (Map.Entry<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> entry :
+        handlers.entrySet()) {
+      if (finalHandlers.containsKey(entry.getKey())) {
+        Set<Class<? extends OrchestrationEventHandler>> existing = finalHandlers.get(entry.getKey());
+        existing.addAll(entry.getValue());
+        finalHandlers.put(entry.getKey(), existing);
+      } else {
+        finalHandlers.put(entry.getKey(), entry.getValue());
+      }
+    }
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
-    environment.lifecycle().manage(injector.getInstance(UserProjectMigrationService.class));
+    environment.lifecycle().manage(injector.getInstance(AccessControlMigrationJob.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 
@@ -469,11 +604,38 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
+  private OpenAPIConfiguration getOasConfig(NextGenConfiguration appConfig) {
+    OpenAPI oas = new OpenAPI();
+    Info info =
+        new Info()
+            .title("CD NextGen API Reference")
+            .description(
+                "This is the Open Api Spec 3 for the NextGen Manager. This is under active development. Beware of the breaking change with respect to the generated code stub")
+            .termsOfService("https://harness.io/terms-of-use/")
+            .version("3.0")
+            .contact(new Contact().email("contact@harness.io"));
+    oas.info(info);
+    URL baseurl = null;
+    try {
+      baseurl = new URL("https", appConfig.getHostname(), appConfig.getBasePathPrefix());
+      Server server = new Server();
+      server.setUrl(baseurl.toString());
+      oas.servers(Collections.singletonList(server));
+    } catch (MalformedURLException e) {
+      log.error("failed to set baseurl for server, {}/{}", appConfig.hostname, appConfig.getBasePathPrefix());
+    }
+    Set<String> packages = NextGenConfiguration.getUniquePackagesContainingResources();
+    return new SwaggerConfiguration().openAPI(oas).prettyPrint(true).resourcePackages(packages).scannerClass(
+        "io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
+  }
+
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(KryoFeature.class));
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(OptimisticLockingFailureExceptionMapper.class);
     environment.jersey().register(NotFoundExceptionMapper.class);
+    environment.jersey().register(InvalidUserRemoveRequestExceptionMapper.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);
   }
@@ -519,16 +681,31 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(InstanceAccountInfoRunnable.class), 0, 6, TimeUnit.HOURS);
   }
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      registerNextGenAuthFilter(configuration, environment);
+      registerNextGenAuthFilter(
+          configuration, environment, injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))));
       registerInternalApiAuthFilter(configuration, environment);
     }
   }
 
-  private void registerNextGenAuthFilter(NextGenConfiguration configuration, Environment environment) {
+  private void registerScopeAccessCheckFilter(
+      NextGenConfiguration configuration, Environment environment, Injector injector) {
+    if (configuration.isScopeAccessCheckEnabled()) {
+      AccessControlClient accessControlClient = injector.getInstance(AccessControlClient.class);
+      environment.jersey().register(
+          new NGScopeAccessCheckFilter(Arrays.asList(bypassInterMsvcRequests(), bypassPublicApi(), bypassInternalApi(),
+                                           bypassPaths(Arrays.asList("/version", "/swagger", "/swagger.json"))),
+              accessControlClient));
+    }
+  }
+
+  private void registerNextGenAuthFilter(
+      NextGenConfiguration configuration, Environment environment, TokenClient tokenClient) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
         (getAuthenticationExemptedRequestsPredicate().negate())
             .and((getAuthFilterPredicate(InternalApi.class)).negate());
@@ -537,7 +714,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     serviceToSecretMapping.put(
         IDENTITY_SERVICE.getServiceId(), configuration.getNextGenConfig().getJwtIdentityServiceSecret());
     serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
-    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    environment.jersey().register(
+        new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping, tokenClient));
   }
 
   private void registerInternalApiAuthFilter(NextGenConfiguration configuration, Environment environment) {
@@ -553,6 +731,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
             -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/openapi.json")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
                     "/swagger.yaml"));
   }
@@ -564,5 +743,32 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
         || (resourceInfoAndRequest.getKey().getResourceClass() != null
             && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
+  }
+
+  private void initializeEnforcementService(Injector injector, NextGenConfiguration configuration) {
+    injector.getInstance(FeatureRestrictionLoader.class).run(configuration);
+  }
+
+  private void initializeEnforcementSdk(Injector injector) {
+    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
+        RestrictionUsageRegisterConfiguration.builder()
+            .restrictionNameClassMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
+                    .put(FeatureRestrictionName.TEST2, ExampleStaticLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST3, ExampleRateLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.MULTIPLE_PROJECTS, ProjectRestrictionsUsageImpl.class)
+                    .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
+                    .build())
+            .build();
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
+                    .put(FeatureRestrictionName.TEST4, ExampleCustomImpl.class)
+                    .build())
+            .build();
+
+    injector.getInstance(EnforcementSdkRegisterService.class)
+        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }

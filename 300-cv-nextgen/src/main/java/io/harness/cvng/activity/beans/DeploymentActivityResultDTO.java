@@ -28,12 +28,28 @@ public class DeploymentActivityResultDTO {
     Long durationMs;
     Risk risk;
     String environmentName;
-    String jobName;
+    @Deprecated String jobName;
     String verificationJobInstanceId;
     String activityId;
     long activityStartTime;
     ActivityVerificationStatus status;
     AdditionalInfo additionalInfo;
+    TimeSeriesAnalysisSummary timeSeriesAnalysisSummary;
+    LogsAnalysisSummary logsAnalysisSummary;
+  }
+
+  @Value
+  @Builder
+  public static class TimeSeriesAnalysisSummary {
+    int totalNumMetrics;
+    int numAnomMetrics;
+  }
+
+  @Value
+  @Builder
+  public static class LogsAnalysisSummary {
+    int totalClusterCount;
+    int anomalousClusterCount;
   }
 
   @Value

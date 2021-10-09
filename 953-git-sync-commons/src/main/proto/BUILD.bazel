@@ -17,10 +17,6 @@ proto_library(
 
 harness_grpc_library(
     name = "953_git_sync_java_contracts_proto",
-    java_deps = [
-        "//980-commons:module",
-    ],
-    java_sources = glob(["**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         ":953_git_sync_contracts_proto",

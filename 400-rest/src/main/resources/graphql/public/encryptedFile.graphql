@@ -7,3 +7,10 @@ type EncryptedFile implements Secret {
   scopedToAccount: Boolean
   inheritScopesFromSM: Boolean
 }
+input EncryptedFileInput {
+  secretManagerId: String
+  name: String!
+  usageScope: UsageScopeInput
+  scopedToAccount: Boolean
+  inheritScopesFromSM: Boolean
+}

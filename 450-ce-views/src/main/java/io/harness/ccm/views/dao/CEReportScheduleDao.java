@@ -1,5 +1,7 @@
 package io.harness.ccm.views.dao;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.entities.CEReportSchedule.CEReportScheduleKeys;
 import io.harness.persistence.HPersistence;
@@ -12,6 +14,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class CEReportScheduleDao {
   @Inject private HPersistence persistence;
@@ -65,6 +68,7 @@ public class CEReportScheduleDao {
             .set(CEReportScheduleKeys.name, schedule.getName())
             .set(CEReportScheduleKeys.description, schedule.getDescription())
             .set(CEReportScheduleKeys.recipients, schedule.getRecipients())
+            .set(CEReportScheduleKeys.userCronTimeZone, schedule.getUserCronTimeZone())
             .set(CEReportScheduleKeys.nextExecution, schedule.getNextExecution());
     persistence.update(query, updateOperations);
     log.info(query.toString());

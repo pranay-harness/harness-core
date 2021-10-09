@@ -31,7 +31,6 @@ public abstract class StackdriverRequest extends DataCollectionRequest<GcpConnec
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    return StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
+    return StackdriverUtils.getCommonEnvVariables(getConnectorConfigDTO(), METRIC_SCOPE);
   }
 }

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
@@ -26,7 +27,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DelegateSelectionLogResourceTest {
+public class DelegateSelectionLogResourceTest extends CategoryTest {
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
   private static DelegateSelectionLogsService delegateSelectionLogsService = mock(DelegateSelectionLogsService.class);
 

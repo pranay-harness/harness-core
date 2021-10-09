@@ -78,7 +78,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(CI)
 public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementParameters, K8sTaskExecutionResponse> {
-  public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
+  public static final String TASK_TYPE_INITIALIZATION_PHASE = "INITIALIZATION_PHASE";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
@@ -130,7 +130,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
     final TaskData taskData = TaskData.builder()
                                   .async(true)
                                   .timeout(stepParameters.getTimeout())
-                                  .taskType(TASK_TYPE_CI_BUILD)
+                                  .taskType(TASK_TYPE_INITIALIZATION_PHASE)
                                   .parameters(new Object[] {buildSetupTaskParams})
                                   .build();
 
@@ -138,8 +138,9 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier)
+      throws Exception {
     K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
 
     LiteEngineTaskStepInfo stepParameters = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();

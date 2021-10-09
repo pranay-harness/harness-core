@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.AMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -18,7 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ExecutionConfigOverrideFromFileOnDelegateTest {
+public class ExecutionConfigOverrideFromFileOnDelegateTest extends CategoryTest {
   private static final String TEST_VALUE = "testValue";
   private static final String TEST_KEY = "testKey";
   private static final String TEXT_WHICH_IS_NOT_JSON = "Random Text which is not json";

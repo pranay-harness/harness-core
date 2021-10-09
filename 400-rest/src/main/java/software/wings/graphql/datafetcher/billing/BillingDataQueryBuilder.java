@@ -52,7 +52,6 @@ import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.service.impl.EnvironmentServiceImpl;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.AliasedObject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -146,6 +145,11 @@ public class BillingDataQueryBuilder {
     if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName)
         && !isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Namespace)) {
       groupBy.add(0, QLCCMEntityGroupBy.Namespace);
+    } else if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Namespace)) {
+      filters.add(
+          QLBillingDataFilter.builder()
+              .instanceType(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"K8S_PV"}).build())
+              .build());
     }
     // Reorder group by entity list to first group by cluster/application
     groupBy = getGroupByOrderedByDrillDown(groupBy);
@@ -1533,9 +1537,8 @@ public class BillingDataQueryBuilder {
 
   private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
     CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
-    if ((null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
-            && ceMetadataRecord.getAwsDataPresent())
-        || ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg").contains(accountId)) {
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
+        && ceMetadataRecord.getAwsDataPresent()) {
       return false;
     }
     if (null != ceMetadataRecord && null != ceMetadataRecord.getAzureDataPresent()

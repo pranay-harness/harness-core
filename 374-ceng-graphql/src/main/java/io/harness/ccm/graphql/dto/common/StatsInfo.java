@@ -10,6 +10,6 @@ public class StatsInfo {
   @GraphQLNonNull String statsLabel;
   @GraphQLNonNull String statsDescription;
   @GraphQLNonNull String statsValue;
-  @GraphQLNonNull Number statsTrend;
-  @GraphQLNonNull Number value;
+  Number statsTrend;
+  Number value;
 }

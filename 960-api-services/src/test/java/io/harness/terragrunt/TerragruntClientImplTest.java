@@ -22,6 +22,8 @@ import io.harness.rule.Owner;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
 import org.junit.Before;
@@ -72,9 +74,19 @@ public class TerragruntClientImplTest extends CategoryTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testInit() throws Exception {
+  public void testInitWithBackendConfig() throws Exception {
+    Files.createFile(Paths.get(terragruntCliCommandRequestParams.getBackendConfigFilePath()));
     terragruntClient.init(terragruntCliCommandRequestParams, logCallback);
     assertThat(getTerraguntCommandPassedToExecutor()).isEqualTo("terragrunt init -backend-config=backendConfigPath");
+    Files.deleteIfExists(Paths.get(terragruntCliCommandRequestParams.getBackendConfigFilePath()));
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testInit() throws Exception {
+    terragruntClient.init(terragruntCliCommandRequestParams, logCallback);
+    assertThat(getTerraguntCommandPassedToExecutor()).isEqualTo("terragrunt init");
   }
 
   @Test
@@ -208,10 +220,20 @@ public class TerragruntClientImplTest extends CategoryTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testRunAllInit() throws Exception {
+  public void testRunAllInitWithBackendConfig() throws Exception {
+    Files.createFile(Paths.get(terragruntCliCommandRequestParams.getBackendConfigFilePath()));
     terragruntClient.runAllInit(terragruntCliCommandRequestParams, logCallback);
     assertThat(getTerraguntCommandPassedToExecutor())
         .isEqualTo("terragrunt run-all init -backend-config=backendConfigPath");
+    Files.deleteIfExists(Paths.get(terragruntCliCommandRequestParams.getBackendConfigFilePath()));
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testRunAllInit() throws Exception {
+    terragruntClient.runAllInit(terragruntCliCommandRequestParams, logCallback);
+    assertThat(getTerraguntCommandPassedToExecutor()).isEqualTo("terragrunt run-all init");
   }
 
   @Test

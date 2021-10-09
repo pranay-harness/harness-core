@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.api.DeploymentType.AMI;
@@ -32,7 +32,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @Builder
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 @OwnedBy(CDP)
 public class InfrastructureMappingBlueprint {
   public static final String CLOUD_PROVIDER_TYPE_KEY = "cloudProviderType";

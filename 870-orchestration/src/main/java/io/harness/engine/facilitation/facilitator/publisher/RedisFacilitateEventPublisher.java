@@ -6,9 +6,9 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.engine.pms.data.PmsTransputHelper;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.facilitators.FacilitatorEvent;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,20 +22,20 @@ public class RedisFacilitateEventPublisher implements FacilitateEventPublisher {
   @Override
   public String publishEvent(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    PlanNode planNode = nodeExecution.getNode();
     FacilitatorEvent event = FacilitatorEvent.newBuilder()
                                  .setNodeExecutionId(nodeExecutionId)
                                  .setAmbiance(nodeExecution.getAmbiance())
                                  .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-                                 .setStepType(nodeExecution.getNode().getStepType())
+                                 .setStepType(planNode.getStepType())
                                  .setNotifyId(generateUuid())
-                                 .addAllResolvedInput(transputHelper.resolveInputs(
-                                     nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
-                                 .addAllFacilitatorObtainments(nodeExecution.getNode().getFacilitatorObtainmentsList())
+        .addAllResolvedInput(transputHelper.resolveInputs(
+            nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
+                                 .addAllFacilitatorObtainments(planNode.getFacilitatorObtainments())
                                  .build();
 
-    String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
+    String serviceName = planNode.getServiceName();
     return eventSender.sendEvent(
-        event.toByteString(), PmsEventCategory.FACILITATOR_EVENT, serviceName, accountId, true);
+        nodeExecution.getAmbiance(), event.toByteString(), PmsEventCategory.FACILITATOR_EVENT, serviceName, true);
   }
 }

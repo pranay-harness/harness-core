@@ -17,6 +17,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.git.GitClientHelper;
 import io.harness.product.ci.scm.proto.BitbucketCloudProvider;
 import io.harness.product.ci.scm.proto.BitbucketServerProvider;
@@ -150,17 +151,25 @@ public class ScmGitProviderMapper {
     if (githubService == null) {
       throw new NotImplementedException("Token for Github App is only supported on delegate");
     }
-    return githubService.getToken(GithubAppConfig.builder()
-                                      .appId(apiAccessDTO.getApplicationId())
-                                      .installationId(apiAccessDTO.getInstallationId())
-                                      .privateKey(String.valueOf(apiAccessDTO.getPrivateKeyRef().getDecryptedValue()))
-                                      .githubUrl(GitClientHelper.getGithubApiURL(githubConnector.getUrl()))
-                                      .build());
+
+    try {
+      return githubService.getToken(GithubAppConfig.builder()
+                                        .appId(apiAccessDTO.getApplicationId())
+                                        .installationId(apiAccessDTO.getInstallationId())
+                                        .privateKey(String.valueOf(apiAccessDTO.getPrivateKeyRef().getDecryptedValue()))
+                                        .githubUrl(GitClientHelper.getGithubApiURL(githubConnector.getUrl()))
+                                        .build());
+    } catch (Exception ex) {
+      throw new InvalidArgumentsException("Failed to generate token for github connector via git hub app ");
+    }
   }
 
   private String getAccessToken(GithubConnectorDTO githubConnector) {
     GithubApiAccessDTO apiAccess = githubConnector.getApiAccess();
     GithubTokenSpecDTO apiAccessDTO = (GithubTokenSpecDTO) apiAccess.getSpec();
+    if (apiAccessDTO.getTokenRef() == null || apiAccessDTO.getTokenRef().getDecryptedValue() == null) {
+      throw new InvalidArgumentsException("The personal access token is not set");
+    }
     return String.valueOf(apiAccessDTO.getTokenRef().getDecryptedValue());
   }
 }

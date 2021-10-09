@@ -1,9 +1,13 @@
 package io.harness.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.pcf.PcfUtils.encodeColor;
+import static io.harness.pcf.PcfUtils.getIntegerSafe;
+import static io.harness.pcf.PcfUtils.getRevisionFromServiceName;
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__INACTIVE__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
@@ -27,6 +31,7 @@ import io.harness.logging.LogLevel;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfConfig;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.pcf.model.CfRunPluginScriptRequestData;
 
@@ -37,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -284,17 +290,50 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
     try {
       List<ApplicationSummary> applicationSummaries = cfSdkClient.getApplications(cfRequestConfig);
       if (CollectionUtils.isEmpty(applicationSummaries)) {
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
       }
 
       return applicationSummaries.stream()
-          .filter(applicationSummary -> matchesPrefix(prefix, applicationSummary))
-          .sorted(comparingInt(applicationSummary -> getRevisionFromServiceName(applicationSummary.getName())))
+          .filter(applicationSummary -> matchesPrefix2(prefix, applicationSummary.getName()))
+          .sorted(Comparator.comparing(ApplicationSummary::getName,
+              (name1, name2) -> {
+                String suffix1 = getLowerCaseSuffix(name1, prefix);
+                String suffix2 = getLowerCaseSuffix(name2, prefix);
+                String inactiveIdentifier = HARNESS__INACTIVE__IDENTIFIER.toLowerCase();
+                String stageIdentifier = HARNESS__STAGE__IDENTIFIER.toLowerCase();
+
+                if (suffix1.equals(stageIdentifier) || suffix2.equals(stageIdentifier)) {
+                  return suffix1.equals(stageIdentifier) ? (suffix2.equals(stageIdentifier) ? 0 : 1) : -1;
+                } else if (suffix1.isEmpty() || suffix2.isEmpty()) {
+                  return suffix1.isEmpty() ? (suffix2.isEmpty() ? 0 : 1) : -1;
+                } else if (suffix1.equals(inactiveIdentifier) || suffix2.equals(inactiveIdentifier)) {
+                  return suffix1.equals(inactiveIdentifier) ? (suffix2.equals(inactiveIdentifier) ? 0 : 1) : -1;
+                } else {
+                  return getIntegerSafe(suffix1).compareTo(getIntegerSafe(suffix2));
+                }
+              }))
           .collect(toList());
 
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  /**
+   * Use this with #matchesPrefix2
+   * @param input name of application
+   * @param prefix prefix
+   * @return
+   */
+  private static String getLowerCaseSuffix(String input, String prefix) {
+    input = input.toLowerCase();
+    prefix = prefix.toLowerCase();
+
+    String suffix = input.substring(prefix.length());
+    if (suffix.startsWith(DELIMITER)) {
+      suffix = suffix.substring(DELIMITER.length());
+    }
+    return suffix;
   }
 
   @VisibleForTesting
@@ -308,11 +347,48 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
     return getAppPrefixByRemovingNumber(applicationSummary.getName()).equalsIgnoreCase(prefix);
   }
 
+  @VisibleForTesting
+  boolean matchesPrefix2(String prefix, String appName) {
+    boolean prefixMatches = appName.toLowerCase().startsWith(prefix.toLowerCase());
+    if (prefixMatches) {
+      String suffix = appName.substring(prefix.length());
+      prefixMatches = isValidRevisionSuffix(suffix);
+    }
+    return prefixMatches;
+  }
+
+  boolean isValidRevisionSuffix(String suffix) {
+    boolean result = suffix.length() == 0 || suffix.equalsIgnoreCase(DELIMITER + HARNESS__INACTIVE__IDENTIFIER)
+        || suffix.equalsIgnoreCase(DELIMITER + HARNESS__STAGE__IDENTIFIER);
+    if (!result && suffix.startsWith(DELIMITER)) {
+      suffix = suffix.substring(DELIMITER.length());
+      result = getIntegerSafe(suffix) != -1;
+    }
+    return result;
+  }
+
   @Override
   public void deleteApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException {
     try {
       cfSdkClient.deleteApplication(cfRequestConfig);
     } catch (Exception e) {
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  @Override
+  public void renameApplication(CfRenameRequest cfRenameRequest, LogCallback logCallback)
+      throws PivotalClientApiException {
+    if (cfRenameRequest.getName().equals(cfRenameRequest.getNewName())) {
+      return;
+    }
+    try {
+      logCallback.saveExecutionLog(String.format(
+          "Renaming app %s to %s", encodeColor(cfRenameRequest.getName()), encodeColor(cfRenameRequest.getNewName())));
+      cfSdkClient.renameApplication(cfRenameRequest);
+    } catch (Exception e) {
+      logCallback.saveExecutionLog(String.format("Failed to rename app %s to %s",
+          encodeColor(cfRenameRequest.getName()), encodeColor(cfRenameRequest.getNewName())));
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
@@ -434,6 +510,20 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
   }
 
   @Override
+  public boolean isInActiveApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException {
+    ApplicationEnvironments applicationEnvironments = cfSdkClient.getApplicationEnvironmentsByName(cfRequestConfig);
+    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
+      for (String statusKey : STATUS_ENV_VARIABLES) {
+        if (applicationEnvironments.getUserProvided().containsKey(statusKey)
+            && HARNESS__STAGE__IDENTIFIER.equals(applicationEnvironments.getUserProvided().get(statusKey))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  @Override
   public void setEnvironmentVariableForAppStatus(CfRequestConfig cfRequestConfig, boolean activeStatus,
       LogCallback executionLogCallback) throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
@@ -525,20 +615,6 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
         .append(", Details: ")
         .append(applicationDetail.toString())
         .toString();
-  }
-
-  public static int getRevisionFromServiceName(String name) {
-    if (name != null) {
-      int index = name.lastIndexOf(DELIMITER);
-      if (index >= 0) {
-        try {
-          return Integer.parseInt(name.substring(index + DELIMITER.length()));
-        } catch (NumberFormatException e) {
-          // Ignore
-        }
-      }
-    }
-    return -1;
   }
 
   public String getAppPrefixByRemovingNumber(String name) {

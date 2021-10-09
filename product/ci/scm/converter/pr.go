@@ -16,7 +16,7 @@ func ConvertPRHook(h *scm.PullRequestHook) (*pb.PullRequestHook, error) {
 	if err != nil {
 		return nil, err
 	}
-	pr, err := convertPR(&h.PullRequest)
+	pr, err := ConvertPR(&h.PullRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func ConvertPRHook(h *scm.PullRequestHook) (*pb.PullRequestHook, error) {
 }
 
 // convertPR converts scm.PullRequest to protobuf object
-func convertPR(pr *scm.PullRequest) (*pb.PullRequest, error) {
+func ConvertPR(pr *scm.PullRequest) (*pb.PullRequest, error) {
 	author, err := convertUser(&pr.Author)
 	if err != nil {
 		return nil, err

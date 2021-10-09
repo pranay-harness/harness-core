@@ -3,6 +3,7 @@ package io.harness.delegate.task.helm;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GCS_HELM;
@@ -35,6 +36,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.chartmuseum.ChartMuseumServer;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
@@ -44,6 +46,7 @@ import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
+import io.harness.delegate.exception.ManifestCollectionException;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
@@ -56,6 +59,7 @@ import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.LogCallback;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -69,10 +73,16 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -88,6 +98,7 @@ public class HelmTaskHelperBase {
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private NGChartMuseumService ngChartMuseumService;
+  @Inject private SecretDecryptionService decryptionService;
 
   public void initHelm(String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) throws IOException {
     String helmHomePath = getHelmHomePath(workingDirectory);
@@ -100,12 +111,12 @@ public class HelmTaskHelperBase {
       helmInitCommand = applyHelmHomePath(helmInitCommand, workingDirectory);
       log.info("Initing helm. Command " + helmInitCommand);
 
-      ProcessResult processResult =
-          executeCommand(helmInitCommand, workingDirectory, "Initing helm Command " + helmInitCommand, timeoutInMillis);
+      ProcessResult processResult = executeCommand(helmInitCommand, workingDirectory,
+          "Initing helm Command " + helmInitCommand, timeoutInMillis, HelmCliCommandType.INIT);
       if (processResult.getExitValue() != 0) {
         throw new HelmClientException(
             "Failed to init helm. Executed command " + helmInitCommand + ". " + processResult.getOutput().getUTF8(),
-            USER);
+            USER, HelmCliCommandType.INIT);
       }
     }
   }
@@ -120,12 +131,12 @@ public class HelmTaskHelperBase {
     log.info(repoAddCommandForLogging);
     log.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
 
-    ProcessResult processResult = executeCommand(
-        repoAddCommand, chartDirectory, "add helm repo. Executed command" + repoAddCommandForLogging, timeoutInMillis);
+    ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory,
+        "add helm repo. Executed command" + repoAddCommandForLogging, timeoutInMillis, HelmCliCommandType.REPO_ADD);
     if (processResult.getExitValue() != 0) {
       throw new HelmClientException("Failed to add helm repo. Executed command " + repoAddCommandForLogging + ". "
               + processResult.getOutput().getUTF8(),
-          USER);
+          USER, HelmCliCommandType.REPO_ADD);
     }
   }
 
@@ -187,7 +198,8 @@ public class HelmTaskHelperBase {
     return isBlank(passwordAsString) ? "" : "--password " + passwordAsString;
   }
 
-  public ProcessResult executeCommand(String command, String directoryPath, String errorMessage, long timeoutInMillis) {
+  public ProcessResult executeCommand(String command, String directoryPath, String errorMessage, long timeoutInMillis,
+      HelmCliCommandType helmCliCommandType) {
     errorMessage = isEmpty(errorMessage) ? "" : errorMessage;
     ProcessExecutor processExecutor = createProcessExecutor(command, directoryPath, timeoutInMillis);
 
@@ -195,12 +207,12 @@ public class HelmTaskHelperBase {
       return processExecutor.execute();
     } catch (IOException e) {
       // Not setting the cause here because it carries forward the commands which can contain passwords
-      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER);
+      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, helmCliCommandType);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER);
+      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, helmCliCommandType);
     } catch (TimeoutException | UncheckedTimeoutException e) {
-      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER);
+      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, helmCliCommandType);
     }
   }
 
@@ -228,8 +240,8 @@ public class HelmTaskHelperBase {
     try {
       String repoRemoveCommand = getRepoRemoveCommand(repoName, workingDirectory, helmVersion);
 
-      ProcessResult processResult =
-          executeCommand(repoRemoveCommand, null, format("remove helm repo %s", repoName), timeoutInMillis);
+      ProcessResult processResult = executeCommand(repoRemoveCommand, null, format("remove helm repo %s", repoName),
+          timeoutInMillis, HelmCliCommandType.REPO_REMOVE);
       if (processResult.getExitValue() != 0) {
         log.warn("Failed to remove helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
       }
@@ -288,8 +300,8 @@ public class HelmTaskHelperBase {
       String chartName, String chartDirectory, String repoDisplayName, String helmFetchCommand, long timeoutInMillis) {
     log.info(helmFetchCommand);
 
-    ProcessResult processResult =
-        executeCommand(helmFetchCommand, chartDirectory, format("fetch chart %s", chartName), timeoutInMillis);
+    ProcessResult processResult = executeCommand(helmFetchCommand, chartDirectory, format("fetch chart %s", chartName),
+        timeoutInMillis, HelmCliCommandType.FETCH);
     if (processResult.getExitValue() != 0) {
       StringBuilder builder = new StringBuilder().append("Failed to fetch chart \"").append(chartName).append("\" ");
 
@@ -370,12 +382,12 @@ public class HelmTaskHelperBase {
     log.info(repoAddCommand);
     log.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
 
-    ProcessResult processResult =
-        executeCommand(repoAddCommand, chartDirectory, ADD_COMMAND_FOR_REPOSITORY + repoDisplayName, timeoutInMillis);
+    ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory,
+        ADD_COMMAND_FOR_REPOSITORY + repoDisplayName, timeoutInMillis, HelmCliCommandType.REPO_ADD);
     if (processResult.getExitValue() != 0) {
       throw new HelmClientException(
           "Failed to add helm repo. Executed command " + repoAddCommand + ". " + processResult.getOutput().getUTF8(),
-          USER);
+          USER, HelmCliCommandType.REPO_ADD);
     }
   }
 
@@ -598,5 +610,224 @@ public class HelmTaskHelperBase {
     }
 
     return HelmChartInfo.builder().version(chartVersion).name(chartName).build();
+  }
+
+  public List<String> fetchChartVersions(HelmChartManifestDelegateConfig helmChartManifestDelegateConfig,
+      long timeoutInMillis, String destinationDirectory) throws Exception {
+    StoreDelegateConfig helmStoreDelegateConfig = helmChartManifestDelegateConfig.getStoreDelegateConfig();
+    String workingDirectory = createDirectory(destinationDirectory);
+    initHelm(workingDirectory, helmChartManifestDelegateConfig.getHelmVersion(), timeoutInMillis);
+
+    if (HTTP_HELM == helmStoreDelegateConfig.getType()) {
+      return fetchVersionsFromHttp(helmChartManifestDelegateConfig, workingDirectory, timeoutInMillis);
+    } else {
+      return fetchVersionsUsingChartMuseumServer(helmChartManifestDelegateConfig, workingDirectory, timeoutInMillis);
+    }
+  }
+
+  String createDirectory(String directoryBase) throws IOException {
+    String workingDirectory = Paths.get(directoryBase).normalize().toAbsolutePath().toString();
+
+    createDirectoryIfDoesNotExist(workingDirectory);
+    waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
+
+    return workingDirectory;
+  }
+
+  private List<String> fetchVersionsFromHttp(
+      HelmChartManifestDelegateConfig manifest, String destinationDirectory, long timeoutInMillis) throws IOException {
+    if (!(manifest.getStoreDelegateConfig() instanceof HttpHelmStoreDelegateConfig)) {
+      throw new InvalidArgumentsException(
+          Pair.of("storeDelegateConfig", "Must be instance of HttpHelmStoreDelegateConfig"));
+    }
+
+    HttpHelmStoreDelegateConfig storeDelegateConfig = (HttpHelmStoreDelegateConfig) manifest.getStoreDelegateConfig();
+    HttpHelmConnectorDTO httpHelmConnector = storeDelegateConfig.getHttpHelmConnector();
+
+    String username = getHttpHelmUsername(httpHelmConnector);
+    char[] password = getHttpHelmPassword(httpHelmConnector);
+    addRepo(storeDelegateConfig.getRepoName(), storeDelegateConfig.getRepoDisplayName(),
+        httpHelmConnector.getHelmRepoUrl(), username, password, destinationDirectory, manifest.getHelmVersion(),
+        timeoutInMillis);
+    updateRepo(storeDelegateConfig.getRepoName(), destinationDirectory, manifest.getHelmVersion(), timeoutInMillis);
+
+    ProcessResult processResult =
+        executeCommand(fetchHelmChartVersionsCommand(manifest.getHelmVersion(), manifest.getChartName(),
+                           storeDelegateConfig.getRepoName(), destinationDirectory),
+            destinationDirectory, "Helm chart fetch versions command failed ", timeoutInMillis,
+            HelmCliCommandType.FETCH_ALL_VERSIONS);
+
+    String commandOutput = "";
+    if (processResult != null && processResult.getOutput() != null) {
+      commandOutput = processResult.getOutput().getString();
+    }
+
+    return parseHelmVersionsFromOutput(commandOutput, manifest);
+  }
+
+  public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
+    try {
+      String repoUpdateCommand = getRepoUpdateCommand(repoName, workingDirectory, helmVersion);
+      ProcessResult processResult = executeCommand(repoUpdateCommand, null, format("update helm repo %s", repoName),
+          timeoutInMillis, HelmCliCommandType.REPO_UPDATE);
+
+      log.info("Repo update command executed on delegate: {}", repoUpdateCommand);
+      if (processResult.getExitValue() != 0) {
+        log.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
+      }
+    } catch (Exception ex) {
+      log.warn(ExceptionUtils.getMessage(ex));
+    }
+  }
+
+  private String getRepoUpdateCommand(String repoName, String workingDirectory, HelmVersion helmVersion) {
+    String repoUpdateCommand =
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_UPDATE, helmVersion)
+            .replace(HELM_PATH_PLACEHOLDER, getHelmPath(helmVersion))
+            .replace("KUBECONFIG=${KUBECONFIG_PATH}", "")
+            .replace(REPO_NAME, repoName);
+
+    return applyHelmHomePath(repoUpdateCommand, workingDirectory);
+  }
+
+  public String fetchHelmChartVersionsCommand(
+      HelmVersion helmVersion, String chartName, String repoName, String workingDirectory) {
+    String helmFetchCommand =
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.FETCH_ALL_VERSIONS, helmVersion)
+            .replace(HELM_PATH_PLACEHOLDER, getHelmPath(helmVersion))
+            .replace("${CHART_NAME}", chartName);
+
+    if (isNotBlank(repoName)) {
+      helmFetchCommand = helmFetchCommand.replace(REPO_NAME, repoName);
+    } else {
+      helmFetchCommand = helmFetchCommand.replace(REPO_NAME + "/", "");
+    }
+    return applyHelmHomePath(helmFetchCommand, workingDirectory);
+  }
+
+  private List<String> parseHelmVersionsFromOutput(String commandOutput, HelmChartManifestDelegateConfig manifestConfig)
+      throws IOException {
+    String errorMessage = "No chart with the given name found. Chart might be deleted at source";
+    if (isEmpty(commandOutput) || commandOutput.contains("No results found")) {
+      throw new InvalidRequestException(errorMessage);
+    }
+
+    CSVFormat csvFormat = CSVFormat.RFC4180.withFirstRecordAsHeader().withDelimiter('\t').withTrim();
+    List<CSVRecord> records = CSVParser.parse(commandOutput, csvFormat).getRecords();
+    if (isEmpty(records)) {
+      throw new InvalidRequestException(errorMessage);
+    }
+
+    List<String> chartVersions =
+        records.stream()
+            .filter(record -> record.size() > 1 && matchesChartName(manifestConfig.getChartName(), record.get(0)))
+            .map(record -> record.get(1))
+            .collect(Collectors.toList());
+
+    if (isEmpty(chartVersions)) {
+      throw new InvalidRequestException(errorMessage);
+    }
+
+    return chartVersions;
+  }
+
+  private boolean matchesChartName(String chartName, String recordName) {
+    return Arrays.asList(recordName.split("/")).contains(chartName);
+  }
+
+  private List<String> fetchVersionsUsingChartMuseumServer(
+      HelmChartManifestDelegateConfig manifest, String destinationDirectory, long timeoutInMillis) throws Exception {
+    String resourceDirectory = null;
+    ChartMuseumServer chartMuseumServer = null;
+    String repoName = null;
+    String repoDisplayName = null;
+    StoreDelegateConfig storeDelegateConfig = manifest.getStoreDelegateConfig();
+    if (S3_HELM == storeDelegateConfig.getType()) {
+      S3HelmStoreDelegateConfig s3StoreDelegateConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
+      repoName = s3StoreDelegateConfig.getRepoName();
+      repoDisplayName = s3StoreDelegateConfig.getRepoDisplayName();
+    } else if (GCS_HELM == storeDelegateConfig.getType()) {
+      GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
+      repoName = gcsHelmStoreDelegateConfig.getRepoName();
+      repoDisplayName = gcsHelmStoreDelegateConfig.getRepoDisplayName();
+    }
+
+    try {
+      resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
+      chartMuseumServer =
+          ngChartMuseumService.startChartMuseumServer(manifest.getStoreDelegateConfig(), resourceDirectory);
+
+      addChartMuseumRepo(repoName, repoDisplayName, chartMuseumServer.getPort(), destinationDirectory,
+          manifest.getHelmVersion(), timeoutInMillis);
+      ProcessResult processResult = executeCommand(fetchHelmChartVersionsCommand(manifest.getHelmVersion(),
+                                                       manifest.getChartName(), repoName, destinationDirectory),
+          destinationDirectory, "Helm chart fetch versions command failed ", timeoutInMillis,
+          HelmCliCommandType.FETCH_ALL_VERSIONS);
+      String commandOutput = processResult.getOutput().getUTF8();
+      return parseHelmVersionsFromOutput(commandOutput, manifest);
+    } finally {
+      if (chartMuseumServer != null) {
+        ngChartMuseumService.stopChartMuseumServer(chartMuseumServer);
+      }
+    }
+  }
+
+  public void cleanupAfterCollection(
+      HelmChartManifestDelegateConfig config, String destinationDirectory, long timeoutInMillis) {
+    String workingDirectory = Paths.get(destinationDirectory).toString();
+    StoreDelegateConfig storeDelegateConfig = config.getStoreDelegateConfig();
+    String repoName;
+    switch (storeDelegateConfig.getType()) {
+      case HTTP_HELM:
+        HttpHelmStoreDelegateConfig helmStoreConfig = (HttpHelmStoreDelegateConfig) storeDelegateConfig;
+        repoName = helmStoreConfig.getRepoName();
+        break;
+      case S3_HELM:
+        S3HelmStoreDelegateConfig s3StoreConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
+        repoName = s3StoreConfig.getRepoName();
+        break;
+      case GCS_HELM:
+        GcsHelmStoreDelegateConfig gcsStoreConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
+        repoName = gcsStoreConfig.getRepoName();
+        break;
+      default:
+        throw new ManifestCollectionException("Manifest collection not supported for other helm repos");
+    }
+    removeRepo(repoName, workingDirectory, config.getHelmVersion(), timeoutInMillis);
+    cleanup(workingDirectory);
+  }
+
+  public void decryptEncryptedDetails(HelmChartManifestDelegateConfig helmChartManifestDelegateConfig) {
+    StoreDelegateConfig helmStoreDelegateConfig = helmChartManifestDelegateConfig.getStoreDelegateConfig();
+    switch (helmStoreDelegateConfig.getType()) {
+      case S3_HELM:
+        S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) helmStoreDelegateConfig;
+        List<DecryptableEntity> s3DecryptableEntityList = s3HelmStoreConfig.getAwsConnector().getDecryptableEntities();
+        if (isNotEmpty(s3DecryptableEntityList)) {
+          for (DecryptableEntity entity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
+            decryptionService.decrypt(entity, s3HelmStoreConfig.getEncryptedDataDetails());
+          }
+        }
+        break;
+      case GCS_HELM:
+        GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) helmStoreDelegateConfig;
+        List<DecryptableEntity> gcsDecryptableEntityList =
+            gcsHelmStoreDelegateConfig.getGcpConnector().getDecryptableEntities();
+        if (isNotEmpty(gcsDecryptableEntityList)) {
+          for (DecryptableEntity entity : gcsDecryptableEntityList) {
+            decryptionService.decrypt(entity, gcsHelmStoreDelegateConfig.getEncryptedDataDetails());
+          }
+        }
+        break;
+      case HTTP_HELM:
+        HttpHelmStoreDelegateConfig httpHelmStoreConfig = (HttpHelmStoreDelegateConfig) helmStoreDelegateConfig;
+        for (DecryptableEntity entity : httpHelmStoreConfig.getHttpHelmConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(entity, httpHelmStoreConfig.getEncryptedDataDetails());
+        }
+        break;
+      default:
+        throw new InvalidRequestException(
+            format("Store type: %s not supported for helm values fetch task NG", helmStoreDelegateConfig.getType()));
+    }
   }
 }

@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class IgnoreFailedInterruptHandler extends MarkStatusInterruptHandler {
   @Override
-  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
-    return super.handleInterruptStatus(interrupt, IGNORE_FAILED);
+  public Interrupt handleInterruptForNodeExecution(@NonNull @Valid Interrupt interrupt, String nodeExecutionId) {
+    return super.handleInterruptStatus(interrupt, nodeExecutionId, IGNORE_FAILED);
   }
 }

@@ -7,7 +7,6 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.category.element.UnitTests;
 import io.harness.migrations.seedata.IISInstallCommandMigration;
 import io.harness.rule.Owner;

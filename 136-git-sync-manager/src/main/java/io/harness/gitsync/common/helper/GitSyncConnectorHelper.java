@@ -68,8 +68,8 @@ public class GitSyncConnectorHelper {
       ConnectorConfigDTO connectorConfig = connector.getConnectorConfig();
       if (connectorConfig instanceof ScmConnector) {
         ScmConnector gitConnectorConfig = (ScmConnector) connector.getConnectorConfig();
-        final ScmConnector scmConnector = decryptGitApiAccessHelper.decryptScmApiAccess(gitConnectorConfig, accountId,
-            gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier());
+        final ScmConnector scmConnector = getDecryptedConnector(
+            accountId, connector.getOrgIdentifier(), connector.getProjectIdentifier(), gitConnectorConfig);
         scmConnector.setUrl(gitSyncConfigDTO.getRepo());
         return scmConnector;
       } else {
@@ -82,6 +82,29 @@ public class GitSyncConnectorHelper {
       throw new UnexpectedException(String.format(
           "No connector found with the id %s, accountId %s, orgId %s, projectId %s", gitSyncConfigDTO.getIdentifier(),
           accountId, gitSyncConfigDTO.getOrganizationIdentifier(), gitSyncConfigDTO.getProjectIdentifier()));
+    }
+  }
+
+  public ScmConnector getDecryptedConnector(
+      String accountId, String orgIdentifier, String projectIdentifier, ScmConnector connectorDTO) {
+    return decryptGitApiAccessHelper.decryptScmApiAccess(connectorDTO, accountId, projectIdentifier, orgIdentifier);
+  }
+
+  public ScmConnector getDecryptedConnector(
+      YamlGitConfigDTO gitSyncConfigDTO, String accountId, ConnectorResponseDTO connectorDTO) {
+    ConnectorInfoDTO connector = connectorDTO.getConnector();
+    ConnectorConfigDTO connectorConfig = connector.getConnectorConfig();
+    if (connectorConfig instanceof ScmConnector) {
+      ScmConnector gitConnectorConfig = (ScmConnector) connector.getConnectorConfig();
+      final ScmConnector scmConnector = decryptGitApiAccessHelper.decryptScmApiAccess(gitConnectorConfig, accountId,
+          gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier());
+      scmConnector.setUrl(gitSyncConfigDTO.getRepo());
+      return scmConnector;
+    } else {
+      throw new UnexpectedException(
+          String.format("The connector with the  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",
+              gitSyncConfigDTO.getIdentifier(), accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
+              gitSyncConfigDTO.getProjectIdentifier()));
     }
   }
 

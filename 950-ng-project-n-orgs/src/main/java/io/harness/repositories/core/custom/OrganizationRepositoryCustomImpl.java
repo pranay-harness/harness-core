@@ -3,11 +3,13 @@ package io.harness.repositories.core.custom;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,6 +39,12 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   }
 
   @Override
+  public List<String> findDistinctAccounts() {
+    return mongoTemplate.findDistinct(
+        new Query(), OrganizationKeys.accountIdentifier, Organization.class, String.class);
+  }
+
+  @Override
   public List<Organization> findAll(Criteria criteria) {
     Query query = new Query(criteria);
     return mongoTemplate.find(query, Organization.class);
@@ -53,6 +61,18 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
     Query query = new Query(criteria);
     Update update = new Update().set(OrganizationKeys.deleted, Boolean.FALSE);
     return mongoTemplate.findAndModify(query, update, Organization.class);
+  }
+
+  @Override
+  public List<Scope> findAllOrgs(Criteria criteria) {
+    Query query = new Query(criteria);
+    query.fields().include(OrganizationKeys.identifier);
+    query.fields().include(OrganizationKeys.accountIdentifier);
+    return mongoTemplate.find(query, Organization.class)
+        .stream()
+        .map(org
+            -> Scope.builder().accountIdentifier(org.getAccountIdentifier()).orgIdentifier(org.getIdentifier()).build())
+        .collect(Collectors.toList());
   }
 
   @Override

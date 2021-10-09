@@ -16,8 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MarkSuccessInterruptHandler extends MarkStatusInterruptHandler {
   @Override
-  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
-    return super.handleInterruptStatus(
-        interrupt, SUCCEEDED, EnumSet.of(Status.FAILED, Status.EXPIRED, Status.ERRORED, Status.INTERVENTION_WAITING));
+  public Interrupt handleInterruptForNodeExecution(
+      @NonNull @Valid Interrupt interrupt, @NonNull String nodeExecutionId) {
+    return super.handleInterruptStatus(interrupt, nodeExecutionId, SUCCEEDED,
+        EnumSet.of(Status.FAILED, Status.EXPIRED, Status.ERRORED, Status.INTERVENTION_WAITING));
   }
 }

@@ -7,6 +7,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetListTypePMS;
@@ -17,6 +19,22 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(PIPELINE)
 @UtilityClass
 public class PMSInputSetFilterHelper {
+  public Criteria createCriteriaForGetListForBranchAndRepo(String accountId, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, InputSetListTypePMS type) {
+    Criteria criteria =
+        createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, type, null, false);
+    GitEntityInfo gitEntityInfo = GitContextHelper.getGitEntityInfo();
+    if (gitEntityInfo != null) {
+      Criteria gitSyncCriteria = new Criteria()
+                                     .and(InputSetEntityKeys.branch)
+                                     .is(gitEntityInfo.getBranch())
+                                     .and(InputSetEntityKeys.yamlGitConfigRef)
+                                     .is(gitEntityInfo.getYamlGitConfigId());
+      criteria.andOperator(gitSyncCriteria);
+    }
+    return criteria;
+  }
+
   public Criteria createCriteriaForGetList(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, InputSetListTypePMS type, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();

@@ -2,6 +2,7 @@ package io.harness.ng.core.environment.services;
 
 import io.harness.ng.core.environment.beans.Environment;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,4 +24,6 @@ public interface EnvironmentService {
 
   boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier, Long version);
+
+  List<Environment> listAccess(Criteria criteria);
 }

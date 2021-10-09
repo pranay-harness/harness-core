@@ -13,6 +13,7 @@ import io.harness.persistence.HIterator;
 
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.WorkflowElement;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
@@ -67,6 +68,8 @@ import org.mongodb.morphia.query.Query;
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface WorkflowExecutionService extends StateStatusUpdate {
+  void refreshPipelineExecution(WorkflowExecution workflowExecution);
+
   HIterator<WorkflowExecution> executions(String appId, long startedFrom, long statedTo, Set<String> includeOnlyFields);
 
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);
@@ -82,6 +85,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, String envId, @NotNull String orchestrationId,
       @NotNull ExecutionArgs executionArgs, Trigger trigger);
+
+  int getActiveServiceCount(String accountId);
 
   WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, String envId, @NotNull String orchestrationId,
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, Trigger trigger);
@@ -181,8 +186,14 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails);
 
+  boolean approveOrRejectExecution(
+      String appId, List<String> userGroupIds, ApprovalDetails approvalDetails, ApiKeyEntry apiEntryKey);
+
   ApprovalStateExecutionData fetchApprovalStateExecutionDataFromWorkflowExecution(
       String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails);
+
+  List<ApprovalStateExecutionData> fetchApprovalStateExecutionsDataFromWorkflowExecution(
+      String appId, String workflowExecutionId);
 
   List<Artifact> getArtifactsCollected(String appId, String executionUuid);
 
@@ -215,6 +226,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       String appId, List<String> serviceIds, List<String> envIds, String workflowId);
 
   boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, String appId, String workflowId);
+
+  boolean verifyAuthorizedToAcceptOrReject(
+      List<String> userGroupIds, List<String> apiKeysUserGroupIds, String appId, String workflowId);
 
   List<WorkflowExecution> listWaitingOnDeployments(String appId, String workflowExecutionId);
 

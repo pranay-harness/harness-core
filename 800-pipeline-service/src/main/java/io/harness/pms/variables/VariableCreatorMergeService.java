@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VariableCreatorMergeService {
   private final PmsSdkHelper pmsSdkHelper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
+  @Inject private Map<String, List<String>> serviceExpressionMap;
 
   private static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
@@ -69,7 +70,7 @@ public class VariableCreatorMergeService {
         createVariablesForDependenciesRecursive(services, dependencies, metadataBuilder.build());
 
     return VariableCreationBlobResponseUtils.getMergeServiceResponse(
-        YamlUtils.writeYamlString(processedYaml), response);
+        YamlUtils.writeYamlString(processedYaml), response, serviceExpressionMap);
   }
 
   private VariablesCreationBlobResponse createVariablesForDependenciesRecursive(
@@ -87,11 +88,13 @@ public class VariableCreatorMergeService {
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
         VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
+        VariableCreationBlobResponseUtils.mergeYamlOutputProperties(responseBuilder, variablesCreationBlobResponse);
         VariableCreationBlobResponseUtils.mergeErrorResponses(responseBuilder, variablesCreationBlobResponse);
         return responseBuilder.build();
       }
       VariableCreationBlobResponseUtils.mergeDependencies(responseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
+      VariableCreationBlobResponseUtils.mergeYamlOutputProperties(responseBuilder, variablesCreationBlobResponse);
     }
 
     return responseBuilder.build();

@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.experimental.UtilityClass;
 
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class BuildDetails {
   @UtilityClass
   public static final class BuildDetailsMetadataKeys {

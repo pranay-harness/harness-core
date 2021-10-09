@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -165,6 +166,33 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
         awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfig, emptyList());
     assertThat(validateCredentialsResponse.isValid()).isFalse();
     assertThat(validateCredentialsResponse.getErrorMessage()).isEqualTo("Secret Key should not be empty");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidateAwsAccountCredentialIamOrIrsaFail() {
+    AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
+    AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
+    exception.setStatusCode(401);
+    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
+    doThrow(exception).when(mockTracker).trackEC2Call(anyString());
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).attachCredentialsAndBackoffPolicy(any(), any());
+
+    AwsConfig awsConfigIam =
+        new AwsConfig("ACCESS_KEY".toCharArray(), null, "", "", true, "", null, false, false, null, null, false, null);
+    AwsEc2ValidateCredentialsResponse validateCredentialsResponseIam =
+        awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfigIam, emptyList());
+    assertThat(validateCredentialsResponseIam.isValid()).isFalse();
+    assertThat(validateCredentialsResponseIam.getErrorMessage()).isNull();
+
+    AwsConfig awsConfigIrsa =
+        new AwsConfig("ACCESS_KEY".toCharArray(), null, "", "", false, "", null, true, false, null, null, false, null);
+    AwsEc2ValidateCredentialsResponse validateCredentialsResponseIrsa =
+        awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfigIrsa, emptyList());
+    assertThat(validateCredentialsResponseIrsa.isValid()).isFalse();
+    assertThat(validateCredentialsResponseIrsa.getErrorMessage()).isNull();
   }
 
   @Test

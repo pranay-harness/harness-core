@@ -22,6 +22,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -189,13 +190,13 @@ public class NodeExecutionMap extends LateBindingMap {
 
   private static Map<String, Object> extractFinalStepParameters(NodeExecution nodeExecution) {
     if (nodeExecution.getResolvedStepParameters() != null) {
-      Map<String, Object> stepParameters =
-          NodeExecutionUtils.extractAndProcessObject(nodeExecution.getResolvedStepParameters().toJson());
+      Map<String, Object> stepParameters = NodeExecutionUtils.extractAndProcessObject(
+          RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()));
       if (stepParameters != null) {
         return stepParameters;
       }
     }
-    return NodeExecutionUtils.extractAndProcessObject(nodeExecution.getNode().getStepParameters());
+    return NodeExecutionUtils.extractAndProcessObject(nodeExecution.getNode().getStepParameters().toJson());
   }
 
   private static Optional<Object> jsonToObject(String json) {

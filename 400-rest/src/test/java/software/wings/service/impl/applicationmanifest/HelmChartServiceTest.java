@@ -8,10 +8,13 @@ import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anySet;
+import static org.mockito.Matchers.eq;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
@@ -22,21 +25,28 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.HelmChart.HelmChartKeys;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 @OwnedBy(CDP)
 public class HelmChartServiceTest extends WingsBaseTest {
   private String APPLICATION_MANIFEST_ID = "APPLICATION_MANIFEST_ID";
   @Inject private HPersistence persistence;
 
-  @Inject private HelmChartService helmChartService;
+  @Mock private ApplicationManifestService applicationManifestService;
+  @Inject @InjectMocks private HelmChartService helmChartService;
 
   private HelmChart helmChart = generateHelmChartWithVersion("1.0");
 
@@ -60,7 +70,7 @@ public class HelmChartServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = INDER)
+  @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void testListHelmChartsForService() {
     helmChartService.create(helmChart);
@@ -73,16 +83,30 @@ public class HelmChartServiceTest extends WingsBaseTest {
                                  .build();
 
     helmChartService.create(newHelmChart);
+    HelmChart newHelmChart2 = HelmChart.builder()
+                                  .accountId(ACCOUNT_ID)
+                                  .appId(APP_ID)
+                                  .uuid("uuid2")
+                                  .applicationManifestId(APPLICATION_MANIFEST_ID + 2)
+                                  .serviceId(SERVICE_ID)
+                                  .build();
+
+    helmChartService.create(newHelmChart2);
     List<HelmChart> helmCharts =
         helmChartService.listHelmChartsForService(aPageRequest()
                                                       .addFilter(HelmChartKeys.appId, EQ, APP_ID)
                                                       .addFilter(HelmChartKeys.serviceId, EQ, SERVICE_ID)
                                                       .build());
-    assertThat(helmCharts).containsOnly(helmChart);
+    assertThat(helmCharts).containsExactlyInAnyOrder(helmChart, newHelmChart2);
 
-    helmCharts = helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, new PageRequest<>());
+    Mockito.when(applicationManifestService.getNamesForIds(eq(APP_ID), anySet()))
+        .thenReturn(ImmutableMap.of(
+            APPLICATION_MANIFEST_ID, APP_MANIFEST_NAME, APPLICATION_MANIFEST_ID + 2, APP_MANIFEST_NAME + 2));
+    Map<String, List<HelmChart>> appManifestHelmChartMap =
+        helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, null, new PageRequest<>());
 
-    assertThat(helmCharts).containsOnly(helmChart);
+    assertThat(appManifestHelmChartMap.get(APP_MANIFEST_NAME)).containsOnly(helmChart);
+    assertThat(appManifestHelmChartMap.get(APP_MANIFEST_NAME + 2)).containsOnly(newHelmChart2);
   }
 
   @Test

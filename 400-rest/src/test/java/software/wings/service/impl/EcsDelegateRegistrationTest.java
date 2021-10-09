@@ -24,6 +24,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.ff.FeatureFlagService;
@@ -50,6 +52,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class EcsDelegateRegistrationTest extends WingsBaseTest {
   DelegateServiceImpl delegateService;
   @Mock HPersistence persistence;
@@ -373,7 +376,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .getDelegateUsingSequenceNum(anyString(), anyString(), anyString());
 
     mockWingsPersistanceForUpdateCall();
-    doNothing().when(delegateService).delete(anyString(), anyString(), eq(true));
+    doNothing().when(delegateService).delete(anyString(), anyString());
 
     DelegateSequenceConfig config =
         delegateService.getInactiveDelegateSequenceConfigToReplace(delegate, existingDelegateSequenceConfigs);
@@ -388,7 +391,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     // existing delegate assocaited to stale sequenceConfig is deleted
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(delegateService).delete(anyString(), captor.capture(), eq(true));
+    verify(delegateService).delete(anyString(), captor.capture());
     assertThat(captor.getValue()).isEqualTo("12345");
   }
 

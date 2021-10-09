@@ -7,12 +7,14 @@ import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
+import io.harness.beans.NGTemplateReference;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entity.InputSetReferenceProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
+import io.harness.eventsframework.schemas.entity.TemplateReferenceProtoDTO;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.event.EntityToEntityProtoHelper;
@@ -27,12 +29,19 @@ public class EntityDetailRestToProtoMapper {
     final EntityTypeProtoEnum entityTypeProto =
         EntityToEntityProtoHelper.getEntityTypeFromProto(entityDetail.getType());
     final EntityDetailProtoDTO.Builder entityDetailProtoBuilder =
-        EntityDetailProtoDTO.newBuilder().setName(entityDetail.getName()).setType(entityTypeProto);
+        EntityDetailProtoDTO.newBuilder().setType(entityTypeProto);
+    if (entityDetail.getName() != null) {
+      entityDetailProtoBuilder.setName(entityDetail.getName());
+    }
     if (entityDetail.getEntityRef() instanceof IdentifierRef) {
       return entityDetailProtoBuilder.setIdentifierRef(createIdentifierRef((IdentifierRef) entityDetail.getEntityRef()))
           .build();
-    } else {
+    } else if (entityDetail.getEntityRef() instanceof InputSetReference) {
       return entityDetailProtoBuilder.setInputSetRef(createInputSetRef((InputSetReference) entityDetail.getEntityRef()))
+          .build();
+    } else {
+      return entityDetailProtoBuilder
+          .setTemplateRef(createTemplateRef((NGTemplateReference) entityDetail.getEntityRef()))
           .build();
     }
   }
@@ -75,5 +84,21 @@ public class EntityDetailRestToProtoMapper {
         .setProjectIdentifier(StringValue.of(nullIfEmpty(inputSetReference.getProjectIdentifier())))
         .setPipelineIdentifier(StringValue.of(inputSetReference.getPipelineIdentifier()))
         .build();
+  }
+
+  private TemplateReferenceProtoDTO createTemplateRef(NGTemplateReference templateReference) {
+    TemplateReferenceProtoDTO.Builder builder =
+        TemplateReferenceProtoDTO.newBuilder()
+            .setAccountIdentifier(StringValue.of(templateReference.getAccountIdentifier()))
+            .setIdentifier(StringValue.of(templateReference.getIdentifier()))
+            .setScope(mapToScopeProtoEnum(templateReference.getScope()))
+            .setVersionLabel(StringValue.of(templateReference.getVersionLabel()));
+    if (isNotEmpty(templateReference.getOrgIdentifier())) {
+      builder.setOrgIdentifier(StringValue.of(nullIfEmpty(templateReference.getOrgIdentifier())));
+    }
+    if (isNotEmpty(templateReference.getProjectIdentifier())) {
+      builder.setProjectIdentifier(StringValue.of(nullIfEmpty(templateReference.getProjectIdentifier())));
+    }
+    return builder.build();
   }
 }

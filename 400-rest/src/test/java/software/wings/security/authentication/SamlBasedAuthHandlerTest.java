@@ -13,9 +13,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -42,6 +47,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Mock AuthenticationUtils authenticationUtils;
   @Mock SSOSettingService ssoSettingService;
@@ -81,10 +88,11 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
       user.setAccounts(Arrays.asList(account));
       String samlResponse =
           IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-      account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+      account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
       when(authenticationUtils.getUser(anyString())).thenReturn(user);
       when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
-      assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
+      assertThat(authHandler.getAuthenticationMechanism())
+          .isEqualTo(io.harness.ng.core.account.AuthenticationMechanism.SAML);
       authHandler.authenticate(oktaIdpUrl, samlResponse);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
@@ -105,7 +113,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
 
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     when(authenticationUtils.getUser(anyString())).thenReturn(user);
     when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
@@ -114,7 +122,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     final SamlSettings samlSettings = mock(SamlSettings.class);
     when(samlSettings.getAccountId()).thenReturn("AC1");
     List<SamlSettings> samlSettingsList = Arrays.asList(samlSettings);
-    doReturn(samlSettingsList.iterator()).when(samlClientService).getSamlSettingsFromOrigin(anyString());
+    doReturn(samlSettingsList.iterator()).when(samlClientService).getSamlSettingsFromOrigin(anyString(), anyString());
     doReturn(samlClient).when(samlClientService).getSamlClient(samlSettings);
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
@@ -135,7 +143,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     user.setUuid("kmpySmUISimoRrJL6NL73w");
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     when(authenticationUtils.getUser(anyString())).thenReturn(user);
     when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
@@ -163,13 +171,13 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     googleSamlSettings1 = spy(googleSamlSettings1);
     googleSamlSettings2 = spy(googleSamlSettings2);
 
-    when(ssoSettingService.getSamlSettingsIteratorByOrigin("accounts.google.com"))
+    when(ssoSettingService.getSamlSettingsIteratorByOrigin("accounts.google.com", "TestGoogleAuthAccount2"))
         .thenReturn(Arrays.asList(googleSamlSettings1, googleSamlSettings2).iterator());
 
     doReturn(samlClient).when(samlClientService).getSamlClient(any(SamlSettings.class));
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
-    User returnedUser = authHandler.authenticate(googleIdpUrl1, samlResponseString).getUser();
+    User returnedUser = authHandler.authenticate(googleIdpUrl1, samlResponseString, "TestGoogleAuthAccount2").getUser();
     assertThat(returnedUser).isEqualTo(user);
   }
 
@@ -186,7 +194,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
 
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     when(authenticationUtils.getUser(anyString())).thenReturn(user);
     when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
@@ -215,13 +223,13 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     azureSetting1 = spy(azureSetting1);
     azureSetting2 = spy(azureSetting2);
 
-    when(ssoSettingService.getSamlSettingsIteratorByOrigin("login.microsoftonline.com"))
+    when(ssoSettingService.getSamlSettingsIteratorByOrigin("login.microsoftonline.com", null))
         .thenReturn(Arrays.asList(azureSetting1, azureSetting2).iterator());
 
     doReturn(samlClient).when(samlClientService).getSamlClient(any(SamlSettings.class));
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
-    User returnedUser = authHandler.authenticate(azureIdpUrl2, samlResponseString).getUser();
+    User returnedUser = authHandler.authenticate(azureIdpUrl2, samlResponseString, null).getUser();
     assertThat(returnedUser).isEqualTo(user);
   }
 
@@ -238,7 +246,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
 
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     when(authenticationUtils.getUser(anyString())).thenReturn(user);
     when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
@@ -247,7 +255,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     final SamlSettings samlSettings = mock(SamlSettings.class);
     when(samlSettings.getAccountId()).thenReturn("AC1");
     List<SamlSettings> samlSettingsList = Arrays.asList(samlSettings);
-    doReturn(samlSettingsList.iterator()).when(samlClientService).getSamlSettingsFromOrigin(anyString());
+    doReturn(samlSettingsList.iterator()).when(samlClientService).getSamlSettingsFromOrigin(anyString(), anyString());
     doReturn(samlClient).when(samlClientService).getSamlClient(samlSettings);
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
@@ -318,7 +326,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     final SamlSettings samlSettings = mock(SamlSettings.class);
     when(samlSettings.getAccountId()).thenReturn("AC1");
     List<SamlSettings> samlSettingsList = Arrays.asList(samlSettings);
-    doReturn(samlSettingsList.iterator()).when(samlClientService).getSamlSettingsFromOrigin(anyString());
+    doReturn(samlSettingsList.iterator()).when(samlClientService).getSamlSettingsFromOrigin(anyString(), anyString());
     doReturn(samlClient).when(samlClientService).getSamlClient(samlSettings);
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 

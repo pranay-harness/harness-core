@@ -47,6 +47,7 @@ message RunTestsStep {
   repeated string envVarOutputs = 12;  // produced output variables
   // TODO (Vistaar): Proxy this call from addon to LE.
   string diff_files = 13;
+  map<string, string> environment = 14;
 }
 
 message RunStep {

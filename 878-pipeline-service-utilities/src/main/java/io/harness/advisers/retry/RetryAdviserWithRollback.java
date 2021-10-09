@@ -2,6 +2,7 @@ package io.harness.advisers.retry;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 import static io.harness.pms.execution.utils.StatusUtils.retryableStatuses;
 
 import io.harness.advisers.CommonAdviserTypes;
@@ -23,6 +24,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
@@ -63,7 +65,8 @@ public class RetryAdviserWithRollback implements Adviser {
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
-    boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus());
+    boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus())
+        && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     FailureInfo failureInfo = advisingEvent.getFailureInfo();
     RetryAdviserRollbackParameters parameters = extractParameters(advisingEvent);
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
@@ -98,7 +101,7 @@ public class RetryAdviserWithRollback implements Adviser {
         String nextNodeId = parameters.getStrategyToUuid().get(
             RollbackStrategy.fromRepairActionCode(parameters.getRepairActionCodeAfterRetry()));
         executionSweepingOutputService.consume(ambiance, YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY,
-            OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(), YAMLFieldNameConstants.PIPELINE_GROUP);
+            OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(), StepOutcomeGroup.STEP.name());
         NextStepAdvise.Builder nextStepAdvise = NextStepAdvise.newBuilder();
         return adviserResponseBuilder.setNextStepAdvise(nextStepAdvise.build()).setType(AdviseType.NEXT_STEP).build();
       case ON_FAIL:

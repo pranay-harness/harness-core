@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchSafeTimeoutInMillis;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -43,6 +45,7 @@ import java.util.Map;
  * Created by anubhaw on 4/3/18.
  */
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HelmRollbackState extends HelmDeployState {
   /**
    * Instantiates a new state.

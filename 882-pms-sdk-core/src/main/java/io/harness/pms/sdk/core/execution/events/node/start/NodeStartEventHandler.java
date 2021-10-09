@@ -42,14 +42,6 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
   }
 
   @Override
-  protected Map<String, String> extractMetricContext(NodeStartEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
-  @Override
   protected String getMetricPrefix(NodeStartEvent message) {
     return "start_event";
   }
@@ -57,14 +49,12 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
   @Override
   public void handleEventWithContext(NodeStartEvent nodeStartEvent) {
     try {
-      log.info("Starting to handle NodeStart event");
       ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeStartEvent.getMode());
-      StepParameters stepParameters = RecastOrchestrationUtils.fromDocumentJson(
-          nodeStartEvent.getStepParameters().toStringUtf8(), StepParameters.class);
+      StepParameters stepParameters =
+          RecastOrchestrationUtils.fromJson(nodeStartEvent.getStepParameters().toStringUtf8(), StepParameters.class);
 
       String passThoughString = nodeStartEvent.getFacilitatorPassThoroughData().toStringUtf8();
-      PassThroughData passThroughData =
-          RecastOrchestrationUtils.fromDocumentJson(passThoughString, PassThroughData.class);
+      PassThroughData passThroughData = RecastOrchestrationUtils.fromJson(passThoughString, PassThroughData.class);
       processor.handleStart(InvokerPackage.builder()
                                 .ambiance(nodeStartEvent.getAmbiance())
                                 .inputPackage(buildStepInputPackage(nodeStartEvent.getResolvedInputList()))
@@ -72,11 +62,10 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
                                 .stepParameters(stepParameters)
                                 .executionMode(nodeStartEvent.getMode())
                                 .build());
-      log.info("Successfully handled NodeStart event");
     } catch (Exception ex) {
       log.error("Error while handle NodeStart event", ex);
-      sdkNodeExecutionService.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
-          NodeExecutionUtils.constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(
+          nodeStartEvent.getAmbiance(), NodeExecutionUtils.constructStepResponse(ex));
     }
   }
 }

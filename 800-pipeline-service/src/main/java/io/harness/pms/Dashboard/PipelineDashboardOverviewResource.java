@@ -5,6 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -45,10 +49,11 @@ public class PipelineDashboardOverviewResource {
   @GET
   @Path("/pipelineHealth")
   @ApiOperation(value = "Get pipeline health", nickname = "getPipelinedHealth")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_project_view")
   public ResponseDTO<DashboardPipelineHealthInfo> getPipelinedHealth(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @QueryParam("moduleInfo") String moduleInfo,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
@@ -64,10 +69,11 @@ public class PipelineDashboardOverviewResource {
   @GET
   @Path("/pipelineExecution")
   @ApiOperation(value = "Get pipeline execution", nickname = "getPipelineExecution")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_project_view")
   public ResponseDTO<DashboardPipelineExecutionInfo> getPipelineExecution(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @QueryParam("moduleInfo") String moduleInfo,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,

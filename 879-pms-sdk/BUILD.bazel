@@ -12,7 +12,7 @@ java_library(
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     resources = [
         "//879-pms-sdk/src/main/resources:resource",
@@ -24,7 +24,7 @@ java_library(
         "//882-pms-sdk-core:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
-        "//950-timeout-engine:module",
+        "//959-timeout-engine:module",
         "//955-delegate-beans:module",
         "//960-persistence:module",
         "//970-grpc:module",

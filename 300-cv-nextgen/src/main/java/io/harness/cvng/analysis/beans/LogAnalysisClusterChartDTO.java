@@ -12,4 +12,5 @@ public class LogAnalysisClusterChartDTO {
   Risk risk;
   double x;
   double y;
+  DeploymentLogAnalysisDTO.ClusterType clusterType;
 }

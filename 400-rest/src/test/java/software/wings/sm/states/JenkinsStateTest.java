@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -23,6 +24,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -63,6 +67,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class JenkinsStateTest extends CategoryTest {
   private static final Activity ACTIVITY_WITH_ID = Activity.builder().build();
 
@@ -76,6 +82,7 @@ public class JenkinsStateTest extends CategoryTest {
   static {
     ACTIVITY_WITH_ID.setUuid(ACTIVITY_ID);
   }
+
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private ActivityService activityService;

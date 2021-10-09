@@ -2,6 +2,7 @@ package io.harness.beans.sweepingoutputs;
 
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
@@ -20,6 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(HarnessTeam.CI)
 @TypeAlias(CODE_BASE_CONNECTOR_REF)
 @JsonTypeName(CODE_BASE_CONNECTOR_REF)
+@RecasterAlias("io.harness.beans.sweepingoutputs.CodeBaseConnectorRefSweepingOutput")
 public class CodeBaseConnectorRefSweepingOutput implements ExecutionSweepingOutput {
   String codeBaseConnectorRef;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore String uuid;

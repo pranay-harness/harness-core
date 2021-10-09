@@ -2,34 +2,34 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
-shared_dependencies = [
-    "//980-commons:module",
-    "//955-delegate-beans:module",
-    "//950-delegate-tasks-beans:module",
-    "@maven//:com_esotericsoftware_kryo",
-    "@maven//:com_fasterxml_jackson_core_jackson_annotations",
-    "@maven//:com_google_code_findbugs_annotations",
-    "@maven//:com_google_code_findbugs_jsr305",
-    "@maven//:com_google_guava_guava",
-    "@maven//:com_google_protobuf_protobuf_java",
-    "@maven//:com_squareup_okhttp3_okhttp",
-    "@maven//:commons_io_commons_io",
-    "@maven//:org_apache_commons_commons_lang3",
-    "@maven//:org_projectlombok_lombok",
-    "@maven//:org_slf4j_slf4j_api",
-    "//:lombok",
-]
-
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     resource_jars = [
         "//920-delegate-agent-beans/src/main/proto:920_delegate_agent_beans_java_proto",
     ],
     resources = [
     ],
     visibility = ["//visibility:public"],
-    deps = shared_dependencies,
+    deps = [
+        "//:lombok",
+        "//950-delegate-tasks-beans:module",
+        "//955-delegate-beans:module",
+        "//970-watcher-beans:module",
+        "//980-commons:module",
+        "//999-annotations:module",
+        "@maven//:com_esotericsoftware_kryo",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_code_findbugs_jsr305",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:commons_io_commons_io",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_projectlombok_lombok",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
 )
 
 java_library(
@@ -37,12 +37,28 @@ java_library(
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
-    deps = shared_dependencies + [
+    deps = [
         "module",
+        "//:lombok",
+        "//950-delegate-tasks-beans:module",
+        "//955-delegate-beans:module",
+        "//970-watcher-beans:module",
+        "//980-commons:module",
         "//990-commons-test:module",
+        "@maven//:com_esotericsoftware_kryo",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_code_findbugs_jsr305",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:commons_io_commons_io",
         "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_projectlombok_lombok",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 

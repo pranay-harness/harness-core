@@ -80,6 +80,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = false)
 public class TimeSeriesDataRecord
     implements GoogleDataStoreAware, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  private static final String ANCESTRY_ACCOUNT_ID = "Fi9wSBlxQmmjZxnsPBbFOQ";
   private static final String BUILD_DOT_COM_ACCOUNT_ID = "JWNrP_OyRrSL6qe9pCSI0g";
   private static final String BUILD_DOT_COM_SERVICE_ID = "ZoYZjErvQGqTKYv9obNy8w";
   public static List<MongoIndex> mongoIndexes() {
@@ -396,8 +397,9 @@ public class TimeSeriesDataRecord
     return newRelicRecords;
   }
 
-  // TODO: remove once CV-5872 is solved
-  public static boolean shouldLogForBuildDotCom(String accountId, String serviceId) {
-    return BUILD_DOT_COM_ACCOUNT_ID.equals(accountId) && BUILD_DOT_COM_SERVICE_ID.equals(serviceId);
+  // TODO: remove once CV-5872, CV-5904 is solved
+  public static boolean shouldLogDetailedInfoForDebugging(String accountId, String serviceId) {
+    return ANCESTRY_ACCOUNT_ID.equals(accountId)
+        || (BUILD_DOT_COM_ACCOUNT_ID.equals(accountId) && BUILD_DOT_COM_SERVICE_ID.equals(serviceId));
   }
 }

@@ -1,8 +1,6 @@
 package io.harness.alert;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
 
 public class AlertModule extends AbstractModule {
   private static volatile AlertModule instance;

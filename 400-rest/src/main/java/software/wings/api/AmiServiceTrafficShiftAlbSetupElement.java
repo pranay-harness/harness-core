@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
@@ -25,6 +28,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("amiServiceTrafficShiftAlbSetupElement")
+@TargetModule(_957_CG_BEANS)
 public class AmiServiceTrafficShiftAlbSetupElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
@@ -40,6 +44,7 @@ public class AmiServiceTrafficShiftAlbSetupElement implements ContextElement, Sw
   private AwsAmiPreDeploymentData preDeploymentData;
   private List<String> baseScalingPolicyJSONs;
   private List<LbDetailsForAlbTrafficShift> detailsWithTargetGroups;
+  private List<String> baseAsgScheduledActionJSONs;
 
   @Override
   public ContextElementType getElementType() {

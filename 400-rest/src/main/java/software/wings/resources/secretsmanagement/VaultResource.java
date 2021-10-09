@@ -1,15 +1,12 @@
 package software.wings.resources.secretsmanagement;
 
-import static io.harness.beans.FeatureName.VAULT_AGENT;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.SecretManagementException;
-import io.harness.exception.WingsException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ff.FeatureFlagService;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.logging.AccountLogContext;
@@ -36,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by rsingh on 10/10/17.
  */
+@OwnedBy(PL)
 @Api("vault")
 @Path("/vault")
 @Produces("application/json")
@@ -52,7 +50,6 @@ public class VaultResource {
   public RestResponse<String> saveOrUpdateVaultConfig(
       @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      checkIfFeatureIsEnabled(accountId, vaultConfig);
       log.info("Adding a vault config");
       return new RestResponse<>(vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true));
     }
@@ -75,19 +72,8 @@ public class VaultResource {
   @ExceptionMetered
   public RestResponse<List<SecretEngineSummary>> listSecretEngines(
       @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
-    checkIfFeatureIsEnabled(accountId, vaultConfig);
+    // checkIfFeatureIsEnabled(accountId, vaultConfig);
     vaultConfig.setAccountId(accountId);
     return new RestResponse<>(vaultService.listSecretEngines(vaultConfig));
-  }
-
-  private void checkIfFeatureIsEnabled(@QueryParam("accountId") String accountId, VaultConfig vaultConfig) {
-    if (!featureFlagService.isEnabled(VAULT_AGENT, accountId)) {
-      boolean usingVaultAgentFeatures = vaultConfig.isUseVaultAgent() || isNotEmpty(vaultConfig.getSinkPath())
-          || isNotEmpty(vaultConfig.getDelegateSelectors());
-      if (usingVaultAgentFeatures) {
-        throw new SecretManagementException(ErrorCode.VAULT_OPERATION_ERROR,
-            "Feature flag " + VAULT_AGENT + " is not enabled for account:" + accountId, WingsException.USER_ADMIN);
-      }
-    }
   }
 }

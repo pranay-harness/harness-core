@@ -1,12 +1,12 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "mocks",
     srcs = ["client_mock.go"],
     importpath = "github.com/wings-software/portal/commons/go/lib/delegate-task-grpc-service/grpc/mocks",
     visibility = ["//visibility:public"],
     deps = [
-        "//910-delegate-task-grpc-service/src/main/proto/io/harness/task/service:go_default_library",
-        "@com_github_golang_mock//gomock:go_default_library",
+        "//910-delegate-task-grpc-service/src/main/proto/io/harness/task/service",
+        "@com_github_golang_mock//gomock",
     ],
 )

@@ -66,7 +66,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
@@ -104,15 +103,15 @@ import org.mongodb.morphia.annotations.Transient;
 @Attributes(title = "Env")
 @Slf4j
 @FieldNameConstants(innerTypeName = "EnvStateKeys")
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EnvState extends State implements WorkflowState {
   public static final Integer ENV_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 
   // NOTE: This field should no longer be used. It contains incorrect/stale values.
-  @Deprecated
   @Expand(dataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
   @Setter
+  @Deprecated
   private String envId;
 
   @Attributes(required = true, title = "Workflow") @Setter private String workflowId;
@@ -163,13 +162,6 @@ public class EnvState extends State implements WorkflowState {
           .errorMessage("Workflow does not exist")
           .stateExecutionData(envStateExecutionData)
           .build();
-    }
-
-    if (isNotEmpty(disableAssertion) && !featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)) {
-      ExecutionResponse response = checkDisableAssertion((ExecutionContextImpl) context, workflowService, log);
-      if (response != null) {
-        return response;
-      }
     }
 
     DeploymentExecutionContext deploymentExecutionContext = (DeploymentExecutionContext) context;
@@ -224,6 +216,7 @@ public class EnvState extends State implements WorkflowState {
           .stateExecutionData(envStateExecutionData)
           .build();
     } catch (Exception e) {
+      log.error("Failed to start workflow execution: ", e);
       String message = ExceptionUtils.getMessage(e);
       return ExecutionResponse.builder()
           .executionStatus(FAILED)

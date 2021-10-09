@@ -5,6 +5,7 @@ package io.harness.delegate.task.citasks.cik8handler;
  * git secrets.
  */
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
 import static io.harness.delegate.beans.ci.pod.CIContainerType.LITE_ENGINE;
@@ -16,6 +17,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
@@ -26,20 +28,18 @@ import io.harness.delegate.beans.ci.pod.CIK8PodParams;
 import io.harness.delegate.beans.ci.pod.CIK8ServicePodParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerParams;
-import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.PodParams;
 import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVarParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
-import io.harness.delegate.beans.ci.pod.SecretVolumeParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.CIBuildTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.helper.DelegateServiceTokenHelper;
 import io.harness.delegate.task.citasks.cik8handler.helper.ProxyVariableHelper;
 import io.harness.delegate.task.citasks.cik8handler.k8java.CIK8JavaClientHandler;
 import io.harness.delegate.task.citasks.cik8handler.k8java.pod.PodSpecBuilder;
-import io.harness.delegate.task.citasks.cik8handler.params.CIConstants;
 import io.harness.k8s.KubernetesHelperService;
+import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
@@ -47,18 +47,21 @@ import io.harness.logging.CommandExecutionStatus;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Event;
 import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.util.Watch;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +70,6 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(HarnessTeam.CI)
 public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
-  @Inject private CIK8CtlHandler kubeCtlHandler;
   @Inject private CIK8JavaClientHandler cik8JavaClientHandler;
   @Inject private PodSpecBuilder podSpecBuilder;
   @Inject private K8sConnectorHelper k8sConnectorHelper;
@@ -76,11 +78,13 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   @Inject private K8EventHandler k8EventHandler;
   @Inject private ProxyVariableHelper proxyVariableHelper;
   @Inject private DelegateServiceTokenHelper delegateServiceTokenHelper;
+  @Inject private ApiClientFactory apiClientFactory;
 
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
   private static final String HARNESS_IMAGE_SECRET = "HARNESS_IMAGE_SECRET";
+  private static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
 
   @Override
   public Type getType() {
@@ -104,27 +108,28 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       try {
         KubernetesConfig kubernetesConfig =
             k8sConnectorHelper.getKubernetesConfig(cik8BuildTaskParams.getK8sConnector());
-        KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
+        ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
+        CoreV1Api coreV1Api = new CoreV1Api(apiClient);
 
-        createImageSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
+        createImageSecrets(coreV1Api, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
         createEnvVariablesSecrets(
-            kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams, gitConnectorDetails);
-        createPVCs(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
+            coreV1Api, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams, gitConnectorDetails);
 
         if (cik8BuildTaskParams.getServicePodParams() != null) {
           for (CIK8ServicePodParams servicePodParams : cik8BuildTaskParams.getServicePodParams()) {
             log.info("Creating service for container: {}", servicePodParams);
-            createServicePod(kubernetesConfig, namespace, servicePodParams);
+            createServicePod(coreV1Api, namespace, servicePodParams);
           }
         }
 
         log.info("Setting up pod spec");
         V1Pod pod = podSpecBuilder.createSpec(podParams).build();
         log.info("Creating pod with spec: {}", pod);
-        cik8JavaClientHandler.createOrReplacePodWithRetries(kubernetesConfig, pod, namespace);
+        cik8JavaClientHandler.createOrReplacePodWithRetries(coreV1Api, pod, namespace);
         Watch<V1Event> watch =
             k8EventHandler.startAsyncPodEventWatch(kubernetesConfig, namespace, podName, logStreamingTaskClient);
-        PodStatus podStatus = kubeCtlHandler.waitUntilPodIsReady(kubernetesClient, podName, namespace);
+        PodStatus podStatus = cik8JavaClientHandler.waitUntilPodIsReady(
+            coreV1Api, podName, namespace, cik8BuildTaskParams.getPodMaxWaitUntilReadySecs());
         if (watch != null) {
           k8EventHandler.stopEventWatch(watch);
         }
@@ -156,34 +161,18 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     return result;
   }
 
-  private void createServicePod(
-      KubernetesConfig kubernetesConfig, String namespace, CIK8ServicePodParams servicePodParams) throws ApiException {
+  private void createServicePod(CoreV1Api coreV1Api, String namespace, CIK8ServicePodParams servicePodParams)
+      throws ApiException {
     V1Pod pod = podSpecBuilder.createSpec((PodParams) servicePodParams.getCik8PodParams()).build();
     log.info("Creating service pod with spec: {}", pod);
 
-    cik8JavaClientHandler.createOrReplacePodWithRetries(kubernetesConfig, pod, namespace);
+    cik8JavaClientHandler.createOrReplacePodWithRetries(coreV1Api, pod, namespace);
 
-    cik8JavaClientHandler.createService(kubernetesConfig, namespace, servicePodParams.getServiceName(),
+    cik8JavaClientHandler.createService(coreV1Api, namespace, servicePodParams.getServiceName(),
         servicePodParams.getSelectorMap(), servicePodParams.getPorts());
   }
 
-  private void createPVCs(
-      KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
-    if (podParams.getPvcParamList() == null) {
-      return;
-    }
-
-    for (PVCParams pvcParams : podParams.getPvcParamList()) {
-      if (!pvcParams.isPresent()) {
-        log.info("Creating pvc: {} for pod name: {}", pvcParams.getClaimName(), podParams.getName());
-        kubeCtlHandler.createPVC(
-            kubernetesClient, namespace, pvcParams.getClaimName(), pvcParams.getStorageClass(), pvcParams.getSizeMib());
-      }
-    }
-  }
-
-  private void createImageSecrets(
-      KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
+  private void createImageSecrets(CoreV1Api coreV1Api, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
     log.info("Creating image secrets for pod name: {}", podParams.getName());
     Stopwatch timer = Stopwatch.createStarted();
     List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
@@ -192,8 +181,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
     for (CIK8ContainerParams containerParams : containerParamsList) {
       String secretName = format("%s-image-%s", podParams.getName(), containerParams.getName());
-      Secret imgSecret = kubeCtlHandler.createRegistrySecret(
-          kubernetesClient, namespace, secretName, containerParams.getImageDetailsWithConnector());
+      V1Secret imgSecret = cik8JavaClientHandler.createRegistrySecret(
+          coreV1Api, namespace, secretName, containerParams.getImageDetailsWithConnector());
       log.info("Registry secret creation for pod name {} is complete", podParams.getName());
       if (imgSecret != null) {
         containerParams.setImageSecret(secretName);
@@ -212,7 +201,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     log.info("Image secret creation took: {} for pod: {} ", timer.stop(), podParams.getName());
   }
 
-  private void createEnvVariablesSecrets(KubernetesClient kubernetesClient, String namespace,
+  private void createEnvVariablesSecrets(CoreV1Api coreV1Api, String namespace,
       CIK8PodParams<CIK8ContainerParams> podParams, ConnectorDetails gitConnectorDetails) {
     Stopwatch timer = Stopwatch.createStarted();
     log.info("Creating env variables for pod name: {}", podParams.getName());
@@ -296,9 +285,23 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     secretData.putAll(gitSecretData);
     log.info("Determined environment secrets to create for stage for pod {}", podParams.getName());
 
+    for (CIK8ContainerParams containerParams : containerParamsList) {
+      Set<String> allSecrets = new HashSet<>();
+      if (!isEmpty(containerParams.getSecretEnvVars())) {
+        allSecrets.addAll(containerParams.getSecretEnvVars().keySet());
+        updateContainerWithEnvVariable(allSecrets, containerParams);
+      }
+    }
+
+    Map<String, byte[]> data = new HashMap<>();
+
     if (isNotEmpty(secretData)) {
+      for (Map.Entry<String, String> entry : secretData.entrySet()) {
+        data.put(entry.getKey(), EncodingUtils.decodeBase64(entry.getValue()));
+      }
+
       log.info("Creating environment secrets for pod name: {}", podParams.getName());
-      kubeCtlHandler.createSecret(kubernetesClient, k8SecretName, namespace, secretData);
+      cik8JavaClientHandler.createEnvSecret(coreV1Api, namespace, k8SecretName, data);
       log.info("Environment k8 secret creation is complete for pod name: {}", podParams.getName());
     }
     log.info("Environment variable creation took: {} for pod: {} ", timer.stop(), podParams.getName());
@@ -307,7 +310,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   private Map<String, String> getAndUpdateEnvVarsWithSecretRefSecretData(
       Map<String, String> envVarsWithSecretRef, CIK8ContainerParams containerParams, String k8SecretName) {
     Map<String, SecretParams> secretData =
-        kubeCtlHandler.fetchEnvVarsWithSecretRefSecretParams(envVarsWithSecretRef, containerParams.getName());
+        secretSpecBuilder.createSecretParamsForPlainTextSecret(envVarsWithSecretRef, containerParams.getName());
     if (isNotEmpty(secretData)) {
       updateContainer(containerParams, k8SecretName, secretData);
       return secretData.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
@@ -318,7 +321,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private Map<String, String> getAndUpdateGithubAppTokenSecretData(
       Map<String, ConnectorDetails> functorConnectors, CIK8ContainerParams containerParams, String secretName) {
-    Map<String, SecretParams> secretData = kubeCtlHandler.fetchGithubAppToken(functorConnectors);
+    Map<String, SecretParams> secretData = secretSpecBuilder.fetchGithubAppToken(functorConnectors);
     if (isNotEmpty(secretData)) {
       updateContainer(containerParams, secretName, secretData);
       return secretData.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
@@ -329,7 +332,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private Map<String, String> getAndUpdateConnectorSecretData(
       Map<String, ConnectorDetails> pluginConnectors, CIK8ContainerParams containerParams, String secretName) {
-    Map<String, SecretParams> secretData = kubeCtlHandler.fetchConnectorsSecretKeyMap(pluginConnectors);
+    Map<String, SecretParams> secretData = secretSpecBuilder.decryptConnectorSecretVariables(pluginConnectors);
     if (isNotEmpty(secretData)) {
       updateContainer(containerParams, secretName, secretData);
       return secretData.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
@@ -341,7 +344,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   private Map<String, String> getAndUpdateCustomVariableSecretData(
       List<SecretVariableDetails> secretVariableDetails, CIK8ContainerParams containerParams, String secretName) {
     Map<String, SecretParams> customVarSecretData =
-        kubeCtlHandler.fetchCustomVariableSecretKeyMap(secretVariableDetails);
+        secretSpecBuilder.decryptCustomSecretVariables(secretVariableDetails);
     if (isNotEmpty(customVarSecretData)) {
       updateContainer(containerParams, secretName, customVarSecretData);
       return customVarSecretData.values().stream().collect(
@@ -401,9 +404,6 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     for (Map.Entry<String, SecretParams> secretDataEntry : secretData.entrySet()) {
       switch (secretDataEntry.getValue().getType()) {
         case FILE:
-          updateContainerWithSecretVolume(
-              secretDataEntry.getKey(), secretDataEntry.getValue(), secretName, containerParams);
-          break;
         case TEXT:
           updateContainerWithSecretVariable(
               secretDataEntry.getKey(), secretDataEntry.getValue(), secretName, containerParams);
@@ -414,36 +414,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     }
   }
 
-  private void updateContainerWithSecretVolume(
-      String variableName, SecretParams secretParam, String secretName, ContainerParams containerParams) {
-    if (secretParam.getType() != SecretParams.Type.FILE) {
-      return;
-    }
-    Map<String, String> envVars = containerParams.getEnvVars();
-    if (envVars == null) {
-      envVars = new HashMap<>();
-      containerParams.setEnvVars(envVars);
-    }
-    envVars.put(variableName, CIConstants.DEFAULT_SECRET_MOUNT_PATH + secretParam.getSecretKey());
-
-    Map<String, SecretVolumeParams> secretVolumes = containerParams.getSecretVolumes();
-    if (secretVolumes == null) {
-      secretVolumes = new HashMap<>();
-      containerParams.setSecretVolumes(secretVolumes);
-    }
-    secretVolumes.put(secretParam.getSecretKey(),
-        SecretVolumeParams.builder()
-            .secretKey(secretParam.getSecretKey())
-            .secretName(secretName)
-            .mountPath(CIConstants.DEFAULT_SECRET_MOUNT_PATH)
-            .build());
-  }
-
   private void updateContainerWithSecretVariable(
       String variableName, SecretParams secretParam, String secretName, ContainerParams containerParams) {
-    if (secretParam.getType() != SecretParams.Type.TEXT) {
-      return;
-    }
     Map<String, SecretVarParams> secretEnvVars = containerParams.getSecretEnvVars();
     if (secretEnvVars == null) {
       secretEnvVars = new HashMap<>();
@@ -451,5 +423,19 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     }
     secretEnvVars.put(
         variableName, SecretVarParams.builder().secretKey(secretParam.getSecretKey()).secretName(secretName).build());
+  }
+
+  private void updateContainerWithEnvVariable(Set<String> allSecrets, ContainerParams containerParams) {
+    if (isEmpty(allSecrets)) {
+      return;
+    }
+
+    Map<String, String> secretEnvVars = containerParams.getEnvVars();
+    if (secretEnvVars == null) {
+      secretEnvVars = new HashMap<>();
+      containerParams.setEnvVars(secretEnvVars);
+    }
+    String secret = String.join(",", allSecrets);
+    secretEnvVars.put(HARNESS_SECRETS_LIST, secret);
   }
 }

@@ -3,7 +3,6 @@ package io.harness.migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;

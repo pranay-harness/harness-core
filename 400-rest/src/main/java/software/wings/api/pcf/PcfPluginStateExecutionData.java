@@ -1,8 +1,10 @@
 package software.wings.api.pcf;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.pcf.CfCommandRequest;
@@ -29,6 +31,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class PcfPluginStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String accountId;

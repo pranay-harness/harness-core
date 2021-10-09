@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.context.ContextElementType.CLOUD_FORMATION_ROLLBACK;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
@@ -45,17 +46,20 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CloudFormationRollbackStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Rollback Stack";
@@ -224,6 +228,21 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
         builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
         builder.data(configParameter.getBody());
       }
+
+      if (configParameter.isSkipBasedOnStackStatus() == false
+          || isEmpty(configParameter.getStackStatusesToMarkAsSuccess())) {
+        builder.stackStatusesToMarkAsSuccess(new ArrayList<>());
+      } else {
+        List<String> stackStatusesToMarkAsSuccessRendered =
+            configParameter.getStackStatusesToMarkAsSuccess()
+                .stream()
+                .map(status -> executionContext.renderExpression(status))
+                .collect(Collectors.toList());
+        builder.stackStatusesToMarkAsSuccess(stackStatusesToMarkAsSuccessRendered.stream()
+                                                 .map(status -> StackStatus.fromValue(status))
+                                                 .collect(Collectors.toList()));
+      }
+
       CloudFormationCreateStackRequest request = builder.stackNameSuffix(configParameter.getEntityId())
                                                      .customStackName(configParameter.getCustomStackName())
                                                      .region(configParameter.getRegion())
@@ -337,6 +356,18 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           .commandName(mainCommandUnit())
           .variables(stackElement.getOldStackParameters())
           .awsConfig(awsConfig);
+      if (stackElement.isSkipBasedOnStackStatus() == false || isEmpty(stackElement.getStackStatusesToMarkAsSuccess())) {
+        builder.stackStatusesToMarkAsSuccess(new ArrayList<>());
+      } else {
+        List<String> stackStatusesToMarkAsSuccessRendered =
+            stackElement.getStackStatusesToMarkAsSuccess()
+                .stream()
+                .map(status -> executionContext.renderExpression(status))
+                .collect(Collectors.toList());
+        builder.stackStatusesToMarkAsSuccess(stackStatusesToMarkAsSuccessRendered.stream()
+                                                 .map(status -> StackStatus.fromValue(status))
+                                                 .collect(Collectors.toList()));
+      }
       CloudFormationCreateStackRequest request = builder.build();
       setTimeOutOnRequest(request);
 

@@ -10,6 +10,7 @@ import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntityReferencesDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
@@ -23,6 +24,7 @@ import java.util.List;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -57,7 +59,8 @@ public class EntitySetupUsageResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @QueryParam(REFERRED_ENTITY_TYPE) EntityType entityType,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @BeanParam GitEntityFindInfoDTO gitFindInfoDTO) {
     return ResponseDTO.newResponse(entitySetupUsageService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, identifier, entityType, searchTerm));
   }
@@ -121,8 +124,8 @@ public class EntitySetupUsageResource {
   // use eveent fmwk
   @POST
   @Path("internal")
-  @Deprecated
   @ApiOperation(value = "Saves the entity reference", nickname = "postEntitySetupUsage", hidden = true)
+  @Deprecated
   public ResponseDTO<EntitySetupUsageDTO> save(EntitySetupUsageDTO entitySetupUsageDTO) {
     return ResponseDTO.newResponse(entitySetupUsageService.save(entitySetupUsageDTO));
   }
@@ -132,8 +135,8 @@ public class EntitySetupUsageResource {
   // for any crud of setup usage use the event framework
   @DELETE
   @Path("internal")
-  @Deprecated
   @ApiOperation(value = "Deletes the entity reference record", nickname = "deleteEntitySetupUsage", hidden = true)
+  @Deprecated
   public ResponseDTO<Boolean> delete(
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN,

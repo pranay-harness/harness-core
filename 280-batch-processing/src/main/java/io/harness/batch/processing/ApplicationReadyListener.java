@@ -70,7 +70,7 @@ public class ApplicationReadyListener {
   public void ensureMongoConnectivity() throws Exception {
     log.info("Inside ensureMongoConnectivity");
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, hPersistence.healthExpectedResponseTimeout(), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, hPersistence.healthExpectedResponseTimeout(), () -> {
         hPersistence.isHealthy();
         return null;
       });

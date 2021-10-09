@@ -6,9 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
-import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
-import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
+import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 
 import retrofit2.Call;
@@ -21,21 +19,12 @@ import retrofit2.http.Query;
 @OwnedBy(HarnessTeam.PL)
 public interface ResourceGroupClient {
   String RESOURCE_GROUP_API = "resourcegroup";
-  String RESOURCE_TYPE_API = "resourcetype";
 
-  @POST(RESOURCE_GROUP_API)
-  Call<ResponseDTO<ResourceGroupResponse>> create(
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Body ResourceGroupRequest resourceGroupRequest);
-
-  @POST(RESOURCE_GROUP_API + "/createInternal")
+  @POST(RESOURCE_GROUP_API + "/createManaged")
   Call<ResponseDTO<Boolean>> createManagedResourceGroup(
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Body ResourceGroupDTO resourceGroupDTO);
+      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 
   @GET(RESOURCE_GROUP_API + "/{identifier}")
   Call<ResponseDTO<ResourceGroupResponse>> getResourceGroup(
@@ -44,16 +33,8 @@ public interface ResourceGroupClient {
       @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 
-  @GET(RESOURCE_GROUP_API)
-  Call<ResponseDTO<PageResponse<ResourceGroupResponse>>> getResourceGroups(
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size);
-
-  @GET(RESOURCE_TYPE_API)
-  Call<ResponseDTO<ResourceTypeDTO>> getResourceTypes(
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+  @POST(RESOURCE_GROUP_API + "/filter")
+  Call<ResponseDTO<PageResponse<ResourceGroupResponse>>> getFilteredResourceGroups(
+      @Body ResourceGroupFilterDTO resourceGroupFilter, @Query(value = NGResourceFilterConstants.PAGE_KEY) int page,
+      @Query(value = NGResourceFilterConstants.SIZE_KEY) int size);
 }

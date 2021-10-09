@@ -212,7 +212,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
       resources = k8sTaskHelper.getResourcesFromManifests(k8sDelegateTaskParams,
           k8sDeleteTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory, deleteFilePaths,
           k8sDeleteTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
-          executionLogCallback, k8sDeleteTaskParameters);
+          executionLogCallback, k8sDeleteTaskParameters, false);
 
       executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));

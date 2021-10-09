@@ -1,30 +1,28 @@
 package io.harness.delegate.cf;
 
+import static io.harness.delegate.cf.CfTestConstants.ACCOUNT_ID;
+import static io.harness.delegate.cf.CfTestConstants.APP_ID;
+import static io.harness.delegate.cf.CfTestConstants.APP_NAME;
+import static io.harness.delegate.cf.CfTestConstants.ORG;
+import static io.harness.delegate.cf.CfTestConstants.RUNNING;
+import static io.harness.delegate.cf.CfTestConstants.SPACE;
+import static io.harness.delegate.cf.CfTestConstants.URL;
+import static io.harness.delegate.cf.CfTestConstants.USER_NAME_DECRYPTED;
 import static io.harness.delegate.cf.PcfCommandTaskBaseHelper.DELIMITER;
-import static io.harness.delegate.cf.PcfCommandTaskBaseHelperTest.ACTIVITY_ID;
-import static io.harness.delegate.cf.PcfCommandTaskBaseHelperTest.APP_ID;
 import static io.harness.delegate.task.pcf.request.CfInfraMappingDataRequest.ActionType.RUNNING_COUNT;
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.BOJANA;
 
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
@@ -33,29 +31,22 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
-import io.harness.delegate.beans.pcf.CfInternalInstanceElement;
-import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.delegate.beans.pcf.CfServiceData;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.pcf.CfCommandRequest;
 import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.pcf.request.CfCommandDeployRequest;
-import io.harness.delegate.task.pcf.request.CfCommandRollbackRequest;
-import io.harness.delegate.task.pcf.request.CfCommandRouteUpdateRequest;
 import io.harness.delegate.task.pcf.request.CfInfraMappingDataRequest;
 import io.harness.delegate.task.pcf.request.CfInfraMappingDataRequest.ActionType;
-import io.harness.delegate.task.pcf.request.CfInstanceSyncRequest;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.delegate.task.pcf.response.CfDeployCommandResponse;
 import io.harness.delegate.task.pcf.response.CfInfraMappingDataResponse;
-import io.harness.delegate.task.pcf.response.CfInstanceSyncResponse;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.pcf.CfDeploymentManager;
-import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
@@ -63,15 +54,12 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
@@ -86,25 +74,14 @@ import org.mockito.Spy;
 
 @OwnedBy(HarnessTeam.CDP)
 public class PcfCommandTaskHandlerTest extends CategoryTest {
-  public static final String URL = "URL";
-  public static final String ORG = "ORG";
-  public static final String SPACE = "SPACE";
-  public static final String ACCOUNT_ID = "ACCOUNT_ID";
-  public static final String RUNNING = "RUNNING";
-  public static final String APP_NAME = "APP_NAME";
-  public static final char[] USER_NAME_DECRYPTED = "USER_NAME_DECRYPTED".toCharArray();
-
-  @Mock CfDeploymentManager pcfDeploymentManager;
+  @Mock CfDeploymentManager cfDeploymentManager;
   @Mock SecretDecryptionService encryptionService;
   @Mock EncryptedDataDetail encryptedDataDetail;
   @Mock LogCallback executionLogCallback;
   @Mock ILogStreamingTaskClient logStreamingTaskClient;
   @InjectMocks @Spy PcfCommandTaskBaseHelper pcfCommandTaskHelper;
   @InjectMocks @Inject PcfDeployCommandTaskHandler pcfDeployCommandTaskHandler;
-  @InjectMocks @Spy PcfRouteUpdateCommandTaskHandler pcfRouteUpdateCommandTaskHandler;
-  @InjectMocks @Inject PcfRollbackCommandTaskHandler pcfRollbackCommandTaskHandler;
   @InjectMocks @Inject PcfDataFetchCommandTaskHandler pcfDataFetchCommandTaskHandler;
-  @InjectMocks @Inject PcfApplicationDetailsCommandTaskHandler pcfApplicationDetailsCommandTaskHandler;
 
   @Before
   public void setUp() throws Exception {
@@ -119,7 +96,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testPerformDeploy_nonBlueGreen() throws Exception {
+  public void testPerformDeployNonBlueGreen() throws Exception {
     CfCommandRequest cfCommandRequest =
         CfCommandDeployRequest.builder()
             .pcfCommandType(PcfCommandType.RESIZE)
@@ -161,7 +138,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
     doReturn(applicationDetailNew)
         .doReturn(applicationDetailOld)
         .doReturn(applicationDetailNew)
-        .when(pcfDeploymentManager)
+        .when(cfDeploymentManager)
         .getApplicationByName(any());
 
     List<ApplicationSummary> previousReleases = new ArrayList<>();
@@ -193,8 +170,8 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
                              .runningInstances(1)
                              .build());
 
-    doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
-    doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
+    doReturn(previousReleases).when(cfDeploymentManager).getPreviousReleases(any(), anyString());
+    doReturn(previousReleases).when(cfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
 
     doReturn(ApplicationDetail.builder()
                  .id("10")
@@ -214,7 +191,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
                                       .memoryUsage((long) 1)
                                       .build())
                  .build())
-        .when(pcfDeploymentManager)
+        .when(cfDeploymentManager)
         .resizeApplication(any());
 
     doReturn(ApplicationDetail.builder()
@@ -243,7 +220,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
                          .memoryUsage((long) 1)
                          .build())
                  .build())
-        .when(pcfDeploymentManager)
+        .when(cfDeploymentManager)
         .upsizeApplicationWithSteadyStateCheck(any(), any());
 
     CfCommandExecutionResponse cfCommandExecutionResponse =
@@ -291,19 +268,19 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
                                               .runningInstances(0)
                                               .build();
 
-    reset(pcfDeploymentManager);
-    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
+    reset(cfDeploymentManager);
+    doReturn(applicationDetail).when(cfDeploymentManager).getApplicationByName(any());
 
     // Autoscalar is false
     pcfDeployCommandTaskHandler.configureAutoscalarIfNeeded(
         pcfCommandRequest, applicationDetail, null, executionLogCallback);
-    verify(pcfDeploymentManager, never()).performConfigureAutoscalar(any(), any());
+    verify(cfDeploymentManager, never()).performConfigureAutoscalar(any(), any());
 
     // Autoscalar is true, but no autosaclar file
     pcfCommandRequest.setUseAppAutoscalar(true);
     pcfDeployCommandTaskHandler.configureAutoscalarIfNeeded(
         pcfCommandRequest, applicationDetail, null, executionLogCallback);
-    verify(pcfDeploymentManager, never()).performConfigureAutoscalar(any(), any());
+    verify(cfDeploymentManager, never()).performConfigureAutoscalar(any(), any());
 
     // Autoscalar is true, autoscalar file is present
     String path = "./test" + System.currentTimeMillis();
@@ -319,7 +296,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
     pcfDeployCommandTaskHandler.configureAutoscalarIfNeeded(
         pcfCommandRequest, applicationDetail, autoscalarRequestData, executionLogCallback);
     ArgumentCaptor<CfAppAutoscalarRequestData> captor = ArgumentCaptor.forClass(CfAppAutoscalarRequestData.class);
-    verify(pcfDeploymentManager, times(1)).performConfigureAutoscalar(captor.capture(), any());
+    verify(cfDeploymentManager, times(1)).performConfigureAutoscalar(captor.capture(), any());
     autoscalarRequestData = captor.getValue();
     assertThat(autoscalarRequestData.getApplicationName()).isEqualTo(APP_NAME);
     assertThat(autoscalarRequestData.getApplicationGuid()).isEqualTo(APP_ID);
@@ -328,175 +305,6 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
     String content = new String(Files.readAllBytes(Paths.get(filePath)));
     assertThat(content).isEqualTo("abc");
     FileIo.deleteDirectoryAndItsContentIfExists(path);
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testPerformRollback() throws Exception {
-    CfCommandRequest cfCommandRequest =
-        CfCommandRollbackRequest.builder()
-            .pcfCommandType(PcfCommandType.ROLLBACK)
-            .pcfConfig(getPcfConfig())
-            .accountId(ACCOUNT_ID)
-            .instanceData(
-                Arrays.asList(CfServiceData.builder().name("a_s_e__6").previousCount(2).desiredCount(0).build(),
-                    CfServiceData.builder().name("a_s_e__4").previousCount(0).desiredCount(2).build()))
-            .resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST)
-            .organization(ORG)
-            .space(SPACE)
-            .timeoutIntervalInMin(5)
-            .newApplicationDetails(
-                CfAppSetupTimeDetails.builder().applicationName("a_s_e__6").urls(Collections.EMPTY_LIST).build())
-            .build();
-
-    doReturn(ApplicationDetail.builder()
-                 .id("Guid:a_s_e__6")
-                 .diskQuota(1)
-                 .instances(0)
-                 .memoryLimit(1)
-                 .name("a_s_e__")
-                 .requestedState("STOPPED")
-                 .stack("")
-                 .runningInstances(0)
-                 .build())
-        .doReturn(ApplicationDetail.builder()
-                      .id("Guid:a_s_e__4")
-                      .diskQuota(1)
-                      .instances(1)
-                      .memoryLimit(1)
-                      .name("a_s_e__4")
-                      .requestedState("STOPPED")
-                      .stack("")
-                      .runningInstances(0)
-                      .build())
-        .when(pcfDeploymentManager)
-        .getApplicationByName(any());
-
-    ApplicationDetail applicationDetailDownsize = ApplicationDetail.builder()
-                                                      .id("Guid:a_s_e__6")
-                                                      .diskQuota(1)
-                                                      .instances(0)
-                                                      .memoryLimit(1)
-                                                      .name("a_s_e__6")
-                                                      .requestedState("STOPPED")
-                                                      .stack("")
-                                                      .runningInstances(0)
-                                                      .build();
-
-    doReturn(ApplicationDetail.builder()
-                 .instanceDetails(Arrays.asList(InstanceDetail.builder()
-                                                    .cpu(1.0)
-                                                    .diskQuota((long) 1.23)
-                                                    .diskUsage((long) 1.23)
-                                                    .index("0")
-                                                    .memoryQuota((long) 1)
-                                                    .memoryUsage((long) 1)
-                                                    .build(),
-                     InstanceDetail.builder()
-                         .cpu(1.0)
-                         .diskQuota((long) 1.23)
-                         .diskUsage((long) 1.23)
-                         .index("1")
-                         .memoryQuota((long) 1)
-                         .memoryUsage((long) 1)
-                         .build()))
-                 .id("Guid:a_s_e__4")
-                 .diskQuota(1)
-                 .instances(1)
-                 .memoryLimit(1)
-                 .name("a_s_e__4")
-                 .requestedState("RUNNING")
-                 .stack("")
-                 .runningInstances(1)
-                 .build())
-        .doReturn(applicationDetailDownsize)
-        .when(pcfDeploymentManager)
-        .upsizeApplicationWithSteadyStateCheck(any(), any());
-
-    doReturn(ApplicationDetail.builder()
-                 .instanceDetails(Arrays.asList(InstanceDetail.builder()
-                                                    .cpu(1.0)
-                                                    .diskQuota((long) 1.23)
-                                                    .diskUsage((long) 1.23)
-                                                    .index("1")
-                                                    .memoryQuota((long) 1)
-                                                    .memoryUsage((long) 1)
-                                                    .build(),
-                     InstanceDetail.builder()
-                         .cpu(1.0)
-                         .diskQuota((long) 1.23)
-                         .diskUsage((long) 1.23)
-                         .index("0")
-                         .memoryQuota((long) 1)
-                         .memoryUsage((long) 1)
-                         .build()))
-                 .id("Guid:a_s_e__4")
-                 .diskQuota(1)
-                 .requestedState("RUNNING")
-                 .instances(1)
-                 .memoryLimit(1)
-                 .name("a_s_e__4")
-                 .stack("")
-                 .runningInstances(1)
-                 .build())
-        .doReturn(applicationDetailDownsize)
-        .when(pcfDeploymentManager)
-        .resizeApplication(any());
-
-    CfCommandExecutionResponse cfCommandExecutionResponse =
-        pcfRollbackCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
-
-    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    CfDeployCommandResponse pcfDeployCommandResponse =
-        (CfDeployCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
-
-    assertThat(pcfDeployCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    assertThat(pcfDeployCommandResponse.getPcfInstanceElements()).isNotNull();
-    assertThat(pcfDeployCommandResponse.getPcfInstanceElements()).hasSize(2);
-
-    Set<String> pcfInstanceElements = new HashSet<>();
-    ((CfDeployCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse())
-        .getPcfInstanceElements()
-        .forEach(pcfInstanceElement
-            -> pcfInstanceElements.add(
-                pcfInstanceElement.getApplicationId() + ":" + pcfInstanceElement.getInstanceIndex()));
-    assertThat(pcfInstanceElements.contains("Guid:a_s_e__4:0")).isTrue();
-    assertThat(pcfInstanceElements.contains("Guid:a_s_e__4:1")).isTrue();
-
-    // Test Exception flow
-    doThrow(new IOException("")).when(pcfCommandTaskHelper).generateWorkingDirectoryForDeployment();
-    cfCommandExecutionResponse =
-        pcfRollbackCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
-    assertThat(cfCommandExecutionResponse.getErrorMessage()).isEqualTo("IOException: ");
-    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testEnableAutoscalarIfNeeded() throws Exception {
-    reset(pcfDeploymentManager);
-
-    CfServiceData cfServiceData = CfServiceData.builder().name(APP_NAME).id(APP_ID).build();
-    List<CfServiceData> upsizeList = Arrays.asList(cfServiceData);
-
-    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
-        CfAppAutoscalarRequestData.builder().configPathVar("path").build();
-    doReturn(true).when(pcfDeploymentManager).changeAutoscalarState(any(), any(), anyBoolean());
-
-    pcfRollbackCommandTaskHandler.enableAutoscalarIfNeeded(
-        emptyList(), pcfAppAutoscalarRequestData, executionLogCallback);
-    verify(pcfDeploymentManager, never()).changeAutoscalarState(any(), any(), anyBoolean());
-
-    pcfRollbackCommandTaskHandler.enableAutoscalarIfNeeded(
-        upsizeList, pcfAppAutoscalarRequestData, executionLogCallback);
-    verify(pcfDeploymentManager, never()).changeAutoscalarState(any(), any(), anyBoolean());
-
-    cfServiceData.setDisableAutoscalarPerformed(true);
-    pcfRollbackCommandTaskHandler.enableAutoscalarIfNeeded(
-        upsizeList, pcfAppAutoscalarRequestData, executionLogCallback);
-    verify(pcfDeploymentManager, times(1)).changeAutoscalarState(any(), any(), anyBoolean());
   }
 
   @Test
@@ -511,9 +319,9 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
                                                       .actionType(ActionType.FETCH_ORG)
                                                       .build();
 
-    doReturn(Arrays.asList(ORG)).when(pcfDeploymentManager).getOrganizations(any());
-    doReturn(Arrays.asList(SPACE)).when(pcfDeploymentManager).getSpacesForOrganization(any());
-    doReturn(Arrays.asList("R1", "R2")).when(pcfDeploymentManager).getRouteMaps(any());
+    doReturn(Arrays.asList(ORG)).when(cfDeploymentManager).getOrganizations(any());
+    doReturn(Arrays.asList(SPACE)).when(cfDeploymentManager).getSpacesForOrganization(any());
+    doReturn(Arrays.asList("R1", "R2")).when(cfDeploymentManager).getRouteMaps(any());
 
     // Fetch Orgs
     CfCommandExecutionResponse cfCommandExecutionResponse =
@@ -564,7 +372,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
                                                 .runningInstances(2)
                                                 .build();
     doReturn(Collections.singletonList(applicationSummary))
-        .when(pcfDeploymentManager)
+        .when(cfDeploymentManager)
         .getPreviousReleases(any(CfRequestConfig.class), eq(appNamePrefix));
     pcfCommandRequest.setApplicationNamePrefix(appNamePrefix);
     pcfCommandRequest.setActionType(RUNNING_COUNT);
@@ -576,7 +384,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
 
     // Fetch running count failure
     doThrow(Exception.class)
-        .when(pcfDeploymentManager)
+        .when(cfDeploymentManager)
         .getPreviousReleases(any(CfRequestConfig.class), eq(appNamePrefix));
     cfCommandExecutionResponse =
         pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, logStreamingTaskClient, false);
@@ -587,305 +395,5 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
     assertThatThrownBy(
         () -> pcfDataFetchCommandTaskHandler.executeTaskInternal(deployRequest, null, logStreamingTaskClient, false))
         .isInstanceOf(InvalidArgumentsException.class);
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testperformAppDetails() throws Exception {
-    CfInstanceSyncRequest cfInstanceSyncRequest = CfInstanceSyncRequest.builder()
-                                                      .pcfCommandType(PcfCommandType.APP_DETAILS)
-                                                      .pcfApplicationName("APP_NAME")
-                                                      .pcfConfig(getPcfConfig())
-                                                      .accountId(ACCOUNT_ID)
-                                                      .timeoutIntervalInMin(5)
-                                                      .build();
-
-    doReturn(ApplicationDetail.builder()
-                 .id("10")
-                 .diskQuota(1)
-                 .instances(1)
-                 .memoryLimit(1)
-                 .name("a_s_e__6")
-                 .requestedState("STOPPED")
-                 .stack("")
-                 .runningInstances(1)
-                 .instanceDetails(Arrays.asList(InstanceDetail.builder()
-                                                    .cpu(1.0)
-                                                    .diskQuota((long) 1.23)
-                                                    .diskUsage((long) 1.23)
-                                                    .index("2")
-                                                    .memoryQuota((long) 1)
-                                                    .memoryUsage((long) 1)
-                                                    .build()))
-                 .id("Guid:a_s_e__3")
-                 .diskQuota(1)
-                 .instances(1)
-                 .memoryLimit(1)
-                 .name("a_s_e__3")
-                 .requestedState("RUNNING")
-                 .stack("")
-                 .runningInstances(1)
-                 .build())
-        .when(pcfDeploymentManager)
-        .getApplicationByName(any());
-
-    // Fetch Orgs
-    CfCommandExecutionResponse cfCommandExecutionResponse = pcfApplicationDetailsCommandTaskHandler.executeTaskInternal(
-        cfInstanceSyncRequest, null, logStreamingTaskClient, false);
-
-    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    CfInstanceSyncResponse pcfInstanceSyncResponse =
-        (CfInstanceSyncResponse) cfCommandExecutionResponse.getPcfCommandResponse();
-
-    assertThat(pcfInstanceSyncResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    assertThat(pcfInstanceSyncResponse.getInstanceIndices()).isNotNull();
-    assertThat(pcfInstanceSyncResponse.getInstanceIndices()).hasSize(1);
-    assertThat(pcfInstanceSyncResponse.getInstanceIndices().get(0)).isEqualTo("2");
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testPerformSwapRouteExecute() throws Exception {
-    CfRouteUpdateRequestConfigData routeUpdateRequestConfigData =
-        CfRouteUpdateRequestConfigData.builder()
-            .downsizeOldApplication(false)
-            .finalRoutes(Arrays.asList("a.b.c"))
-            .isRollback(true)
-            .isStandardBlueGreen(true)
-            .existingApplicationDetails(
-                Arrays.asList(CfAppSetupTimeDetails.builder().applicationName("app1").initialInstanceCount(1).build()))
-            .build();
-    CfCommandRequest cfCommandRequest = CfCommandRouteUpdateRequest.builder()
-                                            .pcfCommandType(PcfCommandType.RESIZE)
-                                            .pcfConfig(getPcfConfig())
-                                            .accountId(ACCOUNT_ID)
-                                            .organization(ORG)
-                                            .space(SPACE)
-                                            .timeoutIntervalInMin(2)
-                                            .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
-                                            .pcfRouteUpdateConfigData(routeUpdateRequestConfigData)
-                                            .build();
-
-    doNothing().when(pcfCommandTaskHelper).mapRouteMaps(anyString(), anyList(), any(), any());
-    doNothing().when(pcfCommandTaskHelper).unmapRouteMaps(anyString(), anyList(), any(), any());
-    doReturn(null).when(pcfDeploymentManager).upsizeApplicationWithSteadyStateCheck(any(), any());
-    doReturn(null).when(pcfDeploymentManager).resizeApplication(any());
-
-    // 2 Rollback True, existingApplication : available
-    reset(pcfDeploymentManager);
-    routeUpdateRequestConfigData.setDownsizeOldApplication(true);
-    CfCommandExecutionResponse cfCommandExecutionResponse =
-        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
-    verify(pcfDeploymentManager, times(1)).upsizeApplicationWithSteadyStateCheck(any(), any());
-    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-
-    // 3 Rollback True, existingApplication : unavailable
-    reset(pcfDeploymentManager);
-    routeUpdateRequestConfigData.setDownsizeOldApplication(true);
-    routeUpdateRequestConfigData.setExistingApplicationDetails(null);
-    cfCommandExecutionResponse =
-        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
-    verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
-    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-
-    // 4 Rollback False, existingApplication : unavailable
-    reset(pcfDeploymentManager);
-    routeUpdateRequestConfigData.setDownsizeOldApplication(true);
-    routeUpdateRequestConfigData.setRollback(false);
-    routeUpdateRequestConfigData.setExistingApplicationDetails(null);
-    cfCommandExecutionResponse =
-        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
-    verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
-    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-
-    // 5  Rollback False, existingApplication : available
-    reset(pcfDeploymentManager);
-    routeUpdateRequestConfigData.setDownsizeOldApplication(true);
-    routeUpdateRequestConfigData.setExistingApplicationDetails(
-        Arrays.asList(CfAppSetupTimeDetails.builder().applicationName("app1").initialInstanceCount(1).build()));
-    cfCommandExecutionResponse =
-        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
-    verify(pcfDeploymentManager, times(1)).resizeApplication(any());
-    verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
-    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testResizeOldApplications() throws Exception {
-    List<CfAppSetupTimeDetails> appSetupTimeDetailsList =
-        Arrays.asList(CfAppSetupTimeDetails.builder().applicationName("app1").initialInstanceCount(1).build());
-    CfRouteUpdateRequestConfigData routeUpdateRequestConfigData = CfRouteUpdateRequestConfigData.builder()
-                                                                      .downsizeOldApplication(false)
-                                                                      .finalRoutes(Arrays.asList("a.b.c"))
-                                                                      .isRollback(false)
-                                                                      .isStandardBlueGreen(true)
-                                                                      .build();
-
-    CfCommandRouteUpdateRequest pcfCommandRequest = CfCommandRouteUpdateRequest.builder()
-                                                        .pcfCommandType(PcfCommandType.RESIZE)
-                                                        .pcfConfig(getPcfConfig())
-                                                        .accountId(ACCOUNT_ID)
-                                                        .organization(ORG)
-                                                        .space(SPACE)
-                                                        .timeoutIntervalInMin(2)
-                                                        .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
-                                                        .pcfRouteUpdateConfigData(routeUpdateRequestConfigData)
-                                                        .useAppAutoscalar(false)
-                                                        .build();
-
-    reset(pcfDeploymentManager);
-
-    // Existing applications are empty. No op expected
-    pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
-        pcfCommandRequest, CfRequestConfig.builder().build(), executionLogCallback, false, "");
-    verify(pcfDeploymentManager, never()).resizeApplication(any());
-
-    // Autoscalar is false, existing app is present
-    routeUpdateRequestConfigData.setExistingApplicationDetails(appSetupTimeDetailsList);
-    ApplicationDetail applicationDetail = ApplicationDetail.builder()
-                                              .id("10")
-                                              .diskQuota(1)
-                                              .instances(1)
-                                              .memoryLimit(1)
-                                              .name("app1")
-                                              .requestedState("STOPPED")
-                                              .stack("")
-                                              .runningInstances(1)
-                                              .instanceDetails(Arrays.asList(InstanceDetail.builder()
-                                                                                 .cpu(1.0)
-                                                                                 .diskQuota((long) 1.23)
-                                                                                 .diskUsage((long) 1.23)
-                                                                                 .index("2")
-                                                                                 .memoryQuota((long) 1)
-                                                                                 .memoryUsage((long) 1)
-                                                                                 .build()))
-                                              .diskQuota(1)
-                                              .instances(1)
-                                              .memoryLimit(1)
-                                              .name("app1")
-                                              .requestedState("RUNNING")
-                                              .stack("")
-                                              .runningInstances(1)
-                                              .build();
-    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
-    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(any());
-
-    doReturn(true).when(pcfCommandTaskHelper).disableAutoscalar(any(), any());
-    pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
-        pcfCommandRequest, CfRequestConfig.builder().build(), executionLogCallback, false, "");
-    verify(pcfDeploymentManager, times(1)).resizeApplication(any());
-    verify(pcfCommandTaskHelper, never()).disableAutoscalar(any(), any());
-
-    // Autoscalar is true, existing app present
-    pcfCommandRequest.setUseAppAutoscalar(true);
-    ArgumentCaptor<CfAppAutoscalarRequestData> argumentCaptor =
-        ArgumentCaptor.forClass(CfAppAutoscalarRequestData.class);
-    pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
-        pcfCommandRequest, CfRequestConfig.builder().build(), executionLogCallback, false, "");
-    verify(pcfDeploymentManager, times(2)).resizeApplication(any());
-    verify(pcfCommandTaskHelper, times(1)).disableAutoscalar(argumentCaptor.capture(), any());
-    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData = argumentCaptor.getValue();
-    assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("app1");
-    assertThat(pcfAppAutoscalarRequestData.getApplicationGuid()).isEqualTo("10");
-    assertThat(pcfAppAutoscalarRequestData.getTimeoutInMins()).isEqualTo(2);
-    assertThat(pcfAppAutoscalarRequestData.isExpectedEnabled()).isTrue();
-
-    routeUpdateRequestConfigData.setRollback(true);
-    doReturn(true).when(pcfDeploymentManager).changeAutoscalarState(any(), any(), anyBoolean());
-    pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
-        pcfCommandRequest, CfRequestConfig.builder().build(), executionLogCallback, true, "");
-    verify(pcfDeploymentManager, times(1)).changeAutoscalarState(argumentCaptor.capture(), any(), anyBoolean());
-    pcfAppAutoscalarRequestData = argumentCaptor.getValue();
-    assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("app1");
-    assertThat(pcfAppAutoscalarRequestData.getApplicationGuid()).isEqualTo("10");
-    assertThat(pcfAppAutoscalarRequestData.getTimeoutInMins()).isEqualTo(2);
-    assertThat(pcfAppAutoscalarRequestData.isExpectedEnabled()).isFalse();
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testSwapRouteExecutionNeeded() throws Exception {
-    assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(null)).isFalse();
-    assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(
-                   CfRouteUpdateRequestConfigData.builder().isRollback(false).build()))
-        .isTrue();
-    assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(
-                   CfRouteUpdateRequestConfigData.builder().isRollback(true).skipRollback(false).build()))
-        .isTrue();
-    assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(
-                   CfRouteUpdateRequestConfigData.builder().isRollback(true).skipRollback(true).build()))
-        .isFalse();
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testGeneratePcfInstancesElementsForExistingApp() throws Exception {
-    List<CfInternalInstanceElement> pcfInstanceElements = new ArrayList<>();
-
-    ApplicationDetail applicationDetail = ApplicationDetail.builder()
-                                              .id("10")
-                                              .diskQuota(1)
-                                              .instances(1)
-                                              .memoryLimit(1)
-                                              .name("app1")
-                                              .requestedState("STOPPED")
-                                              .stack("")
-                                              .runningInstances(1)
-                                              .instanceDetails(Arrays.asList(InstanceDetail.builder()
-                                                                                 .cpu(1.0)
-                                                                                 .diskQuota((long) 1.23)
-                                                                                 .diskUsage((long) 1.23)
-                                                                                 .index("2")
-                                                                                 .memoryQuota((long) 1)
-                                                                                 .memoryUsage((long) 1)
-                                                                                 .build()))
-                                              .diskQuota(1)
-                                              .instances(1)
-                                              .memoryLimit(1)
-                                              .name("app1")
-                                              .requestedState("RUNNING")
-                                              .stack("")
-                                              .runningInstances(1)
-                                              .build();
-    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
-
-    CfCommandDeployRequest request = CfCommandDeployRequest.builder().build();
-    pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
-        pcfInstanceElements, CfRequestConfig.builder().build(), request, executionLogCallback);
-
-    request.setDownsizeAppDetail(CfAppSetupTimeDetails.builder().applicationName("app").build());
-    pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
-        pcfInstanceElements, CfRequestConfig.builder().build(), request, executionLogCallback);
-    assertThat(pcfInstanceElements.size()).isEqualTo(1);
-    assertThat(pcfInstanceElements.get(0).getInstanceIndex()).isEqualTo("2");
-
-    doThrow(new PivotalClientApiException("e")).when(pcfDeploymentManager).getApplicationByName(any());
-    pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
-        pcfInstanceElements, CfRequestConfig.builder().build(), request, executionLogCallback);
-  }
-
-  @Test
-  @Owner(developers = BOJANA)
-  @Category(UnitTests.class)
-  public void testpcfApplicationDetailsCommandTaskHandlerInvalidArgumentsException() throws IOException {
-    CfCommandRequest cfCommandRequest = mock(CfCommandDeployRequest.class);
-    when(cfCommandRequest.getActivityId()).thenReturn(ACTIVITY_ID);
-    List<EncryptedDataDetail> encryptedDataDetails = Arrays.asList(EncryptedDataDetail.builder().build());
-    when(encryptionService.getDecryptedValue(any())).thenReturn("decryptedValue".toCharArray());
-    try {
-      pcfApplicationDetailsCommandTaskHandler.executeTask(
-          cfCommandRequest, encryptedDataDetails, false, logStreamingTaskClient);
-    } catch (Exception e) {
-      assertThatExceptionOfType(InvalidArgumentsException.class);
-      InvalidArgumentsException invalidArgumentsException = (InvalidArgumentsException) e;
-      assertThat(invalidArgumentsException.getParams())
-          .containsValue("cfCommandRequest: Must be instance of CfInstanceSyncRequest");
-    }
   }
 }

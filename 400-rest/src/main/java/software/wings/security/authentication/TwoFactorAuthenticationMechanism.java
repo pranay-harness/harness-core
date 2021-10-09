@@ -1,3 +1,7 @@
 package software.wings.security.authentication;
 
-public enum TwoFactorAuthenticationMechanism { TOTP }
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(PL) public enum TwoFactorAuthenticationMechanism { TOTP }

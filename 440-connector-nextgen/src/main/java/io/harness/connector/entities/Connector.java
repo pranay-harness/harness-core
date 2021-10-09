@@ -8,6 +8,7 @@ import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorConnectivityDetails.ConnectorConnectivityDetailsKeys;
+import io.harness.connector.entities.embedded.vaultconnector.VaultConnector.VaultConnectorKeys;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.data.validator.Trimmed;
@@ -82,6 +83,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   String yamlGitConfigRef;
   String filePath;
   String rootFolder;
+  Boolean executeOnManager = Boolean.FALSE;
 
   @Override
   public String getAccountIdentifier() {
@@ -144,6 +146,14 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
                  .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.projectIdentifier,
                      ConnectorKeys.orgIdentifier, ConnectorKeys.isFromDefaultBranch))
                  .descSortField(ConnectorKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("nextTokenRenewIteration")
+                 .field(VaultConnectorKeys.nextTokenRenewIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("type_nextTokenRenewIteration")
+                 .fields(Arrays.asList(ConnectorKeys.type, VaultConnectorKeys.nextTokenRenewIteration))
                  .build())
         .build();
   }

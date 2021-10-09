@@ -15,6 +15,7 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/db/timescaledb"
 	"github.com/wings-software/portal/product/ci/ti-service/eventsframework"
 	"github.com/wings-software/portal/product/ci/ti-service/handler"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/server"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
@@ -36,6 +37,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	logBuilder := logs.NewBuilder().Verbose(true).WithDeployment("ti-service").
 		WithFields("application_name", "TI-svc")
 	log := logBuilder.MustBuild().Sugar()
+	logger.InitLogger(log)
 
 	// load the system configuration from the environment.
 	config, err := config.Load()
@@ -59,6 +61,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			"selection_stats_table", config.TimeScaleDb.SelectionTable,
 			"coverage_table", config.TimeScaleDb.CoverageTable,
 			"ssl_enabled", config.TimeScaleDb.EnableSSL,
+			"ssl_mode", config.TimeScaleDb.SSLMode,
 			"ssl_cert_path", config.TimeScaleDb.SSLCertPath)
 		db, err = timescaledb.New(
 			config.TimeScaleDb.Username,
@@ -70,6 +73,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			config.TimeScaleDb.CoverageTable,
 			config.TimeScaleDb.SelectionTable,
 			config.TimeScaleDb.EnableSSL,
+			config.TimeScaleDb.SSLMode,
 			config.TimeScaleDb.SSLCertPath,
 			log,
 		)
@@ -106,12 +110,20 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		if config.EventsFramework.RedisUrl != "" {
 			log.Infow("connecting to redis for receiving events", "url", config.EventsFramework.RedisUrl,
 				"ssl_enabled", config.EventsFramework.SSLEnabled, "cert_path", config.EventsFramework.CertPath)
-			rdb, err := eventsframework.New(
-				config.EventsFramework.RedisUrl,
-				config.EventsFramework.RedisPassword,
-				config.EventsFramework.SSLEnabled,
-				config.EventsFramework.CertPath,
-				log)
+
+			conf := eventsframework.RedisBrokerConf{
+				Address:            config.EventsFramework.RedisUrl,
+				ClusterUrls:        config.EventsFramework.ClusterUrls,
+				Password:           config.EventsFramework.RedisPassword,
+				UseTLS:             config.EventsFramework.SSLEnabled,
+				TLSCaFilePath:      config.EventsFramework.CertPath,
+				SentinelMasterName: config.EventsFramework.SentinelMasterName,
+				SentinelUrls:       config.EventsFramework.SentinelUrls,
+				UseSentinel:        config.EventsFramework.UseSentinel,
+				UseCluster:         config.EventsFramework.UseCluster,
+			}
+
+			rdb, err := eventsframework.NewRedisBroker(conf, log)
 			if err != nil {
 				log.Errorw("could not establish connection with events framework Redis")
 				return errors.New("could not establish connection with events framework Redis")
@@ -122,8 +134,11 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			}
 			topic := fmt.Sprintf("%sstreams:webhook_request_payload_data", prefix)
 			log.Infow("registering webhook payload consumer with events framework", "topic", topic)
-			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db)
-			rdb.Run()
+			err = rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db)
+			if err != nil {
+				log.Errorw("error while registering callback function with redis", zap.Error(err))
+				return err
+			}
 			log.Infow("done registering webhook consumer")
 		} else {
 			log.Errorw("events framework redis URL not configured")
@@ -138,7 +153,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	server := server.Server{
 		Acme:    config.Server.Acme,
 		Addr:    config.Server.Bind,
-		Handler: handler.Handler(db, tidb, config, log),
+		Handler: handler.Handler(db, tidb, config),
 	}
 
 	// trap the os signal to gracefully shutdown the

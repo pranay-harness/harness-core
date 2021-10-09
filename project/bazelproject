@@ -5,6 +5,7 @@ directories:
 
 import_run_configurations:
   project/run-configurations/AccessControlMicroservice.xml
+  project/run-configurations/Analyser_Service.xml
   project/run-configurations/BatchProcessinngApp.xml
   project/run-configurations/CENextGenApp.xml
   project/run-configurations/CIManagerApplication.xml
@@ -23,3 +24,5 @@ import_run_configurations:
   project/run-configurations/Watcher.xml
   project/run-configurations/WingsApp.xml
   project/run-configurations/PipelineService.xml
+  project/run-configurations/TemplateService.xml
+  project/run-configurations/DashboardApplication.xml

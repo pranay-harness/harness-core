@@ -7,7 +7,6 @@ option java_multiple_files = true;
 import "io/harness/pms/contracts/ambiance/ambiance.proto";
 import "io/harness/pms/contracts/execution/execution_mode.proto";
 import "io/harness/pms/contracts/refobjects/resolved_ref_object.proto";
-import "io/harness/pms/contracts/execution/executable_response.proto";
 
 message NodeResumeEvent {
   io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;

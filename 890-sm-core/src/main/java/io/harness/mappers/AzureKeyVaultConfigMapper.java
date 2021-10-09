@@ -29,6 +29,7 @@ public class AzureKeyVaultConfigMapper {
                                             .tenantId(azureKeyVaultConfigDTO.getTenantId())
                                             .azureEnvironmentType(azureKeyVaultConfigDTO.getAzureEnvironmentType())
                                             .vaultName(azureKeyVaultConfigDTO.getVaultName())
+                                            .delegateSelectors(azureKeyVaultConfigDTO.getDelegateSelectors())
                                             .build();
     azureVaultConfig.setNgMetadata(ngMetaDataFromDto(azureKeyVaultConfigDTO));
     azureVaultConfig.setAccountId(azureKeyVaultConfigDTO.getAccountIdentifier());

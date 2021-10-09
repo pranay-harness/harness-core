@@ -2,11 +2,14 @@ package io.harness.ng.userprofile.services.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.security.SourcePrincipalContextBuilder;
@@ -24,6 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserInfoServiceImpl implements UserInfoService {
   @Inject private UserClient userClient;
+  @Inject private NgUserService ngUserService;
 
   @Override
   public UserInfo getCurrentUser() {
@@ -87,6 +91,18 @@ public class UserInfoServiceImpl implements UserInfoService {
   public PasswordChangeResponse changeUserPassword(PasswordChangeDTO passwordChangeDTO) {
     UserInfo user = getCurrentUser();
     return RestClientUtils.getResponse(userClient.changeUserPassword(user.getUuid(), passwordChangeDTO));
+  }
+
+  @Override
+  public UserInfo unlockUser(String userId, String accountId) {
+    Optional<UserMetadataDTO> userMetadataOpt = ngUserService.getUserMetadata(userId);
+    if (userMetadataOpt.isPresent()) {
+      String email = userMetadataOpt.get().getEmail();
+      Optional<UserInfo> userInfo = RestClientUtils.getResponse(userClient.unlockUser(email, accountId));
+      return userInfo.get();
+    } else {
+      throw new InvalidRequestException("userMetadata does not exist");
+    }
   }
 
   private Optional<String> getUserEmail() {

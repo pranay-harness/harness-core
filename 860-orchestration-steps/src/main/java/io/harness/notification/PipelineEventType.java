@@ -1,7 +1,11 @@
 package io.harness.notification;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public enum PipelineEventType {
   @JsonProperty(PipelineEventTypeConstants.ALL_EVENTS) ALL_EVENTS("Pipeline", PipelineEventTypeConstants.ALL_EVENTS),
   @JsonProperty(PipelineEventTypeConstants.PIPELINE_START)
@@ -10,6 +14,8 @@ public enum PipelineEventType {
   PIPELINE_SUCCESS("Pipeline", PipelineEventTypeConstants.PIPELINE_SUCCESS),
   @JsonProperty(PipelineEventTypeConstants.PIPELINE_FAILED)
   PIPELINE_FAILED("Pipeline", PipelineEventTypeConstants.PIPELINE_FAILED),
+  @JsonProperty(PipelineEventTypeConstants.PIPELINE_END)
+  PIPELINE_END("Pipeline", PipelineEventTypeConstants.PIPELINE_END),
   @JsonProperty(PipelineEventTypeConstants.PIPELINE_PAUSED)
   PIPELINE_PAUSED("Pipeline", PipelineEventTypeConstants.PIPELINE_PAUSED),
   @JsonProperty(PipelineEventTypeConstants.STAGE_SUCCESS)

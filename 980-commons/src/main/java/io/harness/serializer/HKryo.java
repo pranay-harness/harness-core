@@ -3,6 +3,8 @@ package io.harness.serializer;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
@@ -83,6 +85,7 @@ import net.sf.json.JSONObject;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class HKryo extends Kryo {
   @Setter private String currentLocation;
 
@@ -237,7 +240,7 @@ public class HKryo extends Kryo {
   @Override
   public Registration register(Class type, int id) {
     if (getRegistration(id) != null) {
-      throw new IllegalStateException("The id is already used by " + getRegistration(id).getType());
+      throw new IllegalStateException("The id " + id + " is already used by " + getRegistration(id).getType());
     }
     return check(super.register(type, id), id);
   }
@@ -285,15 +288,14 @@ public class HKryo extends Kryo {
     allowedNames.put(97, "com.google.common.collect.RegularImmutableSet");
     allowedNames.put(99, "com.google.common.collect.ImmutableEnumSet");
     allowedNames.put(100, "com.google.common.collect.ImmutableMap");
-    allowedNames.put(101, "com.google.common.collect.RegularImmutableBiMap");
+    allowedNames.put(101, "com.google.common.collect.RegularImmutableMap");
     allowedNames.put(102, "com.google.common.collect.SingletonImmutableBiMap");
-    allowedNames.put(103, "com.google.common.collect.RegularImmutableMap");
-    allowedNames.put(104, "com.google.common.collect.ImmutableEnumMap");
-    allowedNames.put(105, "com.google.common.collect.ImmutableMultimap");
-    allowedNames.put(106, "com.google.common.collect.EmptyImmutableListMultimap");
-    allowedNames.put(107, "com.google.common.collect.ImmutableListMultimap");
-    allowedNames.put(108, "com.google.common.collect.EmptyImmutableSetMultimap");
-    allowedNames.put(109, "com.google.common.collect.ImmutableSetMultimap");
+    allowedNames.put(103, "com.google.common.collect.ImmutableEnumMap");
+    allowedNames.put(104, "com.google.common.collect.ImmutableMultimap");
+    allowedNames.put(105, "com.google.common.collect.EmptyImmutableListMultimap");
+    allowedNames.put(106, "com.google.common.collect.ImmutableListMultimap");
+    allowedNames.put(107, "com.google.common.collect.EmptyImmutableSetMultimap");
+    allowedNames.put(108, "com.google.common.collect.ImmutableSetMultimap");
   }
 
   @Override

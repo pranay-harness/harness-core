@@ -6,7 +6,6 @@ import static software.wings.yaml.gitSync.YamlChangeSet.Status.COMPLETED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.FAILED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 
 import software.wings.beans.Account;

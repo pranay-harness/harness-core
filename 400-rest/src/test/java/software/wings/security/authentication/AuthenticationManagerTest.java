@@ -3,6 +3,7 @@ package software.wings.security.authentication;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.LAZAR;
 import static io.harness.rule.OwnerRule.PHOENIKX;
@@ -12,7 +13,6 @@ import static io.harness.rule.OwnerRule.VIKAS;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,11 +28,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -64,6 +67,7 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class AuthenticationManagerTest extends WingsBaseTest {
   private static final String NON_EXISTING_USER = "nonExistingUser";
   private static final String PASSWORD_WITH_SPECIAL_CHARECTERS = "prefix:suffix:abc_+=./,!@#$%^&&*(Z)";
@@ -99,8 +103,9 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(USER_PASSWORD);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.SAML);
-    assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(AuthenticationMechanism.SAML);
+    when(account1.getAuthenticationMechanism()).thenReturn(io.harness.ng.core.account.AuthenticationMechanism.SAML);
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
+        .isEqualTo(io.harness.ng.core.account.AuthenticationMechanism.SAML);
   }
 
   @Test
@@ -184,10 +189,10 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(loginTypeResponse.getSSORequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.SAML);
+    when(account1.getAuthenticationMechanism()).thenReturn(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     SSORequest SSORequest = new SSORequest();
     SSORequest.setIdpRedirectUrl("TestURL");
-    when(SAML_CLIENT_SERVICE.generateSamlRequest(mockUser)).thenReturn(SSORequest);
+    when(SAML_CLIENT_SERVICE.generateSamlRequestFromAccount(account1, false)).thenReturn(SSORequest);
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
     assertThat(loginTypeResponse.getSSORequest()).isNotNull();

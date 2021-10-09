@@ -1,5 +1,7 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -18,6 +20,8 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -36,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.util.Arrays;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -45,6 +50,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -52,13 +58,13 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(JUnitParamsRunner.class)
 @PrepareForTest({WinRmSession.class, SshHelperUtils.class})
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class FileBasedWinRmExecutorTest extends CategoryTest {
   @Mock private LogCallback logCallback;
   @Mock private DelegateFileManager delegateFileManager;
   FileBasedWinRmExecutor plainOldExecutor;
-  FileBasedWinRmExecutor plainOldExecutorWithOptimization;
   FileBasedWinRmExecutor executorWithDisableEncoding;
-  FileBasedWinRmExecutor executorWithDisableEncodingAndOptimization;
 
   @Before
   public void setUp() throws Exception {
@@ -66,13 +72,9 @@ public class FileBasedWinRmExecutorTest extends CategoryTest {
     final WinRmSessionConfig winRmSessionConfig =
         WinRmSessionConfig.builder().authenticationScheme(KERBEROS).username("admin").domain("domain").build();
     plainOldExecutor =
-        spy(new FileBasedWinRmExecutor(logCallback, delegateFileManager, false, winRmSessionConfig, false, false));
-    plainOldExecutorWithOptimization =
-        spy(new FileBasedWinRmExecutor(logCallback, delegateFileManager, false, winRmSessionConfig, false, true));
+        spy(new FileBasedWinRmExecutor(logCallback, delegateFileManager, false, winRmSessionConfig, false));
     executorWithDisableEncoding =
-        spy(new FileBasedWinRmExecutor(logCallback, delegateFileManager, false, winRmSessionConfig, true, false));
-    executorWithDisableEncodingAndOptimization =
-        spy(new FileBasedWinRmExecutor(logCallback, delegateFileManager, false, winRmSessionConfig, true, true));
+        spy(new FileBasedWinRmExecutor(logCallback, delegateFileManager, false, winRmSessionConfig, true));
   }
 
   @Test
@@ -80,13 +82,16 @@ public class FileBasedWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   @Parameters({"1", "491", "1024", "4096", "8492", "31297"})
   public void copyConfigFilesOptimized(int size) throws IOException {
-    testCopyConfigFilesForExecutor(size, plainOldExecutorWithOptimization);
-    testCopyConfigFilesForExecutor(size, executorWithDisableEncodingAndOptimization);
+    testCopyConfigFilesForExecutor(size, plainOldExecutor);
+    testCopyConfigFilesForExecutor(size, executorWithDisableEncoding);
   }
 
   private void testCopyConfigFilesForExecutor(int size, FileBasedWinRmExecutor executor) throws IOException {
     mockStatic(SshHelperUtils.class);
     mockRemoteCommandStatus(executor, SUCCESS);
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
     doReturn(buildByteInputStream(size))
         .when(delegateFileManager)
         .downloadByConfigFileId(anyString(), anyString(), anyString(), anyString());
@@ -110,44 +115,12 @@ public class FileBasedWinRmExecutorTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
-  public void getDeleteFileCommandBehindFF() {
-    ConfigFileMetaData configFileMetaData = buildConfigFileMetadata(1);
-    String command = executorWithDisableEncoding.getDeleteFileCommandStr(configFileMetaData);
-    assertThat(command).isEqualTo("$fileName = \"TEST_PATH\\TEST_FILE_NAME\"\n"
-        + "Write-Host \"Clearing target config file $fileName on the host.\""
-        + "\n[IO.File]::Delete($fileName)");
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.YOGESH)
-  @Category(UnitTests.class)
   public void getDeleteFileCommand() {
     ConfigFileMetaData configFileMetaData = buildConfigFileMetadata(1);
     String command = plainOldExecutor.getDeleteFileCommandStr(configFileMetaData);
     assertThat(command).isEqualTo("$decodedFile = 'TEST_PATH\\TEST_FILE_NAME'\n"
         + "Write-Host \"Clearing target config file $decodedFile  on the host.\"\n"
         + "[IO.File]::Delete($decodedFile)");
-  }
-
-  /**
-   * Base64 encoding, no optimization. Transfer file as is using WriteAllText
-   */
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testCopyConfigCommandEncoded() {
-    ConfigFileMetaData configFileMetaData = buildConfigFileMetadata(1);
-    String command = plainOldExecutor.getCopyConfigCommand(configFileMetaData, "This is a test".getBytes());
-    assertThat(command).isEqualTo("#### Convert Base64 string back to config file ####\n"
-        + "\n"
-        + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
-        + "VGhpcyBpcyBhIHRlc3Q="
-        + "\"))\n"
-        + "Write-Host \"Decoding config file on the host.\"\n"
-        + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-        + configFileMetaData.getFilename() + "\'\n"
-        + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
-        + "Write-Host \"Copied config file to the host.\"\n");
   }
 
   /**
@@ -158,8 +131,7 @@ public class FileBasedWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCopyConfigEncodedAndOptimization() {
     ConfigFileMetaData configFileMetaData = buildConfigFileMetadata(1);
-    String command =
-        plainOldExecutorWithOptimization.getCopyConfigCommand(configFileMetaData, "This is a test".getBytes());
+    String command = plainOldExecutor.getCopyConfigCommand(configFileMetaData, "This is a test".getBytes());
     assertThat(command).isEqualTo("#### Convert Base64 string back to config file ####\n"
         + "\n"
         + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\"VGhpcyBpcyBhIHRlc3Q=\"))\n"
@@ -178,29 +150,12 @@ public class FileBasedWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCopyConfigCommandDisableEncodingAndOptimization() {
     ConfigFileMetaData configFileMetaData = buildConfigFileMetadata(1);
-    String command = executorWithDisableEncodingAndOptimization.getCopyConfigCommand(
-        configFileMetaData, "This is a test".getBytes());
+    String command = executorWithDisableEncoding.getCopyConfigCommand(configFileMetaData, "This is a test".getBytes());
     assertThat(command).isEqualTo("$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\"
         + configFileMetaData.getFilename() + "\"\n"
         + "$commandString = @'\n" + new String("This` is` a` test".getBytes()) + "\n'@"
         + "\n[IO.File]::AppendAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
         + "Write-Host \"Appended to config file on the host.\"");
-  }
-
-  /**
-   * no encoding, no optimization. Transfer file as is using WriteAllText in plaintext
-   */
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testCopyConfigCommandDisableEncoding() {
-    ConfigFileMetaData configFileMetaData = buildConfigFileMetadata(1);
-    String command = executorWithDisableEncoding.getCopyConfigCommand(configFileMetaData, "This is a test".getBytes());
-    assertThat(command).isEqualTo("$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-        + configFileMetaData.getFilename() + "\"\n"
-        + "$commandString = {" + new String("This is a test".getBytes()) + "}"
-        + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
-        + "Write-Host \"Copied config file to the host.\"\n");
   }
 
   private ConfigFileMetaData buildConfigFileMetadata(long size) {

@@ -115,6 +115,12 @@ resourceGroupServiceConfig:
     manager:
       baseUrl: http://localhost:3457/api/
       secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+    resourceGroup:
+      baseUrl: http://localhost:9005/api/
+      secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+    template-service:
+      baseUrl: http://localhost:15001/api/
+      secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   redis:
     sentinel: false
     masterName: "test"
@@ -133,6 +139,20 @@ resourceGroupServiceConfig:
       enabled: false
       CATrustStorePath: "/tmp/ca_trust_store"
       CATrustStorePassword: ""
+  redisLockConfig:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
   accessControlAdminClient:
     accessControlServiceConfig:
       baseUrl: http://localhost:9006/api/
@@ -153,4 +173,6 @@ resourceGroupServiceConfig:
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
 
-  distributedLockImplementation: ${DISTRIBUTED_LOCK_IMPLEMENTATION:-MONGO}
+  exportMetricsToStackDriver: false
+
+  distributedLockImplementation: REDIS

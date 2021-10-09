@@ -42,6 +42,7 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -93,6 +94,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private SpotInstStateHelper spotinstStateHelper;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks
   private final AwsAmiServiceTrafficShiftAlbDeployState state =
@@ -172,6 +174,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
     on(state).set("awsAmiServiceHelper", awsAmiServiceHelper);
     on(state).set("spotinstStateHelper", spotinstStateHelper);
     on(state).set("stateExecutionService", stateExecutionService);
+    on(state).set("featureFlagService", featureFlagService);
 
     LbDetailsForAlbTrafficShift lbDetails = LbDetailsForAlbTrafficShift.builder()
                                                 .loadBalancerName("lbName")
@@ -242,6 +245,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
     instanceElement.setUuid("id");
     instanceElement.setHostName("ec2-instance");
     doReturn(singletonList(instanceElement)).when(awsStateHelper).generateInstanceElements(any(), any(), any());
+    doReturn(false).when(featureFlagService).isEnabled(any(), anyString());
 
     if (!isSuccess) {
       doThrow(Exception.class).when(delegateService).queueTask(any());

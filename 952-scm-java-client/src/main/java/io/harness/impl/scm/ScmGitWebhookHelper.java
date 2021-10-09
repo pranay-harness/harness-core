@@ -86,7 +86,7 @@ public class ScmGitWebhookHelper {
       final List<BitbucketCloudWebhookEvent> bitbucketCloudWebhookEvents = (existingWebhook != null)
           ? existingWebhook.getNativeEvents().getBitbucketCloud().getEventsList()
           : Collections.emptyList();
-      return createWebhookRequestBuilder
+      return createWebhookRequestBuilder.setName("HarnessWebhook")
           .setNativeEvents(
               NativeEvents.newBuilder()
                   .setBitbucketCloud(BitbucketCloudWebhookEvents.newBuilder()

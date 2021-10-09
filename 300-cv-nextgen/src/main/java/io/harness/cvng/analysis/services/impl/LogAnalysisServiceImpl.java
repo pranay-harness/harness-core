@@ -260,10 +260,16 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     learningEngineTaskService.markCompleted(taskId);
     CVConfig cvConfig =
         cvConfigService.get(verificationTaskService.getCVConfigId(learningEngineTask.getVerificationTaskId()));
-
+    Preconditions.checkNotNull(
+        cvConfig, String.format("Invalid verification task id: [%s]", learningEngineTask.getVerificationTaskId()));
+    long anomalousLogCount = analysisBody.getLogAnalysisResults()
+                                 .stream()
+                                 .filter(result -> LogAnalysisTag.getAnomalousTags().contains(result.getTag()))
+                                 .count();
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
         cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
-        cvConfig.getCategory(), learningEngineTask.getAnalysisStartTime(), analysisBody.getScore());
+        cvConfig.getCategory(), learningEngineTask.getAnalysisStartTime(), analysisBody.getScore(), 0,
+        anomalousLogCount);
   }
 
   @Override
@@ -384,6 +390,17 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         .lessThanOrEq(endTime)
         .field(LogAnalysisResultKeys.logAnalysisResults + "." + AnalysisResultKeys.tag)
         .in(tags)
+        .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
+  }
+
+  @Override
+  public List<LogAnalysisResult> getAnalysisResults(String verificationTaskId, Instant startTime, Instant endTime) {
+    return hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)
+        .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
+        .field(LogAnalysisResultKeys.analysisStartTime)
+        .greaterThanOrEq(startTime)
+        .field(LogAnalysisResultKeys.analysisEndTime)
+        .lessThanOrEq(endTime)
         .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 

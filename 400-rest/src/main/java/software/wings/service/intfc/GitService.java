@@ -1,5 +1,10 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
@@ -8,13 +13,15 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 
 import java.util.List;
 
+@OwnedBy(HarnessTeam.DX)
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
 public interface GitService {
   String validate(GitConfig gitConfig);
 
   void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext);
 
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
-      List<String> filePaths, boolean useBranch);
+      List<String> filePaths, boolean useBranch, boolean shouldExportCommitSha);
 
   GitFetchFilesResult fetchFilesBetweenCommits(
       GitConfig gitConfig, String newCommitId, String oldCommitId, String connectorId);
@@ -22,7 +29,8 @@ public interface GitService {
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
       List<String> filePaths, boolean useBranch, List<String> fileExtensions, boolean isRecursive);
 
-  void downloadFiles(GitConfig gitConfig, GitFileConfig gitFileConfig, String destinationDirectory);
+  String downloadFiles(
+      GitConfig gitConfig, GitFileConfig gitFileConfig, String destinationDirectory, boolean shouldExportCommitSha);
 
   GitCommitAndPushResult commitAndPush(GitOperationContext gitOperationContext);
 }

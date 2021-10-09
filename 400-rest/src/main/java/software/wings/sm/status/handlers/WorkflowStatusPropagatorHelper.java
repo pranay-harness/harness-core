@@ -10,9 +10,16 @@ import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.REJECTED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.WAITING;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.PipelineStageExecution;
@@ -27,9 +34,12 @@ import javax.validation.constraints.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowStatusPropagatorHelper {
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject WingsPersistence wingsPersistence;
+  @Inject FeatureFlagService featureFlagService;
 
   WorkflowExecution updateStatus(
       String appId, String uuid, List<ExecutionStatus> allowedFromStatuses, ExecutionStatus toStatus) {
@@ -79,5 +89,19 @@ public class WorkflowStatusPropagatorHelper {
                                       .get();
     notNullCheck("Workflow Execution null for executionId: " + pipelineExecutionId, execution);
     return execution.getPipelineExecution().getPipelineStageExecutions();
+  }
+
+  public void refreshPipelineExecution(String accountId, String appId, String pipelineExecutionId) {
+    if (isNotEmpty(pipelineExecutionId) && featureFlagService.isEnabled(FeatureName.APP_TELEMETRY, accountId)) {
+      workflowExecutionService.refreshPipelineExecution(
+          workflowExecutionService.getWorkflowExecution(appId, pipelineExecutionId));
+    }
+  }
+
+  public void refreshPipelineExecution(WorkflowExecution workflowExecution) {
+    String accountId = workflowExecution.getAccountId();
+    if (featureFlagService.isEnabled(FeatureName.APP_TELEMETRY, accountId)) {
+      workflowExecutionService.refreshPipelineExecution(workflowExecution);
+    }
   }
 }

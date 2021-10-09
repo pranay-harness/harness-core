@@ -30,6 +30,7 @@ function clear_dir(){
 
 MODULE_NAME=$1
 MODULE_COVERAGE_DIR="$HOME/combined_coverage_report/${MODULE_NAME}"
+TEST_FOLDER_PATTERN="*/test/*"
 
 #Main Code Starts here
 
@@ -46,8 +47,12 @@ bazel coverage -s -k --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 --coverage_report_generator=@bazel_tools//tools/test:coverage_report_generator \
 //${MODULE_NAME}/...
 
+echo "Removing Test classes from coverage report"
+lcov --remove `bazel info output_path`/_coverage/_coverage_report.dat -o ${MODULE_COVERAGE_DIR}/_coverage_report.dat \
+${TEST_FOLDER_PATTERN}
+
 echo "Generating HTML Coverage Report..."
-genhtml bazel-out/_coverage/_coverage_report.dat -o ${MODULE_COVERAGE_DIR}
+genhtml ${MODULE_COVERAGE_DIR}/_coverage_report.dat -o ${MODULE_COVERAGE_DIR}
 if [ "$?" -eq 0 ];then
   echo -e "Combined HTML Report Generated: ${MODULE_COVERAGE_DIR}/index.html \n \
           Run: \"open ${MODULE_COVERAGE_DIR}/index.html\" to see report in browser."

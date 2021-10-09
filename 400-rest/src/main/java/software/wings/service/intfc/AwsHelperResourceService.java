@@ -46,4 +46,12 @@ public interface AwsHelperResourceService {
   Set<String> listTags(String settingId, String region, String resourceType);
 
   List<String> listBuckets(String awsSettingId);
+
+  /**
+   * List of supported cloudformation capabilities
+   * @return
+   */
+  List<String> listCloudformationCapabilities();
+
+  Set<String> listCloudFormationStatues();
 }

@@ -2,20 +2,21 @@ package io.harness.cvng.cdng.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
-import io.harness.cvng.cdng.beans.BlueGreenCanaryVerificationJobSpec.BlueGreenCanaryVerificationJobSpecKeys;
+import io.harness.beans.SwaggerConstants;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.HashMap;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Data
-@JsonTypeName("Test")
+@JsonTypeName("LoadTest")
 @OwnedBy(HarnessTeam.CV)
 @SuperBuilder
 @NoArgsConstructor
@@ -25,13 +26,15 @@ public class TestVerificationJobSpec extends VerificationJobSpec {
   ParameterField<String> sensitivity;
   @Override
   public String getType() {
-    return "Test";
+    return "LoadTest";
   }
 
   @Override
-  protected void addToRuntimeParams(HashMap<String, String> runtimeParams) {
-    if (sensitivity.getValue() != null) {
-      runtimeParams.put(BlueGreenCanaryVerificationJobSpecKeys.sensitivity, sensitivity.getValue());
-    }
+  public VerificationJobBuilder verificationJobBuilder() {
+    return TestVerificationJob.builder().sensitivity(
+        RuntimeParameter.builder().isRuntimeParam(false).value(sensitivity.getValue()).build());
   }
+
+  @Override
+  protected void validateParams() {}
 }

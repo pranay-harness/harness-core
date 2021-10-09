@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 
@@ -25,5 +24,5 @@ type Client interface {
 	SelectTests(org, project, pipeline, build, stage, step, repo, sha, source, target, req string) (types.SelectTestsResp, error)
 
 	// UploadCg uploads avro encoded callgraph to ti server
-	UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target string, cg []byte) error
+	UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target string, timeMs int64, cg []byte) error
 }

@@ -3,6 +3,7 @@ package io.harness.plancreator.steps.common;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.advisers.rollback.OnFailRollbackParameters;
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -26,6 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("stepElementParameters")
 // TODO this should go to yaml commons
 @TargetModule(HarnessModule._884_PMS_COMMONS)
+@RecasterAlias("io.harness.plancreator.steps.common.StepElementParameters")
 public class StepElementParameters implements StepParameters {
   String uuid;
   String identifier;
@@ -49,7 +51,7 @@ public class StepElementParameters implements StepParameters {
   public String toViewJson() {
     StepElementParameters stepElementParameters = cloneParameters(false);
     stepElementParameters.setSpec(spec.getViewJsonObject());
-    return RecastOrchestrationUtils.toDocumentJson(stepElementParameters);
+    return RecastOrchestrationUtils.toJson(stepElementParameters);
   }
 
   public StepElementParameters cloneParameters(boolean includeUuid) {

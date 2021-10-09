@@ -11,6 +11,19 @@ message TriggerPayload {
   Type type = 3;
   map<string, string> headers = 4;
   SourceType sourceType = 5;
+  oneof buildData {
+    ArtifactData artifactData = 6;
+    ManifestData manifestData = 7;
+  }
+  int64 version = 8;
+}
+
+message ArtifactData {
+  string build = 1;
+}
+
+message ManifestData {
+  string version = 1;
 }
 
 message ParsedPayload {
@@ -25,6 +38,8 @@ enum Type {
   GIT = 1;
   SCHEDULED = 2;
   WEBHOOK = 3;
+  ARTIFACT = 4;
+  MANIFEST = 5;
 }
 
 enum SourceType {

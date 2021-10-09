@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -69,6 +71,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceGrpcClient {
   private final DelegateServiceBlockingStub delegateServiceBlockingStub;
   private final DelegateAsyncService delegateAsyncService;
@@ -99,7 +102,6 @@ public class DelegateServiceGrpcClient {
     final SubmitTaskResponse submitTaskResponse =
         submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken, Duration.ZERO);
     final String taskId = submitTaskResponse.getTaskId().getId();
-    log.info("sync task id created =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
         Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
         Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
@@ -126,7 +128,6 @@ public class DelegateServiceGrpcClient {
     final SubmitTaskResponse submitTaskResponse =
         submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken, Duration.ZERO);
     final String taskId = submitTaskResponse.getTaskId().getId();
-    log.info("ID for Sync Task =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
         Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
         Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
@@ -251,6 +252,26 @@ public class DelegateServiceGrpcClient {
                                                  .createPerpetualTask(CreatePerpetualTaskRequest.newBuilder()
                                                                           .setAccountId(accountId)
                                                                           .setType(type)
+                                                                          .setSchedule(schedule)
+                                                                          .setContext(context)
+                                                                          .setAllowDuplicate(allowDuplicate)
+                                                                          .setTaskDescription(taskDescription)
+                                                                          .build());
+
+      return response.getPerpetualTaskId();
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException("Unexpected error occurred while creating perpetual task.", ex);
+    }
+  }
+
+  public PerpetualTaskId createPerpetualTask(AccountId accountId, String type, PerpetualTaskSchedule schedule,
+      PerpetualTaskClientContextDetails context, boolean allowDuplicate, String taskDescription, String clientTaskId) {
+    try {
+      CreatePerpetualTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
+                                                 .createPerpetualTask(CreatePerpetualTaskRequest.newBuilder()
+                                                                          .setAccountId(accountId)
+                                                                          .setType(type)
+                                                                          .setClientTaskId(clientTaskId)
                                                                           .setSchedule(schedule)
                                                                           .setContext(context)
                                                                           .setAllowDuplicate(allowDuplicate)

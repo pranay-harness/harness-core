@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -44,6 +46,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.CDC)
 public class TriggerConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock DataFetchingEnvironment dataFetchingEnvironment;
   @Inject WingsPersistence wingsPersistence;
@@ -60,18 +63,22 @@ public class TriggerConnectionDataFetcherTest extends AbstractDataFetcherTestBas
     public String getName() {
       return "total";
     }
+
     @Override
     public String getQualifiedName() {
       return null;
     }
+
     @Override
     public GraphQLFieldDefinition getFieldDefinition() {
       return null;
     }
+
     @Override
     public Map<String, Object> getArguments() {
       return null;
     }
+
     @Override
     public DataFetchingFieldSelectionSet getSelectionSet() {
       return null;
@@ -82,21 +89,27 @@ public class TriggerConnectionDataFetcherTest extends AbstractDataFetcherTestBas
     public MergedSelectionSet get() {
       return MergedSelectionSet.newMergedSelectionSet().build();
     }
+
     public Map<String, Map<String, Object>> getArguments() {
       return Collections.emptyMap();
     }
+
     public Map<String, GraphQLFieldDefinition> getDefinitions() {
       return Collections.emptyMap();
     }
+
     public boolean contains(String fieldGlobPattern) {
       return false;
     }
+
     public SelectedField getField(String fieldName) {
       return null;
     }
+
     public List<SelectedField> getFields() {
       return Collections.singletonList(selectedField);
     }
+
     public List<SelectedField> getFields(String fieldGlobPattern) {
       return Collections.emptyList();
     }

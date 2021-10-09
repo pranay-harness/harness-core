@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.commons.constants.Constants.UID;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.rule.OwnerRule.AVMOHAN;
@@ -23,15 +24,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
 
-import com.github.tomakehurst.wiremock.client.UrlMatchingStrategy;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
@@ -66,6 +69,7 @@ import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class PodWatcherTest extends CategoryTest {
   private PodWatcher podWatcher;
   private EventPublisher eventPublisher;
@@ -81,7 +85,7 @@ public class PodWatcherTest extends CategoryTest {
   private static final String MAP_VALUE = "harness.io/created.by";
   private static final Map<String, String> NAMESPACE_LABELS = ImmutableMap.of("harness-managed", "true");
   private static final Map<String, String> SAMPLE_MAP = ImmutableMap.of(MAP_KEY_WITH_DOT, MAP_VALUE);
-  private static final UrlMatchingStrategy POD_URL_MATCHING = urlMatching("^/api/v1/pods.*");
+  private static final UrlPattern POD_URL_MATCHING = urlMatching("^/api/v1/pods.*");
 
   ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
   @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
@@ -189,6 +193,7 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(captor.getAllValues()).hasSize(1);
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this::infoMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
   }
 
   @Test
@@ -201,6 +206,7 @@ public class PodWatcherTest extends CategoryTest {
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this::deletedMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
   }
 
   @Test
@@ -248,6 +254,7 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this::infoMessageAssertions);
     assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this::deletedMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
   }
 
   private static V1Pod scheduledPod() {

@@ -2,7 +2,8 @@ package io.harness.ngtriggers.eventmapper.filters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
+import static io.harness.ngtriggers.Constants.TRIGGER_ERROR_LOG;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
 
 import static java.util.Collections.emptyList;
 
@@ -12,7 +13,7 @@ import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 
 import java.util.List;
 
@@ -38,6 +39,7 @@ public interface TriggerFilter {
                             .toString();
 
     return new StringBuilder(128)
+        .append(TRIGGER_ERROR_LOG)
         .append("Exception while evaluating Trigger: ")
         .append(triggerRef)
         .append(", Filter: ")
@@ -50,7 +52,7 @@ public interface TriggerFilter {
     return WebhookEventMappingResponse.builder()
         .failedToFindTrigger(true)
         .isCustomTrigger(filterRequestData.isCustomTrigger())
-        .webhookEventResponse(WebhookEventResponseHelper.toResponse(EXCEPTION_WHILE_PROCESSING,
+        .webhookEventResponse(TriggerEventResponseHelper.toResponse(EXCEPTION_WHILE_PROCESSING,
             filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null,
             new StringBuilder(256)
                 .append("Exception occurred while Processing Trigger Filter: ")
@@ -66,8 +68,11 @@ public interface TriggerFilter {
 
   default void addDetails(WebhookEventMappingResponseBuilder webhookEventMappingResponseBuilder,
       FilterRequestData filterRequestData, List<TriggerDetails> detailsList) {
-    webhookEventMappingResponseBuilder.parseWebhookResponse(
-        filterRequestData.getWebhookPayloadData().getParseWebhookResponse());
+    if (filterRequestData.getWebhookPayloadData() != null
+        && filterRequestData.getWebhookPayloadData().getParseWebhookResponse() != null) {
+      webhookEventMappingResponseBuilder.parseWebhookResponse(
+          filterRequestData.getWebhookPayloadData().getParseWebhookResponse());
+    }
 
     if (isEmpty(detailsList)) {
       webhookEventMappingResponseBuilder.failedToFindTrigger(true);

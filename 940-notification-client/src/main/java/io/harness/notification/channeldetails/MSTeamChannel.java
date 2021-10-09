@@ -26,9 +26,9 @@ public class MSTeamChannel extends NotificationChannel {
   List<String> msTeamKeys;
 
   @Builder
-  public MSTeamChannel(String accountId, List<String> userGroupIds, List<NotificationRequest.UserGroup> userGroups,
-      String templateId, Map<String, String> templateData, Team team, List<String> msTeamKeys) {
-    super(accountId, userGroupIds, userGroups, templateId, templateData, team);
+  public MSTeamChannel(String accountId, List<NotificationRequest.UserGroup> userGroups, String templateId,
+      Map<String, String> templateData, Team team, List<String> msTeamKeys) {
+    super(accountId, userGroups, templateId, templateData, team);
     this.msTeamKeys = msTeamKeys;
   }
 
@@ -43,7 +43,6 @@ public class MSTeamChannel extends NotificationChannel {
                        .addAllMsTeamKeys(msTeamKeys)
                        .setTemplateId(templateId)
                        .putAllTemplateData(templateData)
-                       .addAllUserGroupIds(CollectionUtils.emptyIfNull(userGroupIds))
                        .addAllUserGroup(CollectionUtils.emptyIfNull(userGroups)))
         .build();
   }

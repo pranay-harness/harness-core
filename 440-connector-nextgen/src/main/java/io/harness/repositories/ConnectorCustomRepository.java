@@ -49,4 +49,6 @@ public interface ConnectorCustomRepository {
   Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType, Supplier functor);
 
   Optional<Connector> findOne(Criteria criteria, String repo, String branch);
+
+  long count(Criteria criteria);
 }

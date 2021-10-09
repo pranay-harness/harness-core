@@ -10,6 +10,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.spy;
@@ -29,6 +30,7 @@ import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
+import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxService;
@@ -39,6 +41,7 @@ import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.UserPrincipal;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
+import java.util.Collections;
 import java.util.Optional;
 import org.bson.Document;
 import org.junit.Before;
@@ -60,13 +63,15 @@ public class OrganizationServiceImplTest extends CategoryTest {
   @Mock private ResourceGroupClient resourceGroupClient;
   @Mock private NgUserService ngUserService;
   @Mock private AccessControlClient accessControlClient;
+  @Mock private ScopeAccessHelper scopeAccessHelper;
   private OrganizationServiceImpl organizationService;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     organizationService = spy(new OrganizationServiceImpl(organizationRepository, outboxService, transactionTemplate,
-        resourceGroupClient, ngUserService, accessControlClient));
+        resourceGroupClient, ngUserService, accessControlClient, scopeAccessHelper));
+    when(scopeAccessHelper.getPermittedScopes(any())).then(returnsFirstArg());
   }
 
   private OrganizationDTO createOrganizationDTO(String identifier) {
@@ -160,15 +165,14 @@ public class OrganizationServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     String searchTerm = randomAlphabetic(5);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
-
+    when(organizationRepository.findAllOrgs(any(Criteria.class))).thenReturn(Collections.emptyList());
     when(organizationRepository.findAll(any(Criteria.class), any(Pageable.class), anyBoolean()))
         .thenReturn(getPage(emptyList(), 0));
 
-    Page<Organization> organizationPage = organizationService.list(
+    Page<Organization> organizationPage = organizationService.listPermittedOrgs(
         accountIdentifier, unpaged(), OrganizationFilterDTO.builder().searchTerm(searchTerm).build());
 
-    verify(organizationRepository, times(1))
-        .findAll(criteriaArgumentCaptor.capture(), any(Pageable.class), anyBoolean());
+    verify(organizationRepository, times(1)).findAllOrgs(criteriaArgumentCaptor.capture());
 
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();

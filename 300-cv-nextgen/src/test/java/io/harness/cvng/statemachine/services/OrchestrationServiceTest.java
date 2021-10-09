@@ -3,6 +3,7 @@ package io.harness.cvng.statemachine.services;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
@@ -33,6 +34,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +43,6 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.MockitoAnnotations;
 
 public class OrchestrationServiceTest extends CvNextGenTestBase {
   @Inject HPersistence hPersistence;
@@ -64,13 +66,12 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     cvConfig.setUuid(cvConfigId);
     hPersistence.save(cvConfig);
     dataGenerator = DataGenerator.builder().accountId(accountId).build();
-    MockitoAnnotations.initMocks(this);
     verificationTaskId = verificationTaskService.create(accountId, cvConfigId, cvConfig.getType());
     timeSeriesAnalysisState = ServiceGuardTimeSeriesAnalysisState.builder().build();
     timeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
     timeSeriesAnalysisState.setInputs(AnalysisInput.builder()
                                           .verificationTaskId(verificationTaskId)
-                                          .startTime(clock.instant())
+                                          .startTime(clock.instant().minus(Duration.ofMinutes(5)))
                                           .endTime(clock.instant())
                                           .build());
   }
@@ -87,11 +88,40 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     orchestrationService.queueAnalysis(cvConfigId, clock.instant(), clock.instant().minus(5, ChronoUnit.MINUTES));
 
     orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
-                       .filter(AnalysisOrchestratorKeys.verificationTaskId, cvConfigId)
+                       .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
                        .get();
 
     assertThat(orchestrator).isNotNull();
+    assertThat(orchestrator.getUuid()).isNotNull();
     assertThat(orchestrator.getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testQueueAnalysis_multiple() {
+    for (Instant startTime = clock.instant(); startTime.isBefore(clock.instant().plus(Duration.ofMinutes(30)));
+         startTime = startTime.plus(Duration.ofMinutes(5))) {
+      orchestrationService.queueAnalysis(verificationTaskId, startTime, startTime.plus(5, ChronoUnit.MINUTES));
+    }
+    List<AnalysisOrchestrator> orchestrator =
+        hPersistence.createQuery(AnalysisOrchestrator.class)
+            .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
+            .asList();
+    assertThat(orchestrator).hasSize(1);
+    assertThat(orchestrator.get(0).getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
+    assertThat(orchestrator.get(0).getAnalysisStateMachineQueue()).hasSize(7);
+    orchestrationService.orchestrate(orchestrator.get(0));
+    for (Instant startTime = clock.instant(); startTime.isBefore(clock.instant().plus(Duration.ofMinutes(15)));
+         startTime = startTime.plus(Duration.ofMinutes(5))) {
+      orchestrationService.queueAnalysis(verificationTaskId, startTime, startTime.plus(5, ChronoUnit.MINUTES));
+    }
+    orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
+                       .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
+                       .asList();
+    assertThat(orchestrator).hasSize(1);
+    assertThat(orchestrator.get(0).getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
+    assertThat(orchestrator.get(0).getAnalysisStateMachineQueue()).hasSize(10);
   }
 
   @Test
@@ -122,7 +152,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     AnalysisStateMachine stateMachine =
         dataGenerator.buildStateMachine(AnalysisStatus.SUCCESS, verificationTaskId, timeSeriesAnalysisState);
     hPersistence.save(stateMachine);
-    orchestrationService.orchestrate(cvConfigId);
+    orchestrate(verificationTaskId);
 
     AnalysisStateMachine savedStateMachine = hPersistence.createQuery(AnalysisStateMachine.class).get();
     assertThat(savedStateMachine).isNotNull();
@@ -151,7 +181,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     orchestrator.getAnalysisStateMachineQueue().add(nextStateMachine);
     hPersistence.save(orchestrator);
 
-    orchestrationService.orchestrate(cvConfigId);
+    orchestrate(verificationTaskId);
 
     List<AnalysisStateMachine> savedStateMachines = hPersistence.createQuery(AnalysisStateMachine.class).asList();
     assertThat(savedStateMachines.size()).isEqualTo(2);
@@ -182,7 +212,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     orchestrator.getAnalysisStateMachineQueue().add(nextStateMachine);
     hPersistence.save(orchestrator);
 
-    orchestrationService.orchestrate(cvConfigId);
+    orchestrate(verificationTaskId);
 
     List<AnalysisStateMachine> savedStateMachines = hPersistence.createQuery(AnalysisStateMachine.class).asList();
     assertThat(savedStateMachines.size()).isEqualTo(2);
@@ -207,7 +237,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     AnalysisStateMachine stateMachine =
         dataGenerator.buildStateMachine(AnalysisStatus.RUNNING, verificationTaskId, timeSeriesAnalysisState);
     analysisStateMachineService.initiateStateMachine(verificationTaskId, stateMachine);
-    orchestrationService.orchestrate(cvConfigId);
+    orchestrate(verificationTaskId);
 
     AnalysisStateMachine savedStateMachine = hPersistence.createQuery(AnalysisStateMachine.class).get();
     assertThat(savedStateMachine).isNotNull();
@@ -228,9 +258,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     stateMachine.setStatus(AnalysisStatus.FAILED);
     stateMachine.getCurrentState().setStatus(AnalysisStatus.FAILED);
     hPersistence.save(stateMachine);
-
-    orchestrationService.orchestrate(verificationTaskId);
-
+    orchestrate(verificationTaskId);
     AnalysisStateMachine savedStateMachine = hPersistence.createQuery(AnalysisStateMachine.class).get();
     assertThat(savedStateMachine).isNotNull();
     assertThat(savedStateMachine.getStatus()).isEqualByComparingTo(AnalysisStatus.RUNNING);
@@ -255,7 +283,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     stateMachine.getCurrentState().setStatus(AnalysisStatus.TIMEOUT);
     hPersistence.save(stateMachine);
 
-    orchestrationService.orchestrate(cvConfigId);
+    orchestrate(verificationTaskId);
 
     AnalysisStateMachine savedStateMachine = hPersistence.createQuery(AnalysisStateMachine.class).get();
     assertThat(savedStateMachine).isNotNull();
@@ -287,7 +315,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     orchestrator.getAnalysisStateMachineQueue().add(nextSM);
     hPersistence.save(orchestrator);
 
-    orchestrationService.orchestrate(cvConfigId);
+    orchestrate(verificationTaskId);
 
     List<AnalysisStateMachine> savedStateMachines = hPersistence.createQuery(AnalysisStateMachine.class).asList();
     assertThat(savedStateMachines.size()).isEqualTo(3);
@@ -326,9 +354,43 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     }
     hPersistence.save(orchestrator);
 
-    orchestrationService.orchestrate(cvConfigId);
+    orchestrate(verificationTaskId);
     AnalysisOrchestrator orchestratorFromDB = hPersistence.createQuery(AnalysisOrchestrator.class).get();
     assertThat(orchestratorFromDB.getAnalysisStateMachineQueue().size()).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testOrchestrate_ignoreStateMachinesAtCreatedState() {
+    AnalysisOrchestrator orchestrator = AnalysisOrchestrator.builder()
+                                            .verificationTaskId(cvConfigId)
+                                            .status(AnalysisStatus.CREATED)
+                                            .analysisStateMachineQueue(new ArrayList<>())
+                                            .build();
+
+    AnalysisStateMachine stateMachine =
+        dataGenerator.buildStateMachine(AnalysisStatus.SUCCESS, verificationTaskId, timeSeriesAnalysisState);
+    hPersistence.save(stateMachine);
+
+    List<AnalysisStateMachine> ignoreList = new ArrayList<>();
+
+    for (int i = 0; i < STATE_MACHINE_IGNORE_LIMIT - 10; i++) {
+      AnalysisStateMachine firstSM =
+          dataGenerator.buildStateMachine(AnalysisStatus.CREATED, verificationTaskId, timeSeriesAnalysisState);
+      firstSM.setAnalysisStartTime(clock.instant().minus(STATE_MACHINE_IGNORE_MINUTES + 20, ChronoUnit.MINUTES));
+      firstSM.setAnalysisEndTime(clock.instant().minus(STATE_MACHINE_IGNORE_MINUTES + 10, ChronoUnit.MINUTES));
+      orchestrator.getAnalysisStateMachineQueue().add(firstSM);
+      if (i < STATE_MACHINE_IGNORE_LIMIT) {
+        ignoreList.add(firstSM);
+      }
+    }
+    hPersistence.save(orchestrator);
+
+    orchestrate(cvConfigId);
+    AnalysisOrchestrator orchestratorFromDB = hPersistence.createQuery(AnalysisOrchestrator.class).get();
+    assertThat(orchestratorFromDB.getAnalysisStateMachineQueue()).isEmpty();
+    assertThat(orchestratorFromDB.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
 
   @Test
@@ -358,5 +420,15 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
         throw new RuntimeException(e);
       }
     });
+  }
+
+  private AnalysisOrchestrator getOrchestrator(String verificationTaskId) {
+    return hPersistence.createQuery(AnalysisOrchestrator.class)
+        .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
+        .get();
+  }
+  public void orchestrate(String verificationTaskId) {
+    AnalysisOrchestrator orchestrator = getOrchestrator(verificationTaskId);
+    orchestrationService.orchestrate(orchestrator);
   }
 }

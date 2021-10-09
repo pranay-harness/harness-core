@@ -13,6 +13,7 @@ import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.clients.AwsKmsEncryptor.KmsEncryptionKeyCacheKey;
@@ -81,7 +82,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
             () -> encryptInternal(accountId, value, gcpKmsConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -145,7 +146,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
           return decryptInternalIfCached(encryptedData, cachedEncryptedKey, System.currentTimeMillis());
         } else {
           // Use HTimeLimiter.callInterruptible only if the KMS plain text key is not cached.
-          return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
+          return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
               () -> decryptInternal(encryptedData, gcpKmsConfig));
         }
       } catch (Exception e) {
@@ -260,5 +261,20 @@ public class GcpKmsEncryptor implements KmsEncryptor {
     } catch (IOException e) {
       throw new InvalidArgumentsException("gcpKmsConfig is invalid", USER_SRE, e);
     }
+  }
+
+  @Override
+  public boolean validateKmsConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    log.info("Validating GCP KMS configuration Start {}", encryptionConfig.getName());
+    String randomString = UUIDGenerator.generateUuid();
+    GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) encryptionConfig;
+    try {
+      encryptSecret(gcpKmsConfig.getAccountId(), randomString, gcpKmsConfig);
+    } catch (Exception e) {
+      log.error("Was not able to encrypt using given credentials. Please check your credentials and try again", e);
+      return false;
+    }
+    log.info("Validating GCP KMS configuration End {}", encryptionConfig.getName());
+    return true;
   }
 }

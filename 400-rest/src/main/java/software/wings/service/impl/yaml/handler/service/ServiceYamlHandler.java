@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.service;
 
+import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -15,6 +16,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -65,6 +68,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
@@ -96,7 +100,9 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                   .configVariables(nameValuePairList)
                                   .applicationStack(applicationStack)
                                   .helmVersion(helmVersion)
-                                  .cfCliVersion(cfCliVersion);
+                                  .cfCliVersion(cfCliVersion)
+                                  .artifactFromManifest(service.getArtifactFromManifest());
+
     if (isNotBlank(service.getDeploymentTypeTemplateId())) {
       yamlBuilder.deploymentTypeTemplateUri(
           customDeploymentTypeService.fetchDeploymentTemplateUri(service.getDeploymentTypeTemplateId()));
@@ -159,6 +165,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     currentService.setName(serviceName);
     currentService.setDescription(yaml.getDescription());
     currentService.setConfigMapYaml(yaml.getConfigMapYaml());
+    currentService.setArtifactFromManifest(yaml.getArtifactFromManifest());
 
     if (isNotBlank(yaml.getDeploymentTypeTemplateUri())) {
       currentService.setDeploymentTypeTemplateId(
@@ -228,6 +235,15 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       }
       if (!initialServiceDeploymentType.equals(yaml.getDeploymentType())) {
         throw new InvalidRequestException("The 'deploymentType' can not be updated when a Service is already created.");
+      }
+      if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, initialService.getAccountId())) {
+        if (initialService.getArtifactFromManifest() != null
+            && !initialService.getArtifactFromManifest().equals(yaml.getArtifactFromManifest())) {
+          throw new InvalidRequestException("artifactFromManifest is not editable after service creation");
+        }
+        if (initialService.getArtifactFromManifest() == null && Boolean.TRUE.equals(yaml.getArtifactFromManifest())) {
+          throw new InvalidRequestException("artifactFromManifest is not editable after service creation");
+        }
       }
     }
   }

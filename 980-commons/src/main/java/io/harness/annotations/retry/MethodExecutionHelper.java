@@ -49,7 +49,7 @@ public class MethodExecutionHelper {
         break;
       } catch (Throwable t) {
         Throwable e = t.getCause() != null ? t.getCause() : t;
-        log.error("Caught Exception class : " + e.getClass());
+        log.error("Caught Exception : ", e);
         for (Class<? extends Throwable> exception : retryOnExceptionSet) {
           log.error(" Comparing with Configured Exception To Retry For : " + exception.getName());
 

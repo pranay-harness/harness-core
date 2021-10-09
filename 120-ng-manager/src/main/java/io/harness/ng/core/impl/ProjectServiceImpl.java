@@ -3,9 +3,10 @@ package io.harness.ng.core.impl;
 import static io.harness.NGCommonEntityConstants.MONGODB_ID;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
-import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_NAME;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.enforcement.constants.FeatureRestrictionName.MULTIPLE_PROJECTS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
@@ -15,8 +16,11 @@ import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
+import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -24,14 +28,19 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.proj
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
 
 import io.harness.ModuleType;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.Scope.ScopeKeys;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
@@ -46,18 +55,22 @@ import io.harness.ng.core.events.ProjectCreateEvent;
 import io.harness.ng.core.events.ProjectDeleteEvent;
 import io.harness.ng.core.events.ProjectRestoreEvent;
 import io.harness.ng.core.events.ProjectUpdateEvent;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.remote.ProjectMapper;
+import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.core.spring.ProjectRepository;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
+import io.harness.utils.PageUtils;
 import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.Lists;
@@ -75,13 +88,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -100,8 +112,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
   private static final String PROJECT_ADMIN_ROLE = "_project_admin";
-  private static final String RESOURCE_GROUP_DESCRIPTION =
-      "All the resources in this project are included in this resource group.";
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
   private final OutboxService outboxService;
@@ -109,13 +119,13 @@ public class ProjectServiceImpl implements ProjectService {
   private final NgUserService ngUserService;
   private final ResourceGroupClient resourceGroupClient;
   private final AccessControlClient accessControlClient;
-  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
+  private final ScopeAccessHelper scopeAccessHelper;
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
       NgUserService ngUserService, @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient,
-      AccessControlClient accessControlClient) {
+      AccessControlClient accessControlClient, ScopeAccessHelper scopeAccessHelper) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.transactionTemplate = transactionTemplate;
@@ -123,10 +133,12 @@ public class ProjectServiceImpl implements ProjectService {
     this.ngUserService = ngUserService;
     this.resourceGroupClient = resourceGroupClient;
     this.accessControlClient = accessControlClient;
+    this.scopeAccessHelper = scopeAccessHelper;
   }
 
   @Override
-  public Project create(String accountIdentifier, String orgIdentifier, ProjectDTO projectDTO) {
+  @FeatureRestrictionCheck(MULTIPLE_PROJECTS)
+  public Project create(@AccountIdentifier String accountIdentifier, String orgIdentifier, ProjectDTO projectDTO) {
     orgIdentifier = orgIdentifier == null ? DEFAULT_ORG_IDENTIFIER : orgIdentifier;
     validateCreateProjectRequest(accountIdentifier, orgIdentifier, projectDTO);
     Project project = toProject(projectDTO);
@@ -136,11 +148,12 @@ public class ProjectServiceImpl implements ProjectService {
     project.setAccountIdentifier(accountIdentifier);
     try {
       validate(project);
-      Project createdProject = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        Project savedProject = projectRepository.save(project);
-        outboxService.save(new ProjectCreateEvent(project.getAccountIdentifier(), ProjectMapper.writeDTO(project)));
-        return savedProject;
-      }));
+      Project createdProject =
+          Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+            Project savedProject = projectRepository.save(project);
+            outboxService.save(new ProjectCreateEvent(project.getAccountIdentifier(), ProjectMapper.writeDTO(project)));
+            return savedProject;
+          }));
       setupProject(Scope.of(accountIdentifier, orgIdentifier, projectDTO.getIdentifier()));
       log.info(String.format("Project with identifier %s and orgIdentifier %s was successfully created",
           project.getIdentifier(), projectDTO.getOrgIdentifier()));
@@ -154,18 +167,21 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void setupProject(Scope scope) {
-    String userId = null;
+    String principalId = null;
+    PrincipalType principalType = PrincipalType.USER;
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+        && (SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER
+            || SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.SERVICE_ACCOUNT)) {
+      principalId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+      principalType = SourcePrincipalContextBuilder.getSourcePrincipal().getType();
     }
-    if (Objects.isNull(userId)) {
+    if (isEmpty(principalId)) {
       throw new InvalidRequestException("User not found in security context");
     }
     try {
       createDefaultResourceGroup(scope);
-      assignProjectAdmin(scope, userId);
-      busyPollUntilProjectSetupCompletes(scope, userId);
+      assignProjectAdmin(scope, principalId, principalType);
+      busyPollUntilProjectSetupCompletes(scope, principalId);
     } catch (Exception e) {
       log.error("Failed to complete post project creation steps for [{}]", ScopeUtils.toString(scope));
     }
@@ -194,14 +210,35 @@ public class ProjectServiceImpl implements ProjectService {
     }
   }
 
-  private void assignProjectAdmin(Scope scope, String userId) {
-    ngUserService.addUserToScope(userId,
-        Scope.builder()
-            .accountIdentifier(scope.getAccountIdentifier())
-            .orgIdentifier(scope.getOrgIdentifier())
-            .projectIdentifier(scope.getProjectIdentifier())
-            .build(),
-        PROJECT_ADMIN_ROLE, SYSTEM);
+  private void assignProjectAdmin(Scope scope, String principalId, PrincipalType principalType) {
+    switch (principalType) {
+      case USER:
+        ngUserService.addUserToScope(principalId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            singletonList(RoleBinding.builder().roleIdentifier(PROJECT_ADMIN_ROLE).build()), emptyList(), SYSTEM);
+        break;
+      case SERVICE_ACCOUNT:
+        ngUserService.addServiceAccountToScope(principalId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            PROJECT_ADMIN_ROLE, SYSTEM);
+        break;
+      case API_KEY:
+      case SERVICE: {
+        throw new InvalidRequestException(
+            "Cannot assign principal" + principalId + "with type" + principalType + "to project");
+      }
+      default: {
+        throw new InvalidRequestException("Invalid  principal type" + principalType);
+      }
+    }
   }
 
   private void createDefaultResourceGroup(Scope scope) {
@@ -212,25 +249,11 @@ public class ProjectServiceImpl implements ProjectService {
       if (resourceGroupResponse != null) {
         return;
       }
-      ResourceGroupDTO resourceGroupDTO = getResourceGroupDTO(scope);
       NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
-          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), resourceGroupDTO));
+          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
     } catch (Exception e) {
       log.error("Couldn't create default resource group for [{}]", ScopeUtils.toString(scope));
     }
-  }
-
-  private ResourceGroupDTO getResourceGroupDTO(Scope scope) {
-    return ResourceGroupDTO.builder()
-        .accountIdentifier(scope.getAccountIdentifier())
-        .orgIdentifier(scope.getOrgIdentifier())
-        .projectIdentifier(scope.getProjectIdentifier())
-        .name(DEFAULT_RESOURCE_GROUP_NAME)
-        .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-        .description(RESOURCE_GROUP_DESCRIPTION)
-        .resourceSelectors(Collections.emptyList())
-        .fullScopeSelected(true)
-        .build();
   }
 
   @Override
@@ -239,6 +262,68 @@ public class ProjectServiceImpl implements ProjectService {
       String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
     return projectRepository.findByAccountIdentifierAndOrgIdentifierAndIdentifierAndDeletedNot(
         accountIdentifier, orgIdentifier, projectIdentifier, true);
+  }
+
+  @Override
+  public PageResponse<ProjectDTO> listProjectsForUser(String userId, String accountId, PageRequest pageRequest) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .exists(true)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                            .exists(true);
+    Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
+    List<UserMembership> userMembershipList = userMembershipPage.getContent();
+    if (userMembershipList.isEmpty()) {
+      return getNGPageResponse(Page.empty(), emptyList());
+    }
+    Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
+    List<Criteria> criteriaList = new ArrayList<>();
+    for (UserMembership userMembership : userMembershipList) {
+      Scope scope = userMembership.getScope();
+      criteriaList.add(Criteria.where(ProjectKeys.orgIdentifier)
+                           .is(scope.getOrgIdentifier())
+                           .and(ProjectKeys.identifier)
+                           .is(scope.getProjectIdentifier())
+                           .and(ProjectKeys.deleted)
+                           .is(false));
+    }
+    projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    Page<Project> projectsPage = projectRepository.findAll(projectCriteria, PageUtils.getPageRequest(pageRequest));
+    return getNGPageResponse(projectsPage.map(ProjectMapper::writeDTO));
+  }
+
+  @Override
+  public List<ProjectDTO> listProjectsForUser(String userId, String accountId) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .exists(true)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                            .exists(true);
+    Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
+    List<UserMembership> userMembershipList = userMembershipPage.getContent();
+    if (userMembershipList.isEmpty()) {
+      return Collections.emptyList();
+    }
+    Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
+    List<Criteria> criteriaList = new ArrayList<>();
+    for (UserMembership userMembership : userMembershipList) {
+      Scope scope = userMembership.getScope();
+      criteriaList.add(Criteria.where(ProjectKeys.orgIdentifier)
+                           .is(scope.getOrgIdentifier())
+                           .and(ProjectKeys.identifier)
+                           .is(scope.getProjectIdentifier())
+                           .and(ProjectKeys.deleted)
+                           .is(false));
+    }
+    projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    List<Project> projectsList = projectRepository.findAll(projectCriteria);
+    return projectsList.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
   }
 
   @Override
@@ -261,7 +346,7 @@ public class ProjectServiceImpl implements ProjectService {
       List<ModuleType> moduleTypeList = verifyModulesNotRemoved(existingProject.getModules(), project.getModules());
       project.setModules(moduleTypeList);
       validate(project);
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
         Project updatedProject = projectRepository.save(project);
         log.info(String.format(
             "Project with identifier %s and orgIdentifier %s was successfully updated", identifier, orgIdentifier));
@@ -286,10 +371,27 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public Page<Project> list(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO) {
+  public Page<Project> listPermittedProjects(
+      String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO) {
     Criteria criteria = createProjectFilterCriteria(
-        Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).ne(Boolean.TRUE),
+        Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).is(FALSE),
         projectFilterDTO);
+    List<Scope> projects = projectRepository.findAllProjects(criteria);
+    List<Scope> permittedProjects = scopeAccessHelper.getPermittedScopes(projects);
+
+    if (permittedProjects.isEmpty()) {
+      return Page.empty();
+    }
+
+    criteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier);
+    Criteria[] subCriteria = permittedProjects.stream()
+                                 .map(project
+                                     -> Criteria.where(ProjectKeys.orgIdentifier)
+                                            .is(project.getOrgIdentifier())
+                                            .and(ProjectKeys.identifier)
+                                            .is(project.getProjectIdentifier()))
+                                 .toArray(Criteria[] ::new);
+    criteria.orOperator(subCriteria);
     return projectRepository.findAll(criteria, pageable);
   }
 
@@ -307,7 +409,11 @@ public class ProjectServiceImpl implements ProjectService {
     if (projectFilterDTO == null) {
       return criteria;
     }
-    criteria.and(ProjectKeys.orgIdentifier).in(projectFilterDTO.getOrgIdentifiers());
+
+    if (projectFilterDTO.getOrgIdentifiers() != null) {
+      criteria.and(ProjectKeys.orgIdentifier).in(projectFilterDTO.getOrgIdentifiers());
+    }
+
     if (projectFilterDTO.getModuleType() != null) {
       if (Boolean.TRUE.equals(projectFilterDTO.getHasModule())) {
         criteria.and(ProjectKeys.modules).in(projectFilterDTO.getModuleType());
@@ -331,7 +437,7 @@ public class ProjectServiceImpl implements ProjectService {
   @DefaultOrganization
   public boolean delete(String accountIdentifier, @OrgIdentifier String orgIdentifier,
       @ProjectIdentifier String projectIdentifier, Long version) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Project deletedProject = projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
       boolean delete = deletedProject != null;
 
@@ -352,7 +458,7 @@ public class ProjectServiceImpl implements ProjectService {
   @Override
   public boolean restore(String accountIdentifier, String orgIdentifier, String identifier) {
     validateParentOrgExists(accountIdentifier, orgIdentifier);
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Project restoredProject = projectRepository.restore(accountIdentifier, orgIdentifier, identifier);
       boolean success = restoredProject != null;
       if (success) {
@@ -384,6 +490,11 @@ public class ProjectServiceImpl implements ProjectService {
         .forEach(projectsPerOrganizationCount
             -> result.put(projectsPerOrganizationCount.getOrgIdentifier(), projectsPerOrganizationCount.getCount()));
     return result;
+  }
+
+  @Override
+  public Long countProjects(String accountIdenifier) {
+    return projectRepository.countByAccountIdentifier(accountIdenifier);
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {

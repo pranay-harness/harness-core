@@ -36,16 +36,17 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
 
   @Override
   public void handle(ResourceGroup resourceGroup) {
-    boolean areResourcesValid = resourceGroupValidatorService.validateAndFilterInvalidOnes(resourceGroup);
-    if (!areResourcesValid) {
-      resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup));
+    boolean updated = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
+    if (updated) {
+      resourceGroupService.update(
+          ResourceGroupMapper.toDTO(resourceGroup), false, Boolean.TRUE.equals(resourceGroup.getHarnessManaged()));
     }
   }
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .name("ResourceGroupAsyncReconciliation")
+            .name("ResourceGroupReconciliationIterator")
             .poolSize(3)
             .interval(ofMinutes(1))
             .build(),
@@ -53,12 +54,19 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
         MongoPersistenceIterator.<ResourceGroup, SpringFilterExpander>builder()
             .clazz(ResourceGroup.class)
             .fieldName(ResourceGroupKeys.nextIteration)
-            .targetInterval(ofHours(2))
-            .acceptableNoAlertDelay(ofHours(2))
+            .targetInterval(ofHours(1))
+            .acceptableNoAlertDelay(ofHours(1))
+            .filterExpander(getFilterExpander())
             .handler(this)
-            .filterExpander(query -> query.addCriteria(Criteria.where(ResourceGroupKeys.deleted).is(Boolean.FALSE)))
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));
+  }
+
+  private SpringFilterExpander getFilterExpander() {
+    return query -> {
+      Criteria criteria = Criteria.where(ResourceGroupKeys.harnessManaged).ne(true);
+      query.addCriteria(criteria);
+    };
   }
 }

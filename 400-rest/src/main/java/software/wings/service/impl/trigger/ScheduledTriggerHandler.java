@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ScheduledTriggerHandler implements Handler<Trigger> {
   private static final int POOL_SIZE = 8;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
@@ -65,8 +66,15 @@ public class ScheduledTriggerHandler implements Handler<Trigger> {
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .persistenceProvider(persistenceProvider)
             .schedulingType(IRREGULAR_SKIP_MISSED)
-            .filterExpander(
-                query -> query.field(TriggerKeys.triggerConditionType).equal(TriggerConditionType.SCHEDULED))
+            .filterExpander(query
+                -> query.field(TriggerKeys.triggerConditionType)
+                       .equal(TriggerConditionType.SCHEDULED)
+                       .field(TriggerKeys.nextIterations)
+                       .exists()
+                       .field(TriggerKeys.nextIterations)
+                       .notEqual(null)
+                       .field(TriggerKeys.nextIterations)
+                       .notEqual(Collections.emptyList()))
             .throttleInterval(ofSeconds(45)));
 
     executor.submit(() -> iterator.process());

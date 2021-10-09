@@ -41,6 +41,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -68,8 +69,9 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
   private final PMSExecutionService pmsExecutionService;
 
   @Inject
-  public ApprovalNotificationHandlerImpl(UserGroupClient userGroupClient, NotificationClient notificationClient,
-      NotificationHelper notificationHelper, PMSExecutionService pmsExecutionService) {
+  public ApprovalNotificationHandlerImpl(@Named("PRIVILEGED") UserGroupClient userGroupClient,
+      NotificationClient notificationClient, NotificationHelper notificationHelper,
+      PMSExecutionService pmsExecutionService) {
     this.userGroupClient = userGroupClient;
     this.notificationClient = notificationClient;
     this.notificationHelper = notificationHelper;
@@ -169,7 +171,6 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
             .team(Team.PIPELINE)
             .templateId(slackTemplateId)
             .templateData(templateData)
-            .userGroupIds(Collections.singletonList(userGroup.getIdentifier()))
             .webhookUrls(Collections.singletonList(slackConfig.getSlackWebhookUrl()))
             .build();
       case EMAIL:
@@ -182,7 +183,6 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
             .team(Team.PIPELINE)
             .templateId(emailTemplateId)
             .templateData(templateData)
-            .userGroupIds(Collections.singletonList(userGroup.getIdentifier()))
             .recipients(Collections.singletonList(emailConfigDTO.getGroupEmail()))
             .build();
       default:

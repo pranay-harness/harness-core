@@ -2,7 +2,9 @@ package software.wings.helpers.ext.gcb;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
@@ -17,6 +19,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public interface GcbRestClient {
   @POST("v1/projects/{projectId}/triggers/{triggerId}:run")
   Call<BuildOperationDetails> runTrigger(@Header("Authorization") String bearerAuthHeader,

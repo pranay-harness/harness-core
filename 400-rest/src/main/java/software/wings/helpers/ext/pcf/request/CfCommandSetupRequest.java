@@ -47,6 +47,8 @@ public class CfCommandSetupRequest extends CfCommandRequest {
   private Integer olderActiveVersionCountToKeep;
   private PcfManifestsPackage pcfManifestsPackage;
   private String artifactProcessingScript;
+  private boolean isNonVersioning;
+  private boolean nonVersioningInactiveRollbackEnabled;
 
   @Builder
   public CfCommandSetupRequest(String accountId, String appId, String commandName, String activityId,
@@ -58,7 +60,7 @@ public class CfCommandSetupRequest extends CfCommandRequest {
       boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation,
       PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar, boolean enforceSslValidation,
       boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, String artifactProcessingScript,
-      CfCliVersion cfCliVersion) {
+      CfCliVersion cfCliVersion, boolean isNonVersioning, boolean nonVersioningInactiveRollbackEnabled) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
         limitPcfThreads, ignorePcfConnectionContextCache, cfCliVersion);
@@ -77,5 +79,7 @@ public class CfCommandSetupRequest extends CfCommandRequest {
     this.useCurrentCount = useCurrentCount;
     this.pcfManifestsPackage = pcfManifestsPackage;
     this.artifactProcessingScript = artifactProcessingScript;
+    this.isNonVersioning = isNonVersioning;
+    this.nonVersioningInactiveRollbackEnabled = nonVersioningInactiveRollbackEnabled;
   }
 }

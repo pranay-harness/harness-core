@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import io.fabric8.utils.Lists;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -135,11 +136,6 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
-  public void deletePerpetualTasks(String accountId, String perpetualTaskId) {
-    verificationManagerService.deletePerpetualTask(accountId, perpetualTaskId);
-  }
-
-  @Override
   public void updateTaskStatus(DataCollectionTaskResult result) {
     log.info("Updating status {}", result);
     UpdateOperations<DataCollectionTask> updateOperations =
@@ -192,36 +188,41 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       metricService.incCounter(CVNGMetricsUtils.getDataCollectionTaskStatusMetricName(dataCollectionTask.getStatus()));
       metricService.recordDuration(
           CVNGMetricsUtils.DATA_COLLECTION_TASK_TOTAL_TIME, dataCollectionTask.totalTime(clock.instant()));
-      if (dataCollectionTask.getLastPickedAt() != null) { // Remove this in the future after lastPickedAt is populated.
-        metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
-        metricService.recordDuration(
-            CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
-      }
+      metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
+      metricService.recordDuration(
+          CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
     }
   }
 
   @Override
-  public void handleRecoverNextTask(CVConfig cvConfig) {
+  public void handleCreateNextTask(CVConfig cvConfig) {
+    Preconditions.checkState(cvConfig.isEnabled(), "CVConfig should be enabled");
     String serviceGuardVerificationTaskId =
         verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
 
     DataCollectionTask dataCollectionTask =
-        hPersistence.createQuery(DataCollectionTask.class)
-            .filter(DataCollectionTaskKeys.accountId, cvConfig.getAccountId())
-            .filter(DataCollectionTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
-            .order(Sort.descending(DataCollectionTaskKeys.startTime))
-            .get();
-
-    Preconditions.checkNotNull(dataCollectionTask, "dataCollectionTask can not be null");
-    if (Instant.ofEpochMilli(dataCollectionTask.getLastUpdatedAt())
-            .isBefore(clock.instant().minus(Duration.ofMinutes(2)))
-        && dataCollectionTask.getStatus().equals(DataCollectionExecutionStatus.SUCCESS)) {
-      createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
-      log.warn(
-          "Recovered from next task creation issue. DataCollectionTask uuid: {}, account: {}, projectIdentifier: {}, orgIdentifier: {}, ",
-          dataCollectionTask.getUuid(), cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-          cvConfig.getOrgIdentifier());
+        getLastDataCollectionTask(cvConfig.getAccountId(), serviceGuardVerificationTaskId);
+    if (dataCollectionTask == null) {
+      enqueueFirstTask(cvConfig);
+    } else {
+      if (Instant.ofEpochMilli(dataCollectionTask.getLastUpdatedAt())
+              .isBefore(clock.instant().minus(Duration.ofMinutes(2)))
+          && dataCollectionTask.getStatus().equals(DataCollectionExecutionStatus.SUCCESS)) {
+        createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
+        log.warn(
+            "Recovered from next task creation issue. DataCollectionTask uuid: {}, account: {}, projectIdentifier: {}, orgIdentifier: {}, ",
+            dataCollectionTask.getUuid(), cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
+            cvConfig.getOrgIdentifier());
+      }
     }
+  }
+
+  private DataCollectionTask getLastDataCollectionTask(String accountId, String serviceGuardVerificationTaskId) {
+    return hPersistence.createQuery(DataCollectionTask.class)
+        .filter(DataCollectionTaskKeys.accountId, accountId)
+        .filter(DataCollectionTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
+        .order(Sort.descending(DataCollectionTaskKeys.startTime))
+        .get();
   }
 
   private void markDependentTasksFailed(DataCollectionTask task) {
@@ -257,8 +258,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       UpdateOperations<DataCollectionTask> updateOperations =
           hPersistence.createUpdateOperations(DataCollectionTask.class)
               .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.QUEUED);
-      hPersistence.update(
-          hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.uuid, task.getNextTaskId()),
+      hPersistence.update(hPersistence.createQuery(DataCollectionTask.class)
+                              .filter(DataCollectionTaskKeys.uuid, task.getNextTaskId())
+                              .filter(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.WAITING),
           updateOperations);
     }
   }
@@ -288,6 +290,10 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     CVConfig cvConfig = cvConfigService.get(verificationTaskService.getCVConfigId(prevTask.getVerificationTaskId()));
     if (cvConfig == null) {
       log.info("CVConfig no longer exists for verificationTaskId {}", prevTask.getVerificationTaskId());
+      return;
+    }
+    if (!cvConfig.isEnabled()) {
+      log.info("Not creating next task as CVConfig is disabled. cvConfigId: {}", cvConfig.getUuid());
       return;
     }
     populateMetricPack(cvConfig);
@@ -331,16 +337,12 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     }
   }
 
-  @Override
-  public void enqueueFirstTask(CVConfig cvConfig) {
-    log.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
+  private void enqueueFirstTask(CVConfig cvConfig) {
     populateMetricPack(cvConfig);
     TimeRange dataCollectionRange = cvConfig.getFirstTimeDataCollectionTimeRange();
     DataCollectionTask dataCollectionTask =
         getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
-
     save(dataCollectionTask);
-    cvConfigService.markFirstTaskCollected(cvConfig);
     log.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
   }
 
@@ -359,6 +361,21 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       dataCollectionTasks.get(0).setStatus(DataCollectionExecutionStatus.QUEUED);
     }
     return hPersistence.save(dataCollectionTasks);
+  }
+
+  @Override
+  public void abortDeploymentDataCollectionTasks(List<String> verificationTaskIds) {
+    Query<DataCollectionTask> query =
+        hPersistence.createQuery(DataCollectionTask.class)
+            .filter(DataCollectionTaskKeys.type, DataCollectionTask.Type.DEPLOYMENT)
+            .field(DataCollectionTaskKeys.verificationTaskId)
+            .in(verificationTaskIds)
+            .field(DataCollectionTaskKeys.status)
+            .in(Lists.newArrayList(DataCollectionExecutionStatus.WAITING, DataCollectionExecutionStatus.QUEUED));
+    UpdateOperations<DataCollectionTask> abortDCTaskOperation =
+        hPersistence.createUpdateOperations(DataCollectionTask.class)
+            .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.ABORTED);
+    hPersistence.update(query, abortDCTaskOperation);
   }
 
   private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {

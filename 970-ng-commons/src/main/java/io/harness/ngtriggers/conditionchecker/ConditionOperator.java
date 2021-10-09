@@ -13,6 +13,10 @@ import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.STARTS_W
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import org.springframework.data.annotation.TypeAlias;
 
 @TypeAlias("operator")
@@ -27,6 +31,8 @@ public enum ConditionOperator {
   @JsonProperty(STARTS_WITH_OPERATOR) STARTS_WITH(STARTS_WITH_OPERATOR),
   @JsonProperty(CONTAINS_OPERATOR) CONTAINS(CONTAINS_OPERATOR);
 
+  private static final Set<ConditionOperator> listOperators =
+      Collections.unmodifiableSet(new HashSet<>(Arrays.asList(IN, NOT_IN)));
   private String value;
 
   ConditionOperator(String value) {
@@ -35,5 +41,9 @@ public enum ConditionOperator {
 
   public String getValue() {
     return value;
+  }
+
+  public static Set<ConditionOperator> fetchListOperators() {
+    return listOperators;
   }
 }

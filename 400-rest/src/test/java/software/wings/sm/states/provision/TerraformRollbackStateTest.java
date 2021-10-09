@@ -3,6 +3,7 @@ package software.wings.sm.states.provision;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -91,7 +92,7 @@ import org.mongodb.morphia.query.QueryImpl;
 import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock TerraformConfig configParameter;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) ExecutionContextImpl executionContext;
@@ -424,5 +425,14 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     return Arrays.asList(NameValuePair.builder().name("key").value("terraform.tfstate").valueType("TEXT").build(),
         NameValuePair.builder().name("bucket").value("tf-remote-state").valueType("TEXT").build(),
         NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build());
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    assertThat(terraformRollbackState.validateFields().size()).isNotEqualTo(0);
+    terraformRollbackState.setProvisionerId("test provisioner");
+    assertThat(terraformRollbackState.validateFields().size()).isEqualTo(0);
   }
 }

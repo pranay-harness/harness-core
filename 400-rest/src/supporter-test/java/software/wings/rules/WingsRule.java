@@ -95,6 +95,7 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.integration.IntegrationTestBase;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.impl.EventEmitter;
 
@@ -311,6 +312,10 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+    configuration.setGrpcDMSClientConfig(
+        GrpcClientConfig.builder().target("localhost:15011").authority("localhost").build());
+    configuration.setDmsSecret("dummy_key");
+
     configuration.setGrpcClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
 
@@ -375,6 +380,8 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
                                            .org("testOrg")
                                            .project("testProject")
                                            .build());
+    configuration.setLdapSyncJobConfig(
+        LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
     return configuration;
   }
 

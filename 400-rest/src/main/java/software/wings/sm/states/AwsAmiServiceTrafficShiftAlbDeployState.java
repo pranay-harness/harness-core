@@ -26,6 +26,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.delegate.beans.TaskData;
@@ -34,6 +35,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.tasks.ResponseData;
@@ -101,6 +103,8 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   @Inject protected AwsStateHelper awsStateHelper;
   @Inject protected AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Inject private SpotInstStateHelper spotinstStateHelper;
+  @Inject private FeatureFlagService featureFlagService;
+
   @Attributes(title = "Command")
   @DefaultValue(ASG_COMMAND_NAME)
   private static final String COMMAND_NAME = ASG_COMMAND_NAME;
@@ -334,6 +338,13 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
                                          .stream()
                                          .map(LbDetailsForAlbTrafficShift::getStageTargetGroupArn)
                                          .collect(toList()))
+        .amiInServiceHealthyStateFFEnabled(false)
+        .baseAsgScheduledActionJSONs(featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY,
+                                         awsAmiTrafficShiftAlbData.getApp().getAccountId())
+                ? serviceSetupElement.getBaseAsgScheduledActionJSONs()
+                : null)
+        .amiAsgConfigCopyEnabled(featureFlagService.isEnabled(
+            FeatureName.AMI_ASG_CONFIG_COPY, awsAmiTrafficShiftAlbData.getApp().getAccountId()))
         .build();
   }
 

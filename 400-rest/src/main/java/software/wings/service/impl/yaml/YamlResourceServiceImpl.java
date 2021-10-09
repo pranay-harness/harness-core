@@ -24,8 +24,10 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SE
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.EVENT_RULE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.CgEventConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -33,6 +35,7 @@ import io.harness.exception.YamlException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.UuidAccess;
 import io.harness.rest.RestResponse;
+import io.harness.service.EventConfigService;
 import io.harness.yaml.BaseYaml;
 
 import software.wings.api.DeploymentType;
@@ -111,6 +114,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
@@ -141,6 +145,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private TemplateService templateService;
   @Inject private GovernanceConfigService governanceConfigService;
+  @Inject private EventConfigService eventConfigService;
 
   /**
    * Find by app, service and service command ids.
@@ -201,8 +206,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     ApplicationManifest.Yaml yaml =
         (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
             .toYaml(applicationManifest, appId);
-    return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml, INDEX_YAML);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml,
+        StringUtils.isNotBlank(applicationManifest.getName()) ? applicationManifest.getName() + YAML_EXTENSION
+                                                              : INDEX_YAML);
   }
 
   @Override
@@ -554,8 +560,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       yaml = yamlHandler.toYaml(settingAttribute, GLOBAL_APP_ID);
     }
 
-    return YamlHelper.getYamlRestResponse(yamlGitSyncService, settingAttribute.getUuid(), accountId, yaml,
-        YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, settingAttribute.getUuid(), accountId, yaml, settingAttribute.getName() + YAML_EXTENSION);
   }
 
   @Override
@@ -861,5 +867,18 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     } else {
       throw new YamlException("The Governance Config with accountId: '" + accountId + "' was not found!", USER);
     }
+  }
+  @Override
+  public RestResponse<YamlPayload> getEventConfig(String appId, String eventConfigId) {
+    notNullCheck("No app found for Id:" + appId, appId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    CgEventConfig cgEventConfig = eventConfigService.getEventsConfig(accountId, appId, eventConfigId);
+    if (cgEventConfig == null) {
+      throw new YamlException("The EventConfig with eventConfigId: '" + eventConfigId + "' was not found!", USER);
+    }
+    CgEventConfig.Yaml yaml =
+        (CgEventConfig.Yaml) yamlHandlerFactory.getYamlHandler(EVENT_RULE).toYaml(cgEventConfig, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, cgEventConfig.getUuid(), accountId, yaml, cgEventConfig.getName() + YAML_EXTENSION);
   }
 }

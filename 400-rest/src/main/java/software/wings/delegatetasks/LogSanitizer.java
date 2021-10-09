@@ -4,6 +4,10 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 
 import static org.apache.commons.lang3.StringUtils.replaceEach;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 
 import java.util.ArrayList;
@@ -11,6 +15,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class LogSanitizer {
   public static Set<String> calculateSecretLines(Set<String> secrets) {
     return secrets.stream()

@@ -26,9 +26,9 @@ public class PagerDutyChannel extends NotificationChannel {
   List<String> integrationKeys;
 
   @Builder
-  public PagerDutyChannel(String accountId, List<String> userGroupIds, List<NotificationRequest.UserGroup> userGroups,
-      String templateId, Map<String, String> templateData, Team team, List<String> integrationKeys) {
-    super(accountId, userGroupIds, userGroups, templateId, templateData, team);
+  public PagerDutyChannel(String accountId, List<NotificationRequest.UserGroup> userGroups, String templateId,
+      Map<String, String> templateData, Team team, List<String> integrationKeys) {
+    super(accountId, userGroups, templateId, templateData, team);
     this.integrationKeys = integrationKeys;
   }
 
@@ -43,7 +43,6 @@ public class PagerDutyChannel extends NotificationChannel {
                           .addAllPagerDutyIntegrationKeys(integrationKeys)
                           .setTemplateId(templateId)
                           .putAllTemplateData(templateData)
-                          .addAllUserGroupIds(CollectionUtils.emptyIfNull(userGroupIds))
                           .addAllUserGroup(CollectionUtils.emptyIfNull(userGroups)))
         .build();
   }

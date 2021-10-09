@@ -1,7 +1,10 @@
 package software.wings;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
 import io.harness.artifacts.docker.service.DockerRegistryService;
@@ -17,7 +20,6 @@ import io.harness.azure.impl.AzureComputeClientImpl;
 import io.harness.azure.impl.AzureMonitorClientImpl;
 import io.harness.azure.impl.AzureNetworkClientImpl;
 import io.harness.cache.HarnessCacheManager;
-import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.exception.WingsException;
@@ -144,6 +146,7 @@ import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PL)
 public class WingsTestModule extends AbstractModule {
   @Provides
   @Named("TestCache")
@@ -164,8 +167,6 @@ public class WingsTestModule extends AbstractModule {
   @Override
   protected void configure() {
     DelegateFileManager mockDelegateFileManager = mock(DelegateFileManager.class);
-    CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
-    bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
     bind(DelegateFileManager.class).toInstance(mockDelegateFileManager);
     bind(AmazonS3BuildService.class).to(AmazonS3BuildServiceImpl.class);
     bind(AmazonS3Service.class).to(AmazonS3ServiceImpl.class);

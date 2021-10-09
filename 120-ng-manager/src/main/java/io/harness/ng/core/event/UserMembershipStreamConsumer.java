@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -28,13 +29,15 @@ public class UserMembershipStreamConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 30;
   private final Consumer eventConsumer;
   private final List<MessageListener> messageListenersList;
+  private final QueueController queueController;
 
   @Inject
   public UserMembershipStreamConsumer(@Named(USERMEMBERSHIP) Consumer eventConsumer,
-      @Named(USERMEMBERSHIP) MessageListener userMembershipStreamListener) {
+      @Named(USERMEMBERSHIP) MessageListener userMembershipStreamListener, QueueController queueController) {
     this.eventConsumer = eventConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(userMembershipStreamListener);
+    this.queueController = queueController;
   }
 
   @Override
@@ -43,6 +46,12 @@ public class UserMembershipStreamConsumer implements Runnable {
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info(
+              "User Membership stream consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
     } catch (InterruptedException ex) {

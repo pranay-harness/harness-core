@@ -2,13 +2,12 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 
-import io.swagger.annotations.ApiModelProperty;
 import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
@@ -22,16 +21,15 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @EqualsAndHashCode
 @TypeAlias("k8sCanaryDeleteParameters")
-public class K8sCanaryDeleteStepParameters implements K8sSpecParameters {
-  ParameterField<Boolean> skipDryRun;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
-  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
-
+@RecasterAlias("io.harness.cdng.k8s.K8sCanaryDeleteStepParameters")
+public class K8sCanaryDeleteStepParameters extends K8sCanaryDeleteStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
-  public K8sCanaryDeleteStepParameters(
-      ParameterField<Boolean> skipDryRun, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+  public K8sCanaryDeleteStepParameters(ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String canaryStepFqn, String canaryDeleteStepFqn) {
     this.skipDryRun = skipDryRun;
     this.delegateSelectors = delegateSelectors;
+    this.canaryStepFqn = canaryStepFqn;
+    this.canaryDeleteStepFqn = canaryDeleteStepFqn;
   }
 
   @Override

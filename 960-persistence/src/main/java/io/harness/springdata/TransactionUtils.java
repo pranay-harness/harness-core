@@ -22,7 +22,7 @@ public class TransactionUtils {
 
   public final int DEFAULT_MAXIMUM_RETRY_ATTEMPT = 3;
 
-  public final RetryPolicy<Object> DEFAULT_TRANSACTION_RETRY_POLICY =
+  public static final RetryPolicy<Object> DEFAULT_TRANSACTION_RETRY_POLICY =
       RetryUtils.getRetryPolicy("[Retrying] attempt: {}", "[Failed] attempt: {}",
           ImmutableList.of(
               TransactionException.class, MongoTransactionException.class, UncategorizedMongoDbException.class),

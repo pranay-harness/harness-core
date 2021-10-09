@@ -1,14 +1,19 @@
 package io.harness.licensing.api.resource;
 
+import static io.harness.licensing.accesscontrol.LicenseAccessControlPermissions.VIEW_LICENSE_PERMISSION;
+
+import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
-import io.harness.licensing.ModuleType;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.exception.IllegalArgumentException;
+import io.harness.exception.WingsException;
+import io.harness.licensing.accesscontrol.ResourceTypes;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
 import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
-import io.harness.licensing.helpers.ModuleLicenseSummaryHelper;
 import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -21,6 +26,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -33,10 +42,23 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
 
-@Api("/licenses")
-@Path("/licenses")
+@Api("licenses")
+@Path("licenses")
 @Produces({"application/json"})
 @Consumes({"application/json"})
+@Tag(name = "Licenses", description = "This contains APIs related to licenses as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -53,13 +75,22 @@ public class LicenseResource {
   }
 
   @GET
-  @Deprecated
   @ApiOperation(
       value = "Gets Module License By Account And ModuleType", nickname = "getModuleLicenseByAccountAndModuleType")
+  @Operation(operationId = "getModuleLicenseByAccountAndModuleType",
+      summary = "Gets Module License By Account And ModuleType",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a module's license")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  @Deprecated
   public ResponseDTO<ModuleLicenseDTO>
   getModuleLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
+    validateModuleType(moduleType);
     return ResponseDTO.newResponse(licenseService.getModuleLicense(accountIdentifier, moduleType));
   }
 
@@ -67,10 +98,19 @@ public class LicenseResource {
   @Path("/modules/{accountIdentifier}")
   @ApiOperation(
       value = "Gets Module Licenses By Account And ModuleType", nickname = "getModuleLicensesByAccountAndModuleType")
+  @Operation(operationId = "getModuleLicensesByAccountAndModuleType",
+      summary = "Gets Module Licenses By Account And ModuleType",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns all of a module's licenses")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<List<ModuleLicenseDTO>>
   getModuleLicenses(
       @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
+    validateModuleType(moduleType);
     return ResponseDTO.newResponse(licenseService.getModuleLicenses(accountIdentifier, moduleType));
   }
 
@@ -78,24 +118,34 @@ public class LicenseResource {
   @Path("{accountIdentifier}/summary")
   @ApiOperation(
       value = "Gets Module Licenses With Summary By Account And ModuleType", nickname = "getLicensesAndSummary")
+  @Operation(operationId = "getLicensesAndSummary",
+      summary = "Gets Module Licenses With Summary By Account And ModuleType",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a module's license summary")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<LicensesWithSummaryDTO>
   getLicensesWithSummary(
       @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
-    List<ModuleLicenseDTO> moduleLicenses = licenseService.getModuleLicenses(accountIdentifier, moduleType);
-    if (moduleLicenses.isEmpty()) {
-      return ResponseDTO.newResponse(null);
-    }
-
-    LicensesWithSummaryDTO response = ModuleLicenseSummaryHelper.generateSummary(moduleType, moduleLicenses);
-    return ResponseDTO.newResponse(response);
+    validateModuleType(moduleType);
+    return ResponseDTO.newResponse(licenseService.getLicenseSummary(accountIdentifier, moduleType));
   }
 
   @GET
   @Path("account")
   @ApiOperation(value = "Gets All Module License Information in Account", nickname = "getAccountLicenses")
-  public ResponseDTO<AccountLicenseDTO> getAccountLicensesDTO(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+  @Operation(operationId = "getAccountLicenses", summary = "Gets All Module License Information in Account",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns all licenses for an account")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  public ResponseDTO<AccountLicenseDTO>
+  getAccountLicensesDTO(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     AccountLicenseDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
     return ResponseDTO.newResponse(accountLicenses);
   }
@@ -103,16 +153,59 @@ public class LicenseResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets Module License", nickname = "getModuleLicenseById")
-  public ResponseDTO<ModuleLicenseDTO> get(@PathParam("identifier") String identifier,
+  @Operation(operationId = "getModuleLicenseById", summary = "Gets Module License",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a module's license")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  public ResponseDTO<ModuleLicenseDTO>
+  get(@PathParam("identifier") String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     ModuleLicenseDTO moduleLicense = licenseService.getModuleLicenseById(identifier);
     return ResponseDTO.newResponse(moduleLicense);
   }
 
   @POST
+  @Path("free")
+  @ApiOperation(value = "Starts Free License For A Module", nickname = "startFreeLicense")
+  @Operation(operationId = "startFreeLicense", summary = "Starts Free License For A Module",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a free module license")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  public ResponseDTO<ModuleLicenseDTO>
+  startFreeLicense(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
+    return ResponseDTO.newResponse(licenseService.startFreeLicense(accountIdentifier, moduleType));
+  }
+
+  @POST
+  @Path("community")
+  @ApiOperation(value = "Starts Community License For A Module", nickname = "startCommunityLicense")
+  @InternalApi
+  public ResponseDTO<ModuleLicenseDTO> startCommunityLicense(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
+    return ResponseDTO.newResponse(licenseService.startCommunityLicense(accountIdentifier, moduleType));
+  }
+
+  @POST
   @Path("trial")
-  @ApiOperation(value = "Starts Trail License For A Module", nickname = "startTrialLicense")
-  public ResponseDTO<ModuleLicenseDTO> startTrialLicense(
+  @ApiOperation(value = "Starts Trial License For A Module", nickname = "startTrialLicense")
+  @Operation(operationId = "startTrialLicense", summary = "Starts Trial License For A Module",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a trial module license")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  public ResponseDTO<ModuleLicenseDTO>
+  startTrialLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialDTO startTrialRequestDTO) {
     return ResponseDTO.newResponse(licenseService.startTrialLicense(accountIdentifier, startTrialRequestDTO));
@@ -121,7 +214,15 @@ public class LicenseResource {
   @POST
   @Path("extend-trial")
   @ApiOperation(value = "Extends Trail License For A Module", nickname = "extendTrialLicense")
-  public ResponseDTO<ModuleLicenseDTO> extendTrialLicense(
+  @Operation(operationId = "extendTrialLicense", summary = "Extends Trial License For A Module",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a trial module license")
+      })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  public ResponseDTO<ModuleLicenseDTO>
+  extendTrialLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialDTO startTrialRequestDTO) {
     return ResponseDTO.newResponse(licenseService.extendTrialLicense(accountIdentifier, startTrialRequestDTO));
@@ -144,5 +245,11 @@ public class LicenseResource {
   public ResponseDTO<Boolean> softDelete(@PathParam("accountId") String accountId) {
     licenseService.softDelete(accountId);
     return ResponseDTO.newResponse(Boolean.TRUE);
+  }
+
+  private void validateModuleType(ModuleType moduleType) {
+    if (moduleType.isInternal()) {
+      throw new IllegalArgumentException("ModuleType is invalid", WingsException.USER);
+    }
   }
 }

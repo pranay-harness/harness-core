@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.grpc.StatusRuntimeException;
-import java.util.Objects;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -32,7 +32,6 @@ public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHan
 
   public ExecutionSummaryUpdateEventHandler() {}
 
-  // Yes
   @Override
   public void handleEvent(OrchestrationEvent orchestrationEvent) {
     if (orchestrationEvent.getEventType() == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE) {
@@ -45,29 +44,20 @@ public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHan
       return;
     }
     Ambiance ambiance = orchestrationEvent.getAmbiance();
-    Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
     ExecutionSummaryUpdateRequest.Builder executionSummaryUpdateRequest =
         ExecutionSummaryUpdateRequest.newBuilder()
             .setModuleName(serviceName)
             .setPlanExecutionId(ambiance.getPlanExecutionId())
             .setNodeExecutionId(AmbianceUtils.obtainCurrentLevel(ambiance).getRuntimeId());
-    if (ambiance.getLevelsCount() >= 3) {
-      if (Objects.equals(ambiance.getLevels(2).getGroup(), "STAGE")) {
-        executionSummaryUpdateRequest.setNodeUuid(ambiance.getLevels(2).getSetupId());
-      } else if (ambiance.getLevelsCount() >= 4) {
-        executionSummaryUpdateRequest.setNodeUuid(ambiance.getLevels(3).getSetupId());
-      }
-    }
-    if (Objects.equals(level.getGroup(), "STAGE")) {
-      executionSummaryUpdateRequest.setNodeUuid(level.getSetupId());
-    }
-    String pipelineInfoJson = RecastOrchestrationUtils.toDocumentJson(
+    Optional<Level> stageLevel = AmbianceUtils.getStageLevelFromAmbiance(ambiance);
+    stageLevel.ifPresent(value -> executionSummaryUpdateRequest.setNodeUuid(value.getSetupId()));
+    String pipelineInfoJson = RecastOrchestrationUtils.toJson(
         executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(orchestrationEvent));
     if (EmptyPredicate.isNotEmpty(pipelineInfoJson)) {
       executionSummaryUpdateRequest.setPipelineModuleInfoJson(pipelineInfoJson);
     }
-    String stageInfoJson = RecastOrchestrationUtils.toDocumentJson(
-        executionSummaryModuleInfoProvider.getStageLevelModuleInfo(orchestrationEvent));
+    String stageInfoJson =
+        RecastOrchestrationUtils.toJson(executionSummaryModuleInfoProvider.getStageLevelModuleInfo(orchestrationEvent));
     if (EmptyPredicate.isNotEmpty(stageInfoJson)) {
       executionSummaryUpdateRequest.setNodeModuleInfoJson(stageInfoJson);
     }

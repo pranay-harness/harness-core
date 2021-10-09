@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.nexusconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
 import io.harness.validation.OneOfField;
@@ -11,6 +14,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @ApiModel("NexusUsernamePasswordAuth")

@@ -9,6 +9,8 @@ import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aN
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
@@ -19,22 +21,27 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.NotificationRule.Yaml;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.utils.Utils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author rktummala on 10/28/17
  */
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRule.Yaml, NotificationRule> {
   @Inject NotificationSetupService notificationSetupService;
+  @Inject UserGroupService userGroupService;
 
   private NotificationRule toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeContextList) {
     Yaml yaml = changeContext.getYaml();
@@ -69,6 +76,18 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
                                            .stream()
                                            .map(condition -> Utils.getEnumFromString(ExecutionStatus.class, condition))
                                            .collect(toList());
+
+    List<String> userGroupIds = new ArrayList<>();
+    if (isNotEmpty(yaml.getUserGroupNames())) {
+      for (String userGroupName : yaml.getUserGroupNames()) {
+        UserGroup userGroup = userGroupService.fetchUserGroupByName(accountId, userGroupName);
+        notNullCheck("User group " + userGroupName + " doesn't exist", userGroup);
+        userGroupIds.add(userGroup.getUuid());
+      }
+    } else {
+      userGroupIds = yaml.getUserGroupIds();
+    }
+
     return NotificationRuleBuilder.aNotificationRule()
         .withUuid(generateUuid())
         .withActive(true)
@@ -78,7 +97,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
         .withNotificationGroupAsExpression(yaml.isNotificationGroupAsExpression())
         .withUserGroupAsExpression(yaml.isUserGroupAsExpression())
         .withUserGroupExpression(yaml.getUserGroupExpression())
-        .withUserGroupIds(yaml.getUserGroupIds())
+        .withUserGroupIds(userGroupIds)
         .withNotificationGroups(notificationGroups)
         .build();
   }
@@ -102,12 +121,21 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
             })
             .collect(toList());
 
+    List<String> userGroupNames = new ArrayList<>();
+    if (isNotEmpty(notificationRule.getUserGroupIds())) {
+      notificationRule.getUserGroupIds().forEach(userGroupId -> {
+        UserGroup userGroup = userGroupService.get(userGroupId);
+        notNullCheck(String.format("User group with id %s doesnot exist.", userGroupId), userGroup);
+        userGroupNames.add(userGroup.getName());
+      });
+    }
+
     return Yaml.builder()
         .conditions(conditionList)
         .executionScope(Utils.getStringFromEnum(notificationRule.getExecutionScope()))
         .notificationGroups(notificationGroupList)
         .notificationGroupAsExpression(notificationRule.isNotificationGroupAsExpression())
-        .userGroupIds(notificationRule.getUserGroupIds())
+        .userGroupNames(userGroupNames)
         .userGroupAsExpression(notificationRule.isUserGroupAsExpression())
         .userGroupExpression(notificationRule.getUserGroupExpression())
         .build();

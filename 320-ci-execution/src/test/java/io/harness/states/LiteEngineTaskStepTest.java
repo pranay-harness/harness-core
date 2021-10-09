@@ -3,7 +3,6 @@ package io.harness.states;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -13,11 +12,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
-import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
-import io.harness.beans.steps.stepinfo.RestoreCacheS3StepInfo;
-import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
@@ -34,9 +29,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
-import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.core.ParallelStepElement;
-import io.harness.yaml.core.StepElement;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -65,30 +57,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     Map<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", "accountId");
     ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
-    liteEngineTaskStepInfo =
-        LiteEngineTaskStepInfo.builder()
-            .steps(
-                ExecutionElement.builder()
-                    .steps(asList(StepElement.builder()
-                                      .type("restoreCache")
-                                      .stepSpecType(RestoreCacheS3StepInfo.builder().identifier("restoreCache").build())
-                                      .build(),
-                        StepElement.builder()
-                            .type("run")
-                            .stepSpecType(RunStepInfo.builder().identifier("run").build())
-                            .build(),
-                        ParallelStepElement.builder()
-                            .sections(asList(StepElement.builder()
-                                                 .type("publishArtifacts")
-                                                 .stepSpecType(DockerStepInfo.builder().identifier("publish").build())
-                                                 .build(),
-                                StepElement.builder()
-                                    .type("saveCache")
-                                    .stepSpecType(SaveCacheS3StepInfo.builder().identifier("saveCache").build())
-                                    .build()))
-                            .build()))
-                    .build())
-            .build();
+    liteEngineTaskStepInfo = LiteEngineTaskStepInfo.builder().build();
     stepElementParameters = StepElementParameters.builder().name("name").spec(liteEngineTaskStepInfo).build();
   }
 
@@ -122,8 +91,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                                      .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
-    StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
+    StepResponse stepResponse = liteEngineTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -141,8 +110,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                                      .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
-    StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
+    StepResponse stepResponse = liteEngineTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 
@@ -173,8 +142,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                                      .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
-    StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
+    StepResponse stepResponse = liteEngineTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -203,8 +172,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                                      .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
-    StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
+    StepResponse stepResponse = liteEngineTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 }

@@ -7,14 +7,18 @@ import static software.wings.service.impl.slack.SlackApprovalUtils.createMessage
 import static software.wings.service.impl.slack.SlackApprovalUtils.slackPostRequest;
 import static software.wings.sm.states.ApprovalState.JSON;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
 
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.approval.SlackApprovalParams;
 import software.wings.service.impl.notifications.SlackApprovalMessageKeys;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.slack.SlackActionHandler;
+import software.wings.sm.StateExecutionInstance;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -26,6 +30,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ConfirmationHandler implements SlackActionHandler {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SlackApprovalUtils slackApprovalUtils;
@@ -57,17 +62,24 @@ public class ConfirmationHandler implements SlackActionHandler {
     String confirmationPayload = createMessageFromTemplate(templateUrl, templateFillers);
 
     // Sending payload to Slack
-    ExecutionStatus currentStatus =
-        workflowExecutionService
-            .getStateExecutionData(confirmationParams.getAppId(), confirmationParams.getStateExecutionId())
-            .getStatus();
+    StateExecutionInstance stateExecutionInstance = workflowExecutionService.getStateExecutionData(
+        confirmationParams.getAppId(), confirmationParams.getStateExecutionId());
+    ExecutionStatus currentStatus = stateExecutionInstance.getStatus();
     if (currentStatus == ExecutionStatus.PAUSED) {
       RequestBody confirmationBody = RequestBody.create(JSON, confirmationPayload);
       return slackPostRequest(confirmationBody, responseUrl);
     } else {
-      RequestBody alreadyApprovedMessageBody =
-          createBody(SlackApprovalMessageKeys.APPROVAL_STATE_CHANGED_MESSAGE, true);
-      return slackPostRequest(alreadyApprovedMessageBody, responseUrl);
+      RequestBody alreadyApprovedMessageBody = null;
+      if (stateExecutionInstance.fetchStateExecutionData() instanceof ApprovalStateExecutionData) {
+        ApprovalStateExecutionData approvalStateExecutionData =
+            (ApprovalStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
+        String alreadyApprovedMessageString = approvalStateExecutionData.isApprovalFromGraphQL()
+            ? SlackApprovalMessageKeys.APPROVAL_STATE_CHANGED_MESSAGE_VIA_API
+            : SlackApprovalMessageKeys.APPROVAL_STATE_CHANGED_MESSAGE;
+        alreadyApprovedMessageBody = createBody(alreadyApprovedMessageString, true);
+        return slackPostRequest(alreadyApprovedMessageBody, responseUrl);
+      }
+      return slackPostRequest(createBody(SlackApprovalMessageKeys.APPROVAL_STATE_CHANGED_MESSAGE, true), responseUrl);
     }
   }
 }

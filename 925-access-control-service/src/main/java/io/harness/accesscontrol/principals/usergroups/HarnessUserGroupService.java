@@ -11,4 +11,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(PL)
 public interface HarnessUserGroupService {
   void sync(@NotEmpty String identifier, @NotNull Scope scope);
+  void deleteIfPresent(@NotEmpty String identifier, @NotNull Scope scope);
 }

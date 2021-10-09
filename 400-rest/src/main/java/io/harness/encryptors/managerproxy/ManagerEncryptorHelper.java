@@ -1,7 +1,8 @@
 package io.harness.encryptors.managerproxy;
 
-import static io.harness.beans.shared.tasks.NgSetupFields.NG;
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.delegate.beans.NgSetupFields.NG;
+import static io.harness.delegate.beans.NgSetupFields.OWNER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -11,6 +12,10 @@ import static software.wings.beans.TaskType.VALIDATE_SECRET_REFERENCE;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -33,6 +38,10 @@ import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule._890_SM_CORE)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
+@BreakDependencyOn("io.harness.beans.DelegateTask")
 public class ManagerEncryptorHelper {
   private final DelegateService delegateService;
   private final TaskSetupAbstractionHelper taskSetupAbstractionHelper;
@@ -52,8 +61,10 @@ public class ManagerEncryptorHelper {
       // Verify if its a Task from NG
       owner = taskSetupAbstractionHelper.getOwner(
           encryptionConfig.getAccountId(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-      abstractions.put(OWNER, owner);
-      if (isNotBlank(ngAccess.getOrgIdentifier()) || isNotBlank(ngAccess.getProjectIdentifier())) {
+      if (isNotBlank(owner)) {
+        abstractions.put(OWNER, owner);
+      }
+      if (isNotBlank(ngAccess.getAccountIdentifier())) {
         abstractions.put(NG, "true");
       }
     }

@@ -1,3 +1,9 @@
+!!!custom_delegateAsyncTaskResponses {"name": "processAfter_1", "background": true} {"processAfter": 1}
+!!!custom_delegateAsyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+!!!custom_delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+!!!custom_delegateTaskProgressResponses {"name": "processAfter_1", "background": true} {"processAfter": 1}
+!!!custom_delegateTaskProgressResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+awsEntityToBucketMapping {"name": "unique_accountId_awsConnectorIdentifier", "unique": true} {"accountId": 1, "awsConnectorIdentifier": 1}
 batchJobInterval {"name": "accountId_batchJobType", "unique": true} {"accountId": 1, "batchJobType": 1}
 batchJobScheduledData {"name": "accountId_batchJobType_validRun_endAt", "background": true} {"accountId": 1, "batchJobType": 1, "validRun": 1, "endAt": -1}
 batchJobScheduledData {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
@@ -8,6 +14,11 @@ ceCluster {"name": "no_dup", "unique": true} {"accountId": 1, "infraAccountId": 
 ceExceptionRecord {"name": "accountId_clusterId_createdAt", "background": true} {"accountId": 1, "clusterId": 1, "createdAt": 1}
 ceMetadataRecord {"name": "accountId", "unique": true} {"accountId": 1}
 ceReportSchedule {"name": "account_enabled_type", "background": true} {"accountId": 1, "enabled": 1, "name": 1, "viewsId": 1}
+clusterRecords {"name": "accountId_k8sBaseConnectorRefIdentifier", "unique": true} {"accountId": 1, "k8sBaseConnectorRefIdentifier": 1}
+delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
+delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
+delegateTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+gcpServiceAccount {"name": "account_id_service_account_email", "background": true} {"accountId": 1, "email": 1}
 instanceData {"name": "accountId_clusterId_instanceId_instanceState", "background": true} {"accountId": 1, "clusterId": 1, "instanceId": 1, "instanceState": 1}
 instanceData {"name": "accountId_clusterId_instanceName_usageStartTime", "background": true} {"accountId": 1, "clusterId": 1, "instanceName": 1, "usageStartTime": -1}
 instanceData {"name": "accountId_clusterId_instanceState_usageStartTime", "background": true} {"accountId": 1, "clusterId": 1, "instanceState": 1, "usageStartTime": 1}
@@ -31,9 +42,20 @@ k8sWorkloadRecommendation {"name": "unique_accountId_clusterId_namespace_workloa
 k8sYaml {"name": "accountId_hash", "background": true} {"accountId": 1, "hash": 1}
 k8sYaml {"name": "hash_1", "unique": true} {"hash": 1}
 lastReceivedPublishedMessage {"name": "no_dup", "unique": true} {"accountId": 1, "identifier": 1}
+notifyQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
+notifyQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
+notifyQueue {"name": "waitInstanceId_1", "unique": true} {"waitInstanceId": 1}
+notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
+notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 partialRecommendationHistogram {"name": "unique_accountId_clusterId_namespace_workloadName_workloadType_date", "unique": true} {"accountId": 1, "clusterId": 1, "namespace": 1, "workloadName": 1, "workloadType": 1, "date": 1}
 primaryVersion {"name": "createdAt_1", "background": true} {"createdAt": 1}
 primaryVersion {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}
+progressUpdate {"name": "correlation", "background": true} {"correlationId": 1, "createdAt": -1}
+progressUpdate {"name": "createdAt_1", "background": true} {"createdAt": 1}
+progressUpdate {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 publishedMessages {"name": "accountId_type_CreatedAt_occurredAt", "background": true} {"accountId": 1, "type": 1, "createdAt": 1, "occurredAt": 1}
 publishedMessages {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 viewCustomField {"name": "accountId_viewId_name", "unique": true} {"accountId": 1, "viewId": 1, "name": 1}
+waitInstances {"name": "correlationIds_1", "background": true} {"correlationIds": 1}
+waitInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+waitInstances {"name": "waitingOnCorrelationIds_1", "background": true} {"waitingOnCorrelationIds": 1}

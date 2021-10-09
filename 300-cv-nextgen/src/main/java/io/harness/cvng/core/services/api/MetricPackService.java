@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.api;
 
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.core.entities.MetricPack;
@@ -13,6 +14,9 @@ public interface MetricPackService {
 
   List<MetricPack> getMetricPacks(
       String accountId, String orgIdentifier, String projectIdentifier, DataSourceType dataSourceType);
+
+  MetricPack getMetricPack(String accountId, String orgIdentifier, String projectIdentifier,
+      DataSourceType dataSourceType, CVMonitoringCategory cvMonitoringCategory);
 
   void createDefaultMetricPackAndThresholds(String accountId, String orgIdentifier, String projectIdentifier);
 

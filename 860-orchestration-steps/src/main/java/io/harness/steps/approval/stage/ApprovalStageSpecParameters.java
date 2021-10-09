@@ -1,5 +1,6 @@
 package io.harness.steps.approval.stage;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
@@ -12,6 +13,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("approvalStageSpecParameters")
+@RecasterAlias("io.harness.steps.approval.stage.ApprovalStageSpecParameters")
 public class ApprovalStageSpecParameters implements SpecParameters {
   String childNodeID;
 

@@ -24,7 +24,7 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FeatureName;
-import io.harness.beans.shared.tasks.NgSetupFields;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
@@ -34,6 +34,7 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.NgSetupFields;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -226,8 +227,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         && Boolean.TRUE.equals(Boolean.valueOf(taskSetupAbstractions.get(NgSetupFields.NG)));
 
     if (featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, delegate.getAccountId())) {
-      log.info(
-          "CG/NG delegate/task assignment isolation test. Is Delegate NG: {}, Is Task NG: {}", isDelegateNg, isTaskNg);
+      if (log.isDebugEnabled()) {
+        log.debug("CG/NG delegate/task assignment isolation test. Is Delegate NG: {}, Is Task NG: {}", isDelegateNg,
+            isTaskNg);
+      }
       return true;
     }
 
@@ -235,8 +238,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       return true;
     }
 
-    log.warn("CG/NG delegate/task assignment isolation check was negative. Is Delegate NG: {}, Is Task NG: {}",
-        isDelegateNg, isTaskNg);
+    if (log.isDebugEnabled()) {
+      log.debug("CG/NG delegate/task assignment isolation check was negative. Is Delegate NG: {}, Is Task NG: {}",
+          isDelegateNg, isTaskNg);
+    }
     return false;
   }
 
@@ -329,7 +334,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       taskSetupAbstractionsPrintable.append(entity.getKey() + ":" + entity.getValue() + "; ");
     }
     String logSequence = batch != null && isNotBlank(batch.getTaskId()) ? batch.getTaskId() : generateUuid();
-    log.info(logSequence + " - Starting profile scoping rules match with task abstractions {}.",
+    log.debug("{} - Starting profile scoping rules match with task abstractions {}.", logSequence,
         taskSetupAbstractionsPrintable.toString());
 
     Set<String> failedRulesDescriptions = new HashSet<>();
@@ -710,9 +715,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                     .set(DelegateConnectionResultKeys.validUntil, DelegateConnectionResult.getValidUntilTime());
             DelegateConnectionResult result = persistence.findAndModify(query, updateOperations, findAndModifyOptions);
             if (result != null) {
-              log.info("Whitelist entry refreshed");
+              log.debug("Whitelist entry refreshed");
             } else {
-              log.info("Whitelist entry was not updated");
+              log.debug("Whitelist entry was not updated");
             }
           }
         }
@@ -746,19 +751,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
-  public void clearConnectionResults(String accountId) {
-    persistence.delete(persistence.createQuery(DelegateConnectionResult.class)
-                           .filter(DelegateConnectionResultKeys.accountId, accountId));
-  }
-
-  @Override
-  public void clearConnectionResults(String accountId, String delegateId) {
-    persistence.delete(persistence.createQuery(DelegateConnectionResult.class)
-                           .filter(DelegateConnectionResultKeys.accountId, accountId)
-                           .filter(DelegateConnectionResultKeys.delegateId, delegateId));
-  }
-
-  @Override
   public String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask) {
     log.info("Delegate task is terminated");
 
@@ -780,9 +772,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     try {
-      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
-
-      log.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
+      // We are skipping invocation of the delegateSelectionLogsService.save intentionally, becuase we do not need to
+      // track selection logs here, we just want retrieveActiveDelegates method to respect cg/ng isolation, if necessary
+      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
+      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), batch);
 
       List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
       if (activeDelegates.isEmpty()) {
@@ -858,6 +851,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         accountDelegatesCache.invalidate(accountId);
       }
 
+      if (batch != null && featureFlagService.isEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)) {
+        accountDelegates =
+            accountDelegates.stream().filter(delegate -> delegate.isNg() == batch.isTaskNg()).collect(toList());
+      }
+
       return identifyActiveDelegateIds(accountDelegates, accountId, batch);
     } catch (ExecutionException ex) {
       log.error("Unexpected error occurred while fetching delegates from cache.", ex);
@@ -912,8 +910,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.DISCONNECTED) != null) {
       disconnectedScalingGroup = delegatesMap.get(DelegateActivity.DISCONNECTED)
                                      .stream()
-                                     .filter(a -> isNotEmpty(a.getDelegateGroupName()))
                                      .map(Delegate::getDelegateGroupName)
+                                     .filter(EmptyPredicate::isNotEmpty)
                                      .collect(Collectors.toSet());
     }
 
@@ -921,8 +919,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.ACTIVE) != null) {
       connectedScalingGroup = delegatesMap.get(DelegateActivity.ACTIVE)
                                   .stream()
-                                  .filter(a -> isNotEmpty(a.getDelegateGroupName()))
                                   .map(Delegate::getDelegateGroupName)
+                                  .filter(EmptyPredicate::isNotEmpty)
                                   .collect(Collectors.toSet());
     }
 

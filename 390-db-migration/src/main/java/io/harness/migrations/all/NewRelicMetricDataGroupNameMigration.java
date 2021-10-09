@@ -3,7 +3,6 @@ package io.harness.migrations.all;
 import static software.wings.beans.Base.ID_KEY2;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

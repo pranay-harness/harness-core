@@ -14,6 +14,8 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsValidationParams;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerDTO;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
 import io.harness.delegate.task.ConnectorValidationHandler;
@@ -80,6 +82,19 @@ public class EncryptSecretTaskValidationHandler implements ConnectorValidationHa
           ConnectorInfoDTO.builder().connectorConfig(awsKmsConnectorDTO).connectorType(ConnectorType.AWS_KMS).build();
       SecretManagerConfigDTO secretManagerConfigDTO = SecretManagerConfigDTOMapper.fromConnectorDTO(
           accountIdentifier, ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), awsKmsConnectorDTO);
+      return EncryptSecretTaskParameters.builder()
+          .encryptionConfig(SecretManagerConfigMapper.fromDTO(secretManagerConfigDTO))
+          .value(UUIDGenerator.generateUuid())
+          .build();
+    } else if (ConnectorType.AWS_SECRET_MANAGER.equals(connectorValidationParams.getConnectorType())) {
+      AwsSecretManagerDTO awsSecretManagerDTO =
+          ((AwsSecretManagerValidationParams) connectorValidationParams).getAwsSecretManagerDTO();
+      ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder()
+                                              .connectorConfig(awsSecretManagerDTO)
+                                              .connectorType(ConnectorType.AWS_SECRET_MANAGER)
+                                              .build();
+      SecretManagerConfigDTO secretManagerConfigDTO = SecretManagerConfigDTOMapper.fromConnectorDTO(
+          accountIdentifier, ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), awsSecretManagerDTO);
       return EncryptSecretTaskParameters.builder()
           .encryptionConfig(SecretManagerConfigMapper.fromDTO(secretManagerConfigDTO))
           .value(UUIDGenerator.generateUuid())

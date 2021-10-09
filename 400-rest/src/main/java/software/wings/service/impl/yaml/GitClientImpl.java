@@ -9,6 +9,7 @@ import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.shell.AuthenticationScheme.HTTP_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
@@ -30,6 +31,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -81,6 +83,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -136,6 +139,7 @@ import org.eclipse.jgit.util.HttpSupport;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._960_API_SERVICES)
+@BreakDependencyOn("software.wings.beans.GitConfig")
 public class GitClientImpl implements GitClient {
   @Inject GitClientHelper gitClientHelper;
 
@@ -143,7 +147,7 @@ public class GitClientImpl implements GitClient {
       GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
     try {
       if (new File(gitRepoDirectory).exists()) {
-        FileUtils.deleteDirectory(new File(gitRepoDirectory));
+        deleteDirectoryAndItsContentIfExists(gitRepoDirectory);
       }
     } catch (IOException ioex) {
       log.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", getMessage(ioex));
@@ -636,7 +640,7 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private void checkoutFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
+  private String checkoutFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, boolean shouldExportCommitSha) {
     synchronized (gitClientHelper.getLockObject(gitRequest.getGitConnectorId())) {
       defaultRepoTypeToYaml(gitConfig);
 
@@ -660,24 +664,27 @@ public class GitClientImpl implements GitClient {
       // clone repo locally without checkout
       String branch = gitRequest.isUseBranch() ? gitRequest.getBranch() : StringUtils.EMPTY;
       cloneRepoForFilePathCheckout(gitConfig, branch, gitConnectorId);
-
       // if useBranch is set, use it to checkout latest, else checkout given commitId
+      String latestCommitSha;
       if (gitRequest.isUseBranch()) {
-        checkoutBranchForPath(gitRequest.getBranch(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
+        latestCommitSha = checkoutBranchForPath(
+            gitRequest.getBranch(), gitRequest.getFilePaths(), gitConfig, gitConnectorId, shouldExportCommitSha);
       } else {
         checkoutGivenCommitForPath(gitRequest.getCommitId(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
+        latestCommitSha = gitRequest.getCommitId();
       }
+      return latestCommitSha;
     }
   }
 
   @Override
-  public void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory) {
+  public String downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory,
+      boolean shouldExportCommitSha) {
     validateRequiredArgs(gitRequest, gitConfig);
     String gitConnectorId = gitRequest.getGitConnectorId();
-
     synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
       try {
-        checkoutFiles(gitConfig, gitRequest);
+        String latestCommitSha = checkoutFiles(gitConfig, gitRequest, shouldExportCommitSha);
         String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitRequest.getGitConnectorId());
 
         FileIo.createDirectoryIfDoesNotExist(destinationDirectory);
@@ -695,6 +702,7 @@ public class GitClientImpl implements GitClient {
         }
 
         resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
+        return latestCommitSha;
       } catch (WingsException e) {
         tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
         throw e;
@@ -709,6 +717,8 @@ public class GitClientImpl implements GitClient {
                 .append(gitRequest.getFilePaths())
                 .append(". Reason: ")
                 .append(e.getMessage())
+                .append(", ")
+                .append(e.getCause() != null ? e.getCause().getMessage() : "")
                 .toString(),
             e, USER);
       }
@@ -716,7 +726,8 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
+  public GitFetchFilesResult fetchFilesByPath(
+      GitConfig gitConfig, GitFetchFilesRequest gitRequest, boolean shouldExportCommitSha) {
     validateRequiredArgs(gitRequest, gitConfig);
 
     String gitConnectorId = gitRequest.getGitConnectorId();
@@ -725,7 +736,7 @@ public class GitClientImpl implements GitClient {
      * */
     synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
       try {
-        checkoutFiles(gitConfig, gitRequest);
+        String latestCommitSHA = checkoutFiles(gitConfig, gitRequest, shouldExportCommitSha);
 
         String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitRequest.getGitConnectorId());
         List<GitFile> gitFiles = getFilteredGitFiles(gitConfig, gitRequest, repoPath);
@@ -740,6 +751,7 @@ public class GitClientImpl implements GitClient {
             .gitCommitResult(GitCommitResult.builder()
                                  .commitId(gitRequest.isUseBranch() ? "latest" : gitRequest.getCommitId())
                                  .build())
+            .latestCommitSHA(latestCommitSHA)
             .build();
 
       } catch (WingsException e) {
@@ -755,6 +767,10 @@ public class GitClientImpl implements GitClient {
                 .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
                 .append(", FilePaths: ")
                 .append(gitRequest.getFilePaths())
+                .append(". Reason: ")
+                .append(e.getMessage())
+                .append(", ")
+                .append(e.getCause() != null ? e.getCause().getMessage() : "")
                 .toString(),
             USER);
       }
@@ -865,8 +881,9 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private void checkoutBranchForPath(
-      String branch, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
+  private String checkoutBranchForPath(String branch, List<String> filePaths, GitConfig gitConfig,
+      String gitConnectorId, boolean shouldExportCommitSha) {
+    String latestCommitSha = null;
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
       log.info("Checking out Branch: " + branch);
       CheckoutCommand checkoutCommand = git.checkout()
@@ -877,7 +894,19 @@ public class GitClientImpl implements GitClient {
                                             .setName(branch);
       setPathsForCheckout(filePaths, checkoutCommand);
       checkoutCommand.call();
+
+      if (isNotEmpty(branch) && shouldExportCommitSha) {
+        ObjectId branchObjectId = git.getRepository().resolve("origin/" + branch).toObjectId();
+        Iterator<RevCommit> revCommitIterator = git.log().add(branchObjectId).setMaxCount(1).call().iterator();
+        RevCommit revCommit = revCommitIterator.next();
+        if (revCommit != null) {
+          latestCommitSha = revCommit.toString().split(" ")[1];
+        }
+      }
+
       log.info("Successfully Checked out Branch: " + branch);
+      return latestCommitSha;
+
     } catch (Exception ex) {
       log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);

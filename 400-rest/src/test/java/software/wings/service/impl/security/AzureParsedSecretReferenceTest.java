@@ -6,6 +6,7 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.runners.Parameterized.Parameter;
 import static org.junit.runners.Parameterized.Parameters;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.helpers.ext.azure.AzureParsedSecretReference;
 import io.harness.rule.Owner;
@@ -19,7 +20,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class AzureParsedSecretReferenceTest {
+public class AzureParsedSecretReferenceTest extends CategoryTest {
   @Parameter(0) public String secretPath;
 
   @Parameter(1) public String secretName;

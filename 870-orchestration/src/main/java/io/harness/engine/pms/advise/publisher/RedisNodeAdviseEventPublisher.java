@@ -8,10 +8,10 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviseEvent;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -24,13 +24,13 @@ public class RedisNodeAdviseEventPublisher implements NodeAdviseEventPublisher {
   @Override
   public String publishEvent(String nodeExecutionId, Status fromStatus) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
+    PlanNode planNode = nodeExecution.getNode();
+    String serviceName = planNode.getServiceName();
     AdviseEvent adviseEvent =
         AdviseEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
             .setFailureInfo(nodeExecution.getFailureInfo())
-            .addAllAdviserObtainments(nodeExecution.getNode().getAdviserObtainmentsList())
+            .addAllAdviserObtainments(planNode.getAdviserObtainments())
             .setIsPreviousAdviserExpired(isPreviousAdviserExpired(nodeExecution.getInterruptHistories()))
             .addAllRetryIds(nodeExecution.getRetryIds())
             .setNotifyId(generateUuid())
@@ -39,7 +39,7 @@ public class RedisNodeAdviseEventPublisher implements NodeAdviseEventPublisher {
             .build();
 
     return eventSender.sendEvent(
-        adviseEvent.toByteString(), PmsEventCategory.NODE_ADVISE, serviceName, accountId, true);
+        nodeExecution.getAmbiance(), adviseEvent.toByteString(), PmsEventCategory.NODE_ADVISE, serviceName, true);
   }
 
   private boolean isPreviousAdviserExpired(List<InterruptEffect> interruptHistories) {

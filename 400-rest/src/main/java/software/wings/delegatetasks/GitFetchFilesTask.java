@@ -1,28 +1,39 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesTaskHelper;
+import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.service.ScmServiceClient;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
@@ -34,6 +45,7 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
+import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
@@ -50,6 +62,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -60,6 +73,9 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private GitFetchFilesTaskHelper gitFetchFilesTaskHelper;
+  @Inject private ScmDelegateClient scmDelegateClient;
+  @Inject private ScmServiceClient scmServiceClient;
+  @Inject private ScmFetchFilesHelper scmFetchFilesHelper;
 
   public static final int GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT = 10;
 
@@ -82,7 +98,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
     AppManifestKind appManifestKind = taskParams.getAppManifestKind();
     Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
-
+    Map<String, GitFetchFilesConfig> gitFetchFilesConfigMap = taskParams.getGitFetchFilesConfigMap();
     for (Entry<String, GitFetchFilesConfig> entry : taskParams.getGitFetchFilesConfigMap().entrySet()) {
       executionLogCallback.saveExecutionLog(
           color(format("%nFetching %s files from git for %s", getFileTypeMessage(appManifestKind), entry.getKey()),
@@ -94,7 +110,8 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
       try {
         gitFetchFilesResult = fetchFilesFromRepo(gitFetchFileConfig.getGitFileConfig(),
-            gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails(), executionLogCallback);
+            gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails(), executionLogCallback,
+            taskParams.isOptimizedFilesFetch(), taskParams.isShouldInheritGitFetchFilesConfigMap());
       } catch (Exception ex) {
         String exceptionMsg = ex.getMessage();
 
@@ -103,6 +120,11 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
             && ex.getCause() instanceof NoSuchFileException) {
           log.info("Values.yaml file not found. " + exceptionMsg, ex);
           executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
+          if (taskParams.isShouldInheritGitFetchFilesConfigMap() && entry.getValue().getGitFileConfig().isUseBranch()) {
+            executionLogCallback.saveExecutionLog(color(
+                "Unable to resolve git reference for values yaml, future phases will continue to use branch for fetching",
+                Yellow, Bold));
+          }
           continue;
         }
 
@@ -116,6 +138,19 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
       }
 
       filesFromMultipleRepo.put(entry.getKey(), gitFetchFilesResult);
+
+      if (taskParams.isShouldInheritGitFetchFilesConfigMap() && entry.getValue().getGitFileConfig().isUseBranch()) {
+        gitFetchFilesConfigMap.get(entry.getKey()).getGitFileConfig().setUseBranch(false);
+        gitFetchFilesConfigMap.get(entry.getKey())
+            .getGitFileConfig()
+            .setCommitId(gitFetchFilesResult.getLatestCommitSHA());
+
+        executionLogCallback.saveExecutionLog(color(
+            String.format(
+                "Recorded Latest CommitId: %s and will use this Commit Id to fetch Values Yaml from git throughout this workflow",
+                gitFetchFilesResult.getLatestCommitSHA()),
+            White, Bold));
+      }
     }
 
     if (taskParams.isFinalState()) {
@@ -123,16 +158,17 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     }
 
     return GitCommandExecutionResponse.builder()
-        .gitCommandResult(
-            GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build())
+        .gitCommandResult(GitFetchFilesFromMultipleRepoResult.builder()
+                              .gitFetchFilesConfigMap(gitFetchFilesConfigMap)
+                              .filesFromMultipleRepo(filesFromMultipleRepo)
+                              .build())
         .gitCommandStatus(GitCommandStatus.SUCCESS)
         .build();
   }
 
   private GitFetchFilesResult fetchFilesFromRepo(GitFileConfig gitFileConfig, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
-    encryptionService.decrypt(gitConfig, encryptedDataDetails, false);
-
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean optimizedFilesFetch, boolean shouldExportCommitSha) {
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfig.getRepoUrl());
     if (gitFileConfig.isUseBranch()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitFileConfig.getBranch());
@@ -159,12 +195,74 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
       filePathsToFetch = Collections.singletonList(filePath);
     }
 
-    GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
-        gitFileConfig.getCommitId(), gitFileConfig.getBranch(), filePathsToFetch, gitFileConfig.isUseBranch());
+    GitFetchFilesResult gitFetchFilesResult;
+    encryptionService.decrypt(gitConfig, encryptedDataDetails, false);
+    if (scmFetchFilesHelper.shouldUseScm(optimizedFilesFetch, gitConfig)) {
+      gitFetchFilesResult = fetchFilesFromRepoWithScm(gitFileConfig, gitConfig, filePathsToFetch, executionLogCallback);
+    } else {
+      gitFetchFilesResult =
+          gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(),
+              gitFileConfig.getBranch(), filePathsToFetch, gitFileConfig.isUseBranch(), shouldExportCommitSha);
+    }
+
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(
         executionLogCallback, gitFetchFilesResult == null ? Collections.emptyList() : gitFetchFilesResult.getFiles());
 
     return gitFetchFilesResult;
+  }
+
+  private GitFetchFilesResult fetchFilesFromRepoWithScm(GitFileConfig gitFileConfig, GitConfig gitConfig,
+      List<String> filePathList, ExecutionLogCallback executionLogCallback) {
+    ScmConnector scmConnector = scmFetchFilesHelper.getScmConnector(gitConfig);
+    FileContentBatchResponse fileBatchContentResponse;
+
+    if (gitFileConfig.isUseBranch()) {
+      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+          -> scmServiceClient.listFilesByFilePaths(
+              scmConnector, filePathList, gitFileConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
+    } else {
+      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+          -> scmServiceClient.listFilesByCommitId(
+              scmConnector, filePathList, gitFileConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
+    }
+
+    List<GitFile> gitFiles =
+        fileBatchContentResponse.getFileBatchContentResponse()
+            .getFileContentsList()
+            .stream()
+            .filter(fileContent -> {
+              if (fileContent.getStatus() != 200) {
+                logFailedFileFetch(gitFileConfig, executionLogCallback, fileContent);
+                return false;
+              } else {
+                return true;
+              }
+            })
+            .map(fileContent
+                -> GitFile.builder().fileContent(fileContent.getContent()).filePath(fileContent.getPath()).build())
+            .collect(Collectors.toList());
+
+    if (isNotEmpty(gitFiles)) {
+      gitFiles.forEach(gitFile -> log.info("File fetched : " + gitFile.getFilePath()));
+    }
+    return GitFetchFilesResult.builder()
+        .files(gitFiles)
+        .gitCommitResult(GitCommitResult.builder()
+                             .commitId(gitFileConfig.isUseBranch() ? "latest" : fileBatchContentResponse.getCommitId())
+                             .build())
+        .build();
+  }
+
+  private void logFailedFileFetch(
+      GitFileConfig gitFileConfig, ExecutionLogCallback executionLogCallback, FileContent fileContent) {
+    executionLogCallback.saveExecutionLog(
+        new StringBuilder("Unable to fetch files for filePath [")
+            .append(fileContent.getPath())
+            .append("]")
+            .append(gitFileConfig.isUseBranch() ? " for Branch: " : " for CommitId: ")
+            .append(gitFileConfig.isUseBranch() ? gitFileConfig.getBranch() : gitFileConfig.getCommitId())
+            .toString(),
+        WARN);
   }
 
   @Override

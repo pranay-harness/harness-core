@@ -2,6 +2,9 @@ package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.eventsframework.EventsFrameworkConstants.ORCHESTRATION_LOG;
+import static io.harness.eventsframework.EventsFrameworkConstants.PLAN_NOTIFY_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_REQUEST_PAYLOAD_DETAILS;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE;
 
@@ -34,10 +37,20 @@ public class PipelineServiceEventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_PRODUCER))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_TOPIC));
+      bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_REQUEST_PAYLOAD_DETAILS))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
+          .annotatedWith(Names.named(ORCHESTRATION_LOG))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_PRODUCER))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+          .annotatedWith(Names.named(EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
@@ -46,6 +59,10 @@ public class PipelineServiceEventsFrameworkModule extends AbstractModule {
           .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,
               EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
       bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_PRODUCER))
+          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_TOPIC, redisConfig,
+              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+      bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_REQUEST_PAYLOAD_DETAILS))
           .toInstance(RedisProducer.of(WEBHOOK_REQUEST_PAYLOAD_DETAILS, redisConfig,
               WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
@@ -53,21 +70,39 @@ public class PipelineServiceEventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
               EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+      bind(Producer.class)
+          .annotatedWith(Names.named(ORCHESTRATION_LOG))
+          .toInstance(RedisProducer.of(ORCHESTRATION_LOG, redisConfig,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT))
+          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT, redisConfig,
+              EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, PIPELINE_SERVICE.getServiceId(),
               redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
       bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.POLLING_EVENTS_STREAM))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.POLLING_EVENTS_STREAM, PIPELINE_SERVICE.getServiceId(),
+              redisConfig, EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.POLLING_EVENTS_STREAM_BATCH_SIZE));
+      bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM, PIPELINE_SERVICE.getServiceId(),
               redisConfig, EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_BATCH_SIZE));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, PIPELINE_SERVICE.getServiceId(),
-              redisConfig, EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.FEATURE_FLAG_READ_BATCH_SIZE));
+          .annotatedWith(Names.named(PLAN_NOTIFY_EVENT_TOPIC))
+          .toInstance(RedisConsumer.of(PLAN_NOTIFY_EVENT_TOPIC, PIPELINE_SERVICE.getServiceId(), redisConfig,
+              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_BATCH_SIZE));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PMS_ORCHESTRATION_NOTIFY_EVENT))
+          .toInstance(RedisConsumer.of(PMS_ORCHESTRATION_NOTIFY_EVENT, PIPELINE_SERVICE.getServiceId(), redisConfig,
+              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT_BATCH_SIZE));
     }
   }
 }

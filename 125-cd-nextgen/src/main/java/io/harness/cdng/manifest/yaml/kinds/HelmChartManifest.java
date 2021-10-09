@@ -1,10 +1,12 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
+import static io.harness.beans.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
@@ -31,6 +33,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -45,22 +48,33 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = HelmChartManifestVisitorHelper.class)
 @TypeAlias("helmChartManifest")
+@RecasterAlias("io.harness.cdng.manifest.yaml.kinds.HelmChartManifest")
 public class HelmChartManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper store;
+  @Wither
+  @JsonProperty("store")
+  @ApiModelProperty(dataType = "io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper")
+  @SkipAutoEvaluation
+  ParameterField<StoreConfigWrapper> store;
+  // @YamlSchemaTypes({string, bool}) ParameterField<Boolean>
   @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartName;
   @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartVersion;
   @Wither HelmVersion helmVersion;
-  @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
+  @Wither
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH)
+  @YamlSchemaTypes({string})
+  @SkipAutoEvaluation
+  ParameterField<Boolean> skipResourceVersioning;
   @Wither List<HelmManifestCommandFlag> commandFlags;
 
   @Override
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     HelmChartManifest helmChartManifest = (HelmChartManifest) overrideConfig;
     HelmChartManifest resultantManifest = this;
-    if (helmChartManifest.getStore() != null) {
-      StoreConfigWrapper storeConfigOverride = helmChartManifest.getStore();
-      resultantManifest = resultantManifest.withStore(store.applyOverrides(storeConfigOverride));
+    if (helmChartManifest.getStore() != null && helmChartManifest.getStore().getValue() != null) {
+      StoreConfigWrapper storeConfigOverride = helmChartManifest.getStore().getValue();
+      resultantManifest = resultantManifest.withStore(
+          ParameterField.createValueField(store.getValue().applyOverrides(storeConfigOverride)));
     }
 
     if (!ParameterField.isNull(helmChartManifest.getChartName())) {
@@ -88,7 +102,7 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add(YAMLFieldNameConstants.STORE, store);
+    children.add(YAMLFieldNameConstants.STORE, store.getValue());
     return children;
   }
 
@@ -99,6 +113,24 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
 
   @Override
   public StoreConfig getStoreConfig() {
-    return this.store.getSpec();
+    return this.store.getValue().getSpec();
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new HelmChartManifestStepParameters(identifier,
+        StoreConfigWrapperParameters.fromStoreConfigWrapper(store.getValue()), chartName, chartVersion, helmVersion,
+        skipResourceVersioning, commandFlags);
+  }
+
+  @Value
+  public static class HelmChartManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<String> chartName;
+    ParameterField<String> chartVersion;
+    HelmVersion helmVersion;
+    ParameterField<Boolean> skipResourceVersioning;
+    List<HelmManifestCommandFlag> commandFlags;
   }
 }

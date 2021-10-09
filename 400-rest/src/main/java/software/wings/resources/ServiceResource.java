@@ -7,6 +7,8 @@ import static io.harness.exception.WingsException.USER;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
@@ -50,6 +52,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -74,6 +77,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.APPLICATION)
 @AuthRule(permissionType = PermissionType.SERVICE)
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
   @Inject ApplicationManifestService applicationManifestService;
@@ -819,9 +823,11 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
-  public RestResponse<PageResponse<HelmChart>> getHelmChartVersions(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<HelmChart> pageRequest) {
-    return new RestResponse<>(helmChartService.listHelmChartsForService(appId, serviceId, pageRequest));
+  public RestResponse<Map<String, List<HelmChart>>> getHelmChartVersions(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @QueryParam("manifestSearchString") String manifestSearchString,
+      @BeanParam PageRequest<HelmChart> pageRequest) {
+    return new RestResponse<>(
+        helmChartService.listHelmChartsForService(appId, serviceId, manifestSearchString, pageRequest));
   }
 
   @PUT

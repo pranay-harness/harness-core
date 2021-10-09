@@ -9,7 +9,9 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
@@ -47,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
 
@@ -85,9 +88,9 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   public void handle(ArtifactStream artifactStream) {
     try (AutoLogContext ignore2 = new ArtifactStreamLogContext(
              artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
-      log.info("Received the artifact collection for ArtifactStream");
+      // log.info("Received the artifact collection for ArtifactStream");
+      executeInternal(artifactStream);
     }
-    executeInternal(artifactStream);
   }
 
   private void executeInternal(ArtifactStream artifactStream) {
@@ -111,8 +114,6 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
         log.info("Permit [{}] acquired for artifactStream [failedCount: {}] for [{}] minutes", permitId,
             artifactStream.getFailedCronAttempts(), TimeUnit.MILLISECONDS.toMinutes(leaseDuration));
         artifactCollectionServiceAsync.collectNewArtifactsAsync(artifactStream, permitId);
-      } else {
-        log.info("Permit already exists for artifactStream");
       }
     } catch (WingsException exception) {
       log.warn("Failed to collect artifacts for artifact stream. Reason {}", exception.getMessage());

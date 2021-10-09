@@ -4,11 +4,13 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import static java.lang.String.format;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
 import io.harness.exception.UnexpectedTypeException;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.validation.Validator;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -21,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
@@ -31,6 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = StoreConfigWrapperVisitorHelper.class)
 @TypeAlias("storeConfigWrapper")
+@RecasterAlias("io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper")
 public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>, Visitable {
   @NotNull @JsonProperty("type") StoreConfigType type;
   @NotNull
@@ -42,6 +46,11 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
   public StoreConfigWrapper(StoreConfigType type, StoreConfig spec) {
     this.type = type;
     this.spec = spec;
+  }
+
+  public void validateParams() {
+    Validator.notNullCheck("Type cannot be empty inside Store.", type);
+    Validator.notNullCheck("Spec cannot be empty inside Store.", spec);
   }
 
   @Override
@@ -63,5 +72,21 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.SPEC, spec);
     return children;
+  }
+
+  @Value
+  public static class StoreConfigWrapperParameters {
+    String type;
+    StoreConfig spec;
+
+    public static StoreConfigWrapperParameters fromStoreConfigWrapper(StoreConfigWrapper storeConfigWrapper) {
+      if (storeConfigWrapper == null) {
+        return null;
+      }
+
+      return new StoreConfigWrapperParameters(
+          storeConfigWrapper.getType() == null ? null : storeConfigWrapper.getType().getDisplayName(),
+          storeConfigWrapper.getSpec());
+    }
   }
 }

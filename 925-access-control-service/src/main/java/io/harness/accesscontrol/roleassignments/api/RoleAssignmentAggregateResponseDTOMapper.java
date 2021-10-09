@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
 import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.accesscontrol.scopes.harness.ScopeDTOMapper;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class RoleAssignmentAggregateResponseDTOMapper {
       List<RoleResponseDTO> roles, List<ResourceGroupDTO> resourceGroups) {
     return RoleAssignmentAggregateResponseDTO.builder()
         .roleAssignments(roleAssignments)
-        .scope(ScopeDTOMapper.toDTO(scope))
+        .scope(ScopeMapper.toDTO(scope))
         .roles(roles)
         .resourceGroups(resourceGroups)
         .build();

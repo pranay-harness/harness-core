@@ -4,12 +4,12 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
-import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
+import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentAggregateResponseDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
@@ -18,10 +18,9 @@ import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
-import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.utils.PageUtils;
 
@@ -33,10 +32,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 @OwnedBy(PL)
 public class AggregateUserServiceImpl implements AggregateUserService {
@@ -55,12 +57,9 @@ public class AggregateUserServiceImpl implements AggregateUserService {
 
     RoleAssignmentFilterDTO roleAssignmentFilter =
         RoleAssignmentFilterDTO.builder().principalFilter(principalDTOs).build();
-    RoleAssignmentAggregateResponseDTO roleAssignmentResponses =
-        getResponse(accessControlAdminClient.getAggregatedFilteredRoleAssignments(scope.getAccountIdentifier(),
-            scope.getOrgIdentifier(), scope.getProjectIdentifier(), roleAssignmentFilter));
 
-    Map<String, List<RoleAssignmentMetadataDTO>> userRoleAssignmentsMap =
-        getUserRoleAssignmentMap(roleAssignmentResponses);
+    Map<String, List<RoleAssignmentMetadataDTO>> userRoleAssignmentsMap = getPrincipalRoleAssignmentMap(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), roleAssignmentFilter);
     List<UserAggregateDTO> userAggregateList =
         userPage.getContent()
             .stream()
@@ -77,10 +76,14 @@ public class AggregateUserServiceImpl implements AggregateUserService {
   @Override
   public PageResponse<UserAggregateDTO> getAggregatedUsers(
       Scope scope, ACLAggregateFilter aclAggregateFilter, PageRequest pageRequest) {
-    RoleAssignmentAggregateResponseDTO roleAssignmentResponses = getRoleAssignments(
-        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), aclAggregateFilter);
-    Map<String, List<RoleAssignmentMetadataDTO>> userRoleAssignmentsMap =
-        getUserRoleAssignmentMap(roleAssignmentResponses);
+    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
+        RoleAssignmentFilterDTO.builder()
+            .roleFilter(aclAggregateFilter.getRoleIdentifiers())
+            .resourceGroupFilter(aclAggregateFilter.getResourceGroupIdentifiers())
+            .principalTypeFilter(Collections.singleton(USER))
+            .build();
+    Map<String, List<RoleAssignmentMetadataDTO>> userRoleAssignmentsMap = getPrincipalRoleAssignmentMap(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), roleAssignmentFilterDTO);
 
     Set<String> userIds = userRoleAssignmentsMap.keySet();
     PageResponse<UserMetadataDTO> userPage =
@@ -101,46 +104,36 @@ public class AggregateUserServiceImpl implements AggregateUserService {
 
   @Override
   public UserAggregateDTO getAggregatedUser(Scope scope, String userId) {
-    Optional<UserInfo> userInfoOptional = ngUserService.getUserById(userId);
-    if (!userInfoOptional.isPresent()) {
+    Optional<UserMetadataDTO> user = ngUserService.getUserMetadata(userId);
+    if (!user.isPresent()) {
       return null;
     }
-    UserInfo userInfo = userInfoOptional.get();
-    UserMetadataDTO user =
-        UserMetadataDTO.builder().uuid(userInfo.getUuid()).name(userInfo.getName()).email(userInfo.getEmail()).build();
 
     RoleAssignmentFilterDTO roleAssignmentFilterDTO =
         RoleAssignmentFilterDTO.builder()
             .principalFilter(Collections.singleton(PrincipalDTO.builder().identifier(userId).type(USER).build()))
             .build();
-    RoleAssignmentAggregateResponseDTO roleAssignmentResponse =
-        getResponse(accessControlAdminClient.getAggregatedFilteredRoleAssignments(scope.getAccountIdentifier(),
-            scope.getOrgIdentifier(), scope.getProjectIdentifier(), roleAssignmentFilterDTO));
 
-    List<RoleAssignmentMetadataDTO> roleAssignmentMetadata =
-        getUserRoleAssignmentMap(roleAssignmentResponse).getOrDefault(userId, Collections.emptyList());
-    return UserAggregateDTO.builder().roleAssignmentMetadata(roleAssignmentMetadata).user(user).build();
+    List<RoleAssignmentMetadataDTO> roleAssignments = getPrincipalRoleAssignmentMap(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), roleAssignmentFilterDTO)
+                                                          .getOrDefault(userId, Collections.emptyList());
+
+    return UserAggregateDTO.builder().roleAssignmentMetadata(roleAssignments).user(user.get()).build();
   }
 
-  private RoleAssignmentAggregateResponseDTO getRoleAssignments(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, ACLAggregateFilter aclAggregateFilter) {
-    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
-        RoleAssignmentFilterDTO.builder()
-            .roleFilter(aclAggregateFilter.getRoleIdentifiers())
-            .resourceGroupFilter(aclAggregateFilter.getResourceGroupIdentifiers())
-            .principalTypeFilter(Collections.singleton(USER))
-            .build();
-    return getResponse(accessControlAdminClient.getAggregatedFilteredRoleAssignments(
-        accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO));
-  }
+  private Map<String, List<RoleAssignmentMetadataDTO>> getPrincipalRoleAssignmentMap(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, RoleAssignmentFilterDTO roleAssignmentFilterDTO) {
+    RoleAssignmentAggregateResponseDTO roleAssignmentAggregateResponseDTO =
+        getResponse(accessControlAdminClient.getAggregatedFilteredRoleAssignments(
+            accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO));
 
-  private Map<String, List<RoleAssignmentMetadataDTO>> getUserRoleAssignmentMap(
-      RoleAssignmentAggregateResponseDTO roleAssignmentAggregateResponseDTO) {
     Map<String, RoleResponseDTO> roleMap = roleAssignmentAggregateResponseDTO.getRoles().stream().collect(
         toMap(e -> e.getRole().getIdentifier(), Function.identity()));
-    Map<String, io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO> resourceGroupMap =
+
+    Map<String, ResourceGroupDTO> resourceGroupMap =
         roleAssignmentAggregateResponseDTO.getResourceGroups().stream().collect(
-            toMap(io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO::getIdentifier, Function.identity()));
+            toMap(ResourceGroupDTO::getIdentifier, Function.identity()));
+
     return roleAssignmentAggregateResponseDTO.getRoleAssignments()
         .stream()
         .filter(roleAssignmentDTO
@@ -148,7 +141,7 @@ public class AggregateUserServiceImpl implements AggregateUserService {
                 && resourceGroupMap.containsKey(roleAssignmentDTO.getResourceGroupIdentifier()))
         .collect(Collectors.groupingBy(roleAssignment
             -> roleAssignment.getPrincipal().getIdentifier(),
-            mapping(roleAssignment
+            Collectors.mapping(roleAssignment
                 -> RoleAssignmentMetadataDTO.builder()
                        .identifier(roleAssignment.getIdentifier())
                        .roleIdentifier(roleAssignment.getRoleIdentifier())

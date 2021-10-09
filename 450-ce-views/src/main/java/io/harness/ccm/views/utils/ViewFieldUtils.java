@@ -46,6 +46,10 @@ public class ViewFieldUtils {
         QLCEViewField.builder().fieldId("azureFrequency").fieldName("Frequency").build());
   }
 
+  public static List<QLCEViewField> getClusterFields(boolean isClusterPerspective) {
+    return isClusterPerspective ? getNgClusterFields() : getClusterFields();
+  }
+
   public static List<QLCEViewField> getClusterFields() {
     return ImmutableList.of(QLCEViewField.builder().fieldId("clusterName").fieldName("Cluster Name").build(),
         QLCEViewField.builder().fieldId("namespace").fieldName("Namespace").build(),
@@ -54,6 +58,27 @@ public class ViewFieldUtils {
         QLCEViewField.builder().fieldId("envId").fieldName("Environment").build(),
         QLCEViewField.builder().fieldId("serviceId").fieldName("Service").build());
   }
+
+  public static List<QLCEViewField> getNgClusterFields() {
+    return ImmutableList.of(QLCEViewField.builder().fieldId("clusterName").fieldName("Cluster Name").build(),
+        QLCEViewField.builder().fieldId("namespace").fieldName("Namespace").build(),
+        QLCEViewField.builder().fieldId("namespace").fieldName("Namespace Id").build(),
+        QLCEViewField.builder().fieldId("workloadName").fieldName("Workload").build(),
+        QLCEViewField.builder().fieldId("workloadName").fieldName("Workload Id").build(),
+        QLCEViewField.builder().fieldId("instanceName").fieldName("Node").build(),
+        QLCEViewField.builder().fieldId("storage").fieldName("Storage").build(),
+        QLCEViewField.builder().fieldId("appName").fieldName("Application").build(),
+        QLCEViewField.builder().fieldId("envName").fieldName("Environment").build(),
+        QLCEViewField.builder().fieldId("serviceName").fieldName("Service").build(),
+        QLCEViewField.builder().fieldId("cloudProvider").fieldName("Cloud Provider").build(),
+        QLCEViewField.builder().fieldId("cloudServiceName").fieldName("ECS Service").build(),
+        QLCEViewField.builder().fieldId("cloudServiceName").fieldName("ECS Service Id").build(),
+        QLCEViewField.builder().fieldId("taskId").fieldName("ECS Task").build(),
+        QLCEViewField.builder().fieldId("taskId").fieldName("ECS Task Id").build(),
+        QLCEViewField.builder().fieldId("launchType").fieldName("ECS Launch Type").build(),
+        QLCEViewField.builder().fieldId("launchType").fieldName("ECS Launch Type Id").build());
+  }
+
   public static List<QLCEViewField> getCommonFields() {
     return ImmutableList.of(QLCEViewField.builder().fieldId("region").fieldName("Region").build(),
         QLCEViewField.builder().fieldId("product").fieldName("Product").build(),

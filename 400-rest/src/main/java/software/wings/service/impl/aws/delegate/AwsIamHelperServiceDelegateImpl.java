@@ -9,9 +9,12 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.intfc.aws.delegate.AwsIamHelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
@@ -29,9 +32,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@Slf4j
 @OwnedBy(CDP)
 public class AwsIamHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsIamHelperServiceDelegate {
@@ -45,15 +50,16 @@ public class AwsIamHelperServiceDelegateImpl
 
   @Override
   public Map<String, String> listIAMRoles(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonIdentityManagementClient> closeableAmazonIdentityManagementClient =
+             new CloseableAmazonWebServiceClient(getAmazonIdentityManagementClient(awsConfig))) {
       Map<String, String> result = new HashMap<>();
       String nextMarker = null;
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       do {
-        AmazonIdentityManagementClient amazonIdentityManagementClient = getAmazonIdentityManagementClient(awsConfig);
         ListRolesRequest listRolesRequest = new ListRolesRequest().withMaxItems(400).withMarker(nextMarker);
         tracker.trackIAMCall("List Roles");
-        ListRolesResult listRolesResult = amazonIdentityManagementClient.listRoles(listRolesRequest);
+        ListRolesResult listRolesResult =
+            closeableAmazonIdentityManagementClient.getClient().listRoles(listRolesRequest);
         listRolesResult.getRoles().forEach(role -> result.put(role.getArn(), role.getRoleName()));
         nextMarker = listRolesResult.getMarker();
       } while (nextMarker != null);
@@ -62,23 +68,27 @@ public class AwsIamHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listIAMRoles", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyMap();
   }
 
   @Override
   public List<String> listIamInstanceRoles(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonIdentityManagementClient> closeableAmazonIdentityManagementClient =
+             new CloseableAmazonWebServiceClient(getAmazonIdentityManagementClient(awsConfig))) {
       List<String> result = new ArrayList<>();
       String nextMarker = null;
       ListInstanceProfilesRequest listInstanceProfilesRequest;
       ListInstanceProfilesResult listInstanceProfilesResult;
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       do {
         listInstanceProfilesRequest = new ListInstanceProfilesRequest().withMarker(nextMarker);
         tracker.trackIAMCall("List Instance Profiles");
         listInstanceProfilesResult =
-            getAmazonIdentityManagementClient(awsConfig).listInstanceProfiles(listInstanceProfilesRequest);
+            closeableAmazonIdentityManagementClient.getClient().listInstanceProfiles(listInstanceProfilesRequest);
         result.addAll(listInstanceProfilesResult.getInstanceProfiles()
                           .stream()
                           .map(InstanceProfile::getInstanceProfileName)
@@ -90,6 +100,9 @@ public class AwsIamHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listIamInstanceRoles", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }

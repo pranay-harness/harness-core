@@ -14,12 +14,14 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.StepUtils;
 import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.steps.jira.JiraStepUtils;
 import io.harness.supplier.ThrowingSupplier;
@@ -31,7 +33,8 @@ import java.util.List;
 
 @OwnedBy(CDC)
 public class JiraCreateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNGResponse> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_CREATE).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_CREATE).setStepCategory(StepCategory.STEP).build();
 
   @Inject private JiraStepHelperService jiraStepHelperService;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
@@ -60,13 +63,14 @@ public class JiraCreateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNG
             .action(JiraActionNG.CREATE_ISSUE)
             .projectKey(specParameters.getProjectKey().getValue())
             .issueType(specParameters.getIssueType().getValue())
+            .delegateSelectors(StepUtils.getDelegateSelectorList(specParameters.getDelegateSelectors()))
             .fields(JiraStepUtils.processJiraFieldsInParameters(specParameters.getFields()));
     return jiraStepHelperService.prepareTaskRequest(paramsBuilder, ambiance,
         specParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Create Issue");
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<JiraTaskNGResponse> responseSupplier) throws Exception {
     return jiraStepHelperService.prepareStepResponse(responseSupplier);
   }

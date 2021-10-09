@@ -359,7 +359,8 @@
           "type": "string",
           "enum": [
             "InheritFromDelegate",
-            "ManualConfig"
+            "ManualConfig",
+            "Irsa"
           ]
         }
       },
@@ -483,12 +484,22 @@
         },
         {
           "type": "object",
+          "required": [
+            "kmsArn"
+          ],
           "properties": {
             "credential": {
               "$ref": "#/definitions/AwsKmsConnectorCredential"
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "kmsArn": {
               "type": "string"
@@ -628,6 +639,173 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AwsSMCredentialSpecAssumeIAM": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSMCredentialSpecAssumeSTS": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "roleArn"
+          ],
+          "properties": {
+            "assumeStsRoleDuration": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "externalId": {
+              "type": "string"
+            },
+            "roleArn": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSMCredentialSpecManualConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessKey",
+            "secretKey"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSecretManagerCredential": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "AssumeIAMRole",
+            "AssumeSTSRole",
+            "ManualConfig"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeIAMRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecAssumeIAM"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeSTSRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecAssumeSTS"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ManualConfig"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecManualConfig"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsSecretManagerCredentialSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSecretManagerDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "credential",
+            "region"
+          ],
+          "properties": {
+            "credential": {
+              "$ref": "#/definitions/AwsSecretManagerCredential"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "region": {
+              "type": "string"
+            },
+            "secretNamePrefix": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AzureKeyVaultConnectorDTO": {
       "allOf": [
         {
@@ -637,6 +815,7 @@
           "type": "object",
           "required": [
             "clientId",
+            "secretKey",
             "subscription",
             "tenantId",
             "vaultName"
@@ -654,6 +833,13 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "secretKey": {
               "type": "string"
@@ -1006,7 +1192,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             }
           }
         }
@@ -1037,7 +1224,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             },
             "subscriptionId": {
               "type": "string"
@@ -1073,7 +1261,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             }
           }
         }
@@ -1138,6 +1327,7 @@
             "Local",
             "AwsKms",
             "GcpKms",
+            "AwsSecretManager",
             "Gcp",
             "Aws",
             "Artifactory",
@@ -1154,7 +1344,8 @@
             "HttpHelmRepo",
             "NewRelic",
             "Datadog",
-            "SumoLogic"
+            "SumoLogic",
+            "PagerDuty"
           ]
         }
       },
@@ -1220,6 +1411,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AwsKmsConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AwsSecretManager"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSecretManagerDTO"
               }
             }
           }
@@ -1564,6 +1771,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "PagerDuty"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PagerDutyConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Prometheus"
               }
             }
@@ -1841,7 +2064,8 @@
         {
           "type": "object",
           "required": [
-            "projectId"
+            "projectId",
+            "serviceAccountEmail"
           ],
           "properties": {
             "billingExportSpec": {
@@ -1856,9 +2080,13 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             },
             "projectId": {
+              "type": "string"
+            },
+            "serviceAccountEmail": {
               "type": "string"
             }
           }
@@ -1934,15 +2162,22 @@
         },
         {
           "type": "object",
+          "required": [
+            "credentials"
+          ],
           "properties": {
             "credentials": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "type": "string"
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "keyName": {
               "type": "string"
@@ -2281,6 +2516,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            "executeOnManager": {
+              "type": "boolean"
             },
             "type": {
               "type": "string",
@@ -3434,6 +3672,32 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "PagerDutyConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiTokenRef"
+          ],
+          "properties": {
+            "apiTokenRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PrometheusConnectorDTO": {
       "allOf": [
         {
@@ -3543,7 +3807,8 @@
               "type": "string",
               "enum": [
                 "APP_ROLE",
-                "TOKEN"
+                "TOKEN",
+                "VAULT_AGENT"
               ]
             },
             "appRoleId": {
@@ -3557,6 +3822,16 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "namespace": {
+              "type": "string"
             },
             "readOnly": {
               "type": "boolean"
@@ -3577,6 +3852,12 @@
             },
             "secretId": {
               "type": "string"
+            },
+            "sinkPath": {
+              "type": "string"
+            },
+            "useVaultAgent": {
+              "type": "boolean"
             },
             "vaultUrl": {
               "type": "string"

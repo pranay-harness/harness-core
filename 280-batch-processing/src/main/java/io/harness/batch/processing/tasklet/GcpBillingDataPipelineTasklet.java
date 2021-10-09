@@ -53,119 +53,122 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    Account account = cloudToHarnessMappingService.getAccountInfoFromId(accountId);
-    String accountName = account.getAccountName();
-    String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
-    log.info("Executing GcpBillingDataPipelineTasklet");
-    List<GcpBillingAccount> gcpBillingAccounts =
-        cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(accountId,
-            CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
-            CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
-    log.info("Found gcpBillingAccounts {}", gcpBillingAccounts);
-    gcpBillingAccounts.stream()
-        .filter(gcpBillingAccount -> {
-          List<BillingDataPipelineRecord> billingDataPipelineRecords =
-              billingDataPipelineRecordDao.listByGcpBillingAccountDataset(gcpBillingAccount.getAccountId(),
-                  gcpBillingAccount.getBqProjectId(), gcpBillingAccount.getBqDatasetId());
-          return isEmpty(billingDataPipelineRecords);
-        })
-        .forEach(gcpBillingAccount -> {
-          String dstDataSetId = billingDataPipelineService.createDataSet(account);
-          String gcpBqProjectId = gcpBillingAccount.getBqProjectId();
-          String gcpBqDatasetId = gcpBillingAccount.getBqDatasetId();
-          String gcpBqDataSetRegion = gcpBillingAccount.getBqDataSetRegion();
+    if (!mainConfig.getBillingDataPipelineConfig().isGcpSyncEnabled()) {
+      Account account = cloudToHarnessMappingService.getAccountInfoFromId(accountId);
+      String accountName = account.getAccountName();
+      String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
+      log.info("Executing GcpBillingDataPipelineTasklet");
+      List<GcpBillingAccount> gcpBillingAccounts =
+          cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(accountId);
+      log.info("Found gcpBillingAccounts {}", gcpBillingAccounts);
+      gcpBillingAccounts.stream()
+          .filter(gcpBillingAccount -> {
+            List<BillingDataPipelineRecord> billingDataPipelineRecords =
+                billingDataPipelineRecordDao.listByGcpBillingAccountDataset(gcpBillingAccount.getAccountId(),
+                    gcpBillingAccount.getBqProjectId(), gcpBillingAccount.getBqDatasetId());
+            return isEmpty(billingDataPipelineRecords);
+          })
+          .forEach(gcpBillingAccount -> {
+            String dstDataSetId = billingDataPipelineService.createDataSet(account);
+            String gcpBqProjectId = gcpBillingAccount.getBqProjectId();
+            String gcpBqDatasetId = gcpBillingAccount.getBqDatasetId();
+            String gcpBqDataSetRegion = gcpBillingAccount.getBqDataSetRegion();
 
-          GcpOrganization gcpOrganization = gcpOrganizationDao.get(gcpBillingAccount.getOrganizationSettingId());
-          String dstProjectId = gcpProjectId;
+            GcpOrganization gcpOrganization = gcpOrganizationDao.get(gcpBillingAccount.getOrganizationSettingId());
+            String dstProjectId = gcpProjectId;
 
-          String transferJobResourceName = null;
-          String transferJobDisplayName = null;
-          String runOnceScheduledQueryName;
-          log.info("Found region {}", Strings.toLowerCase(gcpBqDataSetRegion));
-          switch (Strings.toLowerCase(gcpBqDataSetRegion)) {
-            case US:
-              transferJobDisplayName = String.format(GCP_COPY_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
-              log.info("Creating scheduled query with name {}", transferJobDisplayName);
-              try {
-                billingDataPipelineService.createTransferScheduledQueriesForGCP(transferJobDisplayName, dstDataSetId,
-                    gcpOrganization.getServiceAccountEmail(), gcpBqProjectId + "." + gcpBqDatasetId);
-                log.info("Created scheduled query with name {}", transferJobDisplayName);
-              } catch (IOException e) {
-                log.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
-              }
-              try {
-                runOnceScheduledQueryName =
-                    String.format(RUN_ONCE_GCP_COPY_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
-                log.info("Creating scheduled query with name {}", runOnceScheduledQueryName);
-                transferJobResourceName =
-                    billingDataPipelineService.createRunOnceScheduledQueryGCP(runOnceScheduledQueryName, gcpBqProjectId,
-                        gcpBqDatasetId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
-                log.info("Created scheduled query with name {}", runOnceScheduledQueryName);
-              } catch (IOException e) {
-                log.error("Error while creating BQ -> BQ Run Once Scheduled Query Job {}", transferJobDisplayName, e);
-              }
-              break;
-            default:
-              try {
-                transferJobDisplayName = String.format(COPY_TRANSFER_JOB_NAME_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
-                log.info("Creating BQ Transfer job with name {}", transferJobDisplayName);
-                transferJobResourceName =
-                    billingDataPipelineService.createDataTransferJobFromBQ(transferJobDisplayName, gcpBqProjectId,
-                        gcpBqDatasetId, dstProjectId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
-                log.info("Created BQ Transfer job with name {}", transferJobDisplayName);
-              } catch (IOException e) {
-                log.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
-              }
-          }
+            String transferJobResourceName = null;
+            String transferJobDisplayName = null;
+            String runOnceScheduledQueryName;
+            log.info("Found region {}", Strings.toLowerCase(gcpBqDataSetRegion));
+            switch (Strings.toLowerCase(gcpBqDataSetRegion)) {
+              case US:
+                transferJobDisplayName =
+                    String.format(GCP_COPY_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+                log.info("Creating scheduled query with name {}", transferJobDisplayName);
+                try {
+                  billingDataPipelineService.createTransferScheduledQueriesForGCP(transferJobDisplayName, dstDataSetId,
+                      gcpOrganization.getServiceAccountEmail(), gcpBqProjectId + "." + gcpBqDatasetId);
+                  log.info("Created scheduled query with name {}", transferJobDisplayName);
+                } catch (IOException e) {
+                  log.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+                }
+                try {
+                  runOnceScheduledQueryName =
+                      String.format(RUN_ONCE_GCP_COPY_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+                  log.info("Creating scheduled query with name {}", runOnceScheduledQueryName);
+                  transferJobResourceName =
+                      billingDataPipelineService.createRunOnceScheduledQueryGCP(runOnceScheduledQueryName,
+                          gcpBqProjectId, gcpBqDatasetId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
+                  log.info("Created scheduled query with name {}", runOnceScheduledQueryName);
+                } catch (IOException e) {
+                  log.error("Error while creating BQ -> BQ Run Once Scheduled Query Job {}", transferJobDisplayName, e);
+                }
+                break;
+              default:
+                try {
+                  transferJobDisplayName =
+                      String.format(COPY_TRANSFER_JOB_NAME_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+                  log.info("Creating BQ Transfer job with name {}", transferJobDisplayName);
+                  transferJobResourceName =
+                      billingDataPipelineService.createDataTransferJobFromBQ(transferJobDisplayName, gcpBqProjectId,
+                          gcpBqDatasetId, dstProjectId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
+                  log.info("Created BQ Transfer job with name {}", transferJobDisplayName);
+                } catch (IOException e) {
+                  log.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+                }
+            }
 
-          try {
-            billingDataPipelineService.triggerTransferJobRun(
-                transferJobResourceName, gcpOrganization.getServiceAccountEmail());
-            log.info("Triggered BQ Transfer job with name {}", transferJobResourceName);
-          } catch (IOException e) {
-            log.error("Error while starting manual run for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
-          }
+            try {
+              billingDataPipelineService.triggerTransferJobRun(
+                  transferJobResourceName, gcpOrganization.getServiceAccountEmail());
+              log.info("Triggered BQ Transfer job with name {}", transferJobResourceName);
+            } catch (IOException e) {
+              log.error("Error while starting manual run for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+            }
 
-          String scheduledQueryResourceName = null;
-          String scheduledQueryDisplayName = String.format(GCP_PRE_AGG_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
-          try {
-            scheduledQueryResourceName =
-                billingDataPipelineService.createScheduledQueriesForGCP(scheduledQueryDisplayName, dstDataSetId);
-            log.info("Created preaggregated scheduled query for GCP");
-          } catch (IOException e) {
-            log.error("Error while creating Scheduled Queries {}", scheduledQueryDisplayName, e);
-          }
+            String scheduledQueryResourceName = null;
+            String scheduledQueryDisplayName =
+                String.format(GCP_PRE_AGG_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+            try {
+              scheduledQueryResourceName =
+                  billingDataPipelineService.createScheduledQueriesForGCP(scheduledQueryDisplayName, dstDataSetId);
+              log.info("Created preaggregated scheduled query for GCP");
+            } catch (IOException e) {
+              log.error("Error while creating Scheduled Queries {}", scheduledQueryDisplayName, e);
+            }
 
-          String billingDataPipelineRecordId = billingDataPipelineRecordDao.create(
-              BillingDataPipelineRecord.builder()
-                  .accountId(accountId)
-                  .accountName(accountName)
-                  .settingId(gcpBillingAccount.getOrganizationSettingId())
-                  .cloudProvider(CloudProvider.GCP.name())
-                  .dataSetId(dstDataSetId)
-                  .dataTransferJobName(transferJobDisplayName)
-                  .transferJobResourceName(transferJobResourceName)
-                  .gcpBqProjectId(gcpBqProjectId)
-                  .gcpBqDatasetId(gcpBqDatasetId)
-                  .preAggregatedScheduledQueryName(scheduledQueryDisplayName)
-                  .preAggregatedScheduleQueryResourceName(scheduledQueryResourceName)
-                  .build());
-          try {
-            List<TransferRun> transferRunList = billingDataPipelineService.listTransferRuns(
-                transferJobResourceName, gcpOrganization.getServiceAccountEmail());
-            transferRunList.forEach(transferRun -> {
-              cloudBillingTransferRunDao.upsert(CloudBillingTransferRun.builder()
-                                                    .accountId(accountId)
-                                                    .organizationUuid(gcpBillingAccount.getOrganizationSettingId())
-                                                    .billingDataPipelineRecordId(billingDataPipelineRecordId)
-                                                    .transferRunResourceName(transferRun.getName())
-                                                    .state(TransferJobRunState.PENDING)
-                                                    .build());
-            });
-          } catch (IOException e) {
-            log.error("Error while getting manual runs for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
-          }
-        });
+            String billingDataPipelineRecordId = billingDataPipelineRecordDao.create(
+                BillingDataPipelineRecord.builder()
+                    .accountId(accountId)
+                    .accountName(accountName)
+                    .settingId(gcpBillingAccount.getOrganizationSettingId())
+                    .cloudProvider(CloudProvider.GCP.name())
+                    .dataSetId(dstDataSetId)
+                    .dataTransferJobName(transferJobDisplayName)
+                    .transferJobResourceName(transferJobResourceName)
+                    .gcpBqProjectId(gcpBqProjectId)
+                    .gcpBqDatasetId(gcpBqDatasetId)
+                    .preAggregatedScheduledQueryName(scheduledQueryDisplayName)
+                    .preAggregatedScheduleQueryResourceName(scheduledQueryResourceName)
+                    .build());
+            try {
+              List<TransferRun> transferRunList = billingDataPipelineService.listTransferRuns(
+                  transferJobResourceName, gcpOrganization.getServiceAccountEmail());
+              transferRunList.forEach(transferRun -> {
+                cloudBillingTransferRunDao.upsert(CloudBillingTransferRun.builder()
+                                                      .accountId(accountId)
+                                                      .organizationUuid(gcpBillingAccount.getOrganizationSettingId())
+                                                      .billingDataPipelineRecordId(billingDataPipelineRecordId)
+                                                      .transferRunResourceName(transferRun.getName())
+                                                      .state(TransferJobRunState.PENDING)
+                                                      .build());
+              });
+            } catch (IOException e) {
+              log.error("Error while getting manual runs for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+            }
+          });
+    }
     return null;
   }
 }

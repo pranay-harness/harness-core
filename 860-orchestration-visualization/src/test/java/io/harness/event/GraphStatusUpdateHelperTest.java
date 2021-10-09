@@ -24,14 +24,17 @@ import io.harness.data.OutcomeInstance;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.utils.PmsLevelUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.execution.utils.LevelUtils;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -47,7 +50,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.util.Maps;
 import org.awaitility.Awaitility;
-import org.bson.Document;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -98,18 +100,19 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     planExecutionService.save(planExecution);
 
     // creating NodeExecution
-    NodeExecution dummyStart = NodeExecution.builder()
-                                   .uuid(generateUuid())
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
-                                   .mode(ExecutionMode.SYNC)
-                                   .node(PlanNodeProto.newBuilder()
-                                             .setUuid(generateUuid())
-                                             .setName("name")
-                                             .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                             .setIdentifier("identifier1")
-                                             .build())
-                                   .status(Status.QUEUED)
-                                   .build();
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setName("name")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setIdentifier("identifier1")
+                      .build())
+            .status(Status.QUEUED)
+            .build();
     nodeExecutionService.save(dummyStart);
 
     // creating cached graph
@@ -158,18 +161,20 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     planExecutionService.save(planExecution);
 
     // creating NodeExecution
-    NodeExecution dummyStart = NodeExecution.builder()
-                                   .uuid(generateUuid())
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
-                                   .mode(ExecutionMode.SYNC)
-                                   .status(SUCCEEDED)
-                                   .node(PlanNodeProto.newBuilder()
-                                             .setUuid(generateUuid())
-                                             .setName("name")
-                                             .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                             .setIdentifier("identifier1")
-                                             .build())
-                                   .build();
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+            .mode(ExecutionMode.SYNC)
+            .status(SUCCEEDED)
+            .planNode(PlanNode.builder()
+                          .uuid(generateUuid())
+                          .name("name")
+                          .stepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                          .identifier("identifier1")
+                          .serviceName("PIPELINE")
+                          .build())
+            .build();
     nodeExecutionService.save(dummyStart);
 
     // creating cached graph
@@ -195,13 +200,13 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
 
     // creating outcome
     DummyVisualizationOutcome dummyVisualizationOutcome = new DummyVisualizationOutcome("outcome");
-    Document doc = RecastOrchestrationUtils.toDocument(dummyVisualizationOutcome);
+    Map<String, Object> doc = RecastOrchestrationUtils.toMap(dummyVisualizationOutcome);
     OutcomeInstance outcome =
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
-            .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
+            .producedBy(PmsLevelUtils.buildLevelFromNode(dummyStart.getUuid(), dummyStart.getNode()))
             .createdAt(System.currentTimeMillis())
-            .outcome(doc)
+            .outcomeValue(PmsOutcome.parse(doc))
             .build();
     mongoTemplate.insert(outcome);
 
@@ -218,7 +223,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     assertThat(graphVertexMap.size()).isEqualTo(1);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomeDocuments().values())
-        .containsExactlyInAnyOrder(RecastOrchestrationUtils.toDocument(dummyVisualizationOutcome));
+        .containsExactlyInAnyOrder(PmsOutcome.parse(RecastOrchestrationUtils.toMap(dummyVisualizationOutcome)));
     assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }
@@ -235,8 +240,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(SUCCEEDED)
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(
-            nodeExecution.getResolvedStepParameters() == null ? null : nodeExecution.getResolvedStepParameters())
+        .stepParameters(nodeExecution.getPmsStepParameters())
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())

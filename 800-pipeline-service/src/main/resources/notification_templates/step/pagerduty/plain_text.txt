@@ -1,4 +1,4 @@
-summary: ${message}
+summary: "${EVENT_TYPE}: ${PIPELINE_STEP} step in ${PIPELINE}, triggered by ${USER_NAME}. Started on ${START_DATE} and ${EVENT_TYPE} on ${END_DATE} with duration ${DURATION}."
 link:
     href: harness.io
     text: Harness

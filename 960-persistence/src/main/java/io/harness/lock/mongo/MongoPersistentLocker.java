@@ -140,7 +140,7 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, M
   @Override
   public AcquiredLock waitToAcquireLock(String name, Duration lockTimeout, Duration waitTimeout) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(waitTimeout.toMillis()), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(waitTimeout.toMillis()), () -> {
         while (true) {
           try {
             return acquireLock(name, lockTimeout);

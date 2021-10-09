@@ -14,6 +14,8 @@ import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -24,7 +26,6 @@ import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.security.authentication.AccountSettingsResponse;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.analysis.CVEnabledService;
 
 import java.util.Collection;
@@ -54,7 +55,11 @@ public interface AccountService {
 
   Account get(String accountId);
 
-  AccountDetails getDetails(String accountId);
+  boolean isNextGenEnabled(String accountId);
+
+  Boolean updateNextGenEnabled(String accountId, boolean enabled);
+
+  AccountDetails getAccountDetails(String accountId);
 
   List<Account> getAccounts(List<String> identifiers);
 
@@ -218,9 +223,15 @@ public interface AccountService {
 
   boolean updateAccountPreference(String accountId, String preferenceKey, Object value);
 
+  void updateFeatureFlagsForOnPremAccount();
+
   boolean enableHarnessUserGroupAccess(String accountId);
 
   boolean disableHarnessUserGroupAccess(String accountId);
 
   boolean isRestrictedAccessEnabled(String accountId);
+
+  boolean isAutoInviteAcceptanceEnabled(String accountId);
+
+  Void setDefaultExperience(String accountId, DefaultExperience defaultExperience);
 }

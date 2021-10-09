@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.visualisation.log;
+
+option java_multiple_files = true;
+
+message OrchestrationLogEvent {
+  string planExecutionId = 1;
+}

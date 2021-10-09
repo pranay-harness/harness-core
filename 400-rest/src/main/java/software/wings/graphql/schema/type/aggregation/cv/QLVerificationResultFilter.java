@@ -4,8 +4,8 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
-import software.wings.graphql.schema.type.aggregation.QLExecutionStatusFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 
 import lombok.Builder;
 import lombok.Value;
@@ -17,7 +17,9 @@ public class QLVerificationResultFilter implements EntityFilter {
   QLIdFilter application;
   QLIdFilter service;
   QLIdFilter environment;
-  QLExecutionStatusFilter executionStatus;
+  QLCVWorkflowTagFilter tag;
   Boolean rollback;
-  Boolean analyzed;
+  QLVerificationTypeFilter type;
+  QLTimeFilter startTime;
+  QLTimeFilter endTime;
 }

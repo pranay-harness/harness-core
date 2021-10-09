@@ -1,5 +1,6 @@
 package io.harness.generator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
@@ -14,6 +15,7 @@ import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
@@ -60,6 +62,7 @@ import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class ServiceGenerator {
@@ -645,10 +648,10 @@ public class ServiceGenerator {
 
   public Service ensureEcsTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
-    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.DOCKER).build()));
+    Service service = ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.DOCKER).build());
+    owners.add(service);
     ArtifactStream artifactStream =
-        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR);
-    Service service = owners.obtainService();
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER, name);
     service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
     return service;
   }

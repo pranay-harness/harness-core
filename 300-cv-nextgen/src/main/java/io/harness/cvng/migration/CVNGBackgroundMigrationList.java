@@ -6,10 +6,17 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.migration.list.AddDeploymentMonitoringSourcePerpetualTask;
 import io.harness.cvng.migration.list.AddMonitoringSourcesToVerificationJobMigration;
 import io.harness.cvng.migration.list.CVNGBaseMigration;
+import io.harness.cvng.migration.list.CleanUpMonitoringSourcePerpetualTask;
+import io.harness.cvng.migration.list.CleanUpOldDocuments;
+import io.harness.cvng.migration.list.CleanupDeprecatedDocuments;
 import io.harness.cvng.migration.list.CreateDefaultVerificationJobsMigration;
 import io.harness.cvng.migration.list.DeleteInvalidOrchestratorsMigration;
+import io.harness.cvng.migration.list.DeleteOrchestratorWithInvalidVerificationTaskId;
+import io.harness.cvng.migration.list.EnableExistingCVConfigs;
+import io.harness.cvng.migration.list.FixOrchestratorStatusMigration;
 import io.harness.cvng.migration.list.FixRuntimeParamInCanaryBlueGreenVerificationJob;
 import io.harness.cvng.migration.list.FixRuntimeParamsInDefaultHealthJob;
+import io.harness.cvng.migration.list.MigrateSetupEvents;
 import io.harness.cvng.migration.list.RecoverMonitoringSourceWorkerId;
 import io.harness.cvng.migration.list.RecreateMetricPackAndThresholdMigration;
 import io.harness.cvng.migration.list.UpdateActivitySourceTasksMigration;
@@ -50,7 +57,13 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(15, FixRuntimeParamInCanaryBlueGreenVerificationJob.class))
         .add(Pair.of(16, CVNGBaseMigration.class))
         .add(Pair.of(17, DeleteInvalidOrchestratorsMigration.class))
-
+        .add(Pair.of(18, EnableExistingCVConfigs.class))
+        .add(Pair.of(19, CleanupDeprecatedDocuments.class))
+        .add(Pair.of(20, CleanUpOldDocuments.class))
+        .add(Pair.of(21, FixOrchestratorStatusMigration.class))
+        .add(Pair.of(22, MigrateSetupEvents.class))
+        .add(Pair.of(23, CleanUpMonitoringSourcePerpetualTask.class))
+        .add(Pair.of(24, DeleteOrchestratorWithInvalidVerificationTaskId.class))
         .build();
   }
 }

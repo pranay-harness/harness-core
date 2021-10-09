@@ -41,3 +41,5 @@ else
   echo STABLE_BUILD_NUMBER $(getProperty "build.number")
   echo STABLE_PATCH $(getProperty "build.patch")
 fi
+
+echo "GIT_BRANCH_BASED_CONTAINER_TAG $(git rev-parse --abbrev-ref HEAD | tr / _)"

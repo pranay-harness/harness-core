@@ -54,7 +54,7 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
   private final WebhookEventPayloadParser webhookEventPayloadParser;
 
   @Override
-  public void acquireProviderData(FilterRequestData filterRequestData) {
+  public void acquireProviderData(FilterRequestData filterRequestData, List<TriggerDetails> triggers) {
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
 
     if (webhookPayloadData.getWebhookEvent().getType() != WebhookEvent.Type.PUSH) {
@@ -63,7 +63,7 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
           WingsException.SRE);
     }
 
-    for (TriggerDetails details : filterRequestData.getDetails()) {
+    for (TriggerDetails details : triggers) {
       try {
         String connectorIdentifier =
             details.getNgTriggerEntity().getMetadata().getWebhook().getGit().getConnectorIdentifier();

@@ -6,7 +6,9 @@ import static io.harness.windows.CmdUtils.escapeEnvValueSpecialChars;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class WinRmSession implements AutoCloseable {
   private static final int retryCount = 1;
   @VisibleForTesting static final String COMMAND_PLACEHOLDER = "%s %s";
@@ -68,6 +71,9 @@ public class WinRmSession implements AutoCloseable {
       SshHelperUtils.generateTGT(getUserPrincipal(config.getUsername(), config.getDomain()), config.getPassword(),
           config.getKeyTabFilePath(), logCallback);
       shell = null;
+      if (executeCommandString("echo 'checking connection'", null, null, false) != 0) {
+        throw new InvalidRequestException("Cannot reach remote host");
+      }
       winRmTool = null;
       return;
     }

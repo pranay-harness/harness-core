@@ -1,7 +1,9 @@
 package io.harness.beans.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.yaml.core.nonyaml.NonYamlInfo;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -15,6 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("typeInfo")
+@OwnedBy(CI)
 public class TypeInfo implements NonYamlInfo {
   @NotNull CIStepInfoType stepInfoType;
   @NotNull StepType stepType;

@@ -1,5 +1,7 @@
 package io.harness.repositories.service.custom;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
@@ -24,6 +26,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class ServiceRepositoryCustomImpl implements ServiceRepositoryCustom {
@@ -90,6 +93,27 @@ public class ServiceRepositoryCustomImpl implements ServiceRepositoryCustom {
     Query query =
         new Query().addCriteria(baseCriteria.andOperator(filterCreatedAt.orOperator(filterDeleted, filterDeletedAt)));
     return mongoTemplate.count(query, ServiceEntity.class);
+  }
+
+  @Override
+  public List<ServiceEntity> findAllRunTimePermission(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.find(query, ServiceEntity.class);
+  }
+
+  @Override
+  public ServiceEntity find(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, boolean deleted) {
+    Criteria baseCriteria = Criteria.where(ServiceEntityKeys.accountId)
+                                .is(accountIdentifier)
+                                .and(ServiceEntityKeys.orgIdentifier)
+                                .is(orgIdentifier)
+                                .and(ServiceEntityKeys.projectIdentifier)
+                                .is(projectIdentifier);
+
+    Criteria filterDeleted = Criteria.where(ServiceEntityKeys.deleted).is(deleted);
+    Query query = new Query(baseCriteria.andOperator(filterDeleted));
+    return mongoTemplate.findById(query, ServiceEntity.class);
   }
 
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {

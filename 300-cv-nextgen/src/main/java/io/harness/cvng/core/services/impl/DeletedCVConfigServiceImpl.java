@@ -1,7 +1,5 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
@@ -19,9 +17,8 @@ import io.harness.cvng.core.entities.HostRecord;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.VerificationTask;
-import io.harness.cvng.core.services.api.CVEventService;
-import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
@@ -30,6 +27,8 @@ import io.harness.persistence.PersistentEntity;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -50,12 +49,13 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
           DeploymentTimeSeriesAnalysis.class, DeploymentLogAnalysis.class, TimeSeriesRiskSummary.class,
           TimeSeriesAnomalousPatterns.class, DataCollectionTask.class, TimeSeriesCumulativeSums.class);
   @Inject private HPersistence hPersistence;
-  @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private CVEventService eventService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+  @Inject private Clock clock;
 
   @Override
-  public DeletedCVConfig save(DeletedCVConfig deletedCVConfig) {
+  public DeletedCVConfig save(DeletedCVConfig deletedCVConfig, Duration toDeleteAfterDuration) {
+    deletedCVConfig.setDataCollectionTaskIteration(clock.instant().plus(toDeleteAfterDuration).toEpochMilli());
     hPersistence.save(deletedCVConfig);
     return deletedCVConfig;
   }
@@ -68,10 +68,6 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
 
   @Override
   public void triggerCleanup(DeletedCVConfig deletedCVConfig) {
-    if (isNotEmpty(deletedCVConfig.getPerpetualTaskId())) {
-      dataCollectionTaskService.deletePerpetualTasks(
-          deletedCVConfig.getAccountId(), deletedCVConfig.getPerpetualTaskId());
-    }
     List<String> verificationTaskIds =
         verificationTaskService.getVerificationTaskIds(deletedCVConfig.getCvConfig().getUuid());
     verificationTaskIds.forEach(verificationTaskId
@@ -79,19 +75,13 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
             -> hPersistence.delete(hPersistence.createQuery(entity).filter(
                 VerificationTask.VERIFICATION_TASK_ID_KEY, verificationTaskId))));
     verificationTaskService.removeCVConfigMappings(deletedCVConfig.getCvConfig().getUuid());
-
+    monitoringSourcePerpetualTaskService.deleteTask(deletedCVConfig.getCvConfig().getAccountId(),
+        deletedCVConfig.getCvConfig().getOrgIdentifier(), deletedCVConfig.getCvConfig().getProjectIdentifier(),
+        deletedCVConfig.getCvConfig().getIdentifier());
     log.info("Deleting DeletedCVConfig {}", deletedCVConfig.getUuid());
     delete(deletedCVConfig.getUuid());
     log.info("Deletion of DeletedCVConfig {} was successful", deletedCVConfig.getUuid());
     // TODO We need retry mechanism if things get failing and retry count exceeds max number we should alert it
-
-    sendScopedDeleteEvent(deletedCVConfig);
-  }
-
-  private void sendScopedDeleteEvent(DeletedCVConfig deletedCVConfig) {
-    eventService.sendConnectorDeleteEvent(deletedCVConfig.getCvConfig());
-    eventService.sendServiceDeleteEvent(deletedCVConfig.getCvConfig());
-    eventService.sendEnvironmentDeleteEvent(deletedCVConfig.getCvConfig());
   }
 
   private void delete(String deletedCVConfigId) {

@@ -12,7 +12,6 @@ import io.harness.exception.runtime.DockerHubServerRuntimeException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.manage.GlobalContextManager;
-import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,13 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class DockerArtifactTaskHelper {
   private final DockerArtifactTaskHandler dockerArtifactTaskHandler;
-  private final SecretDecryptionService secretDecryptionService;
 
   public ArtifactTaskResponse getArtifactCollectResponse(
       ArtifactTaskParameters artifactTaskParameters, LogCallback executionLogCallback) {
     DockerArtifactDelegateRequest attributes = (DockerArtifactDelegateRequest) artifactTaskParameters.getAttributes();
     String registryUrl = attributes.getDockerConnectorDTO().getDockerRegistryUrl();
-    decryptRequestDTOs(attributes);
+    dockerArtifactTaskHandler.decryptRequestDTOs(attributes);
     ArtifactTaskResponse artifactTaskResponse;
     try {
       switch (artifactTaskParameters.getArtifactTaskType()) {
@@ -109,12 +107,6 @@ public class DockerArtifactTaskHelper {
         .build();
   }
 
-  private void decryptRequestDTOs(DockerArtifactDelegateRequest dockerRequest) {
-    if (dockerRequest.getDockerConnectorDTO().getAuth() != null) {
-      secretDecryptionService.decrypt(
-          dockerRequest.getDockerConnectorDTO().getAuth().getCredentials(), dockerRequest.getEncryptedDataDetails());
-    }
-  }
   private void saveLogs(LogCallback executionLogCallback, String message) {
     if (executionLogCallback != null) {
       executionLogCallback.saveExecutionLog(message);

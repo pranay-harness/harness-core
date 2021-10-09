@@ -1,9 +1,13 @@
 package software.wings.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
@@ -39,6 +43,8 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(DX)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class YamlHelper {
   public static final String ENCRYPTED_VALUE_STR = "<KMS URL>";
 

@@ -23,7 +23,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Local") LOCAL("Local"),
   @JsonProperty("AwsKms") AWS_KMS("AwsKms"),
   @JsonProperty("GcpKms") GCP_KMS("GcpKms"),
-  //  @JsonProperty("Awssecretsmanager") AWS_SECRETS_MANAGER("Awssecretsmanager"),
+  @JsonProperty("AwsSecretManager") AWS_SECRET_MANAGER("AwsSecretManager"),
   //  @JsonProperty("Cyberark") CYBERARK("Cyberark"),
   //  @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager"),
   @JsonProperty("Gcp") GCP("Gcp"),
@@ -42,10 +42,11 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("HttpHelmRepo") HTTP_HELM_REPO("HttpHelmRepo"),
   @JsonProperty("NewRelic") NEW_RELIC("NewRelic"),
   @JsonProperty("Datadog") DATADOG("Datadog"),
-  @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic");
+  @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic"),
+  @JsonProperty("PagerDuty") PAGER_DUTY("PagerDuty");
   private final String displayName;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static ConnectorType getConnectorType(@JsonProperty("type") String displayName) {
     for (ConnectorType connectorType : ConnectorType.values()) {
       if (connectorType.displayName.equalsIgnoreCase(displayName)) {

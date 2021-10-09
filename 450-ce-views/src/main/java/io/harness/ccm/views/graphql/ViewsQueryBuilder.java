@@ -4,6 +4,35 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY_UN_NESTED;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_VALUE_UN_NESTED;
+import static io.harness.ccm.views.utils.ClusterTableKeys.CLOUD_SERVICE_NAME;
+import static io.harness.ccm.views.utils.ClusterTableKeys.CLUSTER_TABLE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.COUNT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.COUNT_INNER;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_CPU_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_CPU_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_CPU_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_APPLICATION;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_CLOUD_PROVIDER;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_LAUNCH_TYPE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_SERVICE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ENVIRONMENT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_INSTANCE_ID;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_NODE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_SERVICE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.INSTANCE_ID;
+import static io.harness.ccm.views.utils.ClusterTableKeys.LAUNCH_TYPE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TASK_ID;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE;
+import static io.harness.timescaledb.Tables.ANOMALIES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
@@ -54,15 +83,23 @@ public class ViewsQueryBuilder {
   public static final String ECS_CONTAINER_INSTANCE = "ECS_CONTAINER_INSTANCE";
   @Inject ViewCustomFieldDao viewCustomFieldDao;
   private static final String distinct = " DISTINCT(%s)";
+  private static final String count = "COUNT(*)";
   private static final String aliasStartTimeMaxMin = "%s_%s";
   private static final String searchFilter = "REGEXP_CONTAINS( LOWER(%s), LOWER('%s') )";
+  private static final String regexFilter = "REGEXP_CONTAINS( %s, r'%s' )";
   private static final String labelsSubQuery = "(SELECT value FROM UNNEST(labels) WHERE KEY='%s')";
   private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labelsUnnested";
   private static final String leftJoinSelectiveLabels =
       " LEFT JOIN UNNEST(labels) as labelsUnnested ON labelsUnnested.key IN (%s)";
   private static final ImmutableSet<String> podInfoImmutableSet =
-      ImmutableSet.of("namespace", "workloadName", "appId", "envId", "serviceId");
-  private static final ImmutableSet<String> clusterFilterImmutableSet = ImmutableSet.of("product", "region");
+      ImmutableSet.of("namespace", "workloadName", "appId", "envId", "serviceId", "parentInstanceId");
+  private static final ImmutableSet<String> clusterFilterImmutableSet =
+      ImmutableSet.of("product", "region", "PROVIDERS");
+  private static final ImmutableList<String> applicationGroupBys =
+      ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT, GROUP_BY_CLOUD_PROVIDER);
+  private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING = "PROVIDERS";
+  private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY =
+      "CASE WHEN cloudProvider = 'CLUSTER' THEN 'CLUSTER' ELSE 'CLOUD' END";
 
   public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
       List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
@@ -71,9 +108,12 @@ public class ViewsQueryBuilder {
     selectQuery.addCustomFromTable(cloudProviderTableName);
     List<QLCEViewFieldInput> groupByEntity = getGroupByEntity(groupByList);
     QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
+    boolean isClusterTable = isClusterTable(cloudProviderTableName);
 
     List<ViewField> customFields = collectCustomFieldList(rules, filters, groupByEntity);
-    modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, customFields, selectQuery);
+    if ((!isApplicationQuery(groupByList) || !isClusterTable) && !isInstanceQuery(groupByList)) {
+      modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, customFields, selectQuery);
+    }
 
     if (!rules.isEmpty()) {
       selectQuery.addCondition(getConsolidatedRuleCondition(rules));
@@ -84,7 +124,7 @@ public class ViewsQueryBuilder {
     }
 
     if (!timeFilters.isEmpty()) {
-      decorateQueryWithTimeFilters(selectQuery, timeFilters);
+      decorateQueryWithTimeFilters(selectQuery, timeFilters, isClusterTable);
     }
 
     if (!groupByEntity.isEmpty()) {
@@ -100,14 +140,15 @@ public class ViewsQueryBuilder {
           selectQuery.addCustomColumns(
               Converter.toCustomColumnSqlObject(labelSubQuery, ViewsMetaDataFields.LABEL_VALUE.getAlias()));
         } else {
-          selectQuery.addAliasedColumn(sqlObjectFromField, modifyStringToComplyRegex(groupBy.getFieldName()));
+          selectQuery.addAliasedColumn(
+              sqlObjectFromField, modifyStringToComplyRegex(getColumnName(groupBy.getFieldName())));
           selectQuery.addCustomGroupings(modifyStringToComplyRegex(groupBy.getFieldName()));
         }
       }
     }
 
     if (groupByTime != null) {
-      decorateQueryWithGroupByTime(selectQuery, groupByTime);
+      decorateQueryWithGroupByTime(selectQuery, groupByTime, isClusterTable);
     }
 
     if (!aggregations.isEmpty()) {
@@ -136,6 +177,119 @@ public class ViewsQueryBuilder {
 
     log.info("Information schema query for table {}", selectQuery.toString());
     return selectQuery;
+  }
+
+  public SelectQuery getCostByProvidersOverviewQuery(List<QLCEViewTimeFilter> timeFilters,
+      List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations, String cloudProviderTableName) {
+    SelectQuery selectQuery = new SelectQuery();
+    selectQuery.addCustomFromTable(cloudProviderTableName);
+    QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
+    List<QLCEViewFieldInput> groupByEntity = Collections.singletonList(QLCEViewFieldInput.builder()
+                                                                           .fieldId(CLOUD_PROVIDERS_CUSTOM_GROUPING)
+                                                                           .fieldName(CLOUD_PROVIDERS_CUSTOM_GROUPING)
+                                                                           .identifier(ViewFieldIdentifier.COMMON)
+                                                                           .build());
+
+    selectQuery.addAliasedColumn(new CustomSql(CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY), CLOUD_PROVIDERS_CUSTOM_GROUPING);
+    selectQuery.addCustomGroupings(CLOUD_PROVIDERS_CUSTOM_GROUPING);
+
+    // Adding instance type filters
+    modifyQueryWithInstanceTypeFilter(
+        Collections.emptyList(), Collections.emptyList(), groupByEntity, Collections.emptyList(), selectQuery);
+
+    if (!aggregations.isEmpty()) {
+      decorateQueryWithAggregations(selectQuery, aggregations);
+    }
+
+    if (!timeFilters.isEmpty()) {
+      decorateQueryWithTimeFilters(selectQuery, timeFilters, false);
+    }
+
+    if (groupByTime != null) {
+      decorateQueryWithGroupByTime(selectQuery, groupByTime, false);
+    }
+
+    log.info("Query for Overview cost by providers {}", selectQuery.toString());
+    return selectQuery;
+  }
+
+  public SelectQuery getTotalCountQuery(List<ViewRule> rules, List<QLCEViewFilter> filters,
+      List<QLCEViewTimeFilter> timeFilters, List<QLCEViewGroupBy> groupByList, String cloudProviderTableName) {
+    SelectQuery selectQueryInner = new SelectQuery();
+    SelectQuery selectQueryOuter = new SelectQuery();
+    selectQueryInner.addCustomFromTable(cloudProviderTableName);
+    List<QLCEViewFieldInput> groupByEntity = getGroupByEntity(groupByList);
+    QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
+    boolean isClusterTable = isClusterTable(cloudProviderTableName);
+
+    selectQueryInner.addCustomColumns(Converter.toCustomColumnSqlObject(count, COUNT_INNER));
+
+    List<ViewField> customFields = collectCustomFieldList(rules, filters, groupByEntity);
+    if ((!isApplicationQuery(groupByList) || !isClusterTable) && !isInstanceQuery(groupByList)) {
+      modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, customFields, selectQueryInner);
+    }
+
+    if (!rules.isEmpty()) {
+      selectQueryInner.addCondition(getConsolidatedRuleCondition(rules));
+    }
+
+    if (!filters.isEmpty()) {
+      decorateQueryWithFilters(selectQueryInner, filters);
+    }
+
+    if (!timeFilters.isEmpty()) {
+      decorateQueryWithTimeFilters(selectQueryInner, timeFilters, isClusterTable);
+    }
+
+    if (!groupByEntity.isEmpty()) {
+      for (QLCEViewFieldInput groupBy : groupByEntity) {
+        Object sqlObjectFromField = getSQLObjectFromField(groupBy);
+        if (groupBy.getIdentifier() != ViewFieldIdentifier.CUSTOM
+            && groupBy.getIdentifier() != ViewFieldIdentifier.LABEL) {
+          selectQueryInner.addCustomGroupings(sqlObjectFromField);
+        } else if (groupBy.getIdentifier() == ViewFieldIdentifier.LABEL) {
+          String labelSubQuery = String.format(labelsSubQuery, groupBy.getFieldName());
+          selectQueryInner.addCustomGroupings(ViewsMetaDataFields.LABEL_VALUE.getAlias());
+          selectQueryInner.addCustomColumns(
+              Converter.toCustomColumnSqlObject(labelSubQuery, ViewsMetaDataFields.LABEL_VALUE.getAlias()));
+        } else {
+          selectQueryInner.addAliasedColumn(
+              sqlObjectFromField, modifyStringToComplyRegex(getColumnName(groupBy.getFieldName())));
+          selectQueryInner.addCustomGroupings(modifyStringToComplyRegex(groupBy.getFieldName()));
+        }
+      }
+    }
+
+    if (groupByTime != null) {
+      decorateQueryWithGroupByTime(selectQueryInner, groupByTime, isClusterTable);
+    }
+
+    selectQueryOuter.addCustomFromTable("(" + selectQueryInner.toString() + ")");
+    selectQueryOuter.addCustomColumns(Converter.toCustomColumnSqlObject(count, COUNT));
+
+    log.info("Total count query for view {}", selectQueryOuter.toString());
+    return selectQueryOuter;
+  }
+
+  public String getAnomalyQuery(
+      List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters) {
+    SelectQuery selectQuery = new SelectQuery();
+    selectQuery.addCustomFromTable(ANOMALIES.getName());
+    selectQuery.addAllColumns();
+
+    if (!rules.isEmpty()) {
+      selectQuery.addCondition(getConsolidatedRuleCondition(rules));
+    }
+
+    if (!filters.isEmpty()) {
+      decorateQueryWithFilters(selectQuery, filters);
+    }
+
+    if (!timeFilters.isEmpty()) {
+      decorateQueryWithTimeFilters(selectQuery, timeFilters, false);
+    }
+
+    return selectQuery.toString();
   }
 
   private List<ViewField> collectCustomFieldList(
@@ -180,6 +334,9 @@ public class ViewsQueryBuilder {
     boolean isClusterConditionOrFilterPresent = false;
     boolean isPodFilterPresent = false;
     boolean isLabelsOperationPresent = false;
+    if (rules.isEmpty() && filters.isEmpty() && groupByEntity.isEmpty() && customFields.isEmpty()) {
+      isClusterConditionOrFilterPresent = true;
+    }
     for (ViewRule rule : rules) {
       for (ViewCondition condition : rule.getViewConditions()) {
         ViewIdCondition viewIdCondition = (ViewIdCondition) condition;
@@ -282,12 +439,14 @@ public class ViewsQueryBuilder {
   }
 
   public ViewsQueryMetadata getFilterValuesQuery(List<ViewRule> rules, List<QLCEViewFilter> filters,
-      String cloudProviderTableName, Integer limit, Integer offset) {
+      List<QLCEViewTimeFilter> timeFilters, String cloudProviderTableName, Integer limit, Integer offset) {
     List<QLCEViewFieldInput> fields = new ArrayList<>();
     SelectQuery query = new SelectQuery();
     query.addCustomization(new PgLimitClause(limit));
     query.addCustomization(new PgOffsetClause(offset));
     query.addCustomFromTable(cloudProviderTableName);
+
+    boolean isClusterTable = isClusterTable(cloudProviderTableName);
 
     boolean isLabelsPresent = false;
     List<ViewField> customFields = collectCustomFieldList(rules, filters, Collections.EMPTY_LIST);
@@ -306,6 +465,10 @@ public class ViewsQueryBuilder {
 
     if (!rules.isEmpty()) {
       query.addCondition(getConsolidatedRuleCondition(rules));
+    }
+
+    if (!timeFilters.isEmpty()) {
+      decorateQueryWithTimeFilters(query, timeFilters, isClusterTable);
     }
 
     for (QLCEViewFilter filter : filters) {
@@ -524,6 +687,9 @@ public class ViewsQueryBuilder {
       case COST:
         sortKey = ViewsMetaDataFields.COST.getAlias();
         break;
+      case CLUSTER_COST:
+        sortKey = ViewsMetaDataFields.CLUSTER_COST.getAlias();
+        break;
       case TIME:
         sortKey = ViewsMetaDataFields.START_TIME.getAlias();
         break;
@@ -543,16 +709,15 @@ public class ViewsQueryBuilder {
 
   private void decorateQueryWithAggregation(SelectQuery selectQuery, QLCEViewAggregation aggregation) {
     FunctionCall functionCall = getFunctionCallType(aggregation.getOperationType());
-    if (aggregation.getColumnName().equals(ViewsMetaDataFields.COST.getFieldName())) {
-      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
-          functionCall.addCustomParams(new CustomSql(ViewsMetaDataFields.COST.getFieldName())),
-          ViewsMetaDataFields.COST.getFieldName()));
-    }
     if (aggregation.getColumnName().equals(ViewsMetaDataFields.START_TIME.getFieldName())) {
       selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
           functionCall.addCustomParams(new CustomSql(ViewsMetaDataFields.START_TIME.getFieldName())),
           String.format(
               aliasStartTimeMaxMin, ViewsMetaDataFields.START_TIME.getFieldName(), aggregation.getOperationType())));
+    } else {
+      selectQuery.addCustomColumns(
+          Converter.toCustomColumnSqlObject(functionCall.addCustomParams(new CustomSql(aggregation.getColumnName())),
+              getAliasNameForAggregation(aggregation.getColumnName())));
     }
   }
 
@@ -564,16 +729,27 @@ public class ViewsQueryBuilder {
         return FunctionCall.max();
       case MIN:
         return FunctionCall.min();
+      case AVG:
+        return FunctionCall.avg();
       default:
         return null;
     }
   }
 
-  private void decorateQueryWithGroupByTime(SelectQuery selectQuery, QLCEViewTimeTruncGroupBy groupByTime) {
-    selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
-        new TimeTruncatedExpression(
-            new CustomSql(ViewsMetaDataFields.START_TIME.getFieldName()), groupByTime.getResolution()),
-        ViewsMetaDataFields.TIME_GRANULARITY.getFieldName()));
+  private void decorateQueryWithGroupByTime(
+      SelectQuery selectQuery, QLCEViewTimeTruncGroupBy groupByTime, boolean isTimeInEpochMillis) {
+    if (isTimeInEpochMillis) {
+      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+          new TimeTruncatedExpression(
+              new TimestampMillisExpression(new CustomSql(ViewsMetaDataFields.START_TIME.getFieldName())),
+              groupByTime.getResolution()),
+          ViewsMetaDataFields.TIME_GRANULARITY.getFieldName()));
+    } else {
+      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+          new TimeTruncatedExpression(
+              new CustomSql(ViewsMetaDataFields.START_TIME.getFieldName()), groupByTime.getResolution()),
+          ViewsMetaDataFields.TIME_GRANULARITY.getFieldName()));
+    }
 
     selectQuery.addCustomGroupings(ViewsMetaDataFields.TIME_GRANULARITY.getFieldName());
     selectQuery.addCustomOrdering(ViewsMetaDataFields.TIME_GRANULARITY.getFieldName(), OrderObject.Dir.ASCENDING);
@@ -587,7 +763,7 @@ public class ViewsQueryBuilder {
                            : Collections.emptyList();
   }
 
-  protected QLCEViewTimeTruncGroupBy getGroupByTime(List<QLCEViewGroupBy> groupBy) {
+  public QLCEViewTimeTruncGroupBy getGroupByTime(List<QLCEViewGroupBy> groupBy) {
     if (groupBy != null) {
       Optional<QLCEViewTimeTruncGroupBy> first = groupBy.stream()
                                                      .filter(g -> g.getTimeTruncGroupBy() != null)
@@ -732,9 +908,10 @@ public class ViewsQueryBuilder {
     }
   }
 
-  private void decorateQueryWithTimeFilters(SelectQuery selectQuery, List<QLCEViewTimeFilter> timeFilters) {
+  private void decorateQueryWithTimeFilters(
+      SelectQuery selectQuery, List<QLCEViewTimeFilter> timeFilters, boolean isClusterTable) {
     for (QLCEViewTimeFilter timeFilter : timeFilters) {
-      selectQuery.addCondition(getCondition(timeFilter));
+      selectQuery.addCondition(getCondition(timeFilter, isClusterTable));
     }
   }
 
@@ -770,20 +947,27 @@ public class ViewsQueryBuilder {
         return UnaryCondition.isNotNull(conditionKey);
       case NULL:
         return UnaryCondition.isNull(conditionKey);
+      case LIKE:
+        return new CustomCondition(String.format(regexFilter, conditionKey, filter.getValues()[0]));
       default:
         throw new InvalidRequestException("Invalid View Filter operator: " + operator);
     }
   }
 
-  private Condition getCondition(QLCEViewTimeFilter timeFilter) {
+  // Change it back
+  private Condition getCondition(QLCEViewTimeFilter timeFilter, boolean addLongValueConditions) {
     Object conditionKey = getSQLObjectFromField(timeFilter.getField());
     QLCEViewTimeFilterOperator operator = timeFilter.getOperator();
 
     switch (operator) {
       case BEFORE:
-        return BinaryCondition.lessThanOrEq(conditionKey, Instant.ofEpochMilli(timeFilter.getValue().longValue()));
+        return addLongValueConditions
+            ? BinaryCondition.lessThanOrEq(conditionKey, timeFilter.getValue().longValue())
+            : BinaryCondition.lessThanOrEq(conditionKey, Instant.ofEpochMilli(timeFilter.getValue().longValue()));
       case AFTER:
-        return BinaryCondition.greaterThanOrEq(conditionKey, Instant.ofEpochMilli(timeFilter.getValue().longValue()));
+        return addLongValueConditions
+            ? BinaryCondition.greaterThanOrEq(conditionKey, timeFilter.getValue().longValue())
+            : BinaryCondition.greaterThanOrEq(conditionKey, Instant.ofEpochMilli(timeFilter.getValue().longValue()));
       default:
         throw new InvalidRequestException("Invalid View TimeFilter operator: " + operator);
     }
@@ -828,5 +1012,55 @@ public class ViewsQueryBuilder {
 
   public String modifyStringToComplyRegex(String value) {
     return value.toLowerCase().replaceAll("[^a-z0-9]", "_");
+  }
+
+  private String getColumnName(String value) {
+    switch (value) {
+      case GROUP_BY_NODE:
+        return INSTANCE_ID;
+      case GROUP_BY_ECS_SERVICE:
+        return CLOUD_SERVICE_NAME;
+      case GROUP_BY_ECS_LAUNCH_TYPE:
+        return LAUNCH_TYPE;
+      case GROUP_BY_ECS_TASK:
+        return TASK_ID;
+      default:
+        return value;
+    }
+  }
+
+  private boolean isClusterTable(String cloudProviderTableName) {
+    return cloudProviderTableName.contains(CLUSTER_TABLE);
+  }
+
+  private boolean isApplicationQuery(List<QLCEViewGroupBy> groupByList) {
+    return groupByList.stream()
+        .filter(entry -> entry.getEntityGroupBy() != null)
+        .anyMatch(entry -> applicationGroupBys.contains(entry.getEntityGroupBy().getFieldName()));
+  }
+
+  private boolean isInstanceQuery(List<QLCEViewGroupBy> groupByList) {
+    return groupByList.stream()
+        .filter(entry -> entry.getEntityGroupBy() != null)
+        .anyMatch(entry -> entry.getEntityGroupBy().getFieldName().equals(GROUP_BY_INSTANCE_ID));
+  }
+
+  private String getAliasNameForAggregation(String value) {
+    switch (value) {
+      case EFFECTIVE_CPU_LIMIT:
+        return TIME_AGGREGATED_CPU_LIMIT;
+      case EFFECTIVE_CPU_REQUEST:
+        return TIME_AGGREGATED_CPU_REQUEST;
+      case EFFECTIVE_CPU_UTILIZATION_VALUE:
+        return TIME_AGGREGATED_CPU_UTILIZATION_VALUE;
+      case EFFECTIVE_MEMORY_LIMIT:
+        return TIME_AGGREGATED_MEMORY_LIMIT;
+      case EFFECTIVE_MEMORY_REQUEST:
+        return TIME_AGGREGATED_MEMORY_REQUEST;
+      case EFFECTIVE_MEMORY_UTILIZATION_VALUE:
+        return TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE;
+      default:
+        return value;
+    }
   }
 }

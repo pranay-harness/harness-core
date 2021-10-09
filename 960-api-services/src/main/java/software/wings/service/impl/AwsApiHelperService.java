@@ -15,10 +15,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsCallTracker;
+import io.harness.aws.CloseableAmazonWebServiceClient;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -96,14 +98,22 @@ public class AwsApiHelperService {
   }
 
   public List<String> listRegions(AwsInternalConfig awsConfig) {
-    try {
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(awsConfig))) {
       tracker.trackEC2Call("List Regions");
-      return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
+      return closeableAmazonEC2Client.getClient()
+          .describeRegions()
+          .getRegions()
+          .stream()
+          .map(Region::getRegionName)
+          .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listRegions", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -125,10 +135,10 @@ public class AwsApiHelperService {
   }
 
   public List<String> listS3Buckets(AwsInternalConfig awsInternalConfig, String region) {
-    try {
+    try (CloseableAmazonWebServiceClient<AmazonS3Client> closeableAmazonS3Client =
+             new CloseableAmazonWebServiceClient(getAmazonS3Client(awsInternalConfig, region))) {
       tracker.trackS3Call("List Buckets");
-      AmazonS3Client client = getAmazonS3Client(awsInternalConfig, region);
-      List<Bucket> buckets = client.listBuckets();
+      List<Bucket> buckets = closeableAmazonS3Client.getClient().listBuckets();
       if (isEmpty(buckets)) {
         return emptyList();
       }
@@ -137,6 +147,9 @@ public class AwsApiHelperService {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listS3Buckets", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -242,7 +255,7 @@ public class AwsApiHelperService {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonCloudFormationException) {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
-        log.info("Nothing to update on stack" + amazonServiceException.getMessage());
+        log.error("Nothing to update on stack" + amazonServiceException.getMessage());
       } else {
         throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException);
       }

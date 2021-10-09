@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.List;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -17,7 +18,7 @@ public class WorkloadDeploymentInfo {
   String serviceName;
   String serviceId;
   LastWorkloadInfo lastExecuted;
-  List<String> deploymentTypeList;
+  Set<String> deploymentTypeList;
   long totalDeployments;
   double totalDeploymentChangeRate;
   double percentSuccess;

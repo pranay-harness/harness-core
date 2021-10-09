@@ -2,8 +2,9 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
@@ -13,10 +14,10 @@ import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.visitor.Visitable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
-import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,18 +28,16 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @JsonTypeName(StepSpecTypeConstants.K8S_CANARY_DELETE)
 @TypeAlias("k8sCanaryDeleteStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sCanaryDeleteStepInfo")
 public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
+  @JsonIgnore String canaryStepFqn;
+  @JsonIgnore String canaryDeleteStepFqn;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
-
-  @Builder(builderMethodName = "infoBuilder")
-  public K8sCanaryDeleteStepInfo(ParameterField<Boolean> skipDryRun) {
-    this.skipDryRun = skipDryRun;
-  }
 
   @Override
   public StepType getStepType() {
@@ -55,6 +54,8 @@ public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
     return K8sCanaryDeleteStepParameters.infoBuilder()
         .skipDryRun(skipDryRun)
         .delegateSelectors(delegateSelectors)
+        .canaryStepFqn(canaryStepFqn)
+        .canaryDeleteStepFqn(canaryDeleteStepFqn)
         .build();
   }
 }

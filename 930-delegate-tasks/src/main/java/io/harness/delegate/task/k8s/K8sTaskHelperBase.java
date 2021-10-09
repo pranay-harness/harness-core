@@ -36,6 +36,8 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.beans.LogWeight.Normal;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
@@ -53,6 +55,8 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -140,13 +144,18 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReview;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
+import io.kubernetes.client.openapi.models.V1Status;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -296,7 +305,7 @@ public class K8sTaskHelperBase {
 
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       Map<String, String> labels, long timeoutinMillis) throws Exception {
-    return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutinMillis),
+    return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutinMillis),
         ()
             -> kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, namespace, labels)
                    .stream()
@@ -357,7 +366,7 @@ public class K8sTaskHelperBase {
 
   private <T> T waitForLoadBalancerService(String name, Callable<T> getLoadBalancerService, int timeoutInSeconds) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(timeoutInSeconds), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(timeoutInSeconds), () -> {
         while (true) {
           T result = getLoadBalancerService.call();
           if (result != null) {
@@ -752,6 +761,8 @@ public class K8sTaskHelperBase {
     final ApplyCommand applyCommand = overriddenClient.apply().filename("manifests.yaml").record(recordCommand);
     ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, applyCommand);
     if (result.getExitValue() != 0) {
+      log.error(format("\nFailed. Process terminated with exit value: [%s] and output: [%s]", result.getExitValue(),
+          result.outputUTF8()));
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
@@ -763,7 +774,7 @@ public class K8sTaskHelperBase {
     return true;
   }
 
-  public boolean deleteManifests(Kubectl client, List<KubernetesResource> resources,
+  public void deleteManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) throws Exception {
     FileIo.writeUtf8StringToFile(
         k8sDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
@@ -773,12 +784,10 @@ public class K8sTaskHelperBase {
     final DeleteCommand deleteCommand = overriddenClient.delete().filename("manifests.yaml");
     ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
     if (result.getExitValue() != 0) {
-      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
-      return false;
+      log.warn("Failed to delete manifests. Error {}", result.getOutput());
     }
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-    return true;
   }
 
   @VisibleForTesting
@@ -877,25 +886,6 @@ public class K8sTaskHelperBase {
       executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
     }
     return deletedResources;
-  }
-
-  public boolean executeDelete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
-      List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
-      throws Exception {
-    for (KubernetesResourceId resourceId : kubernetesResourceIds) {
-      ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
-      if (result.getExitValue() != 0) {
-        log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
-        executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
-        return false;
-      }
-    }
-
-    if (denoteOverallSuccess) {
-      executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
-    }
-
-    return true;
   }
 
   private ProcessResult executeDeleteCommand(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -1576,8 +1566,9 @@ public class K8sTaskHelperBase {
             k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream, timeoutInMillis);
 
         if (processResult.getExitValue() != 0) {
-          throw new InvalidRequestException(format("Failed to render template for %s. Error %s",
-                                                manifestFile.getFileName(), processResult.getOutput().getUTF8()),
+          throw new InvalidRequestException(
+              getErrorMessageIfProcessFailed(
+                  format("Failed to render template for %s.", manifestFile.getFileName()), processResult),
               USER);
         }
 
@@ -1731,7 +1722,7 @@ public class K8sTaskHelperBase {
       for (KubernetesResource kubernetesResource : resources) {
         String steadyCondition = kubernetesResource.getMetadataAnnotationValue(HarnessAnnotations.steadyStateCondition);
         currentSteadyCondition = steadyCondition;
-        success = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutInMillis),
+        success = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutInMillis),
             ()
                 -> doStatusCheckForCustomResources(client, kubernetesResource.getResourceId(), steadyCondition,
                     k8sDelegateTaskParams, executionLogCallback));
@@ -1862,8 +1853,12 @@ public class K8sTaskHelperBase {
   }
 
   private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName) {
-    String releaseHistoryData =
-        kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
+    String releaseHistoryData = null;
+    try {
+      releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
+    } catch (WingsException e) {
+      log.warn(e.getMessage());
+    }
 
     if (isEmpty(releaseHistoryData)) {
       releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
@@ -2040,7 +2035,14 @@ public class K8sTaskHelperBase {
   private void printGitConfigInExecutionLogs(
       GitStoreDelegateConfig gitStoreDelegateConfig, LogCallback executionLogCallback) {
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-    executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
+    if (isNotEmpty(gitStoreDelegateConfig.getManifestType()) && isNotEmpty(gitStoreDelegateConfig.getManifestId())) {
+      executionLogCallback.saveExecutionLog("\n"
+          + color(format("Fetching %s files with identifier: %s", gitStoreDelegateConfig.getManifestType(),
+                      gitStoreDelegateConfig.getManifestId()),
+              White, Bold));
+    } else {
+      executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
+    }
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
 
     if (FetchType.BRANCH == gitStoreDelegateConfig.getFetchType()) {
@@ -2087,7 +2089,7 @@ public class K8sTaskHelperBase {
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());
       logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientException(errorMsg, e);
+      throw new HelmClientException(errorMsg, e, HelmCliCommandType.FETCH);
     }
 
     return true;
@@ -2120,8 +2122,8 @@ public class K8sTaskHelperBase {
     return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
   }
 
-  public ConnectorValidationResult validateCEKubernetesCluster(
-      ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+  public ConnectorValidationResult validateCEKubernetesCluster(ConnectorConfigDTO connector, String accountIdentifier,
+      List<EncryptedDataDetail> encryptionDetailList, List<CEFeatures> featuresEnabled) {
     ConnectivityStatus connectivityStatus = ConnectivityStatus.SUCCESS;
     KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
     List<ErrorDetail> errorDetails = new ArrayList<>();
@@ -2129,9 +2131,6 @@ public class K8sTaskHelperBase {
     try {
       CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
           kubernetesContainerService.validateMetricsServer(kubernetesConfig);
-      List<CEK8sDelegatePrerequisite.Rule> ruleList =
-          kubernetesContainerService.validateCEResourcePermissions(kubernetesConfig);
-
       if (!metricsServerCheck.getIsInstalled()) {
         errorDetails.add(ErrorDetail.builder()
                              .message("Please install metrics server on your cluster")
@@ -2139,6 +2138,10 @@ public class K8sTaskHelperBase {
                              .build());
         errorSummary += metricsServerCheck.getMessage();
       }
+
+      List<CEK8sDelegatePrerequisite.Rule> ruleList =
+          kubernetesContainerService.validateCEResourcePermissions(kubernetesConfig);
+
       if (!ruleList.isEmpty()) {
         errorDetails.addAll(ruleList.stream()
                                 .map(e
@@ -2150,6 +2153,12 @@ public class K8sTaskHelperBase {
                                            .build())
                                 .collect(toList()));
         errorSummary += "; few permissions are missing.";
+      }
+
+      if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
+        errorDetails.addAll(this.validateLightwingResourceExists(kubernetesConfig));
+
+        errorDetails.addAll(this.validateLightwingResourcePermissions(kubernetesConfig));
       }
 
       if (!errorDetails.isEmpty()) {
@@ -2166,10 +2175,56 @@ public class K8sTaskHelperBase {
     return ConnectorValidationResult.builder().status(connectivityStatus).build();
   }
 
+  public List<ErrorDetail> validateLightwingResourcePermissions(KubernetesConfig kubernetesConfig) throws Exception {
+    final List<V1SelfSubjectAccessReview> reviewStatusList =
+        kubernetesContainerService.validateLightwingResourcePermissions(kubernetesConfig);
+    final List<ErrorDetail> errorDetailList = new ArrayList<>();
+
+    for (V1SelfSubjectAccessReview reviewStatus : reviewStatusList) {
+      if (FALSE.equals(reviewStatus.getStatus().getAllowed())) {
+        final V1ResourceAttributes resourceAttributes = reviewStatus.getSpec().getResourceAttributes();
+
+        final String message =
+            String.format("missing '%s' permission on resource '%s' in api group '%s'", resourceAttributes.getVerb(),
+                resourceAttributes.getResource(), firstNonNull(resourceAttributes.getGroup(), ""));
+
+        errorDetailList.add(ErrorDetail.builder().message(message).reason("not allowed").build());
+      }
+    }
+
+    return errorDetailList;
+  }
+
+  public List<ErrorDetail> validateLightwingResourceExists(KubernetesConfig kubernetesConfig) throws Exception {
+    final List<V1Status> statusList = kubernetesContainerService.validateLightwingResourceExists(kubernetesConfig);
+    final List<ErrorDetail> errorDetailList = new ArrayList<>();
+
+    for (V1Status status : statusList) {
+      errorDetailList.add(ErrorDetail.builder()
+                              .reason(status.getReason())
+                              .message(status.getMessage())
+                              .code(firstNonNull(status.getCode(), 0))
+                              .build());
+    }
+    return errorDetailList;
+  }
+
+  public V1TokenReviewStatus fetchTokenReviewStatus(
+      KubernetesClusterConfigDTO kubernetesClusterConfigDTO, List<EncryptedDataDetail> encryptionDetailList) {
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(kubernetesClusterConfigDTO, encryptionDetailList);
+    return kubernetesContainerService.fetchTokenReviewStatus(kubernetesConfig);
+  }
+
   private ConnectorValidationResult createConnectivityFailureValidationResult(Exception ex) {
     String errorMessage = ex.getMessage();
+
+    if (ex instanceof ApiException) {
+      errorMessage = ((ApiException) ex).getResponseBody();
+    }
+
     ErrorDetail errorDetail = ngErrorHelper.createErrorDetail(errorMessage);
     String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
+
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.FAILURE)
         .errors(Collections.singletonList(errorDetail))
@@ -2211,13 +2266,22 @@ public class K8sTaskHelperBase {
       ProcessResult processResult =
           executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
       if (processResult.getExitValue() != 0) {
-        throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
+        throw new InvalidRequestException(
+            getErrorMessageIfProcessFailed("Failed to render helm chart.", processResult), USER);
       }
-
       result.add(FileData.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
     }
 
     return result;
+  }
+
+  @VisibleForTesting
+  String getErrorMessageIfProcessFailed(String baseMessage, ProcessResult processResult) {
+    StringBuilder stringBuilder = new StringBuilder(baseMessage);
+    if (EmptyPredicate.isNotEmpty(processResult.getOutput().getUTF8())) {
+      stringBuilder.append(String.format(" Error %s", processResult.getOutput().getUTF8()));
+    }
+    return stringBuilder.toString();
   }
 
   public List<FileData> renderTemplateForHelmChartFiles(String helmPath, String manifestFilesDirectory,

@@ -37,8 +37,8 @@ public class ResourceConstraintUtility {
     return resourceConstraintYamlField.getNode().getCurrJsonNode();
   }
 
-  public boolean isSimultaneousDeploymentsAllowed(
-      ParameterField<Boolean> allowSimultaneousDeploymentsField, YamlField rcYamlField) {
+  // Todo: Move to cd-service i.e 125-cd-nextgen
+  public boolean isSimultaneousDeploymentsAllowed(ParameterField<Boolean> allowSimultaneousDeploymentsField) {
     if (!ParameterField.isNull(allowSimultaneousDeploymentsField) && allowSimultaneousDeploymentsField.isExpression()) {
       throw new InvalidRequestException(
           "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
@@ -48,10 +48,6 @@ public class ResourceConstraintUtility {
       allowSimultaneousDeployments = allowSimultaneousDeploymentsField.getValue();
     }
 
-    if (allowSimultaneousDeployments) {
-      return true;
-    }
-
-    return rcYamlField == null;
+    return allowSimultaneousDeployments;
   }
 }

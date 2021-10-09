@@ -1,15 +1,12 @@
 package io.harness.cvng.migration.list;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
 
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
-import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
@@ -30,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UpdateCvConfigPerpetualTasksMigration implements CVNGMigration {
   @Inject private HPersistence hPersistence;
-  @Inject private VerificationManagerService verificationManagerService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
 
   @Override
@@ -44,15 +40,12 @@ public class UpdateCvConfigPerpetualTasksMigration implements CVNGMigration {
         // set iterator to not execute for next 5 mins
         hPersistence.update(cvConfig,
             hPersistence.createUpdateOperations(CVConfig.class)
-                .set(CVConfigKeys.dataCollectionTaskIteration,
-                    Instant.now().plus(5, ChronoUnit.MINUTES).toEpochMilli()));
-        if (isNotEmpty(cvConfig.getPerpetualTaskId())) {
-          verificationManagerService.deletePerpetualTask(cvConfig.getAccountId(), cvConfig.getPerpetualTaskId());
-        }
+                .set("dataCollectionTaskIteration", Instant.now().plus(5, ChronoUnit.MINUTES).toEpochMilli()));
+
         hPersistence.update(cvConfig,
             hPersistence.createUpdateOperations(CVConfig.class)
-                .set(CVConfigKeys.firstTaskQueued, true)
-                .unset(CVConfigKeys.perpetualTaskId));
+                .set("firstTaskQueued", true) // This flag is removed now.
+                .unset("perpetualTaskId"));
         cvConfigKeys.add(CVConfigKey.builder()
                              .accountId(cvConfig.getAccountId())
                              .orgIdentifier(cvConfig.getOrgIdentifier())

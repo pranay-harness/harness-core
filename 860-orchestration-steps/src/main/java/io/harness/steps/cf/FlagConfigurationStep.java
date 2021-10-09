@@ -1,35 +1,45 @@
 package io.harness.steps.cf;
 
-import static java.lang.Boolean.parseBoolean;
+import static java.lang.String.format;
 import static org.joda.time.Minutes.minutes;
 
 import io.harness.OrchestrationStepConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CFApi;
-import io.harness.cf.openapi.model.Feature;
+import io.harness.cf.openapi.ApiException;
 import io.harness.cf.openapi.model.PatchInstruction;
 import io.harness.cf.openapi.model.PatchOperation;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
 import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.security.JWTTokenServiceUtils;
 import io.harness.steps.OrchestrationStepTypes;
+import io.harness.steps.StepUtils;
+import io.harness.steps.cf.AddRuleYaml.AddRuleYamlSpec;
 import io.harness.steps.cf.AddSegmentToVariationTargetMapYaml.AddSegmentToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.AddTargetsToVariationTargetMapYaml.AddTargetsToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.PatchInstruction.Type;
 import io.harness.steps.cf.RemoveSegmentToVariationTargetMapYaml.RemoveSegmentToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.RemoveTargetsToVariationTargetMapYaml.RemoveTargetsToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.SetFeatureFlagStateYaml.SetFeatureFlagStateYamlSpec;
+import io.harness.steps.cf.SetOffVariationYaml.SetOffVariationYamlSpec;
+import io.harness.steps.cf.SetOnVariationYaml.SetOnVariationYamlSpec;
+import io.harness.steps.cf.UpdateRuleYaml.UpdateRuleYamlSpec;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -37,14 +47,17 @@ import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CF)
 @Slf4j
 public class FlagConfigurationStep implements SyncExecutable<StepElementParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(OrchestrationStepTypes.FLAG_CONFIGURATION).build();
-  private static String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(OrchestrationStepTypes.FLAG_CONFIGURATION)
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
+  private static final String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject @Named("cfPipelineAPI") private CFApi cfApi;
   @Inject OrchestrationStepConfig config;
@@ -55,14 +68,32 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
   }
 
   @Override
+  public List<String> getLogKeys(Ambiance ambiance) {
+    // TODO need to figure out how this should work...
+    return StepUtils.generateLogKeys(ambiance, new ArrayList<>());
+  }
+
+  @Override
   public StepResponse executeSync(Ambiance ambiance, StepElementParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     log.info("Executing feature update step..");
     long startTime = System.currentTimeMillis();
+    NGLogCallback ngManagerLogCallback = new NGLogCallback(logStreamingStepClientFactory, ambiance, null, true);
+
     try {
+      ngManagerLogCallback.saveExecutionLog("Starting Flag Update", LogLevel.INFO);
+
+      // Get Org, Account and Project Data
+      String accountID = ambiance.getSetupAbstractionsMap().get("accountId");
+      String orgID = ambiance.getSetupAbstractionsMap().get("orgIdentifier");
+      String projectID = ambiance.getSetupAbstractionsMap().get("projectIdentifier");
+
       FlagConfigurationStepParameters flagConfigurationStepParameters =
           (FlagConfigurationStepParameters) stepParameters.getSpec();
       String featureIdentifier = flagConfigurationStepParameters.getFeature().getValue();
+      String environment = flagConfigurationStepParameters.getEnvironment().getValue();
+
+      ngManagerLogCallback.saveExecutionLog(format("updating Feature flag %s", featureIdentifier), LogLevel.INFO);
 
       List<PatchInstruction> instructions = new ArrayList<>();
 
@@ -70,40 +101,79 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
         if (patchInstruction.getType().equals(Type.SET_FEATURE_FLAG_STATE)) {
           SetFeatureFlagStateYamlSpec spec = ((SetFeatureFlagStateYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
-              cfApi.getFeatureFlagOnPatchInstruction(parseBoolean(spec.getState().getValue()));
+              cfApi.getFeatureFlagOnPatchInstruction(parseStateAsBoolean(spec.getState().getValue()));
           instructions.add(instruction);
+          ngManagerLogCallback.saveExecutionLog(
+              format("setting flag state to %s", spec.getState().getValue()), LogLevel.INFO);
+        }
+
+        if (patchInstruction.getType().equals(Type.SET_ON_VARIATION)) {
+          SetOnVariationYamlSpec spec = ((SetOnVariationYaml) patchInstruction).getSpec();
+          instructions.add(cfApi.setOnVariation(spec.getVariation().getValue()));
+          ngManagerLogCallback.saveExecutionLog(
+              format("setting On variation for flag to %s", spec.getVariation().getValue()), LogLevel.INFO);
+        }
+
+        if (patchInstruction.getType().equals(Type.SET_OFF_VARIATION)) {
+          SetOffVariationYamlSpec spec = ((SetOffVariationYaml) patchInstruction).getSpec();
+          instructions.add(cfApi.setOffVariation(spec.getVariation().getValue()));
+          ngManagerLogCallback.saveExecutionLog(
+              format("setting Off variation for flag to %s", spec.getVariation().getValue()), LogLevel.INFO);
+        }
+
+        if (patchInstruction.getType().equals(Type.ADD_RULE)) {
+          AddRuleYamlSpec spec = ((AddRuleYaml) patchInstruction).getSpec();
+          String identifier = ((AddRuleYaml) patchInstruction).getIdentifier();
+          instructions.add(addRule(spec, accountID, orgID, projectID, featureIdentifier, environment, identifier));
+          ngManagerLogCallback.saveExecutionLog(
+              format("adding rule %s to flag", ((AddRuleYaml) patchInstruction).getIdentifier()), LogLevel.INFO);
+        }
+
+        if (patchInstruction.getType().equals(Type.UPDATE_RULE)) {
+          UpdateRuleYamlSpec spec = ((UpdateRuleYaml) patchInstruction).getSpec();
+          PatchInstruction instruction = cfApi.updatePercentageRollout(spec.getRuleID().getValue(), spec.getServe());
+          instructions.add(instruction);
+          ngManagerLogCallback.saveExecutionLog(format("updating rule for flag"), LogLevel.INFO);
         }
 
         if (patchInstruction.getType().equals(Type.ADD_TARGETS_TO_VARIATION_TARGET_MAP)) {
-          AddTargetsToVariationTargetMapYamlSpec spec =
-              ((AddTargetsToVariationTargetMapYaml) patchInstruction).getSpec();
-          PatchInstruction instruction =
-              cfApi.getAddTargetToVariationMapParams(spec.getVariation().getValue(), spec.getTargets().getValue());
-          instructions.add(instruction);
+          if (patchInstruction instanceof AddTargetsToVariationTargetMapYaml) {
+            AddTargetsToVariationTargetMapYamlSpec spec =
+                ((AddTargetsToVariationTargetMapYaml) patchInstruction).getSpec();
+            PatchInstruction instruction =
+                cfApi.getAddTargetToVariationMapParams(spec.getVariation().getValue(), spec.getTargets().getValue());
+            instructions.add(instruction);
+          }
         }
 
         if (patchInstruction.getType().equals(Type.REMOVE_TARGETS_TO_VARIATION_TARGET_MAP)) {
-          RemoveTargetsToVariationTargetMapYamlSpec spec =
-              ((RemoveTargetsToVariationTargetMapYaml) patchInstruction).getSpec();
-          PatchInstruction instruction =
-              cfApi.getRemoveTargetToVariationMapParams(spec.getVariation().getValue(), spec.getTargets().getValue());
-          instructions.add(instruction);
+          if (patchInstruction instanceof RemoveTargetsToVariationTargetMapYaml) {
+            RemoveTargetsToVariationTargetMapYamlSpec spec =
+                ((RemoveTargetsToVariationTargetMapYaml) patchInstruction).getSpec();
+            PatchInstruction instruction =
+                cfApi.getRemoveTargetToVariationMapParams(spec.getVariation().getValue(), spec.getTargets().getValue());
+            instructions.add(instruction);
+          }
         }
 
         if (patchInstruction.getType().equals(Type.ADD_SEGMENT_TO_VARIATION_TARGET_MAP)) {
-          AddSegmentToVariationTargetMapYamlSpec spec =
-              ((AddSegmentToVariationTargetMapYaml) patchInstruction).getSpec();
-          PatchInstruction instruction =
-              cfApi.getAddSegmentToVariationMapParams(spec.getVariation().getValue(), spec.getSegments().getValue());
-          instructions.add(instruction);
+          if (patchInstruction instanceof AddSegmentToVariationTargetMapYaml) {
+            AddSegmentToVariationTargetMapYamlSpec spec =
+                ((AddSegmentToVariationTargetMapYaml) patchInstruction).getSpec();
+            PatchInstruction instruction =
+                cfApi.getAddSegmentToVariationMapParams(spec.getVariation().getValue(), spec.getSegments().getValue());
+            instructions.add(instruction);
+          }
         }
 
         if (patchInstruction.getType().equals(Type.REMOVE_SEGMENT_TO_VARIATION_TARGET_MAP)) {
-          RemoveSegmentToVariationTargetMapYamlSpec spec =
-              ((RemoveSegmentToVariationTargetMapYaml) patchInstruction).getSpec();
-          PatchInstruction instruction =
-              cfApi.getAddSegmentToVariationMapParams(spec.getVariation().getValue(), spec.getSegments().getValue());
-          instructions.add(instruction);
+          if (patchInstruction instanceof RemoveSegmentToVariationTargetMapYaml) {
+            RemoveSegmentToVariationTargetMapYamlSpec spec =
+                ((RemoveSegmentToVariationTargetMapYaml) patchInstruction).getSpec();
+            PatchInstruction instruction =
+                cfApi.getAddSegmentToVariationMapParams(spec.getVariation().getValue(), spec.getSegments().getValue());
+            instructions.add(instruction);
+          }
         }
       }
 
@@ -111,13 +181,31 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
       addApiKeyHeader(cfApi);
 
-      Feature feature = cfApi.patchFeature(featureIdentifier, ambiance.getSetupAbstractionsMap().get("accountId"),
-          ambiance.getSetupAbstractionsMap().get("orgIdentifier"),
-          ambiance.getSetupAbstractionsMap().get("projectIdentifier"),
+      // cfApi.
+
+      cfApi.patchFeature(featureIdentifier, accountID, orgID, projectID,
           flagConfigurationStepParameters.getEnvironment().getValue(), patchOperation);
-    } catch (Exception e) {
+
+      ngManagerLogCallback.saveExecutionLog(format("Update of Feature flag %s completed", featureIdentifier),
+          LogLevel.INFO, CommandExecutionStatus.SUCCESS);
+
+    } catch (ApiException e) {
+      log.error(format("error updating flag because %s", e.getResponseBody()));
       return StepResponse.builder()
-          .status(Status.FAILED)
+          .status(Status.ERRORED)
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getResponseBody()).build())
+          .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
+                                                          .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
+                                                          .setStatus(UnitStatus.FAILURE)
+                                                          .setStartTime(startTime)
+                                                          .setEndTime(System.currentTimeMillis())
+                                                          .build()))
+          .build();
+
+    } catch (Exception e) {
+      log.error(format("error updating flag because %s", e.getMessage()));
+      return StepResponse.builder()
+          .status(Status.ERRORED)
           .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getMessage()).build())
           .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
                                                           .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
@@ -148,5 +236,36 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
         minutes(10).toStandardDuration().getMillis(), config.getFfServerApiKey());
     cfApi.getApiClient().addDefaultHeader("api-key", "Bearer " + apiKey);
     log.info("FF Server API Key: {}", apiKey);
+  }
+
+  /**
+   * Converts the flag state off|on to a boolean value
+   * i.e. off = false, on = true.
+   * @param state indicates the state of the flag on | off
+   * @return true if flag state is on
+   */
+  private static boolean parseStateAsBoolean(String state) {
+    return (state != null) && state.equalsIgnoreCase("on");
+  }
+
+  private String generateRuleUUID(
+      String accountID, String orgID, String projectID, String featureID, String environmentID, String ruleID) {
+    String aString = String.join(accountID, orgID, projectID, featureID, environmentID, ruleID);
+    return UUID.nameUUIDFromBytes(aString.getBytes()).toString();
+  }
+
+  private PatchInstruction addRule(AddRuleYamlSpec rule, String accountID, String orgID, String projectID,
+      String featureID, String environmentID, String ruleID) {
+    Integer priority = 0;
+    if (ParameterField.isNull(rule.getPriority()) != true) {
+      priority = rule.getPriority().getValue();
+    }
+
+    // Generate a UUID
+    log.info(format("Creating UUID From Account:%s\nOrgID:%s\nProjectID:%s\nFeatureID:%s\nEnvironmentID:%s\nRuleID:%s",
+        accountID, orgID, projectID, featureID, environmentID, ruleID));
+    String uuid = generateRuleUUID(accountID, orgID, projectID, featureID, environmentID, ruleID);
+
+    return cfApi.addPercentageRollout(uuid, priority, rule.getServe(), rule.getClauses());
   }
 }

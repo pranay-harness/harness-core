@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.NGDateUtils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -22,7 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.DX)
-public class GrowthTrendEvaluatorTest {
+public class GrowthTrendEvaluatorTest extends CategoryTest {
   @Test
   @Owner(developers = MOHIT_GARG)
   @Category(UnitTests.class)
@@ -92,7 +93,7 @@ public class GrowthTrendEvaluatorTest {
     List<TimeValuePair<Integer>> trend =
         GrowthTrendEvaluator.getGrowthTrend(entities, startTimeInMs, endTimeInMs, TimeGroupType.DAY);
     List<Integer> finalTrendDataPointsExpected =
-        new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 5, 6, 7, 8, 9, 9, 9, 8, 8, 8, 8, 8, 7, 7, 7));
+        new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 6, 7, 8, 9, 10, 10, 10, 9, 9, 9, 9, 9, 8, 8, 8));
     assertThat(trend.size()).isEqualTo(21);
     int i = 0;
     for (TimeValuePair<Integer> timeValuePair : trend) {

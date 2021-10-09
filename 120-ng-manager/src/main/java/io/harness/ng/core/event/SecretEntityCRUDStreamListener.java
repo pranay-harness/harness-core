@@ -68,7 +68,7 @@ public class SecretEntityCRUDStreamListener implements MessageListener {
         }
       }
     }
-    return false;
+    return true;
   }
 
   private boolean processSecretEntityChangeEvent(EntityChangeDTO entityChangeDTO, @NotNull String action) {

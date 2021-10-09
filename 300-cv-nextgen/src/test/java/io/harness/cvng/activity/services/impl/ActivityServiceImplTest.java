@@ -5,11 +5,11 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.JOB_IDE
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
@@ -38,15 +39,16 @@ import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
-import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.Risk;
+import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
+import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
@@ -56,15 +58,12 @@ import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.activity.InfrastructureActivityDTO;
-import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
-import io.harness.cvng.beans.activity.cd10.CD10EnvMappingDTO;
-import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
-import io.harness.cvng.beans.activity.cd10.CD10ServiceMappingDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.services.api.WebhookService;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
@@ -90,13 +89,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -104,13 +103,13 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private ActivityService activityService;
   @Inject private VerificationJobService realVerificationJobService;
+  @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceService realVerificationJobInstanceService;
-  @Mock private WebhookService mockWebhookService;
+  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Mock private VerificationJobService verificationJobService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Mock private NextGenService nextGenService;
-  @Inject private ActivitySourceService activitySourceService;
   @Mock private AlertRuleService alertRuleService;
 
   private String projectIdentifier;
@@ -134,7 +133,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     envIdentifier = builderFactory.getContext().getEnvIdentifier();
     deploymentTag = "build#1";
 
-    FieldUtils.writeField(activityService, "webhookService", mockWebhookService, true);
     FieldUtils.writeField(activityService, "verificationJobService", verificationJobService, true);
     FieldUtils.writeField(activityService, "verificationJobInstanceService", verificationJobInstanceService, true);
     FieldUtils.writeField(activityService, "nextGenService", nextGenService, true);
@@ -142,309 +140,14 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(activityService, "alertRuleService", alertRuleService, true);
     when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("service name").build());
-    when(mockWebhookService.validateWebhookToken(any(), any(), any())).thenReturn(true);
     when(verificationJobInstanceService.getCVConfigsForVerificationJob(any()))
         .thenReturn(Lists.newArrayList(new AppDynamicsCVConfig()));
     realVerificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testRegisterActivity_whenNoJobExists() {
-    VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(
-             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
-        .thenAnswer(invocationOnMock -> { return null; });
-    assertThatThrownBy(
-        () -> activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob)))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("No Job exists for verificationJobIdentifier: 'identifier'");
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testRegisterActivity_whenNoCvConfigExists() {
-    VerificationJob verificationJob = createVerificationJob();
-    List<String> monitoringSourceIdentifiers = Collections.singletonList("monitoringSourceIdentifier");
-    verificationJob.setMonitoringSources(monitoringSourceIdentifiers);
-    when(verificationJobService.getVerificationJob(
-             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
-        .thenReturn(verificationJob);
-    when(verificationJobInstanceService.getCVConfigsForVerificationJob(any())).thenReturn(Lists.newArrayList());
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
-    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), deploymentActivity))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No monitoring sources with identifiers " + verificationJob.getMonitoringSources()
-            + " defined for environment " + verificationJob.getEnvIdentifier() + " and service "
-            + verificationJob.getServiceIdentifier());
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testRegisterCD10Activity_ifCD10FieldsAreNotPresent() {
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(createVerificationJob());
-    deploymentActivity.setEnvironmentIdentifier(null);
-    deploymentActivity.setServiceIdentifier(null);
-    assertThatThrownBy(() -> activityService.registerCD10Activity(accountId, deploymentActivity))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("harnessCdAppId is not present in runtimeValues");
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testRegisterCD10Activity_resolveServiceAndEnvIdentifiers() throws IllegalAccessException {
-    String appId = generateUuid();
-    String envId = generateUuid();
-    String serviceId = generateUuid();
-    CD10ActivitySourceDTO cd10ActivitySourceDTO = createCD10ActivitySource(appId, envId, serviceId);
-    activitySourceService.create(accountId, cd10ActivitySourceDTO);
-    VerificationJob verificationJob = createVerificationJob();
-    verificationJob.setActivitySourceIdentifier(cd10ActivitySourceDTO.getIdentifier());
-    realVerificationJobService.save(verificationJob);
-    FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
-    deploymentActivity.setEnvironmentIdentifier(null);
-    deploymentActivity.setServiceIdentifier(null);
-    Map<String, String> runtimeValues = new HashMap<>();
-    runtimeValues.put("harnessCdAppId", appId);
-    runtimeValues.put("harnessCdServiceId", serviceId);
-    runtimeValues.put("harnessCdEnvId", envId);
-    List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails =
-        Lists.newArrayList(VerificationJobRuntimeDetails.builder()
-                               .verificationJobIdentifier(verificationJob.getIdentifier())
-                               .runtimeValues(runtimeValues)
-                               .build());
-    deploymentActivity.setVerificationJobRuntimeDetails(verificationJobRuntimeDetails);
-    CD10RegisterActivityDTO cd10RegisterActivityDTO =
-        activityService.registerCD10Activity(accountId, deploymentActivity);
-    DeploymentActivity updated = (DeploymentActivity) activityService.get(cd10RegisterActivityDTO.getActivityId());
-    VerificationJobRuntimeDetails updatedDetails = updated.getVerificationJobRuntimeDetails().get(0);
-    assertThat(updated.getEnvironmentIdentifier())
-        .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
-    assertThat(updated.getServiceIdentifier())
-        .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
-    assertThat(cd10RegisterActivityDTO.getEnvIdentifier())
-        .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
-    assertThat(cd10RegisterActivityDTO.getServiceIdentifier())
-        .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
-    assertThat(updatedDetails.getRuntimeValues().get(ENV_IDENTIFIER_KEY))
-        .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
-    assertThat(updatedDetails.getRuntimeValues().get(SERVICE_IDENTIFIER_KEY))
-        .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testRegisterCD10Activity_validateMappingsWithFailure() throws IllegalAccessException {
-    String appId = generateUuid();
-    String envId = generateUuid();
-    String serviceId = generateUuid();
-    CD10ActivitySourceDTO cd10ActivitySourceDTO = createCD10ActivitySource(appId, envId, serviceId);
-    activitySourceService.create(accountId, cd10ActivitySourceDTO);
-    VerificationJob verificationJob = createVerificationJob();
-    verificationJob.setActivitySourceIdentifier(cd10ActivitySourceDTO.getIdentifier());
-    verificationJob.setServiceIdentifier(generateUuid(), false);
-    realVerificationJobService.save(verificationJob);
-    FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
-    deploymentActivity.setEnvironmentIdentifier(null);
-    deploymentActivity.setServiceIdentifier(null);
-    Map<String, String> runtimeValues = new HashMap<>();
-    runtimeValues.put("harnessCdAppId", appId);
-    runtimeValues.put("harnessCdServiceId", serviceId);
-    runtimeValues.put("harnessCdEnvId", envId);
-    List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails =
-        Lists.newArrayList(VerificationJobRuntimeDetails.builder()
-                               .verificationJobIdentifier(verificationJob.getIdentifier())
-                               .runtimeValues(runtimeValues)
-                               .build());
-    deploymentActivity.setVerificationJobRuntimeDetails(verificationJobRuntimeDetails);
-    assertThatThrownBy(() -> activityService.registerCD10Activity(accountId, deploymentActivity))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Next gen Service identifier does not match CD 1.0 service mapping");
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testRegisterCD10Activity_noCD10MappingExists() {
-    VerificationJob verificationJob = createVerificationJob();
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
-    deploymentActivity.setEnvironmentIdentifier(null);
-    deploymentActivity.setServiceIdentifier(null);
-    Map<String, String> runtimeValues = new HashMap<>();
-    runtimeValues.put("harnessCdAppId", generateUuid());
-    runtimeValues.put("harnessCdServiceId", generateUuid());
-    runtimeValues.put("harnessCdEnvId", generateUuid());
-    List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails =
-        Lists.newArrayList(VerificationJobRuntimeDetails.builder()
-                               .verificationJobIdentifier(verificationJob.getIdentifier())
-                               .runtimeValues(runtimeValues)
-                               .build());
-    deploymentActivity.setVerificationJobRuntimeDetails(verificationJobRuntimeDetails);
-    assertThatThrownBy(() -> activityService.registerCD10Activity(accountId, deploymentActivity))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("No CD 1.0 mapping defined for projectIdentifier: %s", projectIdentifier);
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testRegisterActivity_kubernetesActivity() {
-    VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(
-             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
-        .thenReturn(verificationJob);
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
-
-    Activity activity = hPersistence.createQuery(Activity.class)
-                            .filter(ActivityKeys.projectIdentifier, projectIdentifier)
-                            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
-                            .get();
-
-    assertThat(activity).isNotNull();
-    assertThat(activity.getType().name()).isEqualTo(ActivityType.DEPLOYMENT.name());
-    assertThat(activity.getActivityName()).isEqualTo("Build 23 deploy");
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void testRegister_resolveJobUuidShouldBeNull() {
-    VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(
-             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
-        .thenReturn(verificationJob);
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
-
-    ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
-    verify(verificationJobInstanceService).create(argumentCaptor.capture());
-
-    List<VerificationJobInstance> verificationJobInstanceList = argumentCaptor.getValue();
-
-    assertThat(verificationJobInstanceList.get(0).getResolvedJob().getUuid()).isNull();
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testRegisterActivity_deploymentActivityNoJobDetails() {
-    ActivityDTO activityDTO = DeploymentActivityDTO.builder()
-                                  .dataCollectionDelayMs(2000l)
-                                  .newVersionHosts(new HashSet<>(Arrays.asList("node1", "node2")))
-                                  .oldVersionHosts(new HashSet<>(Arrays.asList("node3", "node4")))
-                                  .build();
-    activityDTO.setAccountIdentifier(accountId);
-    activityDTO.setProjectIdentifier(projectIdentifier);
-    activityDTO.setOrgIdentifier(orgIdentifier);
-    activityDTO.setActivityStartTime(Instant.now().toEpochMilli());
-    activityDTO.setEnvironmentIdentifier(generateUuid());
-    activityDTO.setName("Build 23 deploy");
-    activityDTO.setServiceIdentifier(generateUuid());
-
-    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), activityDTO))
-        .isInstanceOf(NullPointerException.class);
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testRegisterActivity_deploymentActivity() {
-    when(verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, "canaryJobName1"))
-        .thenReturn(createVerificationJob());
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-    List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
-    Map<String, String> runtimeParams = new HashMap<>();
-    runtimeParams.put(JOB_IDENTIFIER_KEY, "canaryJobName1");
-    runtimeParams.put(SERVICE_IDENTIFIER_KEY, "cvngService");
-    runtimeParams.put(ENV_IDENTIFIER_KEY, "production");
-    VerificationJobRuntimeDetails runtimeDetails = VerificationJobRuntimeDetails.builder()
-                                                       .verificationJobIdentifier("canaryJobName1")
-                                                       .runtimeValues(runtimeParams)
-                                                       .build();
-    verificationJobDetails.add(runtimeDetails);
-    Instant now = Instant.now();
-    ActivityDTO activityDTO = DeploymentActivityDTO.builder()
-                                  .dataCollectionDelayMs(2000l)
-                                  .newVersionHosts(new HashSet<>(Arrays.asList("node1", "node2")))
-                                  .oldVersionHosts(new HashSet<>(Arrays.asList("node3", "node4")))
-                                  .verificationStartTime(now.toEpochMilli())
-                                  .deploymentTag(deploymentTag)
-                                  .build();
-    activityDTO.setAccountIdentifier(accountId);
-    activityDTO.setProjectIdentifier(projectIdentifier);
-    activityDTO.setOrgIdentifier(orgIdentifier);
-    activityDTO.setActivityStartTime(now.toEpochMilli());
-    activityDTO.setEnvironmentIdentifier(generateUuid());
-    activityDTO.setName("Build 23 deploy");
-    activityDTO.setVerificationJobRuntimeDetails(verificationJobDetails);
-    activityDTO.setServiceIdentifier(generateUuid());
-    activityDTO.setTags(Arrays.asList("build88", "prod deploy"));
-
-    activityService.register(accountId, generateUuid(), activityDTO);
-
-    Activity activity = hPersistence.createQuery(Activity.class)
-                            .filter(ActivityKeys.projectIdentifier, projectIdentifier)
-                            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
-                            .get();
-    assertThat(activity).isNotNull();
-    assertThat(activity.getType().name()).isEqualTo(ActivityType.DEPLOYMENT.name());
-    assertThat(activity.getActivityName()).isEqualTo("Build 23 deploy");
-    assertThat(activity.getVerificationJobInstanceIds()).isNotEmpty();
-    assertThat(activity.getVerificationJobInstanceIds().get(0)).isEqualTo("taskId1");
-    assertThat(activity.getTags().size()).isEqualTo(2);
-    assertThat(activity.getTags()).containsExactlyInAnyOrder("build88", "prod deploy");
-
-    verify(verificationJobInstanceService).create(anyList());
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testRegisterActivity_deploymentActivityBadJobName() {
-    when(verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, "canaryJobName2"))
-        .thenReturn(createVerificationJob());
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-    List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
-    Map<String, String> runtimeParams = new HashMap<>();
-    runtimeParams.put(JOB_IDENTIFIER_KEY, "canaryJobName1");
-    runtimeParams.put(SERVICE_IDENTIFIER_KEY, "cvngService");
-    runtimeParams.put(ENV_IDENTIFIER_KEY, "production");
-    VerificationJobRuntimeDetails runtimeDetails = VerificationJobRuntimeDetails.builder()
-                                                       .verificationJobIdentifier("canaryJobName1")
-                                                       .runtimeValues(runtimeParams)
-                                                       .build();
-    verificationJobDetails.add(runtimeDetails);
-    ActivityDTO activityDTO = DeploymentActivityDTO.builder()
-                                  .dataCollectionDelayMs(2000l)
-                                  .newVersionHosts(new HashSet<>(Arrays.asList("node1", "node2")))
-                                  .oldVersionHosts(new HashSet<>(Arrays.asList("node3", "node4")))
-                                  .build();
-    activityDTO.setAccountIdentifier(accountId);
-    activityDTO.setProjectIdentifier(projectIdentifier);
-    activityDTO.setOrgIdentifier(orgIdentifier);
-    activityDTO.setActivityStartTime(Instant.now().toEpochMilli());
-    activityDTO.setEnvironmentIdentifier(generateUuid());
-    activityDTO.setName("Build 23 deploy");
-    activityDTO.setVerificationJobRuntimeDetails(verificationJobDetails);
-    activityDTO.setServiceIdentifier(generateUuid());
-    activityDTO.setTags(Arrays.asList("build88", "prod deploy"));
-
-    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), activityDTO))
-        .isInstanceOf(NullPointerException.class);
-
-    verify(verificationJobInstanceService, times(0)).create(anyList());
+    FieldUtils.writeField(
+        activityService, "deploymentTimeSeriesAnalysisService", deploymentTimeSeriesAnalysisService, true);
+    FieldUtils.writeField(deploymentTimeSeriesAnalysisService, "nextGenService", nextGenService, true);
+    when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(Optional.of(ConnectorInfoDTO.builder().name("AppDynamics Connector").build()));
   }
 
   @Test
@@ -482,7 +185,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     Instant now = Instant.now();
     ActivityDTO activityDTO =
         getDeploymentActivityDTO(verificationJobDetails, now, "build#1", generateUuid(), serviceIdentifier);
-    activityService.register(accountId, generateUuid(), activityDTO);
+    activityService.register(accountId, activityDTO);
 
     List<DeploymentActivityVerificationResultDTO> deploymentActivityVerificationResultDTOs =
         activityService.getRecentDeploymentActivityVerifications(accountId, orgIdentifier, projectIdentifier);
@@ -523,10 +226,10 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     ActivityDTO activityDTOCVNG3 =
         getDeploymentActivityDTO(verificationJobDetails, now, "build#2", generateUuid(), "cvng");
 
-    activityService.register(accountId, generateUuid(), activityDTOManager);
-    activityService.register(accountId, generateUuid(), activityDTOCVNG1);
-    activityService.register(accountId, generateUuid(), activityDTOCVNG2);
-    activityService.register(accountId, generateUuid(), activityDTOCVNG3);
+    activityService.register(accountId, activityDTOManager);
+    activityService.register(accountId, activityDTOCVNG1);
+    activityService.register(accountId, activityDTOCVNG2);
+    activityService.register(accountId, activityDTOCVNG3);
     List<DeploymentActivityVerificationResultDTO> deploymentActivityVerificationResultDTOs =
         activityService.getRecentDeploymentActivityVerifications(accountId, orgIdentifier, projectIdentifier);
     assertThat(deploymentActivityVerificationResultDTOs).hasSize(3);
@@ -543,8 +246,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
     doNothing().when(verificationJobInstanceService).addResultsToDeploymentResultSummary(anyString(), anyList(), any());
     ActivityDTO activityDTO = getDeploymentActivity(verificationJob);
-    activityService.register(accountId, generateUuid(), activityDTO);
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, activityDTO);
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
     DeploymentActivityResultDTO result = activityService.getDeploymentActivityVerificationsByTag(
         accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag);
     assertThat(result).isNotNull();
@@ -587,7 +290,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
     DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
-    activityService.register(accountId, "webhook", deploymentActivityDTO);
+    activityService.register(accountId, deploymentActivityDTO);
     DeploymentActivityPopoverResultDTO deploymentActivityPopoverResultDTO =
         DeploymentActivityPopoverResultDTO.builder().build();
     when(verificationJobInstanceService.getDeploymentVerificationPopoverResult(anyList()))
@@ -609,7 +312,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -633,7 +336,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -653,7 +356,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     when(verificationJobService.getVerificationJob(
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -695,7 +398,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     when(verificationJobService.getVerificationJob(
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -741,7 +444,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     when(verificationJobService.getVerificationJob(
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -783,7 +486,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     when(verificationJobService.getVerificationJob(
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -823,8 +526,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.dedupCreate(anyList())).thenReturn(Lists.newArrayList(generateUuid()));
     instant = Instant.now();
-    activityService.register(accountId, generateUuid(), getInfrastructureActivity(verificationJob));
-    activityService.register(accountId, generateUuid(), getInfrastructureActivity(verificationJob));
+    activityService.register(accountId, getInfrastructureActivity(verificationJob));
+    activityService.register(accountId, getInfrastructureActivity(verificationJob));
 
     ActivityVerificationSummary summary = createActivitySummary(Instant.now());
     when(verificationJobInstanceService.getActivityVerificationSummary(anyList())).thenReturn(summary);
@@ -884,11 +587,11 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     });
 
     instant = Instant.now();
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
     List<ActivityDashboardDTO> dashboardDTOList =
-        activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier, envIdentifier,
-            serviceIdentifier, Instant.now().minus(15, ChronoUnit.MINUTES), Instant.now().plus(15, ChronoUnit.MINUTES));
+        activityService.listActivitiesInTimeRange(builderFactory.getContext().getProjectParams(), serviceIdentifier,
+            envIdentifier, Instant.now().minus(15, ChronoUnit.MINUTES), Instant.now().plus(15, ChronoUnit.MINUTES));
 
     assertThat(dashboardDTOList.size()).isEqualTo(2);
     List<Activity> activity = hPersistence.createQuery(Activity.class, excludeAuthority)
@@ -917,7 +620,19 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
-    String activityId = activityService.register(accountId, generateUuid(), deploymentActivityDTO);
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
+    String verificationJobInstanceId = realVerificationJobInstanceService.create(verificationJobInstance);
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
+
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+
+    String activityId = activityService.register(accountId, deploymentActivityDTO);
+    Activity activity = hPersistence.get(Activity.class, activityId);
+    activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
+    hPersistence.save(activity);
+
     DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.builder()
             .environmentName("env name")
@@ -936,6 +651,11 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     assertThat(deploymentVerificationJobInstanceSummary.getActivityId()).isEqualTo(activityId);
     assertThat(deploymentVerificationJobInstanceSummary.getActivityStartTime())
         .isEqualTo(deploymentActivityDTO.getActivityStartTime());
+    assertThat(deploymentVerificationJobInstanceSummary.getTimeSeriesAnalysisSummary()).isNotNull();
+    assertThat(deploymentVerificationJobInstanceSummary.getTimeSeriesAnalysisSummary().getTotalNumMetrics())
+        .isEqualTo(2);
+    assertThat(deploymentVerificationJobInstanceSummary.getTimeSeriesAnalysisSummary().getNumAnomMetrics())
+        .isEqualTo(1);
   }
 
   @Test
@@ -947,7 +667,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
-    String activityId = activityService.register(accountId, generateUuid(), deploymentActivityDTO);
+    String activityId = activityService.register(accountId, deploymentActivityDTO);
     DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.builder()
             .durationMs(verificationJob.getDuration().toMillis())
@@ -1100,8 +820,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .thenReturn(verificationJob);
     instant = Instant.now();
 
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
 
     List<Activity> activities = hPersistence.createQuery(Activity.class).asList();
     activities.get(0).setVerificationJobInstanceIds(Arrays.asList("jobId1"));
@@ -1135,6 +855,49 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testAbort_inNotStarted() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    instant = Instant.now();
+    String activityId = activityService.register(accountId, getDeploymentActivity(verificationJob));
+    Activity activity = activityService.get(activityId);
+    List<String> verificationJobs = Lists.newArrayList("JOB_INSTANCE_ID");
+    activity.setVerificationJobInstanceIds(verificationJobs);
+    hPersistence.save(activity);
+
+    activityService.abort(activityId);
+
+    Activity updatedActivity = activityService.get(activityId);
+    verify(verificationJobInstanceService).abort(Lists.newArrayList(updatedActivity.getVerificationJobInstanceIds()));
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testAbort_inError() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    instant = Instant.now();
+    String activityId = activityService.register(accountId, getDeploymentActivity(verificationJob));
+    Activity activity = activityService.get(activityId);
+    activity.setAnalysisStatus(ActivityVerificationStatus.ERROR);
+    hPersistence.save(activity);
+
+    activityService.abort(activityId);
+
+    Activity updatedActivity = activityService.get(activityId);
+    // assert that errored activity is not aborted
+    assertThat(updatedActivity.getAnalysisStatus()).isEqualTo(ActivityVerificationStatus.ERROR);
+    verify(verificationJobInstanceService, never()).abort(any());
+  }
+
+  @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpdateActivityStatus_inProgress() {
@@ -1144,8 +907,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .thenReturn(verificationJob);
     instant = Instant.now();
 
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
+    activityService.register(accountId, getDeploymentActivity(verificationJob));
 
     List<Activity> activities = hPersistence.createQuery(Activity.class).asList();
     activities.get(0).setVerificationJobInstanceIds(Arrays.asList("jobId1"));
@@ -1181,6 +944,34 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .processDeploymentVerification(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
             ActivityType.DEPLOYMENT, VerificationStatus.getVerificationStatus(ActivityVerificationStatus.NOT_STARTED),
             123456L, 123456L, "tag");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateActivityForDemo() {
+    List<String> verificationJobInstanceIds = Collections.singletonList(generateUuid());
+    when(verificationJobInstanceService.createDemoInstances(anyList())).thenReturn(verificationJobInstanceIds);
+    VerificationJob verificationJob = createVerificationJob();
+    DeploymentActivity deploymentActivity =
+        DeploymentActivity.builder()
+            .deploymentTag("tag")
+            .verificationStartTime(builderFactory.getClock().instant().minus(Duration.ofMinutes(5)).toEpochMilli())
+            .build();
+    deploymentActivity.setVerificationJobs(Arrays.asList(verificationJob));
+    deploymentActivity.setActivityStartTime(builderFactory.getClock().instant().minus(Duration.ofMinutes(10)));
+    deploymentActivity.setOrgIdentifier(orgIdentifier);
+    deploymentActivity.setAccountId(accountId);
+    deploymentActivity.setProjectIdentifier(projectIdentifier);
+    deploymentActivity.setServiceIdentifier(serviceIdentifier);
+    deploymentActivity.setEnvironmentIdentifier(envIdentifier);
+    deploymentActivity.setActivityName("CDNG demo activity");
+    deploymentActivity.setType(ActivityType.DEPLOYMENT);
+    String activityId =
+        activityService.createActivityForDemo(deploymentActivity, ActivityVerificationStatus.VERIFICATION_FAILED);
+    Activity activity = activityService.get(activityId);
+    assertThat(activity).isNotNull();
+    assertThat(activity.getVerificationJobInstanceIds()).isEqualTo(verificationJobInstanceIds);
   }
 
   private DeploymentActivityDTO getDeploymentActivity(VerificationJob verificationJob) {
@@ -1262,10 +1053,10 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     testVerificationJob.setAccountId(accountId);
     testVerificationJob.setIdentifier("identifier");
     testVerificationJob.setJobName(generateUuid());
-    testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJob.setMonitoringSources(Collections.singletonList("monitoringIdentifier"));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
-    testVerificationJob.setServiceIdentifier("<+input>", true);
-    testVerificationJob.setEnvIdentifier("<+input>", true);
+    testVerificationJob.setServiceIdentifier(serviceIdentifier, false);
+    testVerificationJob.setEnvIdentifier(envIdentifier, false);
     testVerificationJob.setDuration(Duration.ofMinutes(5));
     testVerificationJob.setProjectIdentifier(projectIdentifier);
     testVerificationJob.setOrgIdentifier(orgIdentifier);
@@ -1285,29 +1076,76 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .build();
   }
 
-  private CD10ActivitySourceDTO createCD10ActivitySource(String appId, String envId, String serviceId) {
-    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
-    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
-    cd10EnvMappingDTOS.add(createEnvMapping(appId, envId, generateUuid()));
-    cd10ServiceMappingDTOS.add(createServiceMapping(appId, serviceId, generateUuid()));
-    return CD10ActivitySourceDTO.builder()
-        .identifier(CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER)
-        .name("some-name")
-        .envMappings(cd10EnvMappingDTOS)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .serviceMappings(cd10ServiceMappingDTOS)
-        .build();
-  }
-  private CD10EnvMappingDTO createEnvMapping(String appId, String envId, String envIdentifier) {
-    return CD10EnvMappingDTO.builder().appId(appId).envId(envId).envIdentifier(envIdentifier).build();
+  private VerificationJobInstance createVerificationJobInstance() {
+    VerificationJobInstance jobInstance = builderFactory.verificationJobInstanceBuilder().build();
+    jobInstance.setAccountId(accountId);
+    return jobInstance;
   }
 
-  private CD10ServiceMappingDTO createServiceMapping(String appId, String serviceId, String serviceIdentifier) {
-    return CD10ServiceMappingDTO.builder()
-        .appId(appId)
-        .serviceId(serviceId)
-        .serviceIdentifier(serviceIdentifier)
+  private DeploymentTimeSeriesAnalysisDTO.HostInfo createHostInfo(
+      String hostName, int risk, Double score, boolean primary, boolean canary) {
+    return DeploymentTimeSeriesAnalysisDTO.HostInfo.builder()
+        .hostName(hostName)
+        .risk(risk)
+        .score(score)
+        .primary(primary)
+        .canary(canary)
+        .build();
+  }
+  private DeploymentTimeSeriesAnalysisDTO.HostData createHostData(
+      String hostName, int risk, Double score, List<Double> controlData, List<Double> testData) {
+    return DeploymentTimeSeriesAnalysisDTO.HostData.builder()
+        .hostName(hostName)
+        .risk(risk)
+        .score(score)
+        .controlData(controlData)
+        .testData(testData)
+        .build();
+  }
+
+  private DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData createTransactionMetricHostData(
+      String transactionName, String metricName, int risk, Double score,
+      List<DeploymentTimeSeriesAnalysisDTO.HostData> hostDataList) {
+    return DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData.builder()
+        .transactionName(transactionName)
+        .metricName(metricName)
+        .risk(risk)
+        .score(score)
+        .hostData(hostDataList)
+        .build();
+  }
+  private DeploymentTimeSeriesAnalysis createDeploymentTimeSeriesAnalysis(String verificationTaskId) {
+    DeploymentTimeSeriesAnalysisDTO.HostInfo hostInfo1 = createHostInfo("node1", 1, 1.1, false, true);
+    DeploymentTimeSeriesAnalysisDTO.HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, false, true);
+    DeploymentTimeSeriesAnalysisDTO.HostInfo hostInfo3 = createHostInfo("node3", 2, 2.2, false, true);
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData1 =
+        createHostData("node1", 0, 0.0, Arrays.asList(1D), Arrays.asList(1D));
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData2 =
+        createHostData("node2", 2, 2.0, Arrays.asList(1D), Arrays.asList(1D));
+
+    DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData1 =
+        createTransactionMetricHostData(
+            "/todolist/inside", "Errors per Minute", 0, 0.5, Arrays.asList(hostData1, hostData2));
+
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData3 =
+        createHostData("node1", 0, 0.0, Arrays.asList(1D), Arrays.asList(1D));
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData4 =
+        createHostData("node2", 2, 2.0, Arrays.asList(1D), Arrays.asList(1D));
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData5 =
+        createHostData("node3", 2, 2.0, Arrays.asList(1D), Arrays.asList(1D));
+
+    DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData2 =
+        createTransactionMetricHostData(
+            "/todolist/exception", "Calls per Minute", 2, 2.5, Arrays.asList(hostData3, hostData4, hostData5));
+    return DeploymentTimeSeriesAnalysis.builder()
+        .accountId(accountId)
+        .score(.7)
+        .risk(Risk.MEDIUM)
+        .verificationTaskId(verificationTaskId)
+        .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
+        .hostSummaries(Arrays.asList(hostInfo1, hostInfo2, hostInfo3))
+        .startTime(Instant.now())
+        .endTime(Instant.now().plus(1, ChronoUnit.MINUTES))
         .build();
   }
 }

@@ -24,9 +24,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.OauthProviderType;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -90,7 +93,7 @@ public class AuthenticationManager {
   private static final List<ErrorCode> NON_INVALID_CREDENTIALS_ERROR_CODES =
       Arrays.asList(USER_LOCKED, PASSWORD_EXPIRED, MAX_FAILED_ATTEMPT_COUNT_EXCEEDED);
 
-  public AuthHandler getAuthHandler(AuthenticationMechanism mechanism) {
+  public AuthHandler getAuthHandler(io.harness.ng.core.account.AuthenticationMechanism mechanism) {
     switch (mechanism) {
       case SAML:
         return samlBasedAuthHandler;
@@ -103,11 +106,11 @@ public class AuthenticationManager {
     }
   }
 
-  private AuthenticationMechanism getAuthenticationMechanism(User user, String accountId) {
+  private io.harness.ng.core.account.AuthenticationMechanism getAuthenticationMechanism(User user, String accountId) {
     if (user.isDisabled()) {
       throw new WingsException(USER_DISABLED, USER);
     }
-    AuthenticationMechanism authenticationMechanism;
+    io.harness.ng.core.account.AuthenticationMechanism authenticationMechanism;
     if (isNotEmpty(accountId)) {
       // First check if the user is associated with the account.
       if (!userService.isUserAssignedToAccount(user, accountId)) {
@@ -134,12 +137,12 @@ public class AuthenticationManager {
     }
 
     if (authenticationMechanism == null) {
-      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+      authenticationMechanism = io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
     }
     return authenticationMechanism;
   }
 
-  public AuthenticationMechanism getAuthenticationMechanism(String userName) {
+  public io.harness.ng.core.account.AuthenticationMechanism getAuthenticationMechanism(String userName) {
     return getAuthenticationMechanism(authenticationUtils.getUser(userName, USER), null);
   }
 
@@ -179,7 +182,8 @@ public class AuthenticationManager {
     } catch (WingsException ex) {
       if (ex.getCode() == ErrorCode.USER_DOES_NOT_EXIST && mainConfiguration.getDeployMode() != null
           && DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
-        return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+        return builder.authenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD)
+            .build();
       }
       throw ex;
     }
@@ -195,14 +199,14 @@ public class AuthenticationManager {
     builder.showCaptcha(showCaptcha);
 
     if (user.getAccounts().isEmpty()) {
-      return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+      return builder.authenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD).build();
     }
 
     Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
         user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
-    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+    io.harness.ng.core.account.AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
     if (null == authenticationMechanism) {
-      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+      authenticationMechanism = io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
     }
     builder.isOauthEnabled(account.isOauthEnabled());
     if (account.isOauthEnabled()) {
@@ -218,7 +222,7 @@ public class AuthenticationManager {
         }
         break;
       case SAML:
-        ssoRequest = samlClientService.generateSamlRequest(user);
+        ssoRequest = samlClientService.generateSamlRequestFromAccount(account, false);
         builder.SSORequest(ssoRequest);
         break;
       case OAUTH:
@@ -232,6 +236,10 @@ public class AuthenticationManager {
   public User switchAccount(String bearerToken, String accountId) {
     AuthToken authToken = authService.validateToken(bearerToken);
     User user = authToken.getUser();
+    if (user.getAccounts() == null
+        || user.getAccounts().stream().noneMatch(account -> account.getUuid().equals(accountId))) {
+      throw new AccessDeniedException("User not authorized", USER);
+    }
     user.setLastAccountId(accountId);
     return authService.generateBearerTokenForUser(user);
   }
@@ -276,7 +284,7 @@ public class AuthenticationManager {
   public User generate2faJWTToken(User user) {
     HashMap<String, String> claimMap = new HashMap<>();
     claimMap.put(EMAIL, user.getEmail());
-    String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH);
+    String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH, false);
     return User.Builder.anUser()
         .uuid(user.getUuid())
         .email(user.getEmail())
@@ -307,7 +315,8 @@ public class AuthenticationManager {
 
       if (isNotEmpty(accountId)) {
         User user = authenticationUtils.getUser(userName, USER);
-        AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
+        io.harness.ng.core.account.AuthenticationMechanism authenticationMechanism =
+            getAuthenticationMechanism(user, accountId);
         return defaultLoginInternal(userName, password, false, authenticationMechanism);
       } else {
         return defaultLogin(userName, password);
@@ -336,8 +345,8 @@ public class AuthenticationManager {
     return defaultLoginInternal(userName, passwordHash, true, getAuthenticationMechanism(userName));
   }
 
-  private User defaultLoginInternal(
-      String userName, String password, boolean isPasswordHash, AuthenticationMechanism authenticationMechanism) {
+  private User defaultLoginInternal(String userName, String password, boolean isPasswordHash,
+      io.harness.ng.core.account.AuthenticationMechanism authenticationMechanism) {
     try {
       AuthHandler authHandler = getAuthHandler(authenticationMechanism);
       if (authHandler == null) {
@@ -369,19 +378,15 @@ public class AuthenticationManager {
       }
 
     } catch (WingsException we) {
-      log.error("Failed to login via default mechanism", we);
+      log.error("Failed to login via default mechanism with raised exception", we);
       User user = userService.getUserByEmail(userName);
       if (Objects.nonNull(user)) {
         String accountId = user.getDefaultAccountId();
         authService.auditUnsuccessfulLogin(accountId, user);
       }
-      if (NON_INVALID_CREDENTIALS_ERROR_CODES.contains(we.getCode())) {
-        throw we;
-      } else {
-        throw new WingsException(INVALID_CREDENTIAL, USER);
-      }
+      throw we;
     } catch (Exception e) {
-      log.error("Failed to login via default mechanism", e);
+      log.error("Failed to login via default mechanism due to unknown failure", e);
       User user = userService.getUserByEmail(userName);
       if (Objects.nonNull(user)) {
         String accountId = user.getDefaultAccountId();
@@ -391,7 +396,7 @@ public class AuthenticationManager {
     }
   }
 
-  public User loginUsingHarnessPassword(final String basicToken) {
+  public User loginUsingHarnessPassword(final String basicToken, String accountId) {
     String[] decryptedData = decryptBasicToken(basicToken);
     User user = defaultLoginInternal(decryptedData[0], decryptedData[1], false, AuthenticationMechanism.USER_PASSWORD);
     if (user == null) {
@@ -402,9 +407,10 @@ public class AuthenticationManager {
       throw new WingsException(USER_DISABLED, USER);
     }
 
-    String accountId = authenticationUtils.getDefaultAccount(user).getUuid();
+    Account account = isEmpty(accountId) ? authenticationUtils.getDefaultAccount(user) : accountService.get(accountId);
 
-    if (!userService.isUserAccountAdmin(authService.getUserPermissionInfo(accountId, user, false), accountId)) {
+    if (!userService.isUserAccountAdmin(
+            authService.getUserPermissionInfo(account.getUuid(), user, false), account.getUuid())) {
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
     return user;
@@ -435,16 +441,23 @@ public class AuthenticationManager {
   public Response samlLogin(String... credentials) throws URISyntaxException {
     try {
       User user = samlBasedAuthHandler.authenticate(credentials).getUser();
+      String accountId = (credentials != null && credentials.length >= 3) ? credentials[2] : user.getDefaultAccountId();
+      if (accountId == null) {
+        accountId = user.getDefaultAccountId();
+        if (accountId == null) {
+          throw new WingsException("Default accountId of user is null");
+        }
+      }
       HashMap<String, String> claimMap = new HashMap<>();
       claimMap.put(EMAIL, user.getEmail());
-      claimMap.put("subDomainUrl", accountService.get(user.getDefaultAccountId()).getSubdomainUrl());
-      claimMap.put(ACCOUNT_ID, user.getDefaultAccountId());
+      claimMap.put("subDomainUrl", accountService.get(accountId).getSubdomainUrl());
+      claimMap.put(ACCOUNT_ID, accountId);
 
-      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT);
+      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT, true);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
-      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params, user.getDefaultAccountId());
+      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params, accountId);
       return Response.seeOther(redirectUrl).build();
     } catch (WingsException e) {
       if (e.getCode() == ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED) {
@@ -503,7 +516,8 @@ public class AuthenticationManager {
       log.info("OauthAuthentication succeeded for email {}", user.getEmail());
       HashMap<String, String> claimMap = new HashMap<>();
       claimMap.put(EMAIL, user.getEmail());
-      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT);
+      // Oauth method here is mostly not used apart from on-prem - keeping the same behaviour as before!
+      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT, false);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);

@@ -3,15 +3,15 @@ syntax = "proto3";
 package io.harness.gitsync;
 
 import "google/protobuf/wrappers.proto";
-import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_scope_info.proto";
+import "io/harness/gitsync/change_type.proto";
 
 option java_multiple_files = true;
 
 service HarnessToGitPushInfoService {
   rpc pushFromHarness(PushInfo) returns (PushResponse);
-  rpc getConnectorInfo(FileInfo) returns (InfoForPush);
+  rpc pushFile(FileInfo) returns (PushFileResponse);
   rpc isGitSyncEnabledForScope(io.harness.eventsframework.schemas.entity.EntityScopeInfo) returns (IsGitSyncEnabled);
   rpc getDefaultBranch(RepoDetails) returns (BranchDetails);
 }
@@ -26,6 +26,7 @@ message PushInfo {
   string branch_name = 7;
   string folder_path = 8;
   map<string, string> context_map = 9;
+  bool is_sync_from_git = 10;
 }
 
 message PushResponse {
@@ -38,30 +39,40 @@ message FileInfo {
   io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 3;
   string account_id = 4;
   string branch = 5;
-  string folder_path = 6;
-  UserPrincipal user_principal = 7;
-  map<string, string> context_map = 8;
+  bool is_new_branch = 6;
+  google.protobuf.StringValue base_branch = 7;
+  string folder_path = 8;
+  Principal principal = 9;
+  map<string, string> context_map = 10;
+  string yaml = 11;
+  io.harness.gitsync.ChangeType change_type = 12;
+  google.protobuf.StringValue commit_msg = 13;
+  google.protobuf.StringValue old_file_sha = 14;
 }
 
-message InfoForPush {
-  google.protobuf.BytesValue connector = 1;
-  google.protobuf.StringValue file_path = 2;
-  // status 0 = failed, 1 = success
-  bool status = 3;
-  google.protobuf.BytesValue exception = 4;
-  bool is_default = 5;
-  string yaml_git_config_id = 6;
-  string account_id = 7;
-  google.protobuf.StringValue org_identifier = 8;
-  google.protobuf.StringValue project_identifier = 9;
-  string defaultBranchName = 10;
-  google.protobuf.StringValue folder_path = 11;
-  bool execute_on_delegate = 12;
-  google.protobuf.BytesValue encrypted_data_details = 13;
+message PushFileResponse {
+  // failed = 0; success = 1
+  int32 status = 1;
+  bool is_default = 2;
+  string account_id = 3;
+  string defaultBranchName = 4;
+  string error = 5;
+  int32 scm_response_code = 6;
+  string commit_id = 7;
 }
 
 message IsGitSyncEnabled {
   bool enabled = 1;
+}
+message Principal {
+  oneof principal {
+    UserPrincipal user_principal = 1;
+    ServicePrincipal service_principal = 2;
+  }
+}
+
+message ServicePrincipal {
+  string name = 1;
 }
 
 message UserPrincipal {

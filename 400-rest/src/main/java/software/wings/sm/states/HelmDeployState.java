@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.FeatureName.CUSTOM_MANIFEST;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
+import static io.harness.beans.FeatureName.OVERRIDE_VALUES_YAML_FROM_HELM_CHART;
+import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -19,6 +21,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
@@ -28,6 +31,7 @@ import static software.wings.sm.StateType.HELM_ROLLBACK;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchEnvFromExecutionContext;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchSafeTimeoutInMillis;
 
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -50,6 +54,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.deployment.InstanceDetails;
@@ -83,15 +88,18 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Log;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -118,7 +126,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest.HelmInstallCommandRequestBuilder;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
@@ -190,7 +197,7 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 @FieldNameConstants(innerTypeName = "HelmDeployStateKeys")
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HelmDeployState extends State {
   @Inject private AppService appService;
@@ -285,7 +292,7 @@ public class HelmDeployState extends State {
     boolean isCustomManifestFeatureEnabled =
         featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
     if (valuesInHelmChartRepo) {
-      return executeHelmValuesFetchTask(context, activity.getUuid(), helmOverrideManifestMap);
+      return executeHelmValuesFetchTask(context, activity.getUuid(), helmOverrideManifestMap, appManifestMap);
     }
     if (valuesInGit) {
       return executeGitTask(context, activity.getUuid(), appManifestMap);
@@ -314,7 +321,7 @@ public class HelmDeployState extends State {
     }
 
     CustomManifestValuesFetchParams fetchValuesParams =
-        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap);
+        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap, VALUES_YAML_KEY);
     fetchValuesParams.setActivityId(activityId);
     fetchValuesParams.setCommandUnitName(FetchFiles);
     fetchValuesParams.setAppId(context.getAppId());
@@ -652,9 +659,10 @@ public class HelmDeployState extends State {
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap = helmDeployStateExecutionData.getAppManifestMap();
       Map<K8sValuesLocation, Collection<String>> valuesFiles =
           applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
-              context, appManifestMap, executionResponse);
+              context, appManifestMap, executionResponse, VALUES_YAML_KEY);
       helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
     }
+
     helmDeployStateExecutionData.setZippedManifestFileId(executionResponse.getZippedManifestFileId());
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
@@ -684,11 +692,13 @@ public class HelmDeployState extends State {
           .build();
     }
 
-    if (isNotBlank(executionResponse.getValuesFileContent())) {
+    if (isNotEmpty(executionResponse.getMapK8sValuesLocationToContent())) {
       HelmDeployStateExecutionData helmDeployStateExecutionData =
           (HelmDeployStateExecutionData) context.getStateExecutionData();
-      helmDeployStateExecutionData.getValuesFiles().put(
-          K8sValuesLocation.Service, singletonList(executionResponse.getValuesFileContent()));
+      Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToNonEmptyContents =
+          applicationManifestUtils.getMapK8sValuesLocationToNonEmptyContents(
+              executionResponse.getMapK8sValuesLocationToContent());
+      helmDeployStateExecutionData.getValuesFiles().putAll(mapK8sValuesLocationToNonEmptyContents);
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
@@ -719,6 +729,7 @@ public class HelmDeployState extends State {
 
     return false;
   }
+
   public String obtainActivityId(ExecutionContext context) {
     return ((HelmDeployStateExecutionData) context.getStateExecutionData()).getActivityId();
   }
@@ -968,9 +979,13 @@ public class HelmDeployState extends State {
     HelmCommandFlag helmCommandFlag = null;
     if (appManifest != null) {
       helmCommandFlag = ApplicationManifestUtils.getHelmCommandFlags(appManifest.getHelmCommandFlag());
-      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())
-          && applicationManifestUtils.isPollForChangesEnabled(appManifest)) {
-        applicationManifestUtils.applyHelmChartFromExecutionContext(appManifest, context, serviceElement.getUuid());
+      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())) {
+        // replacing app manifest in case of artifact is from manifest
+        Service service = serviceResourceService.get(context.getAppId(), serviceElement.getUuid());
+        if (Boolean.TRUE.equals(service.getArtifactFromManifest())) {
+          appManifest =
+              applicationManifestUtils.getAppManifestFromFromExecutionContextHelmChart(context, service.getUuid());
+        }
       }
 
       switch (appManifest.getStoreType()) {
@@ -1009,6 +1024,8 @@ public class HelmDeployState extends State {
           } else {
             HelmChartConfigParams helmChartConfigTaskParams =
                 helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest);
+            helmChartConfigTaskParams.setUseLatestChartMuseumVersion(
+                featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, context.getAccountId()));
             manifestConfig = K8sDelegateManifestConfig.builder()
                                  .helmChartConfigParams(helmChartConfigTaskParams)
                                  .manifestStoreTypes(HelmChartRepo)
@@ -1443,10 +1460,11 @@ public class HelmDeployState extends State {
   }
 
   public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId,
-      Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap) {
+      Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap,
+      Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
     Application app = appService.get(context.getAppId());
-    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
-        getHelmValuesFetchTaskParameters(context, app.getUuid(), activityId, helmOverrideManifestMap);
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters = getHelmValuesFetchTaskParameters(
+        context, app.getUuid(), activityId, helmOverrideManifestMap, applicationManifestMap);
 
     String waitId = generateUuid();
     final int expressionFunctorToken = HashGenerator.generateIntegerHash();
@@ -1505,7 +1523,8 @@ public class HelmDeployState extends State {
   }
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String appId,
-      String activityId, Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap) {
+      String activityId, Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap,
+      Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(appId, context.fetchInfraMappingId());
 
@@ -1530,6 +1549,8 @@ public class HelmDeployState extends State {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .isBindTaskFeatureSet(isBindTaskFeatureSet)
             .timeoutInMillis(fetchSafeTimeoutInMillis(getTimeoutMillis()))
+            .useLatestChartMuseumVersion(
+                featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, context.getAccountId()))
             .build();
 
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
@@ -1545,8 +1566,32 @@ public class HelmDeployState extends State {
           applicationManifest, helmOverrideManifestMap, K8sValuesLocation.EnvironmentGlobal);
     }
 
-    helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(
-        helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest));
+    HelmChartConfigParams helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest);
+    if (helmChartConfigTaskParams != null) {
+      helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(helmChartConfigTaskParams);
+      SettingValue connectorConfig = helmChartConfigTaskParams.getConnectorConfig();
+      if (connectorConfig != null) {
+        if (connectorConfig instanceof AwsConfig) {
+          AwsConfig awsConfig = (AwsConfig) connectorConfig;
+          if (isNotEmpty(awsConfig.getTag())) {
+            helmValuesFetchTaskParameters.setDelegateSelectors(singleton(awsConfig.getTag()));
+          }
+        } else if (connectorConfig instanceof GcpConfig) {
+          GcpConfig gcpConfig = (GcpConfig) connectorConfig;
+          if (isNotEmpty(gcpConfig.getDelegateSelectors())) {
+            helmValuesFetchTaskParameters.setDelegateSelectors(new HashSet<>(gcpConfig.getDelegateSelectors()));
+          }
+        }
+      }
+    }
+
+    if (featureFlagService.isEnabled(OVERRIDE_VALUES_YAML_FROM_HELM_CHART, context.getAccountId())) {
+      Map<String, List<String>> mapK8sValuesLocationToFilePaths =
+          applicationManifestUtils.getHelmFetchTaskMapK8sValuesLocationToFilePaths(context, applicationManifestMap);
+      helmValuesFetchTaskParameters.setMapK8sValuesLocationToFilePaths(mapK8sValuesLocationToFilePaths);
+    }
+
     return helmValuesFetchTaskParameters;
   }
 

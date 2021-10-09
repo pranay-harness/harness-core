@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.migrations.Migration;

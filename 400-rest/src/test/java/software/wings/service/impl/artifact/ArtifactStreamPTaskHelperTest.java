@@ -1,5 +1,7 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -16,6 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
@@ -44,6 +47,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDC)
 public class ArtifactStreamPTaskHelperTest extends CategoryTest {
   private static final String PERPETUAL_TASK_ID = "PERPETUAL_TASK_ID";
   private static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";

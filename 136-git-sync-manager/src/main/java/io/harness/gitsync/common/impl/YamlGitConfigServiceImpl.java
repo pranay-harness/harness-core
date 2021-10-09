@@ -1,7 +1,9 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 import static io.harness.encryption.ScopeHelper.getScope;
 import static io.harness.gitsync.common.YamlConstants.HARNESS_FOLDER_EXTENSION;
@@ -20,16 +22,27 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
+import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
+import io.harness.gitsync.common.events.GitSyncConfigChangeEventConstants;
+import io.harness.gitsync.common.events.GitSyncConfigChangeEventType;
+import io.harness.gitsync.common.events.GitSyncConfigSwitchType;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.ng.webhook.UpsertWebhookResponseDTO;
 import io.harness.ng.webhook.services.api.WebhookEventService;
@@ -38,12 +51,14 @@ import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.utils.CryptoUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,7 +67,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
 
 @Singleton
@@ -66,13 +83,18 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final GitBranchService gitBranchService;
   private final GitSyncConnectorHelper gitSyncConnectorHelper;
   private final WebhookEventService webhookEventService;
+  private final PersistentLocker persistentLocker;
+  private final IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
+  private final Producer setupUsageEventProducer;
 
   @Inject
   public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
       @Named("connectorDecoratorService") ConnectorService connectorService,
       @Named(EventsFrameworkConstants.GIT_CONFIG_STREAM) Producer gitSyncConfigEventProducer,
       ExecutorService executorService, GitBranchService gitBranchService, GitSyncConnectorHelper gitSyncConnectorHelper,
-      WebhookEventService webhookEventService) {
+      WebhookEventService webhookEventService, PersistentLocker persistentLocker,
+      IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper,
+      @Named(EventsFrameworkConstants.SETUP_USAGE) Producer setupUsageEventProducer) {
     this.yamlGitConfigRepository = yamlGitConfigRepository;
     this.connectorService = connectorService;
     this.gitSyncConfigEventProducer = gitSyncConfigEventProducer;
@@ -80,6 +102,9 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     this.gitBranchService = gitBranchService;
     this.gitSyncConnectorHelper = gitSyncConnectorHelper;
     this.webhookEventService = webhookEventService;
+    this.persistentLocker = persistentLocker;
+    this.identifierRefProtoDTOHelper = identifierRefProtoDTOHelper;
+    this.setupUsageEventProducer = setupUsageEventProducer;
   }
 
   @Override
@@ -163,7 +188,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   @Override
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs) {
-    return save(ygs, ygs.getAccountIdentifier(), true);
+    return saveInternal(ygs, ygs.getAccountIdentifier());
   }
 
   void validatePresenceOfRequiredFields(Object... fields) {
@@ -212,26 +237,26 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         accountId, organizationId, projectId);
   }
 
-  public YamlGitConfigDTO save(YamlGitConfigDTO ygs, String accountId, boolean performFullSync) {
-    // TODO(abhinav): add full sync logic.
-    return saveInternal(ygs, accountId);
-  }
-
   private YamlGitConfigDTO saveInternal(YamlGitConfigDTO gitSyncConfigDTO, String accountId) {
     validateTheGitConfigInput(gitSyncConfigDTO);
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, accountId);
     yamlGitConfigToBeSaved.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
     registerWebhookAsync(gitSyncConfigDTO);
     YamlGitConfig savedYamlGitConfig = null;
-    try {
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             getYamlGitConfigScopeKey(gitSyncConfigDTO), Duration.ofMinutes(1), Duration.ofMinutes(2))) {
+      final boolean wasGitSyncEnabled = isGitSyncEnabled(
+          accountId, gitSyncConfigDTO.getOrganizationIdentifier(), gitSyncConfigDTO.getProjectIdentifier());
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
+      sendEventForGitSyncConfigChange(gitSyncConfigDTO, GitSyncConfigChangeEventType.SAVE_EVENT,
+          wasGitSyncEnabled ? GitSyncConfigSwitchType.NONE : GitSyncConfigSwitchType.ENABLED);
+      sendEventForConnectorSetupUsageChange(gitSyncConfigDTO);
     } catch (DuplicateKeyException ex) {
       throw new InvalidRequestException(
           String.format("A git sync config with this identifier or repo %s and branch %s already exists",
               gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
     }
-    sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
-        yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
+
     executorService.submit(() -> {
       gitBranchService.createBranches(accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
           gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getGitConnectorRef(), gitSyncConfigDTO.getRepo(),
@@ -278,21 +303,31 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     return !yamlGitConfig.isPresent();
   }
 
-  private void sendEventForConfigChange(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier, String eventType) {
-    EntityScopeInfo entityScopeInfo = EntityScopeInfo.newBuilder()
-                                          .setOrgId(StringValue.newBuilder().setValue(orgIdentifier).build())
-                                          .setProjectId(StringValue.newBuilder().setValue(projectIdentifier).build())
-                                          .setAccountId(accountId)
-                                          .build();
+  private void sendEventForGitSyncConfigChange(YamlGitConfigDTO yamlGitConfigDTO,
+      GitSyncConfigChangeEventType eventType, GitSyncConfigSwitchType configSwitchType) {
+    String accountId = yamlGitConfigDTO.getAccountIdentifier();
+    final EntityScopeInfo.Builder entityScopeInfoBuilder =
+        EntityScopeInfo.newBuilder().setAccountId(accountId).setIdentifier(yamlGitConfigDTO.getIdentifier());
+    if (isNotEmpty(yamlGitConfigDTO.getOrganizationIdentifier())) {
+      entityScopeInfoBuilder.setOrgId(StringValue.of(yamlGitConfigDTO.getOrganizationIdentifier()));
+    }
+    if (isNotEmpty(yamlGitConfigDTO.getProjectIdentifier())) {
+      entityScopeInfoBuilder.setProjectId(StringValue.of(yamlGitConfigDTO.getProjectIdentifier()));
+    }
+
     try {
-      gitSyncConfigEventProducer.send(Message.newBuilder()
-                                          .putAllMetadata(ImmutableMap.of("accountId", accountId))
-                                          .setData(entityScopeInfo.toByteString())
-                                          .build());
+      final String messageId = gitSyncConfigEventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", accountId, GitSyncConfigChangeEventConstants.EVENT_TYPE,
+                  eventType.name(), GitSyncConfigChangeEventConstants.CONFIG_SWITCH_TYPE, configSwitchType.name()))
+              .setData(entityScopeInfoBuilder.build().toByteString())
+              .build());
+      log.info(
+          "Produced event with id [{}] for git config change for accountId [{}] during [{}] event for yamlgitconfig [{}]",
+          messageId, accountId, eventType, yamlGitConfigDTO.getIdentifier());
     } catch (Exception e) {
-      log.error("Event to send git config update failed for accountId {} during {} event for yamlgitconfig [{}]",
-          accountId, eventType, identifier, e);
+      log.error("Event to send git config update failed for accountId [{}] during [{}] event for yamlgitconfig [{}]",
+          accountId, eventType, yamlGitConfigDTO.getIdentifier(), e);
     }
   }
 
@@ -302,6 +337,24 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     validateFolderPathIsUnique(ygs);
     validateFoldersAreIndependant(ygs);
     validateAPIAccessFieldPresence(ygs);
+    validateThatHarnessStringComesOnce(ygs);
+  }
+
+  @VisibleForTesting
+  void validateThatHarnessStringComesOnce(YamlGitConfigDTO ygs) {
+    if (ygs.getRootFolders() == null) {
+      return;
+    }
+    for (YamlGitConfigDTO.RootFolder folder : ygs.getRootFolders()) {
+      int harnessStringCount = getHarnessStringCount(folder.getRootFolder());
+      if (harnessStringCount > 1) {
+        throw new InvalidRequestException("The .harness should come only once in the folder path");
+      }
+    }
+  }
+
+  private int getHarnessStringCount(String folderPath) {
+    return folderPath.split(".harness", -1).length - 1;
   }
 
   private void validateAPIAccessFieldPresence(YamlGitConfigDTO ygs) {
@@ -390,20 +443,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
-  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
-    boolean deleted =
-        yamlGitConfigRepository.deleteByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeAndIdentifier(
-            accountId, orgIdentifier, projectIdentifier, scope, identifier)
-        != 0;
-    if (deleted) {
-      sendEventForConfigChange(accountId, orgIdentifier, projectIdentifier, identifier, "delete");
-    }
-    return deleted;
-  }
-
-  @Override
-  public Boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier) {
+  public boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier) {
     return yamlGitConfigRepository.existsByAccountIdAndOrgIdentifierAndProjectIdentifier(
         accountIdentifier, nullIfEmpty(organizationIdentifier), nullIfEmpty(projectIdentifier));
   }
@@ -417,9 +457,68 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   public List<YamlGitConfigDTO> getByRepo(String repo) {
     List<YamlGitConfigDTO> yamlGitConfigDTOs = new ArrayList<>();
 
-    Set<YamlGitConfig> yamlGitConfigs = new HashSet<>(yamlGitConfigRepository.findByRepo(repo));
+    List<YamlGitConfig> yamlGitConfigs = yamlGitConfigRepository.findByRepoOrderByCreatedAtDesc(repo);
     yamlGitConfigs.forEach(
         yamlGitConfig -> yamlGitConfigDTOs.add(YamlGitConfigMapper.toYamlGitConfigDTO(yamlGitConfig)));
     return yamlGitConfigDTOs;
+  }
+
+  @Override
+  public YamlGitConfigDTO getByProjectIdAndRepo(String accountId, String orgId, String projectId, String repo) {
+    Optional<YamlGitConfig> yamlGitConfig =
+        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndRepo(
+            accountId, orgId, projectId, repo);
+    return yamlGitConfig.map(YamlGitConfigMapper::toYamlGitConfigDTO)
+        .orElseThrow(() -> new InvalidRequestException("No git sync config exists"));
+  }
+
+  private String getYamlGitConfigScopeKey(YamlGitConfigDTO yamlGitConfig) {
+    return Stream
+        .of(yamlGitConfig.getAccountIdentifier(), yamlGitConfig.getOrganizationIdentifier(),
+            yamlGitConfig.getProjectIdentifier())
+        .filter(StringUtils::isNotBlank)
+        .collect(Collectors.joining(":"));
+  }
+
+  private void sendEventForConnectorSetupUsageChange(YamlGitConfigDTO gitSyncConfigDTO) {
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(gitSyncConfigDTO.getGitConnectorRef(),
+        gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier(),
+        gitSyncConfigDTO.getProjectIdentifier());
+
+    IdentifierRefProtoDTO yamlGitConfigReference = identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(
+        gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier(),
+        gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getIdentifier());
+    IdentifierRefProtoDTO connectorReference =
+        identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
+            identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+    EntityDetailProtoDTO yamlGitConfigDetails = EntityDetailProtoDTO.newBuilder()
+                                                    .setIdentifierRef(yamlGitConfigReference)
+                                                    .setType(EntityTypeProtoEnum.GIT_REPOSITORIES)
+                                                    .setName(gitSyncConfigDTO.getName())
+                                                    .build();
+    EntityDetailProtoDTO connectorDetails = EntityDetailProtoDTO.newBuilder()
+                                                .setIdentifierRef(connectorReference)
+                                                .setType(EntityTypeProtoEnum.CONNECTORS)
+                                                .build();
+
+    EntitySetupUsageCreateV2DTO entityReferenceDTO = EntitySetupUsageCreateV2DTO.newBuilder()
+                                                         .setAccountIdentifier(gitSyncConfigDTO.getAccountIdentifier())
+                                                         .setReferredByEntity(yamlGitConfigDetails)
+                                                         .addReferredEntities(connectorDetails)
+                                                         .setDeleteOldReferredByRecords(false)
+                                                         .build();
+    try {
+      setupUsageEventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", gitSyncConfigDTO.getAccountIdentifier(),
+                  EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.CONNECTORS.name(),
+                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
+              .setData(entityReferenceDTO.toByteString())
+              .build());
+    } catch (Exception e) {
+      log.info(ENTITY_REFERENCE_LOG_PREFIX
+              + "The entity reference was not created when the connector [{}] was set up from yamlGitConfig [{}]",
+          gitSyncConfigDTO.getGitConnectorRef(), gitSyncConfigDTO.getIdentifier());
+    }
   }
 }

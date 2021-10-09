@@ -16,7 +16,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -111,6 +113,7 @@ import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 public class ShellScriptState extends State implements SweepingOutputStateMixin {
   @Inject @Transient private transient ActivityHelperService activityHelperService;
@@ -135,7 +138,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
   // Please use delegateselectors instead, tags is not longer used but cannot be removed to support older workflows
-  @Deprecated @NotEmpty @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
+  @NotEmpty @Getter @Setter @Attributes(title = "Tags") @Deprecated private List<String> tags;
 
   @NotEmpty @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 

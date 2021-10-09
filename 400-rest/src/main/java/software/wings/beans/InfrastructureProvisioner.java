@@ -38,7 +38,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(HarnessModule._871_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeInfo(use = Id.NAME, property = "infrastructureProvisionerType")
 @JsonSubTypes({
   @Type(value = TerraformInfrastructureProvisioner.class, name = "TERRAFORM")

@@ -6,10 +6,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.notification.PipelineEventType;
+import io.harness.notification.PipelineEventTypeConstants;
 import io.harness.notification.bean.NotificationChannelWrapper;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.notification.bean.PipelineEvent;
@@ -17,30 +19,24 @@ import io.harness.notification.channeldetails.NotificationChannel;
 import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.pipeline.yaml.BasicPipeline;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
-import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.yaml.YamlUtils;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class NotificationHelper {
-  public static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
-
   @Inject private PMSExecutionService pmsExecutionService;
   @Inject NotificationClient notificationClient;
   @Inject PlanExecutionService planExecutionService;
@@ -48,7 +44,7 @@ public class NotificationHelper {
   @Inject PlanExecutionMetadataService planExecutionMetadataService;
 
   public Optional<PipelineEventType> getEventTypeForStage(NodeExecution nodeExecution) {
-    if (!isStageNode(nodeExecution)) {
+    if (!OrchestrationUtils.isStageNode(nodeExecution)) {
       return Optional.empty();
     }
     if (nodeExecution.getStatus() == Status.SUCCEEDED) {
@@ -58,10 +54,6 @@ public class NotificationHelper {
       return Optional.of(io.harness.notification.PipelineEventType.STAGE_FAILED);
     }
     return Optional.empty();
-  }
-
-  public boolean isStageNode(NodeExecution nodeExecution) {
-    return Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
   }
 
   public void sendNotification(
@@ -80,21 +72,25 @@ public class NotificationHelper {
     try {
       notificationRules = getNotificationRulesFromYaml(yaml);
     } catch (IOException exception) {
-      // Todo: throw Execution exception over here.
-      log.error("", exception);
+      log.error("Unable to parse yaml to get notification objects", exception);
     }
     if (EmptyPredicate.isEmpty(notificationRules)) {
       return;
     }
 
-    sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
-        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecution, identifier, updatedAt), orgIdentifier,
-        projectIdentifier);
+    try {
+      sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
+          constructTemplateData(
+              ambiance, pipelineEventType, nodeExecution, identifier, updatedAt, orgIdentifier, projectIdentifier),
+          orgIdentifier, projectIdentifier);
+    } catch (Exception ex) {
+      log.error("Exception occurred in sendNotificationInternal", ex);
+    }
   }
 
   private void sendNotificationInternal(List<NotificationRules> notificationRulesList,
-      PipelineEventType pipelineEventType, String identifier, String accountIdentifier, String notificationContent,
-      String orgIdentifier, String projectIdentifier) {
+      PipelineEventType pipelineEventType, String identifier, String accountIdentifier,
+      Map<String, String> notificationContent, String orgIdentifier, String projectIdentifier) {
     for (NotificationRules notificationRules : notificationRulesList) {
       if (!notificationRules.isEnabled()) {
         continue;
@@ -104,10 +100,14 @@ public class NotificationHelper {
       if (shouldSendNotification) {
         NotificationChannelWrapper wrapper = notificationRules.getNotificationChannelWrapper();
         String templateId = getNotificationTemplate(pipelineEventType.getLevel(), wrapper.getType());
-        NotificationChannel channel = wrapper.getNotificationChannel().toNotificationChannel(accountIdentifier,
-            orgIdentifier, projectIdentifier, templateId,
-            ImmutableMap.of("message", notificationContent, "event_name", pipelineEventType.toString()));
-        notificationClient.sendNotificationAsync(channel);
+        NotificationChannel channel = wrapper.getNotificationChannel().toNotificationChannel(
+            accountIdentifier, orgIdentifier, projectIdentifier, templateId, notificationContent);
+        log.info("Sending notification via notification-client");
+        try {
+          notificationClient.sendNotificationAsync(channel);
+        } catch (Exception ex) {
+          log.error("Unable to send notification because of following exception", ex);
+        }
       }
     }
   }
@@ -128,7 +128,7 @@ public class NotificationHelper {
         if (stages.contains(identifier) || stages.contains("AllStages")) {
           return true;
         }
-      } else if (thisEventType == pipelineEventType && !pipelineEventTypeLevel.equals("Stage")) {
+      } else if (thisEventType == pipelineEventType) {
         return true;
       }
     }
@@ -140,44 +140,10 @@ public class NotificationHelper {
     return basicPipeline.getNotificationRules();
   }
 
-  private String constructDummyTemplateData(Ambiance ambiance, PipelineEventType pipelineEventType,
-      NodeExecution nodeExecution, String identifier, Long updatedAt) {
-    PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
-    String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
-    String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
-    StringBuilder sb =
-        new StringBuilder(128)
-            .append("Pipeline Status Update\nEventType: ")
-            .append(pipelineEventType.getDisplayName())
-            .append("\nProject Id: ")
-            .append(projectId)
-            .append("\nPipeline: ")
-            .append(pipelineId)
-            .append("\nStarted At: ")
-            .append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(planExecution.getStartTs())));
-
-    if (pipelineEventType.getLevel().equals("Stage") && nodeExecution != null) {
-      sb.append("\nStage: ").append(identifier);
-      sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()));
-    } else if (pipelineEventType.getLevel().equals("Step") && nodeExecution != null) {
-      sb.append("\nStep: ").append(identifier);
-      sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()));
-    } else {
-      sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(planExecution.getStatus()));
-    }
-
-    if (StatusUtils.isFinalStatus(planExecution.getStatus()) && updatedAt != null) {
-      sb.append("\nEnded At: ").append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(updatedAt)));
-    }
-    sb.append("\n Link to Execution: ").append(generateUrl(ambiance));
-    return sb.toString();
-  }
-
   public String generateUrl(Ambiance ambiance) {
-    String module = "cd";
     return String.format("%s/account/%s/%s/orgs/%s/projects/%s/pipelines/%s/executions/%s/pipeline",
         pipelineServiceConfiguration.getPipelineServiceBaseUrl(), AmbianceUtils.getAccountId(ambiance),
-        StringUtils.defaultString(ambiance.getMetadata().getModuleType(), module),
+        EmptyPredicate.isEmpty(ambiance.getMetadata().getModuleType()) ? "cd" : ambiance.getMetadata().getModuleType(),
         AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance),
         ambiance.getMetadata().getPipelineIdentifier(), ambiance.getPlanExecutionId());
   }
@@ -185,5 +151,59 @@ public class NotificationHelper {
   private String obtainYaml(String planExecutionId) {
     Optional<PlanExecutionMetadata> optional = planExecutionMetadataService.findByPlanExecutionId(planExecutionId);
     return optional.map(PlanExecutionMetadata::getYaml).orElse(null);
+  }
+
+  private Map<String, String> constructTemplateData(Ambiance ambiance, PipelineEventType pipelineEventType,
+      NodeExecution nodeExecution, String identifier, Long updatedAt, String orgIdentifier, String projectIdentifier) {
+    Map<String, String> templateData = new HashMap<>();
+    PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
+    String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
+    String userName;
+    Long startTs;
+    Long endTs;
+    String startDate;
+    String endDate;
+    String stepIdentifier = "";
+    String imageStatus = PipelineNotificationUtils.getStatusForImage(planExecution.getStatus());
+    String themeColor = PipelineNotificationUtils.getThemeColor(planExecution.getStatus());
+    String nodeStatus = PipelineNotificationUtils.getNodeStatus(planExecution.getStatus());
+    if (!pipelineEventType.getLevel().equals("Pipeline")) {
+      imageStatus = PipelineNotificationUtils.getStatusForImage(nodeExecution.getStatus());
+      themeColor = PipelineNotificationUtils.getThemeColor(nodeExecution.getStatus());
+      nodeStatus = PipelineNotificationUtils.getNodeStatus(nodeExecution.getStatus());
+      userName = nodeExecution.getAmbiance().getMetadata().getTriggerInfo().getTriggeredBy().getIdentifier();
+      startTs = nodeExecution.getStartTs() / 1000;
+      endTs = updatedAt / 1000;
+      startDate = new Date(startTs * 1000).toString();
+      endDate = new Date(endTs * 1000).toString();
+      stepIdentifier = nodeExecution.getNode().getIdentifier();
+    } else {
+      userName = ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getIdentifier();
+      startTs = planExecution.getStartTs() / 1000;
+      if (pipelineEventType.getDisplayName().equals(PipelineEventTypeConstants.PIPELINE_START)) {
+        endTs = startTs;
+      } else {
+        endTs = planExecution.getEndTs() / 1000;
+      }
+      startDate = new Date(startTs * 1000).toString();
+      endDate = new Date(endTs * 1000).toString();
+    }
+    templateData.put("USER_NAME", userName);
+    templateData.put("ORG_IDENTIFIER", orgIdentifier);
+    templateData.put("PROJECT_IDENTIFIER", projectIdentifier);
+    templateData.put("EVENT_TYPE", pipelineEventType.getDisplayName());
+    templateData.put("PIPELINE", pipelineId);
+    templateData.put("PIPELINE_STEP", stepIdentifier);
+    templateData.put("START_TS_SECS", String.valueOf(startTs));
+    templateData.put("END_TS_SECS", String.valueOf(endTs));
+    templateData.put("START_DATE", startDate);
+    templateData.put("END_DATE", endDate);
+    templateData.put("DURATION", String.valueOf(endTs - startTs));
+    templateData.put("URL", generateUrl(ambiance));
+    templateData.put("OUTER_DIV", PipelineNotificationConstants.OUTER_DIV);
+    templateData.put("IMAGE_STATUS", imageStatus);
+    templateData.put("COLOR", themeColor);
+    templateData.put("NODE_STATUS", nodeStatus);
+    return templateData;
   }
 }

@@ -20,4 +20,10 @@ public interface OrchestrationService {
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata);
 
   Interrupt registerInterrupt(@Valid InterruptPackage interruptPackage);
+
+  PlanExecution startExecutionV2(String planId, Map<String, String> setupAbstractions, ExecutionMetadata metadata,
+      PlanExecutionMetadata planExecutionMetadata);
+
+  PlanExecution executePlan(@Valid Plan plan, @NonNull Map<String, String> setupAbstractions,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata);
 }

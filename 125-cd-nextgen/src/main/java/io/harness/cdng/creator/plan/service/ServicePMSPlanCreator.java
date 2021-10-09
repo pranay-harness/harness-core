@@ -7,6 +7,8 @@ import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.creator.plan.artifact.ArtifactsPlanCreator;
 import io.harness.cdng.creator.plan.manifest.ManifestsPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
+import io.harness.cdng.infra.steps.EnvironmentStep;
+import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets.ManifestOverrideSetsStepParametersWrapper;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
@@ -22,6 +24,7 @@ import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
@@ -54,26 +57,11 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 public class ServicePMSPlanCreator {
-  public PlanCreationResponse createPlanForServiceNode(
-      YamlField serviceField, ServiceConfig serviceConfig, KryoSerializer kryoSerializer) {
+  public PlanCreationResponse createPlanForServiceNode(YamlField serviceField, ServiceConfig serviceConfig,
+      KryoSerializer kryoSerializer, InfraSectionStepParameters infraSectionStepParameters) {
     YamlNode serviceNode = serviceField.getNode();
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
-    ServiceYaml actualServiceYaml = actualServiceConfig.getService();
-    if (actualServiceYaml != null && EmptyPredicate.isEmpty(actualServiceYaml.getName())) {
-      actualServiceYaml.setName(actualServiceYaml.getIdentifier());
-    }
-
-    // Apply useFromStage overrides.
-    ServiceConfig serviceOverrides;
-    if (actualServiceConfig.getUseFromStage() != null) {
-      ServiceUseFromStage.Overrides overrides = actualServiceConfig.getUseFromStage().getOverrides();
-      if (overrides != null) {
-        ServiceYaml overriddenEntity =
-            ServiceYaml.builder().name(overrides.getName().getValue()).description(overrides.getDescription()).build();
-        serviceOverrides = ServiceConfig.builder().service(overriddenEntity).build();
-        actualServiceConfig = actualServiceConfig.applyOverrides(serviceOverrides);
-      }
-    }
+    actualServiceConfig = applyUseFromStageOverrides(actualServiceConfig);
 
     Map<String, PlanNode> planNodes = new HashMap<>();
     List<String> serviceSpecChildrenIds = new ArrayList<>();
@@ -94,8 +82,8 @@ public class ServicePMSPlanCreator {
     }
 
     String serviceYamlNodeId = serviceNode.getUuid();
-    String serviceDefinitionNodeId =
-        addServiceDefinitionNode(actualServiceConfig, planNodes, serviceYamlNodeId, serviceSpecChildrenIds);
+    String serviceDefinitionNodeId = addServiceDefinitionNode(actualServiceConfig, planNodes, serviceYamlNodeId,
+        serviceSpecChildrenIds, infraSectionStepParameters, kryoSerializer);
     String serviceNodeId =
         addServiceNode(actualServiceConfig, planNodes, serviceYamlNodeId, serviceDefinitionNodeId, kryoSerializer);
 
@@ -150,13 +138,16 @@ public class ServicePMSPlanCreator {
   }
 
   private String addServiceDefinitionNode(ServiceConfig actualServiceConfig, Map<String, PlanNode> planNodes,
-      String serviceNodeId, List<String> serviceSpecChildrenIds) {
+      String serviceNodeId, List<String> serviceSpecChildrenIds, InfraSectionStepParameters infraSectionStepParameters,
+      KryoSerializer kryoSerializer) {
     String serviceSpecNodeId =
         addServiceSpecNode(actualServiceConfig, planNodes, serviceNodeId, serviceSpecChildrenIds);
+    String environmentStepNodeId =
+        addEnvironmentStepNode(infraSectionStepParameters, planNodes, kryoSerializer, serviceSpecNodeId);
     ServiceDefinitionStepParameters stepParameters =
         ServiceDefinitionStepParameters.builder()
             .type(actualServiceConfig.getServiceDefinition().getType().getYamlName())
-            .childNodeId(serviceSpecNodeId)
+            .childNodeId(environmentStepNodeId)
             .build();
     PlanNode node =
         PlanNode.builder()
@@ -171,6 +162,31 @@ public class ServicePMSPlanCreator {
                     .build())
             .skipExpressionChain(false)
             .skipGraphType(SkipType.SKIP_TREE)
+            .build();
+    planNodes.put(node.getUuid(), node);
+    return node.getUuid();
+  }
+
+  private String addEnvironmentStepNode(InfraSectionStepParameters infraSectionStepParameters,
+      Map<String, PlanNode> planNodes, KryoSerializer kryoSerializer, String serviceSpecNodeUuid) {
+    PlanNode node =
+        PlanNode.builder()
+            .uuid(UUIDGenerator.generateUuid())
+            .stepType(EnvironmentStep.STEP_TYPE)
+            .name(PlanCreatorConstants.ENVIRONMENT_NODE_NAME)
+            .identifier(YamlTypes.ENVIRONMENT_YAML)
+            .stepParameters(infraSectionStepParameters)
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                    .build())
+            .adviserObtainment(
+                AdviserObtainment.newBuilder()
+                    .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                    .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                        OnSuccessAdviserParameters.builder().nextNodeId(serviceSpecNodeUuid).build())))
+                    .build())
+            .skipExpressionChain(false)
             .build();
     planNodes.put(node.getUuid(), node);
     return node.getUuid();
@@ -224,11 +240,36 @@ public class ServicePMSPlanCreator {
     return node.getUuid();
   }
 
+  private ServiceConfig applyUseFromStageOverrides(ServiceConfig actualServiceConfig) {
+    ServiceYaml actualServiceYaml = actualServiceConfig.getService();
+    if (actualServiceYaml != null && EmptyPredicate.isEmpty(actualServiceYaml.getName())) {
+      actualServiceYaml.setName(actualServiceYaml.getIdentifier());
+    }
+
+    // Apply useFromStage overrides.
+    ServiceConfig serviceOverrides;
+    if (actualServiceConfig.getUseFromStage() != null) {
+      ServiceUseFromStage.Overrides overrides = actualServiceConfig.getUseFromStage().getOverrides();
+      if (overrides != null) {
+        ServiceYaml overriddenEntity =
+            ServiceYaml.builder().name(overrides.getName().getValue()).description(overrides.getDescription()).build();
+        serviceOverrides = ServiceConfig.builder().service(overriddenEntity).build();
+        actualServiceConfig = actualServiceConfig.applyOverrides(serviceOverrides);
+      }
+    }
+    return actualServiceConfig;
+  }
+
   /** Method returns actual Service object by resolving useFromStage if present. */
   private ServiceConfig getActualServiceConfig(ServiceConfig serviceConfig, YamlField serviceField) {
     if (serviceConfig.getUseFromStage() == null) {
+      if (serviceConfig.getServiceDefinition() == null) {
+        throw new InvalidArgumentsException(
+            "Either Service Definition or useFromStage should be present in the given stage");
+      }
       return serviceConfig;
     }
+
     if (serviceConfig.getServiceDefinition() != null) {
       throw new InvalidArgumentsException("Service definition should not exist along with useFromStage");
     }

@@ -40,6 +40,7 @@ public class GitToHarnessProgress {
   @NotNull private GitToHarnessProcessingStepStatus stepStatus;
   @NotNull private Long stepStartingTime;
   @NotNull private GitToHarnessProgressStatus gitToHarnessProgressStatus;
+  private String processingCommitId;
   List<GitToHarnessFileProcessingRequest> gitFileChanges;
   List<GitToHarnessProcessingResponseDTO> processingResponse;
   @Version Long version;

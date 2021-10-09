@@ -3,6 +3,7 @@ package io.harness.pcf;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.LogCallback;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 
 import java.nio.file.Path;
@@ -88,6 +89,15 @@ public interface CfSdkClient {
    * @throws InterruptedException
    */
   void stopApplication(CfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Rename application.
+   *
+   * @param cfRenameRequest rename request
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
+  void renameApplication(CfRenameRequest cfRenameRequest) throws PivotalClientApiException, InterruptedException;
 
   /**
    * Delete application.

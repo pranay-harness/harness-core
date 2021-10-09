@@ -1,5 +1,11 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.GitDiffResult;
@@ -15,6 +21,9 @@ import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
  * The interface Git client.
  */
 // Use git client V2 instead of this.
+@OwnedBy(HarnessTeam.DX)
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
+@BreakDependencyOn("software.wings.beans.GitConfig")
 public interface GitClient {
   void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext);
 
@@ -22,9 +31,11 @@ public interface GitClient {
 
   @Deprecated String validate(GitConfig gitConfig);
 
-  GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
+  GitFetchFilesResult fetchFilesByPath(
+      GitConfig gitConfig, GitFetchFilesRequest gitRequest, boolean shouldExportCommitSha);
 
   GitFetchFilesResult fetchFilesBetweenCommits(GitConfig gitConfig, GitFilesBetweenCommitsRequest gitRequest);
 
-  void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory);
+  String downloadFiles(
+      GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory, boolean shouldExportCommitSha);
 }

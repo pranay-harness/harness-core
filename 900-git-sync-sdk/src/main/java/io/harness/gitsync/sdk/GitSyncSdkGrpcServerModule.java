@@ -6,6 +6,7 @@ import static io.harness.gitsync.sdk.GitSyncGrpcConstants.GitSyncSdkInternalServ
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.GitSyncSdkConfiguration;
+import io.harness.gitsync.fullsync.FullSyncGrpcService;
 import io.harness.gitsync.gittoharness.GitToHarnessGrpcService;
 import io.harness.grpc.server.GrpcInProcessServer;
 import io.harness.grpc.server.GrpcServer;
@@ -65,11 +66,12 @@ public class GitSyncSdkGrpcServerModule extends AbstractModule {
 
   @Provides
   @Named("git-sync-sdk-bindable-services")
-  private Set<BindableService> bindableServices(
-      HealthStatusManager healthStatusManager, GitToHarnessGrpcService gitToHarnessGrpcService) {
+  private Set<BindableService> bindableServices(HealthStatusManager healthStatusManager,
+      GitToHarnessGrpcService gitToHarnessGrpcService, FullSyncGrpcService fullSyncGrpcService) {
     Set<BindableService> services = new HashSet<>();
     services.add(healthStatusManager.getHealthService());
     services.add(gitToHarnessGrpcService);
+    services.add(fullSyncGrpcService);
     return services;
   }
 }

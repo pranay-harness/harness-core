@@ -24,6 +24,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -128,9 +129,15 @@ public class PerpetualTaskWorker {
 
       backoffScheduler.recordSuccess();
     } catch (StatusRuntimeException ex) {
-      log.error(
-          THROTTLED, "Grpc status exception in perpetual task worker for account:{}. Backing off...", accountId, ex);
-      backoffScheduler.recordFailure();
+      if (ex.getStatus().getCode() == Status.Code.UNAVAILABLE
+          || ex.getStatus().getCode() == Status.Code.DEADLINE_EXCEEDED) {
+        log.debug(THROTTLED, "Grpc status time out exception in perpetual task worker for account:{}. Backing off...",
+            accountId, ex);
+      } else {
+        log.error(
+            THROTTLED, "Grpc status exception in perpetual task worker for account:{}. Backing off...", accountId, ex);
+        backoffScheduler.recordFailure();
+      }
     } catch (Exception ex) {
       log.error("Exception in perpetual task worker ", ex);
     }

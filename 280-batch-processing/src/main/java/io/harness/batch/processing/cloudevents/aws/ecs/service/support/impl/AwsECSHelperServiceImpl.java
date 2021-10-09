@@ -10,6 +10,7 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.support.AwsCreden
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
 
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
@@ -53,9 +54,9 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
 
   @Override
   public List<String> listECSClusters(String region, AwsCrossAccountAttributes awsCrossAccountAttributes) {
-    try {
-      AmazonECSClient amazonECSClient = getAmazonECSClient(region, awsCrossAccountAttributes);
-      return listECSClusters(amazonECSClient);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonECSClient(region, awsCrossAccountAttributes))) {
+      return listECSClusters(closeableAmazonECSClient.getClient());
     } catch (Exception ex) {
       log.error(exceptionMessage, awsCrossAccountAttributes, region, ex.getMessage());
       return Collections.emptyList();
@@ -65,14 +66,14 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
   @Override
   public List<Service> listServicesForCluster(
       AwsCrossAccountAttributes awsCrossAccountAttributes, String region, String cluster) {
-    try {
-      AmazonECSClient amazonECSClient = getAmazonECSClient(region, awsCrossAccountAttributes);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonECSClient(region, awsCrossAccountAttributes))) {
       List<String> serviceArns = newArrayList();
       String nextToken = null;
       ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(cluster);
       do {
         listServicesRequest.setNextToken(nextToken);
-        ListServicesResult listServicesResult = amazonECSClient.listServices(listServicesRequest);
+        ListServicesResult listServicesResult = closeableAmazonECSClient.getClient().listServices(listServicesRequest);
         List<String> arnsBatch = listServicesResult.getServiceArns();
         if (isNotEmpty(arnsBatch)) {
           serviceArns.addAll(arnsBatch);
@@ -91,7 +92,8 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
           arnsBatch.add(serviceArns.get(counter));
         }
         describeServicesRequest.withServices(arnsBatch);
-        DescribeServicesResult describeServicesResult = amazonECSClient.describeServices(describeServicesRequest);
+        DescribeServicesResult describeServicesResult =
+            closeableAmazonECSClient.getClient().describeServices(describeServicesRequest);
         allServices.addAll(describeServicesResult.getServices());
       }
       return allServices;
@@ -104,8 +106,8 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
   @Override
   public List<ContainerInstance> listContainerInstancesForCluster(
       AwsCrossAccountAttributes awsCrossAccountAttributes, String region, String cluster) {
-    try {
-      AmazonECSClient amazonECSClient = getAmazonECSClient(region, awsCrossAccountAttributes);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonECSClient(region, awsCrossAccountAttributes))) {
       List<String> containerInstanceArns = newArrayList();
       String nextToken = null;
       ListContainerInstancesRequest listContainerInstancesRequest =
@@ -113,7 +115,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
       do {
         listContainerInstancesRequest.withNextToken(nextToken);
         ListContainerInstancesResult listContainerInstancesResult =
-            amazonECSClient.listContainerInstances(listContainerInstancesRequest);
+            closeableAmazonECSClient.getClient().listContainerInstances(listContainerInstancesRequest);
         List<String> arnsBatch = listContainerInstancesResult.getContainerInstanceArns();
         if (isNotEmpty(arnsBatch)) {
           containerInstanceArns.addAll(arnsBatch);
@@ -132,7 +134,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
         if (counter % 100 == 0 || counter == containerInstanceArns.size()) {
           describeContainerInstancesRequest.withContainerInstances(arnsBatch);
           DescribeContainerInstancesResult describeContainerInstancesResult =
-              amazonECSClient.describeContainerInstances(describeContainerInstancesRequest);
+              closeableAmazonECSClient.getClient().describeContainerInstances(describeContainerInstancesRequest);
           allContainerInstance.addAll(describeContainerInstancesResult.getContainerInstances());
           arnsBatch = newArrayList();
         }
@@ -148,8 +150,8 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
   public List<String> listTasksArnForService(AwsCrossAccountAttributes awsCrossAccountAttributes, String region,
       String cluster, String service, DesiredStatus desiredStatus) {
     List<String> taskArns = newArrayList();
-    try {
-      AmazonECSClient client = getAmazonECSClient(region, awsCrossAccountAttributes);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonECSClient(region, awsCrossAccountAttributes))) {
       String nextToken = null;
       ListTasksRequest listTasksRequest = new ListTasksRequest().withCluster(cluster);
       if (null != desiredStatus) {
@@ -160,7 +162,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
         if (null != service) {
           listTasksRequest.withServiceName(service);
         }
-        ListTasksResult listTasksResult = client.listTasks(listTasksRequest);
+        ListTasksResult listTasksResult = closeableAmazonECSClient.getClient().listTasks(listTasksRequest);
         List<String> arnsBatch = listTasksResult.getTaskArns();
         if (isNotEmpty(arnsBatch)) {
           taskArns.addAll(arnsBatch);
@@ -176,8 +178,8 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
   @Override
   public List<Task> listTasksForService(AwsCrossAccountAttributes awsCrossAccountAttributes, String region,
       String cluster, String service, DesiredStatus desiredStatus) {
-    try {
-      AmazonECSClient client = getAmazonECSClient(region, awsCrossAccountAttributes);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonECSClient(region, awsCrossAccountAttributes))) {
       List<String> taskArns =
           listTasksArnForService(awsCrossAccountAttributes, region, cluster, service, desiredStatus);
       int counter = 0;
@@ -191,7 +193,8 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
           arnsBatch.add(taskArns.get(counter));
         }
         describeTasksRequest.withTasks(arnsBatch);
-        DescribeTasksResult describeTasksResult = client.describeTasks(describeTasksRequest);
+        DescribeTasksResult describeTasksResult =
+            closeableAmazonECSClient.getClient().describeTasks(describeTasksRequest);
         allTasks.addAll(describeTasksResult.getTasks());
       }
       return allTasks;

@@ -16,10 +16,11 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.common.NGExecutionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Preconditions;
@@ -42,8 +43,8 @@ public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElemen
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      responseMap.put(
-          stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
+      responseMap.put(stepYamlField.getNode().getUuid(),
+          PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap)).build());
     }
 
     // Add Steps Node
@@ -69,7 +70,7 @@ public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElemen
     return PlanNode.builder()
         .uuid(ctx.getCurrentField().getNode().getUuid())
         .identifier(OrchestrationConstants.EXECUTION_NODE_IDENTIFIER)
-        .stepType(NGSectionStep.STEP_TYPE)
+        .stepType(NGExecutionStep.STEP_TYPE)
         .group(StepOutcomeGroup.EXECUTION.name())
         .name(OrchestrationConstants.EXECUTION_NODE_NAME)
         .stepParameters(stepParameters)

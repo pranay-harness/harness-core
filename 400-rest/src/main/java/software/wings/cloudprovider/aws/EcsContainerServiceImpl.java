@@ -868,7 +868,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForAllInstanceToRegisterWithCluster(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, Integer clusterSize) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(10), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(10), () -> {
         while (!allInstancesRegisteredWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize)) {
           sleep(ofSeconds(10));
         }
@@ -887,7 +887,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String region, String autoscalingGroupName, Integer clusterSize) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(10), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(10), () -> {
         while (!allInstanceInReadyState(awsConfig, encryptedDataDetails, region, autoscalingGroupName, clusterSize)) {
           sleep(ofSeconds(10));
         }
@@ -964,7 +964,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForTasksToBeInRunningState(UpdateServiceCountRequestData requestData) {
     long timeoutDuration = requestData.getTimeOut() == null ? 10L : requestData.getTimeOut().longValue();
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeoutDuration), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeoutDuration), () -> {
         while (notAllDesiredTasksRunning(requestData)) {
           sleep(ofSeconds(10));
         }
@@ -1419,8 +1419,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    *
    * Deprecated Note: Please use {@link #isServiceStable(int, Service)}
    */
-  @Deprecated
   @VisibleForTesting
+  @Deprecated
   boolean hasServiceReachedSteadyState(Service service) {
     List<Deployment> deployments = service.getDeployments();
     if (deployments.size() != 1) {
@@ -1443,7 +1443,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     ExecutionLogCallback executionLogCallback = requestData.getExecutionLogCallback();
     try {
       executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), () -> {
         while (true) {
           List<Service> services = getEcsServicesForCluster(requestData.getRegion(), requestData.getAwsConfig(),
               requestData.getEncryptedDataDetails(), requestData.getCluster(),
@@ -1501,7 +1501,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             + " to reflect updated desired count: " + data.getDesiredCount(),
         LogLevel.INFO);
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         while (true) {
           service[0] = getEcsServicesForCluster(data.getRegion(), data.getAwsConfig(), data.getEncryptedDataDetails(),
               data.getCluster(), Arrays.asList(data.getServiceName()))

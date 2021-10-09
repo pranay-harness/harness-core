@@ -35,17 +35,12 @@ import lombok.extern.slf4j.Slf4j;
 @PublicApi
 @OwnedBy(CE)
 public class HealthResource {
-  private final HealthService healthService;
-
-  @Inject
-  public HealthResource(HealthService healthService) {
-    this.healthService = healthService;
-  }
+  @Inject private HealthService healthService;
 
   @GET
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "Get CENG health", nickname = "getCENGMicroserviceHealthStatus")
+  @ApiOperation(value = "Get CE-NG Manager health", nickname = "getCENGMicroserviceHealthStatus")
   public ResponseDTO<String> get() throws Exception {
     if (getMaintenanceFlag()) {
       log.info("In maintenance mode. Throwing exception to prevent traffic.");

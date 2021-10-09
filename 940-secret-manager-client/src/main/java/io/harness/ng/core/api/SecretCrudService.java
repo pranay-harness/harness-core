@@ -1,5 +1,9 @@
 package io.harness.ng.core.api;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectorCategory;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -10,21 +14,9 @@ import io.harness.secretmanagerclient.SecretType;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 
+@OwnedBy(PL)
 public interface SecretCrudService {
-  default RequestBody getRequestBody(String value) {
-    if (!Optional.ofNullable(value).isPresent()) {
-      return null;
-    }
-    return RequestBody.create(MediaType.parse("text/plain"), value);
-  }
-
-  default RequestBody getRequestBody(byte[] bytes) {
-    return RequestBody.create(MediaType.parse("text/plain"), bytes);
-  }
-
   Boolean validateTheIdentifierIsUnique(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
@@ -37,7 +29,7 @@ public interface SecretCrudService {
 
   PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       List<String> identifiers, List<SecretType> secretTypes, boolean includeSecretsFromEverySubScope,
-      String searchTerm, int page, int size);
+      String searchTerm, int page, int size, ConnectorCategory sourceCategory);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 

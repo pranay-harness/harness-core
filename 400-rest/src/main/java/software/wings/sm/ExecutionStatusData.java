@@ -2,7 +2,9 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 
@@ -15,6 +17,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
+@TargetModule(HarnessModule._980_COMMONS)
 public class ExecutionStatusData implements ExecutionStatusResponseData {
   private ExecutionStatus executionStatus;
 }

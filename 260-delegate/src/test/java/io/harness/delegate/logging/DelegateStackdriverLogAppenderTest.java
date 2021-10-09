@@ -15,7 +15,6 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.logging.AccessTokenBean;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rest.RestResponse;
@@ -27,6 +26,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.Payload.JsonPayload;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -53,7 +53,7 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
 
   private DelegateStackdriverLogAppender appender = new DelegateStackdriverLogAppender();
 
-  private final TimeLimiter timeLimiter = new HFakeTimeLimiter();
+  private final TimeLimiter timeLimiter = new FakeTimeLimiter();
   private final Logger logger = new LoggerContext().getLogger(DelegateStackdriverLogAppenderTest.class);
   private final RestResponse<AccessTokenBean> accessTokenBeanRestResponse =
       new RestResponse<>(AccessTokenBean.builder()

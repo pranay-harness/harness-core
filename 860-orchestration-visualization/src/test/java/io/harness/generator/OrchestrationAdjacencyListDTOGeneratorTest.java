@@ -19,6 +19,7 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -51,7 +52,8 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
   private static final String PLAN_EXECUTION_ID = "planId";
   private static final String STARTING_EXECUTION_NODE_ID = "startID";
 
-  private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
+  private static final StepType DUMMY_STEP_TYPE =
+      StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build();
 
   @Mock private PmsOutcomeService pmsOutcomeService;
   @Inject private GraphVertexConverter graphVertexConverter;
@@ -96,9 +98,9 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
             .node(PlanNodeProto.newBuilder()
                       .setUuid("section_2")
                       .setName("name2")
-                      .setStepType(StepType.newBuilder().setType("SECTION").build())
+                      .setStepType(StepType.newBuilder().setType("SECTION").setStepCategory(StepCategory.STEP).build())
                       .setIdentifier("identifier2")
-                      .setStepParameters(RecastOrchestrationUtils.toDocumentJson(sectionStepParams))
+                      .setStepParameters(RecastOrchestrationUtils.toJson(sectionStepParams))
                       .build())
             .resolvedStepParameters(sectionStepParams)
             .previousId(dummyStart.getUuid())
@@ -160,7 +162,10 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                       .setUuid("section_chain_plan_node")
                       .setName("name_section_chain")
                       .setIdentifier("name_section_chain")
-                      .setStepType(StepType.newBuilder().setType("_DUMMY_SECTION_CHAIN").build())
+                      .setStepType(StepType.newBuilder()
+                                       .setType("_DUMMY_SECTION_CHAIN")
+                                       .setStepCategory(StepCategory.STEP)
+                                       .build())
                       .build())
             .createdAt(System.currentTimeMillis())
             .lastUpdatedAt(System.currentTimeMillis())
@@ -279,25 +284,27 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
   public void shouldGenerateOrchestrationGraphWithFork() {
     StepParameters forkStepParams =
         DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
-    NodeExecution fork = NodeExecution.builder()
-                             .uuid("node1")
-                             .ambiance(Ambiance.newBuilder()
-                                           .setPlanExecutionId(PLAN_EXECUTION_ID)
-                                           .addAllLevels(Collections.singletonList(
-                                               Level.newBuilder().setSetupId(STARTING_EXECUTION_NODE_ID).build()))
-                                           .build())
-                             .mode(ExecutionMode.CHILDREN)
-                             .node(PlanNodeProto.newBuilder()
-                                       .setUuid(STARTING_EXECUTION_NODE_ID)
-                                       .setName("name1")
-                                       .setStepType(StepType.newBuilder().setType("DUMMY_FORK").build())
-                                       .setIdentifier("identifier1")
-                                       .setStepParameters(RecastOrchestrationUtils.toDocumentJson(forkStepParams))
-                                       .build())
-                             .resolvedStepParameters(forkStepParams)
-                             .createdAt(System.currentTimeMillis())
-                             .lastUpdatedAt(System.currentTimeMillis())
-                             .build();
+    NodeExecution fork =
+        NodeExecution.builder()
+            .uuid("node1")
+            .ambiance(Ambiance.newBuilder()
+                          .setPlanExecutionId(PLAN_EXECUTION_ID)
+                          .addAllLevels(Collections.singletonList(
+                              Level.newBuilder().setSetupId(STARTING_EXECUTION_NODE_ID).build()))
+                          .build())
+            .mode(ExecutionMode.CHILDREN)
+            .node(
+                PlanNodeProto.newBuilder()
+                    .setUuid(STARTING_EXECUTION_NODE_ID)
+                    .setName("name1")
+                    .setStepType(StepType.newBuilder().setType("DUMMY_FORK").setStepCategory(StepCategory.STEP).build())
+                    .setIdentifier("identifier1")
+                    .setStepParameters(RecastOrchestrationUtils.toJson(forkStepParams))
+                    .build())
+            .resolvedStepParameters(forkStepParams)
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
     NodeExecution parallelNode1 = NodeExecution.builder()
                                       .uuid("parallel_node_1")
                                       .ambiance(Ambiance.newBuilder()
@@ -387,7 +394,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                        .setName("name1")
                                        .setStepType(StepType.newBuilder().setType("DUMMY_FORK").build())
                                        .setIdentifier("identifier1")
-                                       .setStepParameters(RecastOrchestrationUtils.toDocumentJson(forkStepParams))
+                                       .setStepParameters(RecastOrchestrationUtils.toJson(forkStepParams))
                                        .build())
                              .resolvedStepParameters(forkStepParams)
                              .createdAt(System.currentTimeMillis())
@@ -540,58 +547,62 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                       .setUuid("section_chain_plan_node")
                       .setName("name_section_chain")
                       .setIdentifier("name_section_chain")
-                      .setStepType(StepType.newBuilder().setType("SECTION_CHAIN").build())
+                      .setStepType(
+                          StepType.newBuilder().setType("SECTION_CHAIN").setStepCategory(StepCategory.STEP).build())
                       .build())
             .createdAt(System.currentTimeMillis())
             .lastUpdatedAt(System.currentTimeMillis())
             .build();
 
-    NodeExecution sectionChain1 = NodeExecution.builder()
-                                      .uuid("section_chain_child1")
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(PLAN_EXECUTION_ID).build())
-                                      .mode(ExecutionMode.TASK)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid("section_chain_child1_plan_node")
-                                                .setName("name_section_chain_child1_plan_node")
-                                                .setIdentifier("name_section_chain_child1_plan_node")
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .build())
-                                      .createdAt(System.currentTimeMillis())
-                                      .lastUpdatedAt(System.currentTimeMillis())
-                                      .parentId(sectionChainParentNode.getUuid())
-                                      .nextId(dummyNode1Uuid)
-                                      .build();
+    NodeExecution sectionChain1 =
+        NodeExecution.builder()
+            .uuid("section_chain_child1")
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(PLAN_EXECUTION_ID).build())
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid("section_chain_child1_plan_node")
+                      .setName("name_section_chain_child1_plan_node")
+                      .setIdentifier("name_section_chain_child1_plan_node")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .parentId(sectionChainParentNode.getUuid())
+            .nextId(dummyNode1Uuid)
+            .build();
 
-    NodeExecution sectionChain2 = NodeExecution.builder()
-                                      .uuid("section_chain_child2")
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(PLAN_EXECUTION_ID).build())
-                                      .mode(ExecutionMode.TASK)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid("section_chain_child2_plan_node")
-                                                .setName("name_section_chain_child2_plan_node")
-                                                .setIdentifier("name_section_chain_child2_plan_node")
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .build())
-                                      .createdAt(System.currentTimeMillis())
-                                      .lastUpdatedAt(System.currentTimeMillis())
-                                      .parentId(sectionChainParentNode.getUuid())
-                                      .build();
+    NodeExecution sectionChain2 =
+        NodeExecution.builder()
+            .uuid("section_chain_child2")
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(PLAN_EXECUTION_ID).build())
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid("section_chain_child2_plan_node")
+                      .setName("name_section_chain_child2_plan_node")
+                      .setIdentifier("name_section_chain_child2_plan_node")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .parentId(sectionChainParentNode.getUuid())
+            .build();
 
-    NodeExecution dummyNode1 = NodeExecution.builder()
-                                   .uuid(dummyNode1Uuid)
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(PLAN_EXECUTION_ID).build())
-                                   .mode(ExecutionMode.SYNC)
-                                   .node(PlanNodeProto.newBuilder()
-                                             .setUuid("dummy_plan_node_1")
-                                             .setName("name_dummy_node_1")
-                                             .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                             .setIdentifier("name_dummy_node_1")
-                                             .build())
-                                   .createdAt(System.currentTimeMillis())
-                                   .lastUpdatedAt(System.currentTimeMillis())
-                                   .parentId(sectionChainParentNode.getUuid())
-                                   .previousId(sectionChain1.getUuid())
-                                   .build();
+    NodeExecution dummyNode1 =
+        NodeExecution.builder()
+            .uuid(dummyNode1Uuid)
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(PLAN_EXECUTION_ID).build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid("dummy_plan_node_1")
+                      .setName("name_dummy_node_1")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setIdentifier("name_dummy_node_1")
+                      .build())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .parentId(sectionChainParentNode.getUuid())
+            .previousId(sectionChain1.getUuid())
+            .build();
 
     Map<String, GraphVertex> graphVertexMap = new HashMap<>();
     graphVertexMap.put(sectionChainParentNode.getUuid(), graphVertexConverter.convertFrom(sectionChainParentNode));
@@ -661,25 +672,27 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
   public void shouldTestPopulateAdjacencyListForFork() {
     StepParameters forkStepParams =
         DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
-    NodeExecution fork = NodeExecution.builder()
-                             .uuid("node1")
-                             .ambiance(Ambiance.newBuilder()
-                                           .setPlanExecutionId(PLAN_EXECUTION_ID)
-                                           .addAllLevels(Collections.singletonList(
-                                               Level.newBuilder().setSetupId(STARTING_EXECUTION_NODE_ID).build()))
-                                           .build())
-                             .mode(ExecutionMode.CHILDREN)
-                             .node(PlanNodeProto.newBuilder()
-                                       .setUuid(STARTING_EXECUTION_NODE_ID)
-                                       .setName("name1")
-                                       .setStepType(StepType.newBuilder().setType("DUMMY_FORK").build())
-                                       .setIdentifier("identifier1")
-                                       .setStepParameters(RecastOrchestrationUtils.toDocumentJson(forkStepParams))
-                                       .build())
-                             .resolvedStepParameters(forkStepParams)
-                             .createdAt(System.currentTimeMillis())
-                             .lastUpdatedAt(System.currentTimeMillis())
-                             .build();
+    NodeExecution fork =
+        NodeExecution.builder()
+            .uuid("node1")
+            .ambiance(Ambiance.newBuilder()
+                          .setPlanExecutionId(PLAN_EXECUTION_ID)
+                          .addAllLevels(Collections.singletonList(
+                              Level.newBuilder().setSetupId(STARTING_EXECUTION_NODE_ID).build()))
+                          .build())
+            .mode(ExecutionMode.CHILDREN)
+            .node(
+                PlanNodeProto.newBuilder()
+                    .setUuid(STARTING_EXECUTION_NODE_ID)
+                    .setName("name1")
+                    .setStepType(StepType.newBuilder().setType("DUMMY_FORK").setStepCategory(StepCategory.STEP).build())
+                    .setIdentifier("identifier1")
+                    .setStepParameters(RecastOrchestrationUtils.toJson(forkStepParams))
+                    .build())
+            .resolvedStepParameters(forkStepParams)
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
     NodeExecution parallelNode1 = NodeExecution.builder()
                                       .uuid("parallel_node_1")
                                       .ambiance(Ambiance.newBuilder()

@@ -51,4 +51,8 @@ public class WaitInstance implements WaitEngineEntity {
   ProgressCallback progressCallback;
 
   @Default @FdTtlIndex @NonFinal @Wither Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
+
+  // Timeout instance will expire after this duration if 0 it will never expire
+  Duration timeout;
+  @NonFinal @Wither String timeoutInstanceId;
 }

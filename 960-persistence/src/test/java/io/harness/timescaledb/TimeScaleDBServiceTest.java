@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.health.HealthService;
 import io.harness.rule.Owner;
@@ -17,7 +18,7 @@ import java.util.concurrent.Executors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class TimeScaleDBServiceTest {
+public class TimeScaleDBServiceTest extends CategoryTest {
   private static final Duration DEFAULT_VALID_FOR = Duration.ofMillis(200);
   private static final Duration DEFAULT_EXPECTED_RESPONSE_TIMEOUT = Duration.ofMillis(100);
 

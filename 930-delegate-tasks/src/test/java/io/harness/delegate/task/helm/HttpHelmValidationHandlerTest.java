@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -29,6 +30,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.HelmClientException;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.rule.Owner;
@@ -168,7 +170,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
     }
     doNothing().when(helmTaskHelperBase).initHelm(anyString(), any(), anyLong());
     doReturn(HttpHelmUsernamePasswordDTO.builder().build()).when(decryptionService).decrypt(any(), anyList());
-    doThrow(new HelmClientException(errorMessage, USER))
+    doThrow(new HelmClientException(errorMessage, USER, HelmCliCommandType.REPO_ADD))
         .when(helmTaskHelperBase)
         .addRepo(anyString(), anyString(), anyString(), anyString(), any(), anyString(), any(), anyLong());
 
@@ -199,12 +201,9 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
 
   private void verifyFailureCalls(HttpHelmValidationParams connectorValidationParams) throws Exception {
     HttpHelmAuthType authType = connectorValidationParams.getHttpHelmConnectorDTO().getAuth().getAuthType();
-    ConnectorValidationResult result = validationHandler.validate(connectorValidationParams, "1234");
-    assertThat(result).isNotNull();
-    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
-    assertThat(result.getErrorSummary()).isEqualTo(generalError);
-    assertThat(result.getErrors().size()).isEqualTo(1);
-    assertThat(result.getErrors().get(0).getMessage()).isEqualTo(generalError);
+    assertThatExceptionOfType(HelmClientException.class)
+        .isThrownBy(() -> validationHandler.validate(connectorValidationParams, "1234"))
+        .withMessageContaining("Something went wrong");
 
     verify(helmTaskHelperBase, times(1)).createNewDirectoryAtPath(eq("./repository/helm-validation"));
     verify(helmTaskHelperBase, times(1)).initHelm(eq(workingDir), eq(HelmVersion.V3), anyLong());

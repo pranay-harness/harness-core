@@ -5,7 +5,6 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.SeedDataMigration;
 import io.harness.persistence.HIterator;
 

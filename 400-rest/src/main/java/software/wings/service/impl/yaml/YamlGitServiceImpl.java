@@ -53,6 +53,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
@@ -158,13 +160,13 @@ import javax.ws.rs.core.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
-
 /**
  * The type Yaml git sync service.
  */
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class YamlGitServiceImpl implements YamlGitService {
   /**
    * The constant SETUP_ENTITY_ID.
@@ -440,8 +442,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   public List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app) {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
-    FolderNode applicationsFolder = new FolderNode(
-        accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
+    FolderNode applicationsFolder =
+        new FolderNode(accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER));
 
     yamlDirectoryService.doApplication(app.getUuid(), false, null, applicationsFolder, directoryPath);
 
@@ -456,7 +458,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
     FolderNode templateFolder = yamlDirectoryService.doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID,
-        GLOBAL_TEMPLATE_LIBRARY_FOLDER, YamlVersion.Type.GLOBAL_TEMPLATE_LIBRARY);
+        GLOBAL_TEMPLATE_LIBRARY_FOLDER, YamlVersion.Type.GLOBAL_TEMPLATE_LIBRARY, false, Collections.EMPTY_SET);
     gitFileChanges = yamlDirectoryService.traverseDirectory(
         gitFileChanges, accountId, templateFolder, SETUP_FOLDER, includeFiles, true, Optional.empty());
 
@@ -468,7 +470,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     directoryPath.add(APPLICATIONS_FOLDER);
     DirectoryPath appPath = directoryPath.clone();
     appPath.add(app.getName());
-    FolderNode appTemplates = yamlDirectoryService.doTemplateLibraryForApp(app, appPath.clone());
+    FolderNode appTemplates =
+        yamlDirectoryService.doTemplateLibraryForApp(app, appPath.clone(), false, Collections.EMPTY_SET);
 
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     return yamlDirectoryService.traverseDirectory(
@@ -772,6 +775,19 @@ public class YamlGitServiceImpl implements YamlGitService {
       if (gitPingEvent) {
         log.info(GIT_YAML_LOG_PREFIX + "Ping event found. Skip processing");
         return "Found ping event. Only push events are supported";
+      }
+
+      WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
+      /* When a webhook  for pull request merged event is created at Azure Devops end, it first sends an event with
+       * 'active' status. We need to ignore this and process the next event it sends with status 'completed' at the time
+       * of actual pull request merge. Processing  is skipped for event with 'active' status since pull request event is
+       * still open and and unmerged yet. If we don't skip it, current code flow throws an exception for 'active' event,
+       * which restricts/disables webhook from Azure end */
+      if (webhookSource != null && webhookSource.equals(WebhookSource.AZURE_DEVOPS)
+          && webhookEventUtils.shouldIgnorePullRequestMergeEventWithActiveStatusFromAzure(yamlWebHookPayload)) {
+        log.info(GIT_YAML_LOG_PREFIX
+            + "Merge pull request event having active status received from Azure DevOps. Skipped processing.");
+        return "Skipped processing for merge pull request event since pull request has active status and is still unmerged.";
       }
 
       final String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
@@ -1214,7 +1230,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
 
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
-    webhookEventUtils.validatePushEvent(webhookSource, headers);
+    if (webhookSource == WebhookSource.AZURE_DEVOPS) {
+      webhookEventUtils.validatePushEventForAzureDevOps(yamlWebHookPayload);
+    } else {
+      webhookEventUtils.validatePushEvent(webhookSource, headers);
+    }
 
     Map<String, Object> payLoadMap =
         JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
@@ -1229,7 +1249,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
 
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
-    webhookEventUtils.validatePushEvent(webhookSource, headers);
+    if (webhookSource == WebhookSource.AZURE_DEVOPS) {
+      webhookEventUtils.validatePushEventForAzureDevOps(yamlWebHookPayload);
+    } else {
+      webhookEventUtils.validatePushEvent(webhookSource, headers);
+    }
     Map<String, Object> payLoadMap = webhookEventUtils.obtainPayloadMap(yamlWebHookPayload, headers);
 
     return webhookEventUtils.obtainBranchName(webhookSource, headers, payLoadMap);

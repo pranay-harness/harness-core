@@ -36,6 +36,7 @@ public class AwsAmiSwitchRoutesRequest extends AwsAmiRequest {
   private AwsAmiPreDeploymentData preDeploymentData;
   boolean rollback;
   private List<String> baseScalingPolicyJSONs;
+  private List<String> scheduledActionJSONs;
 
   @Builder
   public AwsAmiSwitchRoutesRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
@@ -43,8 +44,10 @@ public class AwsAmiSwitchRoutesRequest extends AwsAmiRequest {
       List<String> primaryClassicLBs, List<String> primaryTargetGroupARNs, String newAsgName,
       List<String> stageClassicLBs, List<String> stageTargetGroupARNs, int registrationTimeout,
       AwsAmiPreDeploymentData preDeploymentData, boolean downscaleOldAsg, boolean rollback,
-      List<String> baseScalingPolicyJSONs) {
-    super(awsConfig, encryptionDetails, EXECUTE_AMI_SWITCH_ROUTE, region);
+      List<String> baseScalingPolicyJSONs, boolean amiInServiceHealthyStateFFEnabled, List<String> scheduledActions,
+      boolean amiAsgConfigCopyEnabled) {
+    super(awsConfig, encryptionDetails, EXECUTE_AMI_SWITCH_ROUTE, region, amiInServiceHealthyStateFFEnabled,
+        amiAsgConfigCopyEnabled);
     this.accountId = accountId;
     this.appId = appId;
     this.activityId = activityId;
@@ -60,5 +63,6 @@ public class AwsAmiSwitchRoutesRequest extends AwsAmiRequest {
     this.downscaleOldAsg = downscaleOldAsg;
     this.rollback = rollback;
     this.baseScalingPolicyJSONs = baseScalingPolicyJSONs;
+    this.scheduledActionJSONs = scheduledActions;
   }
 }

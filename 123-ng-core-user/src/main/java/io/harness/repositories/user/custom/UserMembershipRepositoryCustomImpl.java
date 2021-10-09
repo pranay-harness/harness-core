@@ -1,35 +1,27 @@
 package io.harness.repositories.user.custom;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.util.MongoDbErrorCodes.isDuplicateKeyCode;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope.ScopeKeys;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 
 import com.google.inject.Inject;
-import com.mongodb.BasicDBObject;
+import com.mongodb.MongoBulkWriteException;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.BulkOperationException;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -45,6 +37,12 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
   public List<UserMembership> findAll(Criteria criteria) {
     Query query = new Query(criteria);
     return mongoTemplate.find(query, UserMembership.class);
+  }
+
+  @Override
+  public UserMembership findOne(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.findOne(query, UserMembership.class);
   }
 
   @Override
@@ -66,58 +64,35 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
   }
 
   @Override
-  public List<UserMetadataDTO> getUserMetadata(Criteria criteria) {
-    Query query = new Query(criteria);
-    query.fields()
-        .include(UserMembershipKeys.userId)
-        .include(UserMembershipKeys.emailId)
-        .include(UserMembershipKeys.name);
-    List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
-    return userMemberships.stream()
-        .map(userMembership
-            -> UserMetadataDTO.builder()
-                   .uuid(userMembership.getUserId())
-                   .email(userMembership.getEmailId())
-                   .name(userMembership.getName())
-                   .build())
-        .collect(Collectors.toList());
-  }
-
-  @Override
   public UserMembership update(String userId, Update update) {
     Criteria criteria = Criteria.where(UserMembershipKeys.userId).is(userId);
     Query query = new Query(criteria);
     return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), UserMembership.class);
   }
 
-  @Override
-  public Set<String> filterUsersWithMembership(List<String> userIds, String accountIdentifier,
-      @Nullable String orgIdentifier, @Nullable String projectIdentifier) {
-    Query query = new Query();
-    query.addCriteria(where(UserMembershipKeys.userId).in(userIds));
-    query.addCriteria(where(UserMembershipKeys.scopes)
-                          .elemMatch(where(ScopeKeys.accountIdentifier)
-                                         .is(accountIdentifier)
-                                         .and(ScopeKeys.orgIdentifier)
-                                         .is(orgIdentifier)
-                                         .and(ScopeKeys.projectIdentifier)
-                                         .is(projectIdentifier)));
-    query.fields().include(UserMembershipKeys.userId);
-    List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
-    return userMemberships.stream().map(UserMembership::getUserId).filter(Objects::nonNull).collect(Collectors.toSet());
-  }
-
-  @Override
-  public Long getProjectCount(String userId, String accountIdentifier) {
-    TypedAggregation<UserMembership> aggregation =
-        newAggregation(UserMembership.class, match(where(UserMembershipKeys.userId).is(userId)),
-            unwind(UserMembershipKeys.scopes), match(where("scopes.projectIdentifier").exists(true)),
-            match(where("scopes.accountIdentifier").is(accountIdentifier)), group().count().as("count"));
-
-    List<BasicDBObject> mappedResults = mongoTemplate.aggregate(aggregation, BasicDBObject.class).getMappedResults();
-
-    return (isNotEmpty(mappedResults) && null != mappedResults.get(0) && null != mappedResults.get(0).get("count"))
-        ? Long.parseLong(mappedResults.get(0).get("count").toString())
-        : 0L;
+  public long insertAllIgnoringDuplicates(List<UserMembership> userMemberships) {
+    try {
+      if (isEmpty(userMemberships)) {
+        return 0;
+      }
+      return mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, UserMembership.class, "userMembershipsV2")
+          .insert(userMemberships)
+          .execute()
+          .getInsertedCount();
+    } catch (BulkOperationException ex) {
+      if (ex.getErrors().stream().allMatch(bulkWriteError -> isDuplicateKeyCode(bulkWriteError.getCode()))) {
+        return ex.getResult().getInsertedCount();
+      }
+      throw ex;
+    } catch (Exception ex) {
+      if (ex.getCause() instanceof MongoBulkWriteException) {
+        MongoBulkWriteException bulkWriteException = (MongoBulkWriteException) ex.getCause();
+        if (bulkWriteException.getWriteErrors().stream().allMatch(
+                writeError -> isDuplicateKeyCode(writeError.getCode()))) {
+          return bulkWriteException.getWriteResult().getInsertedCount();
+        }
+      }
+      throw ex;
+    }
   }
 }

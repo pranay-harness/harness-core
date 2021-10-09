@@ -5,6 +5,7 @@ import static io.harness.accesscontrol.principals.serviceaccounts.persistence.Se
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccount;
+import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAccountDBO.ServiceAccountDBOKeys;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -13,9 +14,11 @@ import io.harness.utils.PageUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @Singleton
@@ -56,5 +59,13 @@ public class ServiceAccountDaoImpl implements ServiceAccountDao {
         .stream()
         .findFirst()
         .flatMap(u -> Optional.of(fromDBO(u)));
+  }
+
+  @Override
+  public long deleteInScopesAndChildScopes(String identifier, String scopeIdentifier) {
+    Criteria criteria = Criteria.where(ServiceAccountDBOKeys.identifier).is(identifier);
+    Pattern startsWithScope = Pattern.compile("^".concat(scopeIdentifier));
+    criteria.and(ServiceAccountDBOKeys.scopeIdentifier).regex(startsWithScope);
+    return serviceAccountRepository.deleteMulti(criteria);
   }
 }

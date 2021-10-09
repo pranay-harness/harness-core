@@ -93,6 +93,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -108,8 +109,8 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.ResourceConstraint;
 import io.harness.beans.WorkflowType;
-import io.harness.beans.shared.ResourceConstraint;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
@@ -209,9 +210,11 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.security.SSHVaultService;
@@ -275,8 +278,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject @InjectMocks private InfrastructureDefinitionService infrastructureDefinitionService;
 
+  @Mock private SettingsService mockSettingsService;
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
@@ -288,7 +292,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private AuthService authService;
   @Mock private GovernanceConfigService governanceConfigService;
   @Mock private SSHVaultService sshVaultService;
-
+  @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private ServiceInstanceService serviceInstanceService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -1566,6 +1570,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Name4", "host1");
@@ -1587,6 +1592,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infrastructureDefinition =
@@ -1913,6 +1919,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Infra", "host1");
@@ -1956,6 +1963,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Name4", "host1");
@@ -2846,6 +2854,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "InfraName", "host1");
 
@@ -2883,7 +2892,15 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
-  public void shouldThrowDeploymentFreezeExceptionWhenResumingFrozenStage() {
+  public void shouldThrowDeploymentFreezeExceptionWhenResumingFrozenStageWithoutOverridePermission() {
+    // User without permission ALLOW_DEPLOYMENTS_DURING_FREEZE
+    User user = anUser().uuid(generateUuid()).name("user-name").build();
+    UserThreadLocal.set(user);
+
+    doThrow(new InvalidRequestException("User is not authorized", WingsException.USER))
+        .when(deploymentAuthHandler)
+        .authorizeDeploymentDuringFreeze();
+
     WorkflowExecution workflowExecution =
         WorkflowExecution.builder().accountId(account.getUuid()).executionArgs(new ExecutionArgs()).build();
     Pipeline pipeline =
@@ -2910,15 +2927,16 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                     .build()))
             .build();
     when(featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, account.getUuid())).thenReturn(true);
-    GovernanceConfig governanceConfig =
-        GovernanceConfig.builder()
-            .accountId(account.getUuid())
-            .timeRangeBasedFreezeConfigs(Collections.singletonList(TimeRangeBasedFreezeConfig.builder()
-                                                                       .name("freeze1")
-                                                                       .uuid(FREEZE_WINDOW_ID)
-                                                                       .timeRange(new TimeRange(0, 1, ""))
-                                                                       .build()))
-            .build();
+
+    GovernanceConfig governanceConfig = GovernanceConfig.builder()
+                                            .accountId(account.getUuid())
+                                            .timeRangeBasedFreezeConfigs(Collections.singletonList(
+                                                TimeRangeBasedFreezeConfig.builder()
+                                                    .name("freeze1")
+                                                    .uuid(FREEZE_WINDOW_ID)
+                                                    .timeRange(new TimeRange(0, 1, "", false, null, null, null, false))
+                                                    .build()))
+                                            .build();
     when(governanceConfigService.get(account.getUuid())).thenReturn(governanceConfig);
     when(governanceConfigService.getFrozenEnvIdsForApp(account.getUuid(), app.getUuid(), governanceConfig))
         .thenReturn(Collections.singletonMap(FREEZE_WINDOW_ID, Collections.singleton(ENV_ID)));

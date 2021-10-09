@@ -42,7 +42,7 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
   }
 
   @Override
-  protected Map<String, String> extractMetricContext(InterruptEvent message) {
+  protected Map<String, String> extractMetricContext(Map<String, String> metadataMap, InterruptEvent message) {
     return ImmutableMap.of();
   }
 
@@ -57,11 +57,11 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
     switch (interruptType) {
       case ABORT:
         handleAbort(event);
-        log.info("[PMS_SDK] Handled ABORT InterruptEvent Successfully");
+        log.info("Handled ABORT InterruptEvent Successfully");
         break;
       case CUSTOM_FAILURE:
         handleFailure(event);
-        log.info("[PMS_SDK] Handled CUSTOM_FAILURE InterruptEvent Successfully");
+        log.info("Handled CUSTOM_FAILURE InterruptEvent Successfully");
         break;
       default:
         log.warn("No Handling present for Interrupt Event of type : {}", interruptType);
@@ -74,7 +74,7 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
       Step<?> step = stepRegistry.obtain(AmbianceUtils.getCurrentStepType(event.getAmbiance()));
       if (step instanceof Failable) {
         StepParameters stepParameters =
-            RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+            RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         ((Failable) step).handleFailureInterrupt(event.getAmbiance(), stepParameters, event.getMetadataMap());
       }
       pmsInterruptService.handleFailure(event.getNotifyId());
@@ -90,7 +90,7 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
       Step<?> step = stepRegistry.obtain(stepType);
       if (step instanceof Abortable) {
         StepParameters stepParameters =
-            RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+            RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         ((Abortable) step).handleAbort(event.getAmbiance(), stepParameters, extractExecutableResponses(event));
         pmsInterruptService.handleAbort(event.getNotifyId());
       } else {

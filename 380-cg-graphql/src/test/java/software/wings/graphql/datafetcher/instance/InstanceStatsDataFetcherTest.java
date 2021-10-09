@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.instance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.rule.OwnerRule.ALEXANDRU_CIOFU;
 import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.graphql.schema.type.instance.QLInstanceType.PHYSICAL_HOST_INSTANCE;
@@ -19,11 +20,18 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
+import software.wings.api.DeploymentType;
+import software.wings.beans.BuildWorkflow;
+import software.wings.beans.Service;
 import software.wings.beans.User;
+import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
+import software.wings.graphql.schema.type.QLEnvironmentType;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
+import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
@@ -37,13 +45,18 @@ import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentType;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowType;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 import software.wings.security.UserThreadLocal;
 
 import com.google.inject.Inject;
@@ -1164,5 +1177,126 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     assertThat(singlePointData).isNotNull();
     assertThat(singlePointData.getDataPoint()).isNotNull();
     assertThat(singlePointData.getDataPoint().getValue()).isEqualTo(count);
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testEnvironmentTypeFilter() {
+    instanceService.save(
+        Instance.builder().accountId(ACCOUNT1_ID).appId(APP1_ID_ACCOUNT1).envType(EnvironmentType.PROD).build());
+    instanceService.save(
+        Instance.builder().accountId(ACCOUNT1_ID).appId(APP2_ID_ACCOUNT1).envType(EnvironmentType.NON_PROD).build());
+
+    QLInstanceFilter envTypeFilter = QLInstanceFilter.builder()
+                                         .environmentType(QLEnvironmentTypeFilter.builder()
+                                                              .values(new QLEnvironmentType[] {QLEnvironmentType.PROD})
+                                                              .operator(QLEnumOperator.IN)
+                                                              .build())
+                                         .build();
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(envTypeFilter), null, null, null);
+
+    assertSinglePointData(qlData, 5L);
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testDeploynmentTypeFilter() {
+    instanceService.save(Instance.builder().accountId(ACCOUNT1_ID).appId(APP1_ID_ACCOUNT1).serviceId("sId3").build());
+    instanceService.save(Instance.builder().accountId(ACCOUNT1_ID).appId(APP2_ID_ACCOUNT1).serviceId("sId4").build());
+    serviceResourceService.save(Service.builder()
+                                    .name("serviceName3")
+                                    .uuid("sId3")
+                                    .accountId(ACCOUNT1_ID)
+                                    .appId(APP1_ID_ACCOUNT1)
+                                    .deploymentType(DeploymentType.SSH)
+                                    .build());
+    serviceResourceService.save(Service.builder()
+                                    .name("serviceName4")
+                                    .uuid("sId4")
+                                    .accountId(ACCOUNT1_ID)
+                                    .appId(APP2_ID_ACCOUNT1)
+                                    .deploymentType(DeploymentType.KUBERNETES)
+                                    .build());
+
+    QLInstanceFilter deploymentTypeFilter =
+        QLInstanceFilter.builder()
+            .deploymentType(QLDeploymentTypeFilter.builder()
+                                .values(new QLDeploymentType[] {QLDeploymentType.SSH})
+                                .operator(QLEnumOperator.IN)
+                                .build())
+            .build();
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(deploymentTypeFilter), null, null, null);
+    assertSinglePointData(qlData, 1L);
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testWorkflowTypeFilter() {
+    instanceService.save(
+        Instance.builder().accountId(ACCOUNT1_ID).appId(APP1_ID_ACCOUNT1).lastWorkflowExecutionId("wid1").build());
+    instanceService.save(
+        Instance.builder().accountId(ACCOUNT1_ID).appId(APP2_ID_ACCOUNT1).lastWorkflowExecutionId("wid2").build());
+    workflowService.createWorkflow(
+        WorkflowBuilder.aWorkflow()
+            .accountId(ACCOUNT1_ID)
+            .appId(APP1_ID_ACCOUNT1)
+            .name(APP1_ID_ACCOUNT1)
+            .orchestrationWorkflow(
+                BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow().build())
+            .uuid("wid1")
+            .build());
+    workflowService.createWorkflow(
+        WorkflowBuilder.aWorkflow()
+            .accountId(ACCOUNT1_ID)
+            .appId(APP2_ID_ACCOUNT1)
+            .name(APP2_ID_ACCOUNT1)
+            .orchestrationWorkflow(
+                BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow().build())
+            .uuid("wid2")
+            .build());
+
+    QLInstanceFilter workflowTypeFilter =
+        QLInstanceFilter.builder()
+            .orchestrationWorkflowType(
+                QLOrchestrationWorkflowTypeFilter.builder()
+                    .values(new QLOrchestrationWorkflowType[] {QLOrchestrationWorkflowType.BUILD})
+                    .operator(QLEnumOperator.IN)
+                    .build())
+            .build();
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(workflowTypeFilter), null, null, null);
+    assertSinglePointData(qlData, 2L);
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testEnvTypeFilterDeploynmentTypeFilterWorkflowTypeFilter() {
+    QLInstanceFilter envTypeFilter = QLInstanceFilter.builder()
+                                         .environmentType(QLEnvironmentTypeFilter.builder()
+                                                              .values(new QLEnvironmentType[] {QLEnvironmentType.PROD})
+                                                              .operator(QLEnumOperator.IN)
+                                                              .build())
+                                         .build();
+    QLInstanceFilter deploymentTypeFilter =
+        QLInstanceFilter.builder()
+            .deploymentType(QLDeploymentTypeFilter.builder()
+                                .values(new QLDeploymentType[] {QLDeploymentType.KUBERNETES})
+                                .operator(QLEnumOperator.IN)
+                                .build())
+            .build();
+    QLInstanceFilter workflowTypeFilter =
+        QLInstanceFilter.builder()
+            .orchestrationWorkflowType(
+                QLOrchestrationWorkflowTypeFilter.builder()
+                    .values(new QLOrchestrationWorkflowType[] {QLOrchestrationWorkflowType.BUILD})
+                    .operator(QLEnumOperator.IN)
+                    .build())
+            .build();
+    QLData qlData = dataFetcher.fetch(
+        ACCOUNT2_ID, null, newArrayList(envTypeFilter, deploymentTypeFilter, workflowTypeFilter), null, null, null);
+    assertSinglePointData(qlData, 0L);
   }
 }

@@ -26,6 +26,8 @@ public class PipelineCoreMigrationDetails implements MigrationDetails {
   public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
         .add(Pair.of(1, NoopPipelineCoreMigration.class))
+        .add(Pair.of(2, PmsInternalRemoverCoreMigration.class))
+        .add(Pair.of(3, PMSTriggerMigration.class))
         .build();
   }
 }

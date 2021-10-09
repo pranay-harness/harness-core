@@ -3,7 +3,9 @@ package software.wings.audit;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -39,6 +41,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 @Entity(value = "audits", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@TargetModule(HarnessModule._940_CG_AUDIT_SERVICE)
 public class AuditHeader extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

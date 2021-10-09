@@ -5,6 +5,7 @@ import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABL
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_CI_INDIRECT_LOG_UPLOAD_FF;
 import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
@@ -22,6 +23,7 @@ import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
@@ -32,6 +34,7 @@ import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.SecretParams;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 
@@ -51,6 +54,7 @@ import java.util.Map;
 @OwnedBy(HarnessTeam.CI)
 public class InternalContainerParamsProvider {
   @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
+  @Inject private CIFeatureFlagService featureFlagService;
 
   public CIK8ContainerParams getSetupAddonContainerParams(
       ConnectorDetails harnessInternalImageConnector, Map<String, String> volumeToMountPath, String workDir) {
@@ -109,6 +113,11 @@ public class InternalContainerParamsProvider {
     final String pipelineID = ambiance.getMetadata().getPipelineIdentifier();
     final int buildNumber = ambiance.getMetadata().getRunSequence();
     final String stageID = k8PodDetails.getStageID();
+
+    // Check whether FF to enable blob upload to log service (as opposed to directly blob storage) is enabled
+    if (featureFlagService.isEnabled(FeatureName.CI_INDIRECT_LOG_UPLOAD, accountID)) {
+      envVars.put(HARNESS_CI_INDIRECT_LOG_UPLOAD_FF, "true");
+    }
 
     // Add environment variables that need to be used inside the lite engine container
     envVars.put(HARNESS_WORKSPACE, workDirPath);

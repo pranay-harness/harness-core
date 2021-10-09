@@ -15,14 +15,14 @@ import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
-import io.harness.serializer.ProtoUtils;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<OrchestrationEvent> {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
-  @Inject @Named(PmsSdkModuleUtils.SDK_EXECUTOR_NAME) private ExecutorService executorService;
+  @Inject @Named(PmsSdkModuleUtils.ORCHESTRATION_EVENT_EXECUTOR_NAME) private ExecutorService executorService;
 
   @Override
   protected Map<String, String> extraLogProperties(OrchestrationEvent event) {
@@ -42,13 +42,12 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
   }
 
   @Override
-  protected Map<String, String> extractMetricContext(OrchestrationEvent message) {
-    Map<String, String> metricContext = new HashMap<>();
-    metricContext.putAll(AmbianceUtils.logContextMap(message.getAmbiance()));
-    metricContext.put("eventType", message.getEventType().name());
-    metricContext.put("module", message.getServiceName());
-    metricContext.put("pipelineIdentifier", message.getAmbiance().getMetadata().getPipelineIdentifier());
-    return metricContext;
+  protected Map<String, String> extractMetricContext(Map<String, String> metadataMap, OrchestrationEvent message) {
+    return ImmutableMap.<String, String>builder()
+        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .build();
   }
 
   @Override
@@ -76,13 +75,13 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
     }
   }
 
-  private io.harness.pms.sdk.core.events.OrchestrationEvent buildSdkOrchestrationEvent(OrchestrationEvent event) {
+  protected io.harness.pms.sdk.core.events.OrchestrationEvent buildSdkOrchestrationEvent(OrchestrationEvent event) {
     return io.harness.pms.sdk.core.events.OrchestrationEvent.builder()
         .eventType(event.getEventType())
         .ambiance(event.getAmbiance())
-        .createdAt(ProtoUtils.timestampToUnixMillis(event.getCreatedAt()))
         .status(event.getStatus())
-        .resolvedStepParameters(event.getStepParameters().toStringUtf8())
+        .resolvedStepParameters(
+            RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class))
         .serviceName(event.getServiceName())
         .triggerPayload(event.getTriggerPayload())
         .tags(generateTagList(event))

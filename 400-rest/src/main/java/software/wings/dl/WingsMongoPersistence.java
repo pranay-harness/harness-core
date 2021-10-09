@@ -67,6 +67,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.DatastoreImpl;
@@ -78,6 +79,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * The Class WingsMongoPersistence.
  */
 @Singleton
+@Slf4j
 public class WingsMongoPersistence extends MongoPersistence implements WingsPersistence, Managed {
   @Inject private SecretManager secretManager;
 
@@ -393,6 +395,10 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   private <T extends PersistentEntity> Query<T> authorizeQuery(Class<T> collectionClass, Query query) {
     if (authFilters(query, collectionClass)) {
       return query;
+    }
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      log.error("User [{}] doesn't have enough permission to perform operation. ", user);
     }
     throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
   }

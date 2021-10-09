@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.storeconfig;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -11,6 +14,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(CDP)
 public class GitStoreDelegateConfig implements StoreDelegateConfig {
   String branch;
   String commitId;
@@ -21,6 +25,8 @@ public class GitStoreDelegateConfig implements StoreDelegateConfig {
   ScmConnector gitConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
   SSHKeySpecDTO sshKeySpecDTO;
+  String manifestType;
+  String manifestId;
 
   @Override
   public StoreDelegateConfigType getType() {

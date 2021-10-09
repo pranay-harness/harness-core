@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
 public class NGServiceConstants {
   public static final String START_TIME = "startTime";
   public static final String END_TIME = "endTime";
-  public static final String SERVICE_IDENTIFIER = "serviceIdentiier";
+  public static final String SERVICE_IDENTIFIER = "serviceId";
   public static final String STATUS = "status";
   public static final String TIME_ENTITY = "time_entity";
   public static final String NUMBER_OF_RECORDS = "numberOfRecords";

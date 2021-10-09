@@ -12,6 +12,10 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
@@ -62,6 +66,8 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
+@TargetModule(HarnessModule._940_CG_AUDIT_SERVICE)
 public class AuditYamlHelperForFailedChanges {
   @Inject private YamlHelper yamlHelper;
   @Inject private EntityHelper entityHelper;
@@ -101,6 +107,11 @@ public class AuditYamlHelperForFailedChanges {
     }
     @Override
     public String fetchArtifactDisplayName(String buildNo) {
+      return null;
+    }
+
+    @Override
+    public ArtifactStream cloneInternal() {
       return null;
     }
   }

@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -16,6 +17,7 @@ import static software.wings.beans.infrastructure.Host.HostKeys;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
+import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_KEY_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -35,6 +37,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -46,13 +52,10 @@ import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.utils.HostCsvFileHelper;
 import software.wings.utils.WingsTestConstants;
 
 import com.amazonaws.services.ec2.model.Instance;
@@ -74,12 +77,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * Created by anubhaw on 6/7/16.
  */
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HostServiceTest extends WingsBaseTest {
-  @Mock private HostCsvFileHelper csvFileHelper;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private WingsPersistence wingsPersistence;
 
   @Mock private EnvironmentService environmentService;
-  @Mock private NotificationService notificationService;
   @Mock private ConfigService configService;
   @Mock private ServiceInstanceService serviceInstanceService;
 
@@ -88,8 +91,6 @@ public class HostServiceTest extends WingsBaseTest {
   @Mock private HQuery<Host> hostQuery;
   @Mock private FieldEnd hostQueryEnd;
   @Mock private UpdateOperations<Host> updateOperations;
-
-  @Mock private BackgroundJobScheduler jobScheduler;
 
   private SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute()
@@ -244,6 +245,23 @@ public class HostServiceTest extends WingsBaseTest {
     savedHost = hostService.saveHost(host2);
     assertThat(savedHost.getEc2Instance().getInstanceId()).isEqualTo("B");
     verify(wingsPersistence).updateField(Host.class, UUID, HostKeys.ec2Instance, bInstance);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSaveHostWithExistingHostConnAttr() {
+    Host host1 = getCleanHost();
+    host1.setUuid(UUID);
+    host1.setHostConnAttr(HOST_CONN_ATTR_ID);
+    doReturn(host1).when(hostQuery).get();
+
+    Host host2 = getCleanHost();
+    host2.setUuid(UUID);
+    host2.setHostConnAttr(HOST_CONN_ATTR_KEY_ID);
+    Host savedHost = hostService.saveHost(host2);
+    assertThat(savedHost.getHostConnAttr()).isEqualTo(HOST_CONN_ATTR_KEY_ID);
+    verify(wingsPersistence).updateField(Host.class, UUID, HostKeys.hostConnAttr, HOST_CONN_ATTR_KEY_ID);
   }
 
   @NotNull

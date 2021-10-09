@@ -172,7 +172,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .setAutoScalingGroupLimits(any(), anyList(), anyString(), anyString(), anyInt(), any());
     verify(mockAwsAsgHelperServiceDelegate)
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
+            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt(), anyBoolean());
   }
 
   @Test
@@ -212,7 +212,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .setAutoScalingGroupLimits(any(), anyList(), anyString(), anyString(), anyInt(), any());
     verify(mockAwsAsgHelperServiceDelegate, times(2))
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
+            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt(), anyBoolean());
     verify(mockAwsAsgHelperServiceDelegate)
         .setMinInstancesForAsg(any(), anyList(), anyString(), anyString(), anyInt(), any());
     verify(mockAwsAsgHelperServiceDelegate)
@@ -240,13 +240,14 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     doNothing()
         .when(mockAwsAsgHelperServiceDelegate)
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
+            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt(), anyBoolean());
     awsAmiHelperServiceDelegate.resizeAsgs("us-east-1", AwsConfig.builder().build(), emptyList(), "newName", 2,
         singletonList(AwsAmiResizeData.builder().asgName("oldName").desiredCount(0).build()), mockCallback, true, 10, 2,
-        0, AwsAmiPreDeploymentData.builder().build(), emptyList(), emptyList(), false, emptyList(), 1);
+        0, AwsAmiPreDeploymentData.builder().build(), emptyList(), emptyList(), false, emptyList(), 1, false,
+        emptyList(), false);
     verify(mockAwsAsgHelperServiceDelegate, times(2))
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
+            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt(), anyBoolean());
   }
 
   @Test
@@ -519,7 +520,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
 
     AwsAmiServiceSetupResponseBuilder builder = AwsAmiServiceSetupResponse.builder();
     awsAmiHelperServiceDelegate.populatePreDeploymentData(
-        AwsConfig.builder().build(), emptyList(), "us-east-1", autoScalingGroup, builder, mockLogCallback);
+        AwsConfig.builder().build(), emptyList(), "us-east-1", autoScalingGroup, builder, mockLogCallback, false);
     AwsAmiServiceSetupResponse response = builder.build();
     AwsAmiPreDeploymentData preDeploymentData = response.getPreDeploymentData();
     assertThat(preDeploymentData.getOldAsgName()).isEqualTo("name_2");
@@ -855,7 +856,8 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     doThrow(Exception.class)
         .when(awsAmiHelperServiceDelegate)
         .resizeAsgs(anyString(), any(), anyList(), anyString(), anyInt(), anyList(), any(), anyBoolean(), anyInt(),
-            anyInt(), anyInt(), any(), anyList(), anyList(), anyBoolean(), anyList(), anyInt());
+            anyInt(), anyInt(), any(), anyList(), anyList(), anyBoolean(), anyList(), anyInt(), anyBoolean(), any(),
+            anyBoolean());
     AwsAmiServiceDeployResponse awsAmiServiceDeployResponse =
         awsAmiHelperServiceDelegate.deployAmiServiceTrafficShift(trafficShiftAlbDeployRequest);
     assertThat(awsAmiServiceDeployResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);

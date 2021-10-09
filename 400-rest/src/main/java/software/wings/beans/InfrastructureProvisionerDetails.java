@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -15,7 +15,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(CDP)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class InfrastructureProvisionerDetails {
   private String uuid;
   private String name;

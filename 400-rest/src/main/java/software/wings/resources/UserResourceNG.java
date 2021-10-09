@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -12,23 +13,29 @@ import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.mappers.AccountMapper;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
+import io.harness.ng.core.user.UtmInfo;
 import io.harness.rest.RestResponse;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.dto.UserPrincipal;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.user.remote.UserFilterNG;
 
 import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
@@ -68,11 +75,10 @@ import retrofit2.http.Body;
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class UserResourceNG {
   private final UserService userService;
+  private final SignupService signupService;
   private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private final AccountService accountService;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
-  private static final String CONFIRM_URL = "confirm";
-  private static final String VERIFY_URL = "verify";
 
   @POST
   public RestResponse<UserInfo> createNewUserAndSignIn(UserRequestDTO userRequest) {
@@ -82,6 +88,47 @@ public class UserResourceNG {
     User createdUser = userService.createNewUserAndSignIn(user, accountId);
 
     return new RestResponse<>(convertUserToNgUser(createdUser));
+  }
+
+  @POST
+  @Path("/signup-invite")
+  public RestResponse<SignupInviteDTO> createSignupInvite(SignupInviteDTO request) {
+    UserInvite userInvite = userService.createNewSignupInvite(request);
+    return new RestResponse<>(convertUserInviteToSignupInviteDTO(userInvite));
+  }
+
+  @PUT
+  @Path("/signup-invite")
+  public RestResponse<UserInfo> completeSignupInvite(@QueryParam("email") String email) {
+    UserInvite userInviteInDB = signupService.getUserInviteByEmail(email);
+    if (userInviteInDB == null || !userInviteInDB.isCreatedFromNG()) {
+      throw new InvalidRequestException("Can't complete signup, due to invalid user invite");
+    }
+
+    User createdUser = userService.completeNewSignupInvite(userInviteInDB);
+    UserInfo userInfo = convertUserToNgUser(createdUser);
+    userInfo.setIntent(userInviteInDB.getIntent());
+
+    if (isNotEmpty(userInviteInDB.getSignupAction())) {
+      userInfo.setSignupAction(userInviteInDB.getSignupAction());
+    }
+
+    if (isNotEmpty(userInviteInDB.getEdition())) {
+      userInfo.setEdition(userInviteInDB.getEdition());
+    }
+
+    if (isNotEmpty(userInviteInDB.getBillingFrequency())) {
+      userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency());
+    }
+
+    return new RestResponse<>(userInfo);
+  }
+
+  @GET
+  @Path("/signup-invite")
+  public RestResponse<SignupInviteDTO> getSignupInvite(@QueryParam("email") String email) {
+    UserInvite userInvite = signupService.getUserInviteByEmail(email);
+    return new RestResponse<>(convertUserInviteToSignupInviteDTO(userInvite));
   }
 
   @POST
@@ -119,8 +166,13 @@ public class UserResourceNG {
   @GET
   @Path("/{userId}")
   public RestResponse<Optional<UserInfo>> getUser(@PathParam("userId") String userId) {
-    User user = userService.get(userId);
-    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+    try {
+      User user = userService.get(userId);
+      return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+    } catch (UnauthorizedException ex) {
+      log.warn("User is not found in database {}", userId);
+      return new RestResponse<>(Optional.empty());
+    }
   }
 
   @GET
@@ -135,6 +187,13 @@ public class UserResourceNG {
   public RestResponse<Boolean> getUserByEmailId(
       @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
     return new RestResponse<>(userService.isUserPasswordPresent(accountId, emailId));
+  }
+
+  @PUT
+  @Path("invites/create-user")
+  public RestResponse<Boolean> createUserForInvite(@Body @NotNull UserInviteDTO userInvite) {
+    userService.completeNGInvite(userInvite);
+    return new RestResponse<>(true);
   }
 
   @PUT
@@ -242,6 +301,7 @@ public class UserResourceNG {
                    .email(user.getEmail())
                    .name(user.getName())
                    .uuid(user.getUuid())
+                   .locked(user.isUserLocked())
                    .admin(requireAdminStatus
                        && Optional.ofNullable(user.getUserGroups())
                               .map(x
@@ -262,6 +322,7 @@ public class UserResourceNG {
         .email(user.getEmail())
         .name(user.getName())
         .uuid(user.getUuid())
+        .locked(user.isUserLocked())
         .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .emailVerified(user.isEmailVerified())
@@ -275,6 +336,14 @@ public class UserResourceNG {
                 .map(x
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
+        .utmInfo(user.getUtmInfo() != null ? UtmInfo.builder()
+                                                 .utmCampaign(user.getUtmInfo().getUtmCampaign())
+                                                 .utmContent(user.getUtmInfo().getUtmContent())
+                                                 .utmMedium(user.getUtmInfo().getUtmMedium())
+                                                 .utmSource(user.getUtmInfo().getUtmSource())
+                                                 .utmTerm(user.getUtmInfo().getUtmTerm())
+                                                 .build()
+                                           : UtmInfo.builder().build())
         .build();
   }
 
@@ -338,5 +407,23 @@ public class UserResourceNG {
   @Path("feature-flags/{accountId}")
   public RestResponse<Collection<FeatureFlag>> getFeatureFlags(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.getFeatureFlags(accountId));
+  }
+
+  @PUT
+  @Path("/unlock-user")
+  public RestResponse<Optional<UserInfo>> unlockUser(
+      @NotEmpty @QueryParam("email") String email, @NotEmpty @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(userService.unlockUser(email, accountId))));
+  }
+
+  private SignupInviteDTO convertUserInviteToSignupInviteDTO(UserInvite userInvite) {
+    if (userInvite == null) {
+      return null;
+    }
+    return SignupInviteDTO.builder()
+        .email(userInvite.getEmail())
+        .completed(userInvite.isCompleted())
+        .createdFromNG(userInvite.isCreatedFromNG())
+        .build();
   }
 }

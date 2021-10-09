@@ -10,7 +10,10 @@ public enum Microservice {
   @JsonProperty("CV") CV,
   @JsonProperty("CF") CF,
   @JsonProperty("CE") CE,
-  @JsonProperty("PMS") PMS;
+  @JsonProperty("PMS") PMS,
+  @JsonProperty("ACCESSCONTROL") ACCESSCONTROL,
+  @JsonProperty("TEMPLATESERVICE") TEMPLATESERVICE,
+  @JsonProperty("RESOURCEGROUP") RESOURCEGROUP;
 
   @JsonCreator
   public static Microservice fromString(String microservice) {

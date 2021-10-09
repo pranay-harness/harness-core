@@ -75,6 +75,7 @@ import static software.wings.sm.StateType.PHASE_STEP;
 
 import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
@@ -96,6 +97,8 @@ import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.EventPayload;
+import io.harness.beans.EventType;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -103,11 +106,18 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.ResourceConstraint;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
-import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.event.cg.CgPipelineStartPayload;
+import io.harness.beans.event.cg.application.ApplicationEventData;
+import io.harness.beans.event.cg.entities.EnvironmentEntity;
+import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
+import io.harness.beans.event.cg.entities.ServiceEntity;
+import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
+import io.harness.beans.event.cg.pipeline.PipelineEventData;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
@@ -115,6 +125,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -130,6 +141,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
+import io.harness.service.EventService;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -243,6 +255,7 @@ import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -315,6 +328,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.ReadPreference;
+import com.sun.istack.internal.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -341,7 +356,6 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -413,12 +427,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HelmChartService helmChartService;
   @Inject private StateInspectionService stateInspectionService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
   @Inject @AccountExpiryCheck private PreDeploymentChecker accountExpirationChecker;
   @Inject private WorkflowStatusPropagatorFactory workflowStatusPropagatorFactory;
   @Inject private WorkflowExecutionUpdate executionUpdate;
+  private static final long SIXTY_DAYS_IN_MILLIS = 60 * 24 * 60 * 60 * 1000L;
+
+  @Inject private EventService eventService;
 
   @Override
   public HIterator<WorkflowExecution> executions(
@@ -472,29 +490,34 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     for (int i = 0; i < res.size(); i++) {
       WorkflowExecution workflowExecution = res.get(i);
-      refreshBreakdown(workflowExecution);
-      if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
-        // pipeline
-        refreshPipelineExecution(workflowExecution);
-        PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
+      try {
+        refreshBreakdown(workflowExecution);
+        if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+          // pipeline
+          refreshPipelineExecution(workflowExecution);
+          PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
 
-        // Done to ignore inconsistent pipeline executions with mismatch from setup
-        if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null
-            || pipelineExecution.getPipeline() == null || pipelineExecution.getPipeline().getPipelineStages() == null) {
-          res.remove(i);
-          i--;
-        } else if (pipelineExecution.getPipelineStageExecutions().size()
-            != pipelineExecution.getPipeline().getPipelineStages().size()) {
-          boolean isAnyStageLooped =
-              pipelineExecution.getPipelineStageExecutions().stream().anyMatch(t -> t.isLooped());
-          if (isAnyStageLooped) {
-            continue;
-          } else {
+          // Done to ignore inconsistent pipeline executions with mismatch from setup
+          if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null
+              || pipelineExecution.getPipeline() == null
+              || pipelineExecution.getPipeline().getPipelineStages() == null) {
             res.remove(i);
             i--;
+          } else if (pipelineExecution.getPipelineStageExecutions().size()
+              != pipelineExecution.getPipeline().getPipelineStages().size()) {
+            boolean isAnyStageLooped =
+                pipelineExecution.getPipelineStageExecutions().stream().anyMatch(t -> t.isLooped());
+            if (isAnyStageLooped) {
+              continue;
+            } else {
+              res.remove(i);
+              i--;
+            }
           }
+          continue;
         }
-        continue;
+      } catch (Exception e) {
+        log.error("Failed to process executions");
       }
       if (withBreakdownAndSummary) {
         try {
@@ -515,9 +538,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
     }
-    if (withFailureDetails) {
-      res.forEach(this::populateFailureDetails);
+    for (WorkflowExecution workflowExecution : res) {
+      if (withFailureDetails) {
+        try {
+          populateFailureDetails(workflowExecution);
+        } catch (Exception e) {
+          log.error("Failed to populate the failure details.");
+        }
+      }
     }
+
     return res;
   }
 
@@ -545,13 +575,31 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public boolean approveOrRejectExecution(
+      String appId, List<String> userGroupIds, ApprovalDetails approvalDetails, ApiKeyEntry apiEntryKey) {
+    if (apiEntryKey == null) {
+      return approveOrRejectExecution(appId, userGroupIds, approvalDetails);
+    }
+    if (apiEntryKey != null && isNotEmpty(userGroupIds)
+        && !verifyAuthorizedToAcceptOrReject(userGroupIds, apiEntryKey.getUserGroupIds(), appId, null)) {
+      throw new InvalidRequestException("User not authorized to accept or reject the approval");
+    }
+
+    return approveOrRejectExecution(appId, approvalDetails);
+  }
+
+  @Override
   public boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails) {
     if (isNotEmpty(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
       throw new InvalidRequestException("User not authorized to accept or reject the approval");
     }
 
+    return approveOrRejectExecution(appId, approvalDetails);
+  }
+
+  private boolean approveOrRejectExecution(String appId, ApprovalDetails approvalDetails) {
     User user = UserThreadLocal.get();
-    if (user != null) {
+    if (user != null && approvalDetails.getApprovedBy() == null) {
       approvalDetails.setApprovedBy(
           EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
     }
@@ -565,11 +613,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                    .approvedBy(approvalDetails.getApprovedBy())
                                                    .comments(approvalDetails.getComments())
                                                    .approvalFromSlack(approvalDetails.isApprovalFromSlack())
+                                                   .approvalFromGraphQL(approvalDetails.isApprovalFromGraphQL())
+                                                   .approvalViaApiKey(approvalDetails.isApprovalViaApiKey())
                                                    .variables(approvalDetails.getVariables())
                                                    .build();
 
     if (approvalDetails.getAction() == APPROVE) {
-      executionData.setStatus(ExecutionStatus.SUCCESS);
+      executionData.setStatus(SUCCESS);
     } else if (approvalDetails.getAction() == REJECT) {
       executionData.setStatus(ExecutionStatus.REJECTED);
     }
@@ -590,6 +640,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     notNullCheck("workflowExecutionId", workflowExecutionId, USER);
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution == null) {
+      throw new InvalidRequestException(
+          "No Execution found for given appId [" + appId + "] and executionId [" + workflowExecutionId + "]", USER);
+    }
     if (workflowExecution.getWorkflowType() == PIPELINE) {
       refreshPipelineExecution(workflowExecution);
     }
@@ -620,6 +674,46 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return approvalStateExecutionData;
+  }
+
+  @Override
+  public List<ApprovalStateExecutionData> fetchApprovalStateExecutionsDataFromWorkflowExecution(
+      String appId, String workflowExecutionId) {
+    notNullCheck("appId", appId, USER);
+
+    notNullCheck("workflowExecutionId", workflowExecutionId, USER);
+
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution == null) {
+      throw new InvalidRequestException(
+          "No Execution found for given appId [" + appId + "] and executionId [" + workflowExecutionId + "]", USER);
+    }
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      refreshPipelineExecution(workflowExecution);
+    }
+
+    notNullCheck("workflowExecution", workflowExecution, USER);
+
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+    String workflowType = "";
+
+    // Pipeline approval
+    if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+      workflowType = "Pipeline";
+      approvalStateExecutionsData = fetchPipelineWaitingApprovalStateExecutionsData(workflowExecution);
+    }
+
+    // Workflow approval
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+      workflowType = "Workflow";
+      approvalStateExecutionsData = fetchWorkflowWaitingApprovalStateExecutionsData(workflowExecution);
+    }
+
+    if (isEmpty(approvalStateExecutionsData)) {
+      throw new InvalidRequestException("No Approval found for execution [" + workflowExecutionId + "]", USER);
+    }
+
+    return approvalStateExecutionsData;
   }
 
   private ApprovalStateExecutionData fetchPipelineWaitingApprovalStateExecutionData(
@@ -673,8 +767,84 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return null;
   }
 
-  @VisibleForTesting
-  void refreshPipelineExecution(WorkflowExecution workflowExecution) {
+  private List<ApprovalStateExecutionData> fetchPipelineWaitingApprovalStateExecutionsData(
+      WorkflowExecution pipelineWorkflowExecution) {
+    PipelineExecution pipelineExecution = pipelineWorkflowExecution.getPipelineExecution();
+    if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null) {
+      return null;
+    }
+
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+
+    for (PipelineStageExecution pe : pipelineExecution.getPipelineStageExecutions()) {
+      if (pe.getStateExecutionData() instanceof ApprovalStateExecutionData) {
+        ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) pe.getStateExecutionData();
+
+        if (pe.getStatus() == ExecutionStatus.PAUSED
+            && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED) {
+          approvalStateExecutionData.setStageName(
+              getStageNameForApprovalStateExecutionData(pipelineExecution, pe.getPipelineStageElementId()));
+          approvalStateExecutionData.setExecutionUuid(pipelineWorkflowExecution.getUuid());
+          approvalStateExecutionsData.add(approvalStateExecutionData);
+        }
+      } else {
+        List<WorkflowExecution> workflowExecutions = pe.getWorkflowExecutions();
+        for (WorkflowExecution workflowExecution : workflowExecutions) {
+          if (RUNNING.equals(workflowExecution.getStatus()) || PAUSED.equals(workflowExecution.getStatus())) {
+            List<ApprovalStateExecutionData> approvalStateExecutionDataList =
+                fetchWorkflowWaitingApprovalStateExecutionsData(workflowExecution);
+            approvalStateExecutionDataList.forEach(approvalStateExecutionData
+                -> approvalStateExecutionData.setStageName(workflowExecution.getStageName()));
+            approvalStateExecutionsData.addAll(approvalStateExecutionDataList);
+          }
+        }
+      }
+    }
+
+    return approvalStateExecutionsData;
+  }
+
+  public String getStageNameForApprovalStateExecutionData(
+      PipelineExecution pipelineExecution, String pipelineStageElementId) {
+    List<PipelineStage> pipelineStages = pipelineExecution.getPipeline().getPipelineStages();
+    if (pipelineStages == null) {
+      return null;
+    }
+
+    for (PipelineStage pipelineStage : pipelineStages) {
+      String stageName = pipelineStage.getName();
+      for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        if (pipelineStageElement != null && pipelineStageElement.getUuid().equals(pipelineStageElementId)) {
+          return stageName;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private List<ApprovalStateExecutionData> fetchWorkflowWaitingApprovalStateExecutionsData(
+      WorkflowExecution workflowExecution) {
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+
+    List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
+    for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+      if (stateExecutionInstance.fetchStateExecutionData() instanceof ApprovalStateExecutionData) {
+        ApprovalStateExecutionData approvalStateExecutionData =
+            (ApprovalStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
+        // Check for Approval Id in PAUSED status
+        if (approvalStateExecutionData != null && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED) {
+          approvalStateExecutionData.setExecutionUuid(workflowExecution.getUuid());
+          approvalStateExecutionsData.add(approvalStateExecutionData);
+        }
+      }
+    }
+
+    return approvalStateExecutionsData;
+  }
+
+  @Override
+  public void refreshPipelineExecution(WorkflowExecution workflowExecution) {
     if (workflowExecution == null || workflowExecution.getPipelineExecution() == null) {
       return;
     }
@@ -760,10 +930,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 || ENV_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
               if (stateExecutionData instanceof EnvStateExecutionData) {
                 EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-                if (featureFlagService.isEnabled(
-                        FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
-                  setWaitingForInputFlag(stateExecutionInstance, stageExecution);
-                }
+                setWaitingForInputFlag(stateExecutionInstance, stageExecution);
                 if (envStateExecutionData.getWorkflowExecutionId() != null) {
                   WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
                       workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
@@ -777,9 +944,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               stageExecutionDataList.add(stageExecution);
             } else if (ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
                 || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
-              if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
-                setWaitingForInputFlag(stateExecutionInstance, stageExecution);
-              }
+              setWaitingForInputFlag(stateExecutionInstance, stageExecution);
               if (stateExecutionData instanceof ForkStateExecutionData) {
                 handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
                     stageExecutionDataList, (ForkStateExecutionData) stateExecutionData, pipelineStageElement,
@@ -966,7 +1131,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (withFailureDetails) {
-      populateFailureDetails(workflowExecution);
+      try {
+        populateFailureDetails(workflowExecution);
+      } catch (Exception e) {
+        log.error("Failed to populate failure details.");
+      }
     }
     return workflowExecution;
   }
@@ -1200,7 +1369,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String accountId = appService.getAccountIdByAppId(appId);
 
     User user = UserThreadLocal.get();
-    if (trigger == null && user != null) {
+    boolean shouldAuthorizeExecution = trigger == null && user != null;
+    if (shouldAuthorizeExecution) {
       deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
       if (isNotEmpty(pipeline.getEnvIds())) {
         pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
@@ -1225,7 +1395,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 ? PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1)
                 : pipeline.getEnvIds()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+    /*
+    Following scenarios cannot override freeze
+    1. triggers without API key
+    2. triggers with API key which don't have override freeze permission
+    3. users without override freeze permission
+     */
+    boolean canOverrideFreeze = user != null && checkIfOverrideFreeze();
+
+    if (!canOverrideFreeze) {
+      deploymentFreezeChecker.check(accountId);
+    }
 
     if (isEmpty(pipeline.getPipelineStages())) {
       throw new WingsException("You can not deploy an empty pipeline.", WingsException.USER);
@@ -1258,6 +1438,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                               .workflowType(WorkflowType.PIPELINE)
                                               .stateMachine(stateMachine)
                                               .name(pipeline.getName())
+                                              .canOverrideFreeze(canOverrideFreeze)
                                               .build();
 
     constructBarriers(pipeline, workflowExecution.getUuid());
@@ -1319,6 +1500,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
   }
 
+  private boolean checkIfOverrideFreeze() {
+    boolean canOverrideFreeze = true;
+    try {
+      deploymentAuthHandler.authorizeDeploymentDuringFreeze();
+    } catch (AccessDeniedException | InvalidRequestException e) {
+      log.info("User can not override deployment freezes. Performing deployment freeze checks...");
+      canOverrideFreeze = false;
+    }
+    return canOverrideFreeze;
+  }
+
   // validations to check is a deployment should be allowed or not
   private void checkPreDeploymentConditions(String accountId, String appId) {
     accountExpirationChecker.check(accountId);
@@ -1332,6 +1524,29 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerOrchestrationExecution(
       String appId, String envId, String workflowId, ExecutionArgs executionArgs, Trigger trigger) {
     return triggerOrchestrationWorkflowExecution(appId, envId, workflowId, null, executionArgs, null, trigger);
+  }
+
+  @Override
+  public int getActiveServiceCount(String accountId) {
+    long sixtyDays = currentTimeMillis() - SIXTY_DAYS_IN_MILLIS;
+    Query query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority);
+    query.filter(WorkflowExecutionKeys.accountId, accountId);
+    query.field(WorkflowExecutionKeys.startTs).greaterThanOrEq(sixtyDays);
+    query.project("serviceIds", true);
+    FindOptions findOptions = new FindOptions();
+    findOptions.modifier("$hint", "accountId_startTs_serviceIds");
+    findOptions.readPreference(ReadPreference.secondaryPreferred());
+    List<WorkflowExecution> workflowExecutions = query.asList(findOptions);
+    Set<String> flattenedSvcSet = new HashSet<>();
+    if (isNotEmpty(workflowExecutions)) {
+      workflowExecutions.forEach(workflowExecution -> {
+        List<String> serviceIdList = workflowExecution.getServiceIds();
+        if (isNotEmpty(serviceIdList)) {
+          serviceIdList.forEach(serviceId -> flattenedSvcSet.add(serviceId));
+        }
+      });
+    }
+    return flattenedSvcSet.size();
   }
 
   /**
@@ -1358,8 +1573,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
     envId = resolveEnvId != null ? resolveEnvId : envId;
     User user = UserThreadLocal.get();
+    boolean shouldAuthorizeExecution = trigger == null && user != null;
+
     // The workflow execution is direct workflow execution and not in Pipeline or trigger.
-    if (trigger == null && user != null && isEmpty(pipelineExecutionId)) {
+    boolean isDirectExecution = trigger == null && user != null && isEmpty(pipelineExecutionId);
+    if (isDirectExecution) {
       deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
       authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
     }
@@ -1377,7 +1595,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
         new DeploymentCtx(appId, isNotEmpty(envId) ? Collections.singletonList(envId) : Collections.emptyList()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+
+    // Check deployment freeze conditions for both direct workflow or pipeline executions
+    // Freeze can be override only for manual deployments, trigger based deployments are rejected when freeze active
+    boolean canOverrideFreeze = false;
+    if (featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)) {
+      if (isNotEmpty(pipelineExecutionId)) {
+        WorkflowExecution pipelineExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                  .project(WorkflowExecutionKeys.canOverrideFreeze, true)
+                                                  .filter(WorkflowExecutionKeys.uuid, pipelineExecutionId)
+                                                  .get();
+        canOverrideFreeze = pipelineExecution.isCanOverrideFreeze();
+      } else {
+        canOverrideFreeze = user != null && checkIfOverrideFreeze();
+      }
+    }
+    if (!canOverrideFreeze) {
+      deploymentFreezeChecker.check(accountId);
+    }
+
     checkPreDeploymentConditions(accountId, appId);
 
     workflow.setOrchestrationWorkflow(
@@ -1396,6 +1632,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stateMachine.setOrchestrationWorkflow(null);
 
+    // pipelineExecutionId
     WorkflowExecution workflowExecution = workflowExecutionServiceHelper.obtainExecution(
         workflow, stateMachine, resolveEnvId, pipelineExecutionId, executionArgs);
 
@@ -1449,12 +1686,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams, Trigger trigger,
       Pipeline pipeline, Workflow workflow, ContextElement... contextElements) {
-    if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId())) {
-      return triggerExecution(workflowExecution, stateMachine, new PipelineStageExecutionAdvisor(),
-          workflowExecutionUpdate, stdParams, trigger, pipeline, workflow, contextElements);
-    }
-    return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, trigger,
-        pipeline, workflow, contextElements);
+    return triggerExecution(workflowExecution, stateMachine, new PipelineStageExecutionAdvisor(),
+        workflowExecutionUpdate, stdParams, trigger, pipeline, workflow, contextElements);
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
@@ -1501,6 +1734,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setReleaseNo(String.valueOf(entityVersion.getVersion()));
     workflowExecution.setAccountId(app.getAccountId());
     wingsPersistence.save(workflowExecution);
+    sendEvent(app, executionArgs, workflowExecution);
     log.info("Created workflow execution {}", workflowExecution.getUuid());
     WorkflowExecution finalWorkflowExecution = workflowExecution;
     if (parameterizedArtifactStreamsPresent(executionArgs.getArtifactVariables())) {
@@ -1524,6 +1758,51 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements);
     }
     return workflowExecution;
+  }
+
+  private void sendEvent(Application app, ExecutionArgs executionArgs, WorkflowExecution execution) {
+    if (!featureFlagService.isEnabled(FeatureName.APP_TELEMETRY, app.getAccountId())) {
+      return;
+    }
+    if (PIPELINE.equals(executionArgs.getWorkflowType())) {
+      PipelineSummary summary = execution.getPipelineSummary();
+      if (summary != null) {
+        eventService.deliverEvent(app.getAccountId(), app.getUuid(),
+            EventPayload.builder()
+                .eventType(EventType.PIPELINE_START.getEventValue())
+                .data(CgPipelineStartPayload.builder()
+                          .application(ApplicationEventData.builder().id(app.getAppId()).name(app.getName()).build())
+                          .executionId(execution.getUuid())
+                          .services(isEmpty(execution.getServiceIds())
+                                  ? Collections.emptyList()
+                                  : execution.getServiceIds()
+                                        .stream()
+                                        .map(id -> ServiceEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .infraDefinitions(isEmpty(execution.getInfraDefinitionIds())
+                                  ? Collections.emptyList()
+                                  : execution.getInfraDefinitionIds()
+                                        .stream()
+                                        .map(id -> InfraDefinitionEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .environments(isEmpty(execution.getEnvIds())
+                                  ? Collections.emptyList()
+                                  : execution.getEnvIds()
+                                        .stream()
+                                        .map(id -> EnvironmentEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .pipeline(PipelineEventData.builder()
+                                        .id(summary.getPipelineId())
+                                        .name(summary.getPipelineName())
+                                        .build())
+                          .startedAt(execution.getCreatedAt())
+                          .triggeredByType(execution.getCreatedByType())
+                          .triggeredBy(execution.getCreatedBy())
+                          .executionArgs(ExecutionArgsEventData.builder().notes(executionArgs.getNotes()).build())
+                          .build())
+                .build());
+      }
+    }
   }
 
   @VisibleForTesting
@@ -2131,6 +2410,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                     .collect(toList());
 
     List<HelmChart> helmCharts = helmChartService.listByIds(accountId, helmChartIds);
+    helmCharts.forEach(helmChart
+        -> helmChart.setMetadata(applicationManifestService.fetchAppManifestProperties(
+            helmChart.getAppId(), helmChart.getApplicationManifestId())));
 
     if (helmCharts == null || helmChartIds.size() != helmCharts.size()) {
       log.error("helmChartIds from executionArgs contains invalid helmCharts");
@@ -2312,6 +2594,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     wingsPersistence.update(query, updateOps);
   }
 
+  private void updateOverrideFreeze(String pipelineExecutionId, boolean canOverrideFreeze) {
+    Query<WorkflowExecution> query =
+        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecutionKeys.uuid, pipelineExecutionId);
+
+    UpdateOperations<WorkflowExecution> updateOps =
+        wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+            .set(WorkflowExecutionKeys.canOverrideFreeze, canOverrideFreeze);
+
+    wingsPersistence.update(query, updateOps);
+  }
+
   private void updateWorkflowExecutionArtifactsAndArtifactVariables(String appId, String workflowExecutionId,
       List<Artifact> workflowExecutionArtifacts, List<Artifact> executionArgsArtifacts,
       List<ArtifactVariable> executionArgsArtifactVariables) {
@@ -2455,7 +2748,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     pipeline, parallelIndexToResume)
                 : pipeline.getEnvIds()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+
+    User user = UserThreadLocal.get();
+    boolean canOverrideFreeze = user != null && checkIfOverrideFreeze();
+    if (!canOverrideFreeze) {
+      deploymentFreezeChecker.check(accountId);
+    }
+
     WorkflowExecution currWorkflowExecution =
         triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
             prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
@@ -2745,7 +3044,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
         new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+    User user = UserThreadLocal.get();
+    boolean canOverrideFreeze = user != null && checkIfOverrideFreeze();
+    if (!canOverrideFreeze) {
+      deploymentFreezeChecker.check(accountId);
+    }
 
     // Not including instance limit and deployment limit check as it is a emergency rollback
     accountExpirationChecker.check(accountId);
@@ -2823,6 +3126,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public ExecutionInterrupt triggerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
+    // TODO: @deepakputhraya Handle events
     String executionUuid = executionInterrupt.getExecutionUuid();
     WorkflowExecution workflowExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
@@ -3131,6 +3435,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowExecution pipelineExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, pipelineExecutionId);
+
+    // check triggered continue
     notNullCheck("Invalid executionId: " + pipelineExecutionId, pipelineExecution);
     // Map WF variables from pipeline variables
     if (isNotEmpty(executionArgs.getArtifacts())) {
@@ -3142,6 +3448,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     Map<String, String> wfVariables =
         validateContinuePipeline(appId, pipelineExecution, pipelineStageElementId, executionArgs);
+
+    // Update User permission who submits the runtime inputs
+    updateOverrideFreeze(pipelineExecutionId, pipelineExecution.isCanOverrideFreeze());
 
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstancePipelineStage(appId, pipelineExecutionId, pipelineStageElementId);
@@ -3348,7 +3657,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           new DeploymentCtx(
               appId, envIdInStage != null ? Collections.singletonList(envIdInStage) : Collections.emptyList()),
           environmentService, featureFlagService);
-      deploymentFreezeChecker.check(pipelineExecution.getAccountId());
+      User user = UserThreadLocal.get();
+      // update user permissions when pipeline continues with runtime inputs
+      boolean canOverrideFreeze = user != null && checkIfOverrideFreeze();
+      pipelineExecution.setCanOverrideFreeze(canOverrideFreeze);
+      if (!canOverrideFreeze) {
+        deploymentFreezeChecker.check(pipelineExecution.getAccountId());
+      }
     }
     List<String> extraVars = new ArrayList<>();
     List<String> runtimeKeys =
@@ -4790,6 +5105,28 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     } else {
       return userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, userGroupIds);
+    }
+  }
+
+  @Override
+  public boolean verifyAuthorizedToAcceptOrReject(
+      List<String> userGroupIds, List<String> apiKeysUserGroupIds, String appId, String workflowId) {
+    if (isEmpty(apiKeysUserGroupIds)) {
+      return true;
+    }
+
+    if (isEmpty(userGroupIds)) {
+      try {
+        if (isBlank(appId) || isBlank(workflowId)) {
+          return true;
+        }
+        deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, workflowId);
+        return true;
+      } catch (WingsException e) {
+        return false;
+      }
+    } else {
+      return userGroupService.verifyApiKeyAuthorizedToAcceptOrRejectApproval(apiKeysUserGroupIds, userGroupIds);
     }
   }
 

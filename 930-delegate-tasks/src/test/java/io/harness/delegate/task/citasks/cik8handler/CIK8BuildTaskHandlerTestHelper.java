@@ -62,6 +62,7 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static Integer storageMib = 100;
   private static String claimName = "pvc";
   private static String volume1 = "volume1";
+  private static final int timeout = 100;
 
   public static CIK8BuildTaskParams buildGitSecretErrorTaskParams() {
     List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
@@ -71,7 +72,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .gitConnector(ConnectorDetails.builder().build())
                                                            .containerParamsList(containerParamsList)
                                                            .build();
-    return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).build();
+    return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).podMaxWaitUntilReadySecs(timeout).build();
   }
 
   public static CIK8BuildTaskParams buildImageSecretErrorTaskParams() {
@@ -96,7 +97,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .containerParamsList(containerParamsList)
                                                            .build();
 
-    return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).build();
+    return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).podMaxWaitUntilReadySecs(timeout).build();
   }
 
   public static CIK8BuildTaskParams buildPodCreateErrorTaskParams() {
@@ -124,6 +125,7 @@ public class CIK8BuildTaskHandlerTestHelper {
     return CIK8BuildTaskParams.builder()
         .k8sConnector(ConnectorDetails.builder().build())
         .cik8PodParams(cik8PodParams)
+        .podMaxWaitUntilReadySecs(timeout)
         .build();
   }
 
@@ -159,7 +161,11 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .containerParamsList(containerParamsList)
                                                            .build();
 
-    return CIK8BuildTaskParams.builder().k8sConnector(getK8sConnector()).cik8PodParams(cik8PodParams).build();
+    return CIK8BuildTaskParams.builder()
+        .k8sConnector(getK8sConnector())
+        .cik8PodParams(cik8PodParams)
+        .podMaxWaitUntilReadySecs(timeout)
+        .build();
   }
 
   private static ConnectorDetails getGitConnector() {
@@ -234,6 +240,7 @@ public class CIK8BuildTaskHandlerTestHelper {
         .k8sConnector(getK8sConnector())
         .cik8PodParams(cik8PodParams)
         .servicePodParams(Arrays.asList(cik8ServicePodParams))
+        .podMaxWaitUntilReadySecs(timeout)
         .build();
   }
 
@@ -276,6 +283,7 @@ public class CIK8BuildTaskHandlerTestHelper {
     return CIK8BuildTaskParams.builder()
         .k8sConnector(ConnectorDetails.builder().build())
         .cik8PodParams(cik8PodParams)
+        .podMaxWaitUntilReadySecs(timeout)
         .build();
   }
 

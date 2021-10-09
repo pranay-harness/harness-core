@@ -1,15 +1,28 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.EntityType.ARTIFACT_STREAM;
+import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.GCP_CONFIG;
+import static software.wings.beans.EntityType.GIT_CONFIG;
+import static software.wings.beans.EntityType.HELM_GIT_CONFIG_ID;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
+import static software.wings.beans.EntityType.JENKINS_SERVER;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
+import static software.wings.beans.EntityType.SS_SSH_CONNECTION_ATTRIBUTE;
+import static software.wings.beans.EntityType.SS_WINRM_CONNECTION_ATTRIBUTE;
+import static software.wings.beans.EntityType.SUMOLOGIC_CONFIGID;
+import static software.wings.beans.EntityType.USER_GROUP;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -24,6 +37,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -34,10 +50,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
@@ -652,6 +671,25 @@ public class CanaryOrchestrationWorkflowTest extends WingsBaseTest {
       assertThat(rollbackPhase.isInfraTemplatised()).isFalse();
       assertThat(rollbackPhase.isSrvTemplatised()).isFalse();
     }
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldAddTemplatizedVariables() {
+    List<EntityType> entityTypes =
+        asList(CF_AWS_CONFIG_ID, HELM_GIT_CONFIG_ID, SUMOLOGIC_CONFIGID, SPLUNK_CONFIGID, SS_SSH_CONNECTION_ATTRIBUTE,
+            SS_WINRM_CONNECTION_ATTRIBUTE, USER_GROUP, GCP_CONFIG, GIT_CONFIG, JENKINS_SERVER, ARTIFACT_STREAM);
+    List<Variable> userVariables =
+        entityTypes.stream()
+            .map(entityType
+                -> aVariable().name(entityType.name()).type(VariableType.ENTITY).entityType(entityType).build())
+            .collect(Collectors.toList());
+    List<Variable> finalUserVariables = CanaryOrchestrationWorkflow.reorderUserVariables(userVariables);
+    assertThat(finalUserVariables.stream().map(Variable::obtainEntityType).collect(Collectors.toList()))
+        .containsExactly(CF_AWS_CONFIG_ID, HELM_GIT_CONFIG_ID, SUMOLOGIC_CONFIGID, SPLUNK_CONFIGID,
+            SS_SSH_CONNECTION_ATTRIBUTE, SS_WINRM_CONNECTION_ATTRIBUTE, USER_GROUP, GCP_CONFIG, GIT_CONFIG,
+            JENKINS_SERVER, ARTIFACT_STREAM);
   }
 
   private TemplateExpression getTemplateExpression(String expression, String fieldName, Map<String, Object> metadata) {

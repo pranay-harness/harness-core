@@ -26,6 +26,8 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -104,6 +106,7 @@ import rx.Observable;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureHelperService.class, Http.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(HarnessTeam.CDC)
 public class AzureHelperServiceTest extends WingsBaseTest {
   @Mock private Azure.Configurable configurable;
   @Mock private Azure.Authenticated authenticated;

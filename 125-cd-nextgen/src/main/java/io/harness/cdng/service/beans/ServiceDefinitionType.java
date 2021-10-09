@@ -14,14 +14,15 @@ public enum ServiceDefinitionType {
   KUBERNETES("Kubernetes",
       Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY,
           ExecutionStrategyType.DEFAULT),
-      ServiceSpecType.KUBERNETES),
-  @JsonProperty(ServiceSpecType.NATIVE_HELM)
-  NATIVE_HELM("NativeHelm", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.NATIVE_HELM);
+      ServiceSpecType.KUBERNETES);
 
   /*
   //Unsupported for now
   //Also commented out in
   125-cd-nextgen/src/test/java/io/harness/cdng/pipeline/resources/CDNGPipelineConfigurationResourceTest.java
+  //Also add test in "CDNGPipelineConfigurationHelperTest"
+  @JsonProperty(ServiceSpecType.NATIVE_HELM)
+  NATIVE_HELM("NativeHelm", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.NATIVE_HELM);
   @JsonProperty(ServiceSpecType.ECS)
   ECS("Ecs",
     Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),

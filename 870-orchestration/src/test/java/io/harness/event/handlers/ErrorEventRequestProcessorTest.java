@@ -4,12 +4,12 @@ import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.events.EventErrorRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
@@ -27,7 +27,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class ErrorEventRequestProcessorTest {
+public class ErrorEventRequestProcessorTest extends CategoryTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @InjectMocks private ErrorEventRequestProcessor errorEventResponseHandler;
 
@@ -52,9 +52,7 @@ public class ErrorEventRequestProcessorTest {
                                                         .build())
                                     .build();
     SdkResponseEventProto sdkResponseEventInternal =
-        SdkResponseEventProto.newBuilder()
-            .setSdkResponseEventRequest(SdkResponseEventRequest.newBuilder().setEventErrorRequest(request).build())
-            .build();
+        SdkResponseEventProto.newBuilder().setEventErrorRequest(request).build();
     errorEventResponseHandler.handleEvent(sdkResponseEventInternal);
     verify(waitNotifyEngine)
         .doneWith(request.getEventNotifyId(),

@@ -54,6 +54,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -115,6 +116,8 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @Mock private AwsAmiServiceStateHelper mockAwsAmiServiceStateHelper;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private AwsStateHelper awsStateHelper;
+  @Mock private FeatureFlagService mockFeatureFlagService;
+
   @InjectMocks private AwsAmiServiceSetup state = new AwsAmiServiceSetup("stateName");
 
   @Test
@@ -143,6 +146,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(EmbeddedUser.builder().email("user@harness.io").name("user").build()).when(mockParams).getCurrentUser();
     doReturn(mockParams).when(mockContext).getContextElement(any());
+    doReturn(false).when(mockFeatureFlagService).isEnabled(any(), any());
     String revision = "ami-1234";
     Artifact artifact = anArtifact().withRevision(revision).build();
     doReturn(artifact).when(mockContext).getDefaultArtifactForService(anyString());

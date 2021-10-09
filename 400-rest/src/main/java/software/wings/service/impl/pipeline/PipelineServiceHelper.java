@@ -31,12 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineServiceHelper {
   private PipelineServiceHelper() {}
 
-  public static void updateLoopingInfo(PipelineStage pipelineStage, Workflow workflow, List<String> infraDefinitionIds,
-      boolean isRuntimeVariableEnabled) {
+  public static void updateLoopingInfo(
+      PipelineStage pipelineStage, Workflow workflow, List<String> infraDefinitionIds) {
     PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
     if (pipelineStageElement.checkDisableAssertion()) {
       return;
@@ -55,8 +55,7 @@ public class PipelineServiceHelper {
     RuntimeInputsConfig runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
     String infraVarNameInPipelineStage = infraDefVariables.get(0).getName();
 
-    if (isRuntimeVariableEnabled && runtimeInputsConfig != null
-        && isNotEmpty(runtimeInputsConfig.getRuntimeInputVariables())
+    if (runtimeInputsConfig != null && isNotEmpty(runtimeInputsConfig.getRuntimeInputVariables())
         && runtimeInputsConfig.getRuntimeInputVariables().contains(infraVarNameInPipelineStage)) {
       pipelineStage.setLooped(true);
       pipelineStage.setLoopedVarName(infraVarNameInPipelineStage);
@@ -76,7 +75,7 @@ public class PipelineServiceHelper {
     }
   }
 
-  public static void updatePipelineWithLoopedState(Pipeline pipeline, boolean isRuntimeEnabled) {
+  public static void updatePipelineWithLoopedState(Pipeline pipeline) {
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       if (pipelineStage.isLooped()) {
         PipelineStageElement pse = pipelineStage.getPipelineStageElements().get(0);
@@ -90,7 +89,7 @@ public class PipelineServiceHelper {
           List<String> loopedValues = new ArrayList<>();
           // In case an Infra var is marked runtime, we assume the stage to be looped.
           // The default value can be empty, or a single value as well.
-          if (isRuntimeEnabled && isNotEmpty(runtimeVariablesInStage) && runtimeVariablesInStage.contains(varLooped)) {
+          if (isNotEmpty(runtimeVariablesInStage) && runtimeVariablesInStage.contains(varLooped)) {
             if (isNotEmpty(pipelineStageVariableValues) && pipelineStageVariableValues.containsKey(varLooped)) {
               String defaultValue = pipelineStageVariableValues.get(varLooped);
               if (isNotEmpty(defaultValue)) {

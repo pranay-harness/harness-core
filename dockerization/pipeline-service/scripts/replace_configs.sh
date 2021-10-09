@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 CONFIG_FILE=/opt/harness/config.yml
+REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
 replace_key_value () {
   CONFIG_KEY="$1";
@@ -30,6 +31,10 @@ fi
 
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
+fi
+
+if [[ "" != "$MONGO_TRACE_MODE" ]]; then
+  yq write -i $CONFIG_FILE mongo.traceMode $MONGO_TRACE_MODE
 fi
 
 if [[ "" != "$MONGO_CONNECT_TIMEOUT" ]]; then
@@ -82,6 +87,14 @@ fi
 
 if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceSecret $NG_MANAGER_SERVICE_SECRET
+fi
+
+if [[ "" != "$PIPELINE_SERVICE_ENDPOINT" ]]; then
+  yq write -i $CONFIG_FILE pipelineServiceClientConfig.baseUrl $PIPELINE_SERVICE_ENDPOINT
+fi
+
+if [[ "" != "$PIPELINE_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE pipelineServiceSecret $PIPELINE_SERVICE_SECRET
 fi
 
 if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
@@ -191,10 +204,6 @@ if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
 fi
 
-if [[ "" != "$AUTH_ENABLED" ]]; then
-  yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
-fi
-
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
@@ -232,6 +241,41 @@ if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
   yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
 fi
 
+yq delete -i $REDISSON_CACHE_FILE codec
+
+if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
+  yq write -i $REDISSON_CACHE_FILE useScriptCache false
+fi
+
+
+if [[ "" != "$CACHE_CONFIG_REDIS_URL" ]]; then
+  yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$CACHE_CONFIG_REDIS_URL"
+fi
+
+if [[ "$CACHE_CONFIG_USE_SENTINEL" == "true" ]]; then
+  yq delete -i $REDISSON_CACHE_FILE singleServerConfig
+fi
+
+if [[ "" != "$CACHE_CONFIG_SENTINEL_MASTER_NAME" ]]; then
+  yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.masterName "$CACHE_CONFIG_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$CACHE_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$CACHE_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+if [[ "" != "$REDIS_NETTY_THREADS" ]]; then
+  yq write -i $REDISSON_CACHE_FILE nettyThreads "$REDIS_NETTY_THREADS"
+fi
+
+replace_key_value cacheConfig.cacheNamespace $CACHE_NAMESPACE
+replace_key_value cacheConfig.cacheBackend $CACHE_BACKEND
+
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
 replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
@@ -261,3 +305,16 @@ replace_key_value shouldDeployWithGitSync "$ENABLE_GIT_SYNC"
 
 replace_key_value enableAudit "$ENABLE_AUDIT"
 replace_key_value auditClientConfig.baseUrl "$AUDIT_SERVICE_BASE_URL"
+replace_key_value notificationClient.secrets.notificationClientSecret "$NOTIFICATION_CLIENT_SECRET"
+
+replace_key_value triggerConfig.webhookBaseUrl "$WEBHOOK_TRIGGER_BASEURL"
+replace_key_value triggerConfig.customBaseUrl "$CUSTOM_TRIGGER_BASEURL"
+
+replace_key_value opaServerConfig.baseUrl "$OPA_SERVER_BASEURL"
+
+replace_key_value delegatePollingConfig.syncDelay "$POLLING_SYNC_DELAY"
+replace_key_value delegatePollingConfig.asyncDelay "$POLLING_ASYNC_DELAY"
+replace_key_value delegatePollingConfig.progressDelay "$POLLING_PROGRESS_DELAY"
+
+replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"

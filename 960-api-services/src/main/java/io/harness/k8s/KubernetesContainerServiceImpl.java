@@ -36,6 +36,7 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -135,8 +136,13 @@ import io.fabric8.openshift.client.dsl.DeployableScalableResource;
 import io.github.resilience4j.retry.Retry;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.AuthenticationV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.VersionApi;
+import io.kubernetes.client.openapi.auth.ApiKeyAuth;
+import io.kubernetes.client.openapi.auth.Authentication;
+import io.kubernetes.client.openapi.auth.HttpBasicAuth;
+import io.kubernetes.client.openapi.auth.HttpBearerAuth;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
@@ -144,7 +150,12 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretBuilder;
+import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReview;
 import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1Status;
+import io.kubernetes.client.openapi.models.V1TokenReview;
+import io.kubernetes.client.openapi.models.V1TokenReviewBuilder;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -168,6 +179,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
@@ -251,7 +264,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace) {
     try {
       Callable<HasMetadata> controller = getControllerInternal(kubernetesConfig, name, namespace);
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(2), controller);
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(2), controller);
     } catch (WingsException e) {
       throw e;
     } catch (UncheckedTimeoutException e) {
@@ -531,6 +544,63 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public List<CEK8sDelegatePrerequisite.Rule> validateCEResourcePermissions(KubernetesConfig kubernetesConfig) {
     return k8sResourceValidator.validateCEPermissions2(kubernetesHelperService.getApiClient(kubernetesConfig));
+  }
+
+  @Override
+  @NotNull
+  public List<V1SelfSubjectAccessReview> validateLightwingResourcePermissions(KubernetesConfig kubernetesConfig)
+      throws Exception {
+    List<V1SelfSubjectAccessReview> statuses = k8sResourceValidator.validateLightwingResourcePermissions(
+        kubernetesHelperService.getApiClient(kubernetesConfig));
+    log.info("Validated validateLightwingResourcePermissions, returning failed checks of size: {}",
+        statuses.stream().filter(x -> FALSE.equals(x.getStatus().getAllowed())).count());
+    return statuses;
+  }
+
+  @Override
+  @NotNull
+  public List<V1Status> validateLightwingResourceExists(KubernetesConfig kubernetesConfig) throws Exception {
+    List<V1Status> statuses =
+        k8sResourceValidator.validateLightwingResourceExists(kubernetesHelperService.getApiClient(kubernetesConfig));
+    log.info("Validated validateLightwingResourceExists, returning failed checks of size: {}", statuses.size());
+    return statuses;
+  }
+
+  @SneakyThrows
+  @Override
+  public V1TokenReviewStatus fetchTokenReviewStatus(KubernetesConfig kubernetesConfig) {
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+
+    String token = isNotEmpty(kubernetesConfig.getServiceAccountToken())
+        ? new String(kubernetesConfig.getServiceAccountToken())
+        : "";
+
+    for (String key : apiClient.getAuthentications().keySet()) {
+      log.info("ApiClint.Authentications key: [{}]", key);
+      Authentication authentication = apiClient.getAuthentications().get(key);
+
+      if (authentication instanceof HttpBearerAuth) {
+        log.warn("HttpBearerAuth: seeing this first time");
+      } else if (authentication instanceof HttpBasicAuth) {
+        log.warn("HttpBasicAuth: seeing this first time");
+      } else if (authentication instanceof ApiKeyAuth) {
+        ApiKeyAuth apiKey = (ApiKeyAuth) authentication;
+        log.debug("ApiKeyAuth: [{}, {}]", apiKey.getApiKeyPrefix(), apiKey.getApiKey());
+        token = apiKey.getApiKey();
+      }
+    }
+
+    AuthenticationV1Api api = new AuthenticationV1Api(apiClient);
+    try {
+      V1TokenReview tokenReview = api.createTokenReview(
+          new V1TokenReviewBuilder().withNewSpec().withNewToken(token).endSpec().build(), null, null, null);
+
+      log.info("V1TokenReviewStatus: [{}]", tokenReview.getStatus());
+
+      return tokenReview.getStatus();
+    } catch (ApiException ex) {
+      throw new InvalidRequestException(ex.getResponseBody());
+    }
   }
 
   @Override
@@ -1124,19 +1194,23 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   private V1ConfigMap replaceConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {
     String name = definition.getMetadata().getName();
     log.info("Replacing config map [{}]", name);
-    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-    try {
-      return new CoreV1Api(apiClient).replaceNamespacedConfigMap(
-          name, kubernetesConfig.getNamespace(), definition, null, null, null);
-    } catch (ApiException exception) {
-      String configMapDef = definition.getMetadata() != null && isNotEmpty(definition.getMetadata().getName())
-          ? format("%s/ConfigMap/%s", kubernetesConfig.getNamespace(), definition.getMetadata().getName())
-          : "ConfigMap";
-      String message = format("Failed to replace %s. Code: %s, message: %s", configMapDef, exception.getCode(),
-          exception.getResponseBody());
-      log.error(message);
-      throw new InvalidRequestException(message, exception, USER);
-    }
+    final Supplier<V1ConfigMap> v1ConfigMapSupplier = Retry.decorateSupplier(retry, () -> {
+      ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+      try {
+        return new CoreV1Api(apiClient).replaceNamespacedConfigMap(
+            name, kubernetesConfig.getNamespace(), definition, null, null, null);
+      } catch (ApiException exception) {
+        String configMapDef = definition.getMetadata() != null && isNotEmpty(definition.getMetadata().getName())
+            ? format("%s/ConfigMap/%s", kubernetesConfig.getNamespace(), definition.getMetadata().getName())
+            : "ConfigMap";
+        String message = format("Failed to replace %s. Code: %s, message: %s", configMapDef, exception.getCode(),
+            exception.getResponseBody());
+        log.error(message);
+        throw new InvalidRequestException(message, exception, USER);
+      }
+    });
+
+    return v1ConfigMapSupplier.get();
   }
 
   private V1ConfigMap createConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {
@@ -1531,7 +1605,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           sleep(ofSeconds(5));
         }
       };
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), callable);
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), callable);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
       log.error(msg, e);
@@ -1662,7 +1736,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
         }
       };
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(waitMinutes), callable);
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(waitMinutes), callable);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
       log.error(msg, e);

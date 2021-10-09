@@ -6,7 +6,7 @@ HarnessTeam = "PL"
 
 java_binary(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.eventsframework.monitor.EventsFrameworkMonitorApplication",
     resource_jars = [],
@@ -173,6 +173,8 @@ java_binary(
         "@maven//:io_netty_netty_transport",
         "@maven//:io_opencensus_opencensus_api",
         "@maven//:io_opencensus_opencensus_contrib_http_util",
+        "@maven//:io_opencensus_opencensus_impl",
+        "@maven//:io_opencensus_opencensus_exporter_stats_stackdriver",
         "@maven//:io_perfmark_perfmark_api",
         "@maven//:io_projectreactor_reactor_core",
         "@maven//:io_prometheus_simpleclient",
@@ -297,3 +299,9 @@ java_binary(
 run_tests()
 
 run_analysis()
+
+exports_files([
+    "config.yml",
+    "redis/redislabs_ca.pem",
+    "redis/install_redis.sh",
+])

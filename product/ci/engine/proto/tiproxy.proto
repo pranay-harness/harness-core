@@ -11,8 +11,9 @@ message UploadCgRequest {
   string repo = 2;
   string sha = 3;
   string source = 4;  // source branch
-  string cg_dir = 5;
+  string data_dir = 5;
   string target = 6;  // target branch
+  int64 time_ms = 7;  // time taken for the test step to complete
 }
 
 message UploadCgResponse {}

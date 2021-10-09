@@ -13,7 +13,9 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.handlers.AbortInterruptHandler;
+import io.harness.engine.interrupts.handlers.MarkExpiredInterruptHandler;
 import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.exception.InvalidRequestException;
@@ -21,7 +23,9 @@ import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.InterruptRepository;
 
 import com.google.inject.Inject;
@@ -43,8 +47,10 @@ public class InterruptServiceImpl implements InterruptService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private PauseAllInterruptHandler pauseAllInterruptHandler;
   @Inject private ResumeAllInterruptHandler resumeAllInterruptHandler;
+  @Inject private MarkExpiredInterruptHandler markExpiredInterruptHandler;
   @Inject private AbortInterruptHandler abortInterruptHandler;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private PlanExecutionService planExecutionService;
 
   @Override
   public Interrupt get(String interruptId) {
@@ -72,7 +78,11 @@ public class InterruptServiceImpl implements InterruptService {
         InterruptUtils.obtainOptionalInterruptFromActiveInterrupts(interrupts, planExecutionId, nodeExecutionId);
 
     Interrupt interrupt = optionalInterrupt.orElseThrow(() -> new InvalidRequestException("Interrupt was not found"));
+    log.info("Interrupt found pre node invocation calculating execution check");
+    return calculateExecutionCheck(nodeExecutionId, interrupt);
+  }
 
+  private ExecutionCheck calculateExecutionCheck(String nodeExecutionId, Interrupt interrupt) {
     switch (interrupt.getType()) {
       case PAUSE_ALL:
         if (pauseRequired(interrupt, nodeExecutionId)) {
@@ -84,19 +94,26 @@ public class InterruptServiceImpl implements InterruptService {
         resumeAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
         return ExecutionCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
       case ABORT_ALL:
-        if (abortRequired(nodeExecutionId)) {
-          abortInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
-          return ExecutionCheck.builder().proceed(false).reason("[InterruptCheck] ABORT_ALL interrupt found").build();
+      case EXPIRE_ALL:
+        NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+        if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
+          if (interrupt.getType() == InterruptType.ABORT_ALL) {
+            abortInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
+          } else {
+            markExpiredInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
+          }
+          return ExecutionCheck.builder()
+              .proceed(false)
+              .reason("[InterruptCheck] " + interrupt.getType() + " interrupt found")
+              .build();
         }
-        return ExecutionCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
+        return ExecutionCheck.builder()
+            .proceed(true)
+            .reason("[InterruptCheck] " + interrupt.getType() + " interrupt found but Node is nnot leaf")
+            .build();
       default:
         throw new InvalidRequestException("No Handler Present for interrupt type: " + interrupt.getType());
     }
-  }
-
-  private boolean abortRequired(String nodeExecutionId) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    return !ExecutionModeUtils.isParentMode(nodeExecution.getMode());
   }
 
   private boolean pauseRequired(Interrupt interrupt, String nodeExecutionId) {
@@ -115,6 +132,16 @@ public class InterruptServiceImpl implements InterruptService {
     }
 
     // This case is for stage level PAUSE
+
+    // Lets first check if stage is already in final state
+    // (ex. interrupt was fired for the last node in the stage)
+    NodeExecution interruptNodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
+    if (StatusUtils.isFinalStatus(interruptNodeExecution.getStatus())) {
+      updatePlanStatus(interruptNodeExecution.getAmbiance().getPlanExecutionId(), nodeExecutionId);
+      updateInterruptState(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+      return false;
+    }
+
     // Find All children for the stage (nodeExecutionId in interrupt) and check if the starting node is one of these. If
     // yes Pause the execution
     List<NodeExecution> targetExecutions =
@@ -126,7 +153,8 @@ public class InterruptServiceImpl implements InterruptService {
   public List<Interrupt> fetchActivePlanLevelInterrupts(String planExecutionId) {
     return interruptRepository.findByPlanExecutionIdAndStateInAndTypeInOrderByCreatedAtDesc(planExecutionId,
         EnumSet.of(REGISTERED, PROCESSING),
-        EnumSet.of(InterruptType.PAUSE_ALL, InterruptType.RESUME_ALL, InterruptType.ABORT_ALL));
+        EnumSet.of(
+            InterruptType.PAUSE_ALL, InterruptType.RESUME_ALL, InterruptType.ABORT_ALL, InterruptType.EXPIRE_ALL));
   }
 
   @Override
@@ -181,5 +209,12 @@ public class InterruptServiceImpl implements InterruptService {
   public List<Interrupt> fetchActiveInterruptsForNodeExecution(String planExecutionId, String nodeExecutionId) {
     return interruptRepository.findByPlanExecutionIdAndNodeExecutionIdAndStateInOrderByCreatedAtDesc(
         planExecutionId, nodeExecutionId, EnumSet.of(REGISTERED, PROCESSING));
+  }
+
+  private void updatePlanStatus(String planExecutionId, String excludingNodeExecutionId) {
+    Status planStatus = planExecutionService.calculateStatusExcluding(planExecutionId, excludingNodeExecutionId);
+    if (!StatusUtils.isFinalStatus(planStatus)) {
+      planExecutionService.updateStatus(planExecutionId, planStatus);
+    }
   }
 }

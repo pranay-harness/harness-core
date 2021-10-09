@@ -42,6 +42,7 @@ public class CIStageFilterJsonCreator extends GenericStageFilterJsonCreator {
 
   @Override
   public PipelineFilter getFilter(FilterCreationContext filterCreationContext, StageElementConfig stageElementConfig) {
+    log.info("Received filter creation request for integration stage {}", stageElementConfig.getIdentifier());
     String accountId = filterCreationContext.getSetupMetadata().getAccountId();
     String orgIdentifier = filterCreationContext.getSetupMetadata().getOrgId();
     String projectIdentifier = filterCreationContext.getSetupMetadata().getProjectId();
@@ -83,6 +84,7 @@ public class CIStageFilterJsonCreator extends GenericStageFilterJsonCreator {
         }
       }
     }
+    log.info("Successfully created filter for integration stage {}", stageElementConfig.getIdentifier());
 
     return ciFilterBuilder.build();
   }

@@ -14,6 +14,7 @@ import io.harness.logstreaming.NGLogCallback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
@@ -42,8 +43,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ServiceSpecStep
     implements SyncExecutable<ServiceSpecStepParameters>, ChildrenExecutable<ServiceSpecStepParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.SERVICE_SPEC.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.SERVICE_SPEC.getName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ServiceStepsHelper serviceStepsHelper;

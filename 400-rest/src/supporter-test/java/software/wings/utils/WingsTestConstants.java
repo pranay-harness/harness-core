@@ -36,6 +36,20 @@ public interface WingsTestConstants {
 
   String SERVICE_ID = "SERVICE_ID";
 
+  String SERVICE1_ID = "SERVICE1_ID";
+
+  String SERVICE2_ID = "SERVICE2_ID";
+
+  String SERVICE3_ID = "SERVICE3_ID";
+
+  String SERVICE4_ID = "SERVICE4_ID";
+
+  String SERVICE5_ID = "SERVICE5_ID";
+
+  String SERVICE6_ID = "SERVICE6_ID";
+
+  String SERVICE7_ID = "SERVICE7_ID";
+
   String SERVICE_TEMPLATE_ID = "SERVICE_TEMPLATE_ID";
 
   String PROVISIONER_ID = "PROVISIONER_ID";
@@ -242,6 +256,8 @@ public interface WingsTestConstants {
 
   String ACCOUNT_ID = "ACCOUNT_ID";
 
+  String ACCOUNT1_ID = "ACCOUNT1_ID";
+
   String ACCOUNT_SERVICE = "ACCOUNT_SERVICE";
 
   String ACCOUNT_KEY = "ACCOUNT_KEY_ACCOUNT_KEY_ACCOUNT_"; // Account key must be 32 characters
@@ -390,6 +406,7 @@ public interface WingsTestConstants {
 
   String HELM_CHART_ID = "HELM_CHART_ID";
   String FREEZE_WINDOW_ID = "FREEZE_WINDOW_ID";
+  String APP_MANIFEST_NAME = "APP_MANIFEST_NAME";
 
   /**
    * The constant URL.

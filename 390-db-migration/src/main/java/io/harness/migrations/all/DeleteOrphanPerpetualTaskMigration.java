@@ -3,7 +3,8 @@ package io.harness.migrations.all;
 import static java.lang.String.format;
 import static org.reflections.Reflections.log;
 
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.Migration;
 import io.harness.perpetualtask.PerpetualTaskService;
 
@@ -25,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(HarnessTeam.CDP)
 public class DeleteOrphanPerpetualTaskMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
@@ -72,6 +74,8 @@ public class DeleteOrphanPerpetualTaskMigration implements Migration {
             instanceSyncPTaskInfoToBeDeleted.add(infraMappingsInstanceSyncPTaskInfoMap.get(infraMappingId));
           }
         });
+
+        log.info(format("Perpetual tasks to be deleted %s", pTasksToBeDeleted));
 
         pTasksToBeDeleted.forEach(pTaskId -> {
           try {

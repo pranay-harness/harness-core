@@ -30,6 +30,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
@@ -40,6 +41,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -147,6 +149,7 @@ public class AwsAmiServiceDeployState extends State {
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private AwsStateHelper awsStateHelper;
   @Inject private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public AwsAmiServiceDeployState(String name) {
     this(name, StateType.AWS_AMI_SERVICE_DEPLOY.name());
@@ -387,6 +390,14 @@ public class AwsAmiServiceDeployState extends State {
             .asgDesiredCounts(amiResizeTaskRequestData.getResizeData())
             .infraMappingClassisLbs(amiResizeTaskRequestData.getClassicLBs())
             .infraMappingTargetGroupArns(amiResizeTaskRequestData.getTargetGroupArns())
+            .amiInServiceHealthyStateFFEnabled(
+                featureFlagService.isEnabled(FeatureName.AMI_IN_SERVICE_HEALTHY_WAIT, accountId))
+            .baseAsgScheduledActionJSONs(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId())
+                    ? serviceSetupElement.getBaseAsgScheduledActionJSONs()
+                    : null)
+            .amiAsgConfigCopyEnabled(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId()))
             .build();
 
     addExistingInstanceIds(amiResizeTaskRequestData, request);

@@ -76,12 +76,20 @@ if [[ "" != "$SMTP_HOST" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.host "$SMTP_HOST"
 fi
 
+if [[ "" != "$SMTP_PORT" ]]; then
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.port "$SMTP_PORT"
+fi
+
 if [[ "" != "$SMTP_USERNAME" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.username "$SMTP_USERNAME"
 fi
 
 if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.password "$SMTP_PASSWORD"
+fi
+
+if [[ "" != "$SMTP_USE_SSL" ]]; then
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.useSSL "$SMTP_USE_SSL"
 fi
 
 if [[ "" != "$OVERRIDE_PREDEFINED_TEMPLATES" ]]; then
@@ -195,9 +203,35 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   done
 fi
 
+
+if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE resourceGroupServiceConfig.redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+replace_key_value resourceGroupServiceConfig.redisLockConfig.redisUrl "$LOCK_CONFIG_REDIS_URL"
+
+replace_key_value resourceGroupServiceConfig.redisLockConfig.envNamespace "$LOCK_CONFIG_ENV_NAMESPACE"
+
+replace_key_value resourceGroupServiceConfig.redisLockConfig.sentinel "$LOCK_CONFIG_USE_SENTINEL"
+
+replace_key_value resourceGroupServiceConfig.redisLockConfig.masterName "$LOCK_CONFIG_SENTINEL_MASTER_NAME"
+
+replace_key_value resourceGroupServiceConfig.redisLockConfig.userName "$LOCK_CONFIG_REDIS_USERNAME"
+
+replace_key_value resourceGroupServiceConfig.redisLockConfig.password "$LOCK_CONFIG_REDIS_PASSWORD"
+
+replace_key_value resourceGroupServiceConfig.distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
+
 replace_key_value resourceGroupServiceConfig.auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
 
 replace_key_value resourceGroupServiceConfig.enableAudit "$AUDIT_ENABLED"
+
+replace_key_value resourceGroupServiceConfig.exportMetricsToStackDriver "$EXPORT_METRICS_TO_STACK_DRIVER"
 
 replace_key_value resourceGroupServiceConfig.accessControlAdminClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
 
@@ -217,6 +251,10 @@ replace_key_value resourceGroupServiceConfig.resourceClients.manager.baseUrl "$M
 
 replace_key_value resourceGroupServiceConfig.resourceClients.manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
+replace_key_value resourceGroupServiceConfig.resourceClients.resourceGroup.baseUrl "$RESOURCE_GROUP_CLIENT_BASEURL"
+
+replace_key_value resourceGroupServiceConfig.resourceClients.resourceGroup.secret "$RESOURCE_GROUP_SECRET"
+
 replace_key_value resourceGroupServiceConfig.mongo.uri "${RESOURCE_GROUP_MONGO_URI//\\&/&}"
 
 replace_key_value resourceGroupServiceConfig.redis.sslConfig.enabled "$EVENTS_FRAMEWORK_REDIS_SSL_ENABLED"
@@ -231,4 +269,8 @@ replace_key_value resourceGroupServiceConfig.mongo.indexManagerMode "$MONGO_INDE
 
 replace_key_value auditServiceConfig.mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
 
-replace_key_value resourceGroupServiceConfig.enableResourceGroup "${ENABLE_RESOURCE_GROUP:-false}" 
+replace_key_value resourceGroupServiceConfig.enableResourceGroup "${ENABLE_RESOURCE_GROUP:-false}"
+
+replace_key_value resourceGroupServiceConfig.resourceClients.template-service.baseUrl "$TEMPLATE_SERVICE_CLIENT_BASEURL"
+
+replace_key_value resourceGroupServiceConfig.resourceClients.template-service.secret "$TEMPLATE_SERVICE_SECRET"

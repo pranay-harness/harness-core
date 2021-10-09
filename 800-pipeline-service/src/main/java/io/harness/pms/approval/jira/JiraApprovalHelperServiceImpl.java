@@ -33,6 +33,7 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -42,6 +43,7 @@ import io.harness.steps.approval.step.entities.ApprovalInstance.ApprovalInstance
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance.JiraApprovalInstanceKeys;
+import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -75,9 +77,10 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   @Inject
   public JiraApprovalHelperServiceImpl(NgDelegate2TaskExecutor ngDelegate2TaskExecutor,
       ConnectorResourceClient connectorResourceClient, KryoSerializer kryoSerializer,
-      SecretNGManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
+      @Named("PRIVILEGED") SecretNGManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
       LogStreamingStepClientFactory logStreamingStepClientFactory,
-      @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName, PmsGitSyncHelper pmsGitSyncHelper) {
+      @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName, PmsGitSyncHelper pmsGitSyncHelper,
+      JiraStepHelperService jiraStepHelperService) {
     this.ngDelegate2TaskExecutor = ngDelegate2TaskExecutor;
     this.connectorResourceClient = connectorResourceClient;
     this.kryoSerializer = kryoSerializer;
@@ -122,8 +125,8 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
       validateField(issueKey, JiraApprovalInstanceKeys.issueKey);
       validateField(connectorRef, JiraApprovalInstanceKeys.connectorRef);
 
-      JiraTaskNGParameters jiraTaskNGParameters =
-          prepareJiraTaskParameters(accountIdentifier, orgIdentifier, projectIdentifier, issueKey, connectorRef);
+      JiraTaskNGParameters jiraTaskNGParameters = prepareJiraTaskParameters(
+          accountIdentifier, orgIdentifier, projectIdentifier, issueKey, connectorRef, instance.getDelegateSelectors());
       logCallback.saveExecutionLog(
           String.format("Jira url: %s", jiraTaskNGParameters.getJiraConnectorDTO().getJiraUrl()));
 
@@ -136,8 +139,8 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
     }
   }
 
-  private JiraTaskNGParameters prepareJiraTaskParameters(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String issueId, String connectorRef) {
+  private JiraTaskNGParameters prepareJiraTaskParameters(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String issueId, String connectorRef, ParameterField<List<String>> delegateSelectors) {
     JiraConnectorDTO jiraConnectorDTO =
         getJiraConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorRef);
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()
@@ -156,6 +159,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
         .encryptionDetails(encryptionDataDetails)
         .jiraConnectorDTO(jiraConnectorDTO)
         .issueKey(issueId)
+        .delegateSelectors(StepUtils.getDelegateSelectorList(delegateSelectors))
         .build();
   }
 

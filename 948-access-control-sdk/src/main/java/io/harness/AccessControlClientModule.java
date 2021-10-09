@@ -76,20 +76,15 @@ public class AccessControlClientModule extends AbstractModule {
           .toProvider(nonPrivilegedAccessControlHttpClientFactory())
           .in(Scopes.SINGLETON);
 
-      AccessControlClient privilegedClient = new PrivilegedAccessControlClientImpl();
-      AccessControlClient nonPrivilegedClient = new NonPrivilegedAccessControlClientImpl();
-      requestInjection(privilegedClient);
-      requestInjection(nonPrivilegedClient);
-
-      bind(AccessControlClient.class).to(NonPrivilegedAccessControlClientImpl.class).in(Scopes.SINGLETON);
-      bind(AccessControlClient.class)
-          .annotatedWith(Names.named(ClientMode.NON_PRIVILEGED.name()))
-          .to(NonPrivilegedAccessControlClientImpl.class)
-          .in(Scopes.SINGLETON);
       bind(AccessControlClient.class)
           .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
           .to(PrivilegedAccessControlClientImpl.class)
           .in(Scopes.SINGLETON);
+      bind(AccessControlClient.class)
+          .annotatedWith(Names.named(ClientMode.NON_PRIVILEGED.name()))
+          .to(NonPrivilegedAccessControlClientImpl.class)
+          .in(Scopes.SINGLETON);
+      bind(AccessControlClient.class).to(NonPrivilegedAccessControlClientImpl.class).in(Scopes.SINGLETON);
     } else {
       bind(AccessControlClient.class).to(NoOpAccessControlClientImpl.class).in(Scopes.SINGLETON);
       bind(AccessControlClient.class)

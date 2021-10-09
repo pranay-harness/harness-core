@@ -19,7 +19,7 @@ import com.google.inject.Singleton;
  */
 @OwnedBy(CDC)
 @Singleton
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class CanaryWorkflowYamlHandler extends WorkflowYamlHandler<CanaryWorkflowYaml> {
   @Override
   protected void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflow) {
@@ -32,6 +32,7 @@ public class CanaryWorkflowYamlHandler extends WorkflowYamlHandler<CanaryWorkflo
             .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
             .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
             .withRollbackProvisioners(workflowInfo.getRollbackProvisioners())
+            .withRollbackProvisionersReverse(workflowInfo.getRollbackProvisionersReverse())
             .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
             .withUserVariables(workflowInfo.getUserVariables())
             .withWorkflowPhases(workflowInfo.getPhaseList());

@@ -388,18 +388,21 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
     if (requestDTO.getEncryptionType() == EncryptionType.VAULT) {
       VaultMetadataRequestSpecDTO specDTO = (VaultMetadataRequestSpecDTO) requestDTO.getSpec();
       Optional<String> urlFromRequest = Optional.ofNullable(specDTO).map(VaultMetadataRequestSpecDTO::getUrl);
-      Optional<String> tokenFromRequest = Optional.ofNullable(specDTO)
-                                              .filter(x -> x.getAccessType() == AccessType.TOKEN)
-                                              .map(x -> ((VaultAuthTokenCredentialDTO) (x.getSpec())).getAuthToken())
-                                              .filter(x -> !x.isEmpty());
+      Optional<String> tokenFromRequest =
+          Optional.ofNullable(specDTO)
+              .filter(x -> x.getAccessType() == AccessType.TOKEN)
+              .map(
+                  x -> String.valueOf(((VaultAuthTokenCredentialDTO) (x.getSpec())).getAuthToken().getDecryptedValue()))
+              .filter(x -> !x.isEmpty());
       Optional<String> appRoleIdFromRequest = Optional.ofNullable(specDTO)
                                                   .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
                                                   .map(x -> ((VaultAppRoleCredentialDTO) (x.getSpec())).getAppRoleId())
                                                   .filter(x -> !x.isEmpty());
-      Optional<String> secretIdFromRequest = Optional.ofNullable(specDTO)
-                                                 .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
-                                                 .map(x -> ((VaultAppRoleCredentialDTO) (x.getSpec())).getSecretId())
-                                                 .filter(x -> !x.isEmpty());
+      Optional<String> secretIdFromRequest =
+          Optional.ofNullable(specDTO)
+              .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
+              .map(x -> String.valueOf(((VaultAppRoleCredentialDTO) (x.getSpec())).getSecretId().getDecryptedValue()))
+              .filter(x -> !x.isEmpty());
 
       Optional<SecretManagerConfig> secretManagerConfigOptional = get(accountIdentifier, requestDTO.getOrgIdentifier(),
           requestDTO.getProjectIdentifier(), requestDTO.getIdentifier(), true);
@@ -460,7 +463,8 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       Optional.ofNullable(specDTO.getClientId()).ifPresent(azureVaultConfig::setClientId);
       Optional.ofNullable(specDTO.getTenantId()).ifPresent(azureVaultConfig::setTenantId);
       Optional.ofNullable(specDTO.getSubscription()).ifPresent(azureVaultConfig::setSubscription);
-      Optional.ofNullable(specDTO.getSecretKey()).ifPresent(azureVaultConfig::setSecretKey);
+      Optional.ofNullable(specDTO.getSecretKey())
+          .ifPresent(secretKey -> azureVaultConfig.setSecretKey(String.valueOf(secretKey.getDecryptedValue())));
       Optional.ofNullable(specDTO.getAzureEnvironmentType()).ifPresent(azureVaultConfig::setAzureEnvironmentType);
       List<String> vaultNames = azureSecretsManagerService.listAzureVaults(accountIdentifier, azureVaultConfig);
       return SecretManagerMetadataDTO.builder()

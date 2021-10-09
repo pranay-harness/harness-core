@@ -11,6 +11,7 @@ import lombok.Value;
 @Value
 @Builder
 public class RoleAssignmentValidationResult {
+  ValidationResult scopeValidationResult;
   ValidationResult principalValidationResult;
   ValidationResult roleValidationResult;
   ValidationResult resourceGroupValidationResult;

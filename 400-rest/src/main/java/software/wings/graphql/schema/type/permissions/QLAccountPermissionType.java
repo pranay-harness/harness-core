@@ -18,6 +18,7 @@ public enum QLAccountPermissionType implements QLEnum {
   ADMINISTER_OTHER_ACCOUNT_FUNCTIONS,
   VIEW_AUDITS,
   MANAGE_TAGS,
+  MANAGE_ACCOUNT_DEFAULTS,
   ADMINISTER_CE,
   VIEW_CE,
   /**
@@ -94,6 +95,11 @@ public enum QLAccountPermissionType implements QLEnum {
    * Manage Deployment Freezes
    */
   MANAGE_DEPLOYMENT_FREEZES,
+
+  /**
+   * Deploy during Deployment Freezes
+   */
+  ALLOW_DEPLOYMENTS_DURING_FREEZE,
 
   /**
    * Manage Pipeline Governance Standards

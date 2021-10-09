@@ -3,6 +3,7 @@ package io.harness.waiter;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 
@@ -10,9 +11,13 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.WaitEngineTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
@@ -24,7 +29,9 @@ import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Poller;
+import io.harness.timeout.TimeoutEngine;
 import io.harness.waiter.ProgressUpdate.ProgressUpdateKeys;
+import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -40,16 +47,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
 public class WaitNotifyEngineTest extends WaitEngineTestBase {
   private static AtomicInteger callCount;
   private static AtomicInteger progressCallCount;
+  private static AtomicInteger timeoutCallCount;
   private static Map<String, ResponseData> responseMap;
   private static List<ProgressData> progressDataList;
 
+  @Inject private TimeoutEngine timeoutEngine;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private HPersistence persistence;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private QueueConsumer<NotifyEvent> notifyConsumer;
   @Inject private NotifyResponseCleaner notifyResponseCleaner;
   @Inject private TestNotifyEventListener notifyEventListener;
@@ -61,6 +72,7 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
    */
   @Before
   public void setupResponseMap() {
+    timeoutCallCount = new AtomicInteger(0);
     callCount = new AtomicInteger(0);
     responseMap = new HashMap<>();
     progressCallCount = new AtomicInteger(0);
@@ -212,8 +224,106 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
     }
   }
 
+  @Test
+  @SpringWaiter
+  @Owner(developers = PRASHANT, intermittent = true)
+  @Category(UnitTests.class)
+  public void shouldTestTimeoutWithResponse() {
+    String uuid1 = generateUuid();
+    String uuid2 = generateUuid();
+    List<String> correlationIds = Arrays.asList(uuid1, uuid2);
+
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      timeoutEngine.registerIterators();
+      String waitInstanceId = waitNotifyEngine.waitForAllOnInList(
+          TEST_PUBLISHER, new TestNotifyCallback(), correlationIds, Duration.ofSeconds(3));
+      WaitInstance waitInstance =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(waitInstance).isNotNull();
+      assertThat(waitInstance.getTimeout()).isEqualTo(Duration.ofSeconds(3));
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid1).build();
+      waitNotifyEngine.doneWith(uuid1, data);
+      Poller.pollFor(Duration.ofSeconds(6), ofMillis(300), () -> timeoutCallCount.get() == 1);
+      assertThat(responseMap).hasSize(1).containsAllEntriesOf(of(uuid1, data));
+      assertThat(mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class))
+          .isNull();
+    }
+  }
+
+  @Test
+  @SpringWaiter
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldNoopDoneWith() {
+    String uuid1 = generateUuid();
+    List<String> correlationIds = Arrays.asList(uuid1);
+
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      String waitInstanceId = waitNotifyEngine.waitForAllOnInList(
+          TEST_PUBLISHER, new TestNotifyCallback(), correlationIds, Duration.ofSeconds(3));
+      WaitInstance waitInstance =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(waitInstance).isNotNull();
+      assertThat(waitInstance.getTimeout()).isEqualTo(Duration.ofSeconds(3));
+      boolean result = waitNotifyEngine.doneWithWithoutCallback(uuid1);
+      assertThat(result).isTrue();
+      WaitInstance deleted =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(deleted).isNull();
+    }
+  }
+
+  @Test
+  @SpringWaiter
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldNoopDoneWithMultipleCorrelationIds() {
+    String uuid1 = generateUuid();
+    String uuid2 = generateUuid();
+    List<String> correlationIds = Arrays.asList(uuid1, uuid2);
+
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      String waitInstanceId = waitNotifyEngine.waitForAllOnInList(
+          TEST_PUBLISHER, new TestNotifyCallback(), correlationIds, Duration.ofSeconds(3));
+      WaitInstance waitInstance =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(waitInstance).isNotNull();
+      assertThat(waitInstance.getTimeout()).isEqualTo(Duration.ofSeconds(3));
+
+      boolean result1 = waitNotifyEngine.doneWithWithoutCallback(uuid1);
+      assertThat(result1).isTrue();
+      WaitInstance firstCallbackInstance =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(firstCallbackInstance).isNotNull();
+      assertThat(firstCallbackInstance.getWaitingOnCorrelationIds()).hasSize(1);
+      assertThat(firstCallbackInstance.getWaitingOnCorrelationIds()).containsExactly(uuid2);
+
+      boolean result2 = waitNotifyEngine.doneWithWithoutCallback(uuid2);
+      assertThat(result2).isTrue();
+      WaitInstance firstCallbackInstance2 =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(firstCallbackInstance2).isNull();
+    }
+  }
+
+  @Test
+  @SpringWaiter
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestTimeoutValid() {
+    String uuid1 = generateUuid();
+    List<String> correlationIds = Arrays.asList(uuid1);
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      assertThatThrownBy(()
+                             -> waitNotifyEngine.waitForAllOnInList(
+                                 TEST_PUBLISHER, new TestNotifyCallback(), correlationIds, Duration.ofSeconds(2)))
+          .isInstanceOf(InvalidArgumentsException.class)
+          .hasMessageContaining("Timeout should be greater than");
+    }
+  }
+
   /**
-   * Should wait for correlation id for multiple wait instances.
+   * Should wait forx correlation id for multiple wait instances.
    */
   @Test
   @Owner(developers = GEORGE)
@@ -325,6 +435,12 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
     @Override
     public void notifyError(Map<String, ResponseData> response) {
       // Do Nothing.
+    }
+
+    @Override
+    public void notifyTimeout(Map<String, ResponseData> response) {
+      timeoutCallCount.incrementAndGet();
+      responseMap.putAll(response);
     }
   }
 

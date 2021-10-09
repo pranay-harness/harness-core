@@ -17,6 +17,6 @@ public class RemoteTerraformVarFileSpec implements TerraformVarFileSpec {
 
   @Override
   public String getType() {
-    return "Remote";
+    return TerraformVarFileTypes.Remote;
   }
 }

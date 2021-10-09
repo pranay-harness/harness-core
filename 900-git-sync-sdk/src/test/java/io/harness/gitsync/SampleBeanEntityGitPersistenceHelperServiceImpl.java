@@ -7,10 +7,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SampleBean;
 import io.harness.common.EntityReference;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 
 import com.google.inject.Singleton;
+import java.util.List;
 import java.util.function.Supplier;
 
 @Singleton
@@ -52,7 +54,7 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public SampleBean update(String accountIdentifier, String yaml) {
+  public SampleBean update(String accountIdentifier, String yaml, ChangeType changeType) {
     return null;
   }
 
@@ -84,5 +86,20 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
   @Override
   public String getBranchKey() {
     return "branch";
+  }
+
+  @Override
+  public SampleBean upsert(String accountIdentifier, String yaml) {
+    return null;
+  }
+
+  @Override
+  public SampleBean fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
+    return null;
+  }
+
+  @Override
+  public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
+    return null;
   }
 }

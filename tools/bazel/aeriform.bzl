@@ -1,3 +1,6 @@
+def breakDependencyOn(target):
+    return target
+
 def aeriform(target):
     name = target.replace("/", "").replace(":", "!")
     native.genquery(
@@ -29,4 +32,22 @@ def aeriform(target):
             "> \"$@\"",
         ]),
         toolchains = ["@bazel_tools//tools/jdk:current_host_java_runtime"],
+    )
+
+def aeriformAnnotations(**kwargs):
+    name = kwargs.get("name")
+    srcs = kwargs.get("srcs", [])
+
+    cmd = "grep -A 1 \"^@OwnedBy\\|^@BreakDependencyOn\\|^@TargetModule\\|^@Deprecated\" "
+    for src in srcs:
+        cmd += "\"$(location %s)\" " % src
+    cmd += "> \"$@\" || true"
+
+    native.genrule(
+        name = name + "_annotations",
+        srcs = srcs,
+        outs = [name + "_srcs_annotations.txt"],
+        cmd = cmd,
+        tags = ["manual", "no-ide", "aeriform"],
+        visibility = ["//visibility:public"],
     )

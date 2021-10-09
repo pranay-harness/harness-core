@@ -1,7 +1,11 @@
 package software.wings.helpers.ext.k8s.request;
 
+import static io.harness.annotations.dev.HarnessModule._950_DELEGATE_TASKS_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
@@ -21,6 +25,8 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
+@TargetModule(_950_DELEGATE_TASKS_BEANS)
 public class K8sDelegateManifestConfig implements NestedAnnotationResolver {
   StoreType manifestStoreTypes;
   List<ManifestFile> manifestFiles;
@@ -42,4 +48,8 @@ public class K8sDelegateManifestConfig implements NestedAnnotationResolver {
   @Expression(ALLOW_SECRETS) private HelmCommandFlag helmCommandFlag;
 
   private boolean customManifestEnabled;
+
+  private boolean optimizedFilesFetch;
+
+  private boolean shouldSaveManifest;
 }

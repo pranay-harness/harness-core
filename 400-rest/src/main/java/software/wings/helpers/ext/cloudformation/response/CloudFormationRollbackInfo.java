@@ -22,5 +22,7 @@ public class CloudFormationRollbackInfo {
   private String region;
   private String customStackName;
   private String cloudFormationRoleArn;
+  private boolean skipBasedOnStackStatus;
+  private List<String> stackStatusesToMarkAsSuccess;
   private List<NameValuePair> variables;
 }

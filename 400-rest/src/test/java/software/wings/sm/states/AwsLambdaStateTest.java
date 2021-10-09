@@ -30,8 +30,10 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -66,6 +68,7 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -83,6 +86,7 @@ import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,6 +94,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
@@ -219,6 +224,9 @@ public class AwsLambdaStateTest extends CategoryTest {
                             LambdaSpecification.FunctionSpecification.builder().functionName("functionName").build()))
                         .build());
     when(mockContext.renderExpression("functionName")).thenReturn("functionName");
+    List<String> aliases = Mockito.mock(List.class);
+    doReturn(true).when(aliases).isEmpty();
+    on(awsLambdaState).set("aliases", aliases);
 
     awsLambdaState.execute(mockContext);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -230,6 +238,9 @@ public class AwsLambdaStateTest extends CategoryTest {
         .isEqualTo(INFRA_MAPPING_ID);
     Activity activity = activityCaptor.getValue();
     assertThat(activity.getInfrastructureDefinitionId()).isEqualTo(INFRA_DEFINITION_ID);
+    verify(aliases, atLeastOnce()).isEmpty();
+    AwsLambdaExecuteWfRequest parameter = (AwsLambdaExecuteWfRequest) delegateTask.getData().getParameters()[0];
+    assertThat(parameter.getEvaluatedAliases()).isEmpty();
   }
 
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {

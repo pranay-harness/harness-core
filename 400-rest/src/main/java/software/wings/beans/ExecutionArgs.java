@@ -4,6 +4,10 @@
 
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
@@ -31,6 +35,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ExecutionArgs {
   private WorkflowType workflowType;
   private String serviceId;
@@ -50,7 +56,7 @@ public class ExecutionArgs {
   private String stageName;
   private Map<String, String> workflowVariables;
   private String notes;
-  @Deprecated @JsonIgnore private EmbeddedUser triggeredBy;
+  @JsonIgnore @Deprecated private EmbeddedUser triggeredBy;
   private CreatedByType createdByType;
   private String triggeringApiKeyId;
   private boolean excludeHostsWithSameArtifact;

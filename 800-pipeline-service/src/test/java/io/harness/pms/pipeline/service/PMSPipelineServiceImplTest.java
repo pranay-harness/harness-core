@@ -1,10 +1,13 @@
 package io.harness.pms.pipeline.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.rule.OwnerRule.BRIJESH;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -12,16 +15,22 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.ChangeType;
+import io.harness.observer.Subject;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
+import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
 import io.harness.pms.pipeline.StepPalleteInfo;
+import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.repositories.pipeline.PMSPipelineRepositoryCustomImpl;
 import io.harness.rule.Owner;
@@ -55,8 +64,10 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Mock private PmsSdkInstanceService pmsSdkInstanceService;
   @Mock private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Mock private PMSPipelineServiceHelper pmsPipelineServiceHelper;
+  @Mock private VariableCreatorMergeService variableCreatorMergeService;
   @Mock private PMSPipelineRepositoryCustomImpl pmsPipelineRepositoryCustom;
   @Mock private OutboxServiceImpl outboxService;
+  @Mock private Subject<PipelineActionObserver> pipelineSubject;
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   StepCategory library;
@@ -71,7 +82,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
   PipelineEntity pipelineEntity;
   PipelineEntity updatedPipelineEntity;
-  OutboxEvent a = OutboxEvent.builder().build();
+  OutboxEvent outboxEvent = OutboxEvent.builder().build();
 
   @Before
   public void setUp() throws IOException {
@@ -139,7 +150,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                 StepInfo.newBuilder()
                     .setName("testStepCD")
                     .setType("testStepCD")
-                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                     .build()))
             .build());
     serviceInstanceNameToSupportedSteps.put("cv",
@@ -149,7 +160,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                 StepInfo.newBuilder()
                     .setName("testStepCV")
                     .setType("testStepCV")
-                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                     .build()))
             .build());
 
@@ -165,8 +176,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
         .thenReturn(cv);
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", null, accountId);
     String expected =
-        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
-
+        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD, disabled=false)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])])";
     assertThat(stepCategory.toString()).isEqualTo(expected);
   }
 
@@ -183,7 +193,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                     .setName("testStepCD")
                     .setType("testStepCD")
                     .setStepMetaData(
-                        StepMetaData.newBuilder().addCategory("K8S").setFolderPath("Double/Single").build())
+                        StepMetaData.newBuilder().addCategory("K8S").addFolderPaths("Double/Single").build())
                     .build()))
             .build());
     serviceInstanceNameToSupportedSteps.put("cv",
@@ -193,7 +203,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                 StepInfo.newBuilder()
                     .setName("testStepCV")
                     .setType("testStepCV")
-                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                     .build()))
             .build());
 
@@ -214,7 +224,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform", accountId);
     String expected =
-        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
+        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])])";
     assertThat(stepCategory.toString()).isEqualTo(expected);
   }
 
@@ -237,7 +247,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testFormCriteriaWithActualData() throws IOException {
     on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
-    doReturn(a).when(outboxService).save(any());
+    doReturn(outboxEvent).when(outboxService).save(any());
     doReturn(updatedPipelineEntity).when(pmsPipelineServiceHelper).updatePipelineInfo(pipelineEntity);
 
     pmsPipelineService.create(pipelineEntity);
@@ -248,7 +258,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
 
     List<PipelineEntity> list =
-        pmsPipelineService.list(criteria, pageable, accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER).getContent();
+        pmsPipelineService.list(criteria, pageable, accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, null).getContent();
 
     assertThat(list.size()).isEqualTo(1);
     PipelineEntity queriedPipelineEntity = list.get(0);
@@ -259,5 +269,53 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     assertThat(queriedPipelineEntity.getYaml()).isEqualTo(updatedPipelineEntity.getYaml());
     assertThat(queriedPipelineEntity.getStageCount()).isEqualTo(updatedPipelineEntity.getStageCount());
     assertThat(queriedPipelineEntity.getStageNames()).isEqualTo(updatedPipelineEntity.getStageNames());
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testDelete() throws IOException {
+    on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
+    doReturn(outboxEvent).when(outboxService).save(any());
+    doReturn(updatedPipelineEntity).when(pmsPipelineServiceHelper).updatePipelineInfo(pipelineEntity);
+    pmsPipelineService.create(pipelineEntity);
+    pmsPipelineService.delete(accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, 1L);
+    assertThatThrownBy(
+        () -> pmsPipelineService.delete(accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, 1L))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testUpdatePipelineYaml() throws IOException {
+    on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
+    doReturn(updatedPipelineEntity).when(pmsPipelineServiceHelper).updatePipelineInfo(pipelineEntity);
+    assertThatThrownBy(() -> pmsPipelineService.updatePipelineYaml(pipelineEntity, ChangeType.ADD))
+        .isInstanceOf(InvalidRequestException.class);
+    pmsPipelineService.create(pipelineEntity);
+    doReturn(updatedPipelineEntity).when(pmsPipelineServiceHelper).updatePipelineInfo(any());
+    pmsPipelineService.updatePipelineYaml(pipelineEntity, ChangeType.ADD);
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testGetThrowException() throws IOException {
+    assertThatThrownBy(
+        () -> pmsPipelineService.get(accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testSaveExecutionInfo() {
+    ExecutionSummaryInfo executionSummaryInfo = ExecutionSummaryInfo.builder().build();
+    on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
+    assertThatCode(()
+                       -> pmsPipelineService.saveExecutionInfo(
+                           accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, executionSummaryInfo))
+        .doesNotThrowAnyException();
   }
 }

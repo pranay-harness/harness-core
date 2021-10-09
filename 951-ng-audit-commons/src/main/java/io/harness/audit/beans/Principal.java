@@ -30,6 +30,8 @@ public class Principal {
         return Principal.builder().type(PrincipalType.API_KEY).identifier(principal.getName()).build();
       case SERVICE:
         return Principal.builder().type(PrincipalType.SYSTEM).identifier(String.valueOf(PrincipalType.SYSTEM)).build();
+      case SERVICE_ACCOUNT:
+        return Principal.builder().type(PrincipalType.SERVICE_ACCOUNT).identifier(principal.getName()).build();
       default:
         throw new InvalidArgumentsException(String.format("Unknown principal type %s", principal.getType()));
     }

@@ -1,7 +1,10 @@
 package io.harness.generator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.beans.Account;
@@ -11,6 +14,7 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Workflow;
+import software.wings.beans.container.ContainerTask;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -21,6 +25,7 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDP)
 @Singleton
 public class OwnerManager {
   @Inject private AccountService accountService;
@@ -165,6 +170,30 @@ public class OwnerManager {
       return objects.stream().filter(obj -> obj instanceof Service).findFirst().map(obj -> (Service) obj).orElse(null);
     }
 
+    public Service obtainServiceByServiceName(String serviceName) {
+      return objects.stream()
+          .filter(obj -> obj instanceof Service)
+          .filter(obj -> ((Service) obj).getName().equals(serviceName))
+          .findFirst()
+          .map(obj -> (Service) obj)
+          .orElse(null);
+    }
+
+    public Service obtainServiceByServiceId(String serviceId) {
+      return objects.stream()
+          .filter(obj -> obj instanceof Service)
+          .filter(obj -> ((Service) obj).getUuid().equals(serviceId))
+          .findFirst()
+          .map(obj -> (Service) obj)
+          .orElse(null);
+    }
+
+    public List<String> obtainAllServiceIds() {
+      List<String> serviceIds = new ArrayList<>();
+      objects.stream().filter(obj -> obj instanceof Service).forEach(obj -> serviceIds.add(((Service) obj).getUuid()));
+      return serviceIds;
+    }
+
     public Service obtainService(Generator<Service> generator) {
       Service service = obtainService();
       if (service != null) {
@@ -197,6 +226,14 @@ public class OwnerManager {
         }
       }
       return serviceTemplate;
+    }
+
+    public ContainerTask obtainContainerTask() {
+      return objects.stream()
+          .filter(obj -> obj instanceof ContainerTask)
+          .findFirst()
+          .map(obj -> (ContainerTask) obj)
+          .orElse(null);
     }
 
     public InfrastructureProvisioner obtainInfrastructureProvisioner() {

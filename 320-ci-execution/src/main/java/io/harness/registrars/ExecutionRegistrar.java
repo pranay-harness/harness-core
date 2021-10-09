@@ -4,15 +4,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.states.BuildStatusStep;
-import io.harness.states.BuildStep;
-import io.harness.states.CIPipelineSetupStep;
 import io.harness.states.CISpecStep;
 import io.harness.states.CleanupStep;
 import io.harness.states.DockerStep;
 import io.harness.states.ECRStep;
 import io.harness.states.GCRStep;
-import io.harness.states.IntegrationStageStep;
 import io.harness.states.IntegrationStageStepPMS;
 import io.harness.states.LiteEngineTaskStep;
 import io.harness.states.PluginStep;
@@ -25,6 +21,8 @@ import io.harness.states.SaveCacheS3Step;
 import io.harness.states.UploadToArtifactoryStep;
 import io.harness.states.UploadToGCSStep;
 import io.harness.states.UploadToS3Step;
+import io.harness.states.codebase.CodeBaseStep;
+import io.harness.states.codebase.CodeBaseTaskStep;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,11 +36,7 @@ public class ExecutionRegistrar {
 
     engineSteps.put(LiteEngineTaskStep.STEP_TYPE, LiteEngineTaskStep.class);
     engineSteps.put(CleanupStep.STEP_TYPE, CleanupStep.class);
-    engineSteps.put(BuildStep.STEP_TYPE, BuildStep.class);
     engineSteps.put(RunStep.STEP_TYPE, RunStep.class);
-    engineSteps.put(IntegrationStageStep.STEP_TYPE, IntegrationStageStep.class);
-    engineSteps.put(CIPipelineSetupStep.STEP_TYPE, CIPipelineSetupStep.class);
-    engineSteps.put(BuildStatusStep.STEP_TYPE, BuildStatusStep.class);
     engineSteps.put(PluginStep.STEP_TYPE, PluginStep.class);
     engineSteps.put(ECRStep.STEP_TYPE, ECRStep.class);
     engineSteps.put(GCRStep.STEP_TYPE, GCRStep.class);
@@ -56,6 +50,8 @@ public class ExecutionRegistrar {
     engineSteps.put(UploadToArtifactoryStep.STEP_TYPE, UploadToArtifactoryStep.class);
     engineSteps.put(RunTestsStep.STEP_TYPE, RunTestsStep.class);
     engineSteps.put(IntegrationStageStepPMS.STEP_TYPE, IntegrationStageStepPMS.class);
+    engineSteps.put(CodeBaseStep.STEP_TYPE, CodeBaseStep.class);
+    engineSteps.put(CodeBaseTaskStep.STEP_TYPE, CodeBaseTaskStep.class);
     engineSteps.put(CISpecStep.STEP_TYPE, CISpecStep.class);
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;

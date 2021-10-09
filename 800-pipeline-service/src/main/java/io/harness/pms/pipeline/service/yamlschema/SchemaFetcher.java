@@ -111,7 +111,7 @@ public class SchemaFetcher {
   private RetryPolicy<Object> getRetryPolicy(ModuleType moduleType) {
     return RetryUtils.getRetryPolicy(format("[PMS] [Retrying] Error while calling %s service", moduleType.name()),
         format("[PMS] Error while calling %s service", moduleType.name()), ImmutableList.of(Exception.class),
-        Duration.ofSeconds(3), 3, log);
+        Duration.ofSeconds(1), 3, log);
   }
 
   private void logWarnIfExceedsThreshold(ModuleType moduleType, long startTs) {

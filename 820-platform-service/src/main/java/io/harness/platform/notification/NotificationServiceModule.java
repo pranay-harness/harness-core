@@ -52,6 +52,7 @@ import io.harness.serializer.NotificationRegistrars;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ExecutorModule;
+import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionModule;
@@ -169,7 +170,7 @@ public class NotificationServiceModule extends AbstractModule {
       }
     });
     bind(HPersistence.class).to(MongoPersistence.class);
-    install(DelegateServiceDriverModule.getInstance(false));
+    install(DelegateServiceDriverModule.getInstance(false, false));
     install(new DelegateServiceDriverGrpcClientModule(appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
         this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getTarget(),
         this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getAuthority(), true));
@@ -196,6 +197,8 @@ public class NotificationServiceModule extends AbstractModule {
     bind(NotificationService.class).to(NotificationServiceImpl.class);
     bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bindMessageConsumer();
+    install(new TokenClientModule(this.appConfig.getRbacServiceConfig(),
+        this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), NOTIFICATION_SERVICE.getServiceId()));
   }
 
   @Provides

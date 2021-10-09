@@ -31,6 +31,13 @@ public class ErrorDTO {
 
   private ErrorDTO() {}
 
+  protected ErrorDTO(Status status, ErrorCode code, String message, String detailedMessage) {
+    this.status = status;
+    this.code = code;
+    this.message = message;
+    this.detailedMessage = detailedMessage;
+  }
+
   public static ErrorDTO newError(Status status, ErrorCode code, String message, String detailedMessage) {
     ErrorDTO errorDto = new ErrorDTO();
     errorDto.setStatus(status);

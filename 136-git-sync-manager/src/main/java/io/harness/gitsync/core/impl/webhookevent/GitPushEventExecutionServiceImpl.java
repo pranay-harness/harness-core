@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
 import io.harness.gitsync.common.beans.BranchSyncStatus;
+import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -43,18 +44,31 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
       Repository repository = scmParsedWebhookResponse.getPush().getRepo();
 
       if (Boolean.TRUE.equals(yamlGitConfigService.isRepoExists(repository.getLink()))) {
-        // if unsynced branch exists in this repo, then ignore the event
-        if (gitBranchService.isBranchExists(webhookDTO.getAccountId(), repository.getLink(),
-                getBranchName(scmParsedWebhookResponse), BranchSyncStatus.UNSYNCED)) {
-          log.info("{} : Branch {} exists in UNSYNCED state, ignoring the event : {}", GIT_PUSH_EVENT,
-              repository.getBranch(), webhookDTO);
+        String branchName = getBranchName(scmParsedWebhookResponse);
+        GitBranch gitBranch = gitBranchService.get(webhookDTO.getAccountId(), repository.getLink(), branchName);
+        if (gitBranch == null) {
+          log.info("{} : Branch {} doesn't exist adding it and ignoring push event : {} ", GIT_PUSH_EVENT, branchName,
+              webhookDTO);
+          final GitBranch branch = GitBranch.builder()
+                                       .accountIdentifier(webhookDTO.getAccountId())
+                                       .branchSyncStatus(BranchSyncStatus.UNSYNCED)
+                                       .branchName(branchName)
+                                       .repoURL(repository.getLink())
+                                       .build();
+          gitBranchService.save(branch);
+          return;
+        }
+
+        if (gitBranch.getBranchSyncStatus() == BranchSyncStatus.UNSYNCED) {
+          log.info(
+              "{} : Branch {} is in UNSYNCED state, ignoring the event : {}", GIT_PUSH_EVENT, branchName, webhookDTO);
           return;
         }
 
         // check if the commit id is already processed, if yes then ignore it
         boolean isCommitAlreadyProcessed = gitCommitService.isCommitAlreadyProcessed(webhookDTO.getAccountId(),
             scmParsedWebhookResponse.getPush().getCommit().getSha(),
-            scmParsedWebhookResponse.getPush().getRepo().getLink(), getBranchName(webhookDTO.getParsedResponse()));
+            scmParsedWebhookResponse.getPush().getRepo().getLink(), branchName);
         if (isCommitAlreadyProcessed) {
           log.info("{} : CommitId {} is already processed, ignoring the event : {}", GIT_PUSH_EVENT,
               scmParsedWebhookResponse.getPush().getCommit(), webhookDTO);

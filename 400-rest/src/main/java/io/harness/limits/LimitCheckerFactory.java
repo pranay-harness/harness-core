@@ -2,7 +2,9 @@ package io.harness.limits;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.limits.configuration.NoLimitConfiguredException;
 import io.harness.limits.lib.LimitChecker;
 
@@ -14,6 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @OwnedBy(PL)
 @ParametersAreNonnullByDefault
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 public interface LimitCheckerFactory {
   /**
    *

@@ -11,6 +11,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
@@ -411,6 +412,18 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
+  public List<TimeSeriesRiskSummary> getRiskSummariesByTimeRange(
+      String verificationTaskId, Instant startTime, Instant endTime) {
+    return hPersistence.createQuery(TimeSeriesRiskSummary.class, excludeAuthority)
+        .filter(TimeSeriesRiskSummaryKeys.verificationTaskId, verificationTaskId)
+        .field(TimeSeriesRiskSummaryKeys.analysisStartTime)
+        .greaterThanOrEq(startTime)
+        .field(TimeSeriesRiskSummaryKeys.analysisEndTime)
+        .lessThanOrEq(endTime)
+        .asList();
+  }
+
+  @Override
   public void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
@@ -433,9 +446,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
     Preconditions.checkNotNull(cvConfig, "CVConfig can not be null");
     double risk = getOverallRisk(analysis);
+    long anomalousMetricCount = analysis.getTxnMetricAnalysisData()
+                                    .values()
+                                    .stream()
+                                    .flatMap(x -> x.values().stream().filter(y -> y.getRisk() == Risk.HIGH))
+                                    .count();
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
         cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
-        cvConfig.getCategory(), startTime, risk);
+        cvConfig.getCategory(), startTime, risk, anomalousMetricCount, 0);
     timeSeriesRecordService.updateRiskScores(cvConfigId, riskSummary);
   }
 

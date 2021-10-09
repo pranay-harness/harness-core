@@ -1,22 +1,26 @@
 package io.harness.steps.approval.step.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.filters.WithConnectorRef;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.approval.ApprovalFacilitator;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -31,11 +35,16 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.JIRA_APPROVAL)
 @TypeAlias("jiraApprovalStepInfo")
+@RecasterAlias("io.harness.steps.approval.step.jira.JiraApprovalStepInfo")
 public class JiraApprovalStepInfo implements PMSStepInfo, WithConnectorRef {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueKey;
   @NotNull CriteriaSpecWrapper approvalCriteria;
   CriteriaSpecWrapper rejectionCriteria;
+
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  @YamlSchemaTypes(value = {runtime})
+  ParameterField<List<String>> delegateSelectors;
 
   @Override
   public StepType getStepType() {
@@ -44,7 +53,7 @@ public class JiraApprovalStepInfo implements PMSStepInfo, WithConnectorRef {
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.ASYNC;
+    return ApprovalFacilitator.APPROVAL_FACILITATOR;
   }
 
   @Override
@@ -54,6 +63,7 @@ public class JiraApprovalStepInfo implements PMSStepInfo, WithConnectorRef {
         .issueKey(issueKey)
         .approvalCriteria(approvalCriteria)
         .rejectionCriteria(rejectionCriteria)
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 

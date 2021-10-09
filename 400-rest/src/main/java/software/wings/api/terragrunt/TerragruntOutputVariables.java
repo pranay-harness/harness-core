@@ -12,7 +12,7 @@ import java.util.HashMap;
 
 @OwnedBy(CDP)
 @JsonTypeName("terragruntOutputVariables")
-@TargetModule(HarnessModule._871_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class TerragruntOutputVariables extends HashMap<String, Object> implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "terragrunt";
 

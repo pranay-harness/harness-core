@@ -5,6 +5,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
+import io.harness.mongo.CollationLocale;
+import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.NGAccountAccess;
@@ -45,12 +48,12 @@ public class ServiceAccount implements PersistentEntity, UuidAware, NGAccountAcc
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_idx")
+                 .name("unique_sa_idx")
                  .field(ServiceAccountKeys.accountIdentifier)
-                 .field(ServiceAccountKeys.orgIdentifier)
-                 .field(ServiceAccountKeys.projectIdentifier)
                  .field(ServiceAccountKeys.identifier)
                  .unique(true)
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build(),
             CompoundMongoIndex.builder()
                 .name("list_accounts_idx")
@@ -71,7 +74,7 @@ public class ServiceAccount implements PersistentEntity, UuidAware, NGAccountAcc
   @NotNull @Size(max = 1024) String description;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
-  @EntityIdentifier String accountIdentifier;
+  @NotNull String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
 }

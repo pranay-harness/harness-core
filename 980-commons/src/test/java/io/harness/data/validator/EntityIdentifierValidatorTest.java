@@ -2,12 +2,14 @@ package io.harness.data.validator;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.validator.EntityIdentifierValidator.NOT_ALLOWED_WORDS;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.VIKAS;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -23,12 +25,17 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(PL)
-public class EntityIdentifierValidatorTest {
+public class EntityIdentifierValidatorTest extends CategoryTest {
   private Validator validator;
 
   @Builder
   static class EntityIdentifierValidatorTestStructure {
     @EntityIdentifier String identifier;
+  }
+
+  @Builder
+  static class EntityScopedIdentifierValidatorTestStructure {
+    @EntityIdentifier(allowScoped = true) String identifier;
   }
 
   @Before
@@ -80,6 +87,23 @@ public class EntityIdentifierValidatorTest {
         assertTrue("identifier : " + identifier, violationsCount > 0);
       }
     }
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testEntityIdentifierValidatorWithScopeAllowed() {
+    assertEquals(0,
+        validator
+            .validate(EntityScopedIdentifierValidatorTestStructure.builder().identifier("account.identifier").build())
+            .size());
+    assertEquals(0,
+        validator.validate(EntityScopedIdentifierValidatorTestStructure.builder().identifier("org.identifier").build())
+            .size());
+    assertEquals(1,
+        validator
+            .validate(EntityScopedIdentifierValidatorTestStructure.builder().identifier("scoped.identifier").build())
+            .size());
   }
 
   private static String generateRandomAsciiString() {

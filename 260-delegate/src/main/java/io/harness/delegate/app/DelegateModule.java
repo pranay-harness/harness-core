@@ -1,5 +1,6 @@
 package io.harness.delegate.app;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -65,6 +66,7 @@ import io.harness.delegate.exceptionhandler.handler.AuthenticationExceptionHandl
 import io.harness.delegate.exceptionhandler.handler.CVConnectorExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.DockerServerExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.GcpClientExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.HelmClientRuntimeExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.InterruptedIOExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.JGitExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SCMExceptionHandler;
@@ -75,6 +77,7 @@ import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.http.HttpTaskNG;
 import io.harness.delegate.k8s.K8sApplyRequestHandler;
 import io.harness.delegate.k8s.K8sBGRequestHandler;
+import io.harness.delegate.k8s.K8sCanaryDeleteRequestHandler;
 import io.harness.delegate.k8s.K8sCanaryRequestHandler;
 import io.harness.delegate.k8s.K8sDeleteRequestHandler;
 import io.harness.delegate.k8s.K8sRequestHandler;
@@ -148,6 +151,7 @@ import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
 import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
+import io.harness.delegate.task.k8s.K8sFetchServiceAccountTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
@@ -179,6 +183,10 @@ import io.harness.delegatetasks.DeleteSecretTask;
 import io.harness.delegatetasks.EncryptSecretTask;
 import io.harness.delegatetasks.EncryptSecretTaskValidationHandler;
 import io.harness.delegatetasks.FetchSecretTask;
+import io.harness.delegatetasks.NGAzureKeyVaultFetchEngineTask;
+import io.harness.delegatetasks.NGVaultFetchEngineTask;
+import io.harness.delegatetasks.NGVaultRenewalAppRoleTask;
+import io.harness.delegatetasks.NGVaultRenewalTask;
 import io.harness.delegatetasks.UpsertSecretTask;
 import io.harness.delegatetasks.UpsertSecretTaskValidationHandler;
 import io.harness.delegatetasks.ValidateSecretManagerConfigurationTask;
@@ -196,6 +204,7 @@ import io.harness.encryptors.clients.GcpKmsEncryptor;
 import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.exception.DelegateServiceDriverExceptionHandler;
 import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.gcp.client.GcpClient;
@@ -224,6 +233,8 @@ import io.harness.pcf.cfsdk.CfSdkClientImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
+import io.harness.perpetualtask.polling.manifest.HelmChartCollectionService;
+import io.harness.perpetualtask.polling.manifest.ManifestCollectionService;
 import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheHelperService;
 import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
@@ -560,6 +571,17 @@ import java.util.concurrent.TimeUnit;
 
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @OwnedBy(HarnessTeam.DEL)
+@BreakDependencyOn("io.harness.delegate.beans.connector.ConnectorType")
+@BreakDependencyOn("io.harness.encryptors.clients.CustomSecretsManagerEncryptor")
+@BreakDependencyOn("io.harness.exception.DelegateServiceDriverExceptionHandler")
+@BreakDependencyOn("io.harness.impl.scm.ScmServiceClientImpl")
+@BreakDependencyOn("io.harness.perpetualtask.internal.AssignmentTask")
+@BreakDependencyOn("io.harness.perpetualtask.polling.manifest.HelmChartCollectionService")
+@BreakDependencyOn("io.harness.perpetualtask.polling.manifest.ManifestCollectionService")
+@BreakDependencyOn("io.harness.service.ScmServiceClient")
+@BreakDependencyOn("software.wings.api.DeploymentType")
+@BreakDependencyOn("software.wings.beans.AwsConfig")
+@BreakDependencyOn("software.wings.beans.AzureConfig")
 public class DelegateModule extends AbstractModule {
   private static volatile DelegateModule instance;
 
@@ -588,6 +610,16 @@ public class DelegateModule extends AbstractModule {
         1, new ThreadFactoryBuilder().setNameFormat("localHeartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { localHeartbeatExecutor.shutdownNow(); }));
     return localHeartbeatExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("watcherUpgradeExecutor")
+  public ScheduledExecutorService watcherUpgradeExecutor() {
+    ScheduledExecutorService watcherUpgradeExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("watcherUpgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { watcherUpgradeExecutor.shutdownNow(); }));
+    return watcherUpgradeExecutor;
   }
 
   @Provides
@@ -706,6 +738,16 @@ public class DelegateModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("taskProgressExecutor")
+  public ExecutorService taskProgressExecutor() {
+    ExecutorService taskProgressExecutor = Executors.newFixedThreadPool(
+        10, new ThreadFactoryBuilder().setNameFormat("taskProgress-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskProgressExecutor.shutdownNow(); }));
+    return taskProgressExecutor;
+  }
+
+  @Provides
+  @Singleton
   @Named("asyncExecutor")
   public ExecutorService asyncExecutor() {
     ExecutorService asyncExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
@@ -738,7 +780,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("taskPollExecutor")
   public ExecutorService taskPollExecutor() {
-    ExecutorService taskPollExecutorService = ThreadPool.create(4, 4, 3, TimeUnit.SECONDS,
+    ExecutorService taskPollExecutorService = ThreadPool.create(4, 10, 3, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("task-poll-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskPollExecutorService.shutdownNow(); }));
     return taskPollExecutorService;
@@ -1019,6 +1061,7 @@ public class DelegateModule extends AbstractModule {
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
     bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
     bind(ScmServiceClient.class).to(ScmServiceClientImpl.class);
+    bind(ManifestCollectionService.class).to(HelmChartCollectionService.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -1033,6 +1076,7 @@ public class DelegateModule extends AbstractModule {
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.SWAP_SERVICE_SELECTORS.name())
         .to(K8sSwapServiceSelectorsHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DELETE.name()).to(K8sDeleteRequestHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.CANARY_DELETE.name()).to(K8sCanaryDeleteRequestHandler.class);
 
     // Terraform Task Handlers
     MapBinder<TFTaskType, TerraformAbstractTaskHandler> tfTaskTypeToHandlerMap =
@@ -1181,6 +1225,11 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AZURE_ARTIFACTS_COLLECTION).toInstance(AzureArtifactsCollectionTask.class);
     mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_VALIDATE_ARTIFACT_SERVER)
         .toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_IMAGE_GALLERIES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_IMAGE_DEFINITIONS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_RESOURCE_GROUPS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_GET_SUBSCRIPTIONS).toInstance(ServiceImplDelegateTask.class);
+
     mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_BUILDS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.AZURE_VMSS_COMMAND_TASK).toInstance(AzureVMSSTask.class);
     mapBinder.addBinding(TaskType.AZURE_APP_SERVICE_TASK).toInstance(AzureAppServiceTask.class);
@@ -1286,6 +1335,10 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.UPSERT_SECRET).toInstance(UpsertSecretTask.class);
     mapBinder.addBinding(TaskType.FETCH_SECRET).toInstance(FetchSecretTask.class);
     mapBinder.addBinding(TaskType.ENCRYPT_SECRET).toInstance(EncryptSecretTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_RENEW_TOKEN).toInstance(NGVaultRenewalTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_RENEW_APP_ROLE_TOKEN).toInstance(NGVaultRenewalAppRoleTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_FETCHING_TASK).toInstance(NGVaultFetchEngineTask.class);
+    mapBinder.addBinding(TaskType.NG_AZURE_VAULT_FETCH_ENGINES).toInstance(NGAzureKeyVaultFetchEngineTask.class);
     mapBinder.addBinding(TaskType.VALIDATE_SECRET_MANAGER_CONFIGURATION)
         .toInstance(ValidateSecretManagerConfigurationTask.class);
 
@@ -1371,7 +1424,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH).toInstance(HelmValuesFetchTask.class);
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH_NG).toInstance(HelmValuesFetchTaskNG.class);
     mapBinder.addBinding(TaskType.SLACK).toInstance(ServiceImplDelegateTask.class);
-    mapBinder.addBinding(TaskType.CI_BUILD).toInstance(CIBuildCommandTask.class);
+    mapBinder.addBinding(TaskType.INITIALIZATION_PHASE).toInstance(CIBuildCommandTask.class);
     mapBinder.addBinding(TaskType.CI_EXECUTE_STEP).toInstance(CIExecuteStepTask.class);
     mapBinder.addBinding(TaskType.CI_LE_STATUS).toInstance(StepStatusTask.class);
     mapBinder.addBinding(TaskType.EXECUTE_COMMAND).toInstance(ExecuteCommandTask.class);
@@ -1394,6 +1447,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AWS_CODECOMMIT_API_TASK).toInstance(AwsCodeCommitApiDelegateTask.class);
     mapBinder.addBinding(TaskType.CE_VALIDATE_KUBERNETES_CONFIG)
         .toInstance(CEKubernetesTestConnectionDelegateTask.class);
+    mapBinder.addBinding(TaskType.K8S_SERVICE_ACCOUNT_INFO).toInstance(K8sFetchServiceAccountTask.class);
     mapBinder.addBinding(TaskType.HTTP_HELM_CONNECTIVITY_TASK).toInstance(HttpHelmConnectivityDelegateTask.class);
 
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
@@ -1531,6 +1585,8 @@ public class DelegateModule extends AbstractModule {
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DYNATRACE.getDisplayName())
         .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.PAGER_DUTY.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {
@@ -1559,5 +1615,9 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(SCMExceptionHandler.class));
     AuthenticationExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(AuthenticationExceptionHandler.class));
+    DelegateServiceDriverExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(DelegateServiceDriverExceptionHandler.class));
+    HelmClientRuntimeExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(HelmClientRuntimeExceptionHandler.class));
   }
 }

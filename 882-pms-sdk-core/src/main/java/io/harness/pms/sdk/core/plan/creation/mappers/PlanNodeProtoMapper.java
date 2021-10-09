@@ -9,15 +9,23 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.timeout.SdkTimeoutObtainment;
+import io.harness.serializer.KryoSerializer;
+import io.harness.timeout.contracts.TimeoutObtainment;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.ByteString;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class PlanNodeProtoMapper {
   @Inject @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME) String serviceName;
+  @Inject private KryoSerializer kryoSerializer;
 
   public PlanNodeProto toPlanNodeProtoWithDecoratedFields(PlanNode node) {
     PlanNodeProto.Builder builder =
@@ -25,17 +33,17 @@ public class PlanNodeProtoMapper {
             .setUuid(node.getUuid())
             .setName(isEmpty(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
+            .setStageFqn(node.getStageFqn())
             .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
-            .setStepParameters(node.getStepParameters() == null
-                    ? ""
-                    : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
+            .setStepParameters(
+                node.getStepParameters() == null ? "" : RecastOrchestrationUtils.toJson(node.getStepParameters()))
             .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
             .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
             .setSkipExpressionChain(node.isSkipExpressionChain())
             .setSkipType(node.getSkipGraphType())
             .setServiceName(serviceName)
-            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
+            .addAllTimeoutObtainments(toTimeoutObtainments(node.getTimeoutObtainments()))
             .setSkipUnresolvedExpressionsCheck(node.isSkipUnresolvedExpressionsCheck());
     if (node.getWhenCondition() != null) {
       builder.setWhenCondition(node.getWhenCondition());
@@ -52,37 +60,16 @@ public class PlanNodeProtoMapper {
     return builder.build();
   }
 
-  // NOTE: Only there to support current gen. Use toPlanNodeProtoWithServiceName instead.
-  public static PlanNodeProto toPlanNodeProto(PlanNode node) {
-    PlanNodeProto.Builder builder =
-        PlanNodeProto.newBuilder()
-            .setUuid(node.getUuid())
-            .setName(isEmpty(node.getName()) ? "" : node.getName())
-            .setStepType(node.getStepType())
-            .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
-            .setStepParameters(node.getStepParameters() == null
-                    ? ""
-                    : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
-            .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
-            .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
-            .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
-            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
-            .setSkipExpressionChain(node.isSkipExpressionChain())
-            .setSkipType(node.getSkipGraphType())
-            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
-            .setSkipUnresolvedExpressionsCheck(node.isSkipUnresolvedExpressionsCheck());
-    if (node.getWhenCondition() != null) {
-      builder.setWhenCondition(node.getWhenCondition());
+  private List<TimeoutObtainment> toTimeoutObtainments(List<SdkTimeoutObtainment> sdkTimeoutObtainments) {
+    if (sdkTimeoutObtainments == null) {
+      return new ArrayList<>();
     }
-    if (node.getSkipCondition() != null) {
-      builder.setSkipCondition(node.getSkipCondition());
-    }
-    if (node.getGroup() != null) {
-      builder.setGroup(node.getGroup());
-    }
-    if (node.getStepInputs() != null) {
-      builder.setStepInputs(node.getStepInputs());
-    }
-    return builder.build();
+    return sdkTimeoutObtainments.stream()
+        .map(entry
+            -> TimeoutObtainment.newBuilder()
+                   .setDimension(entry.getDimension())
+                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(entry.getParameters())))
+                   .build())
+        .collect(Collectors.toList());
   }
 }

@@ -20,11 +20,11 @@ var (
 // Kubernetes waits for upto 30 seconds before terminating the pod
 
 type logCloser struct {
-	rls chan *logs.RemoteLogger
+	rls []*logs.RemoteLogger
 }
 
 func (lc *logCloser) Add(rl *logs.RemoteLogger) {
-	lc.rls <- rl
+	lc.rls = append(lc.rls, rl)
 }
 
 // Waits for the SIGTERM signal and closes all the open remote loggers
@@ -35,7 +35,7 @@ func (lc *logCloser) Run() {
 	go func() {
 		sig := <-ch
 		fmt.Printf("Received signal: %s. Closing all the remote loggers", sig)
-		for rl := range lc.rls {
+		for _, rl := range lc.rls {
 			if err := rl.Writer.Close(); err != nil {
 				fmt.Printf("failed to close remote logger with err: %v", err)
 			}
@@ -48,7 +48,7 @@ func (lc *logCloser) Run() {
 func LogCloser() *logCloser {
 	once.Do(func() {
 		lc = &logCloser{
-			rls: make(chan *logs.RemoteLogger, 5),
+			rls: make([]*logs.RemoteLogger, 0),
 		}
 	})
 	return lc

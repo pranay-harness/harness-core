@@ -261,6 +261,7 @@ public class AccountGenerator {
     limitConfigurationService.configure(accountId, ActionType.DEPLOY, new RateLimit(1000, 1, TimeUnit.HOURS));
     limitConfigurationService.configure(
         Account.GLOBAL_ACCOUNT_ID, ActionType.LOGIN_REQUEST_TASK, new RateLimit(300, 1, TimeUnit.MINUTES));
+    limitConfigurationService.configure(Account.GLOBAL_ACCOUNT_ID, ActionType.MAX_QPM_PER_MANAGER, new StaticLimit(50));
   }
 
   private Account ensureDefaultUsers(Account account) {

@@ -2,7 +2,9 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.OldNotifyCallback;
 
@@ -15,6 +17,7 @@ import java.util.Map;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class StateMachineResumeCallback implements OldNotifyCallback {
   @Inject private StateMachineExecutor stateMachineExecutor;
 

@@ -3,24 +3,20 @@ package io.harness.cvng.core.jobs;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.queue.QueueController;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.time.Duration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class EntityCRUDStreamConsumer implements Runnable {
+public class EntityCRUDStreamConsumer extends AbstractStreamConsumer {
   private static final int MAX_WAIT_TIME_SEC = 10;
-  private final Consumer consumer;
   private final Map<String, ConsumerMessageProcessor> processorMap;
 
   @Inject
@@ -32,8 +28,8 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY)
       ConsumerMessageProcessor organizationChangeEventMessageProcessor,
       @Named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY)
-      ConsumerMessageProcessor accountChangeEventMessageProcessor) {
-    this.consumer = abstractConsumer;
+      ConsumerMessageProcessor accountChangeEventMessageProcessor, QueueController queueController) {
+    super(MAX_WAIT_TIME_SEC, abstractConsumer, queueController);
     processorMap = new HashMap<>();
     processorMap.put(EventsFrameworkMetadataConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
     processorMap.put(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
@@ -42,53 +38,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
   }
 
   @Override
-  public void run() {
-    log.info("Started the consumer for entity crud stream");
-    try {
-      while (!Thread.currentThread().isInterrupted()) {
-        readEventsFrameworkMessages();
-      }
-    } catch (Exception ex) {
-      log.error("Entity crud stream consumer unexpectedly stopped", ex);
-    }
-  }
-
-  private void readEventsFrameworkMessages() throws InterruptedException {
-    try {
-      pollAndProcessMessages();
-    } catch (EventsFrameworkDownException e) {
-      log.error("Events framework is down for Entity crud stream consumer. Retrying again...", e);
-      TimeUnit.SECONDS.sleep(MAX_WAIT_TIME_SEC);
-    }
-  }
-
-  private void pollAndProcessMessages() {
-    List<Message> messages;
-    String messageId;
-    boolean messageProcessed;
-    messages = consumer.read(Duration.ofSeconds(MAX_WAIT_TIME_SEC));
-    for (Message message : messages) {
-      messageId = message.getId();
-      messageProcessed = handleMessage(message);
-      if (messageProcessed) {
-        consumer.acknowledge(messageId);
-      }
-    }
-  }
-
-  private boolean handleMessage(Message message) {
-    try {
-      processMessage(message);
-      return true;
-    } catch (Exception ex) {
-      // This is not evicted from events framework so that it can be processed
-      // by other consumer if the error is a runtime error
-      log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
-      return false;
-    }
-  }
-
-  private void processMessage(Message message) {
+  protected void processMessage(Message message) {
     if (message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
       if (metadataMap != null && metadataMap.containsKey(EventsFrameworkMetadataConstants.ENTITY_TYPE)) {

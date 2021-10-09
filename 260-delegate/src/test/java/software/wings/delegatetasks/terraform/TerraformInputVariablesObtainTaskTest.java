@@ -94,7 +94,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
     when(gitUtilsDelegate.resolveAbsoluteFilePath(any(), any())).thenReturn(moduleDir);
     PowerMockito.when(FileUtils.listFiles(any(), any(), any())).thenReturn(Arrays.asList(new File(moduleDir)));
 
-    when(terraformConfigInspectService.parseFieldsUnderCategory(moduleDir, "variables"))
+    when(terraformConfigInspectService.parseFieldsUnderCategory(moduleDir, "variables", false))
         .thenReturn(Arrays.asList("var_1", "var_2"));
 
     TerraformInputVariablesTaskResponse inputVariables = delegateRunnableTask.run(new Object[] {parameters});

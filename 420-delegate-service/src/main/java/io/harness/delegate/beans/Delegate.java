@@ -135,5 +135,6 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   @UtilityClass
   public static final class DelegateKeys {
     public static final String owner_identifier = owner + "." + DelegateEntityOwnerKeys.identifier;
+    public static final String searchTermFilter = "searchTermFilter";
   }
 }

@@ -1,29 +1,29 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "logs",
     srcs = ["remote_writer.go"],
     importpath = "github.com/wings-software/portal/product/ci/common/logs",
     visibility = ["//visibility:public"],
     deps = [
-        "//commons/go/lib/logs:go_default_library",
-        "//product/log-service/client:go_default_library",
-        "//product/log-service/stream:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//commons/go/lib/logs",
+        "//product/log-service/client",
+        "//product/log-service/stream",
+        "@org_uber_go_zap//:zap",
     ],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "logs_test",
     srcs = ["remote_writer_test.go"],
-    embed = [":go_default_library"],
+    embed = [":logs"],
     deps = [
-        "//commons/go/lib/logs:go_default_library",
-        "//product/log-service/client:go_default_library",
-        "//product/log-service/mock:go_default_library",
-        "//product/log-service/stream:go_default_library",
-        "@com_github_golang_mock//gomock:go_default_library",
-        "@com_github_pkg_errors//:go_default_library",
-        "@com_github_stretchr_testify//assert:go_default_library",
+        "//commons/go/lib/logs",
+        "//product/log-service/client",
+        "//product/log-service/mock",
+        "//product/log-service/stream",
+        "@com_github_golang_mock//gomock",
+        "@com_github_pkg_errors//:errors",
+        "@com_github_stretchr_testify//assert",
     ],
 )

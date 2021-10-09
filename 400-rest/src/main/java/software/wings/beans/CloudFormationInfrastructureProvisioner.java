@@ -7,7 +7,9 @@ import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_URL;
 import static software.wings.beans.InfrastructureProvisionerType.CLOUD_FORMATION;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 
@@ -26,6 +28,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("CLOUD_FORMATION")
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class CloudFormationInfrastructureProvisioner extends InfrastructureProvisioner {
   private static String VARIABLE_KEY = "cloudformation";
   @NotEmpty @Trimmed(message = "Source type should not contain leading and trailing spaces") private String sourceType;

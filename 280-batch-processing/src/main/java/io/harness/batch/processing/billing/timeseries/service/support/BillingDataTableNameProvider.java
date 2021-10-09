@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class BillingDataTableNameProvider {
-  private static final String DAILY_BILLING_DATA_TABLE = "BILLING_DATA";
-  private static final String HOURLY_BILLING_DATA_TABLE = "BILLING_DATA_HOURLY";
-  private static final String DAILY_BILLING_DATA_AGGREGATED_TABLE = "BILLING_DATA_AGGREGATED";
-  private static final String DAILY_BILLING_DATA_HOURLY_AGGREGATED_TABLE = "BILLING_DATA_HOURLY_AGGREGATED";
+  private static final String DAILY_BILLING_DATA_TABLE = "billing_data";
+  private static final String HOURLY_BILLING_DATA_TABLE = "billing_data_hourly";
+  private static final String DAILY_BILLING_DATA_AGGREGATED_TABLE = "billing_data_aggregated";
+  private static final String DAILY_BILLING_DATA_HOURLY_AGGREGATED_TABLE = "billing_data_hourly_aggregated";
 
   public static String replaceTableName(String statement, BatchJobType batchJobType) {
     return String.format(statement, getTableName(batchJobType));

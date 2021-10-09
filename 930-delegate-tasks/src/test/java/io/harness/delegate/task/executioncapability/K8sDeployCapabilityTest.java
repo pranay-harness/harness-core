@@ -26,6 +26,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswor
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
@@ -56,6 +57,8 @@ import org.mockito.Mock;
 
 @OwnedBy(CDP)
 public class K8sDeployCapabilityTest extends CategoryTest {
+  private static final String SOME_URL = "https://url.com/owner/repo.git";
+
   @Mock private ExpressionEvaluator expressionEvaluator;
 
   @Test
@@ -78,9 +81,10 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 K8sManifestDelegateConfig.builder()
-                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
-                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
-                                             .build())
+                    .storeDelegateConfig(
+                        GitStoreDelegateConfig.builder()
+                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .build())
                     .build())
             .build();
 
@@ -89,7 +93,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
   }
 
   @Test
@@ -123,9 +127,10 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 K8sManifestDelegateConfig.builder()
-                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
-                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
-                                             .build())
+                    .storeDelegateConfig(
+                        GitStoreDelegateConfig.builder()
+                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .build())
                     .build())
             .build();
 
@@ -134,7 +139,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
   }
 
   @Test
@@ -156,18 +161,20 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 K8sManifestDelegateConfig.builder()
-                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
-                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
-                                             .build())
+                    .storeDelegateConfig(
+                        GitStoreDelegateConfig.builder()
+                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .build())
                     .build())
             .build();
 
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(2);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.size()).isEqualTo(3);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(GitConnectionNGCapability.class);
   }
 
   @Test
@@ -193,9 +200,10 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 K8sManifestDelegateConfig.builder()
-                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
-                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
-                                             .build())
+                    .storeDelegateConfig(
+                        GitStoreDelegateConfig.builder()
+                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .build())
                     .build())
             .build();
 
@@ -204,7 +212,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
   }
 
   @Test
@@ -242,14 +250,15 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(4);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(5);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(executionCapabilities.get(3)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(3);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(4)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(4);
     assertThat(httpHelmSelectorCapability.getSelectors()).isEqualTo(httpHelmDelegateSelectors);
   }
 
@@ -291,13 +300,14 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(3);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(4);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(2);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(3);
     assertThat(httpHelmSelectorCapability.getSelectors()).isEqualTo(s3HelmDelegateSelectors);
   }
 
@@ -344,12 +354,13 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(3);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(4);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -394,12 +405,13 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(3);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(4);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -441,13 +453,15 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(3);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(5);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(2);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(4)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(4);
     assertThat(httpHelmSelectorCapability.getSelectors()).isEqualTo(gcsHelmDelegateSelectors);
   }
 
@@ -470,9 +484,10 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 KustomizeManifestDelegateConfig.builder()
-                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
-                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
-                                             .build())
+                    .storeDelegateConfig(
+                        GitStoreDelegateConfig.builder()
+                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .build())
                     .pluginPath(pluginPath)
                     .build())
             .build();
@@ -484,7 +499,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities.get(0)).isInstanceOf(KustomizeCapability.class);
     KustomizeCapability kustomizeCapability = (KustomizeCapability) executionCapabilities.get(0);
     assertThat(kustomizeCapability.getPluginRootDir()).isEqualTo(pluginPath);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
   }
 
   @Test
@@ -506,9 +521,10 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 KustomizeManifestDelegateConfig.builder()
-                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
-                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
-                                             .build())
+                    .storeDelegateConfig(
+                        GitStoreDelegateConfig.builder()
+                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .build())
                     .pluginPath(pluginPath)
                     .build())
             .build();
@@ -517,6 +533,6 @@ public class K8sDeployCapabilityTest extends CategoryTest {
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(1);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(GitConnectionNGCapability.class);
   }
 }

@@ -2,7 +2,9 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -44,6 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
 public class AwsConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") @Encrypted(fieldName = "access_key", isReference = true) private char[] accessKey;
@@ -93,9 +96,11 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     executionCapabilities.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
 
-    if (this.isUseEc2IamCredentials() && StringUtils.isNotEmpty(tag)) {
-      executionCapabilities.add(
-          SelectorCapability.builder().selectors(new HashSet<String>(Arrays.asList(tag))).build());
+    if ((this.isUseEc2IamCredentials() || this.useIRSA) && StringUtils.isNotEmpty(tag)) {
+      executionCapabilities.add(SelectorCapability.builder()
+                                    .selectors(new HashSet<String>(Arrays.asList(tag)))
+                                    .selectorOrigin("Cloud Provider")
+                                    .build());
     }
 
     return executionCapabilities;
@@ -108,7 +113,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
 
   @Override
   public List<String> fetchRelevantEncryptedSecrets() {
-    if (useEc2IamCredentials) {
+    if (useEc2IamCredentials || useIRSA) {
       return Collections.emptyList();
     }
 

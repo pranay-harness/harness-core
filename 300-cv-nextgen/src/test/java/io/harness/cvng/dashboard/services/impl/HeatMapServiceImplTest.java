@@ -1,15 +1,21 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIFTEEN_MINUTES;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIVE_MIN;
+import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.THIRTY_MINUTES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -17,11 +23,16 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
+import io.harness.cvng.core.beans.monitoredService.DurationDTO;
+import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -48,9 +59,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,6 +78,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -87,14 +101,17 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
   @Mock private NextGenService nextGenService;
   @Mock private AnalysisService analysisService;
   private Clock clock;
+  private BuilderFactory builderFactory;
+  private Duration bufferTimeForLatestHealthScore;
 
   @Before
   public void setUp() throws Exception {
-    projectIdentifier = generateUuid();
-    serviceIdentifier = generateUuid();
-    orgIdentifier = generateUuid();
-    envIdentifier = generateUuid();
-    accountId = generateUuid();
+    builderFactory = BuilderFactory.getDefault();
+    accountId = builderFactory.getContext().getAccountId();
+    projectIdentifier = builderFactory.getContext().getProjectIdentifier();
+    orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
+    envIdentifier = builderFactory.getContext().getEnvIdentifier();
     cvConfigId = generateUuid();
     AppDynamicsDSConfig dsConfig = new AppDynamicsDSConfig();
     dsConfig.setProjectIdentifier(projectIdentifier);
@@ -129,6 +146,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     when(cvConfigService.getConfigsOfProductionEnvironments(
              anyString(), anyString(), anyString(), anyString(), anyString(), any()))
         .thenReturn(Arrays.asList(cvConfig));
+
+    bufferTimeForLatestHealthScore = Duration.ofMinutes(5);
   }
 
   @Test
@@ -137,7 +156,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
   public void testUpsertAddsAllFields() {
     Instant instant = Instant.now();
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.6);
+        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.6, 10, 0);
     List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority).asList();
     Set<String> nullableFields = Sets.newHashSet(HeatMapKeys.serviceIdentifier, HeatMapKeys.envIdentifier);
     heatMaps.forEach(heatMap -> {
@@ -159,42 +178,46 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
   public void testUpsertAndUpdate() {
     Instant instant = Instant.now();
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.6);
-    verifyUpdates(instant, 0.6);
+        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.6, 10, 9);
+    verifyUpdates(instant, 0.6, 10, 9);
 
     // update and test
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.7);
-    verifyUpdates(instant, 0.7);
+        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.7, 5, 8);
+    verifyUpdates(instant, 0.7, 15, 17);
 
     // updating with lower risk score shouldn't change anything
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.5);
-    verifyUpdates(instant, 0.7);
+        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.5, 5, 5);
+    verifyUpdates(instant, 0.7, 20, 22);
   }
 
-  private void verifyUpdates(Instant instant, double riskScore) {
+  private void verifyUpdates(Instant instant, double riskScore, long anomalousMetricsCount, long anomalousLogsCount) {
     verifyHeatMaps(instant, riskScore,
         hPersistence.createQuery(HeatMap.class, excludeAuthority)
             .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
             .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
             .filter(HeatMapKeys.envIdentifier, envIdentifier)
-            .asList());
+            .asList(),
+        anomalousMetricsCount, anomalousLogsCount);
     verifyHeatMaps(instant, riskScore,
         hPersistence.createQuery(HeatMap.class, excludeAuthority)
             .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
             .filter(HeatMapKeys.serviceIdentifier, null)
             .filter(HeatMapKeys.envIdentifier, envIdentifier)
-            .asList());
+            .asList(),
+        anomalousMetricsCount, anomalousLogsCount);
     verifyHeatMaps(instant, riskScore,
         hPersistence.createQuery(HeatMap.class, excludeAuthority)
             .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
             .filter(HeatMapKeys.serviceIdentifier, null)
             .filter(HeatMapKeys.envIdentifier, null)
-            .asList());
+            .asList(),
+        anomalousMetricsCount, anomalousLogsCount);
   }
 
-  private void verifyHeatMaps(Instant instant, double riskScore, List<HeatMap> heatMaps) {
+  private void verifyHeatMaps(
+      Instant instant, double riskScore, List<HeatMap> heatMaps, long anomalousMetricsCount, long anomalousLogsCount) {
     assertThat(heatMaps.size()).isEqualTo(HeatMapResolution.values().length);
     for (int i = 0; i < HeatMapResolution.values().length; i++) {
       HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
@@ -217,6 +240,8 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
       assertThat(heatMapRisk.getEndTime())
           .isEqualTo(heatMapRisk.getStartTime().plusMillis(heatMapResolution.getResolution().toMillis()));
       assertThat(heatMapRisk.getRiskScore()).isEqualTo(riskScore, offset(0.001));
+      assertThat(heatMapRisk.getAnomalousMetricsCount()).isEqualTo(anomalousMetricsCount);
+      assertThat(heatMapRisk.getAnomalousLogsCount()).isEqualTo(anomalousLogsCount);
     }
   }
 
@@ -229,7 +254,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
           cvConfig, CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
-          0.6);
+          0.6, 0, 0);
     }
     for (int i = 0; i < HeatMapResolution.values().length; i++) {
       HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
@@ -261,7 +286,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     // update a riskscore
     Instant updateInstant = Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(680));
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-        cvConfig, CVMonitoringCategory.PERFORMANCE, updateInstant, 0.7);
+        cvConfig, CVMonitoringCategory.PERFORMANCE, updateInstant, 0.7, 0, 0);
 
     for (int i = 0; i < HeatMapResolution.values().length; i++) {
       HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
@@ -322,7 +347,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
           cvConfig, CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
-          0.01 * minuteBoundry);
+          0.01 * minuteBoundry, 0, 0);
     }
 
     heatMap = heatMapService.getHeatMap(accountId, orgIdentifier, projectIdentifier, null, null,
@@ -381,7 +406,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
           cvConfig, CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
-          0.01 * minuteBoundry);
+          0.01 * minuteBoundry, 0, 0);
     }
 
     heatMap = heatMapService.getHeatMap(accountId, orgIdentifier, projectIdentifier, null, null,
@@ -422,7 +447,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     for (int i = 1; i <= numOfService; i++) {
       for (int j = 1; j <= numOfEnv; j++) {
         heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, "service" + i, "env" + j, cvConfig,
-            CVMonitoringCategory.PERFORMANCE, instant, i * j);
+            CVMonitoringCategory.PERFORMANCE, instant, i * j, 0, 0);
       }
     }
 
@@ -451,7 +476,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     for (int i = 1; i <= numOfService; i++) {
       for (int j = 1; j <= numOfEnv; j++) {
         heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, "service" + i, "env" + j, cvConfig,
-            CVMonitoringCategory.PERFORMANCE, instant, i * j);
+            CVMonitoringCategory.PERFORMANCE, instant, i * j, 0, 0);
       }
     }
 
@@ -494,10 +519,10 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
           cvConfig, CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
-          0.01 * minuteBoundry);
+          0.01 * minuteBoundry, 0, 0);
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier + "2",
           envIdentifier, cvConfig, CVMonitoringCategory.ERRORS,
-          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry);
+          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry, 0, 0);
     }
 
     CategoryRisksDTO categoryRisk = heatMapService.getCategoryRiskScores(
@@ -532,10 +557,10 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
           cvConfig, CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
-          0.01 * minuteBoundry);
+          0.01 * minuteBoundry, 0, 0);
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier + "2",
           envIdentifier, cvConfig, CVMonitoringCategory.ERRORS,
-          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry);
+          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry, 0, 0);
     }
 
     CategoryRisksDTO categoryRisk =
@@ -573,10 +598,10 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
           cvConfig, CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
-          0.01 * minuteBoundry);
+          0.01 * minuteBoundry, 0, 0);
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier + "2",
           envIdentifier, cvConfig, CVMonitoringCategory.ERRORS,
-          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry);
+          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry, 0, 0);
     }
 
     CategoryRisksDTO categoryRisk =
@@ -630,10 +655,10 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
           cvConfig, CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
-          0.01 * minuteBoundry);
+          0.01 * minuteBoundry, 0, 0);
       heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier + "2",
           envIdentifier, cvConfig, CVMonitoringCategory.ERRORS,
-          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry);
+          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry, 0, 0);
     }
     // make the clock reflect a much newer time
     clock = Clock.fixed(Instant.parse("2020-04-23T10:02:06Z"), ZoneOffset.UTC);
@@ -682,9 +707,9 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
              accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-        cvConfig, CVMonitoringCategory.PERFORMANCE, clock.instant(), 0.70);
+        cvConfig, CVMonitoringCategory.PERFORMANCE, clock.instant(), 0.70, 0, 0);
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier + "2", envIdentifier,
-        cvConfig, CVMonitoringCategory.ERRORS, clock.instant(), 0.60);
+        cvConfig, CVMonitoringCategory.ERRORS, clock.instant(), 0.60, 0, 0);
 
     RiskSummaryPopoverDTO riskSummaryPopoverDTO =
         heatMapService.getRiskSummaryPopover(accountId, orgIdentifier, projectIdentifier, clock.instant(), null, null);
@@ -729,9 +754,9 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
              accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-        cvConfig, CVMonitoringCategory.PERFORMANCE, clock.instant(), 0.70);
+        cvConfig, CVMonitoringCategory.PERFORMANCE, clock.instant(), 0.70, 0, 0);
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-        cvConfig, CVMonitoringCategory.ERRORS, clock.instant(), 0.60);
+        cvConfig, CVMonitoringCategory.ERRORS, clock.instant(), 0.60, 0, 0);
 
     RiskSummaryPopoverDTO riskSummaryPopoverDTO = heatMapService.getRiskSummaryPopover(
         accountId, orgIdentifier, projectIdentifier, clock.instant(), null, CVMonitoringCategory.ERRORS);
@@ -747,5 +772,741 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertThat(serviceSummary.getServiceName()).isEqualTo("Service Name");
     assertThat(serviceSummary.getRisk()).isEqualTo(60);
     assertThat(serviceSummary.getAnalysisRisks()).isEqualTo(Collections.singletonList(analysisRisk));
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetHistoricalData_PreConditionServiceEnvironmentListLimit() {
+    List<Pair<String, String>> serviceEnvironmentIds = Collections.nCopies(11, Pair.of("serviceId", "envId"));
+    assertThatThrownBy(
+        () -> heatMapService.getHistoricalTrend(accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIds, 24))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            String.format("Based on page size, the health score calculation should be done for less than 10 services"));
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetHistoricalData_EmptyServiceEnvironmentList() {
+    List<HistoricalTrend> historicalTrendList =
+        heatMapService.getHistoricalTrend(accountId, orgIdentifier, projectIdentifier, Collections.emptyList(), 24);
+    assertThat(historicalTrendList.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetHistoricalData_OneServiceEnvironmentOneCategoryForOneHour() {
+    HeatMap heatMap = builderFactory.heatMapBuilder().build();
+    heatMap.getHeatMapRisks().forEach(heatMapRisk -> heatMapRisk.setRiskScore(0.10));
+    hPersistence.save(heatMap);
+    HeatMap heatMapPrevious = builderFactory.heatMapBuilder().build();
+    setStartTimeEndTimeAndRiskScoreWith30MinBucket(heatMapPrevious, heatMap.getHeatMapBucketStartTime(), 0.50);
+    hPersistence.save(heatMapPrevious);
+
+    List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), 1);
+    assertThat(historicalTrendList.size()).isEqualTo(1);
+    assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(2);
+    historicalTrendList.get(0).getHealthScores().forEach(score -> {
+      assertThat(score.getHealthScore()).isEqualTo(90);
+      assertThat(score.getRiskStatus()).isEqualTo(Risk.LOW);
+    });
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetHistoricalData_OneServiceEnvironmentMultipleCategoryForOneHour() {
+    HeatMap heatMapErrorCategory = builderFactory.heatMapBuilder().build();
+    heatMapErrorCategory.getHeatMapRisks().forEach(heatMapRisk -> heatMapRisk.setRiskScore(0.10));
+    hPersistence.save(heatMapErrorCategory);
+    HeatMap heatMapPerformanceCategory =
+        builderFactory.heatMapBuilder().category(CVMonitoringCategory.PERFORMANCE).build();
+    Instant analysisTime = roundDownToMinBoundary(clock.instant(), 30);
+    heatMapPerformanceCategory.getHeatMapRisks().forEach(heatMapRisk -> {
+      if (ChronoUnit.MINUTES.between(heatMapRisk.getEndTime(), analysisTime) < 30) {
+        heatMapRisk.setRiskScore(.50);
+      }
+    });
+    hPersistence.save(heatMapPerformanceCategory);
+
+    List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), 1);
+
+    assertThat(historicalTrendList.size()).isEqualTo(1);
+    assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(2);
+
+    assertThat(historicalTrendList.get(0).getHealthScores().get(0).getHealthScore()).isEqualTo(90);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(0).getRiskStatus()).isEqualTo(Risk.LOW);
+
+    assertThat(historicalTrendList.get(0).getHealthScores().get(1).getHealthScore()).isEqualTo(50);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(1).getRiskStatus()).isEqualTo(Risk.HIGH);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetHistoricalData_OneServiceEnvironmentOneCategoryFor24Hour() {
+    Instant analysisTime = clock.instant();
+    analysisTime = roundDownToMinBoundary(analysisTime, 30);
+    HeatMap heatMap = builderFactory.heatMapBuilder().build();
+    setStartTimeEndTimeAndRiskScoreWith30MinBucket(heatMap, analysisTime.plus(12, ChronoUnit.HOURS), 0.10);
+    hPersistence.save(heatMap);
+
+    HeatMap heatMapPrevious = builderFactory.heatMapBuilder().build();
+    setStartTimeEndTimeAndRiskScoreWith30MinBucket(heatMapPrevious, heatMap.getHeatMapBucketStartTime(), 0.50);
+    hPersistence.save(heatMapPrevious);
+
+    List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
+        accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), 24);
+
+    assertThat(historicalTrendList.size()).isEqualTo(1);
+    assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(48);
+
+    for (int i = 0; i < 24; i++) {
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getHealthScore()).isEqualTo(50);
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.HIGH);
+    }
+    for (int i = 24; i < 48; i++) {
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getHealthScore()).isEqualTo(90);
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.LOW);
+    }
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetHistoricalData_MultipleServiceEnvironmentOneCategoryForOneHour() {
+    String secondService = "secondService";
+    String secondEnvironment = "secondEnvironment";
+    HeatMap heatMap = builderFactory.heatMapBuilder().build();
+    heatMap.getHeatMapRisks().forEach(heatMapRisk -> heatMapRisk.setRiskScore(0.10));
+    hPersistence.save(heatMap);
+
+    HeatMap heatMapPrevious = builderFactory.heatMapBuilder().build();
+    setStartTimeEndTimeAndRiskScoreWith30MinBucket(heatMapPrevious, heatMap.getHeatMapBucketStartTime(), 0.50);
+    hPersistence.save(heatMapPrevious);
+
+    HeatMap anotherServiceHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier(secondService).envIdentifier(secondEnvironment).build();
+    anotherServiceHeatMap.getHeatMapRisks().forEach(heatMapRisk -> heatMapRisk.setRiskScore(0.55));
+    hPersistence.save(anotherServiceHeatMap);
+
+    List<Pair<String, String>> serviceEnvIds =
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(secondService, secondEnvironment));
+
+    List<HistoricalTrend> historicalTrendList =
+        heatMapService.getHistoricalTrend(accountId, orgIdentifier, projectIdentifier, serviceEnvIds, 1);
+    assertThat(historicalTrendList.size()).isEqualTo(2);
+
+    assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(2);
+    assertThat(historicalTrendList.get(1).getHealthScores().size()).isEqualTo(2);
+
+    assertThat(historicalTrendList.get(0).getHealthScores().get(0).getHealthScore()).isEqualTo(90);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(0).getRiskStatus()).isEqualTo(Risk.LOW);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(1).getHealthScore()).isEqualTo(90);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(1).getRiskStatus()).isEqualTo(Risk.LOW);
+
+    assertThat(historicalTrendList.get(1).getHealthScores().get(0).getHealthScore()).isEqualTo(45);
+    assertThat(historicalTrendList.get(1).getHealthScores().get(0).getRiskStatus()).isEqualTo(Risk.HIGH);
+    assertThat(historicalTrendList.get(1).getHealthScores().get(1).getHealthScore()).isEqualTo(45);
+    assertThat(historicalTrendList.get(1).getHealthScores().get(1).getRiskStatus()).isEqualTo(Risk.HIGH);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetHistoricalData_MultipleServiceEnvironmentOneCategoryFor48Hour() {
+    Instant analysisTime = clock.instant();
+    analysisTime = roundDownToMinBoundary(analysisTime, 30);
+    HeatMap heatMap = builderFactory.heatMapBuilder().build();
+    setStartTimeEndTimeAndRiskScoreWith30MinBucket(heatMap, analysisTime.plus(12, ChronoUnit.HOURS), 0.10);
+    hPersistence.save(heatMap);
+
+    HeatMap heatMapPrevious = builderFactory.heatMapBuilder().build();
+    setStartTimeEndTimeAndRiskScoreWith30MinBucket(heatMapPrevious, heatMap.getHeatMapBucketStartTime(), 0.40);
+    hPersistence.save(heatMapPrevious);
+
+    String secondService = "secondService";
+    String secondEnvironment = "secondEnvironment";
+    HeatMap anotherServiceHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier(secondService).envIdentifier(secondEnvironment).build();
+    anotherServiceHeatMap.getHeatMapRisks().forEach(heatMapRisk -> heatMapRisk.setRiskScore(0.55));
+    hPersistence.save(anotherServiceHeatMap);
+
+    List<Pair<String, String>> serviceEnvIds =
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(secondService, secondEnvironment));
+    List<HistoricalTrend> historicalTrendList =
+        heatMapService.getHistoricalTrend(accountId, orgIdentifier, projectIdentifier, serviceEnvIds, 24);
+
+    assertThat(historicalTrendList.size()).isEqualTo(2);
+
+    assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(48);
+    assertThat(historicalTrendList.get(1).getHealthScores().size()).isEqualTo(48);
+
+    for (int i = 0; i < 24; i++) {
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getHealthScore().intValue()).isEqualTo(60);
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.MEDIUM);
+    }
+    for (int i = 24; i < 48; i++) {
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getHealthScore().intValue()).isEqualTo(90);
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.LOW);
+    }
+
+    for (int i = 0; i < 48; i++) {
+      assertThat(historicalTrendList.get(1).getHealthScores().get(i).getHealthScore().intValue()).isEqualTo(45);
+      assertThat(historicalTrendList.get(1).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.HIGH);
+    }
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreOneServiceEnvironmentOneCategoryWithLatestBucketPresent() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
+    hPersistence.save(heatMap);
+
+    HeatMap previousHeatmap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, heatMap.getHeatMapBucketStartTime(), 0.5, 0.5);
+    hPersistence.save(previousHeatmap);
+
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+
+    assertThat(riskDataList.size()).isEqualTo(1);
+    assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.LOW);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(75);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreOneServiceEnvironmentOneCategoryWithOnlyPreviousBucketPresent() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+
+    HeatMap previousHeatmap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, endTime.minus(4, ChronoUnit.HOURS), 0.50, 0.10);
+    hPersistence.save(previousHeatmap);
+
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+
+    assertThat(riskDataList.size()).isEqualTo(1);
+    assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreOneServiceEnvironmentOneCategoryWithNoHeatMapRiskPresent() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    Instant startTime = endTime.minus(4, ChronoUnit.HOURS);
+    HeatMap previousHeatmap =
+        builderFactory.heatMapBuilder()
+            .heatMapResolution(FIVE_MIN)
+            .heatMapBucketStartTime(startTime)
+            .heatMapBucketEndTime(endTime)
+            .heatMapRisks(Arrays.asList(
+                HeatMapRisk.builder().startTime(startTime).endTime(startTime.plus(5, ChronoUnit.MINUTES)).build()))
+            .build();
+    hPersistence.save(previousHeatmap);
+
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+
+    assertThat(riskDataList.size()).isEqualTo(1);
+    assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreOneServiceEnvironmentMultipleCategory() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
+    hPersistence.save(heatMap);
+
+    HeatMap heatMapPerformanceCategory =
+        builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).category(CVMonitoringCategory.PERFORMANCE).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMapPerformanceCategory, endTime, 0.35, 0.65);
+    hPersistence.save(heatMapPerformanceCategory);
+
+    HeatMap previousHeatmap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, heatMap.getHeatMapBucketStartTime(), 0.5, 0.5);
+    hPersistence.save(previousHeatmap);
+
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+
+    assertThat(riskDataList.size()).isEqualTo(1);
+    assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HIGH);
+    assertThat(riskDataList.get(0).getHealthScore().intValue()).isEqualTo(35);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreMultipleServiceEnvironmentOneCategory() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
+    hPersistence.save(heatMap);
+
+    String newService = "newService";
+    String newEnv = "newEnv";
+    HeatMap anotherServiceEnvHeatMap = builderFactory.heatMapBuilder()
+                                           .heatMapResolution(FIVE_MIN)
+                                           .serviceIdentifier(newService)
+                                           .envIdentifier(newEnv)
+                                           .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(anotherServiceEnvHeatMap, endTime, 0.11, 0.37);
+    hPersistence.save(anotherServiceEnvHeatMap);
+
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(newService, newEnv)),
+        bufferTimeForLatestHealthScore);
+
+    assertThat(riskDataList.size()).isEqualTo(2);
+    assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.LOW);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(75);
+
+    assertThat(riskDataList.get(1).getRiskStatus()).isEqualTo(Risk.MEDIUM);
+    assertThat(riskDataList.get(1).getHealthScore()).isEqualTo(63);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLatestRiskScoreMultipleServiceEnvironmentMultipleCategory() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
+    hPersistence.save(heatMap);
+
+    HeatMap previousHeatmap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, heatMap.getHeatMapBucketStartTime(), 0.5, 0.5);
+    hPersistence.save(previousHeatmap);
+
+    HeatMap heatMapPerformanceCategory =
+        builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).category(CVMonitoringCategory.PERFORMANCE).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMapPerformanceCategory, endTime, 0.35, 0.65);
+    hPersistence.save(heatMapPerformanceCategory);
+
+    String newService = "newService";
+    String newEnv = "newEnv";
+    HeatMap anotherServiceEnvHeatMap = builderFactory.heatMapBuilder()
+                                           .heatMapResolution(FIVE_MIN)
+                                           .serviceIdentifier(newService)
+                                           .envIdentifier(newEnv)
+                                           .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(anotherServiceEnvHeatMap, endTime, 0.11, 0.37);
+    hPersistence.save(anotherServiceEnvHeatMap);
+
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(newService, newEnv)),
+        bufferTimeForLatestHealthScore);
+
+    assertThat(riskDataList.size()).isEqualTo(2);
+    assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HIGH);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(35);
+
+    assertThat(riskDataList.get(1).getRiskStatus()).isEqualTo(Risk.MEDIUM);
+    assertThat(riskDataList.get(1).getHealthScore()).isEqualTo(63);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetHeatMaps() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    // Heatmap for ERRORS category - - should be included in result
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
+    hPersistence.save(heatMap);
+
+    // Heatmap belonging to different service - should not be included in result
+    String newService = "newService";
+    String newEnv = "newEnv";
+    HeatMap anotherServiceEnvHeatMap = builderFactory.heatMapBuilder()
+                                           .heatMapResolution(FIVE_MIN)
+                                           .serviceIdentifier(newService)
+                                           .envIdentifier(newEnv)
+                                           .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(anotherServiceEnvHeatMap, endTime, 0.11, 0.37);
+    hPersistence.save(anotherServiceEnvHeatMap);
+
+    // Heatmap belonging to different category - should be included in result with service and env in query
+    heatMap =
+        builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).category(CVMonitoringCategory.PERFORMANCE).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.11, 0.37);
+    hPersistence.save(heatMap);
+
+    // Heatmap belonging to different category but last time is before 15 minutes - should not be included in result
+    heatMap = builderFactory.heatMapBuilder()
+                  .heatMapResolution(FIVE_MIN)
+                  .category(CVMonitoringCategory.INFRASTRUCTURE)
+                  .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime.minus(20, ChronoUnit.MINUTES), 0.11, 0.37);
+    hPersistence.save(heatMap);
+
+    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(
+        builderFactory.getContext().getProjectParams(), serviceIdentifier, envIdentifier);
+    assertThat(heatMaps.size()).isEqualTo(2);
+
+    heatMaps =
+        heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(), serviceIdentifier, null);
+    assertThat(heatMaps.size()).isEqualTo(2);
+
+    heatMaps = heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(), null, envIdentifier);
+    assertThat(heatMaps.size()).isEqualTo(2);
+
+    heatMaps = heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(), null, null);
+    assertThat(heatMaps.size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetOverAllHealthScoreOneCategory4hrsDuration() {
+    Instant endTime = clock.instant();
+    createHeatMaps(endTime, FIVE_MIN, CVMonitoringCategory.ERRORS, 2);
+    HistoricalTrend historicalTrend =
+        heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(), serviceIdentifier,
+            envIdentifier, DurationDTO.FOUR_HOURS, endTime);
+
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    Instant time =
+        getBoundaryOfResolution(endTime, FIVE_MIN.getResolution()).plusMillis(FIVE_MIN.getResolution().toMillis());
+    for (int i = 47; i >= 0; i--) {
+      RiskData riskData = historicalTrend.getHealthScores().get(i);
+      assertThat(riskData.getEndTime()).isEqualTo(time.toEpochMilli());
+      assertThat(riskData.getStartTime()).isEqualTo(time.minus(5, ChronoUnit.MINUTES).toEpochMilli());
+      time = time.minus(5, ChronoUnit.MINUTES);
+    }
+
+    assertOverallHealthScoreWithInTwoHeatMap(historicalTrend);
+
+    // Test for boundary condition
+    endTime = getBoundaryOfResolution(endTime, FIVE_MIN.getBucketSize()).minus(1, ChronoUnit.MINUTES);
+    historicalTrend = heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(),
+        serviceIdentifier, envIdentifier, DurationDTO.FOUR_HOURS, endTime);
+    assertOverallHealthScoreWithInOneHeatMap(historicalTrend);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetOverAllHealthScoreOneCategory4hrsDurationMultipleCategory() {
+    Instant endTime = clock.instant();
+    createHeatMaps(endTime, FIVE_MIN, CVMonitoringCategory.ERRORS, 2);
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    heatMaps.forEach(heatMap -> heatMap.getHeatMapRisks().forEach(heatMapRisk -> heatMapRisk.setRiskScore(0.0)));
+    hPersistence.save(heatMaps);
+    Instant timeToCheckFor = getBoundaryOfResolution(endTime, FIVE_MIN.getBucketSize()).minus(1, ChronoUnit.MINUTES);
+    HistoricalTrend historicalTrend =
+        heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(), serviceIdentifier,
+            envIdentifier, DurationDTO.FOUR_HOURS, timeToCheckFor);
+
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    for (int i = 47; i >= 23; i--) {
+      assertThat(historicalTrend.getHealthScores().get(i).getHealthScore()).isEqualTo(100);
+      assertThat(historicalTrend.getHealthScores().get(i).getRiskStatus()).isEqualTo(getHealthScoreRiskStatus(100));
+    }
+
+    createHeatMaps(endTime, FIVE_MIN, CVMonitoringCategory.PERFORMANCE, 2);
+    historicalTrend = heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(),
+        serviceIdentifier, envIdentifier, DurationDTO.FOUR_HOURS, timeToCheckFor);
+    assertOverallHealthScoreWithInOneHeatMap(historicalTrend);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetOverAllHealthScoreOneCategory24hrsDuration() {
+    Instant endTime = clock.instant();
+    createHeatMaps(endTime, THIRTY_MINUTES, CVMonitoringCategory.ERRORS, 2);
+    Instant timeToCheckFor = endTime.plus(2, ChronoUnit.HOURS);
+    HistoricalTrend historicalTrend =
+        heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(), serviceIdentifier,
+            envIdentifier, DurationDTO.TWENTY_FOUR_HOURS, timeToCheckFor);
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    Instant time = getBoundaryOfResolution(timeToCheckFor, THIRTY_MINUTES.getResolution())
+                       .plusMillis(THIRTY_MINUTES.getResolution().toMillis());
+    for (int i = 47; i >= 0; i--) {
+      RiskData riskData = historicalTrend.getHealthScores().get(i);
+      assertThat(riskData.getEndTime()).isEqualTo(time.toEpochMilli());
+      assertThat(riskData.getStartTime()).isEqualTo(time.minus(30, ChronoUnit.MINUTES).toEpochMilli());
+      time = time.minus(30, ChronoUnit.MINUTES);
+    }
+    assertOverallHealthScoreWithInTwoHeatMap(historicalTrend);
+
+    // Test for boundary condition
+    timeToCheckFor = getBoundaryOfResolution(endTime, THIRTY_MINUTES.getBucketSize()).minus(1, ChronoUnit.MINUTES);
+    historicalTrend = heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(),
+        serviceIdentifier, envIdentifier, DurationDTO.TWENTY_FOUR_HOURS, timeToCheckFor);
+    assertOverallHealthScoreWithInOneHeatMap(historicalTrend);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetOverAllHealthScoreOneCategory3DaysDuration() {
+    Instant endTime = clock.instant();
+    createHeatMaps(endTime, THIRTY_MINUTES, CVMonitoringCategory.ERRORS, 4);
+    Instant timeToCheckFor = endTime;
+    HistoricalTrend historicalTrend =
+        heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(), serviceIdentifier,
+            envIdentifier, DurationDTO.THREE_DAYS, timeToCheckFor);
+
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    Instant time = getBoundaryOfResolution(timeToCheckFor, THIRTY_MINUTES.getResolution())
+                       .plusMillis(THIRTY_MINUTES.getResolution().toMillis());
+    int healthScore = 79;
+    for (int i = 47; i >= 0; i--) {
+      RiskData riskData = historicalTrend.getHealthScores().get(i);
+      assertThat(riskData.getEndTime()).isEqualTo(time.toEpochMilli());
+      assertThat(riskData.getStartTime()).isEqualTo(time.minus(90, ChronoUnit.MINUTES).toEpochMilli());
+      assertHealthScore(riskData, healthScore);
+      healthScore += 3;
+      if (healthScore == 100) {
+        healthScore = 52;
+      }
+      time = time.minus(90, ChronoUnit.MINUTES);
+    }
+
+    // Test for boundary condition
+    timeToCheckFor = getBoundaryOfResolution(endTime, THIRTY_MINUTES.getBucketSize()).minus(1, ChronoUnit.MINUTES);
+    historicalTrend = heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(),
+        serviceIdentifier, envIdentifier, DurationDTO.THREE_DAYS, timeToCheckFor);
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+
+    time = getBoundaryOfResolution(timeToCheckFor, THIRTY_MINUTES.getResolution())
+               .plusMillis(THIRTY_MINUTES.getResolution().toMillis());
+    healthScore = 52;
+    for (int i = 47; i >= 0; i--) {
+      RiskData riskData = historicalTrend.getHealthScores().get(i);
+      assertThat(riskData.getEndTime()).isEqualTo(time.toEpochMilli());
+      assertThat(riskData.getStartTime()).isEqualTo(time.minus(90, ChronoUnit.MINUTES).toEpochMilli());
+      assertHealthScore(riskData, healthScore);
+      healthScore += 3;
+      if (healthScore == 100) {
+        healthScore = 52;
+      }
+      time = time.minus(90, ChronoUnit.MINUTES);
+    }
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetOverAllHealthScoreOneCategory7DaysDuration() {
+    Instant endTime = clock.instant();
+    createHeatMaps(endTime, THIRTY_MINUTES, CVMonitoringCategory.ERRORS, 8);
+    Instant timeToCheckFor = endTime;
+    HistoricalTrend historicalTrend =
+        heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(), serviceIdentifier,
+            envIdentifier, DurationDTO.SEVEN_DAYS, timeToCheckFor);
+
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    Instant time = getBoundaryOfResolution(timeToCheckFor, THIRTY_MINUTES.getResolution())
+                       .plusMillis(THIRTY_MINUTES.getResolution().toMillis());
+
+    for (int i = 47; i >= 0; i--) {
+      RiskData riskData = historicalTrend.getHealthScores().get(i);
+      assertThat(riskData.getEndTime()).isEqualTo(time.toEpochMilli());
+      assertThat(riskData.getStartTime()).isEqualTo(time.minus(210, ChronoUnit.MINUTES).toEpochMilli());
+      time = time.minus(210, ChronoUnit.MINUTES);
+    }
+    assertHealthScore(historicalTrend.getHealthScores().get(0), 72);
+    assertHealthScore(historicalTrend.getHealthScores().get(47), 79);
+    assertHealthScore(historicalTrend.getHealthScores().get(39), 87);
+    assertHealthScore(historicalTrend.getHealthScores().get(38), 52);
+    assertHealthScore(historicalTrend.getHealthScores().get(40), 80);
+
+    // Test for boundary condition
+    timeToCheckFor = getBoundaryOfResolution(endTime, THIRTY_MINUTES.getBucketSize()).minus(1, ChronoUnit.MINUTES);
+    historicalTrend = heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(),
+        serviceIdentifier, envIdentifier, DurationDTO.SEVEN_DAYS, timeToCheckFor);
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    time = getBoundaryOfResolution(timeToCheckFor, THIRTY_MINUTES.getResolution())
+               .plusMillis(THIRTY_MINUTES.getResolution().toMillis());
+    for (int i = 47; i >= 0; i--) {
+      RiskData riskData = historicalTrend.getHealthScores().get(i);
+      assertThat(riskData.getEndTime()).isEqualTo(time.toEpochMilli());
+      assertThat(riskData.getStartTime()).isEqualTo(time.minus(210, ChronoUnit.MINUTES).toEpochMilli());
+      time = time.minus(210, ChronoUnit.MINUTES);
+    }
+    assertHealthScore(historicalTrend.getHealthScores().get(0), 93);
+    assertHealthScore(historicalTrend.getHealthScores().get(47), 52);
+    assertHealthScore(historicalTrend.getHealthScores().get(42), 87);
+    assertHealthScore(historicalTrend.getHealthScores().get(41), 52);
+    assertHealthScore(historicalTrend.getHealthScores().get(43), 80);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetOverAllHealthScoreOneCategory30DaysDuration() {
+    Instant endTime = clock.instant();
+    createHeatMaps(endTime, THIRTY_MINUTES, CVMonitoringCategory.ERRORS, 31);
+    Instant timeToCheckFor = endTime;
+    HistoricalTrend historicalTrend =
+        heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(), serviceIdentifier,
+            envIdentifier, DurationDTO.THIRTY_DAYS, timeToCheckFor);
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    Instant time = getBoundaryOfResolution(timeToCheckFor, THIRTY_MINUTES.getResolution())
+                       .plusMillis(THIRTY_MINUTES.getResolution().toMillis());
+    for (int i = 47; i >= 0; i--) {
+      RiskData riskData = historicalTrend.getHealthScores().get(i);
+      assertThat(riskData.getEndTime()).isEqualTo(time.toEpochMilli());
+      assertThat(riskData.getStartTime()).isEqualTo(time.minus(15, ChronoUnit.HOURS).toEpochMilli());
+      time = time.minus(15, ChronoUnit.HOURS);
+    }
+    assertHealthScore(historicalTrend.getHealthScores().get(0), 52);
+    assertHealthScore(historicalTrend.getHealthScores().get(47), 52);
+    assertHealthScore(historicalTrend.getHealthScores().get(35), 55);
+
+    // Test for boundary condition
+    historicalTrend = heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(),
+        serviceIdentifier, envIdentifier, DurationDTO.THIRTY_DAYS, timeToCheckFor);
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    time = getBoundaryOfResolution(timeToCheckFor, THIRTY_MINUTES.getResolution())
+               .plusMillis(THIRTY_MINUTES.getResolution().toMillis());
+    for (int i = 47; i >= 0; i--) {
+      RiskData riskData = historicalTrend.getHealthScores().get(i);
+      assertThat(riskData.getEndTime()).isEqualTo(time.toEpochMilli());
+      assertThat(riskData.getStartTime()).isEqualTo(time.minus(15, ChronoUnit.HOURS).toEpochMilli());
+      time = time.minus(15, ChronoUnit.HOURS);
+    }
+    assertHealthScore(historicalTrend.getHealthScores().get(0), 52);
+    assertHealthScore(historicalTrend.getHealthScores().get(47), 52);
+    assertHealthScore(historicalTrend.getHealthScores().get(46), 61);
+  }
+
+  private void assertHealthScore(RiskData riskData, int val) {
+    assertThat(riskData.getHealthScore()).isEqualTo(val);
+    assertThat(getHealthScoreRiskStatus(riskData.getHealthScore())).isEqualTo(riskData.getRiskStatus());
+  }
+
+  private void assertOverallHealthScoreWithInTwoHeatMap(HistoricalTrend historicalTrend) {
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    int healthScore = 75;
+    for (int i = 47; i >= 23; i--) {
+      assertThat(historicalTrend.getHealthScores().get(i).getHealthScore()).isEqualTo(healthScore);
+      assertThat(historicalTrend.getHealthScores().get(i).getRiskStatus())
+          .isEqualTo(getHealthScoreRiskStatus(healthScore));
+      healthScore++;
+    }
+    healthScore = 52;
+    for (int i = 22; i >= 0; i--) {
+      assertThat(historicalTrend.getHealthScores().get(i).getHealthScore()).isEqualTo(healthScore);
+      assertThat(historicalTrend.getHealthScores().get(i).getRiskStatus())
+          .isEqualTo(getHealthScoreRiskStatus(healthScore));
+      healthScore++;
+    }
+  }
+
+  private void assertOverallHealthScoreWithInOneHeatMap(HistoricalTrend historicalTrend) {
+    assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+    int healthScore = 52;
+    for (int i = 47; i >= 0; i--) {
+      assertThat(historicalTrend.getHealthScores().get(i).getHealthScore()).isEqualTo(healthScore);
+      assertThat(historicalTrend.getHealthScores().get(i).getRiskStatus())
+          .isEqualTo(getHealthScoreRiskStatus(healthScore));
+      healthScore++;
+    }
+  }
+
+  private Risk getHealthScoreRiskStatus(int healthScore) {
+    if (healthScore > 70) {
+      return Risk.LOW;
+    } else if (healthScore > 50) {
+      return Risk.MEDIUM;
+    } else {
+      return Risk.HIGH;
+    }
+  }
+
+  private void createHeatMaps(
+      Instant endTime, HeatMapResolution heatMapResolution, CVMonitoringCategory category, int numberOfHeatMaps) {
+    for (int i = 0; i < numberOfHeatMaps; i++) {
+      endTime = getBoundaryOfResolution(endTime, heatMapResolution.getBucketSize())
+                    .plusMillis(heatMapResolution.getBucketSize().toMillis());
+      Instant startTime = endTime.minus(heatMapResolution.getBucketSize());
+      HeatMap heatMap = builderFactory.heatMapBuilder()
+                            .heatMapResolution(heatMapResolution)
+                            .category(category)
+                            .heatMapBucketStartTime(startTime)
+                            .heatMapBucketEndTime(endTime)
+                            .build();
+      List<HeatMapRisk> heatMapRisks = new ArrayList<>();
+      double riskScore = 0.01;
+      for (Instant time = startTime; time.isBefore(endTime); time = time.plus(heatMapResolution.getResolution())) {
+        heatMapRisks.add(HeatMapRisk.builder()
+                             .riskScore(riskScore)
+                             .startTime(time)
+                             .endTime(time.plus(heatMapResolution.getResolution()))
+                             .build());
+        riskScore += 0.01;
+      }
+      heatMap.setHeatMapRisks(heatMapRisks);
+      hPersistence.save(heatMap);
+      endTime = startTime.minus(1, ChronoUnit.MINUTES);
+    }
+  }
+
+  private void setStartTimeEndTimeAndRiskScoreWith30MinBucket(HeatMap heatMap, Instant endTime, double riskScore) {
+    Instant startTime = endTime.minus(24, ChronoUnit.HOURS);
+    heatMap.setHeatMapBucketStartTime(startTime);
+    heatMap.setHeatMapBucketEndTime(endTime);
+    List<HeatMapRisk> heatMapRisks = new ArrayList<>();
+
+    for (Instant time = startTime; time.isBefore(endTime); time = time.plus(30, ChronoUnit.MINUTES)) {
+      heatMapRisks.add(HeatMapRisk.builder()
+                           .riskScore(riskScore)
+                           .startTime(time)
+                           .endTime(time.plus(30, ChronoUnit.MINUTES))
+                           .build());
+    }
+    heatMap.setHeatMapRisks(heatMapRisks);
+  }
+
+  private void setStartTimeEndTimeAndRiskScoreWith5MinBucket(
+      HeatMap heatMap, Instant endTime, double firstHalfRiskScore, double secondHalfRiskScore) {
+    Instant startTime = endTime.minus(4, ChronoUnit.HOURS);
+    heatMap.setHeatMapBucketStartTime(startTime);
+    heatMap.setHeatMapBucketEndTime(endTime);
+    List<HeatMapRisk> heatMapRisks = new ArrayList<>();
+
+    for (Instant time = startTime; time.isBefore(startTime.plus(2, ChronoUnit.HOURS));
+         time = time.plus(5, ChronoUnit.MINUTES)) {
+      heatMapRisks.add(HeatMapRisk.builder()
+                           .riskScore(firstHalfRiskScore)
+                           .startTime(time)
+                           .endTime(time.plus(5, ChronoUnit.MINUTES))
+                           .build());
+    }
+    for (Instant time = startTime.plus(2, ChronoUnit.HOURS); time.isBefore(endTime);
+         time = time.plus(5, ChronoUnit.MINUTES)) {
+      heatMapRisks.add(HeatMapRisk.builder()
+                           .riskScore(secondHalfRiskScore)
+                           .startTime(time)
+                           .endTime(time.plus(5, ChronoUnit.MINUTES))
+                           .build());
+    }
+    heatMap.setHeatMapRisks(heatMapRisks);
+  }
+
+  private Instant getBoundaryOfResolution(Instant input, Duration resolution) {
+    long timeStamp = input.toEpochMilli();
+    return Instant.ofEpochMilli(timeStamp - (timeStamp % resolution.toMillis()));
   }
 }

@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.util.Arrays.asList;
@@ -286,11 +287,12 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void testGetBuildDetailsPaginatedResponse() {
+  public void testGetBuildDetailsPaginatedResponseWithBasic() {
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
 
     wireMockRule.stubFor(
         get(urlEqualTo("/v2/image/tags/list"))
+            .withBasicAuth(dockerConfig.getUsername(), dockerConfig.getPassword())
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -299,6 +301,58 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
 
     wireMockRule.stubFor(
         get(urlEqualTo("/v2/image/tags/list?next_page=gAAAAABbuZsLNl9W6tAycol&n=2"))
+            .withBasicAuth(dockerConfig.getUsername(), dockerConfig.getPassword())
+            .willReturn(aResponse().withStatus(200).withBody(JsonUtils.asJson(dockerImageTagResponsePaginated))));
+
+    List<BuildDetailsInternal> builds = dockerRegistryService.getBuilds(dockerConfig, "image", 10);
+    assertThat(builds).isNotNull();
+    assertThat(builds.get(0).getNumber()).isEqualTo("tag1");
+    assertThat(builds.get(0).getBuildUrl()).isEqualTo(url + "image/tags/tag1");
+    assertThat(builds.get(0).getMetadata().get("tag")).isEqualTo("tag1");
+    assertThat(builds.get(0).getMetadata().get("image")).isEqualTo(Http.getDomainWithPort(url) + "/image:tag1");
+    assertThat(builds.get(1).getNumber()).isEqualTo("tag2");
+    assertThat(builds.get(1).getBuildUrl()).isEqualTo(url + "image/tags/tag2");
+    assertThat(builds.get(1).getMetadata().get("tag")).isEqualTo("tag2");
+    assertThat(builds.get(1).getMetadata().get("image")).isEqualTo(Http.getDomainWithPort(url) + "/image:tag2");
+
+    assertThat(builds.get(2).getNumber()).isEqualTo("tag3");
+    assertThat(builds.get(2).getBuildUrl()).isEqualTo(url + "image/tags/tag3");
+    assertThat(builds.get(2).getMetadata().get("tag")).isEqualTo("tag3");
+    assertThat(builds.get(2).getMetadata().get("image")).isEqualTo(Http.getDomainWithPort(url) + "/image:tag3");
+    assertThat(builds.get(3).getNumber()).isEqualTo("tag4");
+    assertThat(builds.get(3).getBuildUrl()).isEqualTo(url + "image/tags/tag4");
+    assertThat(builds.get(3).getMetadata().get("tag")).isEqualTo("tag4");
+    assertThat(builds.get(3).getMetadata().get("image")).isEqualTo(Http.getDomainWithPort(url) + "/image:tag4");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetBuildDetailsPaginatedResponseWithBearer() {
+    doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
+
+    wireMockRule.stubFor(get(urlEqualTo("/v2/image/tags/list"))
+                             .withBasicAuth(dockerConfig.getUsername(), dockerConfig.getPassword())
+                             .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
+                                 "Bearer realm=\"http://localhost:" + wireMockRule.port()
+                                     + "/service/token\",service=\"harbor-registry\",scope=\"somevalue\"")));
+
+    // http://localhost:9883/service/token?service=harbor-registry&scope=somevalue
+    wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
+                             .willReturn(aResponse().withBody(JsonUtils.asJson(dockerRegistryToken))));
+
+    wireMockRule.stubFor(
+        get(urlEqualTo("/v2/image/tags/list"))
+            .withHeader("Authorization", equalTo("Bearer dockerRegistryToken"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody(JsonUtils.asJson(dockerImageTagResponse))
+                    .withHeader("link", "</v2/tags/list?next_page=gAAAAABbuZsLNl9W6tAycol&n=2>; rel=\"next\"")));
+
+    wireMockRule.stubFor(
+        get(urlEqualTo("/v2/image/tags/list?next_page=gAAAAABbuZsLNl9W6tAycol&n=2"))
+            .withHeader("Authorization", equalTo("Bearer dockerRegistryToken"))
             .willReturn(aResponse().withStatus(200).withBody(JsonUtils.asJson(dockerImageTagResponsePaginated))));
 
     List<BuildDetailsInternal> builds = dockerRegistryService.getBuilds(dockerConfig, "image", 10);
@@ -348,7 +402,7 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
     List<Map<String, String>> labelsMapList = Arrays.asList(labelMap, anotherLabelMap);
 
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
-    doReturn(labelsMapList).when(dockerRegistryUtils).getLabels(any(), any(), any(), any(), any());
+    doReturn(labelsMapList).when(dockerRegistryUtils).getLabels(any(), any(), any(), any(), any(), any());
 
     List<Map<String, String>> resultLabelsMap =
         dockerRegistryService.getLabels(dockerConfig, "image", asList("abc", "latest"));

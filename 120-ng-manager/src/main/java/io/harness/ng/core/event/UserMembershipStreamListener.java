@@ -46,7 +46,7 @@ public class UserMembershipStreamListener implements MessageListener {
   private boolean processUserMembershipEvent(UserMembershipDTO userMembershipDTO) {
     String action = userMembershipDTO.getAction();
     if (DELETE_ACTION.equals(action)) {
-      processDeleteEvent(userMembershipDTO);
+      return processDeleteEvent(userMembershipDTO);
     }
     return true;
   }

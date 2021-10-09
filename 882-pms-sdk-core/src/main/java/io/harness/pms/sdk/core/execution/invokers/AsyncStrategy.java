@@ -6,11 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
 import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
@@ -28,7 +26,6 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -55,20 +52,24 @@ public class AsyncStrategy extends ProgressableStrategy {
     AsyncExecutable asyncExecutable = extractStep(ambiance);
     StepResponse stepResponse = asyncExecutable.handleAsyncResponse(
         ambiance, resumePackage.getStepParameters(), resumePackage.getResponseDataMap());
-    sdkNodeExecutionService.handleStepResponse(
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
+    sdkNodeExecutionService.handleStepResponse(ambiance, StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   private void handleResponse(
       Ambiance ambiance, ExecutionMode mode, StepParameters stepParameters, AsyncExecutableResponse response) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    String stepParamString = RecastOrchestrationUtils.toDocumentJson(stepParameters);
+    String stepParamString = RecastOrchestrationUtils.toJson(stepParameters);
     if (isEmpty(response.getCallbackIdsList())) {
       log.error("StepResponse has no callbackIds - currentState : " + AmbianceUtils.obtainStepIdentifier(ambiance)
           + ", nodeExecutionId: " + nodeExecutionId);
+      // Todo: Create new ExecutionException and throw that over here.
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
-    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
+    // TODO : This is the last use of add executable response need to remove it as causing issues. Find a way to remove
+    // this
+    sdkNodeExecutionService.addExecutableResponse(ambiance, ExecutableResponse.newBuilder().setAsync(response).build());
+
+    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().ambianceBytes(ambiance.toByteArray()).build();
     AsyncSdkProgressCallback progressCallback =
         AsyncSdkProgressCallback.builder()
             .ambianceBytes(ambiance.toByteArray())
@@ -78,21 +79,10 @@ public class AsyncStrategy extends ProgressableStrategy {
             .build();
 
     asyncWaitEngine.waitForAllOn(callback, progressCallback, response.getCallbackIdsList().toArray(new String[0]));
-    sdkNodeExecutionService.addExecutableResponse(nodeExecutionId, extractStatus(response),
-        ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());
   }
 
   @Override
   public AsyncExecutable extractStep(Ambiance ambiance) {
     return (AsyncExecutable) stepRegistry.obtain(AmbianceUtils.getCurrentStepType(ambiance));
-  }
-
-  private Status extractStatus(AsyncExecutableResponse response) {
-    if (response.getMode() == AsyncExecutableMode.APPROVAL_WAITING_MODE) {
-      return Status.APPROVAL_WAITING;
-    } else if (response.getMode() == AsyncExecutableMode.RESOURCE_WAITING_MODE) {
-      return Status.RESOURCE_WAITING;
-    }
-    return Status.ASYNC_WAITING;
   }
 }

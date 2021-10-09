@@ -11,15 +11,18 @@ shared_dependencies = [
     "//:lombok",
     "//450-ce-views:module",
     "//490-ce-commons:module",
+    "//959-psql-database-models:module",
     "//970-ng-commons:module",
+    "@maven//:com_google_code_gson_gson",
     "@maven//:com_google_inject_guice",
     "@maven//:io_leangen_graphql_spqr",
+    "@maven//:org_jooq_jooq",
 ]
 
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     tags = [
         "aeriform",

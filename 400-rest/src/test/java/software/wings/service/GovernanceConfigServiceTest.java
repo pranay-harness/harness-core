@@ -13,6 +13,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.DeprecatedIntegrationTests;
@@ -56,6 +58,7 @@ import org.mockito.Mock;
  * @author rktummala
  */
 @TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(HarnessTeam.CDC)
 public class GovernanceConfigServiceTest extends IntegrationTestBase {
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
@@ -112,7 +115,7 @@ public class GovernanceConfigServiceTest extends IntegrationTestBase {
     savedGovernanceConfig = governanceConfigService.get(accountId);
     compare(inputConfig, savedGovernanceConfig);
 
-    TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata");
+    TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata", false, null, null, null, false);
     WeeklyRange weeklyRange = new WeeklyRange(null, "Tuesday", "7:00 PM", "Monday", "5:00 AM", "Asia/Kolkata");
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),

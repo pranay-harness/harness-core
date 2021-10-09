@@ -54,6 +54,7 @@ import static software.wings.beans.yaml.YamlType.CONFIG_FILE_OVERRIDE_CONTENT;
 import static software.wings.beans.yaml.YamlType.CV_CONFIGURATION;
 import static software.wings.beans.yaml.YamlType.DEPLOYMENT_SPECIFICATION;
 import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
+import static software.wings.beans.yaml.YamlType.EVENT_RULE;
 import static software.wings.beans.yaml.YamlType.GLOBAL_TEMPLATE_LIBRARY;
 import static software.wings.beans.yaml.YamlType.INFRA_DEFINITION;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
@@ -96,7 +97,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.UuidAware;
@@ -115,22 +115,16 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.InvalidYamlNameException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
-import software.wings.service.impl.yaml.util.YamlWorkflowValidator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.service.intfc.yaml.YamlSuccessfulChangeService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.FileOperationStatus;
@@ -143,8 +137,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import com.google.common.annotations.VisibleForTesting;
@@ -154,7 +146,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
@@ -169,7 +160,6 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -212,10 +202,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private static final Set<YamlType> rbacDeleteYamlTypes = rbacCreateYamlTypes;
 
   private static final int YAML_MAX_PARALLEL_COUNT = 20;
-  private static final String AMI_FILTERS = "amiFilters";
-  private static final String PHASES = "phases";
-  private static final String AMI_TAGS = "amiTags";
-  private static final String NAME = "name";
   private static final String DEFAULT_YAML = "harnessApiVersion: '1.0'";
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
@@ -223,18 +209,13 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private transient YamlGitService yamlGitService;
   @Inject private AuthService authService;
   @Inject private ExecutorService executorService;
-  @Inject private TimeLimiter timeLimiter;
-  @Inject private YamlResourceService yamlResourceService;
-  @Inject private WorkflowService workflowService;
+  @Inject private YamlFieldValidator yamlFieldValidator;
   @Inject private AppService appService;
   @Inject private FailedCommitStore failedCommitStore;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private YamlPushService yamlPushService;
   @Inject private HarnessTagYamlHelper harnessTagYamlHelper;
   @Inject private GitSyncService gitSyncService;
   @Inject private YamlHelper yamlHelper;
-  @Inject YamlSuccessfulChangeService yamlSuccessfulChangeService;
   @Inject private AuditHelper auditHelper;
   @Inject private AuditService auditService;
 
@@ -259,7 +240,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE,
         MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_APP_SETTINGS_ENV_OVERRIDE,
         MANIFEST_FILE_APP_SETTINGS_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_CONN_STRINGS_ENV_OVERRIDE,
-        MANIFEST_FILE_CONN_STRINGS_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER, YamlType.GOVERNANCE_CONFIG);
+        MANIFEST_FILE_CONN_STRINGS_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER, YamlType.GOVERNANCE_CONFIG,
+        EVENT_RULE);
   }
 
   @Override
@@ -595,7 +577,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         if (manifestFileChangeContext != null) {
           changeContextList.add(manifestFileChangeContext);
         } else if (yamlFilePath.endsWith(YAML_EXTENSION)) {
-          validateYaml(change.getFileContent());
+          yamlFieldValidator.validateYaml(change.getFileContent());
+          YamlWorkflowValidator.validateWorkflowPreDeploymentSteps(change.getFileContent());
           YamlType yamlType = findYamlType(yamlFilePath, change.getAccountId());
           String yamlSubType = getYamlSubType(change.getFileContent());
 
@@ -997,23 +980,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   /**
-   * Check if the yaml is valid
-   *
-   * @param yamlString
-   * @return
-   */
-  private void validateYaml(String yamlString) throws ScannerException {
-    Yaml yamlObj = new Yaml(new SafeConstructor());
-
-    // We just load the yaml to see if its well formed.
-    LinkedHashMap<String, Object> load = (LinkedHashMap<String, Object>) yamlObj.load(yamlString);
-    checkOnPhasesNamesWithDots(load);
-    checkOnEmptyAmiFiltersNames(load);
-    checkOnEmptyAmiTagNames(load);
-    YamlWorkflowValidator.validateWorkflowPreDeploymentSteps(load);
-  }
-
-  /**
    * Get yaml representation for a given file path
    *
    * @param yamlFilePath
@@ -1117,6 +1083,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             .status(FileOperationStatus.Status.SUCCESS)
             .errorMssg("")
             .yamlFilePath(changeContext.getChange().getFilePath())
+            .entityId(changeContext.getEntity() != null ? ((Base) changeContext.getEntity()).getUuid() : null)
             .build();
       }
     } catch (YamlProcessingException ex) {
@@ -1168,11 +1135,33 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         processedChangesWithContext.stream().map(result -> result.getChange()).collect(toList());
     List<FileOperationStatus> fileOperationStatusList =
         prepareFileOperationStatusListFromChangeList(Collections.EMPTY_LIST, processedChangeList, originalChangeList);
+    fileOperationStatusList = addEntityIdToFileOperationResponse(fileOperationStatusList, processedChangesWithContext);
 
     return yamlOperationResponseBuilder.responseStatus(YamlOperationResponse.Status.SUCCESS)
         .filesStatus(fileOperationStatusList)
         .errorMessage("")
         .build();
+  }
+
+  private List<FileOperationStatus> addEntityIdToFileOperationResponse(
+      List<FileOperationStatus> fileOperationStatusList, List<ChangeContext> processedChangesWithContext) {
+    if (CollectionUtils.isEmpty(processedChangesWithContext)) {
+      return fileOperationStatusList;
+    }
+    Map<String, String> filePathToEntityIdMap = processedChangesWithContext.stream().collect(HashMap::new,
+        (mapping, changeContext)
+            -> mapping.put(changeContext.getChange().getFilePath(),
+                changeContext.getEntity() != null ? ((Base) changeContext.getEntity()).getUuid() : null),
+        (mapping, changeContext) -> {});
+    return fileOperationStatusList.stream()
+        .map(item
+            -> FileOperationStatus.builder()
+                   .yamlFilePath(item.getYamlFilePath())
+                   .status(item.getStatus())
+                   .errorMssg(item.getErrorMssg())
+                   .entityId(filePathToEntityIdMap.getOrDefault(item.getYamlFilePath(), ""))
+                   .build())
+        .collect(toList());
   }
 
   private List<Change> getSkippedChangeList(final List<Change> originalChangeList,
@@ -1235,48 +1224,5 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                                       .build());
     }
     return fileOperationStatusList;
-  }
-
-  private void checkOnPhasesNamesWithDots(LinkedHashMap<String, Object> load) {
-    if (load.containsKey(PHASES)) {
-      List<String> phaseNames =
-          ((List<LinkedHashMap<String, String>>) load.get(PHASES)).stream().map(map -> map.get(NAME)).collect(toList());
-
-      phaseNames.forEach(name -> {
-        if (name.contains(".")) {
-          throw new InvalidYamlNameException("Invalid phase name [" + name + "]. Dots are not permitted");
-        }
-      });
-    }
-  }
-
-  private void checkOnEmptyAmiFiltersNames(LinkedHashMap<String, Object> load) {
-    if (load.containsKey(AMI_FILTERS)) {
-      List<String> phaseNames = ((List<LinkedHashMap<String, String>>) load.get(AMI_FILTERS))
-                                    .stream()
-                                    .map(map -> map.get(NAME))
-                                    .collect(toList());
-
-      phaseNames.forEach(name -> {
-        if (name.trim().isEmpty()) {
-          throw new InvalidYamlNameException("Invalid amiFilter name. Empty names are not permitted");
-        }
-      });
-    }
-  }
-
-  private void checkOnEmptyAmiTagNames(LinkedHashMap<String, Object> load) {
-    if (load.containsKey(AMI_TAGS)) {
-      List<String> phaseNames = ((List<LinkedHashMap<String, String>>) load.get(AMI_TAGS))
-                                    .stream()
-                                    .map(map -> map.get(NAME))
-                                    .collect(toList());
-
-      phaseNames.forEach(name -> {
-        if (name.trim().isEmpty()) {
-          throw new InvalidYamlNameException("Invalid amiTag name. Empty names are not permitted");
-        }
-      });
-    }
   }
 }

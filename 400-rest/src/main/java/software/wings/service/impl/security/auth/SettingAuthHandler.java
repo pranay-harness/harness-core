@@ -2,7 +2,10 @@ package software.wings.service.impl.security.auth;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
@@ -39,7 +42,7 @@ public class SettingAuthHandler {
     }
   }
 
-  public void authorize(SettingAttribute settingAttribute) {
+  public void authorize(SettingAttribute settingAttribute, String appId) {
     if (settingAttribute == null || settingAttribute.getValue() == null
         || settingAttribute.getValue().getType() == null) {
       return;
@@ -53,7 +56,15 @@ public class SettingAuthHandler {
         break;
       }
       case SETTING: {
-        authorizeSshAndWinRM();
+        if (!SettingVariableTypes.STRING.equals(SettingVariableTypes.valueOf(settingAttribute.getValue().getType()))) {
+          authorizeSshAndWinRM();
+        } else {
+          if (GLOBAL_APP_ID.equals(appId)) {
+            authorizeAccountDefaults();
+          } else {
+            authorizeApplicationDefaults();
+          }
+        }
         break;
       }
       case CLOUD_PROVIDER: {
@@ -72,6 +83,18 @@ public class SettingAuthHandler {
     authorize(permissionAttributeList);
   }
 
+  private void authorizeAccountDefaults() {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(ACCOUNT_MANAGEMENT));
+    authorize(permissionAttributeList);
+  }
+
+  private void authorizeApplicationDefaults() {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(MANAGE_APPLICATIONS));
+    authorize(permissionAttributeList);
+  }
+
   private void authorizeConnector() {
     List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
     permissionAttributeList.add(new PermissionAttribute(MANAGE_CONNECTORS));
@@ -86,6 +109,6 @@ public class SettingAuthHandler {
 
   public void authorize(String appId, String settingAttributeId) {
     SettingAttribute settingAttribute = settingsService.get(appId, settingAttributeId);
-    authorize(settingAttribute);
+    authorize(settingAttribute, appId);
   }
 }

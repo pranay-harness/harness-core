@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.sync.response;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @OwnedBy(CDP)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class ContainerSyncResponse implements DelegateTaskNotifyResponseData {
   private DelegateMetaInfo delegateMetaInfo;
   private List<ContainerInfo> containerInfoList;

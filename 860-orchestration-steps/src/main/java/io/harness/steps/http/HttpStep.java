@@ -21,6 +21,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -45,7 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).setStepCategory(StepCategory.STEP).build();
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
@@ -177,6 +179,8 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
             if (evaluatedValue != null) {
               outputVariablesEvaluated.put(name, evaluatedValue.toString());
             }
+          } else if (expr.getValue() != null) {
+            outputVariablesEvaluated.put(name, expr.getValue().toString());
           }
         }
       });

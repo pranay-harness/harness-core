@@ -20,6 +20,7 @@ func Test_NoOp(t *testing.T) {
 }
 
 func Test_ParseJavaNode(t *testing.T) {
+	// Test for source code file
 	f := "320-ci-execution/src/main/java/io/harness/stateutils/buildstate/ConnectorUtils.java"
 
 	node1 := Node{
@@ -35,11 +36,11 @@ func Test_ParseJavaNode(t *testing.T) {
 func Test_ParseFileNames(t *testing.T) {
 
 	files := []string{
-		"320-ci-execution/src/main/java/io/harness/stateutils/buildstate/ConnectorUtils.java",
-		"320-ci-execution/src/test/java/io/harness/stateutils/buildstate/TestConnectorUtils.java",
+		"320-ci-execution/src/main/java/io/harness/stateutils/buildstate/ConnectorUtils.java",     // Source file
+		"320-ci-execution/src/test/java/io/harness/stateutils/buildstate/TestConnectorUtils.java", // Test file
+		"810-ci-manager/src/test/resources/data/ng-trigger-config.yaml",                           // Resource file
 		"330-ci-beans/pom.xml",
 		"320-ci-execution/src/main/java/io/harness/stateutils/buildstate/ConnectorUtils", //.java extension is missing
-
 	}
 	node1 := Node{
 		Pkg:   "io.harness.stateutils.buildstate",
@@ -55,16 +56,20 @@ func Test_ParseFileNames(t *testing.T) {
 		Lang:  LangType_JAVA,
 	}
 
+	node3 := Node{
+		Type: NodeType_RESOURCE,
+		Lang: LangType_JAVA,
+		File: "ng-trigger-config.yaml",
+	}
+
 	unknown := Node{
-		Pkg:   "",
-		Class: "",
-		Type:  NodeType_OTHER,
-		Lang:  LangType_UNKNOWN,
+		Type: NodeType_OTHER,
+		Lang: LangType_UNKNOWN,
 	}
 
 	nodes, _ := ParseFileNames(files)
 
-	nodesExpected := []Node{node1, node2, unknown, unknown}
+	nodesExpected := []Node{node1, node2, node3, unknown, unknown}
 
 	assert.Equal(t, nodesExpected, nodes, "extracted nodes don't match")
 }

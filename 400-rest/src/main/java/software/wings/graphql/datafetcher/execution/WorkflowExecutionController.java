@@ -26,6 +26,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -209,13 +210,20 @@ public class WorkflowExecutionController {
         List<String> extraVariables = new ArrayList<>();
         Map<String, String> variableValues =
             validateAndResolveWorkflowVariables(workflow, variableInputs, envId, extraVariables, false);
-        List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(variableValues, serviceInputs, workflow);
+        /* Fetch the deployment data to find out the required entity types */
+        DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
+            workflow.getAppId(), workflow, variableValues, null, null, DeploymentMetadata.Include.ARTIFACT_SERVICE);
+
+        List<Artifact> artifacts =
+            validateAndGetArtifactsFromServiceInputs(deploymentMetadata, workflow, serviceInputs);
+        List<HelmChart> helmCharts =
+            validateAndGetHelmChartsFromServiceInputs(deploymentMetadata, serviceInputs, workflow);
         ExecutionArgs executionArgs = new ExecutionArgs();
         executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
         executionArgs.setOrchestrationId(triggerExecutionInput.getEntityId());
 
         executionController.populateExecutionArgs(
-            variableValues, artifacts, triggerExecutionInput, mutationContext, executionArgs);
+            variableValues, artifacts, triggerExecutionInput, mutationContext, executionArgs, helmCharts);
         WorkflowExecution workflowExecution =
             workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null);
 
@@ -241,6 +249,20 @@ public class WorkflowExecutionController {
     }
   }
 
+  private List<HelmChart> validateAndGetHelmChartsFromServiceInputs(
+      DeploymentMetadata deploymentMetadata, List<QLServiceInput> serviceInputs, Workflow workflow) {
+    List<String> manifestNeededServiceIds =
+        deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getManifestRequiredServiceIds();
+    if (isEmpty(manifestNeededServiceIds)) {
+      return new ArrayList<>();
+    }
+
+    List<HelmChart> helmCharts = new ArrayList<>();
+    executionController.getHelmChartsFromServiceInputs(
+        serviceInputs, workflow.getAppId(), manifestNeededServiceIds, helmCharts);
+    return helmCharts;
+  }
+
   private void validateInputs(QLStartExecutionInput triggerExecutionInput) {
     if (triggerExecutionInput.isTargetToSpecificHosts() && isEmpty(triggerExecutionInput.getSpecificHosts())) {
       throw new InvalidRequestException(
@@ -249,11 +271,7 @@ public class WorkflowExecutionController {
   }
 
   private List<Artifact> validateAndGetArtifactsFromServiceInputs(
-      Map<String, String> variableValues, List<QLServiceInput> serviceInputs, Workflow workflow) {
-    /* Fetch the deployment data to find out the required entity types */
-    DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
-        workflow.getAppId(), workflow, variableValues, null, null, DeploymentMetadata.Include.ARTIFACT_SERVICE);
-
+      DeploymentMetadata deploymentMetadata, Workflow workflow, List<QLServiceInput> serviceInputs) {
     // Fetch the service
     List<String> artifactNeededServiceIds =
         deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getArtifactRequiredServiceIds();
@@ -394,7 +412,7 @@ public class WorkflowExecutionController {
         "Workflow [" + workflow.getName() + "] has environment parameterized. However, the value not supplied", USER);
   }
 
-  public List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters) {
+  public Map<String, List<String>> getArtifactAndManifestNeededServices(QLServiceInputsForExecutionParams parameters) {
     String appId = parameters.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String workflowId = parameters.getEntityId();
@@ -422,14 +440,7 @@ public class WorkflowExecutionController {
 
         DeploymentMetadata finalDeploymentMetadata = workflowService.fetchDeploymentMetadata(
             appId, workflow, variableValues, null, null, false, null, DeploymentMetadata.Include.ARTIFACT_SERVICE);
-        if (finalDeploymentMetadata != null) {
-          List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
-          if (isNotEmpty(artifactNeededServiceIds)) {
-            return artifactNeededServiceIds;
-          }
-        }
-        log.info("No Services requires artifact inputs for this workflow: " + workflowId);
-        return new ArrayList<>();
+        return executionController.getRequiredServiceIds(workflowId, finalDeploymentMetadata);
       }
     }
   }

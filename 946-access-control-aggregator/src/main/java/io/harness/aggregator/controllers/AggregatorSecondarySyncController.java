@@ -4,18 +4,18 @@ import static io.harness.aggregator.AggregatorConfiguration.ACCESS_CONTROL_SERVI
 import static io.harness.aggregator.models.MongoReconciliationOffset.SECONDARY_COLLECTION;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
-import io.harness.accesscontrol.principals.usergroups.UserGroupService;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupRepository;
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupRepository;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
-import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
+import io.harness.aggregator.consumers.ChangeConsumerService;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
+import io.harness.aggregator.consumers.RoleAssignmentCRUDEventHandler;
+import io.harness.aggregator.consumers.UserGroupCRUDEventHandler;
 import io.harness.aggregator.models.AggregatorSecondarySyncState;
 import io.harness.aggregator.models.AggregatorSecondarySyncState.SecondarySyncStatus;
 import io.harness.aggregator.repositories.AggregatorSecondarySyncStateRepository;
@@ -48,14 +48,15 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
   public AggregatorSecondarySyncController(@Named(ACL.SECONDARY_COLLECTION) ACLRepository aclRepository,
       AggregatorSecondarySyncStateRepository aggregatorSecondarySyncStateRepository,
       RoleAssignmentRepository roleAssignmentRepository, RoleRepository roleRepository,
-      ResourceGroupRepository resourceGroupRepository, UserGroupRepository userGroupRepository, RoleService roleService,
-      UserGroupService userGroupService, ResourceGroupService resourceGroupService,
+      ResourceGroupRepository resourceGroupRepository, UserGroupRepository userGroupRepository,
       AggregatorConfiguration aggregatorConfiguration, PersistentLocker persistentLocker,
       ChangeEventFailureHandler changeEventFailureHandler,
-      MongoReconciliationOffsetRepository mongoReconciliationOffsetRepository) {
+      MongoReconciliationOffsetRepository mongoReconciliationOffsetRepository,
+      ChangeConsumerService changeConsumerService, RoleAssignmentCRUDEventHandler roleAssignmentCRUDEventHandler,
+      UserGroupCRUDEventHandler userGroupCRUDEventHandler) {
     super(aclRepository, roleAssignmentRepository, roleRepository, resourceGroupRepository, userGroupRepository,
-        roleService, userGroupService, resourceGroupService, aggregatorConfiguration, persistentLocker,
-        changeEventFailureHandler, AggregatorJobType.SECONDARY);
+        aggregatorConfiguration, persistentLocker, changeEventFailureHandler, AggregatorJobType.SECONDARY,
+        changeConsumerService, roleAssignmentCRUDEventHandler, userGroupCRUDEventHandler);
     this.aggregatorSecondarySyncStateRepository = aggregatorSecondarySyncStateRepository;
     this.aclRepository = aclRepository;
     this.mongoReconciliationOffsetRepository = mongoReconciliationOffsetRepository;
@@ -88,6 +89,11 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
               debeziumEngine =
                   getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
               debeziumEngineFuture = executorService.submit(debeziumEngine);
+            } else if (syncStateOpt.isPresent() && isSecondarySyncRunning(syncStateOpt.get())) {
+              AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer = buildDebeziumChangeConsumer();
+              debeziumEngine =
+                  getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
+              debeziumEngineFuture = executorService.submit(debeziumEngine);
             }
           }
         }
@@ -97,7 +103,6 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
       }
     } catch (InterruptedException e) {
       log.warn("Secondary sync has been interrupted. Exiting", e);
-      Thread.currentThread().interrupt();
     } catch (Exception e) {
       log.error("Secondary sync failed due to exception ", e);
     } finally {
@@ -109,6 +114,10 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
 
   private boolean isSecondarySyncRequested(AggregatorSecondarySyncState aggregatorSecondarySyncState) {
     return SecondarySyncStatus.SECONDARY_SYNC_REQUESTED.equals(aggregatorSecondarySyncState.getSecondarySyncStatus());
+  }
+
+  private boolean isSecondarySyncRunning(AggregatorSecondarySyncState aggregatorSecondarySyncState) {
+    return SecondarySyncStatus.SECONDARY_SYNC_RUNNING.equals(aggregatorSecondarySyncState.getSecondarySyncStatus());
   }
 
   private void cleanUpAndBootstrapForBulkSync() {
@@ -128,8 +137,11 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
   private void stopDebeziumEngine(DebeziumEngine<ChangeEvent<String, String>> debeziumEngine) {
     try {
       debeziumEngine.close();
+      TimeUnit.SECONDS.sleep(10);
     } catch (IOException exception) {
       log.error("Failed to close debezium engine", exception);
+    } catch (InterruptedException e) {
+      log.warn("Interrupted while waiting for debezium engine to close", e);
     }
   }
 

@@ -68,7 +68,7 @@ import org.mockito.Mockito;
  * Created by sriram_parthasarathy on 12/7/17.
  */
 @OwnedBy(CV)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Inject private HPersistence persistence;
   @Inject private WorkflowExecutionService workflowExecutionService;

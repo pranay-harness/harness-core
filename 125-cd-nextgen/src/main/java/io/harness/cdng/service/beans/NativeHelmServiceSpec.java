@@ -37,7 +37,7 @@ public class NativeHelmServiceSpec implements ServiceSpec, Visitable {
   String metadata;
   @Override
   public String getType() {
-    return ServiceDefinitionType.NATIVE_HELM.getYamlName();
+    return ServiceSpecType.NATIVE_HELM;
   }
 
   @Override

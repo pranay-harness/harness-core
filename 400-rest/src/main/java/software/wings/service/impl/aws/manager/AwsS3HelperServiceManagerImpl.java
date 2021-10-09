@@ -8,6 +8,7 @@ import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCA
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
@@ -37,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(CDP)
 @TargetModule(_410_CG_REST)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class AwsS3HelperServiceManagerImpl implements AwsS3HelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;

@@ -33,6 +33,7 @@ import io.harness.migrations.all.AddHarnessGroupAccessFlagToAccount;
 import io.harness.migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import io.harness.migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import io.harness.migrations.all.AddLoginSettingsToAccountMigration;
+import io.harness.migrations.all.AddNgFieldToDelegateGroupMigration;
 import io.harness.migrations.all.AddReplCtrlNameToKubeSetupProperties;
 import io.harness.migrations.all.AddRestrictionsToSecretManagerConfig;
 import io.harness.migrations.all.AddScopedToAccountAttributeToEncryptedData;
@@ -74,6 +75,8 @@ import io.harness.migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import io.harness.migrations.all.DeleteServiceGuardAlertMigration;
 import io.harness.migrations.all.DeleteStaleSecretUsageLogs;
 import io.harness.migrations.all.DeleteStaleYamlChangeSetsMigration;
+import io.harness.migrations.all.DisableAddingServiceVarsToEcsSpecFFMigration;
+import io.harness.migrations.all.DisableWinrmVariablesFFMigration;
 import io.harness.migrations.all.DropAppIdIndexOnCommandLogs;
 import io.harness.migrations.all.DropDelegateScopeCollectionMigration;
 import io.harness.migrations.all.DropExistingIndexForGitFileActivityMigration;
@@ -84,12 +87,14 @@ import io.harness.migrations.all.DropUniqueIndexOnImportedTemplate;
 import io.harness.migrations.all.DropUniqueIndexOnTemplateGallery;
 import io.harness.migrations.all.DropYamlGitSyncCollectionMigration;
 import io.harness.migrations.all.DuplicateGlobalAccountMigration;
+import io.harness.migrations.all.EnableIteratorsForLdapSync;
 import io.harness.migrations.all.EntityNameValidationMigration_All_00;
 import io.harness.migrations.all.EntityNameValidationMigration_All_01;
 import io.harness.migrations.all.EntityNameValidationMigration_All_02;
 import io.harness.migrations.all.EntityNameValidationMigration_All_03;
 import io.harness.migrations.all.EntityNameValidationMigration_All_04;
 import io.harness.migrations.all.FixCVDashboardStatusMigration;
+import io.harness.migrations.all.GcpServiceAccountMigration;
 import io.harness.migrations.all.GcsArtifactProjectIdMigration;
 import io.harness.migrations.all.GitCommitStatusMigration;
 import io.harness.migrations.all.GitSyncToAllAccounts;
@@ -137,6 +142,7 @@ import io.harness.migrations.all.PipelineWorkflowExecutionActionMigration;
 import io.harness.migrations.all.PipelineWorkflowExecutionActionQlMigration;
 import io.harness.migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import io.harness.migrations.all.PrometheusCVMigration;
+import io.harness.migrations.all.QpsGraphQLMigration;
 import io.harness.migrations.all.RemoveDupInstanceStats;
 import io.harness.migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import io.harness.migrations.all.RemoveServiceVariablesFromActivity;
@@ -425,6 +431,15 @@ public class MigrationList {
         .add(Pair.of(358, BaseMigration.class))
         .add(Pair.of(359, BaseMigration.class))
         .add(Pair.of(360, AddEnableIteratorsToTriggers.class))
+        .add(Pair.of(361, AddNgFieldToDelegateGroupMigration.class))
+        .add(Pair.of(362, BaseMigration.class))
+        .add(Pair.of(363, QpsGraphQLMigration.class))
+        .add(Pair.of(364, BaseMigration.class))
+        .add(Pair.of(365, BaseMigration.class))
+        .add(Pair.of(366, EnableIteratorsForLdapSync.class))
+        .add(Pair.of(367, GcpServiceAccountMigration.class))
+        .add(Pair.of(368, DisableWinrmVariablesFFMigration.class))
+        .add(Pair.of(369, DisableAddingServiceVarsToEcsSpecFFMigration.class))
         .build();
   }
 }
