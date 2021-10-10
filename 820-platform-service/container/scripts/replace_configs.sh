@@ -212,6 +212,8 @@ if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
   done
 fi
 
+replace_key_value ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+
 replace_key_value resourceGroupServiceConfig.redisLockConfig.redisUrl "$LOCK_CONFIG_REDIS_URL"
 
 replace_key_value resourceGroupServiceConfig.redisLockConfig.envNamespace "$LOCK_CONFIG_ENV_NAMESPACE"
@@ -269,3 +271,5 @@ replace_key_value resourceGroupServiceConfig.enableResourceGroup "${ENABLE_RESOU
 replace_key_value resourceGroupServiceConfig.resourceClients.template-service.baseUrl "$TEMPLATE_SERVICE_CLIENT_BASEURL"
 
 replace_key_value resourceGroupServiceConfig.resourceClients.template-service.secret "$TEMPLATE_SERVICE_SECRET"
+
+replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
