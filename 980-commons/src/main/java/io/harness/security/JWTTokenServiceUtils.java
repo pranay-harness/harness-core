@@ -102,13 +102,17 @@ public class JWTTokenServiceUtils {
   }
 
   public Optional<String> extractSource(String headerName, ContainerRequestContext requestContext) {
+    log.info("Container Request Context is {}", requestContext);
     String headerValue = requestContext.getHeaderString(headerName);
+    log.info("Header Value ", headerValue);
     if (headerValue == null) {
+      log.info("Header Value is null");
       return Optional.empty();
     }
 
     String[] sourceAndToken = headerValue.trim().split(SPACE, 2);
     if (sourceAndToken.length < 2) {
+      log.info("Header Value length is {}", sourceAndToken.length);
       return Optional.empty();
     }
     return Optional.of(sourceAndToken[0].trim());
