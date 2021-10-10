@@ -963,7 +963,7 @@ public class AccountServiceImpl implements AccountService {
                           .project("delegateConfiguration", true)
                           .get();
     if (account.getDelegateConfiguration() == null) {
-      return EMPTY;
+      return null;
     }
     return account.getDelegateConfiguration()
         .getDelegateVersions()
