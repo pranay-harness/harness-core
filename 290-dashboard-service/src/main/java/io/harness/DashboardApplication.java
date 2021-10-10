@@ -3,6 +3,8 @@ package io.harness;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import static com.google.common.collect.ImmutableMap.of;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.security.NextGenAuthenticationFilter;
@@ -38,16 +40,20 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.server.model.Resource;
 
 @OwnedBy(PL)
@@ -78,6 +84,7 @@ public class DashboardApplication extends Application<DashboardServiceConfig> {
     registerResources(environment, injector);
     registerOasResource(config, environment, injector);
     registerAuthFilters(config, environment, injector);
+    registerCorsFilter(config, environment);
     // todo @deepak Add the correlation filter
     // todo @deepak Add the register for health check
     MaintenanceController.forceMaintenance(false);
@@ -147,6 +154,15 @@ public class DashboardApplication extends Application<DashboardServiceConfig> {
     Set<String> packages = DashboardServiceConfig.getUniquePackagesContainingResources();
     return new SwaggerConfiguration().openAPI(oas).prettyPrint(true).resourcePackages(packages).scannerClass(
         "io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
+  }
+
+  private void registerCorsFilter(DashboardServiceConfig appConfig, Environment environment) {
+    FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+    String allowedOrigins = String.join(",", appConfig.getAllowedOrigins());
+    cors.setInitParameters(of("allowedOrigins", allowedOrigins, "allowedHeaders",
+        "X-Requested-With,Content-Type,Accept,Origin,Authorization,X-api-key", "allowedMethods",
+        "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
+    cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
   private void registerResources(Environment environment, Injector injector) {
