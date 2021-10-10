@@ -49,6 +49,7 @@ public class JWTTokenServiceUtils {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       JWTVerifier verifier = JWT.require(algorithm).withIssuer(ISSUER).build();
+      log.info("Jwt token value {}", jwtToken);
       verifier.verify(jwtToken);
       log.info("Jwt token value {}", jwtToken);
       return JWT.decode(jwtToken).getClaims();
