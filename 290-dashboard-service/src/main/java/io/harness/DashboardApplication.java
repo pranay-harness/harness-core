@@ -7,6 +7,7 @@ import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.request.RequestContextFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.threading.ExecutorModule;
@@ -85,9 +86,14 @@ public class DashboardApplication extends Application<DashboardServiceConfig> {
     registerOasResource(config, environment, injector);
     registerAuthFilters(config, environment, injector);
     registerCorsFilter(config, environment);
+    registerRequestContextFilter(environment);
     // todo @deepak Add the correlation filter
     // todo @deepak Add the register for health check
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   @Override
