@@ -145,11 +145,13 @@ public class TemplateMergeHelper {
 
     TemplateInputsErrorResponseDTO errorResponse =
         validateLinkedTemplateInputsInYaml(accountId, orgId, projectId, pipelineJsonNode);
+    if (errorResponse != null) {
+      return TemplateMergeResponse.builder().isValid(false).errorResponse(errorResponse).build();
+    }
     Map<String, Object> resMap = generateMergedYamlMap(accountId, orgId, projectId, pipelineJsonNode);
     return TemplateMergeResponse.builder()
         .mergedPipelineYaml(YamlUtils.write(resMap).replace("---\n", ""))
-        .isValid(errorResponse == null)
-        .errorResponse(errorResponse)
+        .isValid(true)
         .build();
   }
 
@@ -295,14 +297,17 @@ public class TemplateMergeHelper {
    */
   public TemplateInputsErrorResponseDTO validateLinkedTemplateInputsInYaml(
       String accountId, String orgId, String projectId, JsonNode yaml) {
-    Map<String, TemplateInputsErrorDTO> errorMap = new LinkedHashMap<>();
-    Map<String, Object> errorYamlMap = generateErrorYamlMap(accountId, orgId, projectId, yaml, errorMap);
-    if (isEmpty(errorYamlMap)) {
+    Map<String, TemplateInputsErrorDTO> templateInputsErrorMap = new LinkedHashMap<>();
+    Map<String, Object> errorYamlMap = generateErrorYamlMap(accountId, orgId, projectId, yaml, templateInputsErrorMap);
+    if (isEmpty(templateInputsErrorMap)) {
       return null;
     }
     String errorYaml = YamlUtils.write(errorYamlMap).replace("---\n", "");
-    String errorTemplateYaml = convertUuidErrorMapToFqnErrorMap(errorYaml, errorMap);
-    return TemplateInputsErrorResponseDTO.builder().errorYaml(errorTemplateYaml).errorMap(errorMap).build();
+    String errorTemplateYaml = convertUuidErrorMapToFqnErrorMap(errorYaml, templateInputsErrorMap);
+    return TemplateInputsErrorResponseDTO.builder()
+        .errorYaml(errorTemplateYaml)
+        .errorMap(templateInputsErrorMap)
+        .build();
   }
 
   private String convertUuidErrorMapToFqnErrorMap(

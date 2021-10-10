@@ -2990,11 +2990,11 @@ public class DelegateServiceTest extends WingsBaseTest {
             .build(),
         ConnectionMode.POLLING);
 
-    assertThat(delegateTaskServiceClassic.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isTrue();
+    assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isTrue();
 
     delegateConnectionDao.delegateDisconnected(ACCOUNT_ID, delegateConnectionId);
 
-    assertThat(delegateTaskServiceClassic.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isFalse();
+    assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isFalse();
   }
 
   @Test
