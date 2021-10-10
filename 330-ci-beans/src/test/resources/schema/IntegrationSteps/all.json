@@ -333,6 +333,22 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "JUnitTestReport": {
       "allOf": [
         {
@@ -357,6 +373,86 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JsonNode": {
+      "type": "object",
+      "properties": {
+        "array": {
+          "type": "boolean"
+        },
+        "bigDecimal": {
+          "type": "boolean"
+        },
+        "bigInteger": {
+          "type": "boolean"
+        },
+        "binary": {
+          "type": "boolean"
+        },
+        "boolean": {
+          "type": "boolean"
+        },
+        "containerNode": {
+          "type": "boolean"
+        },
+        "double": {
+          "type": "boolean"
+        },
+        "float": {
+          "type": "boolean"
+        },
+        "floatingPointNumber": {
+          "type": "boolean"
+        },
+        "int": {
+          "type": "boolean"
+        },
+        "integralNumber": {
+          "type": "boolean"
+        },
+        "long": {
+          "type": "boolean"
+        },
+        "missingNode": {
+          "type": "boolean"
+        },
+        "nodeType": {
+          "type": "string",
+          "enum": [
+            "ARRAY",
+            "BINARY",
+            "BOOLEAN",
+            "MISSING",
+            "NULL",
+            "NUMBER",
+            "OBJECT",
+            "POJO",
+            "STRING"
+          ]
+        },
+        "null": {
+          "type": "boolean"
+        },
+        "number": {
+          "type": "boolean"
+        },
+        "object": {
+          "type": "boolean"
+        },
+        "pojo": {
+          "type": "boolean"
+        },
+        "short": {
+          "type": "boolean"
+        },
+        "textual": {
+          "type": "boolean"
+        },
+        "valueNode": {
+          "type": "boolean"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "Limits": {
@@ -388,6 +484,63 @@
         "name": {
           "type": "string",
           "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldMapStringJsonNode": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/JsonNode"
+          }
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -445,10 +598,7 @@
             "settings": {
               "oneOf": [
                 {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
+                  "$ref": "#/definitions/ParameterFieldMapStringJsonNode"
                 },
                 {
                   "type": "string"

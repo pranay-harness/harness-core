@@ -19,7 +19,7 @@ import lombok.AllArgsConstructor;
 @OwnedBy(HarnessTeam.GITOPS)
 public class ConnectedGitOpsProviderEntityMapper extends AbstractGitOpsProviderEntityMapper {
   @Override
-  public GitOpsProviderResponseDTO toGitOpsProvider(@NotNull GitOpsProvider gitopsProvider) {
+  public GitOpsProviderResponseDTO toGitOpsProviderDTO(@NotNull GitOpsProvider gitopsProvider) {
     ConnectedArgoProvider argoProvider = (ConnectedArgoProvider) gitopsProvider;
     GitOpsProviderResponseDTO responseDTO = new GitOpsProviderResponseDTO();
     responseDTO.setInfoDTO(ConnectedArgoGitOpsInfoDTO.builder().adapterUrl(argoProvider.getAdapterUrl()).build());

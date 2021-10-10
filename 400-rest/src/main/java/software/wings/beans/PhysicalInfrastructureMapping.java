@@ -1,9 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -27,6 +31,8 @@ import lombok.experimental.FieldNameConstants;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
 @FieldNameConstants(innerTypeName = "PhysicalInfrastructureMappingKeys")
+@OwnedBy(CDP)
+@TargetModule(_957_CG_BEANS)
 public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMappingBase {
   private String hostConnectionAttrs;
 

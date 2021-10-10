@@ -26,6 +26,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -35,10 +39,23 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @OwnedBy(HarnessTeam.GTM)
-@Api("/accounts")
-@Path("/accounts")
+@Api("accounts")
+@Path("accounts")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@Tag(name = "Accounts", description = "This contains APIs related to accounts as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -59,8 +76,15 @@ public class AccountResource {
   @GET
   @Path("{accountIdentifier}")
   @ApiOperation(value = "Get Account", nickname = "getAccountNG")
+  @Operation(operationId = "getAccountNG", summary = "Gets an account",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns an account DTO")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
-  public ResponseDTO<AccountDTO> get(@PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier) {
+  public ResponseDTO<AccountDTO>
+  get(@PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.getAccountDTO(accountIdentifier));
 
     accountDTO.setCluster(accountConfig.getDeploymentClusterName());
@@ -71,9 +95,15 @@ public class AccountResource {
   @PUT
   @Path("{accountIdentifier}/name")
   @ApiOperation(value = "Update Account Name", nickname = "updateAccountNameNG")
+  @Operation(operationId = "updateAccountNameNG", summary = "Update Account Name",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns an account DTO")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = EDIT_ACCOUNT_PERMISSION)
-  public ResponseDTO<AccountDTO> updateAccountName(
-      @PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
+  public ResponseDTO<AccountDTO>
+  updateAccountName(@PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateAccountName(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);
@@ -82,9 +112,15 @@ public class AccountResource {
   @PUT
   @Path("{accountIdentifier}/default-experience")
   @ApiOperation(value = "Update Default Experience", nickname = "updateAccountDefaultExperienceNG")
+  @Operation(operationId = "updateAccountDefaultExperienceNG", summary = "Update Default Experience",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns an account DTO")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = EDIT_ACCOUNT_PERMISSION)
-  public ResponseDTO<AccountDTO> updateDefaultExperience(
-      @PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
+  public ResponseDTO<AccountDTO>
+  updateDefaultExperience(@PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateDefaultExperience(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);

@@ -1,5 +1,6 @@
 package io.harness.stateutils.buildstate.providers;
 
+import static io.harness.common.CIExecutionConstants.HARNESS_CI_INDIRECT_LOG_UPLOAD_FF;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
@@ -11,13 +12,17 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.executionplan.CIExecutionTestBase;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.rule.Owner;
@@ -28,9 +33,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
   @Inject InternalContainerParamsProvider internalContainerParamsProvider;
+  @Mock private CIFeatureFlagService featureFlagService;
 
   @Test
   @Owner(developers = ALEKSANDAR)
@@ -51,10 +58,12 @@ public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
   @Category(UnitTests.class)
   public void getLiteEngineContainerParams() {
     int buildID = 1;
+    on(internalContainerParamsProvider).set("featureFlagService", featureFlagService);
     Map<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
+    when(featureFlagService.isEnabled(FeatureName.CI_INDIRECT_LOG_UPLOAD, "account")).thenReturn(true);
     ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
                                               .setExecutionUuid(generateUuid())
                                               .setRunSequence(buildID)
@@ -89,5 +98,7 @@ public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
 
     assertThat(containerParams.getName()).isEqualTo(LITE_ENGINE_CONTAINER_NAME);
     assertThat(containerParams.getContainerType()).isEqualTo(CIContainerType.LITE_ENGINE);
+    assertThat(containerParams.getEnvVars().containsKey(HARNESS_CI_INDIRECT_LOG_UPLOAD_FF));
+    assertThat(containerParams.getEnvVars().get(HARNESS_CI_INDIRECT_LOG_UPLOAD_FF)).isEqualTo("true");
   }
 }

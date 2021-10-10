@@ -62,7 +62,7 @@ public interface OrganizationClient {
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);
 
-  @GET(ORGANIZATIONS_API + "all-organizations")
+  @GET(ORGANIZATIONS_API + "/all-organizations")
   Call<ResponseDTO<PageResponse<OrganizationResponse>>> listAllOrganizations(
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers);

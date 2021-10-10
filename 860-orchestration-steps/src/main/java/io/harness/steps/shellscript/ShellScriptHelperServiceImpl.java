@@ -16,7 +16,6 @@ import io.harness.exception.WingsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.k8s.K8sConstants;
 import io.harness.ng.core.NGAccess;
-import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -26,7 +25,9 @@ import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
+import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.ScriptType;
 import io.harness.steps.OutputExpressionConstants;
@@ -35,12 +36,12 @@ import io.harness.utils.IdentifierRefHelper;
 import software.wings.exception.ShellScriptException;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +51,7 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 public class ShellScriptHelperServiceImpl implements ShellScriptHelperService {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
-  @Inject private SecretCrudService secretCrudService;
+  @Inject @Named("PRIVILEGED") private SecretNGManagerClient secretManagerClient;
   @Inject private SshKeySpecDTOHelper sshKeySpecDTOHelper;
   @Inject private ShellScriptHelperService shellScriptHelperService;
 
@@ -127,13 +128,15 @@ public class ShellScriptHelperServiceImpl implements ShellScriptHelperService {
       IdentifierRef identifierRef =
           IdentifierRefHelper.getIdentifierRef(sshKeyRef, AmbianceUtils.getAccountId(ambiance),
               AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
-      Optional<SecretResponseWrapper> secretResponseWrapper =
-          secretCrudService.get(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-              identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
-      if (!secretResponseWrapper.isPresent()) {
-        throw new InvalidRequestException("No secret configured with identifier: " + sshKeyRef);
+      String errorMSg = "No secret configured with identifier: " + sshKeyRef;
+      SecretResponseWrapper secretResponseWrapper = NGRestUtils.getResponse(
+          secretManagerClient.getSecret(identifierRef.getIdentifier(), identifierRef.getAccountIdentifier(),
+              identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier()),
+          errorMSg);
+      if (secretResponseWrapper == null) {
+        throw new InvalidRequestException(errorMSg);
       }
-      SecretDTOV2 secret = secretResponseWrapper.get().getSecret();
+      SecretDTOV2 secret = secretResponseWrapper.getSecret();
 
       SSHKeySpecDTO secretSpec = (SSHKeySpecDTO) secret.getSpec();
       NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);

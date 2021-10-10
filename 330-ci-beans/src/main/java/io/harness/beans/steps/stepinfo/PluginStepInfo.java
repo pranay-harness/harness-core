@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.beans.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotation.RecasterAlias;
@@ -25,6 +24,7 @@ import io.harness.yaml.extended.ci.container.ContainerResource;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.HashMap;
@@ -56,9 +56,7 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @YamlSchemaTypes(value = {string})
-  @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
-  private ParameterField<Map<String, String>> settings;
+  @YamlSchemaTypes(value = {string}) private ParameterField<Map<String, JsonNode>> settings;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
@@ -81,7 +79,7 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connectorRef", "resources", "entrypoint",
       "envVariables", "harnessInternalImage", "privileged", "runAsUser", "imagePullPolicy"})
-  public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, String>> settings,
+  public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, JsonNode>> settings,
       ParameterField<String> image, ParameterField<String> connectorRef, ContainerResource resources,
       List<String> entrypoint, Map<String, String> envVariables, boolean harnessManagedImage,
       ParameterField<Boolean> privileged, ParameterField<Integer> runAsUser,

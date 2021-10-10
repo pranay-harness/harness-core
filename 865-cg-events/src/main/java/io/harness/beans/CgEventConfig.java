@@ -18,6 +18,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.yaml.BaseYamlWithType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -201,5 +202,25 @@ public class CgEventConfig
         .append(workflowRule.getWorkflowIds().size())
         .append(" Workflow(s)")
         .toString();
+  }
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
+  public static final class Yaml extends BaseYamlWithType {
+    private boolean enabled;
+    private String type;
+    private List<String> delegateSelectors;
+    private WebHookEventConfig.Yaml webhookEventConfiguration;
+    private CgEventRule.Yaml eventRule;
+
+    @lombok.Builder
+    public Yaml(String type, boolean enabled, CgEventRule.Yaml cgEventRule, List<String> delegateSelectors,
+        WebHookEventConfig.Yaml webhookEventConfig) {
+      this.eventRule = cgEventRule;
+      this.type = type;
+      this.webhookEventConfiguration = webhookEventConfig;
+      this.delegateSelectors = delegateSelectors;
+      this.enabled = enabled;
+    }
   }
 }
