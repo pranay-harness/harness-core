@@ -115,6 +115,7 @@ public class JWTTokenServiceUtils {
       log.info("Header Value length is {}", sourceAndToken.length);
       return Optional.empty();
     }
+    log.info("Token value is {}", sourceAndToken[0].trim());
     return Optional.of(sourceAndToken[0].trim());
   }
 
