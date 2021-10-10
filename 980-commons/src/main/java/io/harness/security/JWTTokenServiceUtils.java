@@ -50,6 +50,7 @@ public class JWTTokenServiceUtils {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       JWTVerifier verifier = JWT.require(algorithm).withIssuer(ISSUER).build();
       verifier.verify(jwtToken);
+      log.info("Jwt token value {}", jwtToken);
       return JWT.decode(jwtToken).getClaims();
     } catch (UnsupportedEncodingException | JWTDecodeException | SignatureVerificationException e) {
       throw new InvalidRequestException(
