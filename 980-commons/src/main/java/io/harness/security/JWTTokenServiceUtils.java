@@ -104,7 +104,7 @@ public class JWTTokenServiceUtils {
   public Optional<String> extractSource(String headerName, ContainerRequestContext requestContext) {
     log.info("Container Request Context is {}", requestContext);
     String headerValue = requestContext.getHeaderString(headerName);
-    log.info("Header Value ", headerValue);
+    log.info("Header Value {}", headerValue);
     if (headerValue == null) {
       log.info("Header Value is null");
       return Optional.empty();
