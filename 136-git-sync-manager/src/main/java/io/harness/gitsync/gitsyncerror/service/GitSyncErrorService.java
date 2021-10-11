@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.ng.beans.PageRequest;
@@ -34,4 +35,10 @@ public interface GitSyncErrorService {
       String branchName, String rootFolder, long fromTimestamp);
 
   boolean deleteGitSyncErrors(List<String> errorIds, String accountId);
+
+  void recordConnectivityError(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      GitSyncErrorType gitSyncErrorType, String repoUrl, String branch, String errorMessage);
+
+  PageResponse<GitSyncErrorDTO> listConnectivityErrors(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String repoIdentifier, String branch, PageRequest pageRequest);
 }
