@@ -3,6 +3,7 @@ package io.harness.ng.core.service.entity;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -37,6 +38,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "servicesNG", noClassnameStored = true)
 @Document("servicesNG")
 @TypeAlias("io.harness.ng.core.service.entity.ServiceEntity")
+@ChangeDataCapture(table = "services", dataStore = "ng-harness", fields = {}, handler = "Services")
 @StoreIn(DbAliases.NG_MANAGER)
 public class ServiceEntity implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
