@@ -573,17 +573,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       serviceIdentifiers.add(monitoredServiceListDTOBuilder.getServiceRef());
       environmentIdentifiers.add(monitoredServiceListDTOBuilder.getEnvironmentRef());
     }
-    Map<String, String> serviceIdNameMap = new HashMap<>();
-    Map<String, String> environmentIdNameMap = new HashMap<>();
-
-    nextGenService.listService(accountId, orgIdentifier, projectIdentifier, serviceIdentifiers)
-        .forEach(serviceResponse
-            -> serviceIdNameMap.put(
-                serviceResponse.getService().getIdentifier(), serviceResponse.getService().getName()));
-    nextGenService.listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers)
-        .forEach(environmentResponse
-            -> environmentIdNameMap.put(
-                environmentResponse.getEnvironment().getIdentifier(), environmentResponse.getEnvironment().getName()));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    Map<String, String> serviceIdNameMap =
+        nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers));
+    Map<String, String> environmentIdNameMap =
+        nextGenService.getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers));
 
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);

@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -21,7 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("serviceStepOutcome")
 @JsonTypeName("serviceStepOutcome")
 @RecasterAlias("io.harness.cdng.service.steps.ServiceStepOutcome")
-public class ServiceStepOutcome implements Outcome {
+public class ServiceStepOutcome implements Outcome, ExecutionSweepingOutput {
   String identifier;
   String name;
   String description;

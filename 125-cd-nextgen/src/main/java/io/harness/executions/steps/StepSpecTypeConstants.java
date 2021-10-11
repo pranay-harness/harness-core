@@ -21,6 +21,5 @@ public interface StepSpecTypeConstants {
   String TERRAFORM_DESTROY = "TerraformDestroy";
   String TERRAFORM_ROLLBACK = "TerraformRollback";
 
-  String SHELL_SCRIPT = "ShellScript";
   String PLACEHOLDER = "Placeholder";
 }

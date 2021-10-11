@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.git.GitClientHelper.isBitBucketSAAS;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.stream.Collectors.toList;
@@ -269,6 +270,9 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     final String slug = scmGitProviderHelper.getSlug(scmConnector);
     final Provider provider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     int pageNumber = 1;
+    if (isBitBucketSAAS(scmConnector.getUrl())) {
+      pageNumber = 0;
+    }
     ListCommitsInPRResponse commitsInPRResponse;
     List<Commit> commitList = new ArrayList<>();
     do {

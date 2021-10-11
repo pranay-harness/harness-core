@@ -2,7 +2,9 @@ package io.harness.limits.checker;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
@@ -15,6 +17,7 @@ import lombok.Value;
 @OwnedBy(PL)
 @Value
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._980_COMMONS)
 public class UsageLimitExceededException extends WingsException {
   private Limit limit;
   private String accountId;

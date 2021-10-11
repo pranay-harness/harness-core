@@ -86,10 +86,10 @@ public class PipelineExecutor {
     PlanExecution planExecution;
     if (useV2) {
       planExecution = executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null, null);
     } else {
       planExecution = executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null, null);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
@@ -117,16 +117,18 @@ public class PipelineExecutor {
       throw new InvalidRequestException(String.format("No plan exist for %s planExecutionId", previousExecutionId));
     }
     String previousProcessedYaml = optionalPlanExecutionMetadata.get().getProcessedYaml();
-    List<String> uuidForSkipNode = new ArrayList<>();
+    List<String> identifierOfSkipStages = new ArrayList<>();
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null,
-        triggerInfo, null, true, previousProcessedYaml, retryStagesIdentifier, uuidForSkipNode);
+        triggerInfo, null, true, previousProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
     PlanExecution planExecution;
     if (useV2) {
-      planExecution = executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, uuidForSkipNode);
+      planExecution =
+          executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier, execArgs.getMetadata(),
+              execArgs.getPlanExecutionMetadata(), true, identifierOfSkipStages, previousExecutionId);
     } else {
-      planExecution = executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, uuidForSkipNode);
+      planExecution =
+          executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier, execArgs.getMetadata(),
+              execArgs.getPlanExecutionMetadata(), true, identifierOfSkipStages, previousExecutionId);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)

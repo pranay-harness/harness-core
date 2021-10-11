@@ -315,3 +315,6 @@ replace_key_value opaServerConfig.baseUrl "$OPA_SERVER_BASEURL"
 replace_key_value delegatePollingConfig.syncDelay "$POLLING_SYNC_DELAY"
 replace_key_value delegatePollingConfig.asyncDelay "$POLLING_ASYNC_DELAY"
 replace_key_value delegatePollingConfig.progressDelay "$POLLING_PROGRESS_DELAY"
+
+replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"

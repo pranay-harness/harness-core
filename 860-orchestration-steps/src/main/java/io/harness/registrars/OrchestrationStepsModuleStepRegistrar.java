@@ -15,6 +15,7 @@ import io.harness.steps.http.HttpStep;
 import io.harness.steps.jira.create.JiraCreateStep;
 import io.harness.steps.jira.update.JiraUpdateStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStep;
+import io.harness.steps.shellscript.ShellScriptStep;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,7 @@ public class OrchestrationStepsModuleStepRegistrar {
     engineSteps.put(JiraUpdateStep.STEP_TYPE, JiraUpdateStep.class);
 
     engineSteps.put(HttpStep.STEP_TYPE, HttpStep.class);
+    engineSteps.put(ShellScriptStep.STEP_TYPE, ShellScriptStep.class);
 
     // Feature Flag
     engineSteps.put(FlagConfigurationStep.STEP_TYPE, FlagConfigurationStep.class);

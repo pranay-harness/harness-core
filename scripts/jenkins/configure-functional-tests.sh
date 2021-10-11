@@ -29,7 +29,7 @@ CONFIG_FILES=(360-cg-manager/config.yml 350-event-server/event-service-config.ym
 
 for config_file in ${CONFIG_FILES[@]}; do
   mongo_uri_count=$(grep -P "^\s*uri: mongodb://.*:27017" $config_file | grep -v localhost:27017 | wc -l | awk '{print $1}')
-  good_mongo_uri_count=$(grep -P "^\s*uri: mongodb://.*:27017/functional_test_\d{10}(_[a-zA-Z]+)?$" $config_file | grep -v localhost:27017 | wc -l | awk '{print $1}')
+  good_mongo_uri_count=$(grep -P "^\s*uri: mongodb://.*:27017/functional_test_\d{10}(_[a-zA-Z]+)?(_[a-zA-Z]+)?$" $config_file | grep -v localhost:27017 | wc -l | awk '{print $1}')
   echo "$config_file - Mongo URI count: $mongo_uri_count | Good Mongo URI count: $good_mongo_uri_count"
   if [[ $mongo_uri_count != $good_mongo_uri_count ]]; then
     echo "Invalid Mongo URIs found in $config_file, please follow the format - functional_test_<epoch> or functional_test_<epoch>_sometext"

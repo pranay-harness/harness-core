@@ -6,6 +6,12 @@ import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceR
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
+import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
+import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
+import io.harness.enforcement.client.usage.RestrictionUsageInterface;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.health.HealthService;
 import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
@@ -23,9 +29,11 @@ import io.harness.resourcegroup.migrations.ResourceGroupMigrationProvider;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Injector;
 import io.dropwizard.setup.Environment;
 import java.util.ArrayList;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.model.Resource;
 
@@ -50,6 +58,7 @@ public class ResourceGroupServiceSetup {
     registerMigrations(injector);
     registerHealthCheck(environment, injector);
     initializeMonitoring(appConfig, injector);
+    initializeEnforcementFramework(injector);
     ResourceGroupsManagementJob resourceGroupsManagementJob = injector.getInstance(ResourceGroupsManagementJob.class);
     resourceGroupsManagementJob.run();
   }
@@ -109,5 +118,21 @@ public class ResourceGroupServiceSetup {
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
+  }
+
+  private void initializeEnforcementFramework(Injector injector) {
+    Map<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>> featureRestrictionNameClassHashMap =
+        ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder().build();
+    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
+        RestrictionUsageRegisterConfiguration.builder()
+            .restrictionNameClassMap(featureRestrictionNameClassHashMap)
+            .build();
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder().build())
+            .build();
+    injector.getInstance(EnforcementSdkRegisterService.class)
+        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }

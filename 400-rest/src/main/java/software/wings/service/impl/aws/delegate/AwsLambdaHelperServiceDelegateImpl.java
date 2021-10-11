@@ -13,16 +13,17 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
-import static software.wings.service.impl.aws.model.AwsConstants.LAMBDA_SLEEP_SECS;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.eraro.ErrorCode;
@@ -31,9 +32,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FileCreationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -72,6 +75,8 @@ import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.Environment;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.FunctionConfiguration;
+import com.amazonaws.services.lambda.model.GetFunctionConfigurationRequest;
+import com.amazonaws.services.lambda.model.GetFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.InvokeRequest;
@@ -96,6 +101,8 @@ import com.amazonaws.services.lambda.model.VpcConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
@@ -106,6 +113,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -122,13 +130,26 @@ import org.apache.logging.log4j.util.Strings;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
+@BreakDependencyOn("software.wings.api.AwsLambdaExecutionData")
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
   String REPOSITORY_DIR_PATH = "./repository";
   String LAMBDA_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/lambdaartifacts";
   String AWS_LAMBDA_LOG_PREFIX = "AWS_LAMBDA_LOG_PREFIX ";
 
+  String ACTIVE_FUNCTION_STATE = "Active";
+  String PENDING_FUNCTION_STATE = "Pending";
+  String FAILED_FUNCTION_STATE = "Failed";
+
+  String ACTIVE_LAST_UPDATE_STATUS = "Successful";
+  String PENDING_LAST_UPDATE_STATUS = "InProgress";
+  String FAILED_LAST_UPDATE_STATUS = "Failed";
+
+  long TIMEOUT_IN_SECONDS = 60 * 60L;
+  long WAIT_SLEEP_IN_SECONDS = 10L;
+
   @Inject private DelegateFileManager delegateFileManager;
+  @Inject private TimeLimiter timeLimiter;
 
   @VisibleForTesting
   public AWSLambdaClient getAmazonLambdaClient(String region, AwsConfig awsConfig) {
@@ -403,6 +424,7 @@ public class AwsLambdaHelperServiceDelegateImpl
             .withVpcConfig(vpcConfig);
     tracker.trackLambdaCall("Create Function");
     CreateFunctionResult createFunctionResult = lambdaClient.createFunction(createFunctionRequest);
+    waitForFunctionToCreate(lambdaClient, functionName, executionLogCallback);
     executionLogCallback.saveExecutionLog(format("Function [%s] published with version [%s] successfully", functionName,
                                               createFunctionResult.getVersion()),
         INFO);
@@ -444,33 +466,11 @@ public class AwsLambdaHelperServiceDelegateImpl
           format("Updated Function Code Sha256: [%s]", updateFunctionCodeResult.getCodeSha256()));
       executionLogCallback.saveExecutionLog(
           format("Updated Function ARN: [%s]", updateFunctionCodeResult.getFunctionArn()));
+      waitForFunctionToUpdate(lambdaClient, functionName, executionLogCallback);
     }
 
-    /*
-     * CDP-13038:
-     * We saw a case where even though UpdateFunctionCode returned, the update was still in progress.
-     * As a result, the Update function configuration was failing.
-     * So we decided to introduce a small sleep.
-     */
-    executionLogCallback.saveExecutionLog(
-        format("Waiting [%d] seconds before updating function configuration", LAMBDA_SLEEP_SECS));
-    sleep(ofSeconds(LAMBDA_SLEEP_SECS));
-
-    executionLogCallback.saveExecutionLog("Updating function configuration", INFO);
-    UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest =
-        new UpdateFunctionConfigurationRequest()
-            .withEnvironment(new Environment().withVariables(serviceVariables))
-            .withRuntime(functionParams.getRuntime())
-            .withFunctionName(functionName)
-            .withHandler(functionParams.getHandler())
-            .withRole(roleArn)
-            .withTimeout(functionParams.getTimeout())
-            .withMemorySize(functionParams.getMemory())
-            .withVpcConfig(vpcConfig);
-    tracker.trackLambdaCall("Update Function Configuration");
-    UpdateFunctionConfigurationResult updateFunctionConfigurationResult =
-        lambdaClient.updateFunctionConfiguration(updateFunctionConfigurationRequest);
-    executionLogCallback.saveExecutionLog("Function configuration updated successfully", INFO);
+    UpdateFunctionConfigurationResult updateFunctionConfigurationResult = updateFunctionConfiguration(
+        lambdaClient, functionName, roleArn, functionParams, vpcConfig, serviceVariables, executionLogCallback);
     executionLogCallback.saveExecutionLog("Publishing new version", INFO);
     PublishVersionRequest publishVersionRequest =
         new PublishVersionRequest()
@@ -516,6 +516,118 @@ public class AwsLambdaHelperServiceDelegateImpl
                        .build();
 
     return functionMeta;
+  }
+
+  private UpdateFunctionConfigurationResult updateFunctionConfiguration(AWSLambdaClient lambdaClient,
+      String functionName, String roleArn, AwsLambdaFunctionParams functionParams, VpcConfig vpcConfig,
+      Map<String, String> serviceVariables, LogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("Updating function configuration", INFO);
+    UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest =
+        new UpdateFunctionConfigurationRequest()
+            .withEnvironment(new Environment().withVariables(serviceVariables))
+            .withRuntime(functionParams.getRuntime())
+            .withFunctionName(functionName)
+            .withHandler(functionParams.getHandler())
+            .withRole(roleArn)
+            .withTimeout(functionParams.getTimeout())
+            .withMemorySize(functionParams.getMemory())
+            .withVpcConfig(vpcConfig);
+    tracker.trackLambdaCall("Update Function Configuration");
+    UpdateFunctionConfigurationResult updateFunctionConfigurationResult =
+        lambdaClient.updateFunctionConfiguration(updateFunctionConfigurationRequest);
+
+    waitForFunctionToUpdate(lambdaClient, functionName, executionLogCallback);
+    executionLogCallback.saveExecutionLog("Function configuration updated successfully", INFO);
+    return updateFunctionConfigurationResult;
+  }
+
+  /**
+   * successOnResponse -> "State" = "Active"
+   * errorOnResponse -> "State" = "Failed"
+   * retryOnResponse -> "State" = "Pending"
+   */
+  public void waitForFunctionToCreate(
+      AWSLambdaClient lambdaClient, String functionName, LogCallback executionLogCallback) {
+    try {
+      executionLogCallback.saveExecutionLog("Verifying if state of function is " + ACTIVE_FUNCTION_STATE);
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(TIMEOUT_IN_SECONDS), () -> {
+        while (true) {
+          GetFunctionConfigurationResult result =
+              getFunctionConfiguration(lambdaClient, functionName, executionLogCallback);
+          String state = result.getState();
+          if (ACTIVE_FUNCTION_STATE.equalsIgnoreCase(state)) {
+            break;
+          } else if (FAILED_FUNCTION_STATE.equalsIgnoreCase(state)) {
+            throw new InvalidRequestException(
+                "Function failed to reach " + ACTIVE_FUNCTION_STATE + " state", WingsException.SRE);
+          } else {
+            executionLogCallback.saveExecutionLog(
+                format("function: [%s], state: [%s], reason: [%s]", functionName, state, result.getStateReason()));
+          }
+          sleep(ofSeconds(WAIT_SLEEP_IN_SECONDS));
+        }
+        return true;
+      });
+    } catch (UncheckedTimeoutException e) {
+      throw new TimeoutException("Timed out waiting for function to reach " + ACTIVE_FUNCTION_STATE + " state",
+          "Timeout", e, WingsException.SRE);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(
+          "Error while waiting for function to reach " + ACTIVE_FUNCTION_STATE + " state", e);
+    }
+  }
+
+  /**
+   * successOnResponse -> "LastUpdateStatus" = "Successful"
+   * errorOnResponse -> "LastUpdateStatus" = "Failed"
+   * retryOnResponse -> "LastUpdateStatus" = "InProgress"
+   */
+  public void waitForFunctionToUpdate(
+      AWSLambdaClient lambdaClient, String functionName, LogCallback executionLogCallback) {
+    try {
+      executionLogCallback.saveExecutionLog("Verifying if status of function to be " + ACTIVE_LAST_UPDATE_STATUS);
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(TIMEOUT_IN_SECONDS), () -> {
+        while (true) {
+          GetFunctionConfigurationResult result =
+              getFunctionConfiguration(lambdaClient, functionName, executionLogCallback);
+          String status = result.getLastUpdateStatus();
+          if (ACTIVE_LAST_UPDATE_STATUS.equalsIgnoreCase(status)) {
+            break;
+          } else if (FAILED_LAST_UPDATE_STATUS.equalsIgnoreCase(status)) {
+            throw new InvalidRequestException(
+                "Function failed to reach " + ACTIVE_LAST_UPDATE_STATUS + " status", WingsException.SRE);
+          } else {
+            executionLogCallback.saveExecutionLog(format("function: [%s], status: [%s], reason: [%s]", functionName,
+                status, result.getLastUpdateStatusReason()));
+          }
+          sleep(ofSeconds(WAIT_SLEEP_IN_SECONDS));
+        }
+        return true;
+      });
+    } catch (UncheckedTimeoutException e) {
+      throw new TimeoutException("Timed out waiting for function to reach " + ACTIVE_LAST_UPDATE_STATUS + " status",
+          "Timeout", e, WingsException.SRE);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(
+          "Error while waiting for function to reach " + ACTIVE_LAST_UPDATE_STATUS + " status", e);
+    }
+  }
+
+  private GetFunctionConfigurationResult getFunctionConfiguration(
+      AWSLambdaClient lambdaClient, String functionName, LogCallback executionLogCallback) {
+    try {
+      tracker.trackLambdaCall("Get Function configuration");
+      return lambdaClient.getFunctionConfiguration(
+          new GetFunctionConfigurationRequest().withFunctionName(functionName));
+    } catch (ResourceNotFoundException exception) {
+      // Function does not exist
+      executionLogCallback.saveExecutionLog(format("Function: [%s] not found.", functionName));
+    }
+    throw new InvalidRequestException(format("Function: [%s] not found.", functionName));
   }
 
   private AwsLambdaFunctionResult executeFunctionDeploymentAfterDownloadingArtifact(AWSLambdaClient lambdaClient,

@@ -2144,7 +2144,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Delegate Configuration must be provided.");
+        .hasMessage("Delegate Name must be provided.");
   }
 
   @Test
@@ -2153,6 +2153,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void testValidateKubernetesYamlWithoutName() {
     String accountId = generateUuid();
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder().delegateConfigurationId("delConfigId").build();
+    when(delegateProfileService.get(accountId, "delConfigId")).thenReturn(DelegateProfile.builder().build());
 
     assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails))
         .isInstanceOf(InvalidRequestException.class)
@@ -2166,6 +2167,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     DelegateSetupDetails setupDetails =
         DelegateSetupDetails.builder().delegateConfigurationId("delConfigId").name("name").build();
+    when(delegateProfileService.get(accountId, "delConfigId")).thenReturn(DelegateProfile.builder().build());
 
     assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails))
         .isInstanceOf(InvalidRequestException.class)
@@ -2185,6 +2187,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                             .size(DelegateSize.LARGE)
                                             .description("desc")
                                             .build();
+    when(delegateProfileService.get(accountId, "delConfigId")).thenReturn(DelegateProfile.builder().build());
 
     assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails))
         .isInstanceOf(InvalidRequestException.class)
@@ -2223,15 +2226,17 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateKubernetesYamlShouldGenerateSessionId() {
     String accountId = generateUuid();
+    String delConfigId = "delConfigId";
     DelegateSetupDetails setupDetails =
         DelegateSetupDetails.builder()
-            .delegateConfigurationId("delConfigId")
+            .delegateConfigurationId(delConfigId)
             .name("name")
             .size(DelegateSize.LARGE)
             .description("desc")
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
             .build();
 
+    when(delegateProfileService.get(accountId, delConfigId)).thenReturn(DelegateProfile.builder().build());
     DelegateSetupDetails validatedSetupDetails = delegateService.validateKubernetesYaml(accountId, setupDetails);
     assertThat(validatedSetupDetails).isEqualToIgnoringGivenFields(setupDetails, "sessionIdentifier");
     assertThat(validatedSetupDetails.getSessionIdentifier()).isNotBlank();
@@ -2255,6 +2260,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .description("desc")
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
             .build();
+    when(delegateProfileService.get(ACCOUNT_ID, "delConfigId")).thenReturn(DelegateProfile.builder().build());
 
     persistence.save(DelegateGroup.builder()
                          .accountId(ACCOUNT_ID)
@@ -2295,6 +2301,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGenerateKubernetesClusterViewerYaml() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateProfileService.get(ACCOUNT_ID, "delConfigId")).thenReturn(DelegateProfile.builder().build());
     DelegateSetupDetails setupDetails =
         DelegateSetupDetails.builder()
             .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
@@ -2347,6 +2354,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGenerateKubernetesNamespaceAdminYaml() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateProfileService.get(ACCOUNT_ID, "delConfigId")).thenReturn(DelegateProfile.builder().build());
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
                                             .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
                                             .orgIdentifier("9S5HMP0xROugl3_QgO62rQO")
@@ -2410,6 +2418,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .size(DelegateSize.LARGE)
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
             .build();
+    when(delegateProfileService.get(ACCOUNT_ID, "delConfigId")).thenReturn(DelegateProfile.builder().build());
 
     persistence.save(DelegateGroup.builder()
                          .accountId(ACCOUNT_ID)
@@ -2990,11 +2999,11 @@ public class DelegateServiceTest extends WingsBaseTest {
             .build(),
         ConnectionMode.POLLING);
 
-    assertThat(delegateTaskServiceClassic.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isTrue();
+    assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isTrue();
 
     delegateConnectionDao.delegateDisconnected(ACCOUNT_ID, delegateConnectionId);
 
-    assertThat(delegateTaskServiceClassic.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isFalse();
+    assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isFalse();
   }
 
   @Test

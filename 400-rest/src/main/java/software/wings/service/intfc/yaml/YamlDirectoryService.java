@@ -2,6 +2,7 @@ package software.wings.service.intfc.yaml;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.CgEventConfig;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -128,6 +129,8 @@ public interface YamlDirectoryService {
   String getRootPathByInfraProvisioner(InfrastructureProvisioner provisioner);
 
   String getRootPathByTemplate(Template template);
+
+  String getRootPathByEventConfig(CgEventConfig cgEventConfig);
 
   void getGitFileChange(DirectoryNode dn, String path, String accountId, boolean includeFiles,
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,

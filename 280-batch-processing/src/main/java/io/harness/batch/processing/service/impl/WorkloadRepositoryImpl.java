@@ -1,7 +1,6 @@
 package io.harness.batch.processing.service.impl;
 
 import static io.harness.ccm.commons.entities.k8s.K8sWorkload.encodeDotsInKey;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
@@ -15,6 +14,7 @@ import io.harness.persistence.HPersistence;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +45,7 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
   @Override
   public void savePodWorkload(String accountId, PodInfo podInfo) {
     Owner topLevelOwner = podInfo.getTopLevelOwner();
-    Map<String, String> labelMap = getLabelMap(accountId, podInfo);
+    Map<String, String> labelMap = getLabelMap(podInfo);
     if (isNotEmpty(labelMap)) {
       final CacheKey cacheKey = new CacheKey(podInfo.getClusterId(), topLevelOwner.getUid());
       saved.get(cacheKey,
@@ -69,12 +69,17 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
     }
   }
 
-  private Map<String, String> getLabelMap(String accountId, PodInfo podInfo) {
-    Owner topLevelOwner = podInfo.getTopLevelOwner();
-    Map<String, String> labelsMap = topLevelOwner.getLabelsMap();
-    if (accountId.equals("hW63Ny6rQaaGsKkVjE0pJA") && isEmpty(labelsMap)) {
-      labelsMap = podInfo.getLabelsMap();
-    }
+  /**
+   * the precedence of labels is workloadLabels > namespaceLabels > podLabels
+   */
+  private Map<String, String> getLabelMap(PodInfo podInfo) {
+    final Owner topLevelOwner = podInfo.getTopLevelOwner();
+
+    Map<String, String> labelsMap = new HashMap<>();
+    labelsMap.putAll(podInfo.getLabelsMap());
+    labelsMap.putAll(podInfo.getNamespaceLabelsMap());
+    labelsMap.putAll(topLevelOwner.getLabelsMap());
+
     return labelsMap;
   }
 

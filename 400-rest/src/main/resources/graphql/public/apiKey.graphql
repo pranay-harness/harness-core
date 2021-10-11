@@ -1,0 +1,45 @@
+extend type Mutation {
+  #Create an ApiKey
+  createApiKey(input: CreateApiKeyInput!): CreateApiKeyPayload @dataFetcher(name: createApiKey)
+  #Update an ApiKey
+  updateApiKey(input: UpdateApiKeyInput!): UpdateApiKeyPayload @dataFetcher(name: updateApiKey)
+  #Delete an ApiKey
+  deleteApiKey(input: DeleteApiKeyInput!): DeleteApiKeyPayload @dataFetcher(name: deleteApiKey)
+}
+
+input CreateApiKeyInput {
+  accountId: String!
+  name: String!
+  userGroupIds: [String]
+  clientMutationId: String
+}
+
+type CreateApiKeyPayload {
+  clientMutationId: String
+  name: String
+  uuid: String
+}
+
+input UpdateApiKeyInput {
+  accountId: String!
+  name: String!
+  userGroupIds: [String]
+  clientMutationId: String
+  uuid: String!
+}
+
+type UpdateApiKeyPayload {
+  clientMutationId: String
+  name: String
+  uuid: String
+}
+
+input DeleteApiKeyInput {
+  accountId: String!
+  clientMutationId: String
+  uuid: String!
+}
+
+type DeleteApiKeyPayload {
+  clientMutationId: String
+}

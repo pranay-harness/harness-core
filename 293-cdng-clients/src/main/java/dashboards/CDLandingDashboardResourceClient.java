@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dashboards.DeploymentStatsSummary;
 import io.harness.dashboards.EnvCount;
 import io.harness.dashboards.GroupBy;
+import io.harness.dashboards.PipelinesExecutionDashboardInfo;
 import io.harness.dashboards.ProjectsDashboardInfo;
 import io.harness.dashboards.ServicesCount;
 import io.harness.dashboards.ServicesDashboardInfo;
@@ -17,7 +18,6 @@ import io.harness.ng.core.dto.ResponseDTO;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.QueryParam;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
@@ -45,15 +45,12 @@ public interface CDLandingDashboardResourceClient {
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval);
+      @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval, @NotNull @Query("groupBy") GroupBy groupBy);
 
-  @GET(LANDING_DASHBOARDS_API + "/timeDeploymentStats")
-  Call<ResponseDTO<ServicesDashboardInfo>> getTimeWiseDeploymentInfo(
+  @GET(LANDING_DASHBOARDS_API + "/activeDeploymentStats")
+  Call<ResponseDTO<PipelinesExecutionDashboardInfo>> getActiveDeploymentStats(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
-      @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval,
-      @NotNull @QueryParam("groupBy") GroupBy groupBy);
+      @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers);
 
   @GET(LANDING_DASHBOARDS_API + "/servicesCount")
   Call<ResponseDTO<ServicesCount>> getServicesCount(

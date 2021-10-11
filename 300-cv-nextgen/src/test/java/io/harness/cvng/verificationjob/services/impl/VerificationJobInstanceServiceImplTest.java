@@ -87,6 +87,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -423,6 +424,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
                        .notStarted(1)
                        .durationMs(Duration.ofMinutes(15).toMillis())
                        .remainingTimeMs(1200000)
+                       .verficationStatusMap(new HashMap<>())
                        .build());
   }
 
@@ -452,6 +454,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
                        .notStarted(0)
                        .durationMs(Duration.ofMinutes(15).toMillis())
                        .remainingTimeMs(1200000)
+                       .verficationStatusMap(new HashMap<>())
                        .build());
   }
 
@@ -950,7 +953,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         VerificationJobInstanceKeys.dataCollectionDelay, VerificationJobInstanceKeys.oldVersionHosts,
         VerificationJobInstanceKeys.newVersionHosts, VerificationJobInstanceKeys.newHostsTrafficSplitPercentage,
         VerificationJobInstanceKeys.progressLogs, VerificationJobInstanceKeys.cvConfigMap,
-        VerificationJobInstanceKeys.verificationStatus);
+        VerificationJobInstanceKeys.verificationStatus, VerificationJobInstanceKeys.name);
     verificationJobInstances.forEach(verificationJobInstance -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(VerificationJobInstance.class);
       fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {

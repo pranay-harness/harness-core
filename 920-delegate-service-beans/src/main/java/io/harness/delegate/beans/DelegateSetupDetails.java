@@ -24,7 +24,7 @@ public class DelegateSetupDetails implements YamlDTO {
   @NotNull private String name;
   private String description;
   @NotNull private DelegateSize size;
-  @NotNull private String delegateConfigurationId;
+  private String delegateConfigurationId;
 
   @EntityIdentifier(allowBlank = true) private String identifier; // TODO make mandatory when UI does the change
 

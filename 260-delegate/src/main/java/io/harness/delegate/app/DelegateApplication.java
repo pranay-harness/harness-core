@@ -142,6 +142,8 @@ public class DelegateApplication {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
+    log.info("versionCheckDisabled " + configuration.isVersionCheckDisabled());
+
     List<Module> modules = new ArrayList<>();
     modules.add(KryoModule.getInstance());
 
@@ -177,6 +179,7 @@ public class DelegateApplication {
             .scheme(extractScheme(configuration.getManagerUrl()))
             .accountId(configuration.getAccountId())
             .accountSecret(configuration.getAccountSecret())
+            .versionCheckDisabled(configuration.isVersionCheckDisabled())
             .build();
       }
 

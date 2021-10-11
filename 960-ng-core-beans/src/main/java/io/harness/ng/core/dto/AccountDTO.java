@@ -14,6 +14,7 @@ import io.harness.ng.core.account.ServiceAccountConfig;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +28,7 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @ApiModel(value = "AccountDTO")
 @OwnedBy(PL)
+@Schema(name = "Account", description = "This is the view of an Account defined in Harness")
 public class AccountDTO {
   @EntityIdentifier(allowBlank = false) String identifier;
   @NGEntityName String name;

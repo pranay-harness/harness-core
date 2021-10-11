@@ -10,12 +10,13 @@ import io.harness.steps.approval.step.harness.HarnessApprovalStepInfo;
 import io.harness.steps.approval.step.jira.JiraApprovalStepInfo;
 import io.harness.steps.jira.create.JiraCreateStepInfo;
 import io.harness.steps.jira.update.JiraUpdateStepInfo;
+import io.harness.steps.shellscript.ShellScriptStepInfo;
 import io.harness.yaml.core.StepSpecType;
 
 import io.swagger.annotations.ApiModel;
 
 @OwnedBy(PIPELINE)
-@ApiModel(
-    subTypes = {BarrierStepInfo.class, HttpStepInfo.class, FlagConfigurationStepInfo.class,
-        HarnessApprovalStepInfo.class, JiraApprovalStepInfo.class, JiraCreateStepInfo.class, JiraUpdateStepInfo.class})
+@ApiModel(subTypes = {BarrierStepInfo.class, HttpStepInfo.class, FlagConfigurationStepInfo.class,
+              HarnessApprovalStepInfo.class, JiraApprovalStepInfo.class, JiraCreateStepInfo.class,
+              JiraUpdateStepInfo.class, ShellScriptStepInfo.class})
 public interface PMSStepInfo extends StepSpecType, WithStepElementParameters {}

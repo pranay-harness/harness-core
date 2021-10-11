@@ -141,6 +141,21 @@
       "if" : {
         "properties" : {
           "type" : {
+            "const" : "ShellScript"
+          }
+        }
+      },
+      "then" : {
+        "properties" : {
+          "spec" : {
+            "$ref" : "#/definitions/cvng/ShellScriptStepInfo"
+          }
+        }
+      }
+    }, {
+      "if" : {
+        "properties" : {
+          "type" : {
             "const" : "Verify"
           }
         }
@@ -607,6 +622,21 @@
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
+        "ExecutionTarget" : {
+          "type" : "object",
+          "properties" : {
+            "connectorRef" : {
+              "type" : "string"
+            },
+            "host" : {
+              "type" : "string"
+            },
+            "workingDirectory" : {
+              "type" : "string"
+            }
+          },
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
         "FailureStrategyActionConfig" : {
           "type" : "object",
           "required" : [ "type" ],
@@ -659,9 +689,9 @@
                     "$ref" : "#/definitions/cvng/SetFeatureFlagStateYaml"
                   }, {
                     "$ref" : "#/definitions/cvng/SetOffVariationYaml"
-                  },{
+                  }, {
                     "$ref" : "#/definitions/cvng/SetOnVariationYaml"
-                  },{
+                  }, {
                     "$ref" : "#/definitions/cvng/UpdateRuleYaml"
                   } ]
                 }
@@ -1159,7 +1189,7 @@
           "properties" : {
             "type" : {
               "type" : "string",
-              "enum" : [ "SetFeatureFlagState", "SetOnVariation", "SetOffVariation","AddRule", "UpdateRule", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
+              "enum" : [ "SetFeatureFlagState", "SetOnVariation", "SetOffVariation", "AddRule", "UpdateRule", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
             }
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
@@ -1375,6 +1405,37 @@
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
+        "SetOffVariationYaml" : {
+          "allOf" : [ {
+            "$ref" : "#/definitions/cvng/PatchInstruction"
+          }, {
+            "type" : "object",
+            "required" : [ "identifier", "spec", "type" ],
+            "properties" : {
+              "identifier" : {
+                "type" : "string"
+              },
+              "spec" : {
+                "$ref" : "#/definitions/cvng/SetOffVariationYamlSpec"
+              },
+              "type" : {
+                "type" : "string",
+                "enum" : [ "SetOffVariation" ]
+              }
+            }
+          } ],
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "SetOffVariationYamlSpec" : {
+          "type" : "object",
+          "required" : [ "variation" ],
+          "properties" : {
+            "variation" : {
+              "type" : "string"
+            }
+          },
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
         "SetOnVariationYaml" : {
           "allOf" : [ {
             "$ref" : "#/definitions/cvng/PatchInstruction"
@@ -1406,35 +1467,120 @@
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
-        "SetOffVariationYaml" : {
+        "ShellScriptBaseSource" : {
+          "type" : "object",
+          "discriminator" : "type",
+          "properties" : {
+            "type" : {
+              "type" : "string"
+            }
+          },
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "ShellScriptInlineSource" : {
           "allOf" : [ {
-            "$ref" : "#/definitions/cvng/PatchInstruction"
+            "$ref" : "#/definitions/cvng/ShellScriptBaseSource"
           }, {
             "type" : "object",
-            "required" : [ "identifier", "spec", "type" ],
             "properties" : {
-              "identifier" : {
+              "script" : {
                 "type" : "string"
-              },
-              "spec" : {
-                "$ref" : "#/definitions/cvng/SetOffVariationYamlSpec"
-              },
-              "type" : {
-                "type" : "string",
-                "enum" : [ "SetOffVariation" ]
               }
             }
           } ],
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
-        "SetOffVariationYamlSpec" : {
+        "ShellScriptSourceWrapper" : {
           "type" : "object",
-          "required" : [ "variation" ],
+          "required" : [ "spec", "type" ],
           "properties" : {
-            "variation" : {
+            "type" : {
               "type" : "string"
             }
           },
+          "$schema" : "http://json-schema.org/draft-07/schema#",
+          "allOf" : [ {
+            "if" : {
+              "properties" : {
+                "type" : {
+                  "const" : "Inline"
+                }
+              }
+            },
+            "then" : {
+              "properties" : {
+                "spec" : {
+                  "$ref" : "#/definitions/cvng/ShellScriptInlineSource"
+                }
+              }
+            }
+          } ]
+        },
+        "ShellScriptStepInfo" : {
+          "allOf" : [ {
+            "$ref" : "#/definitions/cvng/StepSpecType"
+          }, {
+            "type" : "object",
+            "required" : [ "onDelegate", "shell", "source" ],
+            "properties" : {
+              "delegateSelectors" : {
+                "oneOf" : [ {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }, {
+                  "type" : "string",
+                  "pattern" : "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength" : 1
+                } ]
+              },
+              "environmentVariables" : {
+                "type" : "array",
+                "items" : {
+                  "oneOf" : [ {
+                    "$ref" : "#/definitions/cvng/NumberNGVariable"
+                  }, {
+                    "$ref" : "#/definitions/cvng/SecretNGVariable"
+                  }, {
+                    "$ref" : "#/definitions/cvng/StringNGVariable"
+                  } ]
+                }
+              },
+              "executionTarget" : {
+                "$ref" : "#/definitions/cvng/ExecutionTarget"
+              },
+              "metadata" : {
+                "type" : "string"
+              },
+              "onDelegate" : {
+                "oneOf" : [ {
+                  "type" : "boolean"
+                }, {
+                  "type" : "string"
+                } ]
+              },
+              "outputVariables" : {
+                "type" : "array",
+                "items" : {
+                  "oneOf" : [ {
+                    "$ref" : "#/definitions/cvng/NumberNGVariable"
+                  }, {
+                    "$ref" : "#/definitions/cvng/SecretNGVariable"
+                  }, {
+                    "$ref" : "#/definitions/cvng/StringNGVariable"
+                  } ]
+                }
+              },
+              "shell" : {
+                "type" : "string",
+                "enum" : [ "Bash", "PowerShell" ]
+              },
+              "source" : {
+                "$ref" : "#/definitions/cvng/ShellScriptSourceWrapper"
+              }
+            }
+          } ],
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
         "StageRollbackFailureActionConfig" : {
@@ -1479,7 +1625,7 @@
             },
             "type" : {
               "type" : "string",
-              "enum" : [ "Barrier", "FlagConfiguration", "HarnessApproval", "Http", "JiraApproval", "JiraCreate", "JiraUpdate", "Verify" ]
+              "enum" : [ "Barrier", "FlagConfiguration", "HarnessApproval", "Http", "JiraApproval", "JiraCreate", "JiraUpdate", "ShellScript", "Verify" ]
             },
             "when" : {
               "$ref" : "#/definitions/cvng/StepWhenCondition"
@@ -1588,6 +1734,21 @@
               "properties" : {
                 "spec" : {
                   "$ref" : "#/definitions/cvng/JiraUpdateStepInfo"
+                }
+              }
+            }
+          }, {
+            "if" : {
+              "properties" : {
+                "type" : {
+                  "const" : "ShellScript"
+                }
+              }
+            },
+            "then" : {
+              "properties" : {
+                "spec" : {
+                  "$ref" : "#/definitions/cvng/ShellScriptStepInfo"
                 }
               }
             }

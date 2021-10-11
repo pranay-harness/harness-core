@@ -23,6 +23,7 @@ java_library(
         "//930-ng-core-clients:module",
         "//940-feature-flag:module",
         "//940-resource-group-beans:module",
+        "//942-enforcement-sdk:module",
         "//945-account-mgmt:module",
         "//945-ng-audit-client:module",
         "//948-access-control-admin-client:module",

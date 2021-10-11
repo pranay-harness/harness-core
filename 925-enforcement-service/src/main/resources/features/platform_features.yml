@@ -3,6 +3,15 @@ clients:
   - name: ngmanager
     clientConfig: ngManagerClientConfig
     secretConfig: nextGenConfig.ngManagerServiceSecret
+  - name: pipelineService
+    clientConfig: pipelineServiceClientConfig
+    secretConfig: nextGenConfig.pipelineServiceSecret
+  - name: accesscontrol
+    clientConfig: accessControlClientConfiguration.accessControlServiceConfig
+    secretConfig: accessControlClientConfiguration.accessControlServiceSecret
+  - name: resourceGroup
+    clientConfig: resourceGroupClientConfig.serviceConfig
+    secretConfig: resourceGroupClientConfig.secret
 features:
   # Feature availability example
   # TEST1 feature
@@ -36,7 +45,6 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
-
   - name: SECRET_MANAGERS
     description: Allow creating secret managers
     restrictions:
@@ -46,6 +54,84 @@ features:
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: SAML_SUPPORT
+    description: Allow configuring SAML Providers
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: OAUTH_SUPPORT
+    description: Allow configuring OAUTH providers
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: TWO_FACTOR_AUTH_SUPPORT
+    description: Allow two factor authentication
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: LDAP_SUPPORT
+    description: Allow LDAP provider configuration
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: CUSTOM_ROLES
+    description: Allow creating custom roles
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: CUSTOM_RESOURCE_GROUPS
+    description: Allow creating custom resource groups
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true

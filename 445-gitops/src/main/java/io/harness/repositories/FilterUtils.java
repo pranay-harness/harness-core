@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.connector.GitOpsProviderType;
 import io.harness.gitopsprovider.SearchTerm;
 import io.harness.gitopsprovider.entity.GitOpsProvider;
 import io.harness.gitopsprovider.entity.GitOpsProvider.GitOpsProviderKeys;
@@ -26,6 +27,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(GITOPS)
 public class FilterUtils {
   static Reflections providerReflection = new Reflections(GitOpsProvider.class.getPackage().getName());
+
   static void applySearchFilter(Criteria criteria, String searchTerm) {
     if (isNotBlank(searchTerm)) {
       Criteria criteriaWithSearchTerm = getSearchTermFilter(searchTerm);
@@ -33,6 +35,11 @@ public class FilterUtils {
     }
   }
 
+  static void applySearchFilterForType(Criteria criteria, GitOpsProviderType type) {
+    if (type != null) {
+      criteria.and(GitOpsProviderKeys.type).is(type);
+    }
+  }
   static Criteria getSearchTermFilter(String searchTerm) {
     if (isNotBlank(searchTerm)) {
       Criteria tagCriteria = createCriteriaForSearchingTag(searchTerm);

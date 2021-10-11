@@ -26,6 +26,7 @@ public class RateLimitRestriction extends Restriction implements LimitRestrictio
     this.enforcementSdkClient = enforcementSdkClient;
   }
 
+  @Override
   public void setEnforcementSdkClient(EnforcementSdkClient enforcementSdkClient) {
     this.enforcementSdkClient = enforcementSdkClient;
   }

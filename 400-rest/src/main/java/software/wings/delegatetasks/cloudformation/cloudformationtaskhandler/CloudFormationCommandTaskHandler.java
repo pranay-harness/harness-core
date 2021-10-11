@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
@@ -74,7 +75,10 @@ public abstract class CloudFormationCommandTaskHandler {
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService, request.getAccountId(),
         request.getAppId(), request.getActivityId(), request.getCommandName());
     try {
-      return executeInternal(request, details, executionLogCallback);
+      CloudFormationCommandExecutionResponse result;
+      result = executeInternal(request, details, executionLogCallback);
+      logStatusMessage(executionLogCallback, result);
+      return result;
     } catch (Exception ex) {
       String errorMessage = format("Exception: %s while executing CF task.", ExceptionUtils.getMessage(ex));
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, FAILURE);
@@ -82,6 +86,16 @@ public abstract class CloudFormationCommandTaskHandler {
           .errorMessage(errorMessage)
           .commandExecutionStatus(FAILURE)
           .build();
+    }
+  }
+
+  private void logStatusMessage(
+      ExecutionLogCallback executionLogCallback, CloudFormationCommandExecutionResponse result) {
+    final CommandExecutionStatus status = result.getCommandExecutionStatus();
+    if (status == SUCCESS) {
+      executionLogCallback.saveExecutionLog("Execution finished successfully.", LogLevel.INFO, status);
+    } else if (status == FAILURE) {
+      executionLogCallback.saveExecutionLog("Execution has been failed.", LogLevel.ERROR, status);
     }
   }
 

@@ -167,3 +167,7 @@ replace_key_value enableAuth "$ENABLE_AUTH"
 
 replace_key_value enableAudit "$ENABLE_AUDIT"
 replace_key_value auditClientConfig.baseUrl "$AUDIT_SERVICE_BASE_URL"
+
+replace_key_value accessControlClientConfig.enableAccessControl "$ACCESS_CONTROL_ENABLED"
+replace_key_value accessControlClientConfig.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
+replace_key_value accessControlClientConfig.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"

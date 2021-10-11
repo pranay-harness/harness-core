@@ -44,6 +44,8 @@ import io.harness.ccm.serviceAccount.GcpResourceManagerService;
 import io.harness.ccm.serviceAccount.GcpResourceManagerServiceImpl;
 import io.harness.ccm.serviceAccount.GcpServiceAccountService;
 import io.harness.ccm.serviceAccount.GcpServiceAccountServiceImpl;
+import io.harness.ccm.views.businessMapping.service.impl.BusinessMappingServiceImpl;
+import io.harness.ccm.views.businessMapping.service.intf.BusinessMappingService;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
@@ -190,6 +192,7 @@ public class CENextGenModule extends AbstractModule {
     bind(AwsClient.class).to(AwsClientImpl.class);
     bind(GCPEntityChangeEventService.class).to(GCPEntityChangeEventServiceImpl.class);
     bind(AwsEntityChangeEventService.class).to(AwsEntityChangeEventServiceImpl.class);
+    bind(BusinessMappingService.class).to(BusinessMappingServiceImpl.class);
     bind(LicenseUsageInterface.class).to(LicenseUsageInterfaceImpl.class).in(Singleton.class);
 
     install(new CENextGenPersistenceModule());
@@ -270,7 +273,7 @@ public class CENextGenModule extends AbstractModule {
       }
     });
 
-    install(DelegateServiceDriverModule.getInstance(false));
+    install(DelegateServiceDriverModule.getInstance(false, false));
     install(new DelegateServiceDriverGrpcClientModule(configuration.getNgManagerServiceSecret(),
         configuration.getGrpcClientConfig().getTarget(), configuration.getGrpcClientConfig().getAuthority(), true));
   }

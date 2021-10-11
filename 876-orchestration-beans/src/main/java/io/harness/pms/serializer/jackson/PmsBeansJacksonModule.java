@@ -9,6 +9,9 @@ import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
+import io.harness.pms.contracts.governance.PolicyMetadata;
+import io.harness.pms.contracts.governance.PolicySetMetadata;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptEffectProto;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -25,10 +28,13 @@ import io.harness.serializer.json.ExecutionMetadataSerializer;
 import io.harness.serializer.json.ExecutionPrincipalInfoSerializer;
 import io.harness.serializer.json.ExecutionTriggerInfoSerializer;
 import io.harness.serializer.json.FailureInfoSerializer;
+import io.harness.serializer.json.GovernanceMetadataSerializer;
 import io.harness.serializer.json.InterruptConfigSerializer;
 import io.harness.serializer.json.InterruptEffectJsonSerializer;
 import io.harness.serializer.json.LayoutNodeInfoSerializer;
 import io.harness.serializer.json.NodeRunInfoSerializer;
+import io.harness.serializer.json.PolicyMetadataSerializer;
+import io.harness.serializer.json.PolicySetMetadataSerializer;
 import io.harness.serializer.json.SkipInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.serializer.json.TriggeredBySerializer;
@@ -57,5 +63,8 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(NodeRunInfo.class, new NodeRunInfoSerializer());
     addSerializer(ExecutionPrincipalInfo.class, new ExecutionPrincipalInfoSerializer());
     addSerializer(InterruptEffectProto.class, new InterruptEffectJsonSerializer());
+    addSerializer(PolicyMetadata.class, new PolicyMetadataSerializer());
+    addSerializer(PolicySetMetadata.class, new PolicySetMetadataSerializer());
+    addSerializer(GovernanceMetadata.class, new GovernanceMetadataSerializer());
   }
 }

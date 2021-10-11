@@ -1,7 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 
@@ -22,6 +27,8 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AzureKubernetesInfrastructureMappingKeys")
+@TargetModule(_957_CG_BEANS)
+@OwnedBy(CDP)
 public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "SubscriptionId") private String subscriptionId;
   @Attributes(title = "Resource Group") private String resourceGroup;

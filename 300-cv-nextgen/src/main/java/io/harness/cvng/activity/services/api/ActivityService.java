@@ -64,25 +64,29 @@ public interface ActivityService {
       String accountId, String orgIdentifier, String projectIdentifier, int size);
   ActivityVerificationResultDTO getActivityVerificationResult(String accountId, String activityId);
 
-  DeploymentActivitySummaryDTO getDeploymentSummary(String activityId);
+  @Deprecated DeploymentActivitySummaryDTO getDeploymentSummary(String activityId);
 
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
+
+  @Deprecated
   TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
       DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
 
+  @Deprecated
   List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
       String accountId, String activityId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter);
 
+  @Deprecated
   PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
       Integer label, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter, PageParams pageParams);
 
   void abort(String activityId);
 
-  Set<HealthSourceDTO> healthSources(String accountId, String activityId);
+  @Deprecated Set<HealthSourceDTO> healthSources(String accountId, String activityId);
 
-  void upsert(Activity activity);
+  String upsert(Activity activity);
 
   List<Activity> get(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
       Instant startTime, Instant endTime, List<ActivityType> activityTypes);

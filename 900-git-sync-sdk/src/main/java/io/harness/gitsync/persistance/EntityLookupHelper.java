@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
+import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,7 +53,10 @@ public class EntityLookupHelper implements EntityKeySource {
       return isGitEnabled;
     } else {
       final Boolean gitSyncEnabled =
-          harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo).getEnabled();
+          GitSyncGrpcClientUtils
+              .retryAndProcessException(
+                  harnessToGitPushInfoServiceBlockingStub::isGitSyncEnabledForScope, entityScopeInfo)
+              .getEnabled();
       gitEnabledCache.put(scope, gitSyncEnabled);
       return gitSyncEnabled;
     }

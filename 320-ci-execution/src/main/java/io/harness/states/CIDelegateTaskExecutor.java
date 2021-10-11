@@ -53,7 +53,7 @@ public class CIDelegateTaskExecutor {
 
     return Failsafe.with(retryPolicy).get(() -> {
       return delegateServiceGrpcClient.submitAsyncTask(
-          delegateTaskRequest, delegateCallbackTokenSupplier.get(), Duration.ofMinutes(5));
+          delegateTaskRequest, delegateCallbackTokenSupplier.get(), Duration.ZERO);
     });
   }
 

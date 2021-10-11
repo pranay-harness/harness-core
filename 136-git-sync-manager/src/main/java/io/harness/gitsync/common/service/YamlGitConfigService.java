@@ -40,4 +40,6 @@ public interface YamlGitConfigService {
   Boolean isRepoExists(String repo);
 
   List<YamlGitConfigDTO> getByRepo(String repo);
+
+  YamlGitConfigDTO getByProjectIdAndRepo(String accountId, String orgId, String projectId, String repo);
 }
