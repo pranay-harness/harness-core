@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -46,6 +48,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -88,7 +92,9 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
+import software.wings.beans.AzureVMSSInfrastructureMapping.AzureVMSSInfrastructureMappingKeys;
 import software.wings.beans.AzureWebAppInfrastructureMapping;
+import software.wings.beans.AzureWebAppInfrastructureMapping.AzureWebAppsInfrastructureMappingKeys;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -208,6 +214,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(_870_CG_ORCHESTRATION)
+@OwnedBy(CDP)
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
@@ -824,6 +832,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(pcfInfrastructureMapping, skipValidation, null);
       handlePcfInfraMapping(keyValuePairs, pcfInfrastructureMapping);
+
+    } else if (infrastructureMapping instanceof AzureVMSSInfrastructureMapping) {
+      AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping =
+          (AzureVMSSInfrastructureMapping) infrastructureMapping;
+      validateAzureVMSSInfraMapping(azureVMSSInfrastructureMapping);
+      updateVMSSInfraFields(keyValuePairs, azureVMSSInfrastructureMapping);
+
+    } else if (infrastructureMapping instanceof AzureWebAppInfrastructureMapping) {
+      AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping =
+          (AzureWebAppInfrastructureMapping) infrastructureMapping;
+      validateAzureWebAppInfraMapping(azureWebAppInfrastructureMapping);
+      updateWebAppInfraFields(keyValuePairs, azureWebAppInfrastructureMapping);
     }
     if (computeProviderSetting != null) {
       keyValuePairs.put("computeProviderName", computeProviderSetting.getName());
@@ -856,6 +876,29 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     return updatedInfraMapping;
+  }
+
+  private void updateVMSSInfraFields(
+      Map<String, Object> keyValuePairs, AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping) {
+    keyValuePairs.put(
+        AzureVMSSInfrastructureMappingKeys.subscriptionId, azureVMSSInfrastructureMapping.getSubscriptionId());
+    keyValuePairs.put(
+        AzureVMSSInfrastructureMappingKeys.resourceGroupName, azureVMSSInfrastructureMapping.getResourceGroupName());
+    keyValuePairs.put(
+        AzureVMSSInfrastructureMappingKeys.baseVMSSName, azureVMSSInfrastructureMapping.getBaseVMSSName());
+    keyValuePairs.put(AzureVMSSInfrastructureMappingKeys.userName, azureVMSSInfrastructureMapping.getUserName());
+    keyValuePairs.put(
+        AzureVMSSInfrastructureMappingKeys.vmssAuthType, azureVMSSInfrastructureMapping.getVmssAuthType());
+    keyValuePairs.put(AzureVMSSInfrastructureMappingKeys.passwordSecretTextName,
+        azureVMSSInfrastructureMapping.getPasswordSecretTextName());
+  }
+
+  private void updateWebAppInfraFields(
+      Map<String, Object> keyValuePairs, AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping) {
+    keyValuePairs.put(
+        AzureWebAppsInfrastructureMappingKeys.subscriptionId, azureWebAppInfrastructureMapping.getSubscriptionId());
+    keyValuePairs.put(
+        AzureWebAppsInfrastructureMappingKeys.resourceGroup, azureWebAppInfrastructureMapping.getResourceGroup());
   }
 
   @Override

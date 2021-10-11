@@ -212,6 +212,10 @@ if ! `grep installClientToolsInBackground config-delegate.yml > /dev/null`; then
   echo "installClientToolsInBackground: $INSTALL_CLIENT_TOOLS_IN_BACKGROUND" >> config-delegate.yml
 fi
 
+if ! `grep versionCheckDisabled config-delegate.yml > /dev/null`; then
+  echo "versionCheckDisabled: $VERSION_CHECK_DISABLED" >> config-delegate.yml
+fi
+
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
   echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
 fi
@@ -247,6 +251,10 @@ export DELEGATE_PROFILE=${delegateProfile}
 <#if delegateType??>
 export DELEGATE_TYPE=${delegateType}
 </#if>
+<#if versionCheckDisabled??>
+export VERSION_CHECK_DISABLED=${versionCheckDisabled}
+</#if>
+
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

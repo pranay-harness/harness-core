@@ -29,6 +29,7 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit.GitSyncErrorAggregateByCommitKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
+import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.remote.GitSyncErrorMapper;
@@ -81,7 +82,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     this.yamlGitConfigService = yamlGitConfigService;
     this.gitSyncErrorRepository = gitSyncErrorRepository;
     this.executorService = Executors.newScheduledThreadPool(1);
-    executorService.scheduleWithFixedDelay(() -> markExpiredErrors(), 1, 24, TimeUnit.HOURS);
+    executorService.scheduleWithFixedDelay(this::markExpiredErrors, 1, 24, TimeUnit.HOURS);
   }
 
   @Override
@@ -232,17 +233,19 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     return getNGPageResponse(gitSyncErrorPage.map(GitSyncErrorMapper::toGitSyncErrorDTO));
   }
 
-  @Override
-  public GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO) {
+  private GitSyncErrorDTO save(GitSyncError gitSyncError) {
     try {
-      GitSyncError gitSyncError =
-          GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier());
       validate(gitSyncError);
       GitSyncError savedError = gitSyncErrorRepository.save(gitSyncError);
       return GitSyncErrorMapper.toGitSyncErrorDTO(savedError);
     } catch (DuplicateKeyException ex) {
       throw new InvalidRequestException("A git sync for this commitId and File already exists.");
     }
+  }
+
+  @Override
+  public GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO) {
+    return save(GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()));
   }
 
   private void markExpiredErrors() {
@@ -297,5 +300,50 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public boolean deleteGitSyncErrors(List<String> errorIds, String accountId) {
     return gitSyncErrorRepository.deleteByIds(errorIds).wasAcknowledged();
+  }
+
+  @Override
+  public void recordConnectivityError(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      GitSyncErrorType gitSyncErrorType, String repoUrl, String branch, String errorMessage) {
+    GitSyncError gitSyncError = GitSyncError.builder()
+                                    .accountIdentifier(accountIdentifier)
+                                    .errorType(gitSyncErrorType)
+                                    .repoUrl(repoUrl)
+                                    .branchName(branch)
+                                    .failureReason(errorMessage)
+                                    .status(GitSyncErrorStatus.ACTIVE)
+                                    .additionalErrorDetails(HarnessToGitErrorDetails.builder()
+                                                                .orgIdentifier(orgIdentifier)
+                                                                .projectIdentifier(projectIdentifier)
+                                                                .build())
+                                    .build();
+    save(gitSyncError);
+  }
+
+  @Override
+  public PageResponse<GitSyncErrorDTO> listConnectivityErrors(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String repoIdentifier, String branch, PageRequest pageRequest) {
+    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(GitSyncErrorKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(GitSyncErrorKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(GitSyncErrorKeys.errorType)
+                            .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE);
+    if (!org.apache.commons.lang3.StringUtils.isEmpty(repoIdentifier)) {
+      YamlGitConfigDTO yamlGitConfigDTO =
+          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
+      if (yamlGitConfigDTO != null) {
+        criteria.and(GitSyncErrorKeys.repoUrl).is(yamlGitConfigDTO.getRepo());
+      }
+      if (!org.apache.commons.lang3.StringUtils.isEmpty(branch)) {
+        criteria.and(GitSyncErrorKeys.branchName).is(branch);
+      }
+    }
+
+    Page<GitSyncError> gitSyncErrors = gitSyncErrorRepository.findAll(criteria, PageUtils.getPageRequest(pageRequest));
+    Page<GitSyncErrorDTO> dtos = gitSyncErrors.map(GitSyncErrorMapper::toGitSyncErrorDTO);
+    return getNGPageResponse(dtos);
   }
 }

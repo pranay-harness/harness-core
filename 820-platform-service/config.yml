@@ -51,6 +51,11 @@ managerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+ngManagerClientConfig:
+  baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 rbacServiceConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
@@ -176,3 +181,6 @@ resourceGroupServiceConfig:
   exportMetricsToStackDriver: false
 
   distributedLockImplementation: REDIS
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: false

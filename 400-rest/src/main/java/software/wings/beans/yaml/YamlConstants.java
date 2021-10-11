@@ -147,4 +147,7 @@ public interface YamlConstants {
   // Governance Folder
   String GOVERNANCE_FOLDER = "Governance";
   String DEPLOYMENT_GOVERNANCE_FOLDER = "Deployment Governance";
+
+  // App Telemetry
+  String CG_EVENT_CONFIG_FOLDER = "Event Rules";
 }

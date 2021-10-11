@@ -153,7 +153,8 @@ public class YamlVersion extends Base implements YamlHistory {
     TAGS,
     GLOBAL_TEMPLATE_LIBRARY,
     APPLICATION_TEMPLATE_LIBRARY,
-    GOVERNANCE_CONFIG
+    GOVERNANCE_CONFIG,
+    EVENT_RULE
   }
 
   @Override

@@ -51,6 +51,8 @@ import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.Dashboard.PMSLandingDashboardService;
+import io.harness.pms.Dashboard.PMSLandingDashboardServiceImpl;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
 import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
@@ -109,13 +111,17 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.steps.shellscript.ShellScriptHelperService;
+import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.JooqModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.token.TokenClientModule;
 import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
@@ -152,6 +158,7 @@ import javax.cache.Cache;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.ExecuteListener;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
@@ -226,6 +233,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
     install(YamlSdkModule.getInstance());
+    install(JooqModule.getInstance());
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), PIPELINE_SERVICE.getServiceId()));
     install(new PollResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
@@ -272,6 +280,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
     bind(ApprovalNotificationHandler.class).to(ApprovalNotificationHandlerImpl.class);
     bind(PMSOpaService.class).to(PMSOpaServiceImpl.class);
+    bind(ShellScriptHelperService.class).to(ShellScriptHelperServiceImpl.class);
     bind(ApprovalYamlSchemaService.class).to(ApprovalYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(FeatureFlagYamlService.class).to(FeatureFlagYamlServiceImpl.class).in(Singleton.class);
     bind(PipelineEnforcementService.class).to(PipelineEnforcementServiceImpl.class).in(Singleton.class);
@@ -298,6 +307,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
     bind(JiraStepHelperService.class).to(JiraStepHelperServiceImpl.class);
     bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
+    bind(PMSLandingDashboardService.class).to(PMSLandingDashboardServiceImpl.class);
     bind(LogStreamingServiceRestClient.class)
         .toProvider(NGLogStreamingClientFactory.builder()
                         .logStreamingServiceBaseUrl(configuration.getLogStreamingServiceConfig().getBaseUrl())
@@ -381,6 +391,13 @@ public class PipelineServiceModule extends AbstractModule {
         .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
         .addAll(NGTriggerRegistrars.yamlSchemaRegistrars)
         .build();
+  }
+
+  @Provides
+  @Singleton
+  @Named("PSQLExecuteListener")
+  ExecuteListener executeListener() {
+    return HExecuteListener.getInstance();
   }
 
   @Provides
