@@ -423,6 +423,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(NotificationInformHandler.class)));
     planExecutionStrategy.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(InstrumentationPipelineEndEventHandler.class)));
+    planExecutionStrategy.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(PipelineStatusUpdateEventHandler.class)));
 
     GraphGenerationServiceImpl graphGenerationService = injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
     graphGenerationService.getGraphNodeUpdateObserverSubject().register(

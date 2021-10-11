@@ -7,6 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.pms.contracts.steps.SdkStep;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.pipeline.CommonStepInfo;
@@ -71,6 +72,8 @@ public class PipelineEnforcementServiceImpl implements PipelineEnforcementServic
         if (stepTypes.contains(sdkStep.getStepType())) {
           if (sdkStep.hasStepInfo() && EmptyPredicate.isNotEmpty(sdkStep.getStepInfo().getFeatureRestrictionName())) {
             featureRestrictionNameList.add(sdkStep.getStepInfo().getFeatureRestrictionName());
+          }
+          if (sdkStep.getStepType().getStepCategory() == StepCategory.STAGE) {
             modules.add(entry.getKey());
           }
         }
@@ -84,9 +87,9 @@ public class PipelineEnforcementServiceImpl implements PipelineEnforcementServic
       }
     }
     for (String module : modules) {
-      if (module.equals(ModuleType.CD.name())) {
+      if (module.equalsIgnoreCase(ModuleType.CD.name())) {
         featureRestrictionNameList.add(FeatureRestrictionName.DEPLOYMENTS.name());
-      } else if (module.equals(ModuleType.CI.name())) {
+      } else if (module.equalsIgnoreCase(ModuleType.CI.name())) {
         featureRestrictionNameList.add(FeatureRestrictionName.BUILDS.name());
       }
     }
