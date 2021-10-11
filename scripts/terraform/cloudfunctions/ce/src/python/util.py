@@ -22,6 +22,9 @@ UNIFIED = "unifiedTable"
 AWSCURPREFIX = "awscur"
 COSTAGGREGATED = "costAggregated"
 CEINTERNALDATASET = "CE_INTERNAL"
+GCPINSTANCEINVENTORY = "gcpInstanceInventory"
+GCPDISKINVENTORY = "gcpDiskInventory"
+
 
 def print_(message, severity="INFO"):
     # Set account id in the beginning of your CF call
@@ -118,11 +121,31 @@ def createTable(client, table_ref):
             type_=bigquery.TimePartitioningType.DAY,
             field="day"  # name of column to use for partitioning
         )
+    elif tableName.startswith(GCPINSTANCEINVENTORY):
+        fieldset = bq_schema.gcpInstanceInventorySchema
+        partition = bigquery.RangePartitioning(
+            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
+            field="projectNumberPartition"
+        )
+    elif tableName.startswith(GCPDISKINVENTORY):
+        fieldset = bq_schema.gcpDiskInventorySchema
+        partition = bigquery.RangePartitioning(
+            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
+            field="projectNumberPartition"
+        )
 
     for field in fieldset:
         if field.get("type") == "RECORD":
-            nested_field = [bigquery.SchemaField(nested_field["name"], nested_field["type"], mode=nested_field.get("mode", "")) for nested_field in field["fields"]]
-            schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"], fields=nested_field))
+            nested_fields = []
+            for nested_field in field["fields"]:
+                if nested_field.get("type") == "RECORD":
+                    inner_nested_fields = [bigquery.SchemaField(inner_nested_field["name"], inner_nested_field["type"],
+                                                                mode=inner_nested_field.get("mode", "")) for inner_nested_field in nested_field["fields"]]
+                    nested_fields.append(bigquery.SchemaField(nested_field["name"], nested_field["type"],
+                                                              mode=nested_field["mode"], fields=inner_nested_fields))
+                else:
+                    nested_fields.append(bigquery.SchemaField(nested_field["name"], nested_field["type"], mode=nested_field.get("mode", "")))
+            schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"], fields=nested_fields))
         else:
             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field.get("mode", "")))
     if not schema:
@@ -134,6 +157,7 @@ def createTable(client, table_ref):
         tableName.startswith(AWSCURPREFIX):
         table.time_partitioning = partition
     elif tableName.startswith(AWSEC2INVENTORY) or tableName.startswith(AWSEBSINVENTORY) or \
+            tableName.startswith(GCPINSTANCEINVENTORY) or tableName.startswith(GCPDISKINVENTORY) or\
             tableName in [CLUSTERDATA, CLUSTERDATAAGGREGATED, CLUSTERDATAHOURLY, CLUSTERDATAHOURLYAGGREGATED]:
         table.range_partitioning = partition
 

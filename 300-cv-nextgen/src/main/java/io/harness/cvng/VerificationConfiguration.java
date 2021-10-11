@@ -47,7 +47,6 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("nextGen") private NGManagerServiceConfig ngManagerServiceConfig;
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
-  @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;

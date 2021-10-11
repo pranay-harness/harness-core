@@ -183,7 +183,7 @@ for tfConfigInspectVersion in v1.0 v1.1; do
 
 done
 
-for scmVersion in 802ac188; do
+for scmVersion in 87448d72; do
   echo "Adding scm" $scmVersion
 
   SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"
@@ -279,7 +279,7 @@ function setupClientUtils() {
       cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
     done
 
-    for scmVersion in 802ac188; do
+    for scmVersion in 87448d72; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
       cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
     done

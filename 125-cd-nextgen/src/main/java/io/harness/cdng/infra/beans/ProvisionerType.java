@@ -1,7 +1,6 @@
 package io.harness.cdng.infra.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.cdng.pipeline.NGStepType.SHELL_SCRIPT;
 import static io.harness.cdng.pipeline.NGStepType.TERRAFORM_APPLY;
 import static io.harness.cdng.pipeline.NGStepType.TERRAFORM_DESTROY;
 import static io.harness.cdng.pipeline.NGStepType.TERRAFORM_PLAN;
@@ -25,7 +24,7 @@ public enum ProvisionerType {
 
   private static final Set<ProvisionerType> supportedTypes = ImmutableSet.of(TERRAFORM);
   private static final List<NGStepType> supportedSteps =
-      Arrays.asList(TERRAFORM_APPLY, TERRAFORM_PLAN, TERRAFORM_DESTROY, TERRAFORM_ROLLBACK, SHELL_SCRIPT);
+      Arrays.asList(TERRAFORM_APPLY, TERRAFORM_PLAN, TERRAFORM_DESTROY, TERRAFORM_ROLLBACK);
 
   @Getter private final String displayName;
   ProvisionerType(String displayName) {

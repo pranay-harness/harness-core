@@ -48,4 +48,6 @@ public interface ProjectService {
   boolean restore(String accountIdentifier, String orgIdentifier, String identifier);
 
   Map<String, Integer> getProjectsCountPerOrganization(String accountIdentifier, List<String> orgIdentifiers);
+
+  Long countProjects(String accountIdenifier);
 }

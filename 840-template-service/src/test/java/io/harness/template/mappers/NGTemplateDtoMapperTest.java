@@ -9,10 +9,10 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
+import io.harness.ng.core.template.TemplateEntityType;
+import io.harness.ng.core.template.TemplateSummaryResponseDTO;
 import io.harness.rule.Owner;
-import io.harness.template.beans.TemplateEntityType;
 import io.harness.template.beans.TemplateResponseDTO;
-import io.harness.template.beans.TemplateSummaryResponseDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 

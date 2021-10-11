@@ -194,7 +194,7 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		return nil, err
 	}
 
-	ref, err := gitclient.GetValidRef(*request.Provider, "", request.GetBranch())
+	ref, err := gitclient.GetValidRef(*request.Provider, request.GetRef(), request.GetBranch())
 	if err != nil {
 		log.Errorw("GetLatestCommit failure, bad ref/branch", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
@@ -207,7 +207,6 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		if response == nil {
 			return nil, err
 		}
-
 		// this is an error from the git provider
 		out = &pb.GetLatestCommitResponse{
 			Error:  err.Error(),
@@ -216,10 +215,16 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		return out, nil
 	}
 
+	commit, err := converter.ConvertCommit(refResponse)
+	if err != nil {
+		log.Errorw("GetLatestCommit convert commit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
 	log.Infow("GetLatestCommit success", "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.GetLatestCommitResponse{
 		CommitId: refResponse.Sha,
+		Commit:   commit,
 		Status:   int32(response.Status),
 	}
 	return out, nil

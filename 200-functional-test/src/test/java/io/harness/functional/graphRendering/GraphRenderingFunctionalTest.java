@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.GenericType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -105,6 +106,7 @@ public class GraphRenderingFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = POOJA)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testGraphWithoutAggregation() {
     resetCache(application.getAccountId());
     Workflow workflowNoAggregation = createNodeAggregationWorkflow(5);
@@ -146,6 +148,7 @@ public class GraphRenderingFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = POOJA, intermittent = true)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testGraphWithAggregation() {
     resetCache(application.getAccountId());
     Workflow workflowNoAggregation = createNodeAggregationWorkflow(20);

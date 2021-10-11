@@ -1,10 +1,10 @@
 package io.harness.repositories;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.connector.GitOpsProviderType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitopsprovider.entity.GitOpsProvider;
 
@@ -44,12 +44,11 @@ public class GitOpsProviderCustomRepositoryImpl implements GitOpsProviderCustomR
   }
 
   @Override
-  public Page<GitOpsProvider> findAll(
-      Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier, String searchTerm) {
+  public Page<GitOpsProvider> findAll(Pageable pageable, String projectIdentifier, String orgIdentifier,
+      String accountIdentifier, String searchTerm, GitOpsProviderType type) {
     final Criteria criteria = FilterUtils.getCriteria(accountIdentifier, orgIdentifier, projectIdentifier);
-    if (isNotEmpty(searchTerm)) {
-      FilterUtils.applySearchFilter(criteria, searchTerm);
-    }
+    FilterUtils.applySearchFilter(criteria, searchTerm);
+    FilterUtils.applySearchFilterForType(criteria, type);
     final Query query = new Query(criteria).with(pageable);
     List<GitOpsProvider> gitOpsProviders = mongoTemplate.find(query, GitOpsProvider.class);
     return PageableExecutionUtils.getPage(

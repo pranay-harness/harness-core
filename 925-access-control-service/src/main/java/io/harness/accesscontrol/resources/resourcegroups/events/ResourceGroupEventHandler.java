@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.resources.resourcegroups.events;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 
@@ -51,6 +52,9 @@ public class ResourceGroupEventHandler implements EventHandler {
               .orgIdentifier(stripToNull(resourceGroupEntityChangeDTO.getOrgIdentifier()))
               .projectIdentifier(stripToNull(resourceGroupEntityChangeDTO.getProjectIdentifier()))
               .build();
+      if (isEmpty(scopeParams.getAccountIdentifier())) {
+        return true;
+      }
       Scope scope = ScopeMapper.fromParams(scopeParams);
       if (getEventType(message).equals(DELETE_ACTION)) {
         harnessResourceGroupService.deleteIfPresent(stripToNull(resourceGroupEntityChangeDTO.getIdentifier()), scope);

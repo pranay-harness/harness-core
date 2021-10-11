@@ -112,7 +112,7 @@ public class ExecutionHelper {
 
   public ExecArgs buildExecutionArgs(PipelineEntity pipelineEntity, String moduleType, String mergedRuntimeInputYaml,
       List<String> stagesToRun, ExecutionTriggerInfo triggerInfo, String originalExecutionId, boolean isRetry,
-      String previousProcessedYaml, List<String> retryStagesIdentifier) {
+      String previousProcessedYaml, List<String> retryStagesIdentifier, List<String> identifierOfSkipStages) {
     final String executionId = generateUuid();
 
     ExecutionMetadata executionMetadata =
@@ -124,8 +124,9 @@ public class ExecutionHelper {
     if (EmptyPredicate.isNotEmpty(stagesToRun)) {
       stagesExecutionInfo = StagesExecutionHelper.getStagesExecutionInfo(pipelineYaml, stagesToRun);
     }
-    PlanExecutionMetadata planExecutionMetadata = obtainPlanExecutionMetadata(mergedRuntimeInputYaml, executionId,
-        stagesExecutionInfo, originalExecutionId, isRetry, previousProcessedYaml, retryStagesIdentifier);
+    PlanExecutionMetadata planExecutionMetadata =
+        obtainPlanExecutionMetadata(mergedRuntimeInputYaml, executionId, stagesExecutionInfo, originalExecutionId,
+            isRetry, previousProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
 
     return ExecArgs.builder().metadata(executionMetadata).planExecutionMetadata(planExecutionMetadata).build();
   }
@@ -166,7 +167,7 @@ public class ExecutionHelper {
 
   private PlanExecutionMetadata obtainPlanExecutionMetadata(String mergedRuntimeInputYaml, String executionId,
       StagesExecutionInfo stagesExecutionInfo, String originalExecutionId, boolean isRetry,
-      String previousProcessedYaml, List<String> retryStagesIdentifier) {
+      String previousProcessedYaml, List<String> retryStagesIdentifier, List<String> identifierOfSkipStages) {
     String pipelineYaml = stagesExecutionInfo.getPipelineYamlToRun();
     PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
         PlanExecutionMetadata.builder()
@@ -183,8 +184,8 @@ public class ExecutionHelper {
     }
     if (isRetry) {
       try {
-        currentProcessedYaml =
-            retryExecutionHelper.retryProcessedYaml(previousProcessedYaml, currentProcessedYaml, retryStagesIdentifier);
+        currentProcessedYaml = retryExecutionHelper.retryProcessedYaml(
+            previousProcessedYaml, currentProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
       } catch (IOException e) {
         log.error("Unable to get processed yaml. Previous Processed yaml:\n" + previousProcessedYaml, e);
         throw new InvalidYamlException("Unable to get processed yaml for retry.", e);
@@ -214,7 +215,8 @@ public class ExecutionHelper {
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier,
-      ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry) {
+      ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry,
+      List<String> identifierOfSkipStages, String previousExecutionId) {
     long startTs = System.currentTimeMillis();
     PlanCreationBlobResponse resp;
     try {
@@ -234,13 +236,15 @@ public class ExecutionHelper {
     log.info("Time taken to complete plan: {}", endTs - startTs);
 
     if (isRetry) {
-      return orchestrationService.retryExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+      Plan newPlan = retryExecutionHelper.transformPlan(plan, identifierOfSkipStages, previousExecutionId);
+      return orchestrationService.startExecution(newPlan, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
   }
 
   public PlanExecution startExecutionV2(String accountId, String orgIdentifier, String projectIdentifier,
-      ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry) {
+      ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry,
+      List<String> identifierOfSkipStages, String previousExecutionId) {
     long startTs = System.currentTimeMillis();
     String planCreationId = generateUuid();
     try {
@@ -268,7 +272,9 @@ public class ExecutionHelper {
       return PlanExecution.builder().build();
     }
     if (isRetry) {
-      return orchestrationService.retryExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+      Plan newPlan = retryExecutionHelper.transformPlan(plan, identifierOfSkipStages, previousExecutionId);
+      return orchestrationService.startExecutionV2(
+          planCreationId, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecutionV2(
         planCreationId, abstractions, executionMetadata, planExecutionMetadata);

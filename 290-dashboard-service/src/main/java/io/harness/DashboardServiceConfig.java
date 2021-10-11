@@ -25,6 +25,8 @@ public class DashboardServiceConfig extends Configuration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("cdServiceClientConfig") private ServiceHttpClientConfig cdServiceClientConfig;
   @JsonProperty("ciServiceClientConfig") private ServiceHttpClientConfig ciServiceClientConfig;
+  @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
+  @JsonProperty("secrets") private DashboardSecretsConfig dashboardSecretsConfig;
 
   public static Collection<Class<?>> getResourceClasses() {
     // todo @Deepak: Add the packages here in the reflection

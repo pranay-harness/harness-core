@@ -238,4 +238,6 @@ spec:
           value: ""
         - name: ENABlE_CE
           value: "${enableCE}"
+        - name: VERSION_CHECK_DISABLED
+          value: "${versionCheckDisabled}"
       restartPolicy: Always

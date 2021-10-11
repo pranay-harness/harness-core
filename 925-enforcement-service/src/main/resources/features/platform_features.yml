@@ -1,0 +1,121 @@
+moduleType: CORE
+clients:
+  - name: ngmanager
+    clientConfig: ngManagerClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
+  - name: pipelineService
+    clientConfig: pipelineServiceClientConfig
+    secretConfig: nextGenConfig.pipelineServiceSecret
+  - name: accesscontrol
+    clientConfig: accessControlClientConfiguration.accessControlServiceConfig
+    secretConfig: accessControlClientConfiguration.accessControlServiceSecret
+features:
+  # Feature availability example
+  # TEST1 feature
+  # FREE is disabled, TEAM and ENTERPRISE are enabled
+  - name: MULTIPLE_ORGANIZATIONS
+    description: Allow creating multiple organizations within a account
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 1
+        clientName: ngmanager
+      TEAM:
+        restrictionType: STATIC_LIMIT
+        limit: 1
+        clientName: ngmanager
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  # Static limit example
+  # Test2 feature
+  # Free is disabled, TEAM have a 10 limit, ENTERPRISE is unlimited.
+  - name: MULTIPLE_PROJECTS
+    description: Allow creating multiple projects within a organization
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: SECRET_MANAGERS
+    description: Allow creating secret managers
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: SAML_SUPPORT
+    description: Allow configuring SAML Providers
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: OAUTH_SUPPORT
+    description: Allow configuring OAUTH providers
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: TWO_FACTOR_AUTH_SUPPORT
+    description: Allow two factor authentication
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: LDAP_SUPPORT
+    description: Allow LDAP provider configuration
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: CUSTOM_ROLES
+    description: Allow creating custom roles
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true

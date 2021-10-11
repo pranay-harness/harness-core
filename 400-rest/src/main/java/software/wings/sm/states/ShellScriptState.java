@@ -138,7 +138,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
   // Please use delegateselectors instead, tags is not longer used but cannot be removed to support older workflows
-  @Deprecated @NotEmpty @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
+  @NotEmpty @Getter @Setter @Attributes(title = "Tags") @Deprecated private List<String> tags;
 
   @NotEmpty @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 

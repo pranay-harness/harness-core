@@ -1,8 +1,12 @@
 package software.wings.helpers.ext.azure;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.Data;
 
 @Data
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
 public class AksGetCredentialsResponse {
   private String id;
   private String location;

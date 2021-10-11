@@ -6,9 +6,9 @@ import static io.harness.cvng.alert.entities.AlertRuleAnomaly.AlertRuleAnomalySt
 import static io.harness.cvng.alert.util.VerificationStatus.VERIFICATION_FAILED;
 import static io.harness.cvng.alert.util.VerificationStatus.VERIFICATION_PASSED;
 import static io.harness.cvng.beans.activity.ActivityType.CONFIG;
-import static io.harness.cvng.beans.activity.ActivityType.CUSTOM;
 import static io.harness.cvng.beans.activity.ActivityType.DEPLOYMENT;
 import static io.harness.cvng.beans.activity.ActivityType.HARNESS_CD;
+import static io.harness.cvng.beans.activity.ActivityType.HARNESS_CD_CURRENT_GEN;
 import static io.harness.cvng.beans.activity.ActivityType.INFRASTRUCTURE;
 import static io.harness.cvng.beans.activity.ActivityType.KUBERNETES;
 import static io.harness.cvng.beans.activity.ActivityType.OTHER;
@@ -210,7 +210,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
 
     assertThat(activityTypes).isNotNull();
     assertThat(activityTypes)
-        .containsExactly(DEPLOYMENT, INFRASTRUCTURE, CUSTOM, CONFIG, OTHER, KUBERNETES, HARNESS_CD, PAGER_DUTY);
+        .containsExactly(
+            DEPLOYMENT, INFRASTRUCTURE, CONFIG, OTHER, KUBERNETES, HARNESS_CD, PAGER_DUTY, HARNESS_CD_CURRENT_GEN);
   }
 
   @Test
@@ -961,7 +962,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessDeploymentVerification_AllActivityTypesDifferentVerificationStatus_ChannelIsNotNotified() {
     VerificationsNotify verificationsNotify =
         VerificationsNotify.builder()
-            .activityTypes(Arrays.asList(DEPLOYMENT, INFRASTRUCTURE, CUSTOM, CONFIG, KUBERNETES))
+            .activityTypes(Arrays.asList(DEPLOYMENT, INFRASTRUCTURE, CONFIG, KUBERNETES))
             .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
             .build();
 

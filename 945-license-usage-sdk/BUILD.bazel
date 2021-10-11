@@ -9,10 +9,12 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//948-access-control-sdk:module",
+        "//960-ng-core-beans:module",
         "//960-ng-license-usage-beans:module",
         "//970-ng-commons:module",
         "//980-commons:module",
         "@maven//:com_google_inject_guice",
+        "@maven//:io_swagger_core_v3_swagger_annotations",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],

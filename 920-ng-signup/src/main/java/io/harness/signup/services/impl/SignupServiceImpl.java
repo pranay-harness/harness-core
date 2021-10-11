@@ -469,20 +469,16 @@ public class SignupServiceImpl implements SignupService {
 
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(userInfo.getEmail(), properties,
-        ImmutableMap.<Destination, Boolean>builder()
-            .put(Destination.SALESFORCE, true)
-            .put(Destination.MARKETO, true)
-            .build());
-    // Wait 1 minute, to ensure identify is sent before track
+        ImmutableMap.<Destination, Boolean>builder().put(Destination.MARKETO, true).build());
+    telemetryReporter.flush();
+
+    // Wait 20 seconds, to ensure identify is sent before track
     ScheduledExecutorService tempExecutor = Executors.newSingleThreadScheduledExecutor();
-    tempExecutor.schedule(()
-                              -> telemetryReporter.sendTrackEvent(SUCCEED_EVENT_NAME, email, accountId, properties,
-                                  ImmutableMap.<Destination, Boolean>builder()
-                                      .put(Destination.SALESFORCE, true)
-                                      .put(Destination.MARKETO, true)
-                                      .build(),
-                                  Category.SIGN_UP),
-        1, TimeUnit.MINUTES);
+    tempExecutor.schedule(
+        ()
+            -> telemetryReporter.sendTrackEvent(SUCCEED_EVENT_NAME, email, accountId, properties,
+                ImmutableMap.<Destination, Boolean>builder().put(Destination.MARKETO, true).build(), Category.SIGN_UP),
+        20, TimeUnit.SECONDS);
     log.info("Signup telemetry sent");
   }
 
@@ -491,12 +487,16 @@ public class SignupServiceImpl implements SignupService {
     properties.put("email", email);
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
     addUtmInfoToProperties(utmInfo, properties);
-    telemetryReporter.sendTrackEvent(SUCCEED_SIGNUP_INVITE_NAME, email, UNDEFINED_ACCOUNT_ID, properties,
-        ImmutableMap.<Destination, Boolean>builder()
-            .put(Destination.SALESFORCE, true)
-            .put(Destination.MARKETO, true)
-            .build(),
-        Category.SIGN_UP);
+    telemetryReporter.sendIdentifyEvent(
+        email, properties, ImmutableMap.<Destination, Boolean>builder().put(Destination.MARKETO, true).build());
+    telemetryReporter.flush();
+
+    ScheduledExecutorService tempExecutor = Executors.newSingleThreadScheduledExecutor();
+    tempExecutor.schedule(
+        ()
+            -> telemetryReporter.sendTrackEvent(SUCCEED_SIGNUP_INVITE_NAME, email, UNDEFINED_ACCOUNT_ID, properties,
+                ImmutableMap.<Destination, Boolean>builder().put(Destination.MARKETO, true).build(), Category.SIGN_UP),
+        20, TimeUnit.SECONDS);
     log.info("Signup invite telemetry sent");
   }
 

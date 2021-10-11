@@ -18,6 +18,7 @@ public enum QLAccountPermissionType implements QLEnum {
   ADMINISTER_OTHER_ACCOUNT_FUNCTIONS,
   VIEW_AUDITS,
   MANAGE_TAGS,
+  MANAGE_ACCOUNT_DEFAULTS,
   ADMINISTER_CE,
   VIEW_CE,
   /**

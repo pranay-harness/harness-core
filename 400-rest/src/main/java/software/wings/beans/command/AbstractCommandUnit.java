@@ -35,7 +35,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
   @SchemaIgnore private boolean artifactNeeded;
-  @Deprecated @SchemaIgnore private String deploymentType;
+  @SchemaIgnore @Deprecated private String deploymentType;
   private List<Variable> variables = new ArrayList<>();
   /**
    * Instantiates a new Command unit.

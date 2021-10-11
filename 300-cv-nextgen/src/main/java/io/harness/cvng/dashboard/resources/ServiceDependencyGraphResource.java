@@ -35,13 +35,17 @@ public class ServiceDependencyGraphResource {
       @QueryParam("accountId") @ApiParam(required = true) @NotNull final String accountId,
       @QueryParam("orgIdentifier") @ApiParam(required = true) @NotNull final String orgIdentifier,
       @QueryParam("projectIdentifier") @ApiParam(required = true) @NotNull final String projectIdentifier,
+      @QueryParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("envIdentifier") String envIdentifier, @QueryParam("serviceIdentifier") String serviceIdentifier) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)
                                       .projectIdentifier(projectIdentifier)
                                       .build();
+    if (environmentIdentifier == null) {
+      environmentIdentifier = envIdentifier;
+    }
     return new RestResponse<>(
-        serviceDependencyGraphService.getDependencyGraph(projectParams, serviceIdentifier, envIdentifier));
+        serviceDependencyGraphService.getDependencyGraph(projectParams, serviceIdentifier, environmentIdentifier));
   }
 }

@@ -15,5 +15,6 @@ public class BasicStageInfo {
   String identifier;
   String name;
   String type;
+  String yaml;
   List<String> stagesRequired;
 }

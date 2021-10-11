@@ -62,19 +62,4 @@ public class GitSyncErrorUtilsTest extends CategoryTest {
     String yamlContentOfGitToHarness = GitSyncErrorUtils.getYamlContentOfError(gitToHarnessError);
     assertThat(yamlContentOfGitToHarness).isEqualTo(yamlContent);
   }
-
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
-  public void testgetCommitTimeOfError() {
-    Long commitTime = 123L;
-    GitToHarnessErrorDetails gitToHarnessErrorDetails =
-        GitToHarnessErrorDetails.builder().commitTime(commitTime).build();
-    GitSyncError gitToHarnessError = GitSyncError.builder()
-                                         .errorType(GitSyncErrorType.GIT_TO_HARNESS)
-                                         .additionalErrorDetails(gitToHarnessErrorDetails)
-                                         .build();
-    Long commitTimeOfGitToHarness = GitSyncErrorUtils.getCommitTimeOfError(gitToHarnessError);
-    assertThat(commitTimeOfGitToHarness).isEqualTo(commitTime);
-  }
 }

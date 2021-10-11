@@ -125,6 +125,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -842,8 +843,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return approvalStateExecutionsData;
   }
 
-  @VisibleForTesting
-  void refreshPipelineExecution(WorkflowExecution workflowExecution) {
+  @Override
+  public void refreshPipelineExecution(WorkflowExecution workflowExecution) {
     if (workflowExecution == null || workflowExecution.getPipelineExecution() == null) {
       return;
     }
@@ -1368,7 +1369,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String accountId = appService.getAccountIdByAppId(appId);
 
     User user = UserThreadLocal.get();
-    if (trigger == null && user != null) {
+    boolean shouldAuthorizeExecution = trigger == null && user != null;
+    if (shouldAuthorizeExecution) {
       deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
       if (isNotEmpty(pipeline.getEnvIds())) {
         pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
@@ -1393,7 +1395,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 ? PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1)
                 : pipeline.getEnvIds()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+    /*
+    Following scenarios cannot override freeze
+    1. triggers without API key
+    2. triggers with API key which don't have override freeze permission
+    3. users without override freeze permission
+     */
+    boolean canOverrideFreeze = user != null && checkIfOverrideFreeze();
+
+    if (!canOverrideFreeze) {
+      deploymentFreezeChecker.check(accountId);
+    }
 
     if (isEmpty(pipeline.getPipelineStages())) {
       throw new WingsException("You can not deploy an empty pipeline.", WingsException.USER);
@@ -1426,6 +1438,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                               .workflowType(WorkflowType.PIPELINE)
                                               .stateMachine(stateMachine)
                                               .name(pipeline.getName())
+                                              .canOverrideFreeze(canOverrideFreeze)
                                               .build();
 
     constructBarriers(pipeline, workflowExecution.getUuid());
@@ -1485,6 +1498,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     return triggerExecution(
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
+  }
+
+  private boolean checkIfOverrideFreeze() {
+    boolean canOverrideFreeze = true;
+    try {
+      deploymentAuthHandler.authorizeDeploymentDuringFreeze();
+    } catch (AccessDeniedException | InvalidRequestException e) {
+      log.info("User can not override deployment freezes. Performing deployment freeze checks...");
+      canOverrideFreeze = false;
+    }
+    return canOverrideFreeze;
   }
 
   // validations to check is a deployment should be allowed or not
@@ -1549,8 +1573,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
     envId = resolveEnvId != null ? resolveEnvId : envId;
     User user = UserThreadLocal.get();
+    boolean shouldAuthorizeExecution = trigger == null && user != null;
+
     // The workflow execution is direct workflow execution and not in Pipeline or trigger.
-    if (trigger == null && user != null && isEmpty(pipelineExecutionId)) {
+    boolean isDirectExecution = trigger == null && user != null && isEmpty(pipelineExecutionId);
+    if (isDirectExecution) {
       deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
       authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
     }
@@ -1568,7 +1595,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
         new DeploymentCtx(appId, isNotEmpty(envId) ? Collections.singletonList(envId) : Collections.emptyList()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+
+    // Check deployment freeze conditions for both direct workflow or pipeline executions
+    // Freeze can be override only for manual deployments, trigger based deployments are rejected when freeze active
+    boolean canOverrideFreeze = false;
+    if (featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)) {
+      if (isNotEmpty(pipelineExecutionId)) {
+        WorkflowExecution pipelineExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                  .project(WorkflowExecutionKeys.canOverrideFreeze, true)
+                                                  .filter(WorkflowExecutionKeys.uuid, pipelineExecutionId)
+                                                  .get();
+        canOverrideFreeze = pipelineExecution.isCanOverrideFreeze();
+      } else {
+        canOverrideFreeze = user != null && checkIfOverrideFreeze();
+      }
+    }
+    if (!canOverrideFreeze) {
+      deploymentFreezeChecker.check(accountId);
+    }
+
     checkPreDeploymentConditions(accountId, appId);
 
     workflow.setOrchestrationWorkflow(
@@ -1587,6 +1632,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stateMachine.setOrchestrationWorkflow(null);
 
+    // pipelineExecutionId
     WorkflowExecution workflowExecution = workflowExecutionServiceHelper.obtainExecution(
         workflow, stateMachine, resolveEnvId, pipelineExecutionId, executionArgs);
 
@@ -2548,6 +2594,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     wingsPersistence.update(query, updateOps);
   }
 
+  private void updateOverrideFreeze(String pipelineExecutionId, boolean canOverrideFreeze) {
+    Query<WorkflowExecution> query =
+        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecutionKeys.uuid, pipelineExecutionId);
+
+    UpdateOperations<WorkflowExecution> updateOps =
+        wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+            .set(WorkflowExecutionKeys.canOverrideFreeze, canOverrideFreeze);
+
+    wingsPersistence.update(query, updateOps);
+  }
+
   private void updateWorkflowExecutionArtifactsAndArtifactVariables(String appId, String workflowExecutionId,
       List<Artifact> workflowExecutionArtifacts, List<Artifact> executionArgsArtifacts,
       List<ArtifactVariable> executionArgsArtifactVariables) {
@@ -2691,7 +2748,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     pipeline, parallelIndexToResume)
                 : pipeline.getEnvIds()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+
+    User user = UserThreadLocal.get();
+    boolean canOverrideFreeze = user != null && checkIfOverrideFreeze();
+    if (!canOverrideFreeze) {
+      deploymentFreezeChecker.check(accountId);
+    }
+
     WorkflowExecution currWorkflowExecution =
         triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
             prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
@@ -2981,7 +3044,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
         new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+    User user = UserThreadLocal.get();
+    boolean canOverrideFreeze = user != null && checkIfOverrideFreeze();
+    if (!canOverrideFreeze) {
+      deploymentFreezeChecker.check(accountId);
+    }
 
     // Not including instance limit and deployment limit check as it is a emergency rollback
     accountExpirationChecker.check(accountId);
@@ -3368,6 +3435,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowExecution pipelineExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, pipelineExecutionId);
+
+    // check triggered continue
     notNullCheck("Invalid executionId: " + pipelineExecutionId, pipelineExecution);
     // Map WF variables from pipeline variables
     if (isNotEmpty(executionArgs.getArtifacts())) {
@@ -3379,6 +3448,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     Map<String, String> wfVariables =
         validateContinuePipeline(appId, pipelineExecution, pipelineStageElementId, executionArgs);
+
+    // Update User permission who submits the runtime inputs
+    updateOverrideFreeze(pipelineExecutionId, pipelineExecution.isCanOverrideFreeze());
 
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstancePipelineStage(appId, pipelineExecutionId, pipelineStageElementId);
@@ -3585,7 +3657,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           new DeploymentCtx(
               appId, envIdInStage != null ? Collections.singletonList(envIdInStage) : Collections.emptyList()),
           environmentService, featureFlagService);
-      deploymentFreezeChecker.check(pipelineExecution.getAccountId());
+      User user = UserThreadLocal.get();
+      // update user permissions when pipeline continues with runtime inputs
+      boolean canOverrideFreeze = user != null && checkIfOverrideFreeze();
+      pipelineExecution.setCanOverrideFreeze(canOverrideFreeze);
+      if (!canOverrideFreeze) {
+        deploymentFreezeChecker.check(pipelineExecution.getAccountId());
+      }
     }
     List<String> extraVars = new ArrayList<>();
     List<String> runtimeKeys =

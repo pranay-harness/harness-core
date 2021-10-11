@@ -13,6 +13,8 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -33,9 +35,11 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import com.google.inject.Inject;
 import java.util.Collections;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class WorkflowExecutionTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private WorkflowGenerator workflowGenerator;
@@ -67,6 +71,7 @@ public class WorkflowExecutionTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = GEORGE)
   @Category({FunctionalTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void fetchExecutionsInRange() throws Exception {
     final Seed seed = new Seed(0);
     Owners owners = ownerManager.create();

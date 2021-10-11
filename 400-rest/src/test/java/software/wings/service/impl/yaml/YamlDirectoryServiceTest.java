@@ -200,6 +200,9 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(appNode.getShortClassName()).isEqualTo("Application");
 
     for (DirectoryNode node : appNode.getChildren()) {
+      if (node == null) {
+        continue;
+      }
       assertThat(node.getAccountId()).isEqualTo(ACCOUNT_ID);
 
       switch (node.getName()) {
@@ -246,6 +249,10 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
           FolderNode triggerFolderNode =
               validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Triggers");
           performTriggerNodeValidation(triggerFolderNode);
+          break;
+        case "Event Rules":
+          FolderNode cgEventConfigFolderNode =
+              validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Event Rules");
           break;
         default:
           throw new IllegalArgumentException("Unknown node name: " + node.getName());

@@ -158,7 +158,7 @@ public class TriggerExecutionHelper {
 
       PlanExecution planExecution = executionHelper.startExecution(ngTriggerEntity.getAccountId(),
           ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), executionMetaDataBuilder.build(),
-          planExecutionMetadataBuilder.build(), false);
+          planExecutionMetadataBuilder.build(), false, null, null);
       // check if abort prev execution needed.
       requestPipelineExecutionAbortForSameExecTagIfNeeded(triggerDetails, planExecution, executionTagForGitEvent);
       return planExecution;
@@ -214,10 +214,10 @@ public class TriggerExecutionHelper {
   @VisibleForTesting
   TriggerType findTriggerType(TriggerPayload triggerPayload) {
     TriggerType triggerType = WEBHOOK;
-    if (triggerPayload.getSourceType() == SourceType.CUSTOM_REPO) {
-      triggerType = WEBHOOK_CUSTOM;
-    } else if (triggerPayload.getType() == Type.SCHEDULED) {
+    if (triggerPayload.getType() == Type.SCHEDULED) {
       triggerType = TriggerType.SCHEDULER_CRON;
+    } else if (triggerPayload.getSourceType() == SourceType.CUSTOM_REPO) {
+      triggerType = WEBHOOK_CUSTOM;
     }
 
     return triggerType;

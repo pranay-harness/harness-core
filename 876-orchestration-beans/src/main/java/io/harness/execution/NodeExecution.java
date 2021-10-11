@@ -19,7 +19,6 @@ import io.harness.plan.NodeType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -73,7 +72,7 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   // Immutable
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull Ambiance ambiance;
-  @Deprecated @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) @NotNull PlanNodeProto node;
+  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) @NotNull @Deprecated PlanNodeProto node;
   @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) Node planNode;
   @NotNull ExecutionMode mode;
   @Wither @FdIndex @CreatedDate Long createdAt;
@@ -115,8 +114,6 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   List<String> timeoutInstanceIds;
   TimeoutDetails timeoutDetails;
 
-  List<StepOutcomeRef> outcomeRefs;
-
   @Singular List<UnitProgress> unitProgresses;
 
   Map<String, Object> progressData;
@@ -156,11 +153,21 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
 
     public static final String planNodeId = NodeExecutionKeys.planNode + "."
         + "uuid";
+
+    public static final String nodeId = NodeExecutionKeys.node + "."
+        + "uuid";
+
     public static final String planNodeIdentifier = NodeExecutionKeys.planNode + "."
         + "identifier";
+    public static final String planNodeStepCategory = NodeExecutionKeys.planNode + "."
+        + "stepType"
+        + "."
+        + "stepCategory";
 
     public static final String nodeIdentifier = NodeExecutionKeys.node + "."
         + "identifier";
+    public static final String stageFqn = NodeExecutionKeys.planNode + "."
+        + "stageFqn";
   }
 
   public static class NodeExecutionBuilder {
@@ -235,6 +242,22 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
                  .name("planExecutionId_step_category_idx")
                  .field(NodeExecutionKeys.planExecutionId)
                  .field(NodeExecutionKeys.stepCategory)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_nodeIdentifier_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.nodeIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_stepCategory_planNodeIdentifier_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.planNodeStepCategory)
+                 .field(NodeExecutionKeys.planNodeIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_stageFqn_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.stageFqn)
                  .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();

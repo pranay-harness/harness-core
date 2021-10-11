@@ -44,6 +44,7 @@ encryptedRecords {"name": "ngSecretManagerIdx", "background": true} {"ngMetadata
 encryptedRecords {"name": "ngSecretManagerTypeIdx", "background": true} {"accountId": 1, "type": 1, "createdAt": 1}
 encryptedRecords {"name": "parents_1", "background": true} {"parents": 1}
 encryptedRecords {"name": "path_1", "background": true} {"path": 1}
+environmentsNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 featureFlag {"name": "name_1", "background": true} {"name": 1}
 filters {"name": "unique_accountId_orgId_projectId_name_type_Index", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "name": 1, "filterType": 1}
 filters {"name": "unique_accountId_organizationId_projectId_type", "unique": true} {"fullyQualifiedIdentifier": 1, "filterType": 1}

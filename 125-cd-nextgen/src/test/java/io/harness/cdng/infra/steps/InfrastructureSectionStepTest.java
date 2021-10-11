@@ -5,19 +5,15 @@ import static io.harness.rule.OwnerRule.ACHYUTH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.environment.beans.Environment;
-import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
@@ -31,7 +27,6 @@ import io.harness.tasks.ResponseData;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +40,6 @@ import org.mockito.junit.MockitoRule;
 @OwnedBy(HarnessTeam.CDP)
 public class InfrastructureSectionStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Mock EnvironmentService environmentService;
   @InjectMocks private InfrastructureSectionStep infrastructureSectionStep;
 
   @Mock ExecutionSweepingOutputService executionSweepingOutputService;
@@ -109,13 +103,7 @@ public class InfrastructureSectionStepTest extends CategoryTest {
 
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
 
-    Optional<Environment> optionalEnvironment = Optional.of(Environment.builder().build());
-    when(executionSweepingOutputService.consume(any(), any(), any(), any())).thenReturn("xyz");
-    when(environmentService.get(any(), any(), any(), any(), anyBoolean())).thenReturn(optionalEnvironment);
-
     assertThat(infrastructureSectionStep.obtainChildAfterRbac(ambiance, stepParameters, stepInputPackage)).isNotNull();
-    verify(executionSweepingOutputService, times(1)).consume(any(), any(), any(), any());
-    verify(environmentService, times(1)).get(any(), any(), any(), any(), anyBoolean());
   }
 
   @Test

@@ -71,8 +71,18 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       throw new InvalidRequestException("ServiceConfig Section cannot be absent in a pipeline");
     }
 
-    PlanCreationResponse servicePlanCreationResponse = ServicePMSPlanCreator.createPlanForServiceNode(
-        serviceField, ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer);
+    YamlField infraField = specField.getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
+    if (infraField == null) {
+      throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
+    }
+
+    PipelineInfrastructure pipelineInfrastructure = ((DeploymentStageConfig) field.getStageType()).getInfrastructure();
+    PipelineInfrastructure actualInfraConfig =
+        InfrastructurePmsPlanCreator.getActualInfraConfig(pipelineInfrastructure, infraField);
+
+    PlanCreationResponse servicePlanCreationResponse = ServicePMSPlanCreator.createPlanForServiceNode(serviceField,
+        ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer,
+        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""));
     planCreationResponseMap.put(servicePlanCreationResponse.getStartingNodeId(),
         PlanCreationResponse.builder().nodes(servicePlanCreationResponse.getNodes()).build());
 
@@ -83,15 +93,6 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
         specPlanNode.getUuid(), PlanCreationResponse.builder().node(specPlanNode.getUuid(), specPlanNode).build());
 
     // Adding infrastructure node
-    YamlField infraField = specField.getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
-    if (infraField == null) {
-      throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
-    }
-
-    PipelineInfrastructure pipelineInfrastructure = ((DeploymentStageConfig) field.getStageType()).getInfrastructure();
-    PipelineInfrastructure actualInfraConfig =
-        InfrastructurePmsPlanCreator.getActualInfraConfig(pipelineInfrastructure, infraField);
-
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(pipelineInfrastructure, infraField);
     planCreationResponseMap.put(
         infraStepNode.getUuid(), PlanCreationResponse.builder().node(infraStepNode.getUuid(), infraStepNode).build());

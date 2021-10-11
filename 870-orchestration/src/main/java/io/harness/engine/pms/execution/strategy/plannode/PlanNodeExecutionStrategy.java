@@ -19,6 +19,7 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.advise.AdviseHandlerFactory;
 import io.harness.engine.pms.advise.AdviserResponseHandler;
 import io.harness.engine.pms.advise.NodeAdviseHelper;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.execution.strategy.EndNodeExecutionHelper;
 import io.harness.engine.pms.execution.strategy.NodeExecutionStrategy;
 import io.harness.engine.pms.resume.NodeResumeHelper;
@@ -28,6 +29,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.NodeExecutionMetadata;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -65,7 +67,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode> {
+public class PlanNodeExecutionStrategy
+    implements NodeExecutionStrategy<PlanNode, NodeExecution, NodeExecutionMetadata> {
   @Inject private Injector injector;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
@@ -80,10 +83,11 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
   @Inject private NodeResumeHelper resumeHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private OrchestrationEngine orchestrationEngine;
+  @Inject private PmsOutcomeService outcomeService;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
-  public void triggerNode(Ambiance ambiance, PlanNode node) {
+  public NodeExecution triggerNode(Ambiance ambiance, PlanNode node, NodeExecutionMetadata metadata) {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
@@ -104,9 +108,10 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
             .unitProgresses(new ArrayList<>())
             .startTs(AmbianceUtils.getCurrentLevelStartTs(cloned))
             .build();
-    nodeExecutionService.save(nodeExecution);
+    NodeExecution save = nodeExecutionService.save(nodeExecution);
     // TODO: Should add to an execution queue rather than submitting straight to thread pool
     executorService.submit(() -> startExecution(cloned));
+    return save;
   }
 
   @Override
@@ -243,7 +248,7 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
       PlanNode planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
                                                 .nodeUuid(planNode.getUuid())
-                                                .stepOutcomeRefs(nodeExecution.getOutcomeRefs())
+                                                .stepOutcomeRefs(outcomeService.fetchOutcomeRefs(nodeExecutionId))
                                                 .failureInfo(nodeExecution.getFailureInfo())
                                                 .identifier(planNode.getIdentifier())
                                                 .group(planNode.getGroup())
