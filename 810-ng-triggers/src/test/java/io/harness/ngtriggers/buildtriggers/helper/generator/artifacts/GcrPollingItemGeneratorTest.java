@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.buildtriggers.helper.generator;
+package io.harness.ngtriggers.buildtriggers.helper.generator.artifacts;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.dto.PollingConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.buildtriggers.helper.generator.PollingItemGeneratorTestHelper;
 import io.harness.ngtriggers.buildtriggers.helpers.BuildTriggerHelper;
 import io.harness.ngtriggers.buildtriggers.helpers.dtos.BuildTriggerOpsData;
 import io.harness.ngtriggers.buildtriggers.helpers.generator.GcrPollingItemGenerator;
@@ -64,7 +65,7 @@ public class GcrPollingItemGeneratorTest extends CategoryTest {
         triggerDetails, gcr_pipeline_artifact_snippet_runtime_tagonly);
     PollingItem pollingItem = gcrPollingItemGenerator.generatePollingItem(buildTriggerOpsData);
 
-    PollingItemGeneratorTestHelper.baseAssert(pollingItem);
+    PollingItemGeneratorTestHelper.baseAssert(pollingItem, io.harness.polling.contracts.Category.ARTIFACT);
 
     assertThat(pollingItem.getPollingPayloadData()).isNotNull();
     assertThat(pollingItem.getPollingPayloadData().getConnectorRef()).isEqualTo("conn");
@@ -85,7 +86,7 @@ public class GcrPollingItemGeneratorTest extends CategoryTest {
         triggerDetails, gcr_pipeline_artifact_snippet_runtime_all);
     PollingItem pollingItem = gcrPollingItemGenerator.generatePollingItem(buildTriggerOpsData);
 
-    PollingItemGeneratorTestHelper.baseAssert(pollingItem);
+    PollingItemGeneratorTestHelper.baseAssert(pollingItem, io.harness.polling.contracts.Category.ARTIFACT);
 
     assertThat(pollingItem.getPollingPayloadData()).isNotNull();
     assertThat(pollingItem.getPollingPayloadData().getConnectorRef()).isEqualTo("account.conn");
