@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
@@ -21,6 +22,7 @@ import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
 import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.cdng.services.impl.CVNGStep.CVNGResponseData;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
@@ -32,12 +34,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
   @Inject private CVNGStepTaskService cvngStepTaskService;
   @Inject private HPersistence hPersistence;
   @Mock private ActivityService activityService;
+  @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
   BuilderFactory builderFactory;
   @Before
@@ -46,6 +50,7 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
     builderFactory = BuilderFactory.getDefault();
     FieldUtils.writeField(cvngStepTaskService, "activityService", activityService, true);
     FieldUtils.writeField(cvngStepTaskService, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(cvngStepTaskService, "verificationJobInstanceService", verificationJobInstanceService, true);
   }
   @Test
   @Owner(developers = KAMAL)
@@ -88,18 +93,31 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
                                               .progressPercentage(100)
                                               .durationMs(Duration.ofMinutes(30).toMillis())
                                               .build();
-    when(activityService.getActivityStatus(eq(accountId), eq(activityId))).thenReturn(activityStatusDTO);
+    DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        DeploymentVerificationJobInstanceSummary.builder()
+            .status(ActivityVerificationStatus.VERIFICATION_PASSED)
+            .progressPercentage(100)
+            .durationMs(Duration.ofMinutes(30).toMillis())
+            .activityId(activityId)
+            .build();
+    when(verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(Mockito.anyList()))
+        .thenReturn(deploymentVerificationJobInstanceSummary);
     cvngStepTaskService.create(builderFactory.cvngStepTaskBuilder()
                                    .accountId(accountId)
                                    .activityId(activityId)
                                    .callbackId(activityId)
+                                   .verificationJobInstanceId(generateUuid())
                                    .status(Status.IN_PROGRESS)
                                    .build());
     cvngStepTaskService.notifyCVNGStep(get(activityId));
     assertThat(get(activityId).getStatus()).isEqualTo(Status.DONE);
     verify(waitNotifyEngine, times(1))
         .doneWith(eq(activityId),
-            eq(CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
+            eq(CVNGResponseData.builder()
+                    .activityId(activityId)
+                    .verifyStepExecutionId(activityId)
+                    .activityStatusDTO(activityStatusDTO)
+                    .build()));
   }
 
   @Test
@@ -131,7 +149,15 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
                                               .progressPercentage(100)
                                               .durationMs(Duration.ofMinutes(30).toMillis())
                                               .build();
-    when(activityService.getActivityStatus(eq(accountId), eq(activityId))).thenReturn(activityStatusDTO);
+    DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        DeploymentVerificationJobInstanceSummary.builder()
+            .status(ActivityVerificationStatus.IN_PROGRESS)
+            .progressPercentage(100)
+            .durationMs(Duration.ofMinutes(30).toMillis())
+            .activityId(activityId)
+            .build();
+    when(verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(Mockito.anyList()))
+        .thenReturn(deploymentVerificationJobInstanceSummary);
     cvngStepTaskService.create(builderFactory.cvngStepTaskBuilder()
                                    .accountId(accountId)
                                    .activityId(activityId)
@@ -142,7 +168,11 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
     assertThat(get(activityId).getStatus()).isEqualTo(Status.IN_PROGRESS);
     verify(waitNotifyEngine, times(1))
         .progressOn(eq(activityId),
-            eq(CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
+            eq(CVNGResponseData.builder()
+                    .activityId(activityId)
+                    .verifyStepExecutionId(activityId)
+                    .activityStatusDTO(activityStatusDTO)
+                    .build()));
   }
 
   private CVNGStepTask get(String callbackId) {
