@@ -101,8 +101,15 @@ public class GitBuildStatusUtility {
         commitSha = codebaseSweepingOutput.getCommitSha();
       }
     }
+    if (commitSha == null && buildStatusUpdateParameter != null) {
+      /* This will be used only in case of sending running state of stage build
 
-    if (buildStatusUpdateParameter != null && optionalSweepingOutput.isFound() && isNotEmpty(commitSha)) {
+      Running state status will not work for manual executed builds
+       */
+      commitSha = buildStatusUpdateParameter.getSha();
+    }
+
+    if (buildStatusUpdateParameter != null && isNotEmpty(commitSha)) {
       CIBuildStatusPushParameters ciBuildStatusPushParameters =
           getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, status, commitSha);
 
