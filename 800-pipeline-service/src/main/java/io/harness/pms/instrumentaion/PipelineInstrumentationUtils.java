@@ -11,6 +11,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
@@ -33,6 +34,14 @@ public class PipelineInstrumentationUtils {
     return EngineExceptionUtils.transformToWingsFailureTypes(failureTypes);
   }
 
+  public Collection<io.harness.exception.FailureType> getFailureTypesFromPipelineExecutionSummary(
+      PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity) {
+    if (pipelineExecutionSummaryEntity.getFailureInfo() == null) {
+      return Collections.emptyList();
+    }
+    return pipelineExecutionSummaryEntity.getFailureInfo().getFailureTypeList();
+  }
+
   public List<String> getErrorMessagesFromNodeExecution(NodeExecution nodeExecution) {
     return nodeExecution.getFailureInfo()
         .getFailureDataList()
@@ -43,6 +52,9 @@ public class PipelineInstrumentationUtils {
 
   public List<String> getErrorMessagesFromPipelineExecutionSummary(
       PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity) {
+    if (pipelineExecutionSummaryEntity.getFailureInfo() == null) {
+      return Collections.emptyList();
+    }
     return pipelineExecutionSummaryEntity.getFailureInfo()
         .getResponseMessages()
         .stream()
