@@ -104,13 +104,14 @@ public class PMSPipelineServiceStepHelper {
 
   public void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo,
       Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap) {
-    StepCategory currentStepCategory = stepCategory;
     if (stepInfo != null) {
       List<String> folderPaths = stepInfo.getStepMetaData().getFolderPathsList();
       if (EmptyPredicate.isEmpty(folderPaths)) {
+        folderPaths = new ArrayList<>();
         folderPaths.add(stepInfo.getStepMetaData().getFolderPath());
       }
       for (String folderPath : folderPaths) {
+        StepCategory currentStepCategory = stepCategory;
         String[] categoryArrayName = folderPath.split("/");
         for (String categoryName : categoryArrayName) {
           currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(categoryName);
