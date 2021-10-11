@@ -1,8 +1,12 @@
 package io.harness.ngtriggers.mapper;
 
 import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.SCHEDULED;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
+import static io.harness.ngtriggers.beans.source.artifact.BuildStoreType.GCS;
+import static io.harness.ngtriggers.beans.source.artifact.BuildStoreType.HTTP;
+import static io.harness.ngtriggers.beans.source.artifact.BuildStoreType.S3;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.CONTAINS;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.ENDS_WITH;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.EQUALS;
@@ -31,6 +35,7 @@ import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
+import io.harness.ngtriggers.beans.source.ManifestType;
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
@@ -38,9 +43,17 @@ import io.harness.ngtriggers.beans.source.artifact.ArtifactTriggerConfig;
 import io.harness.ngtriggers.beans.source.artifact.ArtifactType;
 import io.harness.ngtriggers.beans.source.artifact.ArtifactTypeSpec;
 import io.harness.ngtriggers.beans.source.artifact.BuildAware;
+import io.harness.ngtriggers.beans.source.artifact.BuildStoreTypeSpec;
 import io.harness.ngtriggers.beans.source.artifact.DockerRegistrySpec;
 import io.harness.ngtriggers.beans.source.artifact.EcrSpec;
 import io.harness.ngtriggers.beans.source.artifact.GcrSpec;
+import io.harness.ngtriggers.beans.source.artifact.HelmManifestSpec;
+import io.harness.ngtriggers.beans.source.artifact.ManifestTriggerConfig;
+import io.harness.ngtriggers.beans.source.artifact.ManifestTypeSpec;
+import io.harness.ngtriggers.beans.source.artifact.store.BuildStore;
+import io.harness.ngtriggers.beans.source.artifact.store.GcsBuildStoreTypeSpec;
+import io.harness.ngtriggers.beans.source.artifact.store.HttpBuildStoreTypeSpec;
+import io.harness.ngtriggers.beans.source.artifact.store.S3BuildStoreTypeSpec;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerSpec;
@@ -99,6 +112,9 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
   private String ngTriggerYaml_cron;
   private String ngTriggerYaml_artifact_gcr;
   private String ngTriggerYaml_artifact_ecr;
+  private String ngTriggerYaml_helm_S3;
+  private String ngTriggerYaml_helm_gcs;
+  private String ngTriggerYaml_helm_http;
   private String ngTriggerYaml_artifact_dockerregistry;
   private String ngTriggerYaml_manifest;
 
@@ -152,6 +168,13 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
         Objects.requireNonNull(classLoader.getResource("ng-trigger-artifact-gcr.yaml")), StandardCharsets.UTF_8);
     ngTriggerYaml_artifact_ecr = Resources.toString(
         Objects.requireNonNull(classLoader.getResource("ng-trigger-artifact-ecr.yaml")), StandardCharsets.UTF_8);
+
+    ngTriggerYaml_helm_S3 = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-manifest-helm-s3.yaml")), StandardCharsets.UTF_8);
+    ngTriggerYaml_helm_gcs = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-manifest-helm-gcs.yaml")), StandardCharsets.UTF_8);
+    ngTriggerYaml_helm_http = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-manifest-helm-http.yaml")), StandardCharsets.UTF_8);
     ngTriggerYaml_artifact_dockerregistry =
         Resources.toString(Objects.requireNonNull(classLoader.getResource("ng-trigger-artifact-dockerregistry.yaml")),
             StandardCharsets.UTF_8);
@@ -456,7 +479,7 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
 
     NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
-    assertCommonPathForBuildTriggers(ngTriggerSourceV2, ArtifactType.GCR);
+    assertCommonPathForArtifactTriggers(ngTriggerSourceV2, ArtifactType.GCR);
 
     ArtifactTriggerConfig artifactTriggerConfig = (ArtifactTriggerConfig) ngTriggerSourceV2.getSpec();
     ArtifactTypeSpec artifactTypeSpec = artifactTriggerConfig.getSpec();
@@ -475,7 +498,7 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
 
     NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
-    assertCommonPathForBuildTriggers(ngTriggerSourceV2, ArtifactType.ECR);
+    assertCommonPathForArtifactTriggers(ngTriggerSourceV2, ArtifactType.ECR);
 
     ArtifactTriggerConfig artifactTriggerConfig = (ArtifactTriggerConfig) ngTriggerSourceV2.getSpec();
     ArtifactTypeSpec artifactTypeSpec = artifactTriggerConfig.getSpec();
@@ -488,6 +511,95 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
+  public void testManifestHelmS3() throws Exception {
+    NGTriggerConfigV2 ngTriggerConfigV2 = ngTriggerElementMapper.toTriggerConfigV2(ngTriggerYaml_helm_S3);
+
+    assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
+
+    NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
+    assertCommonPathForManifestTriggers(ngTriggerSourceV2, ManifestType.HELM_MANIFEST);
+
+    ManifestTriggerConfig manifestTriggerConfig = (ManifestTriggerConfig) ngTriggerSourceV2.getSpec();
+    HelmManifestSpec manifestTypeSpec = (HelmManifestSpec) manifestTriggerConfig.getSpec();
+
+    assertThat(manifestTypeSpec.getChartName()).isEqualTo("chart1");
+    assertThat(manifestTypeSpec.getChartVersion()).isEqualTo("<+trigger.manifest.version>");
+
+    BuildStore store = manifestTypeSpec.getStore();
+    assertThat(store.getType() == S3);
+    assertThat(store.getSpec().fetchConnectorRef()).isEqualTo("account.conn");
+
+    BuildStoreTypeSpec spec = store.getSpec();
+    assertThat(S3BuildStoreTypeSpec.class.isAssignableFrom(spec.getClass()));
+
+    S3BuildStoreTypeSpec s3BuildStoreTypeSpec = (S3BuildStoreTypeSpec) spec;
+    assertThat(s3BuildStoreTypeSpec.getBucketName()).isEqualTo("bucket1");
+    assertThat(s3BuildStoreTypeSpec.getConnectorRef()).isEqualTo("account.conn");
+    assertThat(s3BuildStoreTypeSpec.getFolderPath()).isEqualTo("path1");
+    assertThat(s3BuildStoreTypeSpec.getRegion()).isEqualTo("us-west-1");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testManifestHelmGcs() throws Exception {
+    NGTriggerConfigV2 ngTriggerConfigV2 = ngTriggerElementMapper.toTriggerConfigV2(ngTriggerYaml_helm_gcs);
+
+    assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
+
+    NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
+    assertCommonPathForManifestTriggers(ngTriggerSourceV2, ManifestType.HELM_MANIFEST);
+
+    ManifestTriggerConfig manifestTriggerConfig = (ManifestTriggerConfig) ngTriggerSourceV2.getSpec();
+    HelmManifestSpec manifestTypeSpec = (HelmManifestSpec) manifestTriggerConfig.getSpec();
+
+    assertThat(manifestTypeSpec.getChartName()).isEqualTo("chart1");
+    assertThat(manifestTypeSpec.getChartVersion()).isEqualTo("<+trigger.manifest.version>");
+
+    BuildStore store = manifestTypeSpec.getStore();
+    assertThat(store.getType() == GCS);
+    assertThat(store.getSpec().fetchConnectorRef()).isEqualTo("account.conn");
+
+    BuildStoreTypeSpec spec = store.getSpec();
+    assertThat(S3BuildStoreTypeSpec.class.isAssignableFrom(spec.getClass()));
+
+    GcsBuildStoreTypeSpec gcsBuildStoreTypeSpec = (GcsBuildStoreTypeSpec) spec;
+    assertThat(gcsBuildStoreTypeSpec.getBucketName()).isEqualTo("bucket1");
+    assertThat(gcsBuildStoreTypeSpec.getConnectorRef()).isEqualTo("account.conn");
+    assertThat(gcsBuildStoreTypeSpec.getFolderPath()).isEqualTo("path1");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testManifestHelmHttp() throws Exception {
+    NGTriggerConfigV2 ngTriggerConfigV2 = ngTriggerElementMapper.toTriggerConfigV2(ngTriggerYaml_helm_http);
+
+    assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
+
+    NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
+    assertCommonPathForManifestTriggers(ngTriggerSourceV2, ManifestType.HELM_MANIFEST);
+
+    ManifestTriggerConfig manifestTriggerConfig = (ManifestTriggerConfig) ngTriggerSourceV2.getSpec();
+    HelmManifestSpec manifestTypeSpec = (HelmManifestSpec) manifestTriggerConfig.getSpec();
+
+    assertThat(manifestTypeSpec.getChartName()).isEqualTo("chart1");
+    assertThat(manifestTypeSpec.getChartVersion()).isEqualTo("<+trigger.manifest.version>");
+
+    BuildStore store = manifestTypeSpec.getStore();
+    assertThat(store.getType() == HTTP);
+    assertThat(store.getSpec().fetchConnectorRef()).isEqualTo("account.conn");
+
+    BuildStoreTypeSpec spec = store.getSpec();
+    assertThat(HttpBuildStoreTypeSpec.class.isAssignableFrom(spec.getClass()));
+
+    HttpBuildStoreTypeSpec httpBuildStoreTypeSpec = (HttpBuildStoreTypeSpec) spec;
+    assertThat(httpBuildStoreTypeSpec.getConnectorRef()).isEqualTo("account.conn");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
   public void testArtifactDockerRegistry() throws Exception {
     NGTriggerConfigV2 ngTriggerConfigV2 =
         ngTriggerElementMapper.toTriggerConfigV2(ngTriggerYaml_artifact_dockerregistry);
@@ -495,7 +607,7 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     assertRootLevelPropertiesForBuildTriggers(ngTriggerConfigV2);
 
     NGTriggerSourceV2 ngTriggerSourceV2 = ngTriggerConfigV2.getSource();
-    assertCommonPathForBuildTriggers(ngTriggerSourceV2, ArtifactType.DOCKER_REGISTRY);
+    assertCommonPathForArtifactTriggers(ngTriggerSourceV2, ArtifactType.DOCKER_REGISTRY);
 
     ArtifactTriggerConfig artifactTriggerConfig = (ArtifactTriggerConfig) ngTriggerSourceV2.getSpec();
     ArtifactTypeSpec artifactTypeSpec = artifactTriggerConfig.getSpec();
@@ -504,7 +616,7 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     assertThat(dockerRegistrySpec.getTag()).isEqualTo("<+trigger.artifact.build>");
   }
 
-  private void assertCommonPathForBuildTriggers(NGTriggerSourceV2 ngTriggerSourceV2, ArtifactType artifactType) {
+  private void assertCommonPathForArtifactTriggers(NGTriggerSourceV2 ngTriggerSourceV2, ArtifactType artifactType) {
     assertThat(ngTriggerSourceV2).isNotNull();
     assertThat(ngTriggerSourceV2.getType()).isEqualTo(ARTIFACT);
     NGTriggerSpecV2 ngTriggerSpecV2 = ngTriggerSourceV2.getSpec();
@@ -528,6 +640,33 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     assertThat(triggerEventDataConditions).isNotEmpty();
     assertThat(triggerEventDataConditions.size()).isEqualTo(1);
     assertThat(triggerEventDataConditions.get(0).getKey()).isEqualTo("build");
+    assertThat(triggerEventDataConditions.get(0).getOperator().getValue()).isEqualTo("Regex");
+    assertThat(triggerEventDataConditions.get(0).getValue()).isEqualTo("release.*");
+  }
+
+  private void assertCommonPathForManifestTriggers(NGTriggerSourceV2 ngTriggerSourceV2, ManifestType manifestType) {
+    assertThat(ngTriggerSourceV2).isNotNull();
+    assertThat(ngTriggerSourceV2.getType()).isEqualTo(MANIFEST);
+    NGTriggerSpecV2 ngTriggerSpecV2 = ngTriggerSourceV2.getSpec();
+
+    assertThat(BuildAware.class.isAssignableFrom(ngTriggerSpecV2.getClass())).isTrue();
+    BuildAware buildAware = (BuildAware) ngTriggerSpecV2;
+    assertThat(buildAware.fetchbuildRef()).isEqualTo("man1");
+    assertThat(buildAware.fetchStageRef()).isEqualTo("dev");
+    assertThat(buildAware.fetchBuildType()).isEqualTo(manifestType.getValue());
+
+    assertThat(ManifestTriggerConfig.class.isAssignableFrom(ngTriggerSpecV2.getClass())).isTrue();
+    ManifestTriggerConfig triggerConfig = (ManifestTriggerConfig) ngTriggerSpecV2;
+    assertThat(triggerConfig.getManifestRef()).isEqualTo("man1");
+    assertThat(triggerConfig.getStageIdentifier()).isEqualTo("dev");
+    assertThat(triggerConfig.getType() == manifestType).isTrue();
+
+    ManifestTypeSpec manifestTypeSpec = triggerConfig.getSpec();
+    assertThat(manifestTypeSpec.fetchBuildType()).isEqualTo(manifestType.getValue());
+    List<TriggerEventDataCondition> triggerEventDataConditions = manifestTypeSpec.fetchEventDataConditions();
+    assertThat(triggerEventDataConditions).isNotEmpty();
+    assertThat(triggerEventDataConditions.size()).isEqualTo(1);
+    assertThat(triggerEventDataConditions.get(0).getKey()).isEqualTo("version");
     assertThat(triggerEventDataConditions.get(0).getOperator().getValue()).isEqualTo("Regex");
     assertThat(triggerEventDataConditions.get(0).getValue()).isEqualTo("release.*");
   }
