@@ -14,6 +14,7 @@ public interface CVNextGenConstants {
   // TODO: move this to duration
   long CV_ANALYSIS_WINDOW_MINUTES = 5;
   String CV_DATA_COLLECTION_PATH = CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX + "/cv-data-collection-task";
+  String CD_CURRENT_GEN_CHANGE_EVENTS_PATH = CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX + "/change-events";
   Duration DATA_COLLECTION_DELAY = Duration.ofMinutes(2);
   String PERFORMANCE_PACK_IDENTIFIER = "Performance";
   String ERRORS_PACK_IDENTIFIER = "Errors";
