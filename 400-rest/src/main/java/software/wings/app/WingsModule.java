@@ -234,6 +234,7 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
+import software.wings.dl.DMSMongoPersistence;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.WingsMongoExportImport;
@@ -891,7 +892,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(PipelineConfig.class).toInstance(configuration.getPipelineConfig());
     bind(DelegateConfiguration.class).toInstance(DelegateConfiguration.builder().build());
     bind(QueueController.class).to(ConfigurationController.class);
-    bind(HPersistence.class).to(WingsMongoPersistence.class);
+    if (configuration.isDisableDelegateMgmtInManager()){
+        bind(HPersistence.class).to(DMSMongoPersistence.class);
+    }else{
+        bind(HPersistence.class).to(WingsMongoPersistence.class);
+    }
+
+
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(AppService.class).to(AppServiceImpl.class);
     bind(HarnessSampleAppService.class).to(HarnessSampleAppServiceImpl.class);

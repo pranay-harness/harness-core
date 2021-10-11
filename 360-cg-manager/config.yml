@@ -626,7 +626,7 @@ auditClientConfig:
 
 enableAudit: false
 
-disableDelegateMgmtInManager: false
+disableDelegateMgmtInManager: true
 
 ldapSyncJobConfig:
   poolSize: 3
