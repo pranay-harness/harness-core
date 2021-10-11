@@ -71,7 +71,7 @@ public class InstallUtils {
 
   private static String kustomizeBaseDir = "./client-tools/kustomize/";
   private static String kustomizeVersionOld = "v3.5.4";
-  private static String kustomizeVersionNew = "v4.4.0";
+  private static String kustomizeVersionNew = "v4.0.0";
   private static String kustomizePath = "kustomize";
   private static String kustomizeBinaryName = "kustomize";
 
