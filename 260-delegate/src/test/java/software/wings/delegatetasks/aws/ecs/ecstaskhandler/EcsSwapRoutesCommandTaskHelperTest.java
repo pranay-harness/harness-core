@@ -1,8 +1,10 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.SATYAM;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -23,12 +25,19 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsRequest;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
+import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
+import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -39,6 +48,8 @@ import org.mockito.Mock;
 public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   @Mock private AwsHelperService mockAwsHelperService;
   @Mock private EcsContainerService mockEcsContainerService;
+  @Mock private AwsAppAutoScalingHelperServiceDelegate mockAwsAppAutoScalingService;
+  @Mock private EcsCommandTaskHelper mockEcsCommandTaskHelper;
 
   @InjectMocks @Inject private EcsSwapRoutesCommandTaskHelper taskHelper;
 
@@ -83,5 +94,38 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
         AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster", "foo_2", "foo_1", false, mockCallback);
     verify(mockAwsHelperService, times(2)).untagService(anyString(), anyList(), any(), any());
     verify(mockAwsHelperService, times(2)).tagService(anyString(), anyList(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testRestoreAwsAutoScalarConfigs() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    String scalableTargetJson = "scalableTargetJson";
+    String[] scalingPolicyJsons = new String[] {"scalingPolicyJson"};
+    String resourceId = "abc";
+    String scalableDimension = "ecs:service:DesiredCount";
+    List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs = asList(AwsAutoScalarConfig.builder()
+                                                                        .resourceId(resourceId)
+                                                                        .scalingPolicyJson(scalingPolicyJsons)
+                                                                        .scalableTargetJson(scalableTargetJson)
+                                                                        .build());
+    DescribeScalableTargetsRequest describeScalableTargetsRequest = new DescribeScalableTargetsRequest()
+                                                                        .withResourceIds(asList(resourceId))
+                                                                        .withScalableDimension(scalableDimension)
+                                                                        .withServiceNamespace(ServiceNamespace.Ecs);
+    ScalableTarget scalableTarget = new ScalableTarget();
+    scalableTarget.setResourceId(resourceId);
+    scalableTarget.setScalableDimension(scalableDimension);
+    DescribeScalableTargetsResult describeScalableTargetsResult = new DescribeScalableTargetsResult();
+    describeScalableTargetsResult.setScalableTargets(asList(scalableTarget));
+    doReturn(scalableTarget).when(mockAwsAppAutoScalingService).getScalableTargetFromJson(eq(scalableTargetJson));
+
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+
+    taskHelper.restoreAwsAutoScalarConfig(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", previousAwsAutoScalarConfigs, true, mockCallback);
+
+    verify(mockAwsAppAutoScalingService, times(1)).getScalableTargetFromJson(eq(scalableTargetJson));
   }
 }
