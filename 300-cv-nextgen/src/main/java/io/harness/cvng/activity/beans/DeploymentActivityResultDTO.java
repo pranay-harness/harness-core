@@ -30,7 +30,7 @@ public class DeploymentActivityResultDTO {
     String environmentName;
     @Deprecated String jobName;
     String verificationJobInstanceId;
-    String activityId;
+    @Deprecated String activityId;
     long activityStartTime;
     ActivityVerificationStatus status;
     AdditionalInfo additionalInfo;

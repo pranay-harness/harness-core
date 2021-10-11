@@ -5,8 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
-import io.harness.cvng.activity.entities.HarnessCDActivity;
-import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityBuilder;
+import io.harness.cvng.activity.entities.DeploymentActivity;
+import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityBuilder;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityBuilder;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment;
@@ -402,8 +402,8 @@ public class BuilderFactory {
                   .build());
   }
 
-  public HarnessCDActivityBuilder getHarnessCDActivityBuilder() {
-    return HarnessCDActivity.builder()
+  public DeploymentActivityBuilder getDeploymentActivityBuilder() {
+    return DeploymentActivity.builder()
         .accountId(context.getAccountId())
         .orgIdentifier(context.getOrgIdentifier())
         .projectIdentifier(context.getProjectIdentifier())
@@ -413,6 +413,8 @@ public class BuilderFactory {
         .changeSourceIdentifier("changeSourceID")
         .type(ChangeSourceType.HARNESS_CD.getActivityType())
         .stageStepId("stageStepId")
+        .verificationStartTime(clock.millis())
+        .deploymentTag("deploymentTag")
         .stageId("stageId")
         .pipelineId("pipelineId")
         .planExecutionId("executionId")
