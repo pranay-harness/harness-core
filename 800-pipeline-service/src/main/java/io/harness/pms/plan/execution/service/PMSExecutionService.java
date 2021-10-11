@@ -43,4 +43,6 @@ public interface PMSExecutionService {
       ByteString gitEntityBasicInfo);
 
   void deleteExecutionsOnPipelineDeletion(PipelineEntity pipelineEntity);
+
+  long getCountOfExecutions(Criteria criteria);
 }
