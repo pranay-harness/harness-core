@@ -159,7 +159,7 @@ function setupDelegateJars() {
 
     done
 
-    for version in v3.5.4 v4.4.0; do
+    for version in v3.5.4 v4.0.0; do
 
       echo "Copying kustomize ${version} binaries for ${platform}"
 

@@ -149,7 +149,7 @@ for chartmuseumversion in v0.8.2; do
   curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
 done
 
-for kustomizeVersion in v3.5.4 v4.4.0; do
+for kustomizeVersion in v3.5.4 v4.0.0; do
   echo "Adding kustomizeversion $kustomizeVersion"
   KUSTOMIZE_LINUX_DIR="${IMAGES_DIR}/kustomize/linux/$kustomizeVersion/"
   KUSTOMIZE_MAC_DIR="${IMAGES_DIR}/kustomize/darwin/$kustomizeVersion/"
@@ -232,7 +232,7 @@ function setupDelegateJars() {
 
   rm -rf ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/*
   mkdir -p ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}
-  cp images/watcher.jar ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}/
+  cp images/watcher.jar ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}/X
   echo "1.0.${WATCHER_VERSION} jobs/deploy-prod-watcher/${WATCHER_VERSION}/watcher.jar" >watcherprod.txt
   mv watcherprod.txt ${STORAGE_DIR_LOCATION}/wingswatchers
 
@@ -249,7 +249,7 @@ function setupClientUtils() {
       cp images/kubectl/${platform}/$kubectlversion/kubectl ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
     done
 
-    for kustomizeversion in v3.5.4 v4.4.0; do
+    for kustomizeversion in v3.5.4 v4.0.0; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeversion/bin/${platform}/amd64/
       cp images/kustomize/${platform}/$kustomizeversion/kustomize ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeversion/bin/${platform}/amd64/
     done
