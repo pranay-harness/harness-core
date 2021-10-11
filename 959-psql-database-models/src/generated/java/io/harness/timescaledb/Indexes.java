@@ -5,9 +5,13 @@ package io.harness.timescaledb;
 
 import io.harness.timescaledb.tables.Anomalies;
 import io.harness.timescaledb.tables.BillingData;
+import io.harness.timescaledb.tables.Environments;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
+import io.harness.timescaledb.tables.NgInstanceStats;
 import io.harness.timescaledb.tables.NodeInfo;
+import io.harness.timescaledb.tables.Pipelines;
 import io.harness.timescaledb.tables.PodInfo;
+import io.harness.timescaledb.tables.Services;
 
 import org.jooq.Index;
 import org.jooq.OrderField;
@@ -91,6 +95,9 @@ public class Indexes {
           new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.WORKLOADNAME,
               BillingData.BILLING_DATA.STARTTIME.desc()},
           false);
+  public static final Index ENVIRONMENTS_ACCOUNT_ID_CREATED_AT_IDX =
+      Internal.createIndex(DSL.name("environments_account_id_created_at_idx"), Environments.ENVIRONMENTS,
+          new OrderField[] {Environments.ENVIRONMENTS.ACCOUNT_ID, Environments.ENVIRONMENTS.CREATED_AT}, false);
   public static final Index KUBERNETES_UTILIZATION_DATA_ACCID_CLUSTERID_ACINSTANCEID =
       Internal.createIndex(DSL.name("kubernetes_utilization_data_accid_clusterid_acinstanceid"),
           KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA,
@@ -116,10 +123,49 @@ public class Indexes {
           KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.INSTANCETYPE,
           KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.STARTTIME.desc()},
       true);
+  public static final Index NG_INSTANCE_STATS_ACCOUNTID_INDEX =
+      Internal.createIndex(DSL.name("ng_instance_stats_accountid_index"), NgInstanceStats.NG_INSTANCE_STATS,
+          new OrderField[] {
+              NgInstanceStats.NG_INSTANCE_STATS.ACCOUNTID, NgInstanceStats.NG_INSTANCE_STATS.REPORTEDAT.desc()},
+          false);
+  public static final Index NG_INSTANCE_STATS_CLOUDPROVIDERID_INDEX =
+      Internal.createIndex(DSL.name("ng_instance_stats_cloudproviderid_index"), NgInstanceStats.NG_INSTANCE_STATS,
+          new OrderField[] {
+              NgInstanceStats.NG_INSTANCE_STATS.CLOUDPROVIDERID, NgInstanceStats.NG_INSTANCE_STATS.REPORTEDAT.desc()},
+          false);
+  public static final Index NG_INSTANCE_STATS_ENVID_INDEX = Internal.createIndex(
+      DSL.name("ng_instance_stats_envid_index"), NgInstanceStats.NG_INSTANCE_STATS,
+      new OrderField[] {NgInstanceStats.NG_INSTANCE_STATS.ENVID, NgInstanceStats.NG_INSTANCE_STATS.REPORTEDAT.desc()},
+      false);
+  public static final Index NG_INSTANCE_STATS_INSTANCECOUNT_INDEX =
+      Internal.createIndex(DSL.name("ng_instance_stats_instancecount_index"), NgInstanceStats.NG_INSTANCE_STATS,
+          new OrderField[] {
+              NgInstanceStats.NG_INSTANCE_STATS.INSTANCECOUNT, NgInstanceStats.NG_INSTANCE_STATS.REPORTEDAT.desc()},
+          false);
+  public static final Index NG_INSTANCE_STATS_ORGID_INDEX = Internal.createIndex(
+      DSL.name("ng_instance_stats_orgid_index"), NgInstanceStats.NG_INSTANCE_STATS,
+      new OrderField[] {NgInstanceStats.NG_INSTANCE_STATS.ORGID, NgInstanceStats.NG_INSTANCE_STATS.REPORTEDAT.desc()},
+      false);
+  public static final Index NG_INSTANCE_STATS_PROJECTID_INDEX =
+      Internal.createIndex(DSL.name("ng_instance_stats_projectid_index"), NgInstanceStats.NG_INSTANCE_STATS,
+          new OrderField[] {
+              NgInstanceStats.NG_INSTANCE_STATS.PROJECTID, NgInstanceStats.NG_INSTANCE_STATS.REPORTEDAT.desc()},
+          false);
+  public static final Index NG_INSTANCE_STATS_REPORTEDAT_IDX =
+      Internal.createIndex(DSL.name("ng_instance_stats_reportedat_idx"), NgInstanceStats.NG_INSTANCE_STATS,
+          new OrderField[] {NgInstanceStats.NG_INSTANCE_STATS.REPORTEDAT.desc()}, false);
+  public static final Index NG_INSTANCE_STATS_SERVICEID_INDEX =
+      Internal.createIndex(DSL.name("ng_instance_stats_serviceid_index"), NgInstanceStats.NG_INSTANCE_STATS,
+          new OrderField[] {
+              NgInstanceStats.NG_INSTANCE_STATS.SERVICEID, NgInstanceStats.NG_INSTANCE_STATS.REPORTEDAT.desc()},
+          false);
   public static final Index NODE_INFO_ACCID_CLUSTERID_POOLNAME = Internal.createIndex(
       DSL.name("node_info_accid_clusterid_poolname"), NodeInfo.NODE_INFO,
       new OrderField[] {NodeInfo.NODE_INFO.ACCOUNTID, NodeInfo.NODE_INFO.CLUSTERID, NodeInfo.NODE_INFO.NODEPOOLNAME},
       false);
+  public static final Index PIPELINES_ACCOUNT_ID_CREATED_AT_IDX =
+      Internal.createIndex(DSL.name("pipelines_account_id_created_at_idx"), Pipelines.PIPELINES,
+          new OrderField[] {Pipelines.PIPELINES.ACCOUNT_ID, Pipelines.PIPELINES.CREATED_AT}, false);
   public static final Index POD_INFO_STARTTIME_IDX = Internal.createIndex(DSL.name("pod_info_starttime_idx"),
       PodInfo.POD_INFO, new OrderField[] {PodInfo.POD_INFO.STARTTIME.desc()}, false);
   public static final Index POD_INFO_STARTTIME_UNIQUE_RECORD_INDEX =
@@ -127,4 +173,7 @@ public class Indexes {
           new OrderField[] {PodInfo.POD_INFO.ACCOUNTID, PodInfo.POD_INFO.CLUSTERID, PodInfo.POD_INFO.INSTANCEID,
               PodInfo.POD_INFO.STARTTIME.desc()},
           true);
+  public static final Index SERVICES_ACCOUNT_ID_CREATED_AT_IDX =
+      Internal.createIndex(DSL.name("services_account_id_created_at_idx"), Services.SERVICES,
+          new OrderField[] {Services.SERVICES.ACCOUNT_ID, Services.SERVICES.CREATED_AT}, false);
 }

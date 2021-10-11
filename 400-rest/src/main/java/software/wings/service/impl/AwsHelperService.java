@@ -215,7 +215,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class AwsHelperService {
   @Inject private EncryptionService encryptionService;

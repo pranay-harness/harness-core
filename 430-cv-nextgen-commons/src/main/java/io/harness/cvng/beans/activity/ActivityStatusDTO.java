@@ -11,6 +11,6 @@ public class ActivityStatusDTO {
   long durationMs;
   long remainingTimeMs;
   int progressPercentage;
-  String activityId;
+  @Deprecated String activityId;
   @NonFinal @Setter ActivityVerificationStatus status;
 }
