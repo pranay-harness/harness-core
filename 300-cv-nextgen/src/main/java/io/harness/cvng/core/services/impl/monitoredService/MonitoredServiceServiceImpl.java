@@ -505,6 +505,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     hPersistence.save(monitoredServiceEntity);
   }
 
+  private HistoricalTrend getMonitoredServiceHistorialTrend(
+      MonitoredService monitoredService, ProjectParams projectParams, DurationDTO duration, Instant endTime) {
+    Preconditions.checkNotNull(monitoredService,
+        "Monitored service for provided serviceIdentifier and envIdentifier or monitoredServiceIdentifier does not exist.");
+    return heatMapService.getOverAllHealthScore(projectParams, monitoredService.getServiceIdentifier(),
+        monitoredService.getEnvironmentIdentifier(), duration, endTime);
+  }
+
   @Override
   public List<MonitoredService> list(@NonNull ProjectParams projectParams, @Nullable String serviceIdentifier,
       @Nullable String environmentIdentifier) {
@@ -769,9 +777,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   public HistoricalTrend getOverAllHealthScore(
       ProjectParams projectParams, String identifier, DurationDTO duration, Instant endTime) {
     MonitoredService monitoredService = getMonitoredService(projectParams, identifier);
-    Preconditions.checkNotNull(monitoredService, "Monitored service with identifier %s does not exists", identifier);
-    return heatMapService.getOverAllHealthScore(projectParams, monitoredService.getServiceIdentifier(),
-        monitoredService.getEnvironmentIdentifier(), duration, endTime);
+    return getMonitoredServiceHistorialTrend(monitoredService, projectParams, duration, endTime);
+  }
+
+  @Override
+  public HistoricalTrend getOverAllHealthScore(
+      ServiceEnvironmentParams serviceEnvironmentParams, DurationDTO duration, Instant endTime) {
+    MonitoredService monitoredService = getMonitoredService(serviceEnvironmentParams);
+    return getMonitoredServiceHistorialTrend(monitoredService, serviceEnvironmentParams, duration, endTime);
   }
 
   @Override
