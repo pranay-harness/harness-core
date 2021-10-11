@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1beta1.Destination;
@@ -151,6 +152,7 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
     return virtualService;
   }
 
+  @NonNull
   @Override
   public IstioResource createVirtualServiceDefinition(
       List<ContainerServiceData> allData, IstioResource existingVirtualService, String kubernetesServiceName) {
@@ -217,7 +219,7 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
     HTTPRoute existingVirtualServiceHttpRoute = (((VirtualService) existingVirtualService).getSpec()).getHttp().get(0);
 
     if ((virtualServiceHttpRoute == null || existingVirtualServiceHttpRoute == null)
-        && virtualServiceHttpRoute.equals(existingVirtualServiceHttpRoute)) {
+        && virtualServiceHttpRoute != existingVirtualServiceHttpRoute) {
       return false;
     }
 

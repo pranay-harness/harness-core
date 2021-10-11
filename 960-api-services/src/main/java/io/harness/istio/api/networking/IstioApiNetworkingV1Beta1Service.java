@@ -34,23 +34,6 @@ import me.snowdrop.istio.api.networking.v1beta1.VirtualServiceSpec;
 public class IstioApiNetworkingV1Beta1Service {
   @Inject private KubernetesHelperService kubernetesHelperService;
 
-  public DestinationRule getV1Beta1IstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
-    try {
-      DestinationRule destinationRule = new DestinationRuleBuilder().build();
-
-      return kubernetesClient
-          .customResources(getCustomResourceDefinition(kubernetesClient, destinationRule), DestinationRule.class,
-              KubernetesResourceList.class, DoneableDestinationRule.class)
-          .inNamespace(kubernetesConfig.getNamespace())
-          .withName(name)
-          .get();
-    } catch (KubernetesClientException e) {
-      log.error("Failed to get istio DestinationRule/{}", name, e);
-      return null;
-    }
-  }
-
   public VirtualService getIstioBeta1VirtualService(KubernetesConfig kubernetesConfig, String name) {
     KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     try {
@@ -64,6 +47,23 @@ public class IstioApiNetworkingV1Beta1Service {
           .get();
     } catch (KubernetesClientException e) {
       log.error("Failed to get istio VirtualService/{}", name, e);
+      return null;
+    }
+  }
+
+  public DestinationRule getV1Beta1IstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
+    try {
+      DestinationRule destinationRule = new DestinationRuleBuilder().build();
+
+      return kubernetesClient
+          .customResources(getCustomResourceDefinition(kubernetesClient, destinationRule), DestinationRule.class,
+              KubernetesResourceList.class, DoneableDestinationRule.class)
+          .inNamespace(kubernetesConfig.getNamespace())
+          .withName(name)
+          .get();
+    } catch (KubernetesClientException e) {
+      log.error("Failed to get istio DestinationRule/{}", name, e);
       return null;
     }
   }

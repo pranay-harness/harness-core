@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
 public class IstioApiNetworkingService {
-  @Inject public IstioApiNetworkingV1Beta1Service istioApiNetworkingV1Beta1Service;
-  @Inject public IstioApiNetworkingV1Alpha3Service istioApiNetworkingV1Alpha3Service;
+  @Inject private IstioApiNetworkingV1Beta1Service istioApiNetworkingV1Beta1Service;
+  @Inject private IstioApiNetworkingV1Alpha3Service istioApiNetworkingV1Alpha3Service;
 
   public Map<String, String> getVirtualServiceResourcesAnnotations(
       KubernetesResourceId resourceId, KubernetesConfig kubernetesConfig) {
@@ -53,7 +53,7 @@ public class IstioApiNetworkingService {
   }
 
   public int getTrafficPercent(KubernetesConfig kubernetesConfig, String serviceName, Optional<Integer> revision) {
-    if (!revision.isPresent()) {
+    if (revision.isPresent()) {
       HasMetadata istioAlpha3VirtualService =
           istioApiNetworkingV1Alpha3Service.getIstioAlpha3VirtualService(kubernetesConfig, serviceName);
       if (istioAlpha3VirtualService != null) {
@@ -75,12 +75,7 @@ public class IstioApiNetworkingService {
       return istioAlpha3VirtualService;
     }
 
-    HasMetadata istioBeta1VirtualService =
-        istioApiNetworkingV1Beta1Service.getIstioBeta1VirtualService(kubernetesConfig, serviceName);
-    if (istioBeta1VirtualService != null) {
-      return istioBeta1VirtualService;
-    }
-    return null;
+    return istioApiNetworkingV1Beta1Service.getIstioBeta1VirtualService(kubernetesConfig, serviceName);
   }
 
   public static Map<String, String> getResourcesMetadataAnnotations(HasMetadata hasMetadata) {

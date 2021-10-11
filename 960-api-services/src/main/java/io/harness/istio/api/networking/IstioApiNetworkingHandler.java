@@ -13,6 +13,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import java.io.IOException;
 import java.util.List;
+import lombok.NonNull;
 import me.snowdrop.istio.api.IstioResource;
 
 @OwnedBy(HarnessTeam.CDP)
@@ -36,6 +37,7 @@ public interface IstioApiNetworkingHandler {
       LogCallback executionLogCallback, KubernetesClient kubernetesClient, HasMetadata virtualService)
       throws IOException;
 
+  @NonNull
   IstioResource createVirtualServiceDefinition(
       List<ContainerServiceData> allData, IstioResource existingVirtualService, String kubernetesServiceName);
 

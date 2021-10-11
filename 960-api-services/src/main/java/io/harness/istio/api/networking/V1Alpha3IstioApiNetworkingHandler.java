@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
@@ -97,7 +98,7 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
   @Override
   public void deleteHarnessManagedVirtualService(KubernetesConfig kubernetesConfig, HasMetadata virtualService,
       String virtualServiceName, LogCallback executionLogCallback) {
-    if (null != virtualService) {
+    if (null != virtualService && isNotEmpty(virtualService.getMetadata().getLabels())) {
       VirtualService alpha3VirtualService = (VirtualService) virtualService;
       if (alpha3VirtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
         executionLogCallback.saveExecutionLog("Deleting Istio VirtualService: " + virtualServiceName);
@@ -109,7 +110,7 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
   @Override
   public void deleteHarnessManagedDestinationRule(KubernetesConfig kubernetesConfig, HasMetadata destinationRule,
       String virtualServiceName, LogCallback executionLogCallback) {
-    if (destinationRule != null) {
+    if (destinationRule != null && isNotEmpty(destinationRule.getMetadata().getLabels())) {
       DestinationRule alpha3destinationRule = (DestinationRule) destinationRule;
 
       if (alpha3destinationRule.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
@@ -151,6 +152,7 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
     return virtualService;
   }
 
+  @NonNull
   @Override
   public IstioResource createVirtualServiceDefinition(
       List<ContainerServiceData> allData, IstioResource existingVirtualService, String kubernetesServiceName) {
@@ -203,7 +205,7 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
     HTTPRoute existingVirtualServiceHttpRoute = (((VirtualService) existingVirtualService).getSpec()).getHttp().get(0);
 
     if ((virtualServiceHttpRoute == null || existingVirtualServiceHttpRoute == null)
-        && !virtualServiceHttpRoute.equals(existingVirtualServiceHttpRoute)) {
+        && virtualServiceHttpRoute != existingVirtualServiceHttpRoute) {
       return false;
     }
 
