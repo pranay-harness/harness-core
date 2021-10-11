@@ -75,7 +75,7 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
       propertiesMap.put(EXECUTION_TIME, getExecutionTimeInSeconds(pipelineExecutionSummaryEntity));
       propertiesMap.put(NOTIFICATION_RULES_COUNT, notificationRulesList.size());
       propertiesMap.put(FAILURE_TYPES,
-          PipelineInstrumentationUtils.getErrorMessagesFromPipelineExecutionSummary(pipelineExecutionSummaryEntity));
+          PipelineInstrumentationUtils.getFailureTypesFromPipelineExecutionSummary(pipelineExecutionSummaryEntity));
       propertiesMap.put(ERROR_MESSAGES,
           PipelineInstrumentationUtils.getErrorMessagesFromPipelineExecutionSummary(pipelineExecutionSummaryEntity));
       propertiesMap.put(
