@@ -85,6 +85,7 @@ public final class VerificationJobInstance
   public static String VERIFICATION_JOB_IDENTIFIER_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.identifier);
   @Id private String uuid;
+  private String name;
   @NotNull @FdIndex private String accountId;
   @FdIndex private long createdAt;
   @FdIndex private long lastUpdatedAt;
