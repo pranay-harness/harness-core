@@ -26,6 +26,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -38,10 +42,23 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
 
-@Api("/licenses")
-@Path("/licenses")
+@Api("licenses")
+@Path("licenses")
 @Produces({"application/json"})
 @Consumes({"application/json"})
+@Tag(name = "Licenses", description = "This contains APIs related to licenses as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -60,6 +77,13 @@ public class LicenseResource {
   @GET
   @ApiOperation(
       value = "Gets Module License By Account And ModuleType", nickname = "getModuleLicenseByAccountAndModuleType")
+  @Operation(operationId = "getModuleLicenseByAccountAndModuleType",
+      summary = "Gets Module License By Account And ModuleType",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a module's license")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   @Deprecated
   public ResponseDTO<ModuleLicenseDTO>
@@ -74,6 +98,13 @@ public class LicenseResource {
   @Path("/modules/{accountIdentifier}")
   @ApiOperation(
       value = "Gets Module Licenses By Account And ModuleType", nickname = "getModuleLicensesByAccountAndModuleType")
+  @Operation(operationId = "getModuleLicensesByAccountAndModuleType",
+      summary = "Gets Module Licenses By Account And ModuleType",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns all of a module's licenses")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<List<ModuleLicenseDTO>>
   getModuleLicenses(
@@ -87,6 +118,13 @@ public class LicenseResource {
   @Path("{accountIdentifier}/summary")
   @ApiOperation(
       value = "Gets Module Licenses With Summary By Account And ModuleType", nickname = "getLicensesAndSummary")
+  @Operation(operationId = "getLicensesAndSummary",
+      summary = "Gets Module Licenses With Summary By Account And ModuleType",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a module's license summary")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<LicensesWithSummaryDTO>
   getLicensesWithSummary(
@@ -99,9 +137,15 @@ public class LicenseResource {
   @GET
   @Path("account")
   @ApiOperation(value = "Gets All Module License Information in Account", nickname = "getAccountLicenses")
+  @Operation(operationId = "getAccountLicenses", summary = "Gets All Module License Information in Account",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns all licenses for an account")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<AccountLicenseDTO> getAccountLicensesDTO(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+  public ResponseDTO<AccountLicenseDTO>
+  getAccountLicensesDTO(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     AccountLicenseDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
     return ResponseDTO.newResponse(accountLicenses);
   }
@@ -109,8 +153,15 @@ public class LicenseResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets Module License", nickname = "getModuleLicenseById")
+  @Operation(operationId = "getModuleLicenseById", summary = "Gets Module License",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a module's license")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<ModuleLicenseDTO> get(@PathParam("identifier") String identifier,
+  public ResponseDTO<ModuleLicenseDTO>
+  get(@PathParam("identifier") String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     ModuleLicenseDTO moduleLicense = licenseService.getModuleLicenseById(identifier);
     return ResponseDTO.newResponse(moduleLicense);
@@ -119,8 +170,15 @@ public class LicenseResource {
   @POST
   @Path("free")
   @ApiOperation(value = "Starts Free License For A Module", nickname = "startFreeLicense")
+  @Operation(operationId = "startFreeLicense", summary = "Starts Free License For A Module",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a free module license")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<ModuleLicenseDTO> startFreeLicense(
+  public ResponseDTO<ModuleLicenseDTO>
+  startFreeLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
     return ResponseDTO.newResponse(licenseService.startFreeLicense(accountIdentifier, moduleType));
@@ -139,8 +197,15 @@ public class LicenseResource {
   @POST
   @Path("trial")
   @ApiOperation(value = "Starts Trial License For A Module", nickname = "startTrialLicense")
+  @Operation(operationId = "startTrialLicense", summary = "Starts Trial License For A Module",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a trial module license")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<ModuleLicenseDTO> startTrialLicense(
+  public ResponseDTO<ModuleLicenseDTO>
+  startTrialLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialDTO startTrialRequestDTO) {
     return ResponseDTO.newResponse(licenseService.startTrialLicense(accountIdentifier, startTrialRequestDTO));
@@ -149,8 +214,15 @@ public class LicenseResource {
   @POST
   @Path("extend-trial")
   @ApiOperation(value = "Extends Trail License For A Module", nickname = "extendTrialLicense")
+  @Operation(operationId = "extendTrialLicense", summary = "Extends Trial License For A Module",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a trial module license")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<ModuleLicenseDTO> extendTrialLicense(
+  public ResponseDTO<ModuleLicenseDTO>
+  extendTrialLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialDTO startTrialRequestDTO) {
     return ResponseDTO.newResponse(licenseService.extendTrialLicense(accountIdentifier, startTrialRequestDTO));

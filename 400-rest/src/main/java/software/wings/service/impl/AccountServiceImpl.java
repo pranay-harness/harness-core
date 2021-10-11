@@ -38,6 +38,7 @@ import static java.time.Duration.ofHours;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
@@ -950,6 +951,25 @@ public class AccountServiceImpl implements AccountService {
     }
 
     return account.getDelegateConfiguration();
+  }
+
+  @Override
+  public String getAccountPrimaryDelegateVersion(String accountId) {
+    if (licenseService.isAccountDeleted(accountId)) {
+      throw new InvalidRequestException("Deleted AccountId: " + accountId);
+    }
+    Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                          .filter(AccountKeys.uuid, accountId)
+                          .project("delegateConfiguration", true)
+                          .get();
+    if (account.getDelegateConfiguration() == null) {
+      return null;
+    }
+    return account.getDelegateConfiguration()
+        .getDelegateVersions()
+        .stream()
+        .reduce((first, last) -> last)
+        .orElse(EMPTY);
   }
 
   @Override

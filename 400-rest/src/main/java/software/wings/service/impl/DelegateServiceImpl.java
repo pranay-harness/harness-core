@@ -1443,6 +1443,8 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         params.put("delegateNamespace", HARNESS_DELEGATE);
       }
+      boolean versionCheckEnabled = hasVersionCheckDisabled(inquiry.accountId);
+      params.put("versionCheckDisabled", String.valueOf(versionCheckEnabled));
 
       return params.build();
     }
@@ -2920,6 +2922,10 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateGroup;
   }
 
+  private boolean hasVersionCheckDisabled(String accountId) {
+    return accountService.getAccountPrimaryDelegateVersion(accountId) != null;
+  }
+
   @NotNull
   private String getMessage(JerseyViolationException exception) {
     return "Fields "
@@ -2946,8 +2952,12 @@ public class DelegateServiceImpl implements DelegateService {
 
   public void registerHeartbeat(
       String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat, ConnectionMode connectionMode) {
+    String version = heartbeat.getVersion();
+    if (isEmpty(version)) {
+      version = accountService.getAccountPrimaryDelegateVersion(accountId);
+    }
     DelegateConnection previousDelegateConnection = delegateConnectionDao.upsertCurrentConnection(
-        accountId, delegateId, heartbeat.getDelegateConnectionId(), heartbeat.getVersion(), heartbeat.getLocation());
+        accountId, delegateId, heartbeat.getDelegateConnectionId(), version, heartbeat.getLocation());
 
     if (previousDelegateConnection == null) {
       DelegateConnection existingConnection = delegateConnectionDao.findAndDeletePreviousConnections(
@@ -3510,9 +3520,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public List<String> getConnectedDelegates(String accountId, List<String> delegateIds) {
     return delegateIds.stream()
-        .filter(delegateId
-            -> delegateConnectionDao.checkDelegateConnected(
-                accountId, delegateId, versionInfoManager.getVersionInfo().getVersion()))
+        .filter(
+            delegateId -> delegateConnectionDao.checkDelegateConnected(accountId, delegateId, getVersion(accountId)))
         .collect(toList());
   }
 
@@ -3637,5 +3646,15 @@ public class DelegateServiceImpl implements DelegateService {
         .field(DelegateKeys.status)
         .notEqual(DelegateInstanceStatus.DELETED)
         .asList();
+  }
+
+  @Override
+  public boolean checkDelegateConnected(String accountId, String delegateId) {
+    return delegateConnectionDao.checkDelegateConnected(accountId, delegateId, getVersion(accountId));
+  }
+
+  private String getVersion(String accountId) {
+    String accountVersion = accountService.getAccountPrimaryDelegateVersion(accountId);
+    return isNotEmpty(accountVersion) ? accountVersion : versionInfoManager.getVersionInfo().getVersion();
   }
 }

@@ -54,6 +54,7 @@ import static software.wings.beans.yaml.YamlType.CONFIG_FILE_OVERRIDE_CONTENT;
 import static software.wings.beans.yaml.YamlType.CV_CONFIGURATION;
 import static software.wings.beans.yaml.YamlType.DEPLOYMENT_SPECIFICATION;
 import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
+import static software.wings.beans.yaml.YamlType.EVENT_RULE;
 import static software.wings.beans.yaml.YamlType.GLOBAL_TEMPLATE_LIBRARY;
 import static software.wings.beans.yaml.YamlType.INFRA_DEFINITION;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
@@ -239,7 +240,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE,
         MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_APP_SETTINGS_ENV_OVERRIDE,
         MANIFEST_FILE_APP_SETTINGS_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_CONN_STRINGS_ENV_OVERRIDE,
-        MANIFEST_FILE_CONN_STRINGS_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER, YamlType.GOVERNANCE_CONFIG);
+        MANIFEST_FILE_CONN_STRINGS_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER, YamlType.GOVERNANCE_CONFIG,
+        EVENT_RULE);
   }
 
   @Override
