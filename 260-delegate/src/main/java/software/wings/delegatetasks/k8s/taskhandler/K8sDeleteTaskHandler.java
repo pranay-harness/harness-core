@@ -88,6 +88,8 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
     ExecutionLogCallback executionLogCallback =
         new ExecutionLogCallback(delegateLogService, k8sDeleteTaskParameters.getAccountId(),
             k8sDeleteTaskParameters.getAppId(), k8sDeleteTaskParameters.getActivityId(), Delete);
+    k8sTaskHelper.logKubectlOrHelmVersion(
+        k8sDelegateTaskParams, k8sDeleteTaskParameters.getK8sDelegateManifestConfig(), executionLogCallback);
 
     if (isEmpty(k8sDeleteTaskParameters.getResources())) {
       return executeDeleteUsingFiles(k8sDeleteTaskParameters, k8sDelegateTaskParams, executionLogCallback);

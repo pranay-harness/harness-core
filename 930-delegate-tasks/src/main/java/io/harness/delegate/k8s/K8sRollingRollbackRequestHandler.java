@@ -109,6 +109,8 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
     logCallback.saveExecutionLog("Initializing..\n");
     logCallback.saveExecutionLog(
         color(String.format("Release Name: [%s]", rollbackRequest.getReleaseName()), Yellow, Bold));
+    k8sTaskHelperBase.logKubectlOrHelmVersion(
+        k8sDelegateTaskParams, rollbackRequest.getManifestDelegateConfig(), logCallback);
 
     rollbackHandlerConfig.setKubernetesConfig(
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(rollbackRequest.getK8sInfraDelegateConfig()));

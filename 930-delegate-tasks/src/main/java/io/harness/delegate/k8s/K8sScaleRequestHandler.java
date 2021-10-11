@@ -150,6 +150,8 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
     executionLogCallback.saveExecutionLog("Initializing..\n");
     executionLogCallback.saveExecutionLog(
         color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
+    k8sTaskHelperBase.logKubectlOrHelmVersion(
+        k8sDelegateTaskParams, request.getManifestDelegateConfig(), executionLogCallback);
 
     try {
       client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());

@@ -207,6 +207,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       K8sRollingDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
     executionLogCallback.saveExecutionLog(color(String.format("Release Name: [%s]", releaseName), Yellow, Bold));
+    k8sTaskHelperBase.logKubectlOrHelmVersion(
+        k8sDelegateTaskParams, request.getManifestDelegateConfig(), executionLogCallback);
     kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig());
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());

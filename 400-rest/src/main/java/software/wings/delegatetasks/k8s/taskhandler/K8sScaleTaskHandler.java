@@ -140,6 +140,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
   boolean init(K8sScaleTaskParameters k8sScaleTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
       String namespace, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    k8sTaskHelper.logKubectlOrHelmVersion(k8sDelegateTaskParams, null, executionLogCallback);
 
     try {
       client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());

@@ -97,6 +97,7 @@ public class K8sCanaryDeleteRequestHandler extends K8sRequestHandler {
   private void init(K8sCanaryDeleteRequest request, K8sDelegateTaskParams delegateParams, LogCallback logCallback)
       throws Exception {
     logCallback.saveExecutionLog("Initializing...\n");
+    k8sTaskHelperBase.logKubectlOrHelmVersion(delegateParams, request.getManifestDelegateConfig(), logCallback);
 
     client = Kubectl.client(delegateParams.getKubectlPath(), delegateParams.getKubeconfigPath());
     kubernetesConfig =

@@ -141,6 +141,8 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
   boolean init(K8sApplyTaskParameters k8sApplyTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
       ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    k8sTaskHelper.logKubectlOrHelmVersion(
+        k8sDelegateTaskParams, k8sApplyTaskParameters.getK8sDelegateManifestConfig(), executionLogCallback);
 
     k8sApplyHandlerConfig.setKubernetesConfig(
         containerDeploymentDelegateHelper.getKubernetesConfig(k8sApplyTaskParameters.getK8sClusterConfig(), false));

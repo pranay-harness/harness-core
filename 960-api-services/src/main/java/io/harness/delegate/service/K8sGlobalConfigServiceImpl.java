@@ -60,4 +60,25 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
   public String getScmPath() {
     return InstallUtils.getScmPath();
   }
+
+  @Override
+  public String getHelmVersion(@Nullable HelmVersion helmVersion) {
+    if (helmVersion == null) {
+      return InstallUtils.getHelm2Version();
+    }
+
+    switch (helmVersion) {
+      case V2:
+        return InstallUtils.getHelm2Version();
+      case V3:
+        return InstallUtils.getHelm3Version();
+      default:
+        throw new InvalidRequestException("Unsupported Helm Version:" + helmVersion);
+    }
+  }
+
+  @Override
+  public String getKubectlVersion() {
+    return InstallUtils.getDefaultKubectlVersion();
+  }
 }

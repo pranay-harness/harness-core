@@ -79,10 +79,12 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
     K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParameters = (K8sTrafficSplitTaskParameters) k8sTaskParameters;
     K8sTrafficSplitResponse k8sTrafficSplitResponse = K8sTrafficSplitResponse.builder().build();
 
-    boolean success = init(k8sTrafficSplitTaskParameters,
+    ExecutionLogCallback logCallback =
         new ExecutionLogCallback(delegateLogService, k8sTrafficSplitTaskParameters.getAccountId(),
-            k8sTrafficSplitTaskParameters.getAppId(), k8sTrafficSplitTaskParameters.getActivityId(), Init));
+            k8sTrafficSplitTaskParameters.getAppId(), k8sTrafficSplitTaskParameters.getActivityId(), Init);
+    k8sTaskHelper.logKubectlOrHelmVersion(k8sDelegateTaskParams, null, logCallback);
 
+    boolean success = init(k8sTrafficSplitTaskParameters, logCallback);
     if (!success) {
       return k8sTaskHelper.getK8sTaskExecutionResponse(k8sTrafficSplitResponse, CommandExecutionStatus.FAILURE);
     }

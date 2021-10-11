@@ -201,6 +201,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
     executionLogCallback.saveExecutionLog(color(String.format("Release Name: [%s]", releaseName), Yellow, Bold));
+    k8sTaskHelperBase.logKubectlOrHelmVersion(
+        k8sDelegateTaskParams, request.getManifestDelegateConfig(), executionLogCallback);
 
     kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig());

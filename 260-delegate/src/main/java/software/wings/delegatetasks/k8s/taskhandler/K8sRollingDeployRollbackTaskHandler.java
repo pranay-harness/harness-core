@@ -141,6 +141,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
   private boolean init(K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    k8sTaskHelper.logKubectlOrHelmVersion(k8sDelegateTaskParams, null, executionLogCallback);
 
     rollbackHandlerConfig.setKubernetesConfig(containerDeploymentDelegateHelper.getKubernetesConfig(
         k8sRollingDeployRollbackTaskParameters.getK8sClusterConfig(), false));

@@ -48,6 +48,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.manifest.CustomManifestService;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.SCMGrpc;
@@ -597,5 +598,30 @@ public class K8sTaskHelper {
       return false;
     }
     return true;
+  }
+
+  public void logKubectlOrHelmVersion(K8sDelegateTaskParams k8sDelegateTaskParams,
+      K8sDelegateManifestConfig k8sDelegateManifestConfig, LogCallback logCallback) {
+    if (k8sDelegateManifestConfig == null) {
+      k8sTaskHelperBase.logLibraryVersion(
+          format("kubectl version: [%s]", k8sDelegateTaskParams.getKubectlVersion()), logCallback);
+      return;
+    }
+
+    StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
+    switch (storeType) {
+      case Local:
+      case Remote:
+        k8sTaskHelperBase.logLibraryVersion(
+            format("kubectl version: [%s]", k8sDelegateTaskParams.getKubectlVersion()), logCallback);
+        return;
+      case HelmSourceRepo:
+      case HelmChartRepo:
+        k8sTaskHelperBase.logLibraryVersion(
+            format("helm client version: [%s]", k8sDelegateTaskParams.getHelmVersion()), logCallback);
+        return;
+      default:
+        return;
+    }
   }
 }

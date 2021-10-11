@@ -1164,4 +1164,16 @@ public class InstallUtils {
       throw new ProcessExecutionException(format("Unable to execute bash command: %s", cmd), ex);
     }
   }
+
+  public String getHelm3Version() {
+    return helm3Version;
+  }
+
+  public String getHelm2Version() {
+    return helm2Version;
+  }
+
+  public String getDefaultKubectlVersion() {
+    return defaultKubectlVersion;
+  }
 }

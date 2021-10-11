@@ -225,6 +225,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   boolean init(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    k8sTaskHelper.logKubectlOrHelmVersion(
+        k8sDelegateTaskParams, k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(), executionLogCallback);
 
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
         k8sBlueGreenDeployTaskParameters.getK8sClusterConfig(), false);

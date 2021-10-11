@@ -10,4 +10,6 @@ public interface K8sGlobalConfigService {
   String getOcPath();
   String getKustomizePath();
   String getScmPath();
+  String getHelmVersion(HelmVersion helmVersion);
+  String getKubectlVersion();
 }

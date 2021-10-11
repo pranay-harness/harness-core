@@ -2396,4 +2396,32 @@ public class K8sTaskHelperBase {
         getResourcesToBePruned(resourcesFromLastSuccessfulRelease, currentResources);
     return arrangeResourceIdsInDeletionOrder(resourceIdsToBeDeleted);
   }
+
+  public void logKubectlOrHelmVersion(K8sDelegateTaskParams k8sDelegateTaskParams,
+      ManifestDelegateConfig manifestDelegateConfig, LogCallback executionLogCallback) {
+    if (manifestDelegateConfig == null) {
+      logLibraryVersion(
+          format("kubectl version: [%s]", k8sDelegateTaskParams.getKubectlVersion()), executionLogCallback);
+      return;
+    }
+
+    ManifestType manifestType = manifestDelegateConfig.getManifestType();
+    switch (manifestType) {
+      case K8S_MANIFEST:
+        logLibraryVersion(
+            format("kubectl version: [%s]", k8sDelegateTaskParams.getKubectlVersion()), executionLogCallback);
+        return;
+      case HELM_CHART:
+        logLibraryVersion(
+            format("helm client version: [%s]", k8sDelegateTaskParams.getHelmVersion()), executionLogCallback);
+        return;
+      default:
+        return;
+    }
+  }
+
+  public void logLibraryVersion(String message, LogCallback logCallback) {
+    log.info(message);
+    logCallback.saveExecutionLog(color(message, White, Bold));
+  }
 }

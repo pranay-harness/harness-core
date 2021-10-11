@@ -82,6 +82,8 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8SDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     LogCallback executionLogCallback =
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Delete, true, commandUnitsProgress);
+    k8sTaskHelperBase.logKubectlOrHelmVersion(
+        k8SDelegateTaskParams, k8sDeleteRequest.getManifestDelegateConfig(), executionLogCallback);
 
     return executeDelete(
         k8sDeleteRequest, k8SDelegateTaskParams, executionLogCallback, logStreamingTaskClient, commandUnitsProgress);

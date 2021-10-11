@@ -13,4 +13,6 @@ public class K8sDelegateTaskParams {
   String helmPath;
   String ocPath;
   String kustomizeBinaryPath;
+  String kubectlVersion;
+  String helmVersion;
 }

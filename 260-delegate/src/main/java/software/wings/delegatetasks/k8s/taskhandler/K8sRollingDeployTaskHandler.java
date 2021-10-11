@@ -311,6 +311,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   boolean init(K8sRollingDeployTaskParameters request, K8sDelegateTaskParams k8sDelegateTaskParams,
       ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    k8sTaskHelper.logKubectlOrHelmVersion(
+        k8sDelegateTaskParams, request.getK8sDelegateManifestConfig(), executionLogCallback);
+
     KubernetesConfig kubernetesConfig =
         containerDeploymentDelegateHelper.getKubernetesConfig(request.getK8sClusterConfig(), false);
     k8sRollingHandlerConfig.setKubernetesConfig(kubernetesConfig);

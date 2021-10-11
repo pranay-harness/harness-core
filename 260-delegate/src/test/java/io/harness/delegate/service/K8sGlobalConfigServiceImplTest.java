@@ -36,4 +36,20 @@ public class K8sGlobalConfigServiceImplTest extends CategoryTest {
   public void shouldNotApplyFunctorIfNoSecrets() {
     assertThat(InstallUtils.getOcPath()).isEqualTo("oc");
   }
+
+  @Test
+  @Owner(developers = OwnerRule.ACASIAN)
+  @Category(UnitTests.class)
+  public void getHelmVersion() {
+    assertThat(k8sGlobalConfigService.getHelmVersion(null)).isEqualTo("v2.13.1");
+    assertThat(k8sGlobalConfigService.getHelmVersion(HelmVersion.V2)).isEqualTo("v2.13.1");
+    assertThat(k8sGlobalConfigService.getHelmVersion(HelmVersion.V3)).isEqualTo("v3.1.2");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ACASIAN)
+  @Category(UnitTests.class)
+  public void getKubectlVersion() {
+    assertThat(k8sGlobalConfigService.getKubectlVersion()).isEqualTo("v1.13.2");
+  }
 }
