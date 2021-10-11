@@ -103,19 +103,19 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                         .first(GitSyncErrorKeys.branchName)
                                         .as(GitSyncErrorAggregateByCommitKeys.branchName)
                                         .first(GitSyncErrorKeys.createdAt)
-                                        .as(GitSyncErrorKeys.createdAt)
+                                        .as(GitSyncErrorAggregateByCommitKeys.createdAt)
                                         .push(ROOT)
                                         .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
     ProjectionOperation projectOperation = project()
                                                .andInclude(GitSyncErrorAggregateByCommitKeys.gitCommitId)
-                                               .andInclude(GitSyncErrorKeys.createdAt)
+                                               .andInclude(GitSyncErrorAggregateByCommitKeys.createdAt)
                                                .andInclude(GitSyncErrorAggregateByCommitKeys.commitMessage)
                                                .andInclude(GitSyncErrorAggregateByCommitKeys.branchName)
                                                .andInclude(GitSyncErrorAggregateByCommitKeys.failedCount)
                                                .andExpression(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView)
                                                .slice(numberOfErrorsInSummary)
                                                .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
-    SortOperation sortOperation = sort(Sort.Direction.DESC, GitSyncErrorKeys.createdAt);
+    SortOperation sortOperation = sort(Sort.Direction.DESC, GitSyncErrorAggregateByCommitKeys.createdAt);
 
     Aggregation aggregation = newAggregation(match(criteria), groupOperation, projectOperation, sortOperation,
         skip(pageable.getOffset()), limit(pageable.getPageSize()));
