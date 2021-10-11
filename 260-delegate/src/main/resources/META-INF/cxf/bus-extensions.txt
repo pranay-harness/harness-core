@@ -1,0 +1,61 @@
+# This is accumalation all the bus-extentions from all the cxf jars that delegate depends on.
+#
+# Problem: Bazel is flattening the jars. If more than jar has the file that is in the same location
+# it overrides it with whoever happends to be the last one. It seems like the CXF library was designed to accumlate the list of extensions
+# at runtime.
+# To overcome this issue we are providing this accumalated list.
+# https://stackoverflow.com/questions/11428311/null-pointer-exception-in-wsdservicefactory-apache-cxf-libs
+#
+# How this file is crated:
+# Identify the all CXF dependencies and get content of META-INF/cxf/bus-extensions.txt files into this file.
+# One option is to go to the folder where all the cxf jars are and run
+# ls | grep cxf | xargs -I {} sh -c "jar -xf {} META-INF/cxf/bus-extensions.txt; less META-INF/cxf/bus-extensions.txt >> ./bus-extensions-unsorted.txt"; less bus-extensions-unsorted.txt | sort | uniq >> ./bus-extensions.txt
+# Commands:
+# Command to list the files in a jar
+# jar -tf
+# Command to list content of file within a jar
+# jar -xf ./cxf-rt-wsdl-3.3.5.jar META-INF/cxf/bus-extensions.txt && cat META-INF/cxf/bus-extensions.txt
+# //TODO: This accumalation must be automated
+org.apache.cxf.binding.soap.SoapBindingFactory::true
+org.apache.cxf.binding.soap.SoapTransportFactory::true
+org.apache.cxf.binding.xml.XMLBindingFactory::true
+org.apache.cxf.binding.xml.wsdl11.XMLWSDLExtensionLoader::true:true
+org.apache.cxf.bus.managers.CXFBusLifeCycleManager:org.apache.cxf.buslifecycle.BusLifeCycleManager:true
+org.apache.cxf.bus.managers.ClientLifeCycleManagerImpl:org.apache.cxf.endpoint.ClientLifeCycleManager:true
+org.apache.cxf.bus.managers.EndpointResolverRegistryImpl:org.apache.cxf.endpoint.EndpointResolverRegistry:true
+org.apache.cxf.bus.managers.HeaderManagerImpl:org.apache.cxf.headers.HeaderManager:true
+org.apache.cxf.bus.managers.PhaseManagerImpl:org.apache.cxf.phase.PhaseManager:true
+org.apache.cxf.bus.managers.ServerLifeCycleManagerImpl:org.apache.cxf.endpoint.ServerLifeCycleManager:true
+org.apache.cxf.bus.managers.ServerRegistryImpl:org.apache.cxf.endpoint.ServerRegistry:true
+org.apache.cxf.bus.managers.WorkQueueManagerImpl:org.apache.cxf.workqueue.WorkQueueManager:true
+org.apache.cxf.bus.resource.ResourceManagerImpl:org.apache.cxf.resource.ResourceManager:true
+org.apache.cxf.catalog.OASISCatalogManager:org.apache.cxf.catalog.OASISCatalogManager:true
+org.apache.cxf.jaxws.context.WebServiceContextResourceResolver::true
+org.apache.cxf.service.factory.FactoryBeanListenerManager::true
+org.apache.cxf.transport.http.HTTPTransportFactory::true
+org.apache.cxf.transport.http.HTTPWSDLExtensionLoader::true:true
+org.apache.cxf.transport.http.asyncclient.AsyncHTTPConduitFactory:org.apache.cxf.transport.http.HTTPConduitFactory:true:true
+org.apache.cxf.transport.http.asyncclient.AsyncHttpTransportFactory:org.apache.cxf.transport.ConduitInitiator:true:true
+org.apache.cxf.transport.http.policy.HTTPClientAssertionBuilder::true:true
+org.apache.cxf.transport.http.policy.HTTPServerAssertionBuilder::true:true
+org.apache.cxf.transport.http.policy.NoOpPolicyInterceptorProvider::true:true
+org.apache.cxf.ws.addressing.impl.AddressingFeatureApplier:org.apache.cxf.ws.addressing.WSAddressingFeature$WSAddressingFeatureApplier:true:true
+org.apache.cxf.ws.addressing.impl.AddressingWSDLExtensionLoader::true:true
+org.apache.cxf.ws.addressing.impl.MAPAggregatorImplLoader:org.apache.cxf.ws.addressing.MAPAggregator$MAPAggregatorLoader:true:true%
+org.apache.cxf.ws.addressing.policy.AddressingAssertionBuilder::true:true
+org.apache.cxf.ws.addressing.policy.AddressingPolicyInterceptorProvider::true:true
+org.apache.cxf.ws.addressing.policy.UsingAddressingAssertionBuilder::true:true
+org.apache.cxf.ws.policy.AssertionBuilderRegistryImpl:org.apache.cxf.ws.policy.AssertionBuilderRegistry:true
+org.apache.cxf.ws.policy.PolicyAnnotationListener::true
+org.apache.cxf.ws.policy.PolicyBuilderImpl:org.apache.cxf.ws.policy.PolicyBuilder:true
+org.apache.cxf.ws.policy.PolicyDataEngineImpl:org.apache.cxf.policy.PolicyDataEngine:false
+org.apache.cxf.ws.policy.PolicyEngineImpl:org.apache.cxf.ws.policy.PolicyEngine:false
+org.apache.cxf.ws.policy.PolicyInterceptorProviderRegistryImpl:org.apache.cxf.ws.policy.PolicyInterceptorProviderRegistry:true
+org.apache.cxf.ws.policy.attachment.ServiceModelPolicyProvider::true
+org.apache.cxf.ws.policy.attachment.external.DomainExpressionBuilderRegistry::true
+org.apache.cxf.ws.policy.attachment.external.EndpointReferenceDomainExpressionBuilder::true
+org.apache.cxf.ws.policy.attachment.external.URIDomainExpressionBuilder::true
+org.apache.cxf.ws.policy.attachment.wsdl11.Wsdl11AttachmentPolicyProvider::true:true
+org.apache.cxf.ws.policy.mtom.MTOMAssertionBuilder::true
+org.apache.cxf.ws.policy.mtom.MTOMPolicyInterceptorProvider::true
+org.apache.cxf.wsdl11.WSDLManagerImpl:org.apache.cxf.wsdl.WSDLManager:true
