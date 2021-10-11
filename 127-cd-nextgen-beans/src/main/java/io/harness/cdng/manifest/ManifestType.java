@@ -12,5 +12,4 @@ public interface ManifestType {
   String Kustomize = "Kustomize";
   String OpenshiftTemplate = "OpenshiftTemplate";
   String OpenshiftParam = "OpenshiftParam";
-  String KustomizePatches = "KustomizePatches";
 }
