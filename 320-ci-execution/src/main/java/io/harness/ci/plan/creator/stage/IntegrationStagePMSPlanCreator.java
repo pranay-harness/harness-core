@@ -236,7 +236,9 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     }
 
     if (executionSource != null) {
+      String sha = retrieveLastCommitSha((WebhookExecutionSource) executionSource);
       return BuildStatusUpdateParameter.builder()
+          .sha(sha)
           .connectorIdentifier(codeBase.getConnectorRef())
           .repoName(codeBase.getRepoName())
           .name(stageElementConfig.getName())
