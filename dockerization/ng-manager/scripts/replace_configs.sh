@@ -186,6 +186,10 @@ if [[ "" != "$HARNESS_IMAGE_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImagePassword $HARNESS_IMAGE_PASSWORD
 fi
 
+if [[ "" != "$CE_NG_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.baseUrl "$CE_NG_CLIENT_BASEURL"
+fi
+
 if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
 fi
