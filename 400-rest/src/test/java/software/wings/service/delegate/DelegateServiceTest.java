@@ -75,6 +75,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SearchFilter.Operator;
@@ -2462,7 +2463,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testProcessDelegateTaskResponseWithDelegateMetaInfo() {
-    DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
+    DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED, false);
 
     DelegateMetaInfo delegateMetaInfo = DelegateMetaInfo.builder().id(DELEGATE_ID).hostName(HOST_NAME).build();
     JenkinsExecutionResponse jenkinsExecutionResponse =
@@ -3451,8 +3452,9 @@ public class DelegateServiceTest extends WingsBaseTest {
         .build();
   }
 
-  private DelegateTask saveDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {
-    DelegateTask delegateTask =
+  private DelegateTask saveDelegateTask(
+      boolean async, Set<String> validatingTaskIds, DelegateTask.Status status, boolean setDelegateId) {
+    final DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
             .accountId(ACCOUNT_ID)
             .waitId(generateUuid())
@@ -3465,9 +3467,13 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                       .build())
             .validatingDelegateIds(validatingTaskIds)
-            .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
-            .build();
+            .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID));
 
+    if (setDelegateId) {
+      delegateTaskBuilder.delegateId(DELEGATE_ID);
+    }
+
+    final DelegateTask delegateTask = delegateTaskBuilder.build();
     delegateService.saveDelegateTask(delegateTask, status);
     return delegateTask;
   }

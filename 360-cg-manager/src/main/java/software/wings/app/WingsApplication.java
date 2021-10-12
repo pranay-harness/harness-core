@@ -75,6 +75,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.insights.DelegateInsightsSummaryJob;
+import io.harness.iterator.DelegateTaskExpiryCheckIterator;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
@@ -1114,6 +1115,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
+    injector.getInstance(DelegateTaskExpiryCheckIterator.class).registerIterators();
   }
 
   public static void registerIteratorsManager(Injector injector) {
