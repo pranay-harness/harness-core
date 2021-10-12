@@ -37,9 +37,9 @@ public class ChangeIntelReplicaSetHandler extends BaseChangeHandler<V1ReplicaSet
   @Override
   public void processAndSendAddEvent(V1ReplicaSet v1ReplicaSet) {
     log.info("OnAdd of ReplicaSet.");
-    if (!hasOwnerReference(v1ReplicaSet)) {
+    ChangeEventDTO eventDTO = buildChangeEvent(v1ReplicaSet);
+    if (!hasOwnerReference(v1ReplicaSet) && shouldProcessEvent(eventDTO)) {
       log.info("ReplicaSet doesn't have an ownerReference. Sending event Data");
-      ChangeEventDTO eventDTO = buildChangeEvent(v1ReplicaSet);
       String newYaml = k8sHandlerUtils.yamlDump(v1ReplicaSet);
       ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setNewYaml(newYaml);
       ((KubernetesChangeEventMetadata) eventDTO.getMetadata())

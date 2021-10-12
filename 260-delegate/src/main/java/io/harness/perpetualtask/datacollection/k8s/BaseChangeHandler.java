@@ -58,10 +58,12 @@ public abstract class BaseChangeHandler<ApiType extends KubernetesObject> implem
   }
   void processAndSendUpdateEvent(ApiType oldResource, ApiType newResource, String oldYaml, String newYaml) {
     ChangeEventDTO eventDTO = buildChangeEvent(newResource);
-    ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setOldYaml(oldYaml);
-    ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setNewYaml(newYaml);
-    ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setAction(KubernetesChangeEventMetadata.Action.Update);
-    sendEvent(accountId, eventDTO);
+    if (shouldProcessEvent(eventDTO)) {
+      ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setOldYaml(oldYaml);
+      ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setNewYaml(newYaml);
+      ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setAction(KubernetesChangeEventMetadata.Action.Update);
+      sendEvent(accountId, eventDTO);
+    }
   }
 
   @Override
@@ -83,13 +85,23 @@ public abstract class BaseChangeHandler<ApiType extends KubernetesObject> implem
 
   void processAndSendDeletedEvent(ApiType newResource, String oldYaml) {
     ChangeEventDTO eventDTO = buildChangeEvent(newResource);
-    ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setOldYaml(oldYaml);
-    ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setAction(KubernetesChangeEventMetadata.Action.Delete);
-    DateTime deletionTime = k8sHandlerUtils.getMetadata(newResource).getDeletionTimestamp();
-    if (deletionTime != null) {
-      eventDTO.setEventTime(deletionTime.toDate().toInstant().toEpochMilli());
+    if (shouldProcessEvent(eventDTO)) {
+      ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setOldYaml(oldYaml);
+      ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setAction(KubernetesChangeEventMetadata.Action.Delete);
+      DateTime deletionTime = k8sHandlerUtils.getMetadata(newResource).getDeletionTimestamp();
+      if (deletionTime != null) {
+        eventDTO.setEventTime(deletionTime.toDate().toInstant().toEpochMilli());
+      }
+      sendEvent(accountId, eventDTO);
     }
-    sendEvent(accountId, eventDTO);
+  }
+
+  boolean shouldProcessEvent(ChangeEventDTO eventDTO) {
+    KubernetesChangeEventMetadata eventMetadata = (KubernetesChangeEventMetadata) eventDTO.getMetadata();
+    if (eventMetadata.getNamespace() != null && eventMetadata.getNamespace().equals("kube-system")) {
+      return false;
+    }
+    return true;
   }
 
   abstract String getKind();
