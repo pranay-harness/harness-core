@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
@@ -24,12 +25,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("TemplateResponse")
 public class TemplateResponseDTO {
-  @NotEmpty String accountId;
+  @NotNull @NotEmpty String accountId;
   String orgIdentifier;
   String projectIdentifier;
-  @NotEmpty String identifier;
+  @NotNull @NotEmpty String identifier;
 
-  @EntityName String name;
+  @NotNull @EntityName String name;
   @Size(max = 1024) String description;
   Map<String, String> tags;
 
