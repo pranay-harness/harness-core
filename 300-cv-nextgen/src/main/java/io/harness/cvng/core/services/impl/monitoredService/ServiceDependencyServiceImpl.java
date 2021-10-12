@@ -107,6 +107,22 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   }
 
   @Override
+  public Set<ServiceDependencyDTO> getDependentServicesToMonitoredService(
+      @NonNull ProjectParams projectParams, String monitoredServiceIdentifier) {
+    Query<ServiceDependency> query =
+        hPersistence.createQuery(ServiceDependency.class)
+            .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceDependencyKeys.fromMonitoredServiceIdentifier, monitoredServiceIdentifier);
+    List<ServiceDependency> dependencies = query.asList();
+    return dependencies.stream()
+        .map(
+            d -> ServiceDependencyDTO.builder().monitoredServiceIdentifier(d.getToMonitoredServiceIdentifier()).build())
+        .collect(Collectors.toSet());
+  }
+
+  @Override
   public List<ServiceDependency> getServiceDependencies(
       @NonNull ProjectParams projectParams, @Nullable List<String> monitoredServiceIdentifiers) {
     Query<ServiceDependency> query =

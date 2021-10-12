@@ -16,7 +16,9 @@ import io.harness.cvng.activity.entities.InfrastructureActivity.InfrastructureAc
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityUpdatableEntity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
+import io.harness.cvng.activity.services.impl.KubernetesClusterActivityUpdateHandler;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.source.services.impl.KubernetesActivitySourceServiceImpl;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
@@ -491,6 +493,10 @@ public class CVServiceModule extends AbstractModule {
         .to(PagerdutyChangeSourceUpdateHandler.class);
     changeSourceUpdateHandlerMapBinder.addBinding(ChangeSourceType.KUBERNETES)
         .to(KubernetesChangeSourceUpdateHandler.class);
+
+    MapBinder<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdateHandler.class);
+    activityUpdateHandlerMapBinder.addBinding(ActivityType.KUBERNETES).to(KubernetesClusterActivityUpdateHandler.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
