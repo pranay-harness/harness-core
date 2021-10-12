@@ -19,6 +19,7 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.GovernanceService;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -33,10 +34,13 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.notification.bean.NotificationRules;
+import io.harness.opaclient.model.OpaConstants;
 import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.governance.PipelineSaveResponse;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
@@ -112,15 +116,10 @@ public class PipelineResource implements YamlSchemaResource {
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
   private final PMSPipelineTemplateHelper pipelineTemplateHelper;
+  private final GovernanceService governanceService;
 
-  @POST
-  @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
-  public ResponseDTO<String> createPipeline(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull String yaml) throws IOException {
+  private PipelineEntity createPipelineInternal(String accountId, String orgId, String projectId, String yaml)
+      throws IOException {
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     log.info(String.format("Creating pipeline with identifier %s in project %s, org %s, account %s",
         pipelineEntity.getIdentifier(), projectId, orgId, accountId));
@@ -130,10 +129,42 @@ public class PipelineResource implements YamlSchemaResource {
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, resolveTemplateRefsInPipeline);
     // validate unique fqn in resolveTemplateRefsInPipeline
     pmsYamlSchemaService.validateUniqueFqn(resolveTemplateRefsInPipeline);
+    return pmsPipelineService.create(pipelineEntity);
+  }
 
-    PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
-
+  @POST
+  @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
+  public ResponseDTO<String> createPipeline(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull String yaml) throws IOException {
+    PipelineEntity createdEntity = createPipelineInternal(accountId, orgId, projectId, yaml);
     return ResponseDTO.newResponse(createdEntity.getVersion().toString(), createdEntity.getIdentifier());
+  }
+
+  @POST
+  @Path("/v2")
+  @ApiOperation(value = "Create a Pipeline", nickname = "createPipelineV2")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
+  public ResponseDTO<PipelineSaveResponse> createPipelineV2(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull String yaml) throws IOException {
+    GovernanceMetadata governanceMetadata =
+        governanceService.evaluateGovernancePolicies(yaml, accountId, OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_SAVE);
+    if (governanceMetadata.getDeny()) {
+      return ResponseDTO.newResponse(PipelineSaveResponse.builder().governanceMetadata(governanceMetadata).build());
+    }
+
+    PipelineEntity createdEntity = createPipelineInternal(accountId, orgId, projectId, yaml);
+    return ResponseDTO.newResponse(createdEntity.getVersion().toString(),
+        PipelineSaveResponse.builder()
+            .governanceMetadata(governanceMetadata)
+            .identifier(createdEntity.getIdentifier())
+            .build());
   }
 
   @POST
@@ -182,16 +213,8 @@ public class PipelineResource implements YamlSchemaResource {
     return ResponseDTO.newResponse(version, pipeline);
   }
 
-  @PUT
-  @Path("/{pipelineIdentifier}")
-  @ApiOperation(value = "Update a Pipeline", nickname = "putPipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
-  public ResponseDTO<String> updatePipeline(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
-      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull String yaml) throws IOException {
+  private PipelineEntity updatePipelineInternal(String accountId, String orgId, String projectId, String yaml,
+      String pipelineId, String ifMatch) throws IOException {
     log.info(String.format("Updating pipeline with identifier %s in project %s, org %s, account %s", pipelineId,
         projectId, orgId, accountId));
 
@@ -208,10 +231,44 @@ public class PipelineResource implements YamlSchemaResource {
     }
 
     PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+    return pmsPipelineService.updatePipelineYaml(withVersion, ChangeType.MODIFY);
+  }
 
-    PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion, ChangeType.MODIFY);
-
+  @PUT
+  @Path("/{pipelineIdentifier}")
+  @ApiOperation(value = "Update a Pipeline", nickname = "putPipeline")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
+  public ResponseDTO<String> updatePipeline(@HeaderParam(IF_MATCH) String ifMatch,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
+      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull String yaml) throws IOException {
+    PipelineEntity updatedEntity = updatePipelineInternal(accountId, orgId, projectId, yaml, pipelineId, ifMatch);
     return ResponseDTO.newResponse(updatedEntity.getVersion().toString(), updatedEntity.getIdentifier());
+  }
+
+  @PUT
+  @Path("/v2/{pipelineIdentifier}")
+  @ApiOperation(value = "Update a Pipeline", nickname = "putPipelineV2")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
+  public ResponseDTO<PipelineSaveResponse> updatePipelineV2(@HeaderParam(IF_MATCH) String ifMatch,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
+      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull String yaml) throws IOException {
+    GovernanceMetadata governanceMetadata =
+        governanceService.evaluateGovernancePolicies(yaml, accountId, OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_SAVE);
+    if (governanceMetadata.getDeny()) {
+      return ResponseDTO.newResponse(PipelineSaveResponse.builder().governanceMetadata(governanceMetadata).build());
+    }
+    PipelineEntity updatedEntity = updatePipelineInternal(accountId, orgId, projectId, yaml, pipelineId, ifMatch);
+    return ResponseDTO.newResponse(updatedEntity.getVersion().toString(),
+        PipelineSaveResponse.builder()
+            .identifier(updatedEntity.getIdentifier())
+            .governanceMetadata(governanceMetadata)
+            .build());
   }
 
   @DELETE
