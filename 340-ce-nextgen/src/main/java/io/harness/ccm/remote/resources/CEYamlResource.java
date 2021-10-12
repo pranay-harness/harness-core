@@ -2,21 +2,31 @@ package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.service.intf.CEYamlService.CLOUD_COST_K8S_CLUSTER_SETUP;
+import static io.harness.ccm.service.intf.CEYamlService.CLOUD_COST_K8S_CLUSTER_SETUP_V2;
 import static io.harness.ccm.service.intf.CEYamlService.DOT_YAML;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.config.CEFeatures;
 import io.harness.ccm.remote.beans.K8sClusterSetupRequest;
+import io.harness.ccm.service.impl.K8sServiceAccountDelegateTaskClient;
 import io.harness.ccm.service.intf.CEYamlService;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.exception.DelegateNotAvailableException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -24,6 +34,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.io.File;
 import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
@@ -42,14 +54,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Api("yaml")
-@Path("/yaml")
-@Produces({MediaType.APPLICATION_JSON})
+@Path("yaml")
+@Produces({MediaType.APPLICATION_JSON, "application/yaml"})
+@ApiResponses(value =
+    {
+      @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+    })
 @NextGenManagerAuth
 @Slf4j
 @Service
 @OwnedBy(CE)
 public class CEYamlResource {
   @Inject private CEYamlService ceYamlService;
+  @Inject private K8sServiceAccountDelegateTaskClient k8sTaskClient;
 
   private static final String CONTENT_DISPOSITION = "Content-Disposition";
   private static final String ATTACHMENT_FILENAME = "attachment; filename=";
@@ -77,6 +95,7 @@ public class CEYamlResource {
     }
   }
 
+  @Deprecated
   @POST
   @Path(CLOUD_COST_K8S_CLUSTER_SETUP)
   @Timed
@@ -102,7 +121,7 @@ public class CEYamlResource {
             .type("text/plain; charset=UTF-8")
             .build();
       } catch (DelegateServiceDriverException ex) {
-        log.error("DelegateServiceDriverException: msg:[{}]", ex.getMessage(), ex);
+        log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
 
         throw new HintException(
             String.format(HintException.DELEGATE_NOT_AVAILABLE,
@@ -112,6 +131,73 @@ public class CEYamlResource {
         log.error("cloudCostK8sClusterSetup Exception", ex);
 
         throw new InvalidRequestException(ex.getMessage());
+      }
+    }
+  }
+
+  @POST
+  @Path(CLOUD_COST_K8S_CLUSTER_SETUP_V2)
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get k8s cluster setup yaml based on requirement", nickname = CLOUD_COST_K8S_CLUSTER_SETUP_V2)
+  public Response cloudCostK8sClusterSetupV2(@Context HttpServletRequest request,
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @QueryParam("includeVisibility") Boolean includeVisibility,
+      @QueryParam("includeOptimization") Boolean includeOptimization,
+      @Valid @NotNull @RequestBody K8sClusterSetupRequest body) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      includeVisibility = firstNonNull(includeVisibility, Boolean.FALSE);
+      includeOptimization = firstNonNull(includeOptimization, Boolean.FALSE);
+
+      final String serverName = request.getServerName();
+      final String harnessHost = request.getScheme() + "://" + serverName;
+
+      try {
+        final String yamlFileContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
+            accountId, harnessHost, serverName, body, includeVisibility, includeOptimization);
+
+        return Response.ok(yamlFileContent)
+            .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + CLOUD_COST_K8S_CLUSTER_SETUP + DOT_YAML)
+            .type("text/plain; charset=UTF-8")
+            .build();
+      } catch (DelegateServiceDriverException ex) {
+        log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
+
+        throw new HintException(
+            String.format(HintException.DELEGATE_NOT_AVAILABLE,
+                "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
+            new DelegateNotAvailableException(ex.getMessage(), WingsException.USER));
+      } catch (IOException ex) {
+        log.error("Some error occurred while processing the YAML template", ex);
+        throw new UnexpectedException(
+            "Some error occurred while processing the YAML template. Please contact the Harness support team.");
+      }
+    }
+  }
+
+  @POST
+  @Path("/cloudCostCapabilityCheck")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(
+      value = "check if the existing k8s cloud provider have necessary permissions to enable Cloud Cost Visibility",
+      nickname = "cloudCostCapabilityCheck")
+  public ResponseDTO<ConnectorValidationResult>
+  cloudCostCapabilityCheck(
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Valid @NotNull @RequestBody K8sClusterSetupRequest body) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountIdentifier, OVERRIDE_ERROR)) {
+      try {
+        final ConnectorValidationResult response = k8sTaskClient.validateConnectorForCePermissions(
+            body.getConnectorIdentifier(), accountIdentifier, body.getOrgIdentifier(), body.getProjectIdentifier());
+        return ResponseDTO.newResponse(response);
+      } catch (DelegateServiceDriverException ex) {
+        log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
+
+        throw new HintException(
+            String.format(HintException.DELEGATE_NOT_AVAILABLE,
+                "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
+            new DelegateNotAvailableException(ex.getMessage(), WingsException.USER));
       }
     }
   }

@@ -3,6 +3,7 @@ package io.harness.ccm.remote.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -36,12 +37,12 @@ public class CEYamlResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
   public void testCloudCostK8sClusterSetupThrowsDelegateNAException() throws Exception {
-    when(ceYamlService.unifiedCloudCostK8sClusterYaml(any(), any(), any(), any()))
+    when(ceYamlService.unifiedCloudCostK8sClusterYaml(any(), any(), any(), any(), anyBoolean(), anyBoolean()))
         .thenThrow(new DelegateServiceDriverException(""));
 
     assertThatThrownBy(()
-                           -> ceYamlResource.cloudCostK8sClusterSetup(mockHttpServletRequest, null,
-                               K8sClusterSetupRequest.builder().featuresEnabled(Collections.emptyList()).build()))
+                           -> ceYamlResource.cloudCostK8sClusterSetupV2(mockHttpServletRequest,
+                               "kmpySmUISimoRrJL6NL73w", true, true, K8sClusterSetupRequest.builder().build()))
         .isExactlyInstanceOf(HintException.class)
         .hasMessageContaining("Please make sure that your delegates are connected");
   }
@@ -51,10 +52,11 @@ public class CEYamlResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCloudCostK8sClusterSetup() throws Exception {
     final String YAML_CONTENT = "yaml content";
-    when(ceYamlService.unifiedCloudCostK8sClusterYaml(any(), any(), any(), any())).thenReturn(YAML_CONTENT);
+    when(ceYamlService.unifiedCloudCostK8sClusterYaml(any(), any(), any(), any(), anyBoolean(), anyBoolean()))
+        .thenReturn(YAML_CONTENT);
 
-    final Response response = ceYamlResource.cloudCostK8sClusterSetup(mockHttpServletRequest, null,
-        K8sClusterSetupRequest.builder().featuresEnabled(Collections.emptyList()).build());
+    final Response response = ceYamlResource.cloudCostK8sClusterSetupV2(
+        mockHttpServletRequest, "kmpySmUISimoRrJL6NL73w", true, true, K8sClusterSetupRequest.builder().build());
 
     assertThat(response.getEntity()).isNotNull();
     assertThat(response.getEntity().toString()).isEqualTo(YAML_CONTENT);

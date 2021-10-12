@@ -7,6 +7,7 @@ import io.harness.ccm.commons.beans.config.CEFeatures;
 import io.harness.ccm.remote.beans.K8sClusterSetupRequest;
 import io.harness.ccm.service.intf.CEYamlService;
 import io.harness.delegate.beans.connector.k8Connector.K8sServiceAccountInfoResponse;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnexpectedException;
 
 import com.google.common.collect.ImmutableMap;
@@ -55,6 +56,7 @@ public class CEYamlServiceImpl implements CEYamlService {
   }
 
   @Override
+  @Deprecated
   public String unifiedCloudCostK8sClusterYaml(@NonNull String accountId, String harnessHost, String serverName,
       @NonNull K8sClusterSetupRequest request) throws IOException {
     String yamlFileContent = "";
@@ -85,14 +87,51 @@ public class CEYamlServiceImpl implements CEYamlService {
     return yamlFileContent;
   }
 
-  private String getK8sOptimisationYaml(@NonNull String accountId, @NonNull String connectorIdentifier,
+  @Override
+  public String unifiedCloudCostK8sClusterYaml(@NonNull String accountId, String harnessHost, String serverName,
+      @NonNull K8sClusterSetupRequest request, boolean includeVisibility, boolean includeOptimization)
+      throws IOException {
+    if (!includeOptimization && !includeVisibility) {
+      throw new InvalidArgumentsException(
+          "Nothing to generate when includeOptimization=false and includeVisibility=false");
+    }
+
+    String yamlFileContent = "";
+
+    K8sServiceAccountInfoResponse serviceAccount;
+    try {
+      serviceAccount = k8sTaskClient.fetchServiceAccount(
+          request.getConnectorIdentifier(), accountId, request.getOrgIdentifier(), request.getProjectIdentifier());
+
+      log.info(
+          "serviceAccount associated with accountId:{}, connectorIdentifier:{}, orgIdentifier:{}, projectIdentifier:{} is {}",
+          accountId, request.getConnectorIdentifier(), request.getOrgIdentifier(), request.getProjectIdentifier(),
+          serviceAccount);
+    } catch (Exception ex) {
+      log.error("Failed delegate task K8S_SERVICE_ACCOUNT_INFO", ex);
+      throw ex;
+    }
+
+    if (includeVisibility) {
+      yamlFileContent = getK8sVisibilityYaml(serviceAccount);
+    } else if (includeOptimization) {
+      yamlFileContent = getClusterroleYaml(serviceAccount);
+
+      yamlFileContent += getK8sOptimisationYaml(
+          accountId, request.getCcmConnectorIdentifier(), harnessHost, serverName, serviceAccount);
+    }
+
+    return yamlFileContent;
+  }
+
+  private String getK8sOptimisationYaml(@NonNull String accountId, @NonNull String ccmConnectorIdentifier,
       @NonNull String harnessHost, @NonNull String serverName, K8sServiceAccountInfoResponse serviceAccount)
       throws IOException {
     final String costOptimisationFileName = "cost-optimisation-crd";
 
     ImmutableMap<String, String> scriptParams = ImmutableMap.<String, String>builder()
                                                     .put("accountId", accountId)
-                                                    .put("connectorIdentifier", connectorIdentifier)
+                                                    .put("connectorIdentifier", ccmConnectorIdentifier)
                                                     .put("envoyHarnessHostname", serverName)
                                                     .put("harnessHostname", harnessHost)
                                                     .put("serviceAccountName", serviceAccount.getName())
@@ -104,6 +143,17 @@ public class CEYamlServiceImpl implements CEYamlService {
 
   private String getK8sVisibilityYaml(K8sServiceAccountInfoResponse serviceAccount) throws IOException {
     final String visibilityYamlFileName = "k8s-visibility-clusterrole";
+
+    ImmutableMap<String, String> scriptParams = ImmutableMap.<String, String>builder()
+                                                    .put("serviceAccountName", serviceAccount.getName())
+                                                    .put("serviceAccountNamespace", serviceAccount.getNamespace())
+                                                    .build();
+
+    return getProcessedYaml(visibilityYamlFileName, scriptParams);
+  }
+
+  private String getClusterroleYaml(K8sServiceAccountInfoResponse serviceAccount) throws IOException {
+    final String visibilityYamlFileName = "ce-clusterrole";
 
     ImmutableMap<String, String> scriptParams = ImmutableMap.<String, String>builder()
                                                     .put("serviceAccountName", serviceAccount.getName())

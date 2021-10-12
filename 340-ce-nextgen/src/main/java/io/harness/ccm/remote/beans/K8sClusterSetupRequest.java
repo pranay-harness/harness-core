@@ -15,7 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class K8sClusterSetupRequest {
-  @NotEmpty List<CEFeatures> featuresEnabled;
+  List<CEFeatures> featuresEnabled;
 
   // used by VISIBILITY feature
   String connectorIdentifier;

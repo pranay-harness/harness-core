@@ -2371,7 +2371,7 @@ public class K8sTaskHelperBase {
                              .message("Please install metrics server on your cluster")
                              .reason("couldn't access metrics server")
                              .build());
-        errorSummary += metricsServerCheck.getMessage();
+        errorSummary += metricsServerCheck.getMessage() + ", ";
       }
 
       List<CEK8sDelegatePrerequisite.Rule> ruleList =
@@ -2387,13 +2387,15 @@ public class K8sTaskHelperBase {
                                            .code(0)
                                            .build())
                                 .collect(toList()));
-        errorSummary += "; few permissions are missing.";
+        errorSummary += "few of the visibility permissions are missing, ";
       }
 
       if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
         errorDetails.addAll(this.validateLightwingResourceExists(kubernetesConfig));
 
         errorDetails.addAll(this.validateLightwingResourcePermissions(kubernetesConfig));
+
+        errorSummary += "few of the optimization permissions are missing, ";
       }
 
       if (!errorDetails.isEmpty()) {
