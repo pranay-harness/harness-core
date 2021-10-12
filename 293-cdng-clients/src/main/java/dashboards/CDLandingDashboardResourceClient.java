@@ -29,39 +29,39 @@ public interface CDLandingDashboardResourceClient {
   @GET(LANDING_DASHBOARDS_API + "/activeServices")
   Call<ResponseDTO<ServicesDashboardInfo>> get(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
+      @NotNull @Query("orgProjectIdentifiers") List<String> orgProjectIdentifiers,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval, @NotNull @Query("sortBy") SortBy sortBy);
 
   @GET(LANDING_DASHBOARDS_API + "/topProjects")
   Call<ResponseDTO<ProjectsDashboardInfo>> getTopProjects(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
+      @NotNull @Query("orgProjectIdentifiers") List<String> orgProjectIdentifiers,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval);
 
   @GET(LANDING_DASHBOARDS_API + "/deploymentStatsSummary")
   Call<ResponseDTO<DeploymentStatsSummary>> getDeploymentStatsSummary(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
+      @NotNull @Query("orgProjectIdentifiers") List<String> orgProjectIdentifiers,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval, @NotNull @Query("groupBy") GroupBy groupBy);
 
   @GET(LANDING_DASHBOARDS_API + "/activeDeploymentStats")
   Call<ResponseDTO<PipelinesExecutionDashboardInfo>> getActiveDeploymentStats(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers);
+      @NotNull @Query("orgProjectIdentifiers") List<String> orgProjectIdentifiers);
 
   @GET(LANDING_DASHBOARDS_API + "/servicesCount")
   Call<ResponseDTO<ServicesCount>> getServicesCount(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
+      @NotNull @Query("orgProjectIdentifiers") List<String> orgProjectIdentifiers,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval);
 
   @GET(LANDING_DASHBOARDS_API + "/envCount")
   Call<ResponseDTO<EnvCount>> getEnvCount(@NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
+      @NotNull @Query("orgProjectIdentifiers") List<String> orgProjectIdentifiers,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval);
 }

@@ -81,7 +81,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     List<String> orgIdentifiers = getOrgIdentifiers(listOfAccessibleProject);
     Map<String, String> mapOfOrganizationIdentifierAndOrganizationName =
         dashboardRBACService.getMapOfOrganizationIdentifierAndOrganizationName(accountIdentifier, orgIdentifiers);
-    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
+    List<String> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
     Map<String, String> mapOfProjectIdentifierAndProjectName =
         getMapOfProjectIdentifierAndProjectName(listOfAccessibleProject);
     List<RestCallRequest> restCallRequestList = getRestCallRequestListForTopProjectsPanel(
@@ -132,7 +132,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     List<String> orgIdentifiers = getOrgIdentifiers(listOfAccessibleProject);
     Map<String, String> mapOfOrganizationIdentifierAndOrganizationName =
         dashboardRBACService.getMapOfOrganizationIdentifierAndOrganizationName(accountIdentifier, orgIdentifiers);
-    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
+    List<String> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
     Map<String, String> mapOfProjectIdentifierAndProjectName =
         getMapOfProjectIdentifierAndProjectName(listOfAccessibleProject);
     List<RestCallRequest> restCallRequestList = getRestCallRequestListForDeploymentStatsOverview(
@@ -183,7 +183,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   public ExecutionResponse<CountOverview> getCountOverview(
       String accountIdentifier, String userId, long startInterval, long endInterval) {
     List<ProjectDTO> listOfAccessibleProject = dashboardRBACService.listAccessibleProject(accountIdentifier, userId);
-    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
+    List<String> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
     List<RestCallRequest> restCallRequestList = getRestCallRequestListForCountOverview(
         accountIdentifier, userId, startInterval, endInterval, orgProjectIdentifierList);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
@@ -348,10 +348,10 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         .build();
   }
 
-  private List<OrgProjectIdentifier> getOrgProjectIdentifier(List<ProjectDTO> listOfAccessibleProject) {
+  private List<String> getOrgProjectIdentifier(List<ProjectDTO> listOfAccessibleProject) {
     return emptyIfNull(listOfAccessibleProject)
         .stream()
-        .map(projectDTO -> new OrgProjectIdentifier(projectDTO.getOrgIdentifier() + ":" + projectDTO.getIdentifier()))
+        .map(projectDTO -> new OrgProjectIdentifier(projectDTO.getOrgIdentifier() + ":" + projectDTO.getIdentifier()).toString())
         .collect(Collectors.toList());
   }
 
@@ -371,7 +371,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   }
 
   private List<RestCallRequest> getRestCallRequestListForTopProjectsPanel(String accountIdentifier, long startInterval,
-      long endInterval, List<OrgProjectIdentifier> orgProjectIdentifierList) {
+      long endInterval, List<String> orgProjectIdentifierList) {
     List<RestCallRequest> restCallRequestList = new ArrayList<>();
     restCallRequestList.add(RestCallRequest.<ProjectsDashboardInfo>builder()
                                 .request(cdLandingDashboardResourceClient.getTopProjects(
@@ -410,7 +410,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   }
 
   private List<RestCallRequest> getRestCallRequestListForDeploymentStatsOverview(String accountIdentifier,
-      long startInterval, long endInterval, List<OrgProjectIdentifier> orgProjectIdentifierList, GroupBy groupBy,
+      long startInterval, long endInterval, List<String> orgProjectIdentifierList, GroupBy groupBy,
       SortBy sortBy) {
     List<RestCallRequest> restCallRequestList = new ArrayList<>();
     restCallRequestList.add(RestCallRequest.<PipelinesExecutionDashboardInfo>builder()
@@ -432,7 +432,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   }
 
   private List<RestCallRequest> getRestCallRequestListForCountOverview(String accountIdentifier, String userId,
-      long startInterval, long endInterval, List<OrgProjectIdentifier> orgProjectIdentifierList) {
+      long startInterval, long endInterval, List<String> orgProjectIdentifierList) {
     List<RestCallRequest> restCallRequestList = new ArrayList<>();
     restCallRequestList.add(RestCallRequest.<ServicesCount>builder()
                                 .request(cdLandingDashboardResourceClient.getServicesCount(
