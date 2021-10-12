@@ -11,6 +11,7 @@ import io.harness.gitsync.FileChange;
 import io.harness.gitsync.FileChanges;
 import io.harness.gitsync.FullSyncServiceGrpc.FullSyncServiceBlockingStub;
 import io.harness.gitsync.ScopeDetails;
+import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 
@@ -38,7 +39,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
       FileChanges entitiesForFullSync = null;
       try {
         // todo(abhinav): add retry
-        entitiesForFullSync = fullSyncServiceBlockingStub.getEntitiesForFullSync(scopeDetails);
+        entitiesForFullSync = GitSyncGrpcClientUtils.retryAndProcessException(
+            fullSyncServiceBlockingStub::getEntitiesForFullSync, scopeDetails);
       } catch (Exception e) {
         log.error("Error encountered while getting entities while full sync for msvc {}", microservice, e);
         return;

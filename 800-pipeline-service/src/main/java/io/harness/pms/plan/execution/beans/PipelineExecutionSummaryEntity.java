@@ -20,6 +20,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
@@ -31,6 +32,7 @@ import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -90,6 +92,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @Builder.Default Map<String, org.bson.Document> moduleInfo = new HashMap<>();
   @Builder.Default Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();
   List<String> modules;
+  Set<String> executedModules;
   String startingNodeId;
 
   ExecutionTriggerInfo executionTriggerInfo;
@@ -97,6 +100,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @Deprecated ByteString gitSyncBranchContext;
   EntityGitDetails entityGitDetails;
   FailureInfoDTO failureInfo;
+  GovernanceMetadata governanceMetadata;
 
   Long startTs;
   Long endTs;
@@ -146,7 +150,12 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .field(PlanExecutionSummaryKeys.accountId)
                  .field(PlanExecutionSummaryKeys.createdAt)
                  .build())
-
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_executed_modules_startTs_idx")
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.executedModules)
+                 .field(PlanExecutionSummaryKeys.startTs)
+                 .build())
         .build();
   }
 

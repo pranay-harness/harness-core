@@ -10,14 +10,12 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Persistent;
 
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "GitOpsProviderKeys")
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "gitopsproviders", noClassnameStored = true)
 @Persistent
@@ -25,6 +23,11 @@ import org.springframework.data.annotation.Persistent;
 @OwnedBy(HarnessTeam.GITOPS)
 public class ConnectedArgoProvider extends GitOpsProvider {
   @NotBlank @SearchTerm String adapterUrl;
+
+  public ConnectedArgoProvider(String adapterUrl) {
+    this.adapterUrl = adapterUrl;
+    this.type = GitOpsProviderType.CONNECTED_ARGO_PROVIDER;
+  }
 
   @Override
   public GitOpsProviderType getGitOpsProviderType() {

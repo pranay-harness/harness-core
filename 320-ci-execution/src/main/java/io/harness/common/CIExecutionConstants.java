@@ -104,6 +104,9 @@ public class CIExecutionConstants {
 
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
 
+  // All FFs go here
+  public static final String HARNESS_CI_INDIRECT_LOG_UPLOAD_FF = "HARNESS_CI_INDIRECT_LOG_UPLOAD_FF";
+
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));
 

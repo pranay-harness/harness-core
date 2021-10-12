@@ -27,9 +27,12 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.utils.Utils;
 import software.wings.yaml.BaseEntityYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +65,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "artifactStream")
 @HarnessEntity(exportable = true)
 public abstract class ArtifactStream
-    extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
+    extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware,
+                            NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -222,6 +226,12 @@ public abstract class ArtifactStream
     Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, sourceName, artifactStreamType));
     return keywords;
+  }
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getType() {
+    return NGMigrationEntityType.ARTIFACT_STREAM;
   }
 
   @Data

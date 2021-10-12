@@ -3,7 +3,7 @@ package software.wings.verification.prometheus;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfigurationYaml;
+import software.wings.verification.MetricCVConfigurationYaml;
 import software.wings.verification.ServiceGuardThroughputToErrorsMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -72,7 +72,7 @@ public class PrometheusCVServiceConfiguration extends CVConfiguration {
   @Builder
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class PrometheusCVConfigurationYaml extends CVConfigurationYaml {
+  public static final class PrometheusCVConfigurationYaml extends MetricCVConfigurationYaml {
     private List<TimeSeries> timeSeriesList;
   }
 }

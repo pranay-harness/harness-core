@@ -81,9 +81,6 @@ public enum NGStepType {
   BARRIERS(
       "Barriers", Arrays.asList(ServiceDefinitionType.values()), "Flow Control", StepSpecTypeConstants.PLACEHOLDER),
   // Utilities
-  @JsonProperty(StepSpecTypeConstants.SHELL_SCRIPT)
-  SHELL_SCRIPT("Shell Script", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted",
-      StepSpecTypeConstants.SHELL_SCRIPT),
   @JsonProperty("NEW_RELIC_DEPLOYMENT_MAKER")
   NEW_RELIC_DEPLOYMENT_MAKER("New Relic Deployment Maker", Arrays.asList(ServiceDefinitionType.values()),
       "Utilites/Non-Scripted/", StepSpecTypeConstants.PLACEHOLDER),

@@ -460,20 +460,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
 
-    when(nextGenService.listService(anyString(), anyString(), anyString(), any()))
-        .thenReturn(Arrays.asList(ServiceResponse.builder()
-                                      .service(builderFactory.serviceResponseDTOBuilder()
-                                                   .identifier(serviceIdentifier)
-                                                   .name("serviceName")
-                                                   .build())
-                                      .build()));
-    when(nextGenService.listEnvironment(anyString(), anyString(), anyString(), any()))
-        .thenReturn(Arrays.asList(EnvironmentResponse.builder()
-                                      .environment(builderFactory.environmentResponseDTOBuilder()
-                                                       .identifier(environmentIdentifier)
-                                                       .name("environmentName")
-                                                       .build())
-                                      .build()));
+    when(nextGenService.getServiceIdNameMap(any(), any())).thenReturn(new HashMap<String, String>() {
+      { put(serviceIdentifier, "serviceName"); }
+    });
+    when(nextGenService.getEnvironmentIdNameMap(any(), any())).thenReturn(new HashMap<String, String>() {
+      { put(environmentIdentifier, "environmentName"); }
+    });
     PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse =
         monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, null, 0, 10, null);
     assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
@@ -848,9 +840,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             + "  sources:\n"
             + "    healthSources:\n"
             + "    changeSources:\n"
-            + "      - name: Harness CD\n"
-            + "        identifier: harness_cd\n"
-            + "        type: HarnessCD\n"
+            + "      - name: Harness CD Next Gen\n"
+            + "        identifier: harness_cd_next_gen\n"
+            + "        type: HarnessCDNextGen\n"
             + "        enabled : true\n");
 
     assert (monitoredServiceService.getYamlTemplate(projectParams, MonitoredServiceType.INFRASTRUCTURE))
@@ -880,9 +872,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             + "  sources:\n"
             + "    healthSources:\n"
             + "    changeSources:\n"
-            + "      - name: Harness CD\n"
-            + "        identifier: harness_cd\n"
-            + "        type: HarnessCD\n"
+            + "      - name: Harness CD Next Gen\n"
+            + "        identifier: harness_cd_next_gen\n"
+            + "        type: HarnessCDNextGen\n"
             + "        enabled : true\n");
   }
 

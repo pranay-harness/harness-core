@@ -70,8 +70,8 @@ public class GitopsProviderServiceTest extends GitOpsProviderTestBase {
     final List<GitOpsProviderDTO> toSave =
         IntStream.range(0, n).mapToObj(i -> buildConnectedGitOpsDTO("prefix")).collect(Collectors.toList());
     toSave.forEach(dto -> gitopsProviderService.create(dto, TestConstants.ACCOUNT_IDENTIFIER));
-    final Page<GitOpsProviderResponseDTO> listDtos = gitopsProviderService.list(
-        Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID, TestConstants.PROJECT_ID, null);
+    final Page<GitOpsProviderResponseDTO> listDtos = gitopsProviderService.list(Pageable.unpaged(),
+        TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID, TestConstants.PROJECT_ID, null, null);
     assertThat(listDtos).hasSize(n);
   }
 
@@ -93,10 +93,10 @@ public class GitopsProviderServiceTest extends GitOpsProviderTestBase {
         .collect(Collectors.toList())
         .forEach(dto -> gitopsProviderService.create(dto, TestConstants.ACCOUNT_IDENTIFIER));
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "prefix-B"))
+                   TestConstants.PROJECT_ID, "prefix-B", null))
         .hasSize(n);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "prefix-"))
+                   TestConstants.PROJECT_ID, "prefix-", null))
         .hasSize(n * 2);
   }
 
@@ -113,19 +113,19 @@ public class GitopsProviderServiceTest extends GitOpsProviderTestBase {
     gitopsProviderService.create(buildConnectedGitOpsDTO(tagSet3), TestConstants.ACCOUNT_IDENTIFIER);
     gitopsProviderService.create(buildConnectedGitOpsDTO(tagSet4), TestConstants.ACCOUNT_IDENTIFIER);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "k1"))
+                   TestConstants.PROJECT_ID, "k1", null))
         .hasSize(2);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "k2"))
+                   TestConstants.PROJECT_ID, "k2", null))
         .hasSize(2);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "k3"))
+                   TestConstants.PROJECT_ID, "k3", null))
         .hasSize(1);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "k3:v3"))
+                   TestConstants.PROJECT_ID, "k3:v3", null))
         .hasSize(1);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "foobar"))
+                   TestConstants.PROJECT_ID, "foobar", null))
         .hasSize(0);
   }
 
@@ -138,13 +138,13 @@ public class GitopsProviderServiceTest extends GitOpsProviderTestBase {
     gitopsProviderService.create(buildConnectedGitOpsDTODesc("desc3"), TestConstants.ACCOUNT_IDENTIFIER);
 
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "desc"))
+                   TestConstants.PROJECT_ID, "desc", null))
         .hasSize(3);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "desc2"))
+                   TestConstants.PROJECT_ID, "desc2", null))
         .hasSize(1);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "desc3"))
+                   TestConstants.PROJECT_ID, "desc3", null))
         .hasSize(1);
   }
 
@@ -157,13 +157,13 @@ public class GitopsProviderServiceTest extends GitOpsProviderTestBase {
     gitopsProviderService.create(buildConnectedGitOpsDTOName("name3"), TestConstants.ACCOUNT_IDENTIFIER);
 
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "name"))
+                   TestConstants.PROJECT_ID, "name", null))
         .hasSize(3);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "name2"))
+                   TestConstants.PROJECT_ID, "name2", null))
         .hasSize(1);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "name1"))
+                   TestConstants.PROJECT_ID, "name1", null))
         .hasSize(1);
   }
 
@@ -176,10 +176,10 @@ public class GitopsProviderServiceTest extends GitOpsProviderTestBase {
     gitopsProviderService.create(buildConnectedGitOpsDTOUrl("https://provider3.com"), TestConstants.ACCOUNT_IDENTIFIER);
 
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "provider"))
+                   TestConstants.PROJECT_ID, "provider", null))
         .hasSize(3);
     assertThat(gitopsProviderService.list(Pageable.unpaged(), TestConstants.ACCOUNT_IDENTIFIER, TestConstants.ORG_ID,
-                   TestConstants.PROJECT_ID, "provider2"))
+                   TestConstants.PROJECT_ID, "provider2", null))
         .hasSize(1);
   }
 

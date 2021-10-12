@@ -174,10 +174,8 @@ public class IntegrationStageUtils {
         String branchString =
             RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", "identifier", branch, false);
         if (isNotEmpty(branchString)) {
-          if (version >= 3l) {
+          if (!branchString.equals(BRANCH_EXPRESSION)) {
             return true;
-          } else {
-            return false;
           }
         } else {
           throw new CIStageExecutionException("Branch should not be empty for branch build type");

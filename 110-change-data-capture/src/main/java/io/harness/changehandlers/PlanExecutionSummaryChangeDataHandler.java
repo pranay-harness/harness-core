@@ -67,6 +67,10 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
           columnValueMapping.put("source_branch", pullRequestObject.get("sourceBranch").toString());
         }
 
+        if (pullRequestObject.get("id") != null) {
+          columnValueMapping.put("pr", String.valueOf(Long.parseLong(pullRequestObject.get("id").toString())));
+        }
+
         if (pullRequestObject.get(commits) != null && ((List) pullRequestObject.get(commits)).size() > 0) {
           firstCommit = (HashMap) ((List) pullRequestObject.get(commits)).get(0);
           if (firstCommit != null) {

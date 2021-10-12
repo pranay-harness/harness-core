@@ -20,6 +20,7 @@ java_library(
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_inject_guice",
         "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:io_swagger_core_v3_swagger_annotations",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:org_slf4j_slf4j_api",

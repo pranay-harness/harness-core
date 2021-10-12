@@ -13,7 +13,6 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.dashboards.PipelinesCount;
-import io.harness.pms.pipeline.service.PipelineDashboardService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -45,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @PipelineServiceAuth
 @Slf4j
 public class PMSLandingDashboardResource {
-  private final PipelineDashboardService pipelineDashboardService;
+  private final PMSLandingDashboardService pmsLandingDashboardService;
 
   @GET
   @Path("/pipelinesCount")
@@ -56,6 +55,7 @@ public class PMSLandingDashboardResource {
       @NotNull @QueryParam("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
-    return ResponseDTO.newResponse(PipelinesCount.builder().build());
+    return ResponseDTO.newResponse(pmsLandingDashboardService.getPipelinesCount(
+        accountIdentifier, orgProjectIdentifiers, startInterval, endInterval));
   }
 }

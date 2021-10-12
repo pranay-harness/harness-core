@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class DashboardResource {
-  private final String FAILURE_MESSAGE = "failed to get userId";
+  private final String FAILURE_MESSAGE = "Failed to get userId";
 
   private final OverviewDashboardService overviewDashboardService;
 

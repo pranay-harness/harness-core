@@ -186,6 +186,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
             .newServiceDiscoveryArn(containerServiceElement.getEcsBGSetupData().getNewServiceDiscoveryArn())
             .timeout(containerServiceElement.getServiceSteadyStateTimeout())
             .timeoutErrorSupported(featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, application.getAccountId()))
+            .previousAwsAutoScalarConfigs(containerServiceElement.getPreviousAwsAutoScalarConfigs())
             .build();
 
     EcsRoute53WeightUpdateStateExecutionData executionData =

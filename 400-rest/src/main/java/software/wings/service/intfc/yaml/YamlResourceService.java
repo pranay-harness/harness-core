@@ -1,5 +1,7 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.ConfigFile;
@@ -15,6 +17,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  *
  * @author bsollish
  */
+@OwnedBy(HarnessTeam.DX)
 public interface YamlResourceService {
   /**
    * Find by app, service and service command ids.
@@ -138,4 +141,6 @@ public interface YamlResourceService {
   RestResponse<YamlPayload> getHarnessTags(String accountId);
 
   RestResponse<YamlPayload> getGovernanceConfig(@NotEmpty String accountId);
+
+  RestResponse<YamlPayload> getEventConfig(String appId, String eventConfigId);
 }

@@ -2,6 +2,8 @@ load("//:tools/bazel/aeriform.bzl", "aeriform")
 
 aeriform("//001-microservice-intfc-tool:module")
 
+aeriform("//100-ng-migration:module")
+
 aeriform("//110-change-data-capture:module")
 
 aeriform("//120-ng-manager:module")
@@ -308,8 +310,6 @@ aeriform("//940-cg-audit-service:module")
 
 aeriform("//940-cg-audit-service:tests")
 
-aeriform("//940-enforcement-sdk:module")
-
 aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
@@ -327,6 +327,8 @@ aeriform("//940-primary-version-manager:tests")
 aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")
+
+aeriform("//942-enforcement-sdk:module")
 
 aeriform("//943-enforcement-beans:module")
 

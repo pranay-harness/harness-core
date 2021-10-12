@@ -11,16 +11,21 @@ import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -80,7 +85,7 @@ import retrofit2.http.Body;
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -160,6 +165,18 @@ public class UserResource {
   public ResponseDTO<List<ProjectDTO>> getUserAllProjectsInfo(
       @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
+  }
+
+  @GET
+  @Path("projects-count")
+  @ApiOperation(value = "Get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
+  public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(
+        projectService.accessibleProjectsCount(userId, accountIdentifier, startInterval, endInterval));
   }
 
   @POST
@@ -269,14 +286,18 @@ public class UserResource {
   @PUT
   @Path("enable-two-factor-auth")
   @ApiOperation(value = "enable two factor auth settings", nickname = "enableTwoFactorAuth")
-  public ResponseDTO<UserInfo> updateTwoFactorAuthInfo(@Body TwoFactorAuthSettingsInfo authSettingsInfo) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.TWO_FACTOR_AUTH_SUPPORT)
+  public ResponseDTO<UserInfo> updateTwoFactorAuthInfo(
+      @QueryParam("routingId") @AccountIdentifier String accountIdentifier,
+      @Body TwoFactorAuthSettingsInfo authSettingsInfo) {
     return ResponseDTO.newResponse(userInfoService.updateTwoFactorAuthInfo(authSettingsInfo));
   }
 
   @PUT
   @Path("disable-two-factor-auth")
   @ApiOperation(value = "disable two factor auth settings", nickname = "disableTwoFactorAuth")
-  public ResponseDTO<UserInfo> disableTFA() {
+  @FeatureRestrictionCheck(FeatureRestrictionName.TWO_FACTOR_AUTH_SUPPORT)
+  public ResponseDTO<UserInfo> disableTFA(@QueryParam("routingId") @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(userInfoService.disableTFA());
   }
 

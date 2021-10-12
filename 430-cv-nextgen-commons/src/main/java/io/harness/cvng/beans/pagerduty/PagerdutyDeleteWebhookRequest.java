@@ -8,15 +8,17 @@ import io.harness.cvng.beans.DataCollectionRequestType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+@Data
 @JsonTypeName("PAGERDUTY_DELETE_WEBHOOK")
 @SuperBuilder
 @NoArgsConstructor
 @OwnedBy(CV)
 public class PagerdutyDeleteWebhookRequest extends PagerDutyDataCollectionRequest {
-  public static final String DSL = PagerDutyRegisterWebhookRequest.readDSL(
+  public static final String DSL = PagerdutyDeleteWebhookRequest.readDSL(
       "pagerduty-delete-webhook.datacollection", PagerdutyDeleteWebhookRequest.class);
 
   private String webhookId;

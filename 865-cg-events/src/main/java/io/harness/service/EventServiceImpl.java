@@ -135,6 +135,6 @@ public class EventServiceImpl implements EventService {
 
   @Override
   public void pruneByApplication(String appId) {
-    hPersistence.delete(hPersistence.createQuery(Event.class).filter(EventsKeys.appId, appId));
+    hPersistence.deleteOnServer(hPersistence.createQuery(Event.class).filter(EventsKeys.appId, appId));
   }
 }

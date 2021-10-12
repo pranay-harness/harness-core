@@ -164,7 +164,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @QueryParam("pipelineBranch") String pipelineBranch, @QueryParam("pipelineRepoID") String pipelineRepoID,
-      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull String yaml) {
     yaml = removeRuntimeInputFromYaml(yaml);
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntity(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
@@ -192,7 +192,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull String yaml) {
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntityForOverlay(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     log.info(
@@ -222,7 +222,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @QueryParam("pipelineBranch") String pipelineBranch, @QueryParam("pipelineRepoID") String pipelineRepoID,
-      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
+      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull String yaml) {
     log.info(String.format("Updating input set with identifier %s for pipeline %s in project %s, org %s, account %s",
         inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     yaml = removeRuntimeInputFromYaml(yaml);

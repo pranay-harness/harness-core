@@ -30,8 +30,8 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck, Proto
         valid = connectableHost(socketConnCapability.getUrl(), Integer.parseInt(socketConnCapability.getPort()));
       }
       return CapabilityResponse.builder().delegateCapability(socketConnCapability).validated(valid).build();
-    } catch (Exception ex) {
-      log.error("Error Occurred while checking socketConnCapability: {}", ex.getMessage());
+    } catch (final Exception ex) {
+      log.error("Error Occurred while checking socketConnCapability", ex);
       return CapabilityResponse.builder().delegateCapability(socketConnCapability).validated(false).build();
     }
   }
@@ -44,15 +44,14 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck, Proto
     }
     SocketConnectivityParameters socketParameters = parameters.getSocketConnectivityParameters();
     try {
+      final String host =
+          socketParameters.getHostName().isEmpty() ? socketParameters.getUrl() : socketParameters.getHostName();
       return builder
-          .permissionResult(connectableHost(socketParameters.getHostName().isEmpty() ? socketParameters.getUrl()
-                                                                                     : socketParameters.getHostName(),
-                                socketParameters.getPort())
-                  ? PermissionResult.ALLOWED
-                  : PermissionResult.DENIED)
+          .permissionResult(
+              connectableHost(host, socketParameters.getPort()) ? PermissionResult.ALLOWED : PermissionResult.DENIED)
           .build();
-    } catch (Exception ex) {
-      log.error("Error Occurred while checking socketConnCapability: {}", ex.getMessage());
+    } catch (final Exception ex) {
+      log.error("Error Occurred while checking socketConnCapability with proto", ex);
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
   }
@@ -60,10 +59,10 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck, Proto
   public static boolean connectableHost(String host, int port) {
     try (Socket socket = new Socket()) {
       socket.connect(new InetSocketAddress(host, port), 5000); // 5 sec timeout
-      log.info("[Delegate Capability] Socket Connection Succeeded for url " + host + " on port " + port);
+      log.info("[Delegate Capability] Socket Connection Succeeded for url {} on port {}", host, port);
       return true;
-    } catch (IOException ignored) {
-      log.error("[Delegate Capability] Socket Connection Failed for url " + host + " on port " + port);
+    } catch (final IOException e) {
+      log.error("[Delegate Capability] Socket Connection Failed for url " + host + " on port " + port, e);
     }
     return false; // Either timeout or unreachable or failed DNS lookup.
   }

@@ -1,8 +1,11 @@
 package io.harness;
 
+import static io.harness.AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.ProviderModule;
+import io.harness.organization.OrganizationClientModule;
 import io.harness.overviewdashboard.dashboardaggregateservice.impl.OverviewDashboardServiceImpl;
 import io.harness.overviewdashboard.dashboardaggregateservice.service.OverviewDashboardService;
 import io.harness.overviewdashboard.rbac.impl.DashboardRBACServiceImpl;
@@ -11,6 +14,7 @@ import io.harness.pipeline.dashboards.PMSLandingDashboardResourceClientModule;
 import io.harness.serializer.DashboardServiceRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.threading.ExecutorModule;
+import io.harness.token.TokenClientModule;
 import io.harness.userng.UserNGClientModule;
 
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +40,9 @@ public class DashboardServiceModule extends AbstractModule {
     install(UserNGClientModule.getInstance(config.getNgManagerClientConfig(),
         config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
         AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
+    install(OrganizationClientModule.getInstance(config.getNgManagerClientConfig(),
+        config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
+        AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -45,11 +52,14 @@ public class DashboardServiceModule extends AbstractModule {
             .build();
       }
     });
-    install(CDLandingDashboardResourceClientModule.getInstance(
-        config.getCdServiceClientConfig(), config.getDashboardSecretsConfig().getNgManagerServiceSecret(), null));
-    install(PMSLandingDashboardResourceClientModule.getInstance(
-        config.getCdServiceClientConfig(), config.getDashboardSecretsConfig().getNgManagerServiceSecret(), null));
-
+    install(CDLandingDashboardResourceClientModule.getInstance(config.getNgManagerClientConfig(),
+        config.getDashboardSecretsConfig().getNgManagerServiceSecret(),
+        AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
+    install(PMSLandingDashboardResourceClientModule.getInstance(config.getCdServiceClientConfig(),
+        config.getDashboardSecretsConfig().getPipelineServiceSecret(),
+        AuthorizationServiceHeader.DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
+    install(new TokenClientModule(config.getNgManagerClientConfig(),
+        config.getDashboardSecretsConfig().getNgManagerServiceSecret(), DASHBOAD_AGGREGATION_SERVICE.getServiceId()));
     bind(OverviewDashboardService.class).to(OverviewDashboardServiceImpl.class);
     bind(DashboardRBACService.class).to(DashboardRBACServiceImpl.class);
   }

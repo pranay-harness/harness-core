@@ -4,15 +4,27 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.retry.RetryExecutionHelper;
 import io.harness.engine.executions.retry.RetryGroup;
 import io.harness.engine.executions.retry.RetryInfo;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plan.IdentityPlanNode;
+import io.harness.plan.Node;
+import io.harness.plan.NodeType;
+import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -24,17 +36,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class RetryExecuteHelperTest {
   @InjectMocks private RetryExecutionHelper retryExecuteHelper;
+  @Mock private NodeExecutionServiceImpl nodeExecutionService;
 
   @Before
   public void setUp() throws IOException {
@@ -486,9 +502,9 @@ public class RetryExecuteHelperTest {
     String currentYaml = readFile(currentYamlFile);
     String resultYamlFile = "retry-processedYamlResult1.yaml";
     String resultYaml = readFile(resultYamlFile);
-    List<String> uuidOfSkipNode = new ArrayList<>();
+    List<String> identifierOfSkipStages = new ArrayList<>();
     String replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
-        previousYaml, currentYaml, Collections.singletonList("stage2"), uuidOfSkipNode);
+        previousYaml, currentYaml, Collections.singletonList("stage2"), identifierOfSkipStages);
     assertThat(replacedProcessedYaml).isEqualTo(resultYaml);
 
     // resuming from the first stage
@@ -601,61 +617,109 @@ public class RetryExecuteHelperTest {
     String previousYaml = readFile(previousYamlFile);
     String currentYamlFile = "retry-processedYamlCurrent1.yaml";
     String currentYaml = readFile(currentYamlFile);
-    List<String> uuidOfSkipNode = new ArrayList<>();
+    List<String> identifierOfSkipStages = new ArrayList<>();
     retryExecuteHelper.retryProcessedYaml(
-        previousYaml, currentYaml, Collections.singletonList("stage2"), uuidOfSkipNode);
+        previousYaml, currentYaml, Collections.singletonList("stage2"), identifierOfSkipStages);
 
     // resuming from the first stage
-    uuidOfSkipNode.clear();
+    identifierOfSkipStages.clear();
     retryExecuteHelper.retryProcessedYaml(
-        previousYaml, currentYaml, Collections.singletonList("stage1"), uuidOfSkipNode);
-    assertThat(uuidOfSkipNode.size()).isEqualTo(0);
+        previousYaml, currentYaml, Collections.singletonList("stage1"), identifierOfSkipStages);
+    assertThat(identifierOfSkipStages.size()).isEqualTo(0);
 
     // failing a single stage which is ahead of some parallel stages
-    uuidOfSkipNode.clear();
+    identifierOfSkipStages.clear();
     String previousGoldenYamlFile = "retry-processedYamlPreviousGolden.yaml";
     String previousGoldenYaml = readFile(previousGoldenYamlFile);
     String currentGoldenYamlFile = "retry-processedYamlCurrentGolden.yaml";
     String currentGoldenYaml = readFile(currentGoldenYamlFile);
     retryExecuteHelper.retryProcessedYaml(
-        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage7"), uuidOfSkipNode);
-    assertThat(uuidOfSkipNode.size()).isEqualTo(6);
-    assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
-    assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
-    assertThat(uuidOfSkipNode.get(2)).isEqualTo("oldUuid3");
-    assertThat(uuidOfSkipNode.get(3)).isEqualTo("oldUuid4");
-    assertThat(uuidOfSkipNode.get(4)).isEqualTo("oldUuid5");
-    assertThat(uuidOfSkipNode.get(5)).isEqualTo("oldUuid6");
+        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage7"), identifierOfSkipStages);
+    assertThat(identifierOfSkipStages.size()).isEqualTo(6);
+    assertThat(identifierOfSkipStages.get(0)).isEqualTo("stage1");
+    assertThat(identifierOfSkipStages.get(1)).isEqualTo("stage2");
+    assertThat(identifierOfSkipStages.get(2)).isEqualTo("stage3");
+    assertThat(identifierOfSkipStages.get(3)).isEqualTo("stage4");
+    assertThat(identifierOfSkipStages.get(4)).isEqualTo("stage5");
+    assertThat(identifierOfSkipStages.get(5)).isEqualTo("stage6");
 
     // failing single stages from parallel groups
-    uuidOfSkipNode.clear();
+    identifierOfSkipStages.clear();
     retryExecuteHelper.retryProcessedYaml(
-        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage9"), uuidOfSkipNode);
-    assertThat(uuidOfSkipNode.size()).isEqualTo(8);
-    assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
-    assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
-    assertThat(uuidOfSkipNode.get(2)).isEqualTo("oldUuid3");
-    assertThat(uuidOfSkipNode.get(3)).isEqualTo("oldUuid4");
-    assertThat(uuidOfSkipNode.get(4)).isEqualTo("oldUuid5");
-    assertThat(uuidOfSkipNode.get(5)).isEqualTo("oldUuid6");
-    assertThat(uuidOfSkipNode.get(6)).isEqualTo("oldUuid7");
-    assertThat(uuidOfSkipNode.get(7)).isEqualTo("oldUuid8");
+        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage9"), identifierOfSkipStages);
+    assertThat(identifierOfSkipStages.size()).isEqualTo(8);
+    assertThat(identifierOfSkipStages.get(0)).isEqualTo("stage1");
+    assertThat(identifierOfSkipStages.get(1)).isEqualTo("stage2");
+    assertThat(identifierOfSkipStages.get(2)).isEqualTo("stage3");
+    assertThat(identifierOfSkipStages.get(3)).isEqualTo("stage4");
+    assertThat(identifierOfSkipStages.get(4)).isEqualTo("stage5");
+    assertThat(identifierOfSkipStages.get(5)).isEqualTo("stage6");
+    assertThat(identifierOfSkipStages.get(6)).isEqualTo("stage7");
+    assertThat(identifierOfSkipStages.get(7)).isEqualTo("stage8");
 
     // failing multiple stage failure in parallel group
-    uuidOfSkipNode.clear();
+    identifierOfSkipStages.clear();
     retryExecuteHelper.retryProcessedYaml(
-        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage5"), uuidOfSkipNode);
-    assertThat(uuidOfSkipNode.size()).isEqualTo(3);
-    assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
-    assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
-    assertThat(uuidOfSkipNode.get(2)).isEqualTo("oldUuid4");
+        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage5"), identifierOfSkipStages);
+    assertThat(identifierOfSkipStages.size()).isEqualTo(3);
+    assertThat(identifierOfSkipStages.get(0)).isEqualTo("stage1");
+    assertThat(identifierOfSkipStages.get(1)).isEqualTo("stage2");
+    assertThat(identifierOfSkipStages.get(2)).isEqualTo("stage4");
 
     // selecting all stages in parallel group
-    uuidOfSkipNode.clear();
+    identifierOfSkipStages.clear();
     retryExecuteHelper.retryProcessedYaml(
-        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage4", "stage5"), uuidOfSkipNode);
-    assertThat(uuidOfSkipNode.size()).isEqualTo(2);
-    assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
-    assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
+        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage4", "stage5"), identifierOfSkipStages);
+    assertThat(identifierOfSkipStages.size()).isEqualTo(2);
+    assertThat(identifierOfSkipStages.get(0)).isEqualTo("stage1");
+    assertThat(identifierOfSkipStages.get(1)).isEqualTo("stage2");
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testTransformPlan() {
+    StepType TEST_STEP_TYPE =
+        StepType.newBuilder().setType("TEST_STEP_PLAN").setStepCategory(StepCategory.STEP).build();
+    String uuid = "uuid1";
+
+    when(nodeExecutionService.fetchStageFqnFromStageIdentifiers(any(), any()))
+        .thenReturn(Collections.singletonList("pipeline.stages.pip1"));
+
+    PlanNode planNode1 =
+        PlanNode.builder()
+            .name("Test Node")
+            .uuid(uuid)
+            .identifier("test")
+            .stageFqn("pipeline.stages.pip1")
+            .stepType(TEST_STEP_TYPE)
+            .adviserObtainment(
+                AdviserObtainment.newBuilder().setType(AdviserType.newBuilder().setType("NEXT_STEP").build()).build())
+            .build();
+
+    Map<String, Node> uuidMapper = new HashMap<>();
+    uuidMapper.put("nodeUuid", planNode1);
+    when(nodeExecutionService.mapNodeExecutionIdWithPlanNodeForGivenStageFQN(any(), any())).thenReturn(uuidMapper);
+
+    PlanNode planNode2 =
+        PlanNode.builder()
+            .name("Test Node2")
+            .uuid("uuid2")
+            .identifier("test2")
+            .stepType(TEST_STEP_TYPE)
+            .adviserObtainment(
+                AdviserObtainment.newBuilder().setType(AdviserType.newBuilder().setType("NEXT_STEP").build()).build())
+            .build();
+    Plan newPlan = retryExecuteHelper.transformPlan(
+        Plan.builder().planNodes(Arrays.asList(planNode1, planNode2)).build(), Collections.singletonList(uuid), "abc");
+
+    List<Node> updatedNodes = newPlan.getPlanNodes();
+    assertThat(updatedNodes.size()).isEqualTo(2);
+    assertThat(updatedNodes.get(0).getNodeType()).isEqualTo(NodeType.PLAN_NODE);
+    assertThat(updatedNodes.get(1).getNodeType()).isEqualTo(NodeType.IDENTITY_PLAN_NODE);
+    assertThat(((IdentityPlanNode) updatedNodes.get(1)).getOriginalNodeExecutionId()).isEqualTo("nodeUuid");
+    assertThat(updatedNodes.get(1).getIdentifier()).isEqualTo("test");
+    assertThat(updatedNodes.get(1).getName()).isEqualTo("Test Node");
+    assertThat(updatedNodes.get(1).getUuid()).isEqualTo(uuid);
   }
 }

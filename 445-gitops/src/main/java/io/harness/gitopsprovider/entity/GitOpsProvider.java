@@ -62,6 +62,7 @@ public abstract class GitOpsProvider implements PersistentEntity, NGAccountAcces
   @Trimmed @NotEmpty String accountIdentifier;
   @Trimmed String orgIdentifier;
   @Trimmed String projectIdentifier;
+  @NotEmpty GitOpsProviderType type;
 
   @CreatedBy private Principal createdBy;
   @LastModifiedBy private Principal lastUpdatedBy;

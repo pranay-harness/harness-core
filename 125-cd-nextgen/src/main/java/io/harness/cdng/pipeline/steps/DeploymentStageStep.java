@@ -38,7 +38,6 @@ public class DeploymentStageStep implements ChildExecutable<StageElementParamete
     log.info("Executing deployment stage with params [{}]", stepParameters);
     DeploymentStageStepParameters stageStepParameters = (DeploymentStageStepParameters) stepParameters.getSpecConfig();
     final String serviceNodeId = stageStepParameters.getChildNodeID();
-
     return ChildExecutableResponse.newBuilder().setChildNodeId(serviceNodeId).build();
   }
 

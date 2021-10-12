@@ -80,9 +80,10 @@ public class EnvironmentResource {
   @ListAPI(ENVIRONMENT)
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Environment>> list(@QueryParam("appId") List<String> appIds,
-      @BeanParam PageRequest<Environment> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details,
-      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
+  public RestResponse<PageResponse<Environment>> list(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") List<String> appIds, @BeanParam PageRequest<Environment> pageRequest,
+      @QueryParam("details") @DefaultValue("true") boolean details, @QueryParam("tagFilter") String tagFilter,
+      @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
     if (isNotEmpty(appIds)) {
       pageRequest.addFilter(EnvironmentKeys.appId, IN, appIds.toArray());
     }

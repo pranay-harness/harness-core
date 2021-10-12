@@ -777,6 +777,47 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
+  public void testGetAllLogsData_withNoClusterInLogAnalysisResult() {
+    String cvConfigId = generateUuid();
+    Instant startTime = clock.instant().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = clock.instant();
+    List<Long> labelList = Arrays.asList(0l, 1l, 2l);
+
+    Instant time = roundDownTo5MinBoundary(clock.instant());
+    List<LogAnalysisResult> logAnalysisResults =
+        Arrays.asList(LogAnalysisResult.builder()
+                          .analysisStartTime(time.minus(10, ChronoUnit.MINUTES))
+                          .analysisEndTime(time.minus(5, ChronoUnit.MINUTES))
+                          .verificationTaskId(cvConfigId)
+                          .accountId(accountId)
+                          .build(),
+            LogAnalysisResult.builder()
+                .analysisStartTime(time.minus(5, ChronoUnit.MINUTES))
+                .analysisEndTime(time)
+                .verificationTaskId(cvConfigId)
+                .accountId(accountId)
+                .build());
+
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    when(mockCvConfigService.list(serviceEnvironmentParams))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), any(), any())).thenReturn(logAnalysisResults);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter = LiveMonitoringLogAnalysisFilter.builder().build();
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    verify(mockCvConfigService).list(serviceEnvironmentParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
   public void testGetAllLogsData_withFilteringAndTheSameClustersHavingKNOWNAndUNKNOWNTag() {
     String cvConfigId = generateUuid();
     Instant startTime = clock.instant().minus(10, ChronoUnit.MINUTES);

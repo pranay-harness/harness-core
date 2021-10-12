@@ -12,5 +12,5 @@ import lombok.NonNull;
 @OwnedBy(CV)
 public interface ServiceDependencyGraphService {
   ServiceDependencyGraphDTO getDependencyGraph(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier);
+      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String environmentIdentifier);
 }

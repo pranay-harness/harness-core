@@ -36,7 +36,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
-import io.harness.verificationclient.CVNextGenServiceClient;
 
 import software.wings.delegatetasks.cvng.K8InfoDataService;
 
@@ -72,11 +71,9 @@ public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTestB
   @Mock private ChangeIntelSharedInformerFactory changeIntelSharedInformerFactory;
   @Mock private ApiClient apiClient;
   @Mock private CVNGRequestExecutor cvngRequestExecutor;
-  @Mock private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private Injector injector;
   private KubernetesClusterConfigDTO kubernetesClusterConfigDTO;
   private String accountId;
-  private String activitySourceId;
 
   private PerpetualTaskExecutionParams perpetualTaskParams;
 
@@ -90,7 +87,6 @@ public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTestB
     when(apiClientFactory.getClient(any(KubernetesConfig.class))).thenReturn(apiClient);
     on(dataCollector).set("kryoSerializer", kryoSerializer);
     accountId = generateUuid();
-    activitySourceId = generateUuid();
 
     SecretRefData secretRefData = SecretRefData.builder()
                                       .scope(Scope.ACCOUNT)
@@ -113,8 +109,6 @@ public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTestB
                                         .build())
                             .build())
             .build();
-    Call<RestResponse<KubernetesActivitySourceDTO>> call = Mockito.mock(Call.class);
-    when(cvNextGenServiceClient.getKubernetesActivitySourceDTO(anyString(), anyString())).thenReturn(call);
     when(cvngRequestExecutor.executeWithRetry(any(Call.class)))
         .thenReturn(new RestResponse<>(KubernetesActivitySourceDTO.builder()
                                            .activitySourceConfigs(Sets.newHashSet(
@@ -129,8 +123,6 @@ public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTestB
     FieldUtils.writeField(dataCollector, "changeIntelSharedInformerFactory", changeIntelSharedInformerFactory, true);
     FieldUtils.writeField(dataCollector, "apiClientFactory", apiClientFactory, true);
     FieldUtils.writeField(dataCollector, "injector", injector, true);
-    FieldUtils.writeField(dataCollector, "cvNextGenServiceClient", cvNextGenServiceClient, true);
-    FieldUtils.writeField(dataCollector, "cvngRequestExecutor", cvngRequestExecutor, true);
   }
 
   private void createTaskParams() {

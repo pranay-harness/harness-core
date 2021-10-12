@@ -136,3 +136,6 @@ awsConfig:
   destinationBucketsCount : 1
   harnessAwsAccountId: 108817434118
   awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
+
+hostname: ${HOSTNAME:-localhost}
+basePathPrefix: ${BASE_PATH_PREFIX:-""}

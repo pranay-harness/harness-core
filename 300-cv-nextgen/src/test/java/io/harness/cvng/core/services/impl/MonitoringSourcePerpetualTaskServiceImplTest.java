@@ -346,6 +346,7 @@ public class MonitoringSourcePerpetualTaskServiceImplTest extends CvNextGenTestB
                 .connectorIdentifier(connectorIdentifier)
                 .sourceIdentifier(monitoringSourceIdentifier)
                 .dataCollectionType(DataCollectionType.CV)
+                .dataCollectionWorkerId(monitoringSourcePerpetualTask.getDataCollectionWorkerId())
                 .build());
   }
 }

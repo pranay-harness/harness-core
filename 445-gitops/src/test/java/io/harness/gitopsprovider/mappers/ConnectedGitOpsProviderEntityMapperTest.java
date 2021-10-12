@@ -77,7 +77,7 @@ public class ConnectedGitOpsProviderEntityMapperTest extends GitOpsProviderTestB
     entity.setProjectIdentifier(TestConstants.PROJECT_ID);
     entity.setOrgIdentifier(TestConstants.ORG_ID);
 
-    final GitOpsProviderResponseDTO dto = target.toGitOpsProvider(entity);
+    final GitOpsProviderResponseDTO dto = target.toGitOpsProviderDTO(entity);
 
     assertThat(dto.getInfoDTO().getGitProviderType()).isEqualTo(GitOpsProviderType.CONNECTED_ARGO_PROVIDER);
     assertThat(((ConnectedArgoGitOpsInfoDTO) dto.getInfoDTO()).getAdapterUrl()).isEqualTo(TestConstants.ADAPTER_URL);

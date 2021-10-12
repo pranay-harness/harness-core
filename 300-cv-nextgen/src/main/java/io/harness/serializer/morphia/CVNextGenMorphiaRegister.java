@@ -4,11 +4,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
-import io.harness.cvng.activity.entities.CD10ActivitySource;
-import io.harness.cvng.activity.entities.CDNGActivitySource;
-import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.HarnessCDActivity;
+import io.harness.cvng.activity.entities.HarnessCDCurrentGenActivity;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
@@ -63,6 +61,7 @@ import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.Webhook;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
+import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
@@ -119,7 +118,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(ClusteredLog.class);
     set.add(BlueGreenVerificationJob.class);
     set.add(DeploymentDataCollectionTask.class);
-    set.add(CustomActivity.class);
     set.add(AppDynamicsCVConfig.class);
     set.add(DeploymentLogAnalysis.class);
     set.add(TestVerificationJob.class);
@@ -143,7 +141,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(LogAnalysisLearningEngineTask.class);
     set.add(LogAnalysisResult.class);
     set.add(KubernetesActivitySource.class);
-    set.add(CD10ActivitySource.class);
     set.add(LogAnalysisRecord.class);
     set.add(AlertRule.class);
     set.add(CanaryVerificationJob.class);
@@ -154,7 +151,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(CVNGLog.class);
     set.add(MonitoringSourcePerpetualTask.class);
     set.add(NewRelicCVConfig.class);
-    set.add(CDNGActivitySource.class);
     set.add(CVNGStepTask.class);
     set.add(Comparable.class);
     set.add(PrometheusCVConfig.class);
@@ -170,6 +166,8 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(Webhook.class);
     set.add(PagerDutyWebhook.class);
     set.add(PagerDutyActivity.class);
+    set.add(HarnessCDCurrentGenChangeSource.class);
+    set.add(HarnessCDCurrentGenActivity.class);
   }
 
   @Override

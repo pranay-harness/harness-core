@@ -7,6 +7,8 @@ import io.harness.engine.pms.execution.strategy.NodeExecutionStrategy;
 import io.harness.engine.pms.execution.strategy.NodeExecutionStrategyFactory;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.PmsNodeExecution;
+import io.harness.execution.PmsNodeExecutionMetadata;
 import io.harness.plan.Node;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -34,9 +36,9 @@ public class OrchestrationEngine {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private NodeExecutionStrategyFactory strategyFactory;
 
-  public void triggerNode(Ambiance ambiance, Node node) {
+  public <T extends PmsNodeExecution> T triggerNode(Ambiance ambiance, Node node, PmsNodeExecutionMetadata metadata) {
     NodeExecutionStrategy strategy = strategyFactory.obtainStrategy(node.getNodeType());
-    strategy.triggerNode(ambiance, node);
+    return (T) strategy.triggerNode(ambiance, node, metadata);
   }
 
   // Just for backward compatibility will be removed in next release

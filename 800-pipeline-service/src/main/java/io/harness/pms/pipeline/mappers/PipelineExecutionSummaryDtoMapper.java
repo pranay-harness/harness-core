@@ -46,6 +46,7 @@ public class PipelineExecutionSummaryDtoMapper {
                 ? new ArrayList<>()
                 : pipelineExecutionSummaryEntity.getModules())
         .gitDetails(entityGitDetails)
+        .governanceMetadata(pipelineExecutionSummaryEntity.getGovernanceMetadata())
         .build();
   }
 

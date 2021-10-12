@@ -12,12 +12,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.logging.CommandExecutionStatus;
@@ -52,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDP)
 public class K8sTrafficSplitState extends AbstractK8sState {
   @Inject private ActivityService activityService;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   public static final String K8S_TRAFFIC_SPLIT_STATE_NAME = "Traffic Split";
 
@@ -84,6 +87,8 @@ public class K8sTrafficSplitState extends AbstractK8sState {
                                                 .timeoutIntervalInMin(10)
                                                 .virtualServiceName(virtualServiceName)
                                                 .istioDestinationWeights(istioDestinationWeights)
+                                                .useLatestKustomizeVersion(featureFlagService.isEnabled(
+                                                    FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
                                                 .build();
       return queueK8sDelegateTask(context, k8sTaskParameters, null);
     } catch (WingsException e) {

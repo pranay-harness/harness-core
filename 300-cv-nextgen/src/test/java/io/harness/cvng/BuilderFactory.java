@@ -5,8 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
-import io.harness.cvng.activity.entities.HarnessCDActivity;
-import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityBuilder;
+import io.harness.cvng.activity.entities.DeploymentActivity;
+import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityBuilder;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityBuilder;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment;
@@ -38,6 +38,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.HarnessCDChangeSourceSpec;
+import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.HarnessCDCurrentGenChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.KubernetesChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.PagerDutyChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
@@ -60,6 +61,8 @@ import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigBuilder;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource.HarnessCDChangeSourceBuilder;
+import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
+import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource.HarnessCDCurrentGenChangeSourceBuilder;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource.KubernetesChangeSourceBuilder;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
@@ -359,6 +362,20 @@ public class BuilderFactory {
         .identifier(generateUuid());
   }
 
+  public HarnessCDCurrentGenChangeSourceBuilder getHarnessCDCurrentGenChangeSourceBuilder() {
+    return HarnessCDCurrentGenChangeSource.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .enabled(true)
+        .harnessApplicationId(randomAlphabetic(20))
+        .harnessServiceId(randomAlphabetic(20))
+        .harnessEnvironmentId(randomAlphabetic(20))
+        .type(ChangeSourceType.HARNESS_CD_CURRENT_GEN);
+  }
+
   public ChangeSourceDTOBuilder getHarnessCDChangeSourceDTOBuilder() {
     return getChangeSourceDTOBuilder(ChangeSourceType.HARNESS_CD).spec(new HarnessCDChangeSourceSpec());
   }
@@ -376,8 +393,17 @@ public class BuilderFactory {
         .spec(KubernetesChangeSourceSpec.builder().connectorRef(generateUuid()).build());
   }
 
-  public HarnessCDActivityBuilder getHarnessCDActivityBuilder() {
-    return HarnessCDActivity.builder()
+  public ChangeSourceDTOBuilder getHarnessCDCurrentGenChangeSourceDTOBuilder() {
+    return getChangeSourceDTOBuilder(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
+        .spec(HarnessCDCurrentGenChangeSourceSpec.builder()
+                  .harnessApplicationId(randomAlphabetic(20))
+                  .harnessServiceId(randomAlphabetic(20))
+                  .harnessEnvironmentId(randomAlphabetic(20))
+                  .build());
+  }
+
+  public DeploymentActivityBuilder getDeploymentActivityBuilder() {
+    return DeploymentActivity.builder()
         .accountId(context.getAccountId())
         .orgIdentifier(context.getOrgIdentifier())
         .projectIdentifier(context.getProjectIdentifier())
@@ -387,6 +413,8 @@ public class BuilderFactory {
         .changeSourceIdentifier("changeSourceID")
         .type(ChangeSourceType.HARNESS_CD.getActivityType())
         .stageStepId("stageStepId")
+        .verificationStartTime(clock.millis())
+        .deploymentTag("deploymentTag")
         .stageId("stageId")
         .pipelineId("pipelineId")
         .planExecutionId("executionId")

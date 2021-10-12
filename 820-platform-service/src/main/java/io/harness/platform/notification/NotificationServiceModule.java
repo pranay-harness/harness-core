@@ -170,7 +170,7 @@ public class NotificationServiceModule extends AbstractModule {
       }
     });
     bind(HPersistence.class).to(MongoPersistence.class);
-    install(DelegateServiceDriverModule.getInstance(false));
+    install(DelegateServiceDriverModule.getInstance(false, false));
     install(new DelegateServiceDriverGrpcClientModule(appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
         this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getTarget(),
         this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getAuthority(), true));
@@ -183,11 +183,11 @@ public class NotificationServiceModule extends AbstractModule {
 
     install(new UserGroupClientModule(appConfig.getRbacServiceConfig(),
         appConfig.getPlatformSecrets().getNgManagerServiceSecret(), NOTIFICATION_SERVICE.getServiceId()));
-    install(new UserClientModule(appConfig.getServiceHttpClientConfig(),
+    install(new UserClientModule(appConfig.getManagerServiceConfig(),
         appConfig.getPlatformSecrets().getNgManagerServiceSecret(), NOTIFICATION_SERVICE.getServiceId()));
     bind(ChannelService.class).to(ChannelServiceImpl.class);
     install(new SmtpConfigClientModule(
-        appConfig.getServiceHttpClientConfig(), appConfig.getPlatformSecrets().getNgManagerServiceSecret()));
+        appConfig.getManagerServiceConfig(), appConfig.getPlatformSecrets().getNgManagerServiceSecret()));
     bind(NotificationSettingsService.class).to(NotificationSettingsServiceImpl.class);
     bind(SeedDataPopulaterService.class).to(SeedDataPopulaterServiceImpl.class);
     bind(ChannelService.class).annotatedWith(Names.named(MAILSERVICE)).to(MailServiceImpl.class);

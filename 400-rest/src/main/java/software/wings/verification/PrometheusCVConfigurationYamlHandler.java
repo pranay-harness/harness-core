@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PrometheusCVConfigurationYamlHandler
-    extends CVConfigurationYamlHandler<PrometheusCVConfigurationYaml, PrometheusCVServiceConfiguration> {
+    extends MetricCVConfigurationYamlHandler<PrometheusCVConfigurationYaml, PrometheusCVServiceConfiguration> {
   @Override
   public PrometheusCVConfigurationYaml toYaml(PrometheusCVServiceConfiguration bean, String appId) {
     PrometheusCVConfigurationYaml yaml = PrometheusCVConfigurationYaml.builder().build();
