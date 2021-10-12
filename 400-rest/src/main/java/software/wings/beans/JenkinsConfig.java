@@ -133,13 +133,15 @@ public class JenkinsConfig extends SettingValue
   public static final class Yaml extends ArtifactServerYaml {
     private String token;
     private String authMechanism;
+    private boolean useConnectorUrlForJobExecution;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String token,
-        String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
+        String authMechanism, UsageRestrictions.Yaml usageRestrictions, boolean useConnectorUrlForJobExecution) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.token = token;
       this.authMechanism = authMechanism;
+      this.useConnectorUrlForJobExecution = useConnectorUrlForJobExecution;
     }
   }
 
@@ -152,16 +154,19 @@ public class JenkinsConfig extends SettingValue
     private String password = ENCRYPTED_VALUE_STR;
     private String token = ENCRYPTED_VALUE_STR;
     private String authMechanism;
+    private boolean useConnectorUrlForJobExecution;
 
     @Builder
     public VerificationYaml(String type, String harnessApiVersion, String url, String username, String password,
-        String token, String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
+        String token, String authMechanism, UsageRestrictions.Yaml usageRestrictions,
+        boolean useConnectorUrlForJobExecution) {
       super(type, harnessApiVersion, usageRestrictions);
       this.url = url;
       this.username = username;
       this.password = password;
       this.authMechanism = authMechanism;
       this.token = token;
+      this.useConnectorUrlForJobExecution = useConnectorUrlForJobExecution;
     }
   }
 }
