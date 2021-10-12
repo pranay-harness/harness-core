@@ -34,6 +34,10 @@
   "perpetualTaskId": null,
   "collectionStatus": null,
   "artifactStreamParameterized": false,
+  "collectionEnabled":null,
+  "lastIteration":0,
+  "lastSuccessfulIteration":0,
+  "maxAttempts":0,
   "jobname": "TES-GAR",
   "artifactPaths": [
     "metadata.json/metadata.json"
