@@ -76,6 +76,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static lombok.AccessLevel.PACKAGE;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -312,7 +313,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private static volatile String delegateId;
 
-  @Inject private DelegateConfiguration delegateConfiguration;
+  @Inject
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting }))
+  private DelegateConfiguration delegateConfiguration;
   @Inject private RestartableServiceManager restartableServiceManager;
 
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
@@ -405,15 +408,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return Optional.ofNullable(delegateId);
   }
 
-  boolean kubectlInstalled;
-  boolean goTemplateInstalled;
-  boolean harnessPywinrmInstalled;
-  boolean helmInstalled;
-  boolean chartMuseumInstalled;
-  boolean tfConfigInspectInstalled;
-  boolean ocInstalled;
-  boolean kustomizeInstalled;
-  boolean scmInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kubectlInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean goTemplateInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean harnessPywinrmInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean helmInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean chartMuseumInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean tfConfigInspectInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean ocInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kustomizeInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean scmInstalled;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -609,10 +612,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       startProfileCheck();
 
-      if (!areAllClientToolsInstalled()) {
+      if (!isClientToolsInstallationFinished()) {
         systemExecutor.submit(() -> {
           int retries = CLIENT_TOOL_RETRIES;
-          while (!areAllClientToolsInstalled() && retries > 0) {
+          while (!isClientToolsInstallationFinished() && retries > 0) {
             sleep(ofSeconds(15L));
             if (!kubectlInstalled) {
               kubectlInstalled = installKubectl(delegateConfiguration);
@@ -703,9 +706,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  public boolean areAllClientToolsInstalled() {
-    return kubectlInstalled && goTemplateInstalled && helmInstalled && chartMuseumInstalled && tfConfigInspectInstalled
-        && ocInstalled && kustomizeInstalled && harnessPywinrmInstalled && scmInstalled;
+  public boolean isClientToolsInstallationFinished() {
+    return getDelegateConfiguration().isClientToolsDownloadDisabled()
+        || (this.isKubectlInstalled() && this.isGoTemplateInstalled() && this.isHelmInstalled()
+            && this.isChartMuseumInstalled() && this.isTfConfigInspectInstalled() && this.isOcInstalled()
+            && this.isKustomizeInstalled() && this.isHarnessPywinrmInstalled() && this.isScmInstalled());
   }
 
   private RequestBuilder prepareRequestBuilder() {
@@ -1972,7 +1977,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return delegateConnectionResults -> {
       try (AutoLogContext ignored = new TaskLogContext(taskId, OVERRIDE_ERROR)) {
         // Tools might be installed asynchronously, so get the flag early on
-        final boolean areAllClientToolsInstalled = areAllClientToolsInstalled();
+        final boolean areAllClientToolsInstalled = isClientToolsInstallationFinished();
         currentlyValidatingTasks.remove(taskId);
         currentlyValidatingFutures.remove(taskId);
         log.info("Removed from validating futures on post validation");
