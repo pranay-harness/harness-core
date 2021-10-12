@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.accountpermission.AddManageTagsPermission;
 import io.harness.migrations.accountpermission.AlertNotificationAccountPermissionMigration;
 import io.harness.migrations.accountpermission.CreateCustomDashboardPermissionMigration;
+import io.harness.migrations.accountpermission.ManageAccountDefaultsPermissionMigration;
 import io.harness.migrations.accountpermission.ManageApiKeyPermissionMigration;
 import io.harness.migrations.accountpermission.ManageApplicationsPermissionMigration;
 import io.harness.migrations.accountpermission.ManageAuthenticationSettingsPermissionMigration;
@@ -440,6 +441,7 @@ public class MigrationList {
         .add(Pair.of(367, GcpServiceAccountMigration.class))
         .add(Pair.of(368, DisableWinrmVariablesFFMigration.class))
         .add(Pair.of(369, DisableAddingServiceVarsToEcsSpecFFMigration.class))
+        .add(Pair.of(370, ManageAccountDefaultsPermissionMigration.class))
         .build();
   }
 }
