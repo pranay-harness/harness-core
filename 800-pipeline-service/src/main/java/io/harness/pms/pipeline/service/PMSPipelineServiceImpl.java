@@ -294,9 +294,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public VariableMergeServiceResponse createVariablesResponse(PipelineEntity pipelineEntity) {
+  public VariableMergeServiceResponse createVariablesResponse(String yaml) {
     try {
-      return variableCreatorMergeService.createVariablesResponse(pipelineEntity.getYaml());
+      return variableCreatorMergeService.createVariablesResponse(yaml);
     } catch (Exception ex) {
       log.error("Error happened while creating variables for pipeline:", ex);
       throw new InvalidRequestException(

@@ -7,7 +7,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -28,6 +30,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Data
 @Builder
+@TargetModule(HarnessModule._955_ALERT_BEANS)
 public class ArtifactCollectionFailedAlert implements AlertData {
   // TODO: ASR: refactor this class for connector level artifact streams
   @Inject @Transient @SchemaIgnore private transient AppService appService;

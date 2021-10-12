@@ -6,7 +6,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionPTaskClientParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AccountLogContext;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ArtifactStreamPTaskHelper {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PerpetualTaskService perpetualTaskService;

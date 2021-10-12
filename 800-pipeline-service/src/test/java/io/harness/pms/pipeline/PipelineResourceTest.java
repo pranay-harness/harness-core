@@ -30,6 +30,7 @@ import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
@@ -66,6 +67,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Mock NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   @Mock AccessControlClient accessControlClient;
   @Mock PmsGitSyncHelper pmsGitSyncHelper;
+  @Mock PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -84,8 +86,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
-    pipelineResource = new PipelineResource(pmsPipelineService, pmsExecutionService, pmsYamlSchemaService,
-        nodeExecutionService, accessControlClient, nodeExecutionToExecutioNodeMapper, pmsGitSyncHelper);
+    pipelineResource =
+        new PipelineResource(pmsPipelineService, pmsExecutionService, pmsYamlSchemaService, nodeExecutionService,
+            accessControlClient, nodeExecutionToExecutioNodeMapper, pmsGitSyncHelper, pipelineTemplateHelper);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -143,6 +146,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreatePipeline() throws IOException {
     doReturn(entityWithVersion).when(pmsPipelineService).create(entity);
+    doReturn(yaml).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(entity);
     ResponseDTO<String> identifier =
         pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml);
     assertThat(identifier.getData()).isNotEmpty();
@@ -152,12 +156,11 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
-  @Ignore("Ignored till Schema validation is behind FF")
   public void testCreatePipelineWithSchemaErrors() {
+    doReturn(yaml).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(entity);
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
         .validateYamlSchema(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
-
     assertThatThrownBy(() -> pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml))
         .isInstanceOf(JsonSchemaValidationException.class);
   }
@@ -198,6 +201,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdatePipelineWithWrongIdentifier() {
     String incorrectPipelineIdentifier = "notTheIdentifierWeNeed";
+    doReturn(yaml)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
     assertThatThrownBy(()
                            -> pipelineResource.updatePipeline(null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
                                incorrectPipelineIdentifier, null, yaml))
@@ -210,6 +216,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdatePipeline() throws IOException {
     doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity, ChangeType.MODIFY);
+    doReturn(yaml)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
     ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData()).isEqualTo(PIPELINE_IDENTIFIER);
@@ -220,6 +229,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   @Ignore("Ignored till Schema validation is behind FF")
   public void testUpdatePipelineWithSchemaErrors() {
+    doReturn(yaml)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
         .validateYamlSchema(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);

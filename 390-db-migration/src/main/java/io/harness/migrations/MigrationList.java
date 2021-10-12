@@ -442,6 +442,7 @@ public class MigrationList {
         .add(Pair.of(368, DisableWinrmVariablesFFMigration.class))
         .add(Pair.of(369, DisableAddingServiceVarsToEcsSpecFFMigration.class))
         .add(Pair.of(370, ManageAccountDefaultsPermissionMigration.class))
+        .add(Pair.of(371, BaseMigration.class))
         .build();
   }
 }
