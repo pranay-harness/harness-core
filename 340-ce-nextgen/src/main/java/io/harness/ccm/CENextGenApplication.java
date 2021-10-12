@@ -18,6 +18,7 @@ import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
 import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
 import io.harness.enforcement.client.custom.CustomRestrictionInterface;
+import io.harness.enforcement.client.resources.EnforcementClientResource;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -212,6 +213,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     }
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
     environment.jersey().register(injector.getInstance(LicenseUsageResource.class));
+    environment.jersey().register(injector.getInstance(EnforcementClientResource.class));
   }
 
   private void registerAuthFilters(CENextGenConfiguration configuration, Environment environment, Injector injector) {
