@@ -13,10 +13,11 @@ const (
 )
 
 var (
-    // Allowed values for the regex:
-    // 1. ${ngSecretManager.obtain(\"account.testSecret\", 12345)}
-    // 2. ${ngSecretManager.obtain("account.testSecret", 12345)}
-	secretRegex = regexp.MustCompile(`\${ngSecretManager.obtain\((\\|)"([^\\"]*)(\\|)", [^\)]*\)}`)
+	// Allowed values for the regex:
+	// 1. ${ngSecretManager.obtain(\"account.testSecret\", 12345)}
+	// 2. ${ngSecretManager.obtain(\\\\\\\"account.testSecret\\\\\\\", 115)}
+	// 2. ${ngSecretManager.obtain("account.testSecret", 12345)}
+	secretRegex = regexp.MustCompile(`\${ngSecretManager.obtain\((\\+|)"([^\\"]*)(\\+|)", [^\)]*\)}`)
 )
 
 // ResolveSecretInList replaces secrets in the given list
