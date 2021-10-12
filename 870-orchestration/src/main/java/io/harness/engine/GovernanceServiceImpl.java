@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.PlanExecutionMetadata;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.opaclient.OpaServiceClient;
@@ -22,8 +21,6 @@ import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.governance.PolicyMetadata;
 import io.harness.pms.contracts.governance.PolicySetMetadata;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.UserPrincipal;
@@ -35,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,20 +45,17 @@ public class GovernanceServiceImpl implements GovernanceService {
   private final UserClient userClient;
 
   @Override
-  public GovernanceMetadata evaluateGovernancePolicies(ExecutionMetadata executionMetadata,
-      PlanExecutionMetadata planExecutionMetadata, Map<String, String> setupAbstractions) {
-    if (!pmsFeatureFlagService.isEnabled(
-            setupAbstractions.get(SetupAbstractionKeys.accountId), FeatureName.OPA_PIPELINE_GOVERNANCE)) {
+  public GovernanceMetadata evaluateGovernancePolicies(String yaml, String accountId, String action) {
+    if (!pmsFeatureFlagService.isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE)) {
       return GovernanceMetadata.newBuilder()
           .setDeny(false)
-          .setMessage(String.format("FF: [%s] is disabled for account: [%s]", FeatureName.OPA_PIPELINE_GOVERNANCE,
-              setupAbstractions.get(SetupAbstractionKeys.accountId)))
+          .setMessage(
+              String.format("FF: [%s] is disabled for account: [%s]", FeatureName.OPA_PIPELINE_GOVERNANCE, accountId))
           .build();
     }
     PipelineOpaEvaluationContext context;
     try {
-      context =
-          createEvaluationContext(planExecutionMetadata.getYaml(), OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_RUN);
+      context = createEvaluationContext(yaml, action);
     } catch (IOException ex) {
       log.error("Could not create OPA evaluation context", ex);
       return GovernanceMetadata.newBuilder()
@@ -72,9 +65,8 @@ public class GovernanceServiceImpl implements GovernanceService {
     }
     OpaEvaluationResponseHolder response;
     try {
-      response = SafeHttpCall.executeWithExceptions(
-          opaServiceClient.evaluateWithCredentials(OpaConstants.OPA_EVALUATION_TYPE_PIPELINE, "", "", "",
-              OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_RUN, context));
+      response = SafeHttpCall.executeWithExceptions(opaServiceClient.evaluateWithCredentials(
+          OpaConstants.OPA_EVALUATION_TYPE_PIPELINE, "", "", "", action, context));
     } catch (Exception ex) {
       log.error("Exception while evluating OPA rules", ex);
       throw new InvalidRequestException(ex.getMessage());
