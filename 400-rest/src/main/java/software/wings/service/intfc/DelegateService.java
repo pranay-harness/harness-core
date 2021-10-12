@@ -174,4 +174,6 @@ public interface DelegateService extends OwnedByAccount {
   List<Delegate> getNonDeletedDelegatesForAccount(String accountId);
 
   boolean checkDelegateConnected(String accountId, String delegateId);
+
+  void updateLastExpiredEventHeartbeatTime(long lastExpiredEventHeartbeatTime, String delegateId, String accountId);
 }
