@@ -31,6 +31,7 @@ import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
@@ -43,6 +44,7 @@ import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
@@ -95,7 +97,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
+          @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
+              message = "TemplateRefs Resolved failed in pipeline yaml.")
     })
 @PipelineServiceAuth
 @Slf4j
@@ -107,6 +111,7 @@ public class PipelineResource implements YamlSchemaResource {
   private final AccessControlClient accessControlClient;
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
+  private final PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
@@ -120,10 +125,12 @@ public class PipelineResource implements YamlSchemaResource {
     log.info(String.format("Creating pipeline with identifier %s in project %s, org %s, account %s",
         pipelineEntity.getIdentifier(), projectId, orgId, accountId));
 
-    pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, yaml);
+    // Apply all the templateRefs(if any) then check for schema validation.
+    String resolveTemplateRefsInPipeline = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
+    pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, resolveTemplateRefsInPipeline);
+    // validate unique fqn in resolveTemplateRefsInPipeline
+    pmsYamlSchemaService.validateUniqueFqn(resolveTemplateRefsInPipeline);
 
-    // validate unique fqn in yaml
-    pmsYamlSchemaService.validateUniqueFqn(yaml);
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
 
     return ResponseDTO.newResponse(createdEntity.getVersion().toString(), createdEntity.getIdentifier());
@@ -140,7 +147,10 @@ public class PipelineResource implements YamlSchemaResource {
     log.info("Creating variables for pipeline.");
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
-    VariableMergeServiceResponse variablesResponse = pmsPipelineService.createVariablesResponse(pipelineEntity);
+    // Apply all the templateRefs(if any) then check for variables.
+    String resolveTemplateRefsInPipeline = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
+    VariableMergeServiceResponse variablesResponse =
+        pmsPipelineService.createVariablesResponse(resolveTemplateRefsInPipeline);
 
     return ResponseDTO.newResponse(variablesResponse);
   }
@@ -185,7 +195,12 @@ public class PipelineResource implements YamlSchemaResource {
     log.info(String.format("Updating pipeline with identifier %s in project %s, org %s, account %s", pipelineId,
         projectId, orgId, accountId));
 
-    pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, yaml);
+    // Apply all the templateRefs(if any) then check for schema validation.
+    String resolveTemplateRefsInPipeline =
+        pipelineTemplateHelper.resolveTemplateRefsInPipeline(accountId, orgId, projectId, yaml);
+    pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, resolveTemplateRefsInPipeline);
+    // validate unique fqn in yaml
+    pmsYamlSchemaService.validateUniqueFqn(resolveTemplateRefsInPipeline);
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     if (!pipelineEntity.getIdentifier().equals(pipelineId)) {
@@ -193,9 +208,6 @@ public class PipelineResource implements YamlSchemaResource {
     }
 
     PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
-
-    // validate unique fqn in yaml
-    pmsYamlSchemaService.validateUniqueFqn(yaml);
 
     PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion, ChangeType.MODIFY);
 
