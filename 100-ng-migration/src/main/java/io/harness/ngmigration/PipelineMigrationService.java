@@ -32,7 +32,6 @@ import java.util.Set;
 public class PipelineMigrationService implements NgMigration {
   @Inject private PipelineService pipelineService;
   @Inject private WorkflowMigrationService workflowMigrationService;
-  @Inject private NgMigrationFactory ngMigrationFactory;
 
   @Override
   public DiscoveryNode discover(NGMigrationEntity entity) {
@@ -102,10 +101,6 @@ public class PipelineMigrationService implements NgMigration {
     }
 
     List<NGYamlFile> allFiles = new ArrayList<>();
-
-    graph.get(entityId).forEach(entityId1 -> {
-      allFiles.addAll(ngMigrationFactory.getMethod(entityId1.getType()).getYamls(entities, graph, entityId1));
-    });
 
     // TODO: @puthraya Fix tags
     PipelineInfoConfig pipelineInfoConfig = PipelineInfoConfig.builder()
