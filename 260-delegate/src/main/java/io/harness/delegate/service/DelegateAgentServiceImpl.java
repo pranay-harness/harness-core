@@ -691,6 +691,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       messageService.closeChannel(DELEGATE, getProcessId());
 
       if (upgradePending.get()) {
+        log.info("Upgrade pending");
         removeDelegateVersionFromCapsule();
         cleanupOldDelegateVersionFromBackup();
       }
@@ -2377,6 +2378,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void cleanupOldDelegateVersionFromBackup() {
     try {
+      log.info("Cleanup old delegate version from backup: {}, upgradeVersion: {}", getVersion(), upgradeVersion);
       cleanup(new File(System.getProperty("user.dir")), getVersion(), upgradeVersion, "backup.");
     } catch (Exception ex) {
       log.error("Failed to clean delegate version [{}] from Backup", upgradeVersion, ex);
@@ -2385,6 +2387,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void removeDelegateVersionFromCapsule() {
     try {
+      log.info(
+          "Cleanup old delegate version from capsule: {}, upgradeVersion: {}", getVersionWithPatch(), upgradeVersion);
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersionWithPatch(), upgradeVersion,
           "delegate-");
     } catch (Exception ex) {

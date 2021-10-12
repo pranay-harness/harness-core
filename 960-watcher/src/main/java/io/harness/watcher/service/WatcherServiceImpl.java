@@ -1395,6 +1395,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void removeWatcherVersionFromCapsule(String version, String newVersion) {
     try {
+      log.info("Remove watcher versions from capsule: version: {}, newVersion: {}, capsule.dir: {}", version,
+          newVersion, System.getProperty("capsule.dir"));
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), newHashSet(version, newVersion), "watcher-");
     } catch (Exception ex) {
       log.error("Failed to clean watcher version from Capsule", ex);
@@ -1403,6 +1405,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void cleanupOldDelegateVersions(Set<String> keepVersions) {
     try {
+      log.info(
+          "Cleanup old delegate versions: {}, [{}]", System.getProperty(USER_DIR), StringUtils.join(keepVersions, ","));
       cleanupVersionFolders(new File(System.getProperty(USER_DIR)), keepVersions);
       cleanup(new File(System.getProperty(USER_DIR)), keepVersions, "backup.");
     } catch (Exception ex) {
@@ -1412,6 +1416,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void removeDelegateVersionsFromCapsule(Set<String> keepVersions) {
     try {
+      log.info("Remove delegate versions from capsule: {}, [{}]", System.getProperty("capsule.dir"),
+          StringUtils.join(keepVersions, ","));
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), keepVersions, "delegate-");
     } catch (Exception ex) {
       log.error("Failed to clean delegate version from Capsule", ex);
@@ -1419,6 +1425,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void cleanup(File dir, Set<String> keepVersions, String pattern) {
+    log.info("Cleanup: {}, [{}]", dir, StringUtils.join(keepVersions, ","));
     FileUtils.listFilesAndDirs(dir, falseFileFilter(), prefixFileFilter(pattern))
         .stream()
         .filter(file -> !dir.equals(file))
@@ -1430,6 +1437,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void cleanupVersionFolders(File dir, Set<String> keepVersions) {
+    log.info("Cleaning folders: {}, [{}]", dir, StringUtils.join(keepVersions, ","));
     FileUtils.listFilesAndDirs(dir, falseFileFilter(), trueFileFilter())
         .stream()
         .filter(file -> !dir.equals(file))
