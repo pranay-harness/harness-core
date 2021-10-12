@@ -13,12 +13,14 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
@@ -79,6 +81,7 @@ public class K8sDelete extends AbstractK8sState {
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   public static final String K8S_DELETE_COMMAND_NAME = "Delete";
 
@@ -128,6 +131,8 @@ public class K8sDelete extends AbstractK8sState {
                                                 .resources(context.renderExpression(this.resources))
                                                 .deleteNamespacesForRelease(deleteNamespacesForRelease)
                                                 .timeoutIntervalInMin(10)
+                                                .useLatestKustomizeVersion(featureFlagService.isEnabled(
+                                                    FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
                                                 .build();
 
       return queueK8sDelegateTask(context, k8sTaskParameters, null);
@@ -202,6 +207,8 @@ public class K8sDelete extends AbstractK8sState {
                             .k8sDelegateManifestConfig(
                                 createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
                             .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
+                            .useLatestKustomizeVersion(featureFlagService.isEnabled(
+                                FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
                             .build();
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);
   }

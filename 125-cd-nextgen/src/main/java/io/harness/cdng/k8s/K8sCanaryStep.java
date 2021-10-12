@@ -25,13 +25,13 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -89,7 +89,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
     final String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepElementParameters.getSpec();
     final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
-    final String accountId = AmbianceHelper.getAccountId(ambiance);
+    final String accountId = AmbianceUtils.getAccountId(ambiance);
     final boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
         canaryStepParameters.getSkipDryRun(), K8sCanaryBaseStepInfoKeys.skipDryRun, stepElementParameters);
     List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
@@ -112,6 +112,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
             .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .commandUnitsProgress(UnitProgressDataMapper.toCommandUnitsProgress(unitProgressData))
+            .useLatestKustomizeVersion(k8sStepHelper.isUseLatestKustomizeVersion(accountId))
             .build();
 
     k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
