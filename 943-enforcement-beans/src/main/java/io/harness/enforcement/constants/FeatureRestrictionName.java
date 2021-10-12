@@ -11,6 +11,9 @@ public enum FeatureRestrictionName {
   TEST4,
   TEST5,
 
+  // CCM Features
+  PERSPECTIVES,
+
   // All Features
   MULTIPLE_ORGANIZATIONS,
   MULTIPLE_PROJECTS,

@@ -10,10 +10,17 @@ import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.eventframework.CENGEventConsumerService;
 import io.harness.ccm.migration.CENGCoreMigrationProvider;
+import io.harness.ccm.service.impl.PerspectivesRestrictionUsageImpl;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
+import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
+import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
+import io.harness.enforcement.client.usage.RestrictionUsageInterface;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
@@ -167,6 +174,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     registerOasResource(configuration, environment, injector);
     MaintenanceController.forceMaintenance(false);
     createConsumerThreadsToListenToEvents(environment, injector);
+    initializeEnforcementSdk(injector);
   }
 
   private void registerOasResource(CENextGenConfiguration configuration, Environment environment, Injector injector) {
@@ -293,5 +301,24 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
           { add(CENGCoreMigrationProvider.class); } // Add all migration provider classes here
         })
         .build();
+  }
+
+  private void initializeEnforcementSdk(Injector injector) {
+    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
+        RestrictionUsageRegisterConfiguration.builder()
+            .restrictionNameClassMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
+                    .put(FeatureRestrictionName.PERSPECTIVES, PerspectivesRestrictionUsageImpl.class)
+                    .build())
+            .build();
+
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder().build())
+            .build();
+
+    injector.getInstance(EnforcementSdkRegisterService.class)
+        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }
