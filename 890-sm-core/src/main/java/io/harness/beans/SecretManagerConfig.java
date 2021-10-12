@@ -29,6 +29,8 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 import io.harness.validation.Update;
 
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.security.ScopedEntity;
 import software.wings.security.UsageRestrictions;
 
@@ -72,7 +74,7 @@ import org.mongodb.morphia.annotations.Transient;
 public abstract class SecretManagerConfig
     implements AccountAccess, EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                UpdatedAtAware, UpdatedByAware, PersistentRegularIterable, NGAccess, NGSecretManagerConfigDTOConverter,
-               ExecutionCapabilityDemander, ScopedEntity {
+               ExecutionCapabilityDemander, ScopedEntity, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -142,6 +144,12 @@ public abstract class SecretManagerConfig
   @JsonIgnore public abstract SecretManagerType getType();
 
   @JsonIgnore public abstract List<SecretManagerCapabilities> getSecretManagerCapabilities();
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getMigrationEntityType() {
+    return NGMigrationEntityType.SECRET_MANAGER;
+  }
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
