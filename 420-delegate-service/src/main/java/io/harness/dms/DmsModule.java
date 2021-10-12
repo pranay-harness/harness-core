@@ -19,7 +19,8 @@ public class DmsModule extends AbstractModule {
   @Override
   protected void configure() {
     if (isDmsMode) {
-      bind(DmsProxy.class).to(DmsProxyDelegateModeImpl.class);
+      // todo(abhinav): change to delegate when done.
+      bind(DmsProxy.class).to(DmsProxyManagerModeImpl.class);
     } else {
       bind(DmsProxy.class).to(DmsProxyManagerModeImpl.class);
     }
