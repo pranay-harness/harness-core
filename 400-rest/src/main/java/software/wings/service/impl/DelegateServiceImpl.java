@@ -264,6 +264,7 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -309,6 +310,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String ENV_ENV_VAR = "ENV";
   public static final String TASK_SELECTORS = "Task Selectors";
   public static final String TASK_CATEGORY_MAP = "Task Category Map";
+  private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -563,7 +565,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails) {
-    validateSetupDetails(delegateSetupDetails);
+    validateSetupDetails(accountId, delegateSetupDetails);
     delegateSetupDetails.setSessionIdentifier(generateUuid());
     return delegateSetupDetails;
   }
@@ -571,7 +573,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
       String verificationServiceUrl, MediaType fileFormat) throws IOException {
-    validateSetupDetails(delegateSetupDetails);
+    validateSetupDetails(accountId, delegateSetupDetails);
     if (isBlank(delegateSetupDetails.getSessionIdentifier())) {
       throw new InvalidRequestException("Session identifier must be provided.", USER);
     }
@@ -676,10 +678,11 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void validateSetupDetails(DelegateSetupDetails delegateSetupDetails) {
-    if (isBlank(delegateSetupDetails.getDelegateConfigurationId())) {
-      throw new InvalidRequestException("Delegate Configuration must be provided.", USER);
+  private void validateSetupDetails(String accoutnId, DelegateSetupDetails delegateSetupDetails) {
+    if (null == delegateSetupDetails) {
+      throw new InvalidRequestException("Delegate Setup Details must be provided.", USER);
     }
+    validateDelegateProfileId(accoutnId, delegateSetupDetails.getDelegateConfigurationId());
 
     if (isBlank(delegateSetupDetails.getName())) {
       throw new InvalidRequestException("Delegate Name must be provided.", USER);
@@ -694,6 +697,17 @@ public class DelegateServiceImpl implements DelegateService {
       throw new InvalidRequestException("K8s permission type must be provided.", USER);
     } else if (k8sConfigDetails.getK8sPermissionType() == NAMESPACE_ADMIN && isBlank(k8sConfigDetails.getNamespace())) {
       throw new InvalidRequestException("K8s namespace must be provided for this type of permission.", USER);
+    }
+  }
+
+  @VisibleForTesting
+  void validateDelegateProfileId(String accountId, String delegateProfileId) throws InvalidRequestException {
+    if (isBlank(delegateProfileId)) {
+      return;
+    }
+    DelegateProfile profile = delegateProfileService.get(accountId, delegateProfileId);
+    if (profile == null) {
+      throw new InvalidRequestException("Delegate configuration (profile) id does not match any record", USER);
     }
   }
 
@@ -1441,6 +1455,8 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         params.put("delegateNamespace", HARNESS_DELEGATE);
       }
+      boolean versionCheckEnabled = hasVersionCheckDisabled(inquiry.accountId);
+      params.put("versionCheckDisabled", String.valueOf(versionCheckEnabled));
 
       return params.build();
     }
@@ -2357,6 +2373,13 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateEntityOwner owner =
         DelegateEntityOwnerHelper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
 
+    String delegateProfileId = delegateParams.getDelegateProfileId();
+    try {
+      validateDelegateProfileId(delegateParams.getAccountId(), delegateProfileId);
+    } catch (InvalidRequestException e) {
+      log.warn("No delegate configuration (profile) with id {} exists: {}", delegateProfileId, e);
+    }
+
     Delegate delegate =
         Delegate.builder()
             .uuid(delegateParams.getDelegateId())
@@ -2371,7 +2394,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateGroupName(delegateParams.getDelegateGroupName())
             .delegateGroupId(isNotBlank(delegateGroupId) ? delegateGroupId : null)
             .delegateName(delegateParams.getDelegateName())
-            .delegateProfileId(delegateParams.getDelegateProfileId())
+            .delegateProfileId(delegateProfileId)
             .lastHeartBeat(delegateParams.getLastHeartBeat())
             .version(delegateParams.getVersion())
             .sequenceNum(delegateParams.getSequenceNum())
@@ -2918,6 +2941,10 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateGroup;
   }
 
+  private boolean hasVersionCheckDisabled(String accountId) {
+    return accountService.getAccountPrimaryDelegateVersion(accountId) != null;
+  }
+
   @NotNull
   private String getMessage(JerseyViolationException exception) {
     return "Fields "
@@ -2944,8 +2971,12 @@ public class DelegateServiceImpl implements DelegateService {
 
   public void registerHeartbeat(
       String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat, ConnectionMode connectionMode) {
+    String version = heartbeat.getVersion();
+    if (isEmpty(version)) {
+      version = accountService.getAccountPrimaryDelegateVersion(accountId);
+    }
     DelegateConnection previousDelegateConnection = delegateConnectionDao.upsertCurrentConnection(
-        accountId, delegateId, heartbeat.getDelegateConnectionId(), heartbeat.getVersion(), heartbeat.getLocation());
+        accountId, delegateId, heartbeat.getDelegateConnectionId(), version, heartbeat.getLocation());
 
     if (previousDelegateConnection == null) {
       DelegateConnection existingConnection = delegateConnectionDao.findAndDeletePreviousConnections(
@@ -3508,9 +3539,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public List<String> getConnectedDelegates(String accountId, List<String> delegateIds) {
     return delegateIds.stream()
-        .filter(delegateId
-            -> delegateConnectionDao.checkDelegateConnected(
-                accountId, delegateId, versionInfoManager.getVersionInfo().getVersion()))
+        .filter(
+            delegateId -> delegateConnectionDao.checkDelegateConnected(accountId, delegateId, getVersion(accountId)))
         .collect(toList());
   }
 
@@ -3613,5 +3643,37 @@ public class DelegateServiceImpl implements DelegateService {
       return delegateServiceClassicGrpcClient.executeTask(task);
     }
     return delegateTaskServiceClassic.executeTask(task);
+  }
+
+  @Override
+  public boolean sampleDelegateExists(String accountId) {
+    Key<Delegate> delegateKey = persistence.createQuery(Delegate.class)
+                                    .filter(DelegateKeys.accountId, accountId)
+                                    .filter(DelegateKeys.delegateName, SAMPLE_DELEGATE_NAME)
+                                    .getKey();
+    if (delegateKey == null) {
+      return false;
+    }
+    return delegateConnectionDao.checkDelegateConnected(
+        accountId, delegateKey.getId().toString(), versionInfoManager.getVersionInfo().getVersion());
+  }
+
+  @Override
+  public List<Delegate> getNonDeletedDelegatesForAccount(String accountId) {
+    return persistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .asList();
+  }
+
+  @Override
+  public boolean checkDelegateConnected(String accountId, String delegateId) {
+    return delegateConnectionDao.checkDelegateConnected(accountId, delegateId, getVersion(accountId));
+  }
+
+  private String getVersion(String accountId) {
+    String accountVersion = accountService.getAccountPrimaryDelegateVersion(accountId);
+    return isNotEmpty(accountVersion) ? accountVersion : versionInfoManager.getVersionInfo().getVersion();
   }
 }

@@ -3,6 +3,7 @@ package io.harness.pms.pipeline;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
@@ -25,7 +26,7 @@ public class CommonStepInfo {
   StepInfo shellScriptStepInfo =
       StepInfo.newBuilder()
           .setName("Shell Script")
-          .setType("ShellScript")
+          .setType(StepSpecTypeConstants.SHELL_SCRIPT)
           .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Utilities/Scripted").build())
           .build();
   StepInfo httpStepInfo =
@@ -34,24 +35,29 @@ public class CommonStepInfo {
           .setType("Http")
           .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Utilities/Non-Scripted").build())
           .build();
-  StepInfo harnessApprovalStepInfo = StepInfo.newBuilder()
-                                         .setName("Harness Approval")
-                                         .setType("HarnessApproval")
-                                         .setStepMetaData(StepMetaData.newBuilder()
-                                                              .addCategory("Provisioner")
-                                                              .addCategory("Approval")
-                                                              .addFolderPaths("Approval")
-                                                              .build())
-                                         .build();
-  StepInfo jiraApprovalStepInfo = StepInfo.newBuilder()
-                                      .setName("Jira Approval")
-                                      .setType("JiraApproval")
-                                      .setStepMetaData(StepMetaData.newBuilder()
-                                                           .addCategory("Provisioner")
-                                                           .addCategory("Approval")
-                                                           .addFolderPaths("Approval")
-                                                           .build())
-                                      .build();
+  StepInfo harnessApprovalStepInfo =
+      StepInfo.newBuilder()
+          .setName("Harness Approval")
+          .setType("HarnessApproval")
+          .setStepMetaData(StepMetaData.newBuilder()
+                               .addCategory("Provisioner")
+                               .addCategory("Approval")
+                               .addFolderPaths("Approval")
+                               .build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_HARNESS_UI.name())
+          .build();
+  StepInfo jiraApprovalStepInfo =
+      StepInfo.newBuilder()
+          .setName("Jira Approval")
+          .setType("JiraApproval")
+          .setStepMetaData(StepMetaData.newBuilder()
+                               .addCategory("Provisioner")
+                               .addCategory("Approval")
+                               .addFolderPaths("Approval")
+                               .build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
+
+          .build();
   StepInfo jiraCreateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Create")
@@ -73,10 +79,7 @@ public class CommonStepInfo {
 
   public List<StepInfo> getCommonSteps(String category) {
     List<StepInfo> stepInfos = new ArrayList<>();
-    // Remove shell script from approval stage till shell script step is moved to pipeline service.
-    if (!APPROVAL_STEP_CATEGORY.equals(category)) {
-      stepInfos.add(shellScriptStepInfo);
-    }
+    stepInfos.add(shellScriptStepInfo);
     stepInfos.add(httpStepInfo);
     stepInfos.add(harnessApprovalStepInfo);
     stepInfos.add(jiraApprovalStepInfo);

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
@@ -30,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PMSPipelineServiceStepHelper {
   @Inject private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
   @Inject private final CommonStepInfo commonStepInfo;
-  @Inject private final PipelineServiceEnforcementService pipelineServiceEnforcementService;
+  @Inject private final PipelineEnforcementService pipelineEnforcementService;
 
   @VisibleForTesting public static String LIBRARY = "Library";
 
@@ -59,9 +60,15 @@ public class PMSPipelineServiceStepHelper {
 
   public StepCategory calculateStepsForCategory(String module, List<StepInfo> stepInfoList, String accountId) {
     List<StepInfo> ffEnabledStepInfoList = filterStepsBasedOnFeatureFlag(stepInfoList, accountId);
+    Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap =
+        pipelineEnforcementService.getFeatureRestrictionMap(accountId,
+            ffEnabledStepInfoList.stream()
+                .filter(stepInfo -> EmptyPredicate.isNotEmpty(stepInfo.getFeatureRestrictionName()))
+                .map(StepInfo::getFeatureRestrictionName)
+                .collect(Collectors.toList()));
     StepCategory stepCategory = StepCategory.builder().name(module).build();
     for (StepInfo stepType : ffEnabledStepInfoList) {
-      addToTopLevel(stepCategory, stepType, accountId);
+      addToTopLevel(stepCategory, stepType, featureRestrictionNameBooleanMap);
     }
     return stepCategory;
   }
@@ -95,20 +102,23 @@ public class PMSPipelineServiceStepHelper {
     return calculateStepsForCategory(module, filteredStepTypes, accountId);
   }
 
-  public void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo, String accountId) {
-    StepCategory currentStepCategory = stepCategory;
+  public void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo,
+      Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap) {
     if (stepInfo != null) {
       List<String> folderPaths = stepInfo.getStepMetaData().getFolderPathsList();
       if (EmptyPredicate.isEmpty(folderPaths)) {
+        folderPaths = new ArrayList<>();
         folderPaths.add(stepInfo.getStepMetaData().getFolderPath());
       }
       for (String folderPath : folderPaths) {
+        StepCategory currentStepCategory = stepCategory;
         String[] categoryArrayName = folderPath.split("/");
         for (String categoryName : categoryArrayName) {
           currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(categoryName);
         }
         boolean disabled = !stepInfo.getFeatureRestrictionName().isEmpty()
-            && pipelineServiceEnforcementService.isFeatureRestricted(accountId, stepInfo.getFeatureRestrictionName());
+            && !featureRestrictionNameBooleanMap.get(
+                FeatureRestrictionName.valueOf(stepInfo.getFeatureRestrictionName()));
         currentStepCategory.addStepData(
             StepData.builder().name(stepInfo.getName()).type(stepInfo.getType()).disabled(disabled).build());
       }

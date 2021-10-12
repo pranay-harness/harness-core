@@ -20,6 +20,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.delegate.beans.connector.GitOpsProviderType;
 import io.harness.delegate.beans.connector.gitops.GitOpsProviderDTO;
 import io.harness.delegate.beans.connector.gitops.GitOpsProviderResponseDTO;
 import io.harness.gitopsprovider.entity.GitOpsProvider.GitOpsProviderKeys;
@@ -114,7 +115,8 @@ public class GitopsProviderResource {
           NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @ProjectIdentifier @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam("type") GitOpsProviderType type) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(PROJECT, null), VIEW_PROJECT_PERMISSION);
     Pageable pageRequest;
@@ -123,8 +125,8 @@ public class GitopsProviderResource {
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
-    return ResponseDTO.newResponse(getNGPageResponse(
-        gitopsProviderService.list(pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm)));
+    return ResponseDTO.newResponse(getNGPageResponse(gitopsProviderService.list(
+        pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type)));
   }
 
   @POST

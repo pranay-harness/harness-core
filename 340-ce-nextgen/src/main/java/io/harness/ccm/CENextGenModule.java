@@ -273,7 +273,7 @@ public class CENextGenModule extends AbstractModule {
       }
     });
 
-    install(DelegateServiceDriverModule.getInstance(false));
+    install(DelegateServiceDriverModule.getInstance(false, false));
     install(new DelegateServiceDriverGrpcClientModule(configuration.getNgManagerServiceSecret(),
         configuration.getGrpcClientConfig().getTarget(), configuration.getGrpcClientConfig().getAuthority(), true));
   }

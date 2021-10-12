@@ -9,6 +9,7 @@ shared_dependencies = [
     "//930-ng-core-clients:module",
     "//945-account-mgmt:module",
     "//948-access-control-sdk:module",
+    "//965-api-key-filter:module",
     "//960-persistence:module",
     "//980-commons:module",
     "@maven//:io_dropwizard_dropwizard_configuration",

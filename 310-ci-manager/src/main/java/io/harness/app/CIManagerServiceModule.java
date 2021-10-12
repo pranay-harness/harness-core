@@ -18,6 +18,8 @@ import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.core.ci.services.CIOverviewDashboardService;
 import io.harness.core.ci.services.CIOverviewDashboardServiceImpl;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.ff.CIFeatureFlagService;
+import io.harness.ff.impl.CIFeatureFlagServiceImpl;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.AbstractManagerGrpcClientModule;
@@ -129,6 +131,7 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(HPersistence.class).to(MongoPersistence.class).in(Singleton.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
     bind(CIYamlSchemaService.class).to(CIYamlSchemaServiceImpl.class).in(Singleton.class);
+    bind(CIFeatureFlagService.class).to(CIFeatureFlagServiceImpl.class).in(Singleton.class);
     bind(CIOverviewDashboardService.class).to(CIOverviewDashboardServiceImpl.class);
     try {
       bind(TimeScaleDBService.class)
@@ -164,7 +167,7 @@ public class CIManagerServiceModule extends AbstractModule {
 
     install(new CIExecutionServiceModule(
         ciManagerConfiguration.getCiExecutionServiceConfig(), ciManagerConfiguration.getShouldConfigureWithPMS()));
-    install(DelegateServiceDriverModule.getInstance(false));
+    install(DelegateServiceDriverModule.getInstance(false, true));
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority(), true));
 

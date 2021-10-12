@@ -91,15 +91,14 @@ public class EnforcementServiceImpl implements EnforcementService {
   @Override
   public RestrictionMetadataMapResponseDTO getFeatureRestrictionMetadataMap(
       List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier) {
-    Map<FeatureRestrictionName, RestrictionMetadataDTO> metadataDTOMap = new HashMap<>();
+    Map<FeatureRestrictionName, FeatureRestrictionMetadataDTO> metadataDTOMap = new HashMap<>();
 
     for (FeatureRestrictionName name : featureRestrictionNames) {
       FeatureRestriction featureRestriction = featureRestrictionMap.get(name);
       Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
-      RestrictionMetadataDTO restrictionMetadataDTO =
-          toRestrictionMetadataDTO(featureRestriction.getRestrictions().get(edition));
 
-      metadataDTOMap.put(name, restrictionMetadataDTO);
+      FeatureRestrictionMetadataDTO featureRestrictionMetadataDTO = toFeatureMetadataDTO(featureRestriction, edition);
+      metadataDTOMap.put(name, featureRestrictionMetadataDTO);
     }
     return RestrictionMetadataMapResponseDTO.builder().metadataMap(metadataDTOMap).build();
   }
@@ -204,7 +203,7 @@ public class EnforcementServiceImpl implements EnforcementService {
   private FeatureRestrictionMetadataDTO toFeatureMetadataDTO(FeatureRestriction feature, Edition edition) {
     FeatureRestrictionMetadataDTO featureDetailsDTO = FeatureRestrictionMetadataDTO.builder()
                                                           .name(feature.getName())
-                                                          .moduleType(feature.getModuleType().name())
+                                                          .moduleType(feature.getModuleType())
                                                           .edition(edition)
                                                           .build();
 

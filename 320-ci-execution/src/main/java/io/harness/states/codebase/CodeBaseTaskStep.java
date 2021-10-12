@@ -286,6 +286,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
 
       return CodebaseSweepingOutput.builder()
           .commits(codeBaseCommits)
+          .state(getState(prWebhookEvent))
           .branch(prWebhookEvent.getTargetBranch())
           .targetBranch(prWebhookEvent.getTargetBranch())
           .sourceBranch(prWebhookEvent.getSourceBranch())
@@ -411,6 +412,17 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     if (pr.getClosed()) {
       state = "closed";
     } else if (pr.getMerged()) {
+      state = "merged";
+    }
+    return state;
+  }
+
+  @NotNull
+  private String getState(PRWebhookEvent pr) {
+    String state = "open";
+    if (pr.isClosed()) {
+      state = "closed";
+    } else if (pr.isMerged()) {
       state = "merged";
     }
     return state;

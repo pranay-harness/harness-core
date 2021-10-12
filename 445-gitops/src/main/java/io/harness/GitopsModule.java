@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.GitOpsProviderType;
 import io.harness.gitopsprovider.mappers.ConnectedGitOpsProviderEntityMapper;
 import io.harness.gitopsprovider.mappers.GitOpsProviderEntityMapper;
+import io.harness.gitopsprovider.mappers.ManagedGitOpsProviderEntityMapper;
 import io.harness.gitopsprovider.services.GitopsProviderService;
 import io.harness.gitopsprovider.services.impl.GitOpsProviderServiceImpl;
 import io.harness.persistence.HPersistence;
@@ -15,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @OwnedBy(HarnessTeam.GITOPS)
 public class GitopsModule extends AbstractModule {
-  private static final AtomicReference<GitopsModule> instanceRef = new AtomicReference();
+  private static final AtomicReference<GitopsModule> instanceRef = new AtomicReference<>();
 
   private GitopsModule() {}
 
@@ -24,7 +25,7 @@ public class GitopsModule extends AbstractModule {
       instanceRef.compareAndSet(null, new GitopsModule());
     }
 
-    return (GitopsModule) instanceRef.get();
+    return instanceRef.get();
   }
   @Override
   protected void configure() {
@@ -35,5 +36,7 @@ public class GitopsModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), GitOpsProviderType.class, GitOpsProviderEntityMapper.class);
     gitopsProviderEntityMapperBinding.addBinding(GitOpsProviderType.CONNECTED_ARGO_PROVIDER)
         .to(ConnectedGitOpsProviderEntityMapper.class);
+    gitopsProviderEntityMapperBinding.addBinding(GitOpsProviderType.MANAGED_ARGO_PROVIDER)
+        .to(ManagedGitOpsProviderEntityMapper.class);
   }
 }

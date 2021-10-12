@@ -16,6 +16,7 @@ import io.harness.persistence.UuidAware;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Date;
@@ -57,6 +58,7 @@ public class CVNGStepTask
   private long createdAt;
   private long lastUpdatedAt;
   private String activityId;
+  // verifyStepExecutionId
   @FdIndex private String callbackId;
   private boolean skip;
   private Status status;
@@ -66,6 +68,7 @@ public class CVNGStepTask
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
   private long asyncTaskIteration;
   private String verificationJobInstanceId;
+  private Instant deploymentStartTime;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {

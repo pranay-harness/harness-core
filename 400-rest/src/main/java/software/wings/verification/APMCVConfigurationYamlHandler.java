@@ -16,7 +16,7 @@ import software.wings.verification.apm.APMCVServiceConfiguration;
 import java.util.List;
 
 public class APMCVConfigurationYamlHandler
-    extends CVConfigurationYamlHandler<APMCVConfigurationYaml, APMCVServiceConfiguration> {
+    extends MetricCVConfigurationYamlHandler<APMCVConfigurationYaml, APMCVServiceConfiguration> {
   @Override
   public APMCVConfigurationYaml toYaml(APMCVServiceConfiguration bean, String appId) {
     APMCVConfigurationYaml yaml = APMCVConfigurationYaml.builder().build();

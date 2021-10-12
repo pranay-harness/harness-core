@@ -2,9 +2,11 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.BHAVYA;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -26,12 +28,14 @@ import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDetailsDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorDetailsDTO;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.repositories.gitSyncError.GitSyncErrorRepository;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -177,5 +181,45 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         .additionalErrorDetails(additionalErrorDetails)
         .createdAt(createdAt)
         .build();
+  }
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testRecordConnectivityIssue() {
+    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
+        repoUrl, branch, "Unable to connect to git provider");
+    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+    PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, repoId, branch, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isNotEmpty();
+    assertThat(gitSyncErrorList.getContent()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testListGitSyncErrors() {
+    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
+        repoUrl, branch, "Unable to connect to git provider");
+
+    gitSyncErrorService.recordConnectivityError(
+        accountId, orgId, projectId, GitSyncErrorType.FULL_SYNC, repoUrl, branch, "Unable to connect to git provider");
+
+    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.FULL_SYNC, "repoUrl1",
+        branch, "Unable to connect to git provider");
+
+    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+
+    PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, repoId, branch, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isNotEmpty();
+    assertThat(gitSyncErrorList.getContent()).hasSize(2);
+
+    gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isNotEmpty();
+    assertThat(gitSyncErrorList.getContent()).hasSize(3);
   }
 }

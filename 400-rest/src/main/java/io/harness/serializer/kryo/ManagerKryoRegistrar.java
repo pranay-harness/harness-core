@@ -109,7 +109,6 @@ import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
-import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
@@ -810,7 +809,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerRollbackRequestElement.class, 4010);
     kryo.register(ContainerServiceElement.class, 5095);
     kryo.register(DeploymentType.class, 5096);
-    kryo.register(EcsBGSetupData.class, 5611);
     kryo.register(EcsSetupElement.class, 5671);
     kryo.register(EcsListenerUpdateExecutionSummary.class, 5612);
     kryo.register(EcsListenerUpdateStateExecutionData.class, 5614);

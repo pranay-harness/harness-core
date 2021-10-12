@@ -11,7 +11,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncErrorKeys;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
@@ -108,19 +107,20 @@ public class GitSyncErrorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
-      @QueryParam(NGResourceFilterConstants.TYPE_KEY) GitSyncErrorType errorType) {
+      @QueryParam("gitToHarness") @DefaultValue("true") Boolean gitToHarnessErrors) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(GitSyncErrorKeys.createdAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
 
-    if (errorType.equals(GitSyncErrorType.GIT_TO_HARNESS)) {
+    if (Boolean.TRUE.equals(gitToHarnessErrors)) {
       return ResponseDTO.newResponse(
           gitSyncErrorService.listAllGitToHarnessErrors(pageRequest, accountIdentifier, orgIdentifier,
               projectIdentifier, searchTerm, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch()));
     } else {
-      return ResponseDTO.newResponse(PageResponse.getEmptyPageResponse(pageRequest));
+      return ResponseDTO.newResponse(gitSyncErrorService.listConnectivityErrors(accountIdentifier, orgIdentifier,
+          projectIdentifier, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch(), pageRequest));
     }
   }
 }

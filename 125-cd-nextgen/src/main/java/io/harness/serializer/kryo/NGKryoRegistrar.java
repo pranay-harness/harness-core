@@ -62,7 +62,6 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
-import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.cdng.provision.terraform.TerraformApplyStepInfo;
 import io.harness.cdng.provision.terraform.TerraformPlanStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
@@ -117,7 +116,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sRollingStepInfo.class, 8051);
     kryo.register(K8sRollingStepParameters.class, 8052);
     kryo.register(ManifestFetchParameters.class, 8053);
-    kryo.register(ShellScriptStepInfo.class, 8055);
     kryo.register(K8sStepPassThroughData.class, 8056);
 
     // Starting using 8100 series

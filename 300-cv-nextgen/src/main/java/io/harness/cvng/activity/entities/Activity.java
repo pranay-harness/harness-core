@@ -202,10 +202,15 @@ public abstract class Activity
           .set(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier())
           .set(ActivityKeys.eventTime, activity.getEventTime())
           .set(ActivityKeys.activityStartTime, activity.getActivityStartTime())
-          .set(ActivityKeys.changeSourceIdentifier, activity.getChangeSourceIdentifier())
           .set(ActivityKeys.type, activity.getType());
       if (activity.getActivityEndTime() != null) {
         updateOperations.set(ActivityKeys.activityEndTime, activity.getActivityEndTime());
+      }
+      if (activity.getChangeSourceIdentifier() != null) {
+        updateOperations.set(ActivityKeys.changeSourceIdentifier, activity.getChangeSourceIdentifier());
+      }
+      if (activity.getVerificationJobInstanceIds() != null) {
+        updateOperations.set(ActivityKeys.verificationJobInstanceIds, activity.getVerificationJobInstanceIds());
       }
     }
   }

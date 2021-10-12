@@ -1,14 +1,12 @@
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.beans.job.VerificationJobType.HEALTH;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.job.VerificationJobDTO;
-import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
@@ -20,21 +18,15 @@ import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobU
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
-import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
-import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DuplicateKeyException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +38,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(HarnessTeam.CV)
 public class VerificationJobServiceImpl implements VerificationJobService {
   @Inject private HPersistence hPersistence;
-  @Inject private NextGenService nextGenService;
   @Inject private Injector injector;
 
   @Override
@@ -139,46 +130,6 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     return defaultHealthVerificationJob;
   }
 
-  @Override
-  public VerificationJob get(String uuid) {
-    Preconditions.checkNotNull(uuid);
-    return hPersistence.get(VerificationJob.class, uuid);
-  }
-
-  @Override
-  public VerificationJob getByUrl(String accountId, String verificationJobUrl) {
-    Preconditions.checkNotNull(accountId);
-    Preconditions.checkNotNull(verificationJobUrl);
-
-    String identifier = getParamFromUrl(verificationJobUrl, VerificationJobKeys.identifier);
-    String orgIdentifier = getParamFromUrl(verificationJobUrl, VerificationJobKeys.orgIdentifier);
-    String projectIdentifier = getParamFromUrl(verificationJobUrl, VerificationJobKeys.projectIdentifier);
-    Preconditions.checkNotNull(identifier);
-    Preconditions.checkNotNull(orgIdentifier);
-    Preconditions.checkNotNull(projectIdentifier);
-    return getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
-  }
-
-  @Override
-  public VerificationJobDTO getDTOByUrl(String accountId, String verificationJobUrl) {
-    VerificationJob job = getByUrl(accountId, verificationJobUrl);
-    if (job != null) {
-      VerificationJobDTO verificationJobDTO = job.getVerificationJobDTO();
-      if (!job.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
-        EnvironmentResponseDTO environmentResponseDTO = nextGenService.getEnvironment(
-            accountId, job.getOrgIdentifier(), job.getProjectIdentifier(), job.getEnvIdentifier());
-        verificationJobDTO.setEnvName(environmentResponseDTO.getName());
-      }
-      if (!job.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
-        ServiceResponseDTO serviceResponseDTO = nextGenService.getService(
-            accountId, job.getOrgIdentifier(), job.getProjectIdentifier(), job.getServiceIdentifier());
-        verificationJobDTO.setServiceName(serviceResponseDTO.getName());
-      }
-      return verificationJobDTO;
-    }
-    return null;
-  }
-
   private String getParamFromUrl(String url, String paramName) {
     try {
       List<NameValuePair> queryParams = new URIBuilder(url).getQueryParams();
@@ -193,82 +144,12 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     }
   }
 
-  public void delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    hPersistence.delete(hPersistence.createQuery(VerificationJob.class)
-                            .filter(VerificationJobKeys.accountId, accountId)
-                            .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
-                            .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
-                            .filter(VerificationJobKeys.identifier, identifier));
-  }
-
-  @Override
-  public PageResponse<VerificationJobDTO> list(
-      String accountId, String projectId, String orgIdentifier, Integer offset, Integer pageSize, String filter) {
-    List<VerificationJob> verificationJobs = verificationJobList(accountId, projectId, orgIdentifier);
-
-    List<VerificationJobDTO> verificationJobList = new ArrayList<>();
-
-    for (VerificationJob verificationJob : verificationJobs) {
-      if (isEmpty(filter) || verificationJob.getJobName().toLowerCase().contains(filter.trim().toLowerCase())) {
-        verificationJobList.add(verificationJob.getVerificationJobDTO());
-        continue;
-      }
-      if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
-        EnvironmentResponseDTO environmentResponseDTO =
-            nextGenService.getEnvironment(accountId, orgIdentifier, projectId, verificationJob.getEnvIdentifier());
-
-        if (environmentResponseDTO.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
-          verificationJobList.add(verificationJob.getVerificationJobDTO());
-          continue;
-        }
-      }
-
-      if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
-        ServiceResponseDTO serviceResponseDTO =
-            nextGenService.getService(accountId, orgIdentifier, projectId, verificationJob.getServiceIdentifier());
-
-        if (serviceResponseDTO.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
-          verificationJobList.add(verificationJob.getVerificationJobDTO());
-          continue;
-        }
-      }
-    }
-
-    return PageUtils.offsetAndLimit(verificationJobList, offset, pageSize);
-  }
-
   private List<VerificationJob> verificationJobList(String accountId, String projectIdentifier, String orgIdentifier) {
     return hPersistence.createQuery(VerificationJob.class)
         .filter(VerificationJobKeys.accountId, accountId)
         .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
         .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
         .asList();
-  }
-
-  @Override
-  public boolean doesAVerificationJobExistsForThisProject(
-      String accountId, String orgIdentifier, String projectIdentifier) {
-    long numberOfVerificationJobs = hPersistence.createQuery(VerificationJob.class)
-                                        .filter(VerificationJobKeys.accountId, accountId)
-                                        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
-                                        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
-                                        .count();
-    return numberOfVerificationJobs > 0;
-  }
-
-  @Override
-  public int getNumberOfServicesUndergoingHealthVerification(
-      String accountId, String orgIdentifier, String projectIdentifier) {
-    BasicDBObject verificationJobQuery = new BasicDBObject();
-    List<BasicDBObject> conditions = new ArrayList<>();
-    conditions.add(new BasicDBObject(VerificationJobKeys.accountId, accountId));
-    conditions.add(new BasicDBObject(VerificationJobKeys.projectIdentifier, projectIdentifier));
-    conditions.add(new BasicDBObject(VerificationJobKeys.orgIdentifier, orgIdentifier));
-    conditions.add(new BasicDBObject(VerificationJobKeys.type, HEALTH.toString()));
-    verificationJobQuery.put("$and", conditions);
-    List<String> serviceIdentifiers = hPersistence.getCollection(VerificationJob.class)
-                                          .distinct(VerificationJobKeys.serviceIdentifier, verificationJobQuery);
-    return serviceIdentifiers.size();
   }
 
   @Override

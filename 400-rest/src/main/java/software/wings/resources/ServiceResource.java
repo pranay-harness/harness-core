@@ -105,9 +105,10 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   @ListAPI(ResourceType.SERVICE)
-  public RestResponse<PageResponse<Service>> list(@QueryParam("appId") List<String> appIds,
-      @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
-      @BeanParam PageRequest<Service> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details) {
+  public RestResponse<PageResponse<Service>> list(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") List<String> appIds, @QueryParam("tagFilter") String tagFilter,
+      @QueryParam("withTags") @DefaultValue("false") boolean withTags, @BeanParam PageRequest<Service> pageRequest,
+      @QueryParam("details") @DefaultValue("true") boolean details) {
     if (isNotEmpty(appIds)) {
       pageRequest.addFilter("appId", IN, appIds.toArray());
     }

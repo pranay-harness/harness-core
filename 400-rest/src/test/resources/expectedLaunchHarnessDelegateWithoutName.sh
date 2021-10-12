@@ -30,4 +30,5 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 6
 -e JRE_VERSION=1.8.0_242 \
 -e CLIENT_TOOLS_DOWNLOAD_DISABLED=false \
 -e INSTALL_CLIENT_TOOLS_IN_BACKGROUND=true \
+-e VERSION_CHECK_DISABLED=false \
 harness/delegate:latest
