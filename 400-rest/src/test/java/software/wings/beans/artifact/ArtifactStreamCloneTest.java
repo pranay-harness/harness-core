@@ -129,6 +129,6 @@ public class ArtifactStreamCloneTest {
     T artifactStream = JsonUtils.readResourceFile(filPath, tClass);
     T clonedArtifactStream = (T) artifactStream.cloneInternal();
     JsonNode expected = JsonUtils.readResourceFile(filPath, JsonNode.class);
-    assertThat(expected.toString()).isEqualTo(JsonUtils.toJsonNode(clonedArtifactStream).toString());
+    assertThat(JsonUtils.toJsonNode(clonedArtifactStream).toString()).isEqualTo(expected.toString());
   }
 }
