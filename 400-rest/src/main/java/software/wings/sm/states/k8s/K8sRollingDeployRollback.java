@@ -14,6 +14,7 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
@@ -130,6 +131,8 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
                       ? emptyList()
                       : k8sContextElement.getPrunedResourcesIds())
               .isPruningEnabled(featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, context.getAccountId()))
+              .useLatestKustomizeVersion(
+                  featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
               .build();
 
       return queueK8sDelegateTask(context, k8sTaskParameters, null);

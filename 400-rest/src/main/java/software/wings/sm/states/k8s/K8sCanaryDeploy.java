@@ -177,6 +177,8 @@ public class K8sCanaryDeploy extends AbstractK8sState {
             .skipDryRun(skipDryRun)
             .skipVersioningForAllK8sObjects(
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
+            .useLatestKustomizeVersion(
+                featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
             .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);

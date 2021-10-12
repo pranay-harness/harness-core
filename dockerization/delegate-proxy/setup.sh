@@ -33,14 +33,6 @@ KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$KUBECTL_VERSION/"
 KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/linux/amd64/kubectl
 KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/darwin/amd64/kubectl
 
-KUSTOMIZE_VERSION=v3.5.4
-
-KUSTOMIZE_LINUX_DIR="${IMAGES_DIR}/kustomize/linux/$KUSTOMIZE_VERSION/"
-KUSTOMIZE_MAC_DIR="${IMAGES_DIR}/kustomize/darwin/$KUSTOMIZE_VERSION/"
-
-KUSTOMIZE_LINUX_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$KUSTOMIZE_VERSION"/bin/linux/amd64/kustomize
-KUSTOMIZE_MAC_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$KUSTOMIZE_VERSION"/bin/darwin/amd64/kustomize
-
 OC_VERSION=v4.2.16
 OC_LINUX_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/linux/amd64/oc
 OC_MAC_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/darwin/amd64/oc
@@ -68,12 +60,6 @@ mkdir -p $KUBECTL_MAC_DIR
 
 curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
 curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
-
-mkdir -p $KUSTOMIZE_LINUX_DIR
-mkdir -p $KUSTOMIZE_MAC_DIR
-
-curl -L -o "${KUSTOMIZE_MAC_DIR}kustomize" "${KUSTOMIZE_MAC_URL}"
-curl -L -o "${KUSTOMIZE_LINUX_DIR}kustomize" "${KUSTOMIZE_LINUX_URL}"
 
 mkdir -p $OC_LINUX_DIR
 mkdir -p $OC_MAC_DIR
@@ -163,6 +149,25 @@ for chartmuseumversion in v0.8.2; do
   curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
 done
 
+for kustomizeVersion in v3.5.4 v4.0.0; do
+  echo "Adding kustomizeversion $kustomizeVersion"
+  KUSTOMIZE_LINUX_DIR="${IMAGES_DIR}/kustomize/linux/$kustomizeVersion/"
+  KUSTOMIZE_MAC_DIR="${IMAGES_DIR}/kustomize/darwin/$kustomizeVersion/"
+
+  KUSTOMIZE_LINUX_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$kustomizeVersion"/bin/linux/amd64/kustomize
+  KUSTOMIZE_MAC_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$kustomizeVersion"/bin/darwin/amd64/kustomize
+
+  echo $KUSTOMIZE_LINUX_DIR
+  echo $KUSTOMIZE_MAC_DIR
+
+  mkdir -p $KUSTOMIZE_LINUX_DIR
+  mkdir -p $KUSTOMIZE_MAC_DIR
+
+  curl -L -o "${KUSTOMIZE_MAC_DIR}kustomize" "${KUSTOMIZE_MAC_URL}"
+  curl -L -o "${KUSTOMIZE_LINUX_DIR}kustomize" "${KUSTOMIZE_LINUX_URL}"
+done
+
+
 for tfConfigInspectVersion in v1.0 v1.1; do
   echo "Adding terraform-config-inspect" $tfConfigInspectVersion
 
@@ -227,7 +232,7 @@ function setupDelegateJars() {
 
   rm -rf ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/*
   mkdir -p ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}
-  cp images/watcher.jar ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}/
+  cp images/watcher.jar ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}/X
   echo "1.0.${WATCHER_VERSION} jobs/deploy-prod-watcher/${WATCHER_VERSION}/watcher.jar" >watcherprod.txt
   mv watcherprod.txt ${STORAGE_DIR_LOCATION}/wingswatchers
 
@@ -244,7 +249,7 @@ function setupClientUtils() {
       cp images/kubectl/${platform}/$kubectlversion/kubectl ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
     done
 
-    for kustomizeversion in v3.5.4; do
+    for kustomizeversion in v3.5.4 v4.0.0; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeversion/bin/${platform}/amd64/
       cp images/kustomize/${platform}/$kustomizeversion/kustomize ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeversion/bin/${platform}/amd64/
     done
