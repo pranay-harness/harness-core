@@ -828,7 +828,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           log.warn("Failed to connect.", e);
           restartNeeded.set(true);
         } else if (e instanceof ConcurrentModificationException) {
-          log.error("Concurrent modification exception. Ignoring.", e);
+          log.warn("ConcurrentModificationException on WebSocket ignoring");
+          log.debug("ConcurrentModificationException on WebSocket.", e);
         } else {
           log.error("Exception: ", e);
           try {
