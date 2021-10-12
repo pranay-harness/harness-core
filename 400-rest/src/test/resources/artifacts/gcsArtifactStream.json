@@ -35,6 +35,10 @@
   "perpetualTaskId": null,
   "collectionStatus": null,
   "artifactStreamParameterized": false,
+  "collectionEnabled":null,
+  "lastIteration":0,
+  "lastSuccessfulIteration":0,
+  "maxAttempts":0,
   "jobname": "yogesh-test",
   "artifactPaths": [
     "k8s.zip"

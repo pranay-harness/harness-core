@@ -157,7 +157,7 @@ public class ArtifactResourceTest extends CategoryTest {
             .post(entity(artifact, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Artifact>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Artifact.class);
     verify(ARTIFACT_SERVICE).create(artifact);
-    verify(ARTIFACT_STREAM_SERVICE).updateFailedCronAttempts(ACCOUNT_ID, ARTIFACT_STREAM_ID, 0);
+    verify(ARTIFACT_STREAM_SERVICE).updateFailedCronAttemptsAndLastIteration(ACCOUNT_ID, ARTIFACT_STREAM_ID, 0);
     verify(PERMIT_SERVICE).releasePermitByKey(ARTIFACT_STREAM_ID);
   }
 
