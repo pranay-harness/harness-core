@@ -346,7 +346,7 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     StringBuilder combinedId = new StringBuilder();
 
     for (String key : keys) {
-      combinedId.append(key).append(" ");
+      combinedId.append(key).append(' ');
     }
     combinedId.deleteCharAt(combinedId.length() - 1);
 

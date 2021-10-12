@@ -169,12 +169,14 @@ public class UserResource {
 
   @GET
   @Path("projects-count")
-  @ApiOperation(value = "get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
-  public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(@QueryParam("accountId") String accountId,
-      @QueryParam("userId") String userId, @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+  @ApiOperation(value = "Get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
+  public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     return ResponseDTO.newResponse(
-        projectService.accessibleProjectsCount(userId, accountId, startInterval, endInterval));
+        projectService.accessibleProjectsCount(userId, accountIdentifier, startInterval, endInterval));
   }
 
   @POST

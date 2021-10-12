@@ -21,7 +21,7 @@ public interface UserNGClient {
       @Query(value = "accountId") String accountId, @Query(value = "userId") String userId);
 
   @GET(COUNT_OF_ACCESSIBLE_PROJECTS_API)
-  Call<ResponseDTO<ActiveProjectsCountDTO>> getAccessibleProjectsCount(@Query(value = "accountId") String accountId,
-                                                                       @Query(value = "userId") String userId, @Query(value = "startTime") long startInterval,
-                                                                       @Query(value = "endTime") long endInterval);
+  Call<ResponseDTO<ActiveProjectsCountDTO>> getAccessibleProjectsCount(
+      @Query(value = "accountIdentifier") String accountId, @Query(value = "userId") String userId,
+      @Query(value = "startTime") long startInterval, @Query(value = "endTime") long endInterval);
 }

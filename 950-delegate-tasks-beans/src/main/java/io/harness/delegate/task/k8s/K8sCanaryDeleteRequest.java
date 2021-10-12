@@ -19,6 +19,7 @@ public class K8sCanaryDeleteRequest implements K8sDeployRequest {
   String commandName;
   Integer timeoutIntervalInMin;
   CommandUnitsProgress commandUnitsProgress;
+  boolean useLatestKustomizeVersion;
 
   @Override
   public ManifestDelegateConfig getManifestDelegateConfig() {

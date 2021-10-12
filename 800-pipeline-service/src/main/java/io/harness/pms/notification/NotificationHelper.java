@@ -135,7 +135,7 @@ public class NotificationHelper {
     return false;
   }
 
-  private List<NotificationRules> getNotificationRulesFromYaml(String yaml) throws IOException {
+  List<NotificationRules> getNotificationRulesFromYaml(String yaml) throws IOException {
     BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
     return basicPipeline.getNotificationRules();
   }
@@ -148,7 +148,7 @@ public class NotificationHelper {
         ambiance.getMetadata().getPipelineIdentifier(), ambiance.getPlanExecutionId());
   }
 
-  private String obtainYaml(String planExecutionId) {
+  String obtainYaml(String planExecutionId) {
     Optional<PlanExecutionMetadata> optional = planExecutionMetadataService.findByPlanExecutionId(planExecutionId);
     return optional.map(PlanExecutionMetadata::getYaml).orElse(null);
   }

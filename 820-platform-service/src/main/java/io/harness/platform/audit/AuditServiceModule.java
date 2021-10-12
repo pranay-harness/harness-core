@@ -111,7 +111,7 @@ public class AuditServiceModule extends AbstractModule {
     bind(AuditSettingsService.class).to(AuditSettingsServiceImpl.class);
     install(
         AccessControlClientModule.getInstance(appConfig.getAccessControlClientConfig(), AUDIT_SERVICE.getServiceId()));
-    install(new TokenClientModule(this.appConfig.getServiceHttpClientConfig(),
+    install(new TokenClientModule(this.appConfig.getManagerServiceConfig(),
         this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), AUDIT_SERVICE.getServiceId()));
   }
 

@@ -141,8 +141,17 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
                   delegateLogService, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime()));
+          List<LogDataRecord> validRecords =
+              logDataRecords.stream()
+                  .filter(log -> isNotEmpty(log.getLog()) && isNotEmpty(log.getHostname()))
+                  .collect(Collectors.toList());
+          if (validRecords.size() < logDataRecords.size()) {
+            log.info(
+                "Log query is not optimized. Some records with invalid messageIdentifier and serviceInstanceIdentifier are present for verification task id: {}",
+                dataCollectionTask.getVerificationTaskId());
+          }
           logRecordDataStoreService.save(
-              dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), logDataRecords);
+              dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), validRecords);
           if (dataCollectionInfo.isCollectHostData()) {
             Set<String> hosts;
             LogDataCollectionInfo logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
@@ -153,7 +162,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
                       dataCollectionTask.getVerificationTaskId(), delegateLogService, dataCollectionTask.getStartTime(),
                       dataCollectionTask.getEndTime())));
             } else {
-              hosts = logDataRecords.stream().map(LogDataRecord::getHostname).collect(Collectors.toSet());
+              hosts = validRecords.stream().map(LogDataRecord::getHostname).collect(Collectors.toSet());
             }
             hostRecordDataStoreService.save(dataCollectionTask.getAccountId(),
                 dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getStartTime(),

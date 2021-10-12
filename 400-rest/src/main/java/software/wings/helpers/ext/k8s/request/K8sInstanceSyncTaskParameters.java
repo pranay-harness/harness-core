@@ -22,9 +22,11 @@ public class K8sInstanceSyncTaskParameters extends K8sTaskParameters {
   @Builder
   public K8sInstanceSyncTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName, Integer timeoutIntervalInMin,
-      String namespace, HelmVersion helmVersion, Set<String> delegateSelectors, boolean useLatestChartMuseumVersion) {
+      String namespace, HelmVersion helmVersion, Set<String> delegateSelectors, boolean useLatestChartMuseumVersion,
+      boolean useLatestKustomizeVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, K8sTaskType.INSTANCE_SYNC, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
+        timeoutIntervalInMin, K8sTaskType.INSTANCE_SYNC, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
+        useLatestKustomizeVersion);
     this.namespace = namespace;
   }
 }

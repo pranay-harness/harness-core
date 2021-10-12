@@ -22,5 +22,6 @@ public class GitSyncErrorAggregateByCommitDTO {
   String repoId;
   String branchName;
   String commitMessage;
+  long createdAt;
   List<GitSyncErrorDTO> errorsForSummaryView;
 }

@@ -53,3 +53,8 @@ if [[ "" != "$ALLOWED_ORIGINS" ]]; then
   yq delete -i $CONFIG_FILE allowedOrigins
   yq write -i $CONFIG_FILE allowedOrigins "$ALLOWED_ORIGINS"
 fi
+
+if [[ "" != "$ALLOWED_ORIGINS" ]]; then
+  yq delete -i $CONFIG_FILE allowedOrigins
+  yq write -i $CONFIG_FILE allowedOrigins "$ALLOWED_ORIGINS"
+fi

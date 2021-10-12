@@ -54,7 +54,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -133,6 +135,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 @OwnedBy(CDP)
 public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infraMappingService;
@@ -1515,6 +1518,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .releaseName("release-123")
             .containers(singletonList(K8sContainerInfo.builder().image("nginx:0.1").build()))
             .build());
+    instanceWithGreenColor.setLastWorkflowExecutionId("workflowExecution_1");
     Instance instanceWithBlueColor = buildInstanceWith("sample-pod-2",
         K8sPodInfo.builder()
             .blueGreenColor(colorBlue)
@@ -1523,6 +1527,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .releaseName("release-123")
             .containers(singletonList(K8sContainerInfo.builder().image("nginx:0.1").build()))
             .build());
+    instanceWithBlueColor.setLastWorkflowExecutionId("workflowExecution_1");
 
     /* Given:
         - New deployment with blue stage color
