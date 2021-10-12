@@ -6,6 +6,8 @@ import static io.harness.ccm.budget.AlertThresholdBase.FORECASTED_COST;
 import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.ccm.budget.utils.BudgetUtils;
 import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.budget.BudgetData;
+import io.harness.ccm.graphql.core.budget.BudgetService;
 import io.harness.ccm.graphql.dto.budget.BudgetSummary;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
 import io.harness.ccm.graphql.utils.annotations.GraphQLApi;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BudgetsQuery {
   @Inject private GraphQLUtils graphQLUtils;
   @Inject private BudgetDao budgetDao;
+  @Inject private BudgetService budgetService;
 
   @GraphQLQuery(name = "budgetSummary", description = "Budget card for perspectives")
   public BudgetSummary budgetSummaryForPerspective(@GraphQLArgument(name = "perspectiveId") String perspectiveId,
@@ -46,7 +49,7 @@ public class BudgetsQuery {
           budget = perspectiveBudgets.get(0);
         }
       } else if (budgetId != null) {
-        budget = budgetDao.get(budgetId);
+        budget = budgetDao.get(budgetId, accountId);
       }
 
       if (budget != null) {
@@ -74,6 +77,13 @@ public class BudgetsQuery {
     budgets.forEach(budget -> budgetSummaryList.add(buildBudgetSummary(budget)));
 
     return budgetSummaryList;
+  }
+
+  @GraphQLQuery(name = "budgetCostData", description = "Budget cost data")
+  public BudgetData budgetCostData(@GraphQLArgument(name = "budgetId", defaultValue = "") String budgetId,
+      @GraphQLEnvironment final ResolutionEnvironment env) {
+    final String accountId = graphQLUtils.getAccountIdentifier(env);
+    return budgetService.getBudgetTimeSeriesStats(budgetDao.get(budgetId, accountId));
   }
 
   private BudgetSummary buildBudgetSummary(Budget budget) {
