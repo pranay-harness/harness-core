@@ -102,7 +102,6 @@ import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
-import io.harness.exception.GitOperationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -2559,7 +2558,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testFetchManifestFilesAndWriteToDirectory() throws IOException {
+  public void testFetchManifestFilesAndWriteToDirectory() throws Exception {
     K8sTaskHelperBase spyHelperBase = spy(k8sTaskHelperBase);
     GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
     List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
@@ -2609,13 +2608,13 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     assertThatThrownBy(()
                            -> k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
                                manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId"))
-        .isInstanceOf(GitOperationException.class);
+        .isInstanceOf(KubernetesTaskException.class);
   }
 
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testFetchManifestFilesAndWriteToDirectoryHttpHelm() throws IOException {
+  public void testFetchManifestFilesAndWriteToDirectoryHttpHelm() throws Exception {
     K8sTaskHelperBase spyTaskHelperBase = spy(k8sTaskHelperBase);
     HttpHelmStoreDelegateConfig httpStoreDelegateConfig = HttpHelmStoreDelegateConfig.builder()
                                                               .repoName("repoName")

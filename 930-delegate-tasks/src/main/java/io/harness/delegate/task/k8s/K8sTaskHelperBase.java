@@ -84,8 +84,8 @@ import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
 import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.GitOperationException;
 import io.harness.exception.HelmClientException;
+import io.harness.exception.HelmClientRuntimeException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -95,6 +95,7 @@ import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.UrlNotProvidedException;
 import io.harness.exception.UrlNotReachableException;
 import io.harness.exception.WingsException;
+import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmCommandFlagsUtils;
@@ -2178,7 +2179,8 @@ public class K8sTaskHelperBase {
   }
 
   public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
-      String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis, String accountId) {
+      String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis, String accountId)
+      throws Exception {
     StoreDelegateConfig storeDelegateConfig = manifestDelegateConfig.getStoreDelegateConfig();
     switch (storeDelegateConfig.getType()) {
       case GIT:
@@ -2198,7 +2200,7 @@ public class K8sTaskHelperBase {
   }
 
   private boolean downloadManifestFilesFromGit(StoreDelegateConfig storeDelegateConfig, String manifestFilesDirectory,
-      LogCallback executionLogCallback, String accountId) {
+      LogCallback executionLogCallback, String accountId) throws Exception {
     if (!(storeDelegateConfig instanceof GitStoreDelegateConfig)) {
       throw new InvalidArgumentsException(Pair.of("storeDelegateConfig", "Must be instance of GitStoreDelegateConfig"));
     }
@@ -2226,11 +2228,26 @@ public class K8sTaskHelperBase {
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
 
       return true;
-    } catch (Exception e) {
-      String errorMsg = "Failed to download manifest files from git. ";
+    } catch (YamlException e) {
+      log.error("Failure in fetching files from git", e);
       executionLogCallback.saveExecutionLog(
-          errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      throw new GitOperationException(errorMsg, e);
+          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
+          CommandExecutionStatus.FAILURE);
+
+      throw new KubernetesTaskException(
+          format("Failed while trying to fetch files from git connector: '%s' in manifest with identifier: %s",
+              gitStoreDelegateConfig.getConnectorName(), gitStoreDelegateConfig.getManifestId()),
+          e.getCause());
+    } catch (Exception e) {
+      log.error("Failure in fetching files from git", e);
+      executionLogCallback.saveExecutionLog(
+          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
+          CommandExecutionStatus.FAILURE);
+
+      throw new KubernetesTaskException(
+          format("Failed while trying to fetch files from git connector: '%s' in manifest with identifier: %s",
+              gitStoreDelegateConfig.getConnectorName(), gitStoreDelegateConfig.getManifestId()),
+          e);
     }
   }
 
@@ -2287,6 +2304,12 @@ public class K8sTaskHelperBase {
       logCallback.saveExecutionLog(getManifestFileNamesInLogFormat(destinationDirectory));
       logCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
 
+    } catch (HelmClientException e) {
+      String errorMsg = format("Failed to download manifest files from %s repo. ",
+          manifestDelegateConfig.getStoreDelegateConfig().getType());
+      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+
+      throw new HelmClientRuntimeException(e);
     } catch (Exception e) {
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());

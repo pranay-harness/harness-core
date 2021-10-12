@@ -277,7 +277,7 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     assertThatThrownBy(()
                            -> helmTaskHelperBase.fetchChartFromRepo(REPO_NAME, REPO_DISPLAY_NAME, CHART_NAME,
                                CHART_VERSION, "/dir", V3, emptyHelmCommandFlag, 90000))
-        .isInstanceOf(InvalidRequestException.class);
+        .isInstanceOf(HelmClientException.class);
 
     verify(helmTaskHelperBase, times(1))
         .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));

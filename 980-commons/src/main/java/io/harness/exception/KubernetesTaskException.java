@@ -18,4 +18,9 @@ public class KubernetesTaskException extends WingsException {
     super(message, null, KUBERNETES_API_TASK_EXCEPTION, Level.ERROR, null, EnumSet.of(failureType));
     super.param(MESSAGE_ARG, message);
   }
+
+  public KubernetesTaskException(String message, Throwable cause) {
+    super(message, cause, KUBERNETES_API_TASK_EXCEPTION, Level.ERROR, null, EnumSet.of(FailureType.APPLICATION_ERROR));
+    super.param(MESSAGE_ARG, message);
+  }
 }
