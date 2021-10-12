@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.FeatureName.CF_ALLOW_SPECIAL_CHARACTERS;
 import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -13,6 +14,7 @@ import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -86,6 +88,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
@@ -475,6 +478,32 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testCFAppNamesWithSpecialCharacters() {
+    String manifest = "applications:\n"
+        + "- name: test-gsup-1.0.45\n"
+        + "  memory: 500M\n"
+        + "  instances : 2\n"
+        + "  random-route: true\n"
+        + "  docker:\n"
+        + "   image: registry.hub.docker.com/harness/todolist_ga:latest\n";
+
+    PcfManifestsPackage manifestsPackage = PcfManifestsPackage.builder().manifestYml(manifest).build();
+    CfInternalConfig config = CfInternalConfig.builder().build();
+    doReturn(false).when(featureFlagService).isEnabled(eq(CF_ALLOW_SPECIAL_CHARACTERS), anyString());
+    String appNamePrefix =
+        pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, manifestsPackage, config);
+    assertThat(appNamePrefix).isNotNull();
+    assertThat(appNamePrefix).isEqualTo("test__gsup__1__0__45");
+
+    doReturn(true).when(featureFlagService).isEnabled(eq(CF_ALLOW_SPECIAL_CHARACTERS), anyString());
+    appNamePrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, manifestsPackage, config);
+    assertThat(appNamePrefix).isNotNull();
+    assertThat(appNamePrefix).isEqualTo("test-gsup-1.0.45");
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteForFetchFiles() {
@@ -757,14 +786,16 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateAppNamePrefix() {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_LEGACY).build();
+    CfInternalConfig config = CfInternalConfig.builder().build();
     String appName = "applicationName";
     pcfSetupState.setPcfAppName(appName);
-    String appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage);
+    String appPrefix =
+        pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage, config);
     assertThat(appPrefix).isNotNull();
     assertThat(appPrefix).isEqualTo(appName);
 
     pcfSetupState.setPcfAppName(null);
-    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage);
+    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage, config);
     assertThat(appPrefix).isNotNull();
     assertThat(appPrefix).isEqualTo(APP_NAME + "__" + SERVICE_NAME + "__" + ENV_NAME);
 
@@ -772,7 +803,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     appName = "appName";
     doReturn(appName).when(pcfStateHelper).fetchPcfApplicationName(any(), anyString());
     pcfManifestsPackage.setManifestYml(MANIFEST_YAML_CONTENT);
-    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage);
+    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage, config);
     assertThat(appPrefix).isNotNull();
     assertThat(appPrefix).isEqualTo("appName");
   }
