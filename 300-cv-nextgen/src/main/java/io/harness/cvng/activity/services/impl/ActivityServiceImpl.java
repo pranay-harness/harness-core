@@ -27,6 +27,7 @@ import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
@@ -109,6 +110,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private Injector injector;
   @Inject private Map<ActivityType, ActivityUpdatableEntity> activityUpdatableEntityMap;
+  @Inject private Map<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMap;
   // TODO: remove the dependency once UI moves to new APIs
   @Inject private CVNGStepTaskService cvngStepTaskService;
 
@@ -771,6 +773,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public String upsert(Activity activity) {
+    ActivityUpdateHandler handler = activityUpdateHandlerMap.get(activity.getType());
     ActivityUpdatableEntity activityUpdatableEntity = activityUpdatableEntityMap.get(activity.getType());
     Optional<Activity> optionalFromDb =
         StringUtils.isEmpty(activity.getUuid()) ? getFromDb(activity) : Optional.ofNullable(get(activity.getUuid()));
@@ -785,9 +788,17 @@ public class ActivityServiceImpl implements ActivityService {
       UpdateOperations<Activity> updateOperations =
           hPersistence.createUpdateOperations(activityUpdatableEntity.getEntityClass());
       activityUpdatableEntity.setUpdateOperations(updateOperations, activity);
+      if (handler != null) {
+        handler.handleUpdate(optionalFromDb.get(), activity);
+      }
       hPersistence.update(optionalFromDb.get(), updateOperations);
       return optionalFromDb.get().getUuid();
     } else {
+      if (handler != null) {
+        handler.handleCreate(activity);
+      }
+      register(activity);
+
       hPersistence.save(activity);
       log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(),
           activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());

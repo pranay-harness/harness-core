@@ -38,9 +38,9 @@ public class ChangeIntelStatefulSetHandler extends BaseChangeHandler<V1StatefulS
   @Override
   public void processAndSendAddEvent(V1StatefulSet v1StatefulSet) {
     log.info("OnAdd of StatefulSet.");
-    if (!hasOwnerReference(v1StatefulSet)) {
+    ChangeEventDTO eventDTO = buildChangeEvent(v1StatefulSet);
+    if (!hasOwnerReference(v1StatefulSet) && shouldProcessEvent(eventDTO)) {
       log.info("StatefulSet doesn't have an ownerReference. Sending event Data");
-      ChangeEventDTO eventDTO = buildChangeEvent(v1StatefulSet);
       String newYaml = k8sHandlerUtils.yamlDump(v1StatefulSet);
       ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setNewYaml(newYaml);
       DateTime dateTime = v1StatefulSet.getMetadata().getCreationTimestamp();

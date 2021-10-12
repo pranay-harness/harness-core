@@ -134,7 +134,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       serviceDependencyService.updateDependencies(
           environmentParams, monitoredServiceDTO.getIdentifier(), monitoredServiceDTO.getDependencies());
     }
-    if (isNotEmpty(monitoredServiceDTO.getSources().getChangeSources())) {
+    if (monitoredServiceDTO.getSources() != null && isNotEmpty(monitoredServiceDTO.getSources().getChangeSources())) {
       changeSourceService.create(environmentParams, monitoredServiceDTO.getSources().getChangeSources());
     }
     saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
@@ -298,6 +298,33 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
+  public List<MonitoredServiceResponse> get(ProjectParams projectParams, Set<String> identifierSet) {
+    List<MonitoredService> monitoredServices =
+        hPersistence.createQuery(MonitoredService.class)
+            .filter(MonitoredServiceKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(MonitoredServiceKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(MonitoredServiceKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .field(MonitoredServiceKeys.identifier)
+            .in(identifierSet)
+            .asList();
+
+    if (monitoredServices != null) {
+      List<MonitoredServiceResponse> monitoredServiceResponseList = new ArrayList<>();
+
+      monitoredServices.forEach(monitoredService -> {
+        ServiceEnvironmentParams environmentParams =
+            builderWithProjectParams(projectParams)
+                .serviceIdentifier(monitoredService.getServiceIdentifier())
+                .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
+                .build();
+        monitoredServiceResponseList.add(createMonitoredServiceDTOFromEntity(monitoredService, environmentParams));
+      });
+      return monitoredServiceResponseList;
+    }
+    return null;
+  }
+
+  @Override
   public MonitoredServiceResponse get(ProjectParams projectParams, String identifier) {
     MonitoredService monitoredServiceEntity = getMonitoredService(projectParams, identifier);
     if (monitoredServiceEntity == null) {
@@ -309,6 +336,12 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
             .serviceIdentifier(monitoredServiceEntity.getServiceIdentifier())
             .environmentIdentifier(monitoredServiceEntity.getEnvironmentIdentifier())
             .build();
+
+    return createMonitoredServiceDTOFromEntity(monitoredServiceEntity, environmentParams);
+  }
+
+  private MonitoredServiceResponse createMonitoredServiceDTOFromEntity(
+      MonitoredService monitoredServiceEntity, ServiceEnvironmentParams environmentParams) {
     MonitoredServiceDTO monitoredServiceDTO =
         MonitoredServiceDTO.builder()
             .name(monitoredServiceEntity.getName())
@@ -329,7 +362,12 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                         changeSourceService.get(environmentParams, monitoredServiceEntity.getChangeSourceIdentifiers()))
                     .build())
             .dependencies(serviceDependencyService.getDependentServicesForMonitoredService(
-                projectParams, monitoredServiceEntity.getIdentifier()))
+                ProjectParams.builder()
+                    .accountIdentifier(environmentParams.getAccountIdentifier())
+                    .orgIdentifier(environmentParams.getOrgIdentifier())
+                    .projectIdentifier(environmentParams.getProjectIdentifier())
+                    .build(),
+                monitoredServiceEntity.getIdentifier()))
             .build();
     return MonitoredServiceResponse.builder()
         .monitoredService(monitoredServiceDTO)
