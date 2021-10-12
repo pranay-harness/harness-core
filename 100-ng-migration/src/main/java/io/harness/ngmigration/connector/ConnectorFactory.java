@@ -1,5 +1,7 @@
 package io.harness.ngmigration.connector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ConnectorFactory {
   public static ConnectorType getConnectorType(SettingAttribute settingAttribute) {
     if (settingAttribute.getValue() instanceof DockerConfig) {
@@ -31,6 +34,14 @@ public class ConnectorFactory {
   public static ConnectorConfigDTO getConfigDTO(SettingAttribute settingAttribute) {
     if (settingAttribute.getValue() instanceof DockerConfig) {
       return fromDocker(settingAttribute);
+    }
+    throw new UnsupportedOperationException("Connector Not Supported");
+  }
+
+  public static String getSecretId(SettingAttribute settingAttribute) {
+    if (settingAttribute.getValue() instanceof DockerConfig) {
+      DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
+      return dockerConfig.getEncryptedPassword();
     }
     throw new UnsupportedOperationException("Connector Not Supported");
   }
