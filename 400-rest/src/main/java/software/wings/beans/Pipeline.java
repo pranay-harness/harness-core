@@ -30,6 +30,7 @@ import software.wings.ngmigration.NGMigrationEntity;
 import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.yaml.BaseEntityYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
@@ -147,6 +148,7 @@ public class Pipeline
     return keywords;
   }
 
+  @JsonIgnore
   @Override
   public NGMigrationEntityType getType() {
     return NGMigrationEntityType.PIPELINE;
