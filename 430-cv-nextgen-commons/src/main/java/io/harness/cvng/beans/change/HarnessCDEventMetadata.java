@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
@@ -36,6 +37,7 @@ public class HarnessCDEventMetadata extends ChangeEventMetadata {
     return ChangeSourceType.HARNESS_CD;
   }
 
+  @Value
   @Builder
   public static class VerifyStepSummary {
     String name;
