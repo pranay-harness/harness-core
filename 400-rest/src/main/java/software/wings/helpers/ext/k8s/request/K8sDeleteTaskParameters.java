@@ -37,9 +37,10 @@ public class K8sDeleteTaskParameters extends K8sTaskParameters implements Manife
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       String resources, boolean deleteNamespacesForRelease, HelmVersion helmVersion, String filePaths,
-      Set<String> delegateSelectors, boolean useLatestChartMuseumVersion) {
+      Set<String> delegateSelectors, boolean useLatestChartMuseumVersion, boolean useLatestKustomizeVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
+        useLatestKustomizeVersion);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.resources = resources;
