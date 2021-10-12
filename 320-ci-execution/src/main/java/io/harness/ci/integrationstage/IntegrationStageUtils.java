@@ -381,7 +381,8 @@ public class IntegrationStageUtils {
       registryHostName = url.getHost() + ":" + url.getPort();
     }
 
-    if (imageName.contains(registryHostName) || registryHostName.equals("index.docker.io")) {
+    if (imageName.contains(registryHostName) || registryHostName.equals("index.docker.io")
+        || registryHostName.equals("registry.hub.docker.com")) {
       return imageName;
     }
 

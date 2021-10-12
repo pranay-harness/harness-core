@@ -38,11 +38,13 @@ public class ChangeIntelConfigMapHandler extends BaseChangeHandler<V1ConfigMap> 
 
   @Override
   void processAndSendAddEvent(V1ConfigMap v1ConfigMap) {
+    ChangeEventDTO eventDTO = buildChangeEvent(v1ConfigMap);
     if (!hasOwnerReference(v1ConfigMap) && v1ConfigMap.getMetadata() != null
         && v1ConfigMap.getMetadata().getCreationTimestamp().isAfter(
-            Instant.now().minus(2, ChronoUnit.HOURS).toEpochMilli())) {
+            Instant.now().minus(2, ChronoUnit.HOURS).toEpochMilli())
+        && shouldProcessEvent(eventDTO)) {
       log.info("ConfigMap doesn't have an ownerReference. Sending event Data");
-      ChangeEventDTO eventDTO = buildChangeEvent(v1ConfigMap);
+
       String newYaml = k8sHandlerUtils.yamlDump(v1ConfigMap);
       ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setNewYaml(newYaml);
       DateTime dateTime = v1ConfigMap.getMetadata().getCreationTimestamp();
