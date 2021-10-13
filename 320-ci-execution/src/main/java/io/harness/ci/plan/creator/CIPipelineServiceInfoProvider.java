@@ -1,7 +1,10 @@
 package io.harness.ci.plan.creator;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.steps.StepMetadata;
 import io.harness.beans.steps.StepSpecTypeConstants;
 import io.harness.ci.creator.variables.CIStageVariableCreator;
 import io.harness.ci.creator.variables.CIStepVariableCreator;
@@ -22,6 +25,8 @@ import io.harness.pms.utils.InjectorUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -61,86 +66,33 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
 
   @Override
   public List<StepInfo> getStepInfo() {
-    StepInfo runStepInfo = StepInfo.newBuilder()
-                               .setName("Run")
-                               .setType(StepSpecTypeConstants.RUN)
-                               .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
-                               .build();
+    StepInfo runStepInfo = getStepInfo("Run", StepSpecTypeConstants.RUN, Collections.singletonList("Build"));
+    StepInfo runTestsStepInfo =
+        getStepInfo("Run Tests", StepSpecTypeConstants.RUN_TEST, Collections.singletonList("Build"));
+    StepInfo pluginStepInfo = getStepInfo("Plugin", StepSpecTypeConstants.PLUGIN, Collections.singletonList("Build"));
 
-    StepInfo runTestsStepInfo = StepInfo.newBuilder()
-                                    .setName("Run Tests")
-                                    .setType(StepSpecTypeConstants.RUN_TEST)
-                                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
-                                    .build();
+    StepInfo saveCacheToGCS =
+        getStepInfo("Save Cache to GCS", StepSpecTypeConstants.SAVE_CACHE_GCS, Collections.singletonList("Build"));
+    StepInfo restoreCacheFromGCS = getStepInfo(
+        "Restore Cache From GCS", StepSpecTypeConstants.RESTORE_CACHE_GCS, Collections.singletonList("Build"));
+    StepInfo restoreCacheFromS3 = getStepInfo(
+        "Restore Cache From S3", StepSpecTypeConstants.RESTORE_CACHE_S3, Collections.singletonList("Build"));
+    StepInfo saveCacheToS3 =
+        getStepInfo("Save Cache to S3", StepSpecTypeConstants.SAVE_CACHE_S3, Collections.singletonList("Build"));
 
-    StepInfo pluginStepInfo = StepInfo.newBuilder()
-                                  .setName("Plugin")
-                                  .setType(StepSpecTypeConstants.PLUGIN)
-                                  .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
-                                  .build();
-    StepInfo restoreCacheFromGCS = StepInfo.newBuilder()
-                                       .setName("Restore Cache From GCS")
-                                       .setType(StepSpecTypeConstants.RESTORE_CACHE_GCS)
-                                       .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
-                                       .build();
+    StepInfo uploadToGCS =
+        getStepInfo("Upload Artifacts to GCS", StepSpecTypeConstants.GCS_UPLOAD, Collections.singletonList("Build"));
+    StepInfo uploadToS3 =
+        getStepInfo("Upload Artifacts to S3", StepSpecTypeConstants.S3_UPLOAD, Collections.singletonList("Build"));
+    StepInfo uploadArtifactsToJfrogBuild = getStepInfo("Upload Artifacts to JFrog Artifactory",
+        StepSpecTypeConstants.ARTIFACTORY_UPLOAD, Arrays.asList("Artifacts", "Build"));
 
-    StepInfo restoreCacheFromS3 = StepInfo.newBuilder()
-                                      .setName("Restore Cache From S3")
-                                      .setType(StepSpecTypeConstants.RESTORE_CACHE_S3)
-                                      .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
-                                      .build();
-
-    StepInfo saveCacheToS3 = StepInfo.newBuilder()
-                                 .setName("Save Cache to S3")
-                                 .setType(StepSpecTypeConstants.SAVE_CACHE_S3)
-                                 .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
-                                 .build();
-
-    StepInfo saveCacheToGCS = StepInfo.newBuilder()
-                                  .setName("Save Cache to GCS")
-                                  .setType(StepSpecTypeConstants.SAVE_CACHE_GCS)
-                                  .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
-                                  .build();
-
-    StepInfo ecrPushBuilds =
-        StepInfo.newBuilder()
-            .setName("Build and Push to ECR")
-            .setType(StepSpecTypeConstants.BUILD_AND_PUSH_ECR)
-            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").addFolderPaths("Build").build())
-            .build();
-
-    StepInfo uploadArtifactsToJfrogBuild =
-        StepInfo.newBuilder()
-            .setName("Upload Artifacts to JFrog Artifactory")
-            .setType(StepSpecTypeConstants.ARTIFACTORY_UPLOAD)
-            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").addFolderPaths("Build").build())
-            .build();
-
-    StepInfo dockerPushBuild =
-        StepInfo.newBuilder()
-            .setName("Build and Push an image to Docker Registry")
-            .setType(StepSpecTypeConstants.BUILD_AND_PUSH_DOCKER_REGISTRY)
-            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").addFolderPaths("Build").build())
-            .build();
-
-    StepInfo gcrPushBuilds =
-        StepInfo.newBuilder()
-            .setName("Build and Push to GCR")
-            .setType(StepSpecTypeConstants.BUILD_AND_PUSH_GCR)
-            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").addFolderPaths("Build").build())
-            .build();
-
-    StepInfo uploadToGCS = StepInfo.newBuilder()
-                               .setName("Upload Artifacts to GCS")
-                               .setType(StepSpecTypeConstants.GCS_UPLOAD)
-                               .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").build())
-                               .build();
-
-    StepInfo uploadToS3 = StepInfo.newBuilder()
-                              .setName("Upload Artifacts to S3")
-                              .setType(StepSpecTypeConstants.S3_UPLOAD)
-                              .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").build())
-                              .build();
+    StepInfo dockerPushBuild = getStepInfo("Build and Push an image to Docker Registry",
+        StepSpecTypeConstants.BUILD_AND_PUSH_DOCKER_REGISTRY, Arrays.asList("Artifacts", "Build"));
+    StepInfo gcrPushBuilds = getStepInfo(
+        "Build and Push to GCR", StepSpecTypeConstants.BUILD_AND_PUSH_GCR, Arrays.asList("Artifacts", "Build"));
+    StepInfo ecrPushBuilds = getStepInfo(
+        "Build and Push to ECR", StepSpecTypeConstants.BUILD_AND_PUSH_ECR, Arrays.asList("Artifacts", "Build"));
 
     List<StepInfo> stepInfos = new ArrayList<>();
 
@@ -159,5 +111,17 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     stepInfos.add(saveCacheToS3);
 
     return stepInfos;
+  }
+
+  private StepInfo getStepInfo(String stepName, String stepType, List<String> folderPaths) {
+    StepMetaData.Builder stepMetadataBuilder = StepMetaData.newBuilder();
+    if (isNotEmpty(folderPaths)) {
+      stepMetadataBuilder.addAllFolderPaths(folderPaths);
+    }
+    return StepInfo.newBuilder()
+        .setName(stepName)
+        .setType(stepType)
+        .setStepMetaData(stepMetadataBuilder.build())
+        .build();
   }
 }
