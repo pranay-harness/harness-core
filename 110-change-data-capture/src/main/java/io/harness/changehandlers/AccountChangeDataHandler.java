@@ -26,8 +26,8 @@ public class AccountChangeDataHandler extends AbstractChangeDataHandler {
       return columnValueMapping;
     }
 
-    if (dbObject.get(AccountKeys.name) != null) {
-      columnValueMapping.put("name", dbObject.get(AccountKeys.name).toString());
+    if (dbObject.get(AccountKeys.accountName) != null) {
+      columnValueMapping.put("name", dbObject.get(AccountKeys.accountName).toString());
     }
 
     if (dbObject.get(AccountKeys.createdAt) != null) {
