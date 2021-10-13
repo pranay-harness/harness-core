@@ -9,5 +9,5 @@ public interface DelegateAgentService {
 
   void freeze();
 
-  boolean areAllClientToolsInstalled();
+  boolean isClientToolsInstallationFinished();
 }

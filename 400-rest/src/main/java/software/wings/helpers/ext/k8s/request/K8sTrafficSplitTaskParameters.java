@@ -25,9 +25,11 @@ public class K8sTrafficSplitTaskParameters extends K8sTaskParameters {
   public K8sTrafficSplitTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, String virtualServiceName, List<IstioDestinationWeight> istioDestinationWeights,
-      HelmVersion helmVersion, Set<String> delegateSelectors, boolean useLatestChartMuseumVersion) {
+      HelmVersion helmVersion, Set<String> delegateSelectors, boolean useLatestChartMuseumVersion,
+      boolean useLatestKustomizeVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
+        useLatestKustomizeVersion);
 
     this.virtualServiceName = virtualServiceName;
     this.istioDestinationWeights = istioDestinationWeights;

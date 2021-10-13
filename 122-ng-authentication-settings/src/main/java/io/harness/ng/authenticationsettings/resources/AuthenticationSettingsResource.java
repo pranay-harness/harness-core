@@ -15,6 +15,8 @@ import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 import io.harness.ng.authenticationsettings.impl.AuthenticationSettingsService;
 import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
@@ -30,6 +32,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.InputStream;
 import java.util.Set;
 import javax.validation.Valid;
@@ -57,6 +64,20 @@ import retrofit2.http.Multipart;
 @Path("/authentication-settings")
 @Produces(MediaType.APPLICATION_JSON)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Tag(name = "AuthenticationSettings",
+    description = "This contains APIs related to Authentication settings as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.PL)
@@ -68,8 +89,15 @@ public class AuthenticationSettingsResource {
   @GET
   @Path("/")
   @ApiOperation(value = "Get authentication settings for an account", nickname = "getAuthenticationSettings")
-  public RestResponse<AuthenticationSettingsResponse> getAuthenticationSettings(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+  @Operation(operationId = "getAuthenticationSettings",
+      summary = "Get the authentication settings by accountIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns authentication settings of the account")
+      })
+  public RestResponse<AuthenticationSettingsResponse>
+  getAuthenticationSettings(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), VIEW_AUTHSETTING_PERMISSION);
     AuthenticationSettingsResponse response =
@@ -80,8 +108,15 @@ public class AuthenticationSettingsResource {
   @GET
   @Path("/login-settings/password-strength")
   @ApiOperation(value = "Get Password strength settings", nickname = "getPasswordStrengthSettings")
-  public RestResponse<PasswordStrengthPolicy> getPasswordStrengthSettings(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+  @Operation(operationId = "getPasswordStrengthSettings",
+      summary = "Get the password strength settings by accountIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns authentication settings of the account")
+      })
+  public RestResponse<PasswordStrengthPolicy>
+  getPasswordStrengthSettings(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), VIEW_AUTHSETTING_PERMISSION);
     PasswordStrengthPolicy response = authenticationSettingsService.getPasswordStrengthSettings(accountIdentifier);
@@ -91,8 +126,17 @@ public class AuthenticationSettingsResource {
   @PUT
   @Path("/login-settings/{loginSettingsId}")
   @ApiOperation(value = "Update login settings - lockout, expiration, strength", nickname = "putLoginSettings")
-  public RestResponse<LoginSettings> updateLoginSettings(@PathParam("loginSettingsId") String loginSettingsId,
+  @Operation(operationId = "putLoginSettings", summary = "Updates the login settings",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated login settings")
+      })
+  public RestResponse<LoginSettings>
+  updateLoginSettings(@PathParam("loginSettingsId") String loginSettingsId,
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+          description = "This is the updated Login Settings. This should have all the fields not just the updated ones")
       @NotNull @Valid LoginSettings loginSettings) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
@@ -104,7 +148,14 @@ public class AuthenticationSettingsResource {
   @PUT
   @Path("/oauth/update-providers")
   @ApiOperation(value = "Update Oauth providers for an account", nickname = "updateOauthProviders")
-  public RestResponse<Boolean> updateOauthProviders(
+  @Operation(operationId = "updateOauthProviders", summary = "Updates the Oauth providers by accountIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns success response")
+      })
+  public RestResponse<Boolean>
+  updateOauthProviders(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier, OAuthSettings oAuthSettings) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
@@ -115,8 +166,14 @@ public class AuthenticationSettingsResource {
   @DELETE
   @Path("/oauth/remove-mechanism")
   @ApiOperation(value = "Remove Oauth mechanism for an account", nickname = "removeOauthMechanism")
-  public RestResponse<Boolean> removeOauthMechanism(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+  @Operation(operationId = "removeOauthMechanism", summary = "Deletes Oauth mechanism by accountIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns success response")
+      })
+  public RestResponse<Boolean>
+  removeOauthMechanism(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), DELETE_AUTHSETTING_PERMISSION);
     authenticationSettingsService.removeOauthMechanism(accountIdentifier);
@@ -126,7 +183,14 @@ public class AuthenticationSettingsResource {
   @PUT
   @Path("/update-auth-mechanism")
   @ApiOperation(value = "Update Auth mechanism for an account", nickname = "updateAuthMechanism")
-  public RestResponse<Boolean> updateAuthMechanism(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
+  @Operation(operationId = "updateAuthMechanism", summary = "Updates the Auth mechanism by accountIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns success response")
+      })
+  public RestResponse<Boolean>
+  updateAuthMechanism(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
       @QueryParam("authenticationMechanism") AuthenticationMechanism authenticationMechanism) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
@@ -137,8 +201,16 @@ public class AuthenticationSettingsResource {
   @PUT
   @Path("/whitelisted-domains")
   @ApiOperation(value = "Update Whitelisted domains for an account", nickname = "updateWhitelistedDomains")
-  public RestResponse<Boolean> updateWhitelistedDomins(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier, Set<String> whitelistedDomains) {
+  @Operation(operationId = "updateWhitelistedDomains", summary = "Updates the Whitelisted domains by accountIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns success response")
+      })
+  public RestResponse<Boolean>
+  updateWhitelistedDomins(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
+      @Parameter(
+          description = "Set of whiteListed domains that needs to be for the account") Set<String> whitelistedDomains) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
     authenticationSettingsService.updateWhitelistedDomains(accountIdentifier, whitelistedDomains);
@@ -176,8 +248,14 @@ public class AuthenticationSettingsResource {
   @Path("/saml-metadata-upload")
   @Consumes("multipart/form-data")
   @ApiOperation(value = "Edit SAML Config", nickname = "updateSamlMetaData")
-  public RestResponse<SSOConfig> updateSamlMetaData(@QueryParam("accountId") String accountId,
-      @FormDataParam("file") InputStream uploadedInputStream,
+  @Operation(operationId = "updateSamlMetaData", summary = "Uploads the saml metadata by accountId",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns SSO config of the account")
+      })
+  public RestResponse<SSOConfig>
+  updateSamlMetaData(@QueryParam("accountId") String accountId, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
@@ -202,8 +280,14 @@ public class AuthenticationSettingsResource {
   @DELETE
   @Path("/delete-saml-metadata")
   @ApiOperation(value = "Delete SAML Config", nickname = "deleteSamlMetaData")
-  public RestResponse<SSOConfig> deleteSamlMetadata(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+  @Operation(operationId = "deleteSamlMetaData", summary = "Deletes Saml meta data by accountIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the SSO config of the account")
+      })
+  public RestResponse<SSOConfig>
+  deleteSamlMetadata(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), DELETE_AUTHSETTING_PERMISSION);
     SSOConfig response = authenticationSettingsService.deleteSAMLMetadata(accountIdentifier);
@@ -213,7 +297,14 @@ public class AuthenticationSettingsResource {
   @GET
   @Path("/saml-login-test")
   @ApiOperation(value = "Get SAML Login Test", nickname = "getSamlLoginTest")
-  public RestResponse<LoginTypeResponse> getSamlLoginTest(@QueryParam("accountId") @NotEmpty String accountId) {
+  @Operation(operationId = "getSamlLoginTest", summary = "Get the Saml login test by accountId",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the login type response of the account")
+      })
+  public RestResponse<LoginTypeResponse>
+  getSamlLoginTest(@QueryParam("accountId") @NotEmpty String accountId) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTING, null), VIEW_AUTHSETTING_PERMISSION);
     LoginTypeResponse response = authenticationSettingsService.getSAMLLoginTest(accountId);
@@ -223,8 +314,15 @@ public class AuthenticationSettingsResource {
   @PUT
   @Path("/two-factor-admin-override-settings")
   @ApiOperation(value = "Set account level two factor auth setting", nickname = "setTwoFactorAuthAtAccountLevel")
-  public RestResponse<Boolean> setTwoFactorAuthAtAccountLevel(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
+  @Operation(operationId = "setTwoFactorAuthAtAccountLevel",
+      summary = "set two factor auth at account lever by accountIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the boolean status")
+      })
+  public RestResponse<Boolean>
+  setTwoFactorAuthAtAccountLevel(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
       TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);

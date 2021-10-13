@@ -36,6 +36,10 @@
   "perpetualTaskId":null,
   "collectionStatus":null,
   "artifactStreamParameterized":false,
+  "collectionEnabled":null,
+  "lastIteration":0,
+  "lastSuccessfulIteration":0,
+  "maxAttempts":0,
   "jobname":"aaditi-todolist-test",
   "artifactPaths":[
     "next copy 29.war"

@@ -71,6 +71,8 @@ public interface NodeExecutionService {
 
   List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId);
 
+  List<NodeExecution> fetchStageExecutions(String planExecutionId);
+
   Map<String, String> fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(
       List<String> identifierOfSkipStages, String previousExecutionId);
 

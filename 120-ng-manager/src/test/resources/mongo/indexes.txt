@@ -52,8 +52,10 @@ applications {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
 approvalPollingJob {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 artifactSourceNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
 artifactSourceNG {"name": "uniqueHash", "unique": true} {"uniqueHash": 1}
+artifactStream {"name": "accountId_1", "background": true} {"accountId": 1}
 artifactStream {"name": "appId_1", "background": true} {"appId": 1}
 artifactStream {"name": "artifactStream_cleanup", "background": true} {"artifactStreamType": 1, "nextCleanupIteration": 1}
+artifactStream {"name": "artifactStream_collection", "background": true} {"collectionEnabled": 1, "nextIteration": 1}
 artifactStream {"name": "createdAt_1", "background": true} {"createdAt": 1}
 artifactStream {"name": "nextCleanupIteration_1", "background": true} {"nextCleanupIteration": 1}
 artifactStream {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
@@ -212,6 +214,7 @@ delegates {"name": "byAcctNgGroupIdOwner", "background": true} {"accountId": 1, 
 delegates {"name": "capabilitiesCheckNextIteration_1", "background": true} {"capabilitiesCheckNextIteration": 1}
 delegates {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegates {"name": "sessionIdentifier_1", "background": true} {"sessionIdentifier": 1}
+delegates {"name": "taskExpiryCheckNextIteration_1", "background": true} {"taskExpiryCheckNextIteration": 1}
 delegates {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 deletedEntities {"name": "entityId_1", "unique": true} {"entityId": 1}
 deletedEntities {"name": "nextIteration_1", "background": true} {"nextIteration": 1}

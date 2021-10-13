@@ -79,6 +79,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamCollectionStatus;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Action;
@@ -918,30 +919,37 @@ public class ArtifactCollectionUtils {
   public boolean skipArtifactStreamIteration(ArtifactStream artifactStream, boolean isCollection) {
     String prefix = isCollection ? "ASYNC_ARTIFACT_CRON" : "ASYNC_ARTIFACT_CLEANUP_CRON";
     String action = isCollection ? "collection" : "cleanup";
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId())) {
+    String accountId = artifactStream.getAccountId();
+    String artifactStreamId = artifactStream.getUuid();
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, accountId)) {
       if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
         log.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
-            artifactStream.getUuid(), action);
+            artifactStreamId, action);
         return true;
       }
     } else if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
       // If perpetual task is not enabled but the artifact stream still has a perpetual task id, delete the perpetual
       // task.
-      artifactStreamPTaskHelper.deletePerpetualTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId());
+      artifactStreamPTaskHelper.deletePerpetualTask(accountId, artifactStream.getPerpetualTaskId());
     }
 
     if (artifactStream.getFailedCronAttempts() > ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS) {
       log.warn(
           "{}: Artifact {} disabled for artifactStream due to too many failures, type: {}, id: {}, failed count: {}",
-          prefix, action, artifactStream.getArtifactStreamType(), artifactStream.getUuid(),
+          prefix, action, artifactStream.getArtifactStreamType(), artifactStreamId,
           artifactStream.getFailedCronAttempts());
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, accountId)
+          && !ArtifactStreamCollectionStatus.STOPPED.name().equals(artifactStream.getCollectionStatus())) {
+        artifactStreamService.updateCollectionStatus(
+            accountId, artifactStreamId, ArtifactStreamCollectionStatus.STOPPED.name());
+      }
       return true;
     }
 
-    if (EmptyPredicate.isEmpty(artifactStream.getAccountId())) {
+    if (EmptyPredicate.isEmpty(accountId)) {
       // Ideally, we should clean up these artifact streams.
       log.warn("{}: Artifact {} disabled for artifactStream due to empty accountId, type: {}, id: {}, failed count: {}",
-          prefix, action, artifactStream.getArtifactStreamType(), artifactStream.getUuid(),
+          prefix, action, artifactStream.getArtifactStreamType(), artifactStreamId,
           artifactStream.getFailedCronAttempts());
       return true;
     }
@@ -954,8 +962,7 @@ public class ArtifactCollectionUtils {
       }
       if (isNotBlank(settingAttribute.getConnectivityError())) {
         log.info("{}: Skipping {} for artifact stream: {}, because of connectivity error in setting: {} and error: {}",
-            prefix, action, artifactStream.getUuid(), artifactStream.getSettingId(),
-            settingAttribute.getConnectivityError());
+            prefix, action, artifactStreamId, artifactStream.getSettingId(), settingAttribute.getConnectivityError());
         return true;
       }
     }
@@ -963,7 +970,7 @@ public class ArtifactCollectionUtils {
     if (artifactStream.isArtifactStreamParameterized()) {
       log.info(
           format("Skipping artifact collection through iterator for artifact stream [%s] since it is parameterized",
-              artifactStream.getUuid()));
+              artifactStreamId));
       return true;
     }
 

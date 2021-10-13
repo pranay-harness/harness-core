@@ -1,0 +1,634 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: h2
+      port: 9080
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 3459
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: h2
+      port: 9081
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  requestLog:
+    appenders:
+      - type: console
+        target: STDOUT
+        threshold: ERROR
+  maxThreads: 1024
+
+auditConfig:
+  storeRequestPayload: false
+  storeResponsePayload: false
+
+backgroundScheduler:
+  enabled: true
+  schedulerName: automation_background_scheduler
+  instanceId: automation_background
+  tablePrefix: quartz
+  threadCount: 25
+  clustered: true #backgroundScheduler
+  #mongoUri: mongodb://localhost:27017/background_scheduler
+
+serviceScheduler:
+  #schedulerName: automation_service_scheduler
+  schedulerName: automation_background_scheduler
+  #instanceId: automation_service
+  instanceId: automation_background
+  tablePrefix: quartz
+  threadCount: 25
+  enabled: true
+  #mongoUri: mongodb://localhost:27017/service_scheduler
+
+enableIterators: true
+trialRegistrationAllowed: true
+eventsFrameworkAvailableInOnPrem: false
+trialRegistrationAllowedForBugathon: false
+blacklistedEmailDomainsAllowed: true
+pwnedPasswordsAllowed: true
+executionLogStorageMode: MONGO
+#                        GOOGLE_CLOUD_DATA_STORE
+fileStorageMode: MONGO
+clusterName: ""
+deploymentClusterName: ""
+bugsnagApiKey: ""
+numberOfRemindersBeforeAccountDeletion: 3
+
+jobsFrequencyConfig:
+  accountLicenseCheckJobFrequencyInMinutes: 60
+  accountDeletionJobFrequencyInMinutes: 300
+
+ceSetUpConfig:
+  awsAccountId: 108817434118
+  awsAccessKey: awsAccessKeyPlaceHolder
+  awsSecretKey: awsSecretKeyPlaceHolder
+  awsS3BucketName: awsS3BucketPlaceHolder
+  masterAccountCloudFormationTemplateLink: masterAccountCloudFormationTemplateLinkPlaceHolder
+  linkedAccountCloudFormationTemplateLink: cloudFormationTemplateLinkPlaceHolder
+  gcpProjectId: gcpProjectIdPlaceHolder
+  awsRoleName: harnessContinuousEfficiencyRole
+  sampleAccountId: ""
+  azureAppClientId: placeholder
+  azureAppClientSecret: placeholder
+
+mktPlaceConfig:
+  awsAccessKey: awsMktPlaceAccessKeyPlaceHolder
+  awsSecretKey: awsMktPlaceSecretKeyPlaceHolder
+  awsMarketPlaceProductCode: awsMktPlaceProductCodePlaceHolder
+  awsMarketPlaceCeProductCode: awsMktPlaceCeProductCodePlaceHolder
+  azureMarketplaceAccessKey: "ZWRlZDEzMjMtYTk5Zi00MDc0LWJmMjMtOWFhZTYzN2M4ZGQy"
+  azureMarketplaceSecretKey: "UmU4QmtxZkdKal9aWWhyTjlCTU5zRnFIcFNAXUI9ODc="
+
+marketoConfig:
+  enabled: false #marketoConfigEnable
+  url: "marketo_url_place_holder"
+  clientId: "marketo_client_id"
+  clientSecret: "marketo_client_secret"
+
+segmentConfig:
+  enabled: false #segmentConfigEnable
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
+salesforceConfig:
+  userName: "user_name"
+  password: "password"
+  consumerKey: "consumer_key"
+  consumerSecret: "consumer_secret"
+  grantType: "grant_type"
+  loginInstanceDomain: "login_instance_domain"
+  apiVersion: "api_version" #Example : 47.0
+
+datadogConfig:
+  enabled: false #datadogConfigEnable
+  apiKey: "datadog_api_key"
+
+distributedLockImplementation: MONGO
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+
+atmosphereBroadcaster: HAZELCAST
+
+redisAtmosphereConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+
+githubConfig:
+  clientId: githubClientId
+  clientSecret: githubClientSecret
+  callbackUrl: githubCallbackUrl
+
+linkedinConfig:
+  clientId: linkedinClientId
+  clientSecret: linkedinClientSecret
+  callbackUrl: linkedinCallbackUrl
+
+googleConfig:
+  clientId: googleClientId
+  clientSecret: googleClientSecret
+  callbackUrl: googleCallbackUrl
+
+azureConfig:
+  clientId: azureClientId
+  clientSecret: azureClientSecret
+  callbackUrl: azureCallbackUrl
+
+gitlabConfig:
+  clientId: gitlabClientId
+  clientSecret: gitlabClientSecret
+  callbackUrl: gitlabCallbackUrl
+
+bitbucketConfig:
+  clientId: bitbucketClientId
+  clientSecret: bitbucketClientSecret
+  callbackUrl: bitbucketCallbackUrl
+
+smtp:
+  type: SMTP
+  host: host_placeholder
+  port: 465
+  fromAddress: noreply@harness.io
+  useSSL: true
+  username: smtp_username_placeholder
+  password: "smtp_password_placeholder"
+
+globalWhitelistConfig:
+  filters: 127.0.0.1/8
+
+defaultSalesContacts:
+  enabled: false
+  accountTypeDefaults:
+    - accountType: TRIAL
+      emailIds: se@harness.io
+    - accountType: PAID
+      emailIds: csm@harness.io
+
+supportEmail: support@harness.io
+
+logging:
+  level: INFO
+  loggers:
+    com.novemberain.quartz.mongodb: WARN
+    org.quartz.plugins: WARN
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    # the following is to suppress "Error retrieving job for trigger XYZ, setting trigger state to ERROR."
+    # TODO: remove this suppression when the mentioned issue is resolved
+    com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
+    org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+    - type: file
+      threshold: TRACE
+      currentLogFilename: portal.log
+      archive: true
+      archivedFileCount: 5
+      maxFileSize: 150MB
+      archivedLogFilenamePattern: portal.%d.%i.log
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+
+timescaledb:
+  timescaledbUrl: ""
+  timescaledbUsername: ""
+  timescaledbPassword: ""
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+  instanceDataRetentionDays: 210
+  instanceStatsMigrationEventsLimit: 150
+  instanceStatsMigrationQueryBatchSize: 100
+  deploymentDataMigrationRowLimit: 1000
+  deploymentDataMigrationQueryBatchSize: 100
+  isHealthCheckNeeded: false
+
+grpcServerConfig:
+  connectors:
+    - port: 9880
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 9879
+
+#Currently this should be pointing to the managers (71 - rest) grpc server from the grpcServerConfig property until delegate service becomes standalone service
+grpcDelegateServiceClientConfig:
+  target: localhost:9880
+  authority: localhost
+
+grpcClientConfig:
+  target: localhost:9980
+  authority: localhost
+
+#This will be used only by OnPrem delegates for grpc communication
+grpcOnpremDelegateClientConfig:
+  target: localhost:9880
+  authority: localhost
+
+grpcDMSClientConfig:
+  target: localhost:15011
+  authority: localhost
+
+dmsSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+
+mongo:
+  uri: mongodb://localhost:27017/harness
+  #uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness
+  #locksUri: mongodb://localhost:27017/impermanent
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+  traceMode: DISABLED
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
+
+events-mongo:
+  uri: mongodb://localhost:27017/events
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+searchEnabled: false
+
+elasticsearch:
+  uri: http://localhost:9200
+  indexSuffix: _default
+  mongoTagKey: none
+  mongoTagValue: none
+
+watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
+
+delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
+
+apiUrl: "https://localhost:9090"
+deployMode: KUBERNETES
+envPath: ""
+
+kubectlVersion: v1.13.2
+scmVersion: 87448d72
+
+ngAuthUIEnabled: false
+
+portal:
+  url: https://localhost:8000
+  zendeskBaseUrl: "https://harnesssupport.zendesk.com"
+  gatewayPathPrefix: "gateway/"
+  allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
+  companyName: Harness Inc
+  authTokenExpiryInMillis: 86400000
+  jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
+  jwtExternalServiceSecret: nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ
+  jwtZendeskSecret: RdL7j9ZdCz6TVSHO7obJRS6ywYLJjH8tdfPP39i4MbevKjVo
+  jwtMultiAuthSecret: 5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN
+  jwtSsoRedirectSecret: qY4GXZAlPJQPEV8JCPTNhgmDmnHZSAgorzGxvOY03Xptr8N9xDfAYbwGohr2pCRLfFG69vBQaNpeTjcV
+  jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
+  jwtMarketPlaceSecret: NqlqtztOXgJSQeVocN74TLnldqNjdyZM8DyNwaAioOt7M3piQsDILSqUQEh2qhdTadh21HKVxnXuuGfh
+  jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
+  jwtDataHandlerSecret: RdL7j9ZdCz6TVSHO7obJRS6ywYLJjH8tdfPP39i4MbevKjVodvjdhakdhashsh4371dasjldas
+  jwtNextGenManagerSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  delegateDockerImage: harness/delegate:latest
+  externalGraphQLRateLimitPerMinute: 500
+  customDashGraphQLRateLimitPerMinute: 1000
+  optionalDelegateTaskRejectAtLimit: 10000
+  importantDelegateTaskRejectAtLimit: 50000
+  criticalDelegateTaskRejectAtLimit: 100000
+
+cacheConfig:
+  cacheBackend: HAZELCAST
+  cacheNamespace: ""
+  disabledCaches: []
+
+gcpMarketplaceConfig:
+  enabled: false
+  subscriptionName: gcp-marketplace-topic-subscriber
+
+cfClientConfig:
+  apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl : "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+featuresEnabled: ""
+
+sampleTargetEnv: ""
+
+sampleTargetStatusHost: ""
+
+awsRegionIdToName:
+  us-east-1: US East (N. Virginia)
+  us-east-2: US East (Ohio)
+  us-west-1: US West (N. California)
+  us-west-2: US West (Oregon)
+  eu-west-1: EU (Ireland)
+  eu-west-2: EU (London)
+  eu-west-3: EU (Paris)
+  eu-central-1: EU (Frankfurt)
+  ap-northeast-1: Asia Pacific (Tokyo)
+  ap-northeast-2: Asia Pacific (Seoul)
+  ap-southeast-1: Asia Pacific (Singapore)
+  ap-southeast-2: Asia Pacific (Sydney)
+  ca-central-1: Canada (Central)
+  ap-south-1: Asia Pacific (Mumbai)
+  sa-east-1: South America (São Paulo)
+  us-gov-east-1: GovCloud (US-East)
+  us-gov-west-1: GovCloud (US-West)
+  cn-north-1: China North (Beijing)
+  cn-northwest-1: China (Ningxia)
+
+awsInstanceTypes:
+  - t2.nano
+  - t2.micro
+  - t2.small
+  - t2.medium
+  - t2.large
+  - m3.medium
+  - m3.large
+  - m3.xlarge
+  - m3.2xlarge
+  - m4.large
+  - m4.xlarge
+  - m4.2xlarge
+  - m4.4xlarge
+  - m4.10xlarge
+  - c4.large
+  - c4.xlarge
+  - c4.2xlarge
+  - c4.4xlarge
+  - c4.8xlarge
+  - c3.large
+  - c3.xlarge
+  - c3.2xlarge
+  - c3.4xlarge
+  - c3.8xlarge
+  - r3.large
+  - r3.xlarge
+  - r3.2xlarge
+  - r3.4xlarge
+  - r3.8xlarge
+  - g2.2xlarge
+  - g2.8xlarge
+  - i2.xlarge
+  - i2.2xlarge
+  - i2.4xlarge
+  - i2.8xlarge
+  - d2.xlarge
+  - d2.2xlarge
+  - d2.4xlarge
+  - d2.8xlarge
+
+techStacks:
+  Deployment-Kubernetes:
+    title: Connect to a Kubernetes Cluster
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#kubernetes_cluster
+  Deployment-AWS:
+    title: Connect to Amazon Web Services
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#amazon_web_services_aws_cloud
+  Deployment-GCP:
+    title: Connect to Google Cloud Provider
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#google_cloud_platform_gcp
+  Deployment-Azure:
+    title: Connect to Microsoft Azure
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#microsoft_azure
+  Deployment-Pivotal:
+    title: Connect to Pivotal Cloud Foundry
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#pivotal_cloud_foundry_pcf
+  Deployment-Datacenter:
+    title: Connect to a physical data center
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#physical_data_center
+  Deployment-General:
+    title: Connect to a cloud provider
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers
+  Artifact-S3:
+    title: Connect to Amazon S3
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#aws_s3_and_google_cloud_storage
+  Artifact-GCS:
+    title: Connect to Google Cloud Storage
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#aws_s3_and_google_cloud_storage
+  Artifact-DockerHub:
+    title: Connect to a Docker Repository
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#docker_registry
+  Artifact-Nexus:
+    title: Connect to Nexus
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#nexus
+  Artifact-SFTP:
+    title: Connect to an SFTP server
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#sftp
+  Artifact-SMB:
+    title: Connect to an SMB server
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#smb
+  Artifact-Artifactory:
+    title: Connect to Artifactory
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#artifactory
+  Artifact-Jenkins:
+    title: Connect to Jenkins
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#jenkins
+  Artifact-General:
+    title: Connect to an artifact repository
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server
+  Monitoring-AppDynamics:
+    title: Connect to AppDynamics
+    url: https://docs.harness.io/article/ps716zaurs-use-app-dynamics
+  Monitoring-NewRelic:
+    title: Connect to NewRelic
+    url: https://docs.harness.io/article/uw64fijctw-new-relic-cv
+  Monitoring-DynaTrace:
+    title: Connect to Dynatrace
+    url: https://docs.harness.io/article/ftp6uphgs1-dynatrace-verification
+  Monitoring-DataDog:
+    title: Connect to Datadog
+    url: https://docs.harness.io/article/rougsx3tir-datadog-verification
+  Monitoring-Prometheus:
+    title: Connect to Prometheus
+    url: https://docs.harness.io/article/dzehr6um67-prometheus-cv
+  Monitoring-CloudWatch:
+    title: Connect to Cloudwatch
+    url: https://docs.harness.io/article/fnl9wjmd4c-cloud-watch-verification
+  Monitoring-Bugsnag:
+    title: Connect to Bugsnag
+    url: https://docs.harness.io/article/p4lxsooom7-bugsnag-verification
+  Monitoring-Splunk:
+    title: Connect to Splunk
+    url: https://docs.harness.io/article/fq1ompej1b-splunk-verification
+  Monitoring-ELK:
+    title: Connect to ELK Elasticsearch
+    url: https://docs.harness.io/article/xpftsz2cte-elk-elasticsearch-cv
+  Monitoring-SumoLogic:
+    title: Connect to Sumologic
+    url: https://docs.harness.io/article/9kqxldnrmx-sumo-logic-verification
+  Monitoring-StackDriver:
+    title: Connect to Stackdriver
+    url: https://docs.harness.io/article/g5l03na9zo-stackdriver-verification
+  Monitoring-Custom:
+    title: Connect to custom metrics
+    url: https://docs.harness.io/article/27w7uso9r4-new-relic-insights-cv
+  Monitoring-General:
+    title: Connect to a verification provider
+    url: https://docs.harness.io/article/r6ut6tldy0-verification-providers
+
+workers:
+  active:
+    io.harness: true
+    software.wings: true
+
+publishers:
+  active:
+    io.harness: true
+    software.wings: true
+
+#Timeout in ms
+pipelineConfig:
+  enabled: true
+  envStateTimeout: -1
+  approvalStateTimeout: -1
+
+currentJre: openjdk8u242
+migrateToJre: openjdk8u242
+
+jreConfigs:
+  oracle8u191:
+    version: 1.8.0_191
+    jreDirectory: jre1.8.0_191
+    jreMacDirectory: jre1.8.0_191.jre
+    jreTarPath: jre/8u191/jre-8u191-${OS}-x64.tar.gz
+    alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+  openjdk8u242:
+    version: 1.8.0_242
+    jreDirectory: jdk8u242-b08-jre
+    jreMacDirectory: jdk8u242-b08-jre
+    jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+    alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+
+cdnConfig:
+  url: https://qa.harness.io
+  keyName: storage-qa-private
+  keySecret: cdnSignedUrlKey
+  delegateJarPath: private/shared/delegates/builds/oracle-8u191/%s/delegate.jar
+  watcherJarBasePath: public/shared/watchers/builds
+  watcherJarPath: oracle-8u191/%s/watcher.jar
+  watcherMetaDataFilePath: public/%s/%s/watchers/current.version
+  alpnJarPath: public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+  cdnJreTarPaths:
+    oracle8u191: public/shared/jre/oracle-8u191/jre-8u191-${OS}-x64.tar.gz
+    openjdk8u242: public/shared/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+
+commandLibraryServiceConfig:
+  baseUrl: https://localhost:5050/command-library-service/
+  managerToCommandLibraryServiceSecret: a611aa13eb1d5e77bc3295517ebe65gh1
+  publishingAllowed: false
+  publishingSecret: publishing-secret@harness-command-library
+
+ngManagerServiceHttpClientConfig:
+  baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+  enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+
+
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
+
+mockServerConfig:
+  baseUrl: http://localhost
+  port: 8989
+
+delegateGrpcServicePort: 8080
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+exportAccountDataBatchSize: 1000
+
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+enableAudit: false
+
+disableDelegateMgmtInManager: false
+
+ldapSyncJobConfig:
+  poolSize: 3
+  syncInterval: 15
+  defaultCronExpression: "0 0/15 * 1/1 * ? *"

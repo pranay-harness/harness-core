@@ -117,7 +117,7 @@ public class K8sTaskNGTest extends CategoryTest {
     doReturn(helmV2Path).when(k8sGlobalConfigService).getHelmPath(HelmVersion.V2);
     doReturn(helmV3Path).when(k8sGlobalConfigService).getHelmPath(HelmVersion.V3);
     doReturn(ocPath).when(k8sGlobalConfigService).getOcPath();
-    doReturn(kustomizePath).when(k8sGlobalConfigService).getKustomizePath();
+    doReturn(kustomizePath).when(k8sGlobalConfigService).getKustomizePath(false);
   }
 
   @Test

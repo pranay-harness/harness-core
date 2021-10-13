@@ -19,6 +19,7 @@ import io.harness.pms.filter.creation.FilterCreationResponseWrapper.FilterCreati
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
@@ -48,21 +49,23 @@ public class FilterCreatorMergeService {
   private final PmsSdkHelper pmsSdkHelper;
   private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
+  private final PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
-  public FilterCreatorMergeService(
-      PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper, PmsGitSyncHelper pmsGitSyncHelper) {
+  public FilterCreatorMergeService(PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper,
+      PmsGitSyncHelper pmsGitSyncHelper, PMSPipelineTemplateHelper pipelineTemplateHelper) {
     this.pmsSdkHelper = pmsSdkHelper;
     this.pipelineSetupUsageHelper = pipelineSetupUsageHelper;
     this.pmsGitSyncHelper = pmsGitSyncHelper;
+    this.pipelineTemplateHelper = pipelineTemplateHelper;
   }
 
   public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
-    String yaml = pipelineEntity.getYaml();
+    String yaml = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
     String processedYaml = YamlUtils.injectUuid(yaml);
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
