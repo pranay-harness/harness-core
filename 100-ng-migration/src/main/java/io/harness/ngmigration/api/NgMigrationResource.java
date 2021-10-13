@@ -1,4 +1,4 @@
-package io.harness.api;
+package io.harness.ngmigration.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

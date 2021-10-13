@@ -3,7 +3,12 @@ package io.harness.ngmigration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
+import io.harness.cdng.k8s.K8sRollingStepInfo;
+import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.StageElementWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
@@ -47,7 +52,6 @@ import java.util.stream.Collectors;
 public class WorkflowMigrationService implements NgMigration {
   @Inject private WorkflowService workflowService;
   @Inject private RollingWorkflowYamlHandler rollingWorkflowYamlHandler;
-  @Inject private NgMigrationFactory ngMigrationFactory;
 
   @Override
   public DiscoveryNode discover(NGMigrationEntity entity) {
@@ -143,12 +147,12 @@ public class WorkflowMigrationService implements NgMigration {
                                        .action(StageRollbackFailureActionConfig.builder().build())
                                        .build())
                         .build()))
-                //                .stageType(
-                //                    DeploymentStageConfig.builder()
-                //                        .serviceConfig(ServiceConfig.builder().build())
-                //                        .infrastructure(PipelineInfrastructure.builder().build())
-                //                        .execution(ExecutionElementConfig.builder().steps(steps).rollbackSteps(rollingSteps).build())
-                //                        .build())
+                .stageType(
+                    DeploymentStageConfig.builder()
+                        .serviceConfig(ServiceConfig.builder().build())
+                        .infrastructure(PipelineInfrastructure.builder().build())
+                        .execution(ExecutionElementConfig.builder().steps(steps).rollbackSteps(rollingSteps).build())
+                        .build())
                 .build()))
         .parallel(null)
         .build();
@@ -157,13 +161,7 @@ public class WorkflowMigrationService implements NgMigration {
   @Override
   public List<NGYamlFile> getYamls(
       Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {
-    List<NGYamlFile> files = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(graph.get(entityId))) {
-      graph.get(entityId).forEach(entityId1 -> {
-        files.addAll(ngMigrationFactory.getMethod(entityId1.getType()).getYamls(entities, graph, entityId1));
-      });
-    }
-    return files;
+    return new ArrayList<>();
   }
 
   private StepElementConfig getStepElementConfig(StepYaml step) {
@@ -174,9 +172,9 @@ public class WorkflowMigrationService implements NgMigration {
           .identifier(step.getName())
           .name(step.getName())
           .type(step.getType())
-          //          .stepSpecType(K8sRollingStepInfo.infoBuilder()
-          //                            .skipDryRun(ParameterField.<Boolean>builder().value(false).build())
-          //                            .build())
+          .stepSpecType(K8sRollingStepInfo.infoBuilder()
+                            .skipDryRun(ParameterField.<Boolean>builder().value(false).build())
+                            .build())
           .timeout(ParameterField.<Timeout>builder()
                        .value(Timeout.builder()
                                   .timeoutString(properties.getOrDefault("stateTimeoutInMinutes", "10") + "m")

@@ -129,9 +129,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       ManualExecutionSource manualExecutionSource = (ManualExecutionSource) stepParameters.getExecutionSource();
       String prNumber = manualExecutionSource.getPrNumber();
       if (scmGitRefTaskResponseData == null && isNotEmpty(prNumber)) {
-        throw new CIStageExecutionException(
-            "Exception: Validate codebase connector api token is correct and PR number: " + prNumber
-            + " exists in codebase repo ");
+        throw new CIStageExecutionException("Failed to retrieve PrNumber: " + prNumber + " details");
       }
       log.error("Failed to retrieve codebase info from returned delegate response");
     }
@@ -379,6 +377,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
                                  .prNumber(String.valueOf(pr.getNumber()))
                                  .prTitle(pr.getTitle())
                                  .commitSha(pr.getSha())
+                                 .event("pull_request")
                                  .baseCommitSha(pr.getBase().getSha())
                                  .commitRef(pr.getRef())
                                  .repoUrl(repoUrl) // Add repo url to scm.PullRequest and get it from there

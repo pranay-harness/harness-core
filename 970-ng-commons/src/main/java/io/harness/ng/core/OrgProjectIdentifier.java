@@ -36,4 +36,9 @@ public class OrgProjectIdentifier {
   public String getProjectIdentifier() {
     return projectIdentifier;
   }
+
+  @Override
+  public String toString() {
+    return this.orgIdentifier + ":" + this.projectIdentifier;
+  }
 }
