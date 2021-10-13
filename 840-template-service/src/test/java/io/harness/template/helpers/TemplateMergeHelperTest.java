@@ -84,6 +84,8 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     when(templateService.get(ACCOUNT_ID, ORG_ID, null, "template1", "1", false))
         .thenReturn(Optional.of(templateEntity));
+    when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "", false))
+        .thenReturn(Optional.of(templateEntity));
 
     String approvalTemplateStepYaml = readFile("approval-step-template.yaml");
     TemplateEntity approvalTemplateEntity = TemplateEntity.builder()
@@ -124,6 +126,8 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
                                         .build();
 
     when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "1", false))
+        .thenReturn(Optional.of(templateEntity));
+    when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "", false))
         .thenReturn(Optional.of(templateEntity));
 
     String approvalTemplateStepYaml = readFile("approval-step-template.yaml");
