@@ -467,6 +467,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
   @Override
   public List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId) {
+    return fetchStageDetailFromNodeExecution(fetchStageExecutions(planExecutionId));
+  }
+
+  @Override
+  public List<NodeExecution> fetchStageExecutions(String planExecutionId) {
     Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
                             .is(planExecutionId)
                             .and(NodeExecutionKeys.status)
@@ -476,9 +481,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
     Query query = new Query().addCriteria(criteria);
     query.with(by(NodeExecutionKeys.createdAt));
-    List<NodeExecution> nodeExecutionList = mongoTemplate.find(query, NodeExecution.class);
-
-    return fetchStageDetailFromNodeExecution(nodeExecutionList);
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override

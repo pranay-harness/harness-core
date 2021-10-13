@@ -2945,6 +2945,19 @@ public class DelegateServiceImpl implements DelegateService {
     return accountService.getAccountPrimaryDelegateVersion(accountId) != null;
   }
 
+  @Override
+  public void updateLastExpiredEventHeartbeatTime(
+      long lastExpiredEventHeartbeatTime, String delegateId, String accountId) {
+    final Query<Delegate> delegateFindQuery = persistence.createQuery(Delegate.class)
+                                                  .field(DelegateKeys.uuid)
+                                                  .equal(delegateId)
+                                                  .field(DelegateKeys.accountId)
+                                                  .equal(accountId);
+    persistence.update(delegateFindQuery,
+        persistence.createUpdateOperations(Delegate.class)
+            .set(DelegateKeys.lastExpiredEventHeartbeatTime, lastExpiredEventHeartbeatTime));
+  }
+
   @NotNull
   private String getMessage(JerseyViolationException exception) {
     return "Fields "

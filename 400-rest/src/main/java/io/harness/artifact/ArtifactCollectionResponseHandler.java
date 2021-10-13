@@ -147,7 +147,8 @@ public class ArtifactCollectionResponseHandler {
     }
 
     log.info("Successfully fetched builds after {} failures", artifactStream.getFailedCronAttempts());
-    artifactStreamService.updateFailedCronAttempts(artifactStream.getAccountId(), artifactStream.getUuid(), 0);
+    artifactStreamService.updateFailedCronAttemptsAndLastIteration(
+        artifactStream.getAccountId(), artifactStream.getUuid(), 0);
     alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
         ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStream.getUuid()).build());
   }
@@ -158,7 +159,7 @@ public class ArtifactCollectionResponseHandler {
       perpetualTaskService.resetTask(artifactStream.getAccountId(), perpetualTaskId, null);
     }
 
-    artifactStreamService.updateFailedCronAttempts(
+    artifactStreamService.updateFailedCronAttemptsAndLastIteration(
         artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
     log.warn("Failed to fetch/process builds, total failed attempts: {}", failedCronAttempts);
     if (failedCronAttempts != MAX_FAILED_ATTEMPTS) {

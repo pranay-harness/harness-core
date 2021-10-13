@@ -131,7 +131,8 @@ public class ResourceGroupModule extends AbstractModule {
         new ServiceResourceClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new EnvironmentResourceClientModule(
         ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
-    install(
-        new TemplateResourceClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(new TemplateResourceClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getTemplateService().getBaseUrl()).build(),
+        resourceClients.getTemplateService().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
   }
 }
