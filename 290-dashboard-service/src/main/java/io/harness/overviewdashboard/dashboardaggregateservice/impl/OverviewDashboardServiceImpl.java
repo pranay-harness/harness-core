@@ -358,7 +358,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   private Map<String, String> getMapOfProjectIdentifierAndProjectName(List<ProjectDTO> listOfAccessibleProject) {
     Map<String, String> mapOfProjectIdentifierAndProjectName = new HashMap<>();
     for(ProjectDTO projectDTO:listOfAccessibleProject){
-      mapOfProjectIdentifierAndProjectName.put(projectDTO.getIdentifier(), projectDTO.getName()));
+      mapOfProjectIdentifierAndProjectName.put(projectDTO.getIdentifier(), projectDTO.getName());
     }
     return mapOfProjectIdentifierAndProjectName;
   }
