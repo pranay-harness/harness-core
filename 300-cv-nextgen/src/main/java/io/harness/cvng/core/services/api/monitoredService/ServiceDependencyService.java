@@ -22,6 +22,9 @@ public interface ServiceDependencyService extends DeleteEntityByHandler<ServiceD
   Set<ServiceDependencyDTO> getDependentServicesForMonitoredService(
       @NonNull ProjectParams projectParams, String monitoredServiceIdentifier);
 
+  Set<ServiceDependencyDTO> getDependentServicesToMonitoredService(
+      @NonNull ProjectParams projectParams, String monitoredServiceIdentifier);
+
   List<ServiceDependency> getServiceDependencies(
       @NonNull ProjectParams projectParams, @NonNull List<String> monitoredServiceIdentifiers);
 }
