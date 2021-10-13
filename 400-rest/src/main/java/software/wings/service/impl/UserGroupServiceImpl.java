@@ -160,7 +160,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
     userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));
-    userGroup.setAccountPermissions(addAccountDefaultsPermissions(accountPermissions));
+    userGroup.setAccountPermissions(addAccountDefaultsPermissions(userGroup.getAccountPermissions()));
     UserGroup savedUserGroup = wingsPersistence.saveAndGet(UserGroup.class, userGroup);
     Account account = accountService.get(userGroup.getAccountId());
     notNullCheck("account", account);
