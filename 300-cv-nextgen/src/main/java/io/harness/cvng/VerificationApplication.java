@@ -25,7 +25,7 @@ import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.jobs.ActivityStatusJob;
-import io.harness.cvng.activity.jobs.HarnessCDChangeSourceCollectionHandler;
+import io.harness.cvng.activity.jobs.HarnessCDCurrentGenEventsHandler;
 import io.harness.cvng.activity.jobs.KubernetesChangeSourceCollectionHandler;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.change.ChangeSourceType;
@@ -587,19 +587,19 @@ public class VerificationApplication extends Application<VerificationConfigurati
     dataCollectionExecutor.scheduleWithFixedDelay(
         () -> changeSourceCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
 
-    HarnessCDChangeSourceCollectionHandler harnessCDChangeSourceCollectionHandler =
-        injector.getInstance(HarnessCDChangeSourceCollectionHandler.class);
+    HarnessCDCurrentGenEventsHandler harnessCDCurrentGenEventsHandler =
+        injector.getInstance(HarnessCDCurrentGenEventsHandler.class);
     PersistenceIterator harnessCDIterator =
         MongoPersistenceIterator
             .<HarnessCDCurrentGenChangeSource, MorphiaFilterExpander<HarnessCDCurrentGenChangeSource>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(HarnessCDCurrentGenChangeSource.class)
             .fieldName(ChangeSourceKeys.dataCollectionTaskIteration)
-            .targetInterval(ofMinutes(5))
+            .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(5))
-            .handler(harnessCDChangeSourceCollectionHandler)
+            .handler(harnessCDCurrentGenEventsHandler)
             .schedulingType(REGULAR)
             .filterExpander(query -> query.filter(ChangeSourceKeys.type, ChangeSourceType.HARNESS_CD_CURRENT_GEN))
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
