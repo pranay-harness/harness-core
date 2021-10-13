@@ -35,7 +35,6 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.OrganizationRepository;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.rule.Owner;
 import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.UserPrincipal;
@@ -60,7 +59,6 @@ public class OrganizationServiceImplTest extends CategoryTest {
   @Mock private OrganizationRepository organizationRepository;
   @Mock private OutboxService outboxService;
   @Mock private TransactionTemplate transactionTemplate;
-  @Mock private ResourceGroupClient resourceGroupClient;
   @Mock private NgUserService ngUserService;
   @Mock private AccessControlClient accessControlClient;
   @Mock private ScopeAccessHelper scopeAccessHelper;
@@ -70,7 +68,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     organizationService = spy(new OrganizationServiceImpl(organizationRepository, outboxService, transactionTemplate,
-        resourceGroupClient, ngUserService, accessControlClient, scopeAccessHelper));
+        ngUserService, accessControlClient, scopeAccessHelper));
     when(scopeAccessHelper.getPermittedScopes(any())).then(returnsFirstArg());
   }
 
