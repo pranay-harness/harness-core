@@ -28,7 +28,6 @@ import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
 
@@ -57,7 +56,6 @@ public class NGAccountSetupService {
   private final AccessControlAdminClient accessControlAdminClient;
   private final NgUserService ngUserService;
   private final UserClient userClient;
-  private final ResourceGroupClient resourceGroupClient;
   private final AccessControlMigrationService accessControlMigrationService;
   private final HarnessSMManager harnessSMManager;
   private final CIDefaultEntityManager ciDefaultEntityManager;
@@ -66,15 +64,13 @@ public class NGAccountSetupService {
   public NGAccountSetupService(OrganizationService organizationService,
       AccountOrgProjectValidator accountOrgProjectValidator,
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, NgUserService ngUserService,
-      UserClient userClient, ResourceGroupClient resourceGroupClient,
-      AccessControlMigrationService accessControlMigrationService, HarnessSMManager harnessSMManager,
-      CIDefaultEntityManager ciDefaultEntityManager) {
+      UserClient userClient, AccessControlMigrationService accessControlMigrationService,
+      HarnessSMManager harnessSMManager, CIDefaultEntityManager ciDefaultEntityManager) {
     this.organizationService = organizationService;
     this.accountOrgProjectValidator = accountOrgProjectValidator;
     this.accessControlAdminClient = accessControlAdminClient;
     this.ngUserService = ngUserService;
     this.userClient = userClient;
-    this.resourceGroupClient = resourceGroupClient;
     this.accessControlMigrationService = accessControlMigrationService;
     this.harnessSMManager = harnessSMManager;
     this.ciDefaultEntityManager = ciDefaultEntityManager;
@@ -109,9 +105,6 @@ public class NGAccountSetupService {
   }
 
   private void setupRBAC(String accountIdentifier, String orgIdentifier) {
-    NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(accountIdentifier, null, null));
-    NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(accountIdentifier, orgIdentifier, null));
-
     Collection<UserInfo> cgUsers = getCGUsers(accountIdentifier);
     Collection<String> cgAdmins =
         cgUsers.stream().filter(UserInfo::isAdmin).map(UserInfo::getUuid).collect(Collectors.toSet());

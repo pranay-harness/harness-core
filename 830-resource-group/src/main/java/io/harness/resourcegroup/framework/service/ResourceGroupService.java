@@ -20,8 +20,6 @@ import org.springframework.data.domain.Page;
 public interface ResourceGroupService {
   ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO, boolean harnessManaged);
 
-  void createManagedResourceGroup(Scope scope);
-
   Optional<ResourceGroupResponse> get(
       @NotNull Scope scope, @NotEmpty String identifier, @NotNull ManagedFilter managedFilter);
 
