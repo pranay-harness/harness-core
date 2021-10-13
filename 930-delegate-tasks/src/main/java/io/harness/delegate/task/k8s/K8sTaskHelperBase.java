@@ -2396,4 +2396,15 @@ public class K8sTaskHelperBase {
         getResourcesToBePruned(resourcesFromLastSuccessfulRelease, currentResources);
     return arrangeResourceIdsInDeletionOrder(resourceIdsToBeDeleted);
   }
+  // dummy chnage 1a
+  // dummy change 2a
+  public List<KubernetesResourceId> getResourcesToBePrunedInOrder3(
+      List<KubernetesResource> resourcesFromLastSuccessfulRelease, List<KubernetesResource> resources) {
+    List<KubernetesResourceId> currentResources =
+        resources.stream().map(KubernetesResource::getResourceId).collect(toList());
+
+    List<KubernetesResourceId> resourceIdsToBeDeleted =
+        getResourcesToBePruned(resourcesFromLastSuccessfulRelease, currentResources);
+    return arrangeResourceIdsInDeletionOrder(resourceIdsToBeDeleted);
+  }
 }
