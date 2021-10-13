@@ -29,14 +29,15 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CV)
 @LearningEngineAuth
 @ExposeInternalException(withStackTrace = true)
-public class CDChangeSourceIntegrationResource {
+public class CDChangeSourceResource {
   @Inject private CDChangeSourceIntegrationService cdChangeSourceIntegrationService;
 
   @GET
   public RestResponse<List<HarnessCDCurrentGenEventMetadata>> getChangeEvents(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
-      @QueryParam("environmentId") String environmentId, @QueryParam("timestamp") Long timestamp) {
+      @QueryParam("environmentId") String environmentId, @QueryParam("startTime") Long startTime,
+      @QueryParam("endTime") Long endTime) {
     return new RestResponse<>(cdChangeSourceIntegrationService.getCurrentGenEventsBetween(
-        accountId, appId, serviceId, environmentId, Instant.ofEpochMilli(timestamp)));
+        accountId, appId, serviceId, environmentId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 }
