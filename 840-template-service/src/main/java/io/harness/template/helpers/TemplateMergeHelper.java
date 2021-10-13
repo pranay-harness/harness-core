@@ -218,6 +218,8 @@ public class TemplateMergeHelper {
     }
 
     if (templateInputs == null) {
+      // If runtime inputs are not provided while linking template, we consider them omitted.
+      // TODO[inder]: remove omitted runtime inputs from mergedYaml.
       return templateSpec;
     }
 
@@ -496,7 +498,10 @@ public class TemplateMergeHelper {
 
   private TemplateEntity getLinkedTemplateEntity(String accountId, String orgId, String projectId, JsonNode yaml) {
     String identifier = yaml.get(TEMPLATE_REF).asText();
-    String versionLabel = yaml.get(TEMPLATE_VERSION_LABEL).asText();
+    String versionLabel = "";
+    if (yaml.get(TEMPLATE_VERSION_LABEL) != null) {
+      versionLabel = yaml.get(TEMPLATE_VERSION_LABEL).asText();
+    }
 
     IdentifierRef templateIdentifierRef = IdentifierRefHelper.getIdentifierRef(identifier, accountId, orgId, projectId);
     Optional<TemplateEntity> templateEntity =
