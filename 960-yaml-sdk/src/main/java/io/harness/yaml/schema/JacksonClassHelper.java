@@ -10,9 +10,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
+import io.harness.validation.OneOfSet;
 import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.OneOfMapping;
+import io.harness.yaml.schema.beans.OneOfSetMapping;
 import io.harness.yaml.schema.beans.PossibleFieldTypes;
 import io.harness.yaml.schema.beans.StringFieldTypeMetadata;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
@@ -43,8 +45,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -109,12 +113,15 @@ public class JacksonClassHelper {
       }
       // One of mappings
       final Set<OneOfMapping> oneOfMappingForClasses = getOneOfMappingsForClass(clazz);
+      // One of set mappings
+      final OneOfSetMapping oneOfSetMappingForClasses = getOneOfSetMappingsForClass(clazz);
       checkIfSubTypeDataListIsNotUnique(fieldSubtypeDataList);
       final SwaggerDefinitionsMetaInfo definitionsMetaInfo = SwaggerDefinitionsMetaInfo.builder()
                                                                  .oneOfMappings(oneOfMappingForClasses)
                                                                  .subtypeClassMap(fieldSubtypeDataList)
                                                                  .fieldPossibleTypes(possibleFieldTypesSet)
                                                                  .notEmptyStringFields(nonEmptyFields)
+                                                                 .oneOfSetMapping(oneOfSetMappingForClasses)
                                                                  .build();
       swaggerDefinitionsMetaInfoMap.put(swaggerClassName, definitionsMetaInfo);
     }
@@ -239,6 +246,31 @@ public class JacksonClassHelper {
                                         .filter(Objects::nonNull)
                                         .collect(Collectors.toSet());
     return OneOfMapping.builder().oneOfFieldNames(oneOfFields).nullable(oneOfField.nullable()).build();
+  }
+
+  @VisibleForTesting
+  OneOfSetMapping getOneOfSetMappingsForClass(Class<?> clazz) {
+    final OneOfSet oneOfSetAnnotation = clazz.getAnnotation(OneOfSet.class);
+    if (oneOfSetAnnotation != null) {
+      final Field[] declaredFields = clazz.getDeclaredFields();
+      Set<Set<String>> mappedOneOfSetFields = new HashSet<>();
+      for (String oneOfSetFields : oneOfSetAnnotation.fields()) {
+        Set<String> oneOfSet =
+            Stream.of(oneOfSetFields.trim().split("\\s*,\\s*"))
+                .map(oneOfSetField -> {
+                  Optional<Field> declaredField =
+                      Arrays.stream(declaredFields).filter(f -> oneOfSetField.equals(f.getName())).findFirst();
+                  return declaredField.map(YamlSchemaUtils::getFieldName).orElse(null);
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (isNotEmpty(oneOfSet)) {
+          mappedOneOfSetFields.add(oneOfSet);
+        }
+      }
+      return OneOfSetMapping.builder().oneOfSets(mappedOneOfSetFields).build();
+    }
+    return null;
   }
 
   private Class<?> getAlternativeClassType(Field declaredField) {
