@@ -50,7 +50,6 @@ java_binary(
         "//958-migration-sdk:module",
         "//959-psql-database-models:module",
         "//959-timeout-engine:module",
-        "//959-psql-database-models:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",
