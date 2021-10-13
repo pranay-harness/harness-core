@@ -85,5 +85,5 @@ public interface VerificationManagerClient {
   @GET(CD_CURRENT_GEN_CHANGE_EVENTS_PATH)
   Call<RestResponse<List<HarnessCDCurrentGenEventMetadata>>> getCDCurrentGenChangeEvents(
       @Query("accountId") String accountId, @Query("appId") String appId, @Query("serviceId") String serviceId,
-      @Query("environmentId") String environmentId, @Query("timestamp") Long timestamp);
+      @Query("environmentId") String environmentId, @Query("startTime") Long startTime, @Query("endTime") Long endTime);
 }
