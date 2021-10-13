@@ -5,17 +5,7 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dashboards.DeploymentStatsSummary;
-import io.harness.dashboards.EnvCount;
-import io.harness.dashboards.GroupBy;
-import io.harness.dashboards.PipelinesExecutionDashboardInfo;
-import io.harness.dashboards.ProjectDashBoardInfo;
-import io.harness.dashboards.ProjectsDashboardInfo;
-import io.harness.dashboards.ServiceDashboardInfo;
-import io.harness.dashboards.ServicesCount;
-import io.harness.dashboards.ServicesDashboardInfo;
-import io.harness.dashboards.SortBy;
-import io.harness.dashboards.TimeBasedDeploymentInfo;
+import io.harness.dashboards.*;
 import io.harness.ng.core.OrgProjectIdentifier;
 import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -37,6 +27,8 @@ import io.harness.overviewdashboard.dtos.ExecutionResponse;
 import io.harness.overviewdashboard.dtos.ExecutionStatus;
 import io.harness.overviewdashboard.dtos.MostActiveServicesList;
 import io.harness.overviewdashboard.dtos.OrgInfo;
+import io.harness.overviewdashboard.dtos.PipelineExecutionInfo;
+import io.harness.overviewdashboard.dtos.PipelineInfo;
 import io.harness.overviewdashboard.dtos.ProjectInfo;
 import io.harness.overviewdashboard.dtos.RateAndRateChangeInfo;
 import io.harness.overviewdashboard.dtos.ServiceInfo;
@@ -163,7 +155,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
             (ServicesDashboardInfo) mostActiveServicesOptional.get().getResponse();
         return ExecutionResponse.<DeploymentsStatsOverview>builder()
             .response(DeploymentsStatsOverview.builder()
-                          .deploymentsOverview(getDeploymentsOverview(activeDeploymentsInfo))
+                          .deploymentsOverview(getDeploymentsOverview(activeDeploymentsInfo,
+                              mapOfProjectIdentifierAndProjectName, mapOfOrganizationIdentifierAndOrganizationName))
                           .deploymentsStatsSummary(getDeploymentStatsSummary(deploymentStatsInfo))
                           .mostActiveServicesList(getMostActiveServicesList(sortBy, servicesDashboardInfo,
                               mapOfProjectIdentifierAndProjectName, mapOfOrganizationIdentifierAndOrganizationName))
@@ -227,13 +220,50 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         .build();
   }
 
-  private DeploymentsOverview getDeploymentsOverview(PipelinesExecutionDashboardInfo activeDeploymentsInfo) {
+  private DeploymentsOverview getDeploymentsOverview(PipelinesExecutionDashboardInfo activeDeploymentsInfo,
+      Map<String, String> mapOfProjectIdentifierAndProjectName,
+      Map<String, String> mapOfOrganizationIdentifierAndOrganizationName) {
     return DeploymentsOverview.builder()
-        .failed24HrsExecutions(activeDeploymentsInfo.getFailed24HrsExecutions())
-        .pendingApprovalExecutions(activeDeploymentsInfo.getPendingApprovalExecutions())
-        .pendingManualInterventionExecutions(activeDeploymentsInfo.getPendingManualInterventionExecutions())
-        .runningExecutions(activeDeploymentsInfo.getRunningExecutions())
+        .failed24HrsExecutions(getExecutions(activeDeploymentsInfo.getFailed24HrsExecutions(),
+            mapOfProjectIdentifierAndProjectName, mapOfOrganizationIdentifierAndOrganizationName))
+        .pendingApprovalExecutions(getExecutions(activeDeploymentsInfo.getPendingApprovalExecutions(),
+            mapOfProjectIdentifierAndProjectName, mapOfOrganizationIdentifierAndOrganizationName))
+        .pendingManualInterventionExecutions(
+            getExecutions(activeDeploymentsInfo.getPendingManualInterventionExecutions(),
+                mapOfProjectIdentifierAndProjectName, mapOfOrganizationIdentifierAndOrganizationName))
+        .runningExecutions(getExecutions(activeDeploymentsInfo.getRunningExecutions(),
+            mapOfProjectIdentifierAndProjectName, mapOfOrganizationIdentifierAndOrganizationName))
         .build();
+  }
+
+  private List<PipelineExecutionInfo> getExecutions(List<PipelineExecutionDashboardInfo> executions,
+      Map<String, String> mapOfProjectIdentifierAndProjectName,
+      Map<String, String> mapOfOrganizationIdentifierAndOrganizationName) {
+    List<PipelineExecutionInfo> executionsList = new ArrayList<>();
+    for (PipelineExecutionDashboardInfo pipelineExecutionDashboardInfo : emptyIfNull(executions)) {
+      executionsList.add(PipelineExecutionInfo.builder()
+                             .pipelineInfo(PipelineInfo.builder()
+                                               .pipelineIdentifier(pipelineExecutionDashboardInfo.getIdentifier())
+                                               .pipelineName(pipelineExecutionDashboardInfo.getName())
+                                               .build())
+                             .accountInfo(AccountInfo.builder()
+                                              .accountIdentifier(pipelineExecutionDashboardInfo.getAccountIdentifier())
+                                              .build())
+                             .orgInfo(OrgInfo.builder()
+                                          .orgIdentifier(pipelineExecutionDashboardInfo.getOrgIdentifier())
+                                          .orgName(mapOfOrganizationIdentifierAndOrganizationName.get(
+                                              pipelineExecutionDashboardInfo.getOrgIdentifier()))
+                                          .build())
+                             .projectInfo(ProjectInfo.builder()
+                                              .projectIdentifier(pipelineExecutionDashboardInfo.getProjectIdentifier())
+                                              .projectName(mapOfProjectIdentifierAndProjectName.get(
+                                                  pipelineExecutionDashboardInfo.getProjectIdentifier()))
+                                              .build())
+                             .planExecutionId(pipelineExecutionDashboardInfo.getPlanExecutionId())
+                             .startTs(pipelineExecutionDashboardInfo.getStartTs())
+                             .build());
+    }
+    return executionsList;
   }
 
   private DeploymentsStatsSummary getDeploymentStatsSummary(DeploymentStatsSummary deploymentStatsSummary) {
@@ -351,13 +381,14 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   private List<String> getOrgProjectIdentifier(List<ProjectDTO> listOfAccessibleProject) {
     return emptyIfNull(listOfAccessibleProject)
         .stream()
-        .map(projectDTO -> new OrgProjectIdentifier(projectDTO.getOrgIdentifier() + ":" + projectDTO.getIdentifier()).toString())
+        .map(projectDTO
+            -> new OrgProjectIdentifier(projectDTO.getOrgIdentifier() + ":" + projectDTO.getIdentifier()).toString())
         .collect(Collectors.toList());
   }
 
   private Map<String, String> getMapOfProjectIdentifierAndProjectName(List<ProjectDTO> listOfAccessibleProject) {
     Map<String, String> mapOfProjectIdentifierAndProjectName = new HashMap<>();
-    for(ProjectDTO projectDTO:listOfAccessibleProject){
+    for (ProjectDTO projectDTO : listOfAccessibleProject) {
       mapOfProjectIdentifierAndProjectName.put(projectDTO.getIdentifier(), projectDTO.getName());
     }
     return mapOfProjectIdentifierAndProjectName;
@@ -371,8 +402,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         .findAny();
   }
 
-  private List<RestCallRequest> getRestCallRequestListForTopProjectsPanel(String accountIdentifier, long startInterval,
-      long endInterval, List<String> orgProjectIdentifierList) {
+  private List<RestCallRequest> getRestCallRequestListForTopProjectsPanel(
+      String accountIdentifier, long startInterval, long endInterval, List<String> orgProjectIdentifierList) {
     List<RestCallRequest> restCallRequestList = new ArrayList<>();
     restCallRequestList.add(RestCallRequest.<ProjectsDashboardInfo>builder()
                                 .request(cdLandingDashboardResourceClient.getTopProjects(
@@ -411,8 +442,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   }
 
   private List<RestCallRequest> getRestCallRequestListForDeploymentStatsOverview(String accountIdentifier,
-      long startInterval, long endInterval, List<String> orgProjectIdentifierList, GroupBy groupBy,
-      SortBy sortBy) {
+      long startInterval, long endInterval, List<String> orgProjectIdentifierList, GroupBy groupBy, SortBy sortBy) {
     List<RestCallRequest> restCallRequestList = new ArrayList<>();
     restCallRequestList.add(RestCallRequest.<PipelinesExecutionDashboardInfo>builder()
                                 .request(cdLandingDashboardResourceClient.getActiveDeploymentStats(
