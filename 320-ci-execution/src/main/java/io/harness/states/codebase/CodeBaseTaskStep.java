@@ -377,6 +377,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
                                  .prNumber(String.valueOf(pr.getNumber()))
                                  .prTitle(pr.getTitle())
                                  .commitSha(pr.getSha())
+                                 .event("pull_request")
                                  .baseCommitSha(pr.getBase().getSha())
                                  .commitRef(pr.getRef())
                                  .repoUrl(repoUrl) // Add repo url to scm.PullRequest and get it from there
