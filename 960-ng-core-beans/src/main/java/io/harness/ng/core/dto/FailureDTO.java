@@ -6,6 +6,7 @@ import io.harness.ng.core.Status;
 import io.harness.ng.core.ValidationError;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel(value = "Failure")
+@Schema(name = "Failure", description = "This is Failure entity as defied in Harness")
 public class FailureDTO {
   Status status = Status.FAILURE; // we won't rely on http codes, clients will figure out error/success with this field
   ErrorCode code; // enum representing what kind of an error this is (e.g.- secret management error)
