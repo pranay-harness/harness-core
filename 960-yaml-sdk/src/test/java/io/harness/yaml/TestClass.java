@@ -3,6 +3,7 @@ package io.harness.yaml;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.validation.OneOfField;
+import io.harness.validation.OneOfSet;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -109,5 +110,18 @@ public class TestClass {
     @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME, property = "mnop", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
     List<TestInterface> testInterface;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @OneOfSet(fields = {"a, c", "b, d", "testString,", "e, f"})
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  public static class ClassWithOneOfSetAnnotation {
+    @NotNull String testString;
+    String a;
+    String b;
+    @JsonProperty("jsontypeinfo") String c;
+    @ApiModelProperty(name = "apimodelproperty") String d;
   }
 }
