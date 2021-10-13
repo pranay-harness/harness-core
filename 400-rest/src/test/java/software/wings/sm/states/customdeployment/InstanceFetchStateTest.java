@@ -291,8 +291,8 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(executionResponse.getErrorMessage())
         .isEqualTo(
-            "JsonParseException: Unexpected character (':' (code 58)): was expecting comma to separate ARRAY entries\n"
-            + " at [Source: {\"Instances\": [\"ip\":\"1.1\"},{\"ip\":\"2.2\"}]}; line: 1, column: 21]");
+            "JsonParseException: Unexpected character (':' (code 58)): was expecting comma to separate Array entries\n"
+            + " at [Source: (String)\"{\"Instances\": [\"ip\":\"1.1\"},{\"ip\":\"2.2\"}]}\"; line: 1, column: 21]");
   }
 
   @Test

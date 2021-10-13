@@ -14,7 +14,7 @@ import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.utils.NGVariablesUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
@@ -45,13 +45,13 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements PMSS
   }
 
   @Override
-  @JsonIgnore
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public StepType getStepType() {
     return ShellScriptStep.STEP_TYPE;
   }
 
   @Override
-  @JsonIgnore
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.TASK;
   }

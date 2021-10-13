@@ -17,6 +17,7 @@ import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
@@ -48,7 +49,9 @@ public class BuildEnvSetupStepInfo implements CIStepInfo {
   @NotNull private BuildJobEnvInfo buildJobEnvInfo;
   @NotNull private String gitConnectorIdentifier;
   @NotNull private String branchName;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  @ApiModelProperty(dataType = INTEGER_CLASSPATH)
+  private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties(

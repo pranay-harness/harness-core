@@ -28,7 +28,7 @@ public enum AzureRegistryType {
     return value;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static AzureRegistryType getAzureDockerRegistryTypeFromValue(@JsonProperty("type") String value) {
     for (AzureRegistryType sourceType : AzureRegistryType.values()) {
       if (sourceType.value.equalsIgnoreCase(value)) {

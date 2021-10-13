@@ -15,7 +15,7 @@ public enum Microservice {
   @JsonProperty("TEMPLATESERVICE") TEMPLATESERVICE,
   @JsonProperty("RESOURCEGROUP") RESOURCEGROUP;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static Microservice fromString(String microservice) {
     for (Microservice msvc : Microservice.values()) {
       if (msvc.name().equalsIgnoreCase(microservice)) {

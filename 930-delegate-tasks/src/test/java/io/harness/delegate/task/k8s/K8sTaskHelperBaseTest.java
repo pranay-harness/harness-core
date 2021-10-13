@@ -49,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
@@ -104,6 +105,9 @@ import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.UrlNotProvidedException;
 import io.harness.exception.UrlNotReachableException;
 import io.harness.exception.WingsException;
+import io.harness.istio.api.networking.IstioNetworkingApiFactory;
+import io.harness.istio.api.networking.IstioNetworkingApiVersions;
+import io.harness.istio.api.networking.V1Alpha3IstioApiNetworkingHandler;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.kubectl.AbstractExecutable;
@@ -149,6 +153,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.ContainerStatusBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
@@ -191,13 +196,10 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeightBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.NumberPort;
-import me.snowdrop.istio.api.networking.v1alpha3.PortSelectorBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.Subset;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
+import me.snowdrop.istio.api.networking.v1alpha3.PortSelector;
 import me.snowdrop.istio.api.networking.v1alpha3.TCPRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
@@ -243,6 +245,8 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private SecretDecryptionService mockSecretDecryptionService;
   @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Mock private KubernetesHelperService kubernetesHelperService;
+  @Mock private IstioNetworkingApiFactory istioNetworkingApiFactory;
+  @Mock private V1Alpha3IstioApiNetworkingHandler mockedV1Alpha3IstioApiNetworkingHandler;
   @Mock private NGErrorHelper ngErrorHelper;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
@@ -1321,10 +1325,13 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
             IstioDestinationWeight.builder().destination(stableDestinationExpression).weight("40").build(),
             IstioDestinationWeight.builder().destination("host: test\nsubset: default").weight("50").build());
 
+    V1Alpha3IstioApiNetworkingHandler v1Alpha3IstioApiNetworkingHandler = spy(V1Alpha3IstioApiNetworkingHandler.class);
+    when(istioNetworkingApiFactory.obtainHandler(anyString())).thenReturn(v1Alpha3IstioApiNetworkingHandler);
+
     k8sTaskHelperBase.updateVirtualServiceWithDestinationWeights(destinationWeights, service, executionLogCallback);
-    List<DestinationWeight> routes = service.getSpec().getHttp().get(0).getRoute();
-    assertThat(routes.stream().map(DestinationWeight::getWeight)).containsExactly(10, 40, 50);
-    assertThat(routes.stream().map(DestinationWeight::getDestination).map(Destination::getSubset))
+    List<HTTPRouteDestination> routes = service.getSpec().getHttp().get(0).getRoute();
+    assertThat(routes.stream().map(HTTPRouteDestination::getWeight)).containsExactly(10, 40, 50);
+    assertThat(routes.stream().map(HTTPRouteDestination::getDestination).map(Destination::getSubset))
         .containsExactly(HarnessLabelValues.trackCanary, HarnessLabelValues.trackStable, "default");
   }
 
@@ -1334,6 +1341,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void testUpdateVirtualServiceWithDestinationWeightsMultipleRoutes() {
     VirtualService service = virtualServiceWith(ImmutableMap.of("localhost", 2304, "0.0.0.0", 8030));
     List<IstioDestinationWeight> destinationWeights = emptyList();
+    V1Alpha3IstioApiNetworkingHandler v1Alpha3IstioApiNetworkingHandler = spy(V1Alpha3IstioApiNetworkingHandler.class);
+    when(istioNetworkingApiFactory.obtainHandler(anyString())).thenReturn(v1Alpha3IstioApiNetworkingHandler);
+
     assertThatThrownBy(()
                            -> k8sTaskHelperBase.updateVirtualServiceWithDestinationWeights(
                                destinationWeights, service, executionLogCallback))
@@ -1346,6 +1356,8 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void testUpdateVirtualServiceWithDestinationWeightsNoRoutes() {
     VirtualService service = virtualServiceWith(ImmutableMap.of());
     List<IstioDestinationWeight> destinationWeights = emptyList();
+    V1Alpha3IstioApiNetworkingHandler v1Alpha3IstioApiNetworkingHandler = spy(V1Alpha3IstioApiNetworkingHandler.class);
+    when(istioNetworkingApiFactory.obtainHandler(anyString())).thenReturn(v1Alpha3IstioApiNetworkingHandler);
     assertThatThrownBy(()
                            -> k8sTaskHelperBase.updateVirtualServiceWithDestinationWeights(
                                destinationWeights, service, executionLogCallback))
@@ -1359,6 +1371,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     VirtualServiceSpec spec = new VirtualServiceSpecBuilder().withHttp(new HTTPRoute()).withTcp(new TCPRoute()).build();
     VirtualService service = new VirtualServiceBuilder().withSpec(spec).build();
     List<IstioDestinationWeight> destinationWeights = emptyList();
+    V1Alpha3IstioApiNetworkingHandler v1Alpha3IstioApiNetworkingHandler = spy(V1Alpha3IstioApiNetworkingHandler.class);
+    when(istioNetworkingApiFactory.obtainHandler(anyString())).thenReturn(v1Alpha3IstioApiNetworkingHandler);
+
     assertThatThrownBy(()
                            -> k8sTaskHelperBase.updateVirtualServiceWithDestinationWeights(
                                destinationWeights, service, executionLogCallback))
@@ -1398,12 +1413,20 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         mock(ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable.class);
     doReturn(resource).when(mockClient).load(any());
     doReturn(asList(service1)).when(resource).get();
-    VirtualService result = k8sTaskHelperBase.updateVirtualServiceManifestFilesWithRoutesForCanary(
+    when(istioNetworkingApiFactory.obtainHandler(IstioNetworkingApiVersions.V1Alpha3.getApiVersion()))
+        .thenReturn(mockedV1Alpha3IstioApiNetworkingHandler);
+
+    k8sTaskHelperBase.updateVirtualServiceManifestFilesWithRoutesForCanary(
         resources, KubernetesConfig.builder().build(), executionLogCallback);
-    List<DestinationWeight> routes = result.getSpec().getHttp().get(0).getRoute();
-    assertThat(routes.stream().map(DestinationWeight::getWeight)).containsExactly(100, 0);
-    assertThat(routes.stream().map(DestinationWeight::getDestination).map(Destination::getSubset))
-        .containsExactly(HarnessLabelValues.trackStable, HarnessLabelValues.trackCanary);
+
+    ArgumentCaptor<HasMetadata> virtualServiceArgumentCaptor = ArgumentCaptor.forClass(HasMetadata.class);
+    verify(mockedV1Alpha3IstioApiNetworkingHandler, times(1))
+        .updateVirtualServiceManifestFilesWithRoutes(any(KubernetesResource.class), any(KubernetesConfig.class),
+            anyList(), any(LogCallback.class), any(KubernetesClient.class), virtualServiceArgumentCaptor.capture());
+    HasMetadata captorValue = virtualServiceArgumentCaptor.getValue();
+    assertThat(captorValue).isInstanceOf(VirtualService.class);
+    assertThat(captorValue.getApiVersion()).isEqualTo("networking.istio.io/v1alpha3");
+    assertThat(captorValue.getKind()).isEqualTo("VirtualService");
   }
 
   private VirtualService virtualServiceWith(Map<String, Integer> destinations) {
@@ -1412,18 +1435,13 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
             .stream()
             .map(entry
                 -> new HTTPRouteBuilder()
-                       .withRoute(
-                           new DestinationWeightBuilder()
-                               .withDestination(
-                                   new DestinationBuilder()
-                                       .withHost(entry.getKey())
-                                       .withPort(
-                                           new PortSelectorBuilder().withPort(new NumberPort(entry.getValue())).build())
-                                       .build())
-                               .build())
+                       .withRoute(new HTTPRouteDestination(new DestinationBuilder()
+                                                               .withHost(entry.getKey())
+                                                               .withPort(new PortSelector(entry.getValue()))
+                                                               .build(),
+                           null, null))
                        .build())
             .collect(Collectors.toList());
-
     return new VirtualServiceBuilder().withSpec(new VirtualServiceSpecBuilder().withHttp(routes).build()).build();
   }
 
@@ -1601,21 +1619,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       assertThat(container.getName()).isEqualTo(expectedContainerId + "-name");
       assertThat(container.getImage()).isEqualTo("example:0.0.1");
     });
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
-  public void testGenerateSubsetsForDestinationRule() {
-    List<String> subsetNames = new ArrayList<>();
-    subsetNames.add(HarnessLabelValues.trackCanary);
-    subsetNames.add(HarnessLabelValues.trackStable);
-    subsetNames.add(HarnessLabelValues.colorBlue);
-    subsetNames.add(HarnessLabelValues.colorGreen);
-
-    final List<Subset> result = k8sTaskHelperBase.generateSubsetsForDestinationRule(subsetNames);
-
-    assertThat(result.size()).isEqualTo(4);
   }
 
   @Test

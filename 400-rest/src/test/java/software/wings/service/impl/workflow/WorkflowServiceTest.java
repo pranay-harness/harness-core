@@ -3237,6 +3237,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).hasSize(1);
     assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next())
         .isEqualTo("metrics");
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics()).hasSize(1);
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics().get(0).getResource()).isNotNull();
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics().get(0).getResource().getName()).isEqualTo("cpu");
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics().get(0).getResource().getTarget().getAverageUtilization())
+        .isEqualTo(60);
   }
 
   @Test

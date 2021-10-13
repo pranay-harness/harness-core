@@ -22,6 +22,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.container.ContainerInfo.Status;
@@ -58,6 +60,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDP)
 public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   @Mock private GkeClusterService gkeClusterService;
   @Mock private KubernetesContainerService kubernetesContainerService;

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Duration;
 import lombok.Builder;
 import lombok.Value;
@@ -13,17 +13,17 @@ import lombok.Value;
 @Builder
 @OwnedBy(CE)
 public class CeLicenseInfo {
-  @JsonIgnore public static final int CE_TRIAL_GRACE_PERIOD_DAYS = 15;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) public static final int CE_TRIAL_GRACE_PERIOD_DAYS = 15;
 
   private CeLicenseType licenseType;
   private long expiryTime;
 
-  @JsonIgnore
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public long getExpiryTimeWithGracePeriod() {
     return expiryTime + Duration.ofDays(CE_TRIAL_GRACE_PERIOD_DAYS).toMillis();
   }
 
-  @JsonIgnore
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public boolean isValidLicenceType() {
     switch (licenseType) {
       case LIMITED_TRIAL:

@@ -4,11 +4,15 @@ import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.DOCKER_
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.ECR_NAME;
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.GCR_NAME;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 
+@OwnedBy(HarnessTeam.CDC)
 public enum ArtifactSourceType {
   @JsonProperty(DOCKER_REGISTRY_NAME) DOCKER_REGISTRY(DOCKER_REGISTRY_NAME),
   @JsonProperty(GCR_NAME) GCR(GCR_NAME),
@@ -28,7 +32,7 @@ public enum ArtifactSourceType {
     return displayName;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static ArtifactSourceType getArtifactSourceType(@JsonProperty("type") String displayName) {
     for (ArtifactSourceType sourceType : ArtifactSourceType.values()) {
       if (sourceType.displayName.equalsIgnoreCase(displayName)) {

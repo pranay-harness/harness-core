@@ -706,15 +706,6 @@ public class K8sStepHelperTest extends CategoryTest {
         K8sDirectInfrastructureOutcome.builder().connectorRef("abcConnector").namespace("namespace test");
 
     try {
-      k8sStepHelper.getK8sInfraDelegateConfig(outcomeBuilder.build(), ambiance);
-      fail("Should not reach here.");
-    } catch (InvalidArgumentsException ex) {
-      assertThat(ex.getParams().get("args"))
-          .isEqualTo(
-              "Namespace: \"namespace test\" is an invalid name. Namespaces may only contain lowercase letters, numbers, and '-'.");
-    }
-
-    try {
       outcomeBuilder.namespace("");
       k8sStepHelper.getK8sInfraDelegateConfig(outcomeBuilder.build(), ambiance);
       fail("Should not reach here.");

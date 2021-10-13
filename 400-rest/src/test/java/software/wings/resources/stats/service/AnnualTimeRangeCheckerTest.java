@@ -25,8 +25,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfEndTimeForRepeatableRangeIsBeforeCurrentTime() {
-    TimeRange timeRange =
-        new TimeRange(1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, 1624879347000L, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1624785747000L, 1624792947000L, "Europe/Belgrade", false, null, 1624879347000L, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 16248789680000L)).isFalse();
   }
 
@@ -34,8 +34,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentMonthIsNotInGivenRangeWhenRangeCoversTwoYears() {
-    TimeRange timeRange =
-        new TimeRange(1638350547000L, 1646126547000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1638350547000L, 1646126547000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1648804947000L)).isFalse();
   }
 
@@ -43,8 +43,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentMonthIsNotInGivenRangeWhenRangeCoversSameYear() {
-    TimeRange timeRange =
-        new TimeRange(1609492947000L, 1621156947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609492947000L, 1621156947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1654075347000L)).isFalse();
   }
 
@@ -52,8 +52,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayIsNotInGivenRangeWhenRangeCoversOneMonth() {
-    TimeRange timeRange =
-        new TimeRange(1609492947000L, 1610788947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609492947000L, 1610788947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1643102547000L)).isFalse();
   }
 
@@ -61,8 +61,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentDayIsInGivenRangeWhenRangeCoversOneMonth() {
-    TimeRange timeRange =
-        new TimeRange(1609492947000L, 1611220947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609492947000L, 1611220947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1611220946999L)).isTrue();
   }
 
@@ -70,8 +70,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayIsInGivenRangeWhenRangeCoversOneMonthButTimeIsBeforeStartTime() {
-    TimeRange timeRange =
-        new TimeRange(1609492947000L, 1611220947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609492947000L, 1611220947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1609492946999L)).isFalse();
   }
 
@@ -79,8 +79,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentDayIsInGivenRangeWhenRangeCoversOneMonthButTimeIsAfterEndTime() {
-    TimeRange timeRange =
-        new TimeRange(1609492947000L, 1611220947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609492947000L, 1611220947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1611220947001L)).isFalse();
   }
 
@@ -88,8 +88,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentMonthIsInGivenRangeWhenRangeCoversMultipleMonths() {
-    TimeRange timeRange =
-        new TimeRange(1609492947000L, 1621156947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609492947000L, 1621156947000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1646126547000L)).isTrue();
   }
 
@@ -97,8 +97,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentMonthIsEqualsToStartMonthButDayIsBeforeStartDay() {
-    TimeRange timeRange =
-        new TimeRange(1609838547000L, 1610702547000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609838547000L, 1610702547000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1609752147000L)).isFalse();
   }
 
@@ -106,8 +106,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentMonthIsEqualsToStartMonthAndDayIsAfterStartDay() {
-    TimeRange timeRange =
-        new TimeRange(1609838547000L, 1610702547000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609838547000L, 1610702547000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1609924947000L)).isTrue();
   }
 
@@ -115,8 +115,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentMonthAndDayIsEqualsToStartMonthAndDayAndTimeIsAfterStartTime() {
-    TimeRange timeRange =
-        new TimeRange(1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1609838547001L)).isTrue();
   }
 
@@ -124,8 +124,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentMonthAndDayIsEqualsToStartMonthAndDayButTimeIsBeforeStartTime() {
-    TimeRange timeRange =
-        new TimeRange(1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1609838546999L)).isFalse();
   }
 
@@ -133,8 +133,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentMonthIsEqualsToEndMonthButDayIsAfterEndDay() {
-    TimeRange timeRange =
-        new TimeRange(1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1644312147000L)).isFalse();
   }
 
@@ -142,8 +142,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentMonthIsEqualsToEndMonthAndDayIsBeforeEndDay() {
-    TimeRange timeRange =
-        new TimeRange(1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1644052947000L)).isTrue();
   }
 
@@ -151,8 +151,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfCurrentMonthAndDayIsEqualsToEndMonthAndDayAndTimeIsBeforeEndTime() {
-    TimeRange timeRange =
-        new TimeRange(1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1644222147000L)).isTrue();
   }
 
@@ -160,8 +160,8 @@ public class AnnualTimeRangeCheckerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfCurrentMonthAndDayIsEqualsToEndMonthAndDayButTimeIsAfterEndTime() {
-    TimeRange timeRange =
-        new TimeRange(1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
+    TimeRange timeRange = new TimeRange(
+        null, 1609838547000L, 1612689747000L, "Europe/Belgrade", false, null, Long.MAX_VALUE, DAILY, false);
     assertThat(timeRangeChecker.istTimeInRange(timeRange, 1644229347000L)).isFalse();
   }
 }

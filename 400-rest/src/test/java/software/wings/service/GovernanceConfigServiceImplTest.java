@@ -160,7 +160,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetFrozenAppEnvs() {
-    TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000_000,
+    TimeRange range = new TimeRange(null, System.currentTimeMillis(), System.currentTimeMillis() + 100_000_000,
         "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
@@ -211,7 +211,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetFrozenAllAppEnvs() {
-    TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000_000,
+    TimeRange range = new TimeRange(null, System.currentTimeMillis(), System.currentTimeMillis() + 100_000_000,
         "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
@@ -249,8 +249,8 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetOnlyApplicableAppEnvs() {
-    TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 2_000_000, "Asia/Kolkatta",
-        false, null, null, null, false);
+    TimeRange range = new TimeRange(null, System.currentTimeMillis(), System.currentTimeMillis() + 2_000_000,
+        "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
                                           .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
@@ -292,8 +292,8 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnEmptyMapForNoAppSelections() {
-    TimeRange range = new TimeRange(System.currentTimeMillis() + 18_00_000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+    TimeRange range = new TimeRange(null, System.currentTimeMillis() + 18_00_000,
+        System.currentTimeMillis() + 54_00_000, "Asia/Kolkatta", false, null, null, null, false);
 
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
@@ -336,7 +336,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnEmptyMapForOutofTimeRange() {
-    TimeRange range = new TimeRange(100, 18_00_100, "Asia/Kolkatta", false, null, null, null, false);
+    TimeRange range = new TimeRange(null, 100, 18_00_100, "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection3 =
         CustomAppFilter.builder()
@@ -368,7 +368,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetFrozenEnvsForApp() {
-    TimeRange range = new TimeRange(System.currentTimeMillis() + 1, System.currentTimeMillis() + 54_00_000,
+    TimeRange range = new TimeRange(null, System.currentTimeMillis() + 1, System.currentTimeMillis() + 54_00_000,
         "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
@@ -420,7 +420,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetFrozenEnvsForOneBlockingWindow() {
-    TimeRange range = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 18_000_000,
+    TimeRange range = new TimeRange(null, System.currentTimeMillis(), System.currentTimeMillis() + 18_000_000,
         "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
@@ -464,7 +464,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetOnlyApplicableEnvs() throws InterruptedException {
-    TimeRange range = new TimeRange(System.currentTimeMillis() + 5000, System.currentTimeMillis() + 54_00_000,
+    TimeRange range = new TimeRange(null, System.currentTimeMillis() + 5000, System.currentTimeMillis() + 54_00_000,
         "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()
@@ -508,8 +508,8 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnEmptyEnvForNoAppSelections() {
-    TimeRange range = new TimeRange(System.currentTimeMillis() + 18_00_000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+    TimeRange range = new TimeRange(null, System.currentTimeMillis() + 18_00_000,
+        System.currentTimeMillis() + 54_00_000, "Asia/Kolkatta", false, null, null, null, false);
 
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
@@ -532,8 +532,8 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnEmptyMapForUnFrozenApp() {
-    TimeRange range = new TimeRange(System.currentTimeMillis() + 18_00_000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+    TimeRange range = new TimeRange(null, System.currentTimeMillis() + 18_00_000,
+        System.currentTimeMillis() + 54_00_000, "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection3 =
         CustomAppFilter.builder()
@@ -579,7 +579,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnEmptyEnvForOutofTimeRange() {
-    TimeRange range = new TimeRange(100, 18_00_100, "Asia/Kolkatta", false, null, null, null, false);
+    TimeRange range = new TimeRange(null, 100, 18_00_100, "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection3 =
         CustomAppFilter.builder()
@@ -610,8 +610,8 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetFreezeWindowsWithId() {
-    TimeRange range = new TimeRange(System.currentTimeMillis() + 18_00_000, System.currentTimeMillis() + 54_00_000,
-        "Asia/Kolkatta", false, null, null, null, false);
+    TimeRange range = new TimeRange(null, System.currentTimeMillis() + 18_00_000,
+        System.currentTimeMillis() + 54_00_000, "Asia/Kolkatta", false, null, null, null, false);
 
     GovernanceConfig governanceConfig =
         JsonUtils.readResourceFile("governance/governance_config.json", GovernanceConfig.class);
@@ -655,11 +655,11 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldRecalculateNextIterations() {
     long currentTimeMillis = System.currentTimeMillis();
-    TimeRange range = new TimeRange(currentTimeMillis + DAY_IN_MILLIS, currentTimeMillis + 2 * DAY_IN_MILLIS,
+    TimeRange range = new TimeRange(null, currentTimeMillis + DAY_IN_MILLIS, currentTimeMillis + 2 * DAY_IN_MILLIS,
         "Asia/Kolkatta", false, null, null, null, false);
-    TimeRange range2 = new TimeRange(currentTimeMillis - DAY_IN_MILLIS, currentTimeMillis + DAY_IN_MILLIS,
+    TimeRange range2 = new TimeRange(null, currentTimeMillis - DAY_IN_MILLIS, currentTimeMillis + DAY_IN_MILLIS,
         "Asia/Kolkatta", false, null, null, null, false);
-    TimeRange range3 = new TimeRange(currentTimeMillis + 2 * DAY_IN_MILLIS, currentTimeMillis + 3 * DAY_IN_MILLIS,
+    TimeRange range3 = new TimeRange(null, currentTimeMillis + 2 * DAY_IN_MILLIS, currentTimeMillis + 3 * DAY_IN_MILLIS,
         "Asia/Kolkatta", false, null, null, null, false);
 
     ApplicationFilter appSelection1 = AllAppFilter.builder()

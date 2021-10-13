@@ -13,7 +13,7 @@ public enum TILanguage {
 
   private final String yamlName;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static TILanguage getLanguage(@JsonProperty("language") String yamlName) {
     for (TILanguage language : TILanguage.values()) {
       if (language.yamlName.equalsIgnoreCase(yamlName)) {

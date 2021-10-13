@@ -43,13 +43,13 @@ import software.wings.helpers.ext.k8s.response.K8sTrafficSplitResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -66,7 +66,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
   private ReleaseHistory releaseHistory;
   private Release release;
   private KubernetesConfig kubernetesConfig;
-  private VirtualService virtualService;
+  private HasMetadata virtualService;
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -197,8 +197,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
         executionLogCallback.saveExecutionLog("\n" + toYaml(virtualService));
       }
 
-      virtualService =
-          (VirtualService) kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, virtualService);
+      virtualService = kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, virtualService);
 
       executionLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
       return true;
@@ -249,20 +248,14 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
 
     for (KubernetesResourceId resourceId : resourceIds) {
       if (Kind.VirtualService.name().equals(resourceId.getKind())) {
-        VirtualService istioVirtualService =
-            kubernetesContainerService.getIstioVirtualService(kubernetesConfig, resourceId.getName());
-
-        if (istioVirtualService != null && istioVirtualService.getMetadata() != null
-            && isNotEmpty(istioVirtualService.getMetadata().getAnnotations())) {
-          Map<String, String> annotations = istioVirtualService.getMetadata().getAnnotations();
-          if (annotations.containsKey(HarnessAnnotations.managed)
-              && annotations.get(HarnessAnnotations.managed).equalsIgnoreCase("true")) {
-            managedVirtualServices.add(resourceId);
-          }
+        Map<String, String> annotations =
+            kubernetesContainerService.getVirtualServiceResourcesAnnotations(resourceId, kubernetesConfig);
+        if (isNotEmpty(annotations) && annotations.containsKey(HarnessAnnotations.managed)
+            && annotations.get(HarnessAnnotations.managed).equalsIgnoreCase("true")) {
+          managedVirtualServices.add(resourceId);
         }
       }
     }
-
     return managedVirtualServices;
   }
 }

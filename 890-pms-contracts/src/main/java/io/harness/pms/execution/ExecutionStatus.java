@@ -64,7 +64,7 @@ public enum ExecutionStatus {
     this.ignoreStatus = ignoreStatus;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static ExecutionStatus getExecutionStatus(@JsonProperty("type") String displayName) {
     for (ExecutionStatus executionStatus : ExecutionStatus.values()) {
       if (executionStatus.displayName.equalsIgnoreCase(displayName)) {

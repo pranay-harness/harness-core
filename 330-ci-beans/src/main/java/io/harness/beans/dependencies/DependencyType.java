@@ -18,7 +18,7 @@ public enum DependencyType {
     return yamlProperty;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static DependencyType getDependencyType(@JsonProperty("type") String yamlProperty) {
     for (DependencyType dependencyType : DependencyType.values()) {
       if (dependencyType.getYamlProperty().equalsIgnoreCase(yamlProperty)) {
