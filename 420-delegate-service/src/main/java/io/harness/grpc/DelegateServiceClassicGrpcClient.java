@@ -10,7 +10,6 @@ import io.harness.delegate.QueueTaskResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.serializer.KryoSerializer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
@@ -47,9 +46,6 @@ public class DelegateServiceClassicGrpcClient {
             .build();
 
     final ExecuteTaskResponse executeTaskResponse = delegateTaskBlockingStub.executeTask(delegateClassicTaskRequest);
-    ObjectMapper mapper = new ObjectMapper();
-    return (T) mapper.convertValue(
-        kryoSerializer.asInflatedObject(executeTaskResponse.getDelegateTaskResponseKryo().toByteArray()),
-        DelegateResponseData.class);
+    return (T) kryoSerializer.asInflatedObject(executeTaskResponse.getDelegateTaskResponseKryo().toByteArray());
   }
 }
