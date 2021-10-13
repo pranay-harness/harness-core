@@ -67,6 +67,7 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
         .preDeploymentData(contextElement.getPreDeploymentData())
         .timeoutIntervalInMin(contextElement.getAppServiceSlotSetupTimeOut())
+        .startupCommand(fetchStartupCommand(context))
         .build();
   }
 

@@ -28,11 +28,8 @@ import software.wings.delegatetasks.azure.appservice.deployment.context.AzureApp
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServicePackageDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
-import software.wings.delegatetasks.azure.common.ArtifactDownloaderServiceLogWrapper;
 import software.wings.delegatetasks.azure.common.AutoCloseableWorkingDirectory;
-import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 import software.wings.delegatetasks.azure.common.AzureContainerRegistryService;
-import software.wings.delegatetasks.azure.common.context.ArtifactDownloaderContext;
 import software.wings.utils.ArtifactType;
 
 import com.google.inject.Inject;
@@ -50,9 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHandler {
-  @Inject private ArtifactDownloaderServiceLogWrapper artifactDownloaderServiceLogWrapper;
   @Inject private AzureContainerRegistryService azureContainerRegistryService;
-  @Inject private AzureAppServiceService azureAppServiceService;
 
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
@@ -120,10 +115,11 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
           getAzureAppServicePreDeploymentData(packageDeploymentContext);
 
       azureAppServiceDeploymentService.deployPackage(packageDeploymentContext, azureAppServicePreDeploymentData);
-
+      List<AzureAppDeploymentData> azureAppDeploymentData = azureAppServiceService.fetchDeploymentData(
+          azureWebClientContext, azureWebAppSlotSetupParameters.getSlotName());
       markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
       return AzureWebAppSlotSetupResponse.builder()
-          .azureAppDeploymentData(null)
+          .azureAppDeploymentData(azureAppDeploymentData)
           .preDeploymentData(azureAppServicePreDeploymentData)
           .build();
     } catch (Exception ex) {
@@ -194,28 +190,6 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     Map<String, AzureAppServiceConnectionString> userAddedConnSettings = deploymentContext.getConnSettingsToAdd();
     return azureAppServiceService.getAzureAppServicePreDeploymentData(azureWebClientContext, slotName, targetSlotName,
         userAddedAppSettings, userAddedConnSettings, deploymentContext.getLogStreamingTaskClient());
-  }
-
-  private File getArtifactFile(AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters,
-      ArtifactStreamAttributes streamAttributes, AutoCloseableWorkingDirectory autoCloseableWorkingDirectory,
-      ILogStreamingTaskClient logStreamingTaskClient) {
-    ArtifactDownloaderContext artifactDownloaderContext =
-        toArtifactDownloaderContext(azureWebAppSlotSetupParameters, streamAttributes, autoCloseableWorkingDirectory);
-    return artifactDownloaderServiceLogWrapper.fetchArtifactFileForDeploymentAndLog(
-        artifactDownloaderContext, logStreamingTaskClient);
-  }
-
-  public ArtifactDownloaderContext toArtifactDownloaderContext(
-      AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters, ArtifactStreamAttributes streamAttributes,
-      AutoCloseableWorkingDirectory autoCloseableWorkingDirectory) {
-    return ArtifactDownloaderContext.builder()
-        .accountId(azureWebAppSlotSetupParameters.getAccountId())
-        .activityId(azureWebAppSlotSetupParameters.getActivityId())
-        .appId(azureWebAppSlotSetupParameters.getAppId())
-        .commandName(azureWebAppSlotSetupParameters.getCommandName())
-        .artifactStreamAttributes(streamAttributes)
-        .workingDirectory(autoCloseableWorkingDirectory.workingDir())
-        .build();
   }
 
   private AzureAppServicePackageDeploymentContext toAzureAppServicePackageDeploymentContext(

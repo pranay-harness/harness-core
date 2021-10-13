@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
+import static io.harness.azure.model.AzureConstants.AZURE_APP_SVC_ARTIFACT_DOWNLOAD_DIR_PATH;
+import static io.harness.azure.model.AzureConstants.REPOSITORY_DIR_PATH;
 import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_PERCENTAGE;
 import static io.harness.azure.model.AzureConstants.START_DEPLOYMENT_SLOT;
 import static io.harness.azure.model.AzureConstants.STOP_DEPLOYMENT_SLOT;
@@ -27,11 +29,16 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
+import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServicePackageDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
+import software.wings.delegatetasks.azure.common.AutoCloseableWorkingDirectory;
 
 import com.google.inject.Singleton;
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import lombok.NoArgsConstructor;
@@ -44,11 +51,41 @@ import lombok.extern.slf4j.Slf4j;
 public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
+      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient,
+      ArtifactStreamAttributes artifactStreamAttributes) {
+    return artifactStreamAttributes == null
+        ? executeDockerTask(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient)
+        : executePackageTask(
+            azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient, artifactStreamAttributes);
+  }
+
+  private AzureAppServiceTaskResponse executeDockerTask(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     AzureWebAppRollbackParameters rollbackParameters = (AzureWebAppRollbackParameters) azureAppServiceTaskParameters;
     AzureWebClientContext azureWebClientContext = buildAzureWebClientContext(rollbackParameters, azureConfig);
     AzureAppServiceDockerDeploymentContext deploymentContext =
         toAzureAppServiceDockerDeploymentContext(rollbackParameters, azureWebClientContext, logStreamingTaskClient);
+
+    performRollback(logStreamingTaskClient, rollbackParameters, azureWebClientContext, deploymentContext);
+
+    List<AzureAppDeploymentData> azureAppDeploymentData =
+        getAppServiceDeploymentData(rollbackParameters, azureWebClientContext);
+
+    markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
+    return AzureWebAppSlotSetupResponse.builder()
+        .azureAppDeploymentData(azureAppDeploymentData)
+        .preDeploymentData(rollbackParameters.getPreDeploymentData())
+        .build();
+  }
+
+  private AzureAppServiceTaskResponse executePackageTask(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
+      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient,
+      ArtifactStreamAttributes artifactStreamAttributes) {
+    AzureWebAppRollbackParameters rollbackParameters = (AzureWebAppRollbackParameters) azureAppServiceTaskParameters;
+
+    AzureWebClientContext azureWebClientContext = buildAzureWebClientContext(rollbackParameters, azureConfig);
+    AzureAppServicePackageDeploymentContext deploymentContext = toAzureAppServicePackageDeploymentContext(
+        rollbackParameters, azureWebClientContext, logStreamingTaskClient, artifactStreamAttributes);
 
     performRollback(logStreamingTaskClient, rollbackParameters, azureWebClientContext, deploymentContext);
 
@@ -79,7 +116,7 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
 
   private void performRollback(ILogStreamingTaskClient logStreamingTaskClient,
       AzureWebAppRollbackParameters rollbackParameters, AzureWebClientContext azureWebClientContext,
-      AzureAppServiceDockerDeploymentContext deploymentContext) {
+      AzureAppServiceDeploymentContext deploymentContext) {
     AppServiceDeploymentProgress progressMarker = getProgressMarker(rollbackParameters);
     log.info(String.format("Starting rollback from previous marker - [%s]", progressMarker.getStepName()));
 
@@ -100,7 +137,8 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
       case START_SLOT:
       case UPDATE_TRAFFIC_PERCENT:
       case SWAP_SLOT:
-        rollbackDeploymentAndTrafficShift(logStreamingTaskClient, rollbackParameters, azureWebClientContext);
+        rollbackDeploymentAndTrafficShift(
+            logStreamingTaskClient, rollbackParameters, azureWebClientContext, deploymentContext);
         break;
 
       case DEPLOYMENT_COMPLETE:
@@ -128,7 +166,7 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
   }
 
   private void rollbackFromStopSlotState(ILogStreamingTaskClient logStreamingTaskClient,
-      AzureWebAppRollbackParameters rollbackParameters, AzureAppServiceDockerDeploymentContext deploymentContext) {
+      AzureWebAppRollbackParameters rollbackParameters, AzureAppServiceDeploymentContext deploymentContext) {
     String message = "Failed to stop the slot during deployment. Hence skipping this step";
     markCommandUnitAsDone(logStreamingTaskClient, STOP_DEPLOYMENT_SLOT, message);
 
@@ -146,7 +184,7 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
   }
 
   private void rollbackFromUpdateConfigurationState(ILogStreamingTaskClient logStreamingTaskClient,
-      AzureWebAppRollbackParameters rollbackParameters, AzureAppServiceDockerDeploymentContext deploymentContext) {
+      AzureWebAppRollbackParameters rollbackParameters, AzureAppServiceDeploymentContext deploymentContext) {
     String message = "Slot is already stopped. Hence skipping this step";
     markCommandUnitAsDone(logStreamingTaskClient, STOP_DEPLOYMENT_SLOT, message);
 
@@ -164,9 +202,10 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
   }
 
   private void rollbackDeploymentAndTrafficShift(ILogStreamingTaskClient logStreamingTaskClient,
-      AzureWebAppRollbackParameters rollbackParameters, AzureWebClientContext azureWebClientContext) {
+      AzureWebAppRollbackParameters rollbackParameters, AzureWebClientContext azureWebClientContext,
+      AzureAppServiceDeploymentContext deploymentContext) {
     AzureAppServicePreDeploymentData preDeploymentData = rollbackParameters.getPreDeploymentData();
-    rollbackSetupSlot(rollbackParameters, azureWebClientContext, logStreamingTaskClient);
+    rollbackSetupSlot(rollbackParameters, deploymentContext);
     rollbackUpdateSlotTrafficWeight(preDeploymentData, azureWebClientContext, logStreamingTaskClient);
   }
 
@@ -180,12 +219,9 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
     markCommandUnitAsDone(logStreamingTaskClient, SLOT_TRAFFIC_PERCENTAGE, message);
   }
 
-  private void rollbackSetupSlot(AzureWebAppRollbackParameters rollbackParameters,
-      AzureWebClientContext azureWebClientContext, ILogStreamingTaskClient logStreamingTaskClient) {
-    AzureAppServiceDockerDeploymentContext dockerDeploymentContext =
-        toAzureAppServiceDockerDeploymentContext(rollbackParameters, azureWebClientContext, logStreamingTaskClient);
-    azureAppServiceDeploymentService.deployDockerImage(
-        dockerDeploymentContext, rollbackParameters.getPreDeploymentData());
+  private void rollbackSetupSlot(
+      AzureWebAppRollbackParameters rollbackParameters, AzureAppServiceDeploymentContext deploymentContext) {
+    deploymentContext.deploy(azureAppServiceDeploymentService, rollbackParameters.getPreDeploymentData());
   }
 
   private AzureAppServiceDockerDeploymentContext toAzureAppServiceDockerDeploymentContext(
@@ -206,6 +242,34 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
             preDeploymentData.getDockerSettingsToAdd()))
         .imagePathAndTag(preDeploymentData.getImageNameAndTag())
         .slotName(preDeploymentData.getSlotName())
+        .azureWebClientContext(azureWebClientContext)
+        .steadyStateTimeoutInMin(rollbackParameters.getTimeoutIntervalInMin())
+        .build();
+  }
+
+  private AzureAppServicePackageDeploymentContext toAzureAppServicePackageDeploymentContext(
+      AzureWebAppRollbackParameters rollbackParameters, AzureWebClientContext azureWebClientContext,
+      ILogStreamingTaskClient logStreamingTaskClient, ArtifactStreamAttributes streamAttributes) {
+    AutoCloseableWorkingDirectory autoCloseableWorkingDirectory =
+        new AutoCloseableWorkingDirectory(REPOSITORY_DIR_PATH, AZURE_APP_SVC_ARTIFACT_DOWNLOAD_DIR_PATH);
+    File artifactFile =
+        getArtifactFile(rollbackParameters, streamAttributes, autoCloseableWorkingDirectory, logStreamingTaskClient);
+
+    AzureAppServicePreDeploymentData preDeploymentData = rollbackParameters.getPreDeploymentData();
+    return AzureAppServicePackageDeploymentContext.builder()
+        .logStreamingTaskClient(logStreamingTaskClient)
+        .appSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettings(
+            preDeploymentData.getAppSettingsToAdd()))
+        .appSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettings(
+            preDeploymentData.getAppSettingsToRemove()))
+        .connSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStrings(
+            preDeploymentData.getConnStringsToAdd()))
+        .connSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStrings(
+            preDeploymentData.getConnStringsToRemove()))
+        .slotName(preDeploymentData.getSlotName())
+        .startupCommand(rollbackParameters.getStartupCommand())
+        .artifactType(streamAttributes.getArtifactType())
+        .artifactFile(artifactFile)
         .azureWebClientContext(azureWebClientContext)
         .steadyStateTimeoutInMin(rollbackParameters.getTimeoutIntervalInMin())
         .build();

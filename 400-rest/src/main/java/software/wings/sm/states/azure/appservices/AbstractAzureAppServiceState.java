@@ -44,6 +44,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
@@ -72,6 +73,7 @@ import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -348,6 +350,11 @@ public abstract class AbstractAzureAppServiceState extends State {
   protected AzureAppServiceSlotSetupContextElement readContextElement(ExecutionContext context) {
     return (AzureAppServiceSlotSetupContextElement) azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(
         context, SWEEPING_OUTPUT_APP_SERVICE);
+  }
+
+  protected String fetchStartupCommand(ExecutionContext context) {
+    Optional<UserDataSpecification> userDataSpecification = azureVMSSStateHelper.getUserDataSpecification(context);
+    return userDataSpecification.map(UserDataSpecification::getData).orElse(null);
   }
 
   protected abstract boolean supportRemoteManifest();

@@ -11,14 +11,19 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.AbstractAzureAppServiceTaskHandler;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
+import software.wings.delegatetasks.azure.common.ArtifactDownloaderServiceLogWrapper;
+import software.wings.delegatetasks.azure.common.AutoCloseableWorkingDirectory;
 import software.wings.delegatetasks.azure.common.AzureAppServiceService;
+import software.wings.delegatetasks.azure.common.context.ArtifactDownloaderContext;
 
 import com.google.inject.Inject;
+import java.io.File;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class AbstractAzureWebAppTaskHandler extends AbstractAzureAppServiceTaskHandler {
   @Inject protected AzureAppServiceDeploymentService azureAppServiceDeploymentService;
   @Inject protected AzureAppServiceService azureAppServiceService;
+  @Inject private ArtifactDownloaderServiceLogWrapper artifactDownloaderServiceLogWrapper;
 
   protected AzureWebClientContext buildAzureWebClientContext(
       AzureAppServiceTaskParameters appServiceTaskParameters, AzureConfig azureConfig) {
@@ -39,5 +44,26 @@ public abstract class AbstractAzureWebAppTaskHandler extends AbstractAzureAppSer
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient,
       ArtifactStreamAttributes artifactStreamAttributes) {
     throw new UnsupportedOperationException("Concrete subclass method implementation not available yet");
+  }
+
+  protected File getArtifactFile(AzureAppServiceTaskParameters azureWebAppTaskParameters,
+      ArtifactStreamAttributes streamAttributes, AutoCloseableWorkingDirectory autoCloseableWorkingDirectory,
+      ILogStreamingTaskClient logStreamingTaskClient) {
+    ArtifactDownloaderContext artifactDownloaderContext =
+        toArtifactDownloaderContext(azureWebAppTaskParameters, streamAttributes, autoCloseableWorkingDirectory);
+    return artifactDownloaderServiceLogWrapper.fetchArtifactFileForDeploymentAndLog(
+        artifactDownloaderContext, logStreamingTaskClient);
+  }
+
+  private ArtifactDownloaderContext toArtifactDownloaderContext(AzureAppServiceTaskParameters azureWebAppTaskParameters,
+      ArtifactStreamAttributes streamAttributes, AutoCloseableWorkingDirectory autoCloseableWorkingDirectory) {
+    return ArtifactDownloaderContext.builder()
+        .accountId(azureWebAppTaskParameters.getAccountId())
+        .activityId(azureWebAppTaskParameters.getActivityId())
+        .appId(azureWebAppTaskParameters.getAppId())
+        .commandName(azureWebAppTaskParameters.getCommandName())
+        .artifactStreamAttributes(streamAttributes)
+        .workingDirectory(autoCloseableWorkingDirectory.workingDir())
+        .build();
   }
 }

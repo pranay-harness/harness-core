@@ -6,6 +6,9 @@ import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+
+import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 
 import java.util.Map;
 import lombok.Builder;
@@ -31,5 +34,11 @@ public class AzureAppServiceDockerDeploymentContext extends AzureAppServiceDeplo
         connSettingsToRemove, slotName, targetSlotName, steadyStateTimeoutInMin);
     this.dockerSettings = dockerSettings;
     this.imagePathAndTag = imagePathAndTag;
+  }
+
+  @Override
+  public void deploy(
+      AzureAppServiceDeploymentService deploymentService, AzureAppServicePreDeploymentData preDeploymentData) {
+    deploymentService.deployDockerImage(this, preDeploymentData);
   }
 }

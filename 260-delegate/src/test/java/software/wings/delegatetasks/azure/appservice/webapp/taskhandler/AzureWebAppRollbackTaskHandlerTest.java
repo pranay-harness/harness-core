@@ -1,7 +1,12 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
+import static io.harness.azure.model.AzureConstants.AZURE_APP_SVC_ARTIFACT_DOWNLOAD_DIR_PATH;
+import static io.harness.azure.model.AzureConstants.REPOSITORY_DIR_PATH;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.IVAN;
+import static io.harness.rule.OwnerRule.JELENA;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -24,10 +29,14 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
+import software.wings.delegatetasks.azure.common.ArtifactDownloaderServiceLogWrapper;
 import software.wings.delegatetasks.azure.common.AzureAppServiceService;
+import software.wings.delegatetasks.azure.common.context.ArtifactDownloaderContext;
 
+import java.io.File;
 import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +57,7 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
   @Mock private LogCallback mockLogCallback;
   @Mock private AzureAppServiceDeploymentService azureAppServiceDeploymentService;
   @Mock private AzureAppServiceService azureAppServiceService;
-
+  @Mock private ArtifactDownloaderServiceLogWrapper artifactDownloaderServiceLogWrapper;
   @Spy @InjectMocks AzureWebAppRollbackTaskHandler azureWebAppRollbackTaskHandler;
 
   @Before
@@ -69,8 +78,8 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
     mockDeployDockerImage();
     mockRerouteProductionSlotTraffic();
 
-    AzureAppServiceTaskResponse azureAppServiceTaskResponse =
-        azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
+    AzureAppServiceTaskResponse azureAppServiceTaskResponse = azureWebAppRollbackTaskHandler.executeTaskInternal(
+        rollbackParameters, azureConfig, mockLogStreamingTaskClient, null);
 
     assertThat(azureAppServiceTaskResponse).isNotNull();
   }
@@ -85,8 +94,8 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
     mockDeployDockerImage();
     mockRerouteProductionSlotTraffic();
 
-    AzureAppServiceTaskResponse azureAppServiceTaskResponse =
-        azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
+    AzureAppServiceTaskResponse azureAppServiceTaskResponse = azureWebAppRollbackTaskHandler.executeTaskInternal(
+        rollbackParameters, azureConfig, mockLogStreamingTaskClient, null);
 
     assertThat(azureAppServiceTaskResponse).isNotNull();
     verify(azureAppServiceDeploymentService)
@@ -103,16 +112,16 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
 
     AzureWebAppRollbackParameters rollbackParameters =
         buildAzureWebAppRollbackParameters(AppServiceDeploymentProgress.SAVE_CONFIGURATION);
-    AzureAppServiceTaskResponse azureAppServiceTaskResponse =
-        azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
+    AzureAppServiceTaskResponse azureAppServiceTaskResponse = azureWebAppRollbackTaskHandler.executeTaskInternal(
+        rollbackParameters, azureConfig, mockLogStreamingTaskClient, null);
     assertThat(azureAppServiceTaskResponse).isNotNull();
     verify(azureAppServiceService, never()).fetchDeploymentData(any(), eq(SLOT_NAME));
     verify(azureAppServiceDeploymentService, never()).deployDockerImage(any(), any());
 
     rollbackParameters.getPreDeploymentData().setDeploymentProgressMarker(
         AppServiceDeploymentProgress.STOP_SLOT.name());
-    azureAppServiceTaskResponse =
-        azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
+    azureAppServiceTaskResponse = azureWebAppRollbackTaskHandler.executeTaskInternal(
+        rollbackParameters, azureConfig, mockLogStreamingTaskClient, null);
     assertThat(azureAppServiceTaskResponse).isNotNull();
     verify(azureAppServiceDeploymentService).startSlotAsyncWithSteadyCheck(any(), any());
     verify(azureAppServiceService, never()).fetchDeploymentData(any(), eq(SLOT_NAME));
@@ -120,15 +129,66 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
 
     rollbackParameters.getPreDeploymentData().setDeploymentProgressMarker(
         AppServiceDeploymentProgress.DEPLOYMENT_COMPLETE.name());
-    azureAppServiceTaskResponse =
-        azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
+    azureAppServiceTaskResponse = azureWebAppRollbackTaskHandler.executeTaskInternal(
+        rollbackParameters, azureConfig, mockLogStreamingTaskClient, null);
     assertThat(azureAppServiceTaskResponse).isNotNull();
     verify(azureAppServiceDeploymentService, never()).deployDockerImage(any(), any());
     verify(azureAppServiceDeploymentService, never()).stopSlotAsyncWithSteadyCheck(any(), any());
   }
 
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testRollbackArtifact() {
+    AzureConfig azureConfig = buildAzureConfig();
+    doNothing().when(azureAppServiceDeploymentService).deployPackage(any(), any());
+    mockRerouteProductionSlotTraffic();
+    ArtifactStreamAttributes artifactStreamAttributes = buildArtifactStreamAttributes(false);
+    File artifactWorkdir = new File(AZURE_APP_SVC_ARTIFACT_DOWNLOAD_DIR_PATH);
+    ArtifactDownloaderContext artifactDownloaderContext = ArtifactDownloaderContext.builder()
+                                                              .appId("appId")
+                                                              .accountId("accountId")
+                                                              .activityId("activityId")
+                                                              .commandName(ROLLBACK_COMMAND_NAME)
+                                                              .workingDirectory(artifactWorkdir)
+                                                              .build();
+
+    doReturn(new File("test/path"))
+        .when(artifactDownloaderServiceLogWrapper)
+        .fetchArtifactFileForDeploymentAndLog(artifactDownloaderContext, mockLogStreamingTaskClient);
+
+    AzureWebAppRollbackParameters rollbackParameters =
+        buildAzureWebAppRollbackParameters(AppServiceDeploymentProgress.SAVE_CONFIGURATION);
+    AzureAppServiceTaskResponse azureAppServiceTaskResponse = azureWebAppRollbackTaskHandler.executeTaskInternal(
+        rollbackParameters, azureConfig, mockLogStreamingTaskClient, artifactStreamAttributes);
+    assertThat(azureAppServiceTaskResponse).isNotNull();
+    verify(azureAppServiceService, never()).fetchDeploymentData(any(), eq(SLOT_NAME));
+    verify(azureAppServiceDeploymentService, never()).deployPackage(any(), any());
+
+    rollbackParameters.getPreDeploymentData().setDeploymentProgressMarker(
+        AppServiceDeploymentProgress.STOP_SLOT.name());
+    azureAppServiceTaskResponse = azureWebAppRollbackTaskHandler.executeTaskInternal(
+        rollbackParameters, azureConfig, mockLogStreamingTaskClient, artifactStreamAttributes);
+    assertThat(azureAppServiceTaskResponse).isNotNull();
+    verify(azureAppServiceDeploymentService).startSlotAsyncWithSteadyCheck(any(), any());
+    verify(azureAppServiceService, never()).fetchDeploymentData(any(), eq(SLOT_NAME));
+    verify(azureAppServiceDeploymentService, never()).deployPackage(any(), any());
+
+    rollbackParameters.getPreDeploymentData().setDeploymentProgressMarker(
+        AppServiceDeploymentProgress.DEPLOYMENT_COMPLETE.name());
+    azureAppServiceTaskResponse = azureWebAppRollbackTaskHandler.executeTaskInternal(
+        rollbackParameters, azureConfig, mockLogStreamingTaskClient, artifactStreamAttributes);
+    assertThat(azureAppServiceTaskResponse).isNotNull();
+    verify(azureAppServiceDeploymentService, never()).deployPackage(any(), any());
+    verify(azureAppServiceDeploymentService, never()).stopSlotAsyncWithSteadyCheck(any(), any());
+  }
+
   private void mockDeployDockerImage() {
     doNothing().when(azureAppServiceDeploymentService).deployDockerImage(any(), any());
+  }
+
+  private ArtifactStreamAttributes buildArtifactStreamAttributes(boolean isDockerArtifactType) {
+    return isDockerArtifactType ? null : ArtifactStreamAttributes.builder().build();
   }
 
   private void mockRerouteProductionSlotTraffic() {
