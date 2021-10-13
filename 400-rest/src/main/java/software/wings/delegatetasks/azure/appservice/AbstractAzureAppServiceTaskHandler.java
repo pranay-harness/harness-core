@@ -38,7 +38,9 @@ public abstract class AbstractAzureAppServiceTaskHandler {
     try {
       AzureAppServiceTaskResponse azureAppServiceTaskResponse =
           (AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SETUP
-              == azureAppServiceTaskParameters.getCommandType())
+                  == azureAppServiceTaskParameters.getCommandType()
+              || AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_ROLLBACK
+                  == azureAppServiceTaskParameters.getCommandType())
           ? executeTaskInternal(
               azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient, artifactStreamAttributes)
           : executeTaskInternal(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);

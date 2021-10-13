@@ -45,7 +45,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
@@ -305,7 +304,6 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
     AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder = AzureWebAppSlotSetupParameters.builder();
     provideAppServiceSettings(context, slotSetupParametersBuilder);
-    provideStartupCommand(context, slotSetupParametersBuilder);
 
     String appServiceName = context.renderExpression(appService);
     String deploySlotName =
@@ -323,6 +321,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
         .targetSlotName(targetSlotName)
         .webAppName(appServiceName)
         .timeoutIntervalInMin(getUserDefinedTimeOut(context))
+        .startupCommand(fetchStartupCommand(context))
         .build();
   }
 
@@ -381,13 +380,6 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     artifactStreamAttributes.setArtifactServerEncryptedDataDetails(encryptedDataDetails);
 
     return artifactStreamAttributes;
-  }
-
-  private void provideStartupCommand(
-      ExecutionContext context, AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder) {
-    Optional<UserDataSpecification> userDataSpecification = azureVMSSStateHelper.getUserDataSpecification(context);
-    userDataSpecification.ifPresent(
-        dataSpecification -> slotSetupParametersBuilder.startupCommand(dataSpecification.getData()));
   }
 
   private void provideInstanceElementDetails(

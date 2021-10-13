@@ -11,6 +11,9 @@ import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+
+import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -30,4 +33,9 @@ public class AzureAppServiceDeploymentContext {
   private String slotName;
   private String targetSlotName;
   private int steadyStateTimeoutInMin;
+
+  public void deploy(
+      AzureAppServiceDeploymentService deploymentService, AzureAppServicePreDeploymentData preDeploymentData) {
+    throw new UnsupportedOperationException("Concrete subclass method implementation not available yet");
+  }
 }
