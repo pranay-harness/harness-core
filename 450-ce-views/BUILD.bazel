@@ -25,7 +25,7 @@ java_library(
         "@maven//:com_healthmarketscience_sqlbuilder_sqlbuilder",
         "@maven//:io_leangen_graphql_spqr",
         "@maven//:javax_validation_validation_api",
-        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_hibernate_validator_hibernate_validator",
         "@maven//:org_jfree_jfreechart",
         "@maven//:org_mongodb_morphia_morphia",
         "@maven//:org_slf4j_slf4j_api",
