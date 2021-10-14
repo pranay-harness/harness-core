@@ -77,7 +77,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunPipelineWithInputSetPipelineYaml() {
-    doReturnStatementsForFreshRun(null, false, null, null);
+    doReturnStatementsForFreshRun(null, false, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runPipelineWithInputSetPipelineYaml(
         accountId, orgId, projectId, pipelineId, moduleType, runtimeInputYaml, useV2);
@@ -91,7 +91,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunPipelineWithInputSetReferencesList() {
-    doReturnStatementsForFreshRun(null, true, null, null);
+    doReturnStatementsForFreshRun(null, true, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runPipelineWithInputSetReferencesList(
         accountId, orgId, projectId, pipelineId, moduleType, inputSetReferences, pipelineBranch, pipelineRepoId);
@@ -100,7 +100,7 @@ public class PipelineExecutorTest extends CategoryTest {
 
     verify(validateAndMergeHelper, times(1))
         .getMergeInputSetFromPipelineTemplate(
-            accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId);
+            accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId, null);
     verifyStatementsForFreshRun(null, true, null);
   }
 
@@ -108,7 +108,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunStagesWithRuntimeInputYaml() {
-    doReturnStatementsForFreshRun(null, false, stageIdentifiers, null);
+    doReturnStatementsForFreshRun(null, false, stageIdentifiers);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runStagesWithRuntimeInputYaml(
         accountId, orgId, projectId, pipelineId, moduleType, runStageRequestDTO, useV2);
@@ -122,7 +122,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRerunPipelineWithInputSetPipelineYaml() {
-    doReturnStatementsForFreshRun(originalExecutionId, false, null, null);
+    doReturnStatementsForFreshRun(originalExecutionId, false, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.rerunPipelineWithInputSetPipelineYaml(
         accountId, orgId, projectId, pipelineId, moduleType, originalExecutionId, runtimeInputYaml, useV2);
@@ -136,7 +136,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRerunPipelineWithInputSetReferencesList() {
-    doReturnStatementsForFreshRun(originalExecutionId, true, null, null);
+    doReturnStatementsForFreshRun(originalExecutionId, true, null);
 
     PlanExecutionResponseDto planExecutionResponse =
         pipelineExecutor.rerunPipelineWithInputSetReferencesList(accountId, orgId, projectId, pipelineId, moduleType,
@@ -147,13 +147,13 @@ public class PipelineExecutorTest extends CategoryTest {
     verifyStatementsForFreshRun(originalExecutionId, true, null);
   }
 
-  private void doReturnStatementsForFreshRun(String originalExecutionId, boolean addValidateAndMergeHelperDoReturn,
-      List<String> stageIdentifiers, List<String> identifierOfSkipStagess) {
+  private void doReturnStatementsForFreshRun(
+      String originalExecutionId, boolean addValidateAndMergeHelperDoReturn, List<String> stageIdentifiers) {
     if (addValidateAndMergeHelperDoReturn) {
       doReturn(runtimeInputYaml)
           .when(validateAndMergeHelper)
           .getMergeInputSetFromPipelineTemplate(
-              accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId);
+              accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId, null);
     }
 
     doReturn(pipelineEntity).when(executionHelper).fetchPipelineEntity(accountId, orgId, projectId, pipelineId);
@@ -180,7 +180,7 @@ public class PipelineExecutorTest extends CategoryTest {
     if (verifyValidateAndMergeHelper) {
       verify(validateAndMergeHelper, times(1))
           .getMergeInputSetFromPipelineTemplate(
-              accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId);
+              accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId, null);
     }
 
     verify(executionHelper, times(1)).fetchPipelineEntity(accountId, orgId, projectId, pipelineId);
