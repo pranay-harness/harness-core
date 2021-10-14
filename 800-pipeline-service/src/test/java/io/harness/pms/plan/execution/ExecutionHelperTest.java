@@ -204,6 +204,9 @@ public class ExecutionHelperTest extends CategoryTest {
   public void testBuildExecutionArgs() throws IOException {
     buildExecutionArgsMocks();
 
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(mergedPipelineYaml).build();
+    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml,
         Collections.emptyList(), executionTriggerInfo, null, false, null, null, null);
     executionMetadataAssertions(execArgs.getMetadata());
@@ -257,6 +260,9 @@ public class ExecutionHelperTest extends CategoryTest {
   public void testBuildExecutionArgsForRunStage() throws IOException {
     buildExecutionArgsMocks();
 
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(mergedPipelineYaml).build();
+    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml,
         Collections.singletonList("s2"), executionTriggerInfo, null, false, null, null, null);
     executionMetadataAssertions(execArgs.getMetadata());
