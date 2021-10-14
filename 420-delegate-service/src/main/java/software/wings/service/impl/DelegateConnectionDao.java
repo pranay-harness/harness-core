@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateConnectionDetails;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.DelegateConnection;
@@ -36,7 +37,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @OwnedBy(DEL)
 public class DelegateConnectionDao {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
 
   public void delegateDisconnected(String accountId, String delegateConnectionId) {
     log.info("Mark as disconnected delegateConnectionId: {}", delegateConnectionId);

@@ -19,7 +19,7 @@ import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.delegate.beans.ProfileScopingRulesDetails;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder;
@@ -68,7 +68,7 @@ import org.jetbrains.annotations.NotNull;
 @BreakDependencyOn("software.wings.beans.Service")
 @OwnedBy(DEL)
 public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsService {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private DelegateService delegateService;
   @Inject private DelegateCache delegateCache;
 

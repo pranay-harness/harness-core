@@ -24,8 +24,8 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.manage.GlobalContextManager;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
 import io.harness.security.DelegateTokenAuthenticator;
 
 import software.wings.beans.Account;
@@ -55,7 +55,7 @@ import org.mongodb.morphia.query.Query;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateTokenAuthenticatorImpl implements DelegateTokenAuthenticator {
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
 
   private final LoadingCache<String, String> keyCache =
       Caffeine.newBuilder()

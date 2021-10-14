@@ -12,7 +12,7 @@ import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 
 import com.google.inject.Inject;
@@ -26,11 +26,11 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Slf4j
 public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorMapService {
-  @Inject private HPersistence hPersistence;
+  @Inject private DMSPersistence persistence;
 
   @Override
   public List<TaskSelectorMap> list(String accountId) {
-    return hPersistence.createQuery(TaskSelectorMap.class).filter(TaskSelectorMapKeys.accountId, accountId).asList();
+    return persistence.createQuery(TaskSelectorMap.class).filter(TaskSelectorMapKeys.accountId, accountId).asList();
   }
 
   @Override
@@ -42,7 +42,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
     }
 
     try {
-      hPersistence.save(taskSelectorMap);
+      persistence.save(taskSelectorMap);
     } catch (DuplicateKeyException e) {
       ignoredOnPurpose(e);
       throw new InvalidRequestException("Task selector map with given task group already exists for this account");
@@ -56,11 +56,11 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
   public TaskSelectorMap update(TaskSelectorMap taskSelectorMap) {
     log.info("Updating task selector map:" + taskSelectorMap);
     if (isEmpty(taskSelectorMap.getSelectors())) {
-      hPersistence.delete(TaskSelectorMap.class, taskSelectorMap.getUuid());
+      persistence.delete(TaskSelectorMap.class, taskSelectorMap.getUuid());
       return null;
     } else {
-      hPersistence.update(taskSelectorMap,
-          hPersistence.createUpdateOperations(TaskSelectorMap.class)
+      persistence.update(taskSelectorMap,
+          persistence.createUpdateOperations(TaskSelectorMap.class)
               .set(TaskSelectorMapKeys.selectors, taskSelectorMap.getSelectors()));
       return taskSelectorMap;
     }
@@ -68,7 +68,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
 
   @Override
   public TaskSelectorMap addTaskSelector(String accountId, String taskSelectorMapUuid, String taskSelector) {
-    TaskSelectorMap existingMap = hPersistence.createQuery(TaskSelectorMap.class)
+    TaskSelectorMap existingMap = persistence.createQuery(TaskSelectorMap.class)
                                       .filter(TaskSelectorMapKeys.accountId, accountId)
                                       .filter(ID_KEY, taskSelectorMapUuid)
                                       .get();
@@ -79,7 +79,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
     }
     if (!existingMap.getSelectors().contains(taskSelector)) {
       existingMap.getSelectors().add(taskSelector);
-      hPersistence.save(existingMap);
+      persistence.save(existingMap);
       log.info("Updated task selector map {} for task category {} with new task selector", taskSelectorMapUuid,
           existingMap.getTaskGroup(), taskSelector);
     }
@@ -88,7 +88,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
 
   @Override
   public TaskSelectorMap removeTaskSelector(String accountId, String taskSelectorMapUuid, String taskSelector) {
-    TaskSelectorMap existingMap = hPersistence.createQuery(TaskSelectorMap.class)
+    TaskSelectorMap existingMap = persistence.createQuery(TaskSelectorMap.class)
                                       .filter(TaskSelectorMapKeys.accountId, accountId)
                                       .filter(ID_KEY, taskSelectorMapUuid)
                                       .get();
@@ -100,11 +100,11 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
     if (isNotEmpty(existingMap.getSelectors()) && existingMap.getSelectors().contains(taskSelector)) {
       existingMap.getSelectors().remove(taskSelector);
       if (existingMap.getSelectors().isEmpty()) {
-        hPersistence.delete(TaskSelectorMap.class, taskSelectorMapUuid);
+        persistence.delete(TaskSelectorMap.class, taskSelectorMapUuid);
         existingMap = null;
         log.info("Delegate task selector map {} deleted", taskSelectorMapUuid);
       } else {
-        hPersistence.save(existingMap);
+        persistence.save(existingMap);
         log.info("Delegate task selector map {} updated", taskSelectorMapUuid);
       }
     }
@@ -113,7 +113,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
 
   @Override
   public TaskSelectorMap get(String accountId, TaskGroup taskGroup) {
-    return hPersistence.createQuery(TaskSelectorMap.class)
+    return persistence.createQuery(TaskSelectorMap.class)
         .filter(TaskSelectorMapKeys.accountId, accountId)
         .filter(TaskSelectorMapKeys.taskGroup, taskGroup)
         .get();

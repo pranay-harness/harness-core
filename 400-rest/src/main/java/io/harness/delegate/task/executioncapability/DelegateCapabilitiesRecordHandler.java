@@ -26,7 +26,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
@@ -51,7 +51,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
   private static final FindOptions FETCH_LIMIT_OPTIONS = new FindOptions().limit(10);
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<Delegate> persistenceProvider;
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private DelegateService delegateService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CapabilityService capabilityService;

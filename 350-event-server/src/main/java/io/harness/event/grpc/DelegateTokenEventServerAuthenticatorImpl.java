@@ -20,8 +20,8 @@ import io.harness.exception.RevokedTokenException;
 import io.harness.exception.WingsException;
 import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.manage.GlobalContextManager;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
 import io.harness.security.DelegateTokenAuthenticator;
 
 import software.wings.beans.Account;
@@ -56,7 +56,7 @@ import org.mongodb.morphia.query.Query;
 @Singleton
 @OwnedBy(DEL)
 public class DelegateTokenEventServerAuthenticatorImpl implements DelegateTokenAuthenticator {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
 
   private final LoadingCache<String, String> keyCache =
       Caffeine.newBuilder()

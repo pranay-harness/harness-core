@@ -15,8 +15,8 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
 import io.harness.observer.Subject;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCallbackRegistry;
@@ -45,7 +45,7 @@ import org.mongodb.morphia.query.Query;
 @ValidateOnExecution
 @Slf4j
 public class DelegateTaskServiceImpl implements DelegateTaskService {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateCallbackRegistry delegateCallbackRegistry;

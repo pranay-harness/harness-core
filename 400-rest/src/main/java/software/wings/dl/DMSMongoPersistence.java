@@ -1,30 +1,42 @@
 package software.wings.dl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import io.harness.beans.*;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
+import static io.harness.encryption.EncryptionReflectUtils.isSecretReference;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.persistence.HQuery.allChecks;
+import static io.harness.persistence.HQuery.excludeAuthority;
+
+import static software.wings.utils.WingsReflectionUtils.buildSecretIdsToParentsMap;
+import static software.wings.utils.WingsReflectionUtils.fetchSecretParentsUpdateDetailList;
+import static software.wings.utils.WingsReflectionUtils.getEncryptableSetting;
+import static software.wings.utils.WingsReflectionUtils.isSetByYaml;
+
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedDataParent;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
+import io.harness.beans.SecretParentsUpdateDetail;
+import io.harness.beans.SecretText;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.WingsException;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.PageController;
-import io.harness.persistence.*;
-
-
-import com.google.inject.name.Named;
-import io.dropwizard.lifecycle.Managed;
+import io.harness.persistence.AccountAccess;
+import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HIterator;
+import io.harness.persistence.HQuery;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAware;
 import io.harness.reflection.ReflectionUtils;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.DatastoreImpl;
-import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.Base;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -34,23 +46,32 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import io.dropwizard.lifecycle.Managed;
 import java.lang.reflect.Field;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
-import static io.harness.encryption.EncryptionReflectUtils.isSecretReference;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.persistence.HQuery.allChecks;
-import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.utils.WingsReflectionUtils.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.DatastoreImpl;
+import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
-public class DMSMongoPersistence extends MongoPersistence implements WingsPersistence, Managed {
-
+public class DMSMongoPersistence extends MongoPersistence implements DMSPersistence, Managed {
   @Inject private SecretManager secretManager;
 
   @Inject
@@ -59,13 +80,18 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
   }
 
   @Override
-  public void start() throws Exception {
-    // Do nothing
+  public AdvancedDatastore getDatastore(PersistentEntity entity) {
+    return super.getDatastore(entity);
   }
 
   @Override
-  public void stop() throws Exception {
-    close();
+  public AdvancedDatastore getDatastore(Class cls) {
+    return super.getDatastore(cls);
+  }
+
+  @Override
+  public <T extends PersistentEntity> void upsert(Query<T> query, UpdateOperations<T> updateOperations) {
+    super.upsert(query, updateOperations);
   }
 
   @Override
@@ -86,6 +112,16 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
   }
 
   @Override
+  public <T extends PersistentEntity> Query<T> createAuthorizedQuery(Class<T> collectionClass) {
+    return null;
+  }
+
+  @Override
+  public Query createAuthorizedQuery(Class collectionClass, boolean disableValidation) {
+    return null;
+  }
+
+  @Override
   public <T extends PersistentEntity> void saveIgnoringDuplicateKeys(List<T> ts) {
     for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
       T t = iterator.next();
@@ -97,20 +133,6 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
     super.saveIgnoringDuplicateKeys(ts);
   }
 
-
-
-  @Override
-  public <T extends Base> T saveAndGet(Class<T> cls, T object) {
-    Object id = save(object);
-    Query<T> query = createQuery(cls).filter(ID_KEY, id);
-    if (object.getShardKeys() != null) {
-      object.getShardKeys().keySet().forEach(key -> query.filter(key, object.getShardKeys().get(key)));
-    }
-    return query.get();
-  }
-
-
-
   @Override
   public <T extends PersistentEntity> void updateField(Class<T> cls, String entityId, String fieldName, Object value) {
     Map<String, Object> keyValuePairs = new HashMap<>();
@@ -120,13 +142,13 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
 
   @Override
   public <T extends PersistentEntity> void updateFields(
-          Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
+      Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
     updateFields(cls, entityId, keyValuePairs, Collections.emptySet());
   }
 
   @Override
   public <T extends PersistentEntity> void updateFields(
-          Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove) {
+      Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove) {
     final AdvancedDatastore datastore = getDatastore(cls);
 
     Query<T> query = datastore.createQuery(cls).filter(ID_KEY, entityId);
@@ -144,16 +166,16 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
         if (value instanceof EncryptableSetting) {
           EncryptableSetting encryptableSetting = (EncryptableSetting) value;
           EncryptableSetting savedEncryptableSetting = savedObject != null
-                  ? (EncryptableSetting) ReflectionUtils.getFieldValue(savedObject, entry.getKey())
-                  : null;
+              ? (EncryptableSetting) ReflectionUtils.getFieldValue(savedObject, entry.getKey())
+              : null;
           setEncryptedFields(encryptableSetting);
           encryptPlainTextSecrets(encryptableSetting, savedEncryptableSetting);
           shouldUpdateSecretParents = true;
         } else if (encryptable && savedObject != null) {
           EncryptableSetting encryptableSetting = (EncryptableSetting) savedObject;
           Optional<Field> f = fieldsWithEncryptedAnnotation.stream()
-                  .filter(field -> field.getName().equals(entry.getKey()))
-                  .findFirst();
+                                  .filter(field -> field.getName().equals(entry.getKey()))
+                                  .findFirst();
 
           if (f.isPresent() && isEncryptedFieldDuringUpdate(f.get(), encryptableSetting, keyValuePairs)) {
             Field encryptedField = f.get();
@@ -163,7 +185,7 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
               operations.set(encryptedRefField.getName(), value);
             } else {
               String encryptedId =
-                      encryptPlainTextSecret(encryptedField, (char[]) value, encryptableSetting, encryptableSetting);
+                  encryptPlainTextSecret(encryptedField, (char[]) value, encryptableSetting, encryptableSetting);
               operations.set(encryptedRefField.getName(), encryptedId);
             }
             operations.unset(encryptedField.getName());
@@ -178,7 +200,7 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
         if (encryptable && savedObject != null) {
           EncryptableSetting encryptableSetting = (EncryptableSetting) savedObject;
           Optional<Field> f =
-                  fieldsWithEncryptedAnnotation.stream().filter(field -> field.getName().equals(fieldToRemove)).findFirst();
+              fieldsWithEncryptedAnnotation.stream().filter(field -> field.getName().equals(fieldToRemove)).findFirst();
           if (f.isPresent()) {
             Field encryptedRefField = getEncryptedRefField(f.get(), encryptableSetting);
             operations.unset(encryptedRefField.getName());
@@ -197,6 +219,7 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
       updateEncryptionReferencesIfNecessary(updatedObject, entityId, savedObject);
     }
   }
+
   @Override
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
     if (cls.equals(SettingAttribute.class) || EncryptableSetting.class.isAssignableFrom(cls)) {
@@ -236,12 +259,22 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
   }
 
   @Override
+  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<HQuery.QueryChecks> queryChecks) {
+    if (!authFilters(req, cls)) {
+      return aPageResponse().withTotal(0).build();
+    }
+    return super.query(cls, req, queryChecks);
+  }
+
+  @Override
   public <T extends PersistentEntity> Query<T> convertToQuery(Class<T> cls, PageRequest<T> req) {
     return convertToQuery(cls, req, allChecks);
   }
 
+  @SuppressWarnings("deprecation")
   @Override
-  public <T extends PersistentEntity> Query<T> convertToQuery(Class<T> cls, PageRequest<T> req, Set<HQuery.QueryChecks> queryChecks) {
+  public <T extends PersistentEntity> Query<T> convertToQuery(
+      Class<T> cls, PageRequest<T> req, Set<HQuery.QueryChecks> queryChecks) {
     AdvancedDatastore advancedDatastore = getDatastore(cls);
     Query<T> query = advancedDatastore.createQuery(cls);
     authorizeQuery(cls, query);
@@ -253,43 +286,23 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
   }
 
   @Override
-  public <T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable) {
-    return null;
+  public void start() throws Exception {
+    // Do nothing
   }
 
   @Override
-  public <T extends PersistentEntity> Query<T> createAuthorizedQuery(Class<T> collectionClass) {
-    return null;
-  }
-
-  @Override
-  public Query createAuthorizedQuery(Class collectionClass, boolean disableValidation) {
-    return null;
-  }
-
-  @Override
-  public AdvancedDatastore getDatastore(PersistentEntity entity) {
-    return null;
-  }
-
-  @Override
-  public AdvancedDatastore getDatastore(Class cls) {
-    return null;
-  }
-
-  @Override
-  public <T extends PersistentEntity> void upsert(Query<T> query, UpdateOperations<T> updateOperations) {
-
+  public void stop() throws Exception {
+    close();
   }
 
   private <T extends PersistentEntity> Optional<T> getSavedEntity(@NonNull T entity) {
     Optional<String> entityId =
-            entity instanceof UuidAware ? Optional.ofNullable(((UuidAware) entity).getUuid()) : Optional.empty();
+        entity instanceof UuidAware ? Optional.ofNullable(((UuidAware) entity).getUuid()) : Optional.empty();
     return entityId.flatMap(uuid -> Optional.ofNullable(getDatastore(entity).get((Class<T>) entity.getClass(), uuid)));
   }
 
   private boolean isEncryptedFieldDuringUpdate(
-          Field f, EncryptableSetting savedObject, Map<String, Object> keyValuePairs) {
+      Field f, EncryptableSetting savedObject, Map<String, Object> keyValuePairs) {
     List<Field> encryptedFields = savedObject.getEncryptedFields();
     if (savedObject.getClass().equals(ServiceVariable.class)) {
       return keyValuePairs.get("type") == ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -305,17 +318,17 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
         EncryptableSetting encryptableSetting = encryptableSettingOptional.get();
         setEncryptedFields(encryptableSetting);
         Optional<EncryptableSetting> savedEncryptableSettingOptional =
-                savedEntity != null ? getEncryptableSetting(savedEntity) : Optional.empty();
+            savedEntity != null ? getEncryptableSetting(savedEntity) : Optional.empty();
         EncryptableSetting savedEncryptableSetting = savedEncryptableSettingOptional.orElse(null);
         encryptPlainTextSecrets(encryptableSetting, savedEncryptableSetting);
         return true;
       }
     } catch (IllegalAccessException e) {
       throw new EncryptDecryptException(
-              String.format(
-                      "Illegal access exception while accessing the encrypted fields of object of Class %s while encryption",
-                      entity.getClass()),
-              e);
+          String.format(
+              "Illegal access exception while accessing the encrypted fields of object of Class %s while encryption",
+              entity.getClass()),
+          e);
     }
     return false;
   }
@@ -338,22 +351,22 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
 
       if (secretIdOptional.isPresent() && isSetByYaml(secretIdOptional.get())) {
         Optional<EncryptedData> encryptedDataOptional = Optional.ofNullable(
-                secretManager.getEncryptedDataFromYamlRef(secretIdOptional.get(), object.getAccountId()));
+            secretManager.getEncryptedDataFromYamlRef(secretIdOptional.get(), object.getAccountId()));
         EncryptedData encryptedData = encryptedDataOptional.<EncryptDecryptException>orElseThrow(
-                () -> { throw new EncryptDecryptException("The yaml reference is not valid."); });
+            () -> { throw new EncryptDecryptException("The yaml reference is not valid."); });
         encryptedRefField.set(object, encryptedData.getUuid());
       }
     }
   }
 
   private Optional<EncryptedData> getEncryptedDataFromField(
-          @NonNull EncryptableSetting object, @NonNull Field encryptedRefField) throws IllegalAccessException {
+      @NonNull EncryptableSetting object, @NonNull Field encryptedRefField) throws IllegalAccessException {
     Optional<String> secretIdOptional = Optional.ofNullable((String) encryptedRefField.get(object));
     return secretIdOptional.flatMap(secretId -> Optional.ofNullable(get(EncryptedData.class, secretId)));
   }
 
   private void encryptPlainTextSecrets(@NonNull EncryptableSetting object, EncryptableSetting savedObject)
-          throws IllegalAccessException {
+      throws IllegalAccessException {
     List<Field> encryptedFields = Optional.ofNullable(object.getEncryptedFields()).orElseGet(Collections::emptyList);
     for (Field encryptedField : encryptedFields) {
       encryptedField.setAccessible(true);
@@ -371,11 +384,11 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
   }
 
   private String encryptPlainTextSecret(@NonNull Field encryptedField, @NonNull char[] secret,
-                                        @NonNull EncryptableSetting object, EncryptableSetting savedObject) throws IllegalAccessException {
+      @NonNull EncryptableSetting object, EncryptableSetting savedObject) throws IllegalAccessException {
     Field encryptedRefField = getEncryptedRefField(encryptedField, object);
     encryptedRefField.setAccessible(true);
     Optional<EncryptedData> savedSecretOptional =
-            savedObject == null ? Optional.empty() : getEncryptedDataFromField(savedObject, encryptedRefField);
+        savedObject == null ? Optional.empty() : getEncryptedDataFromField(savedObject, encryptedRefField);
 
     String encryptedId;
     if (savedSecretOptional.isPresent()) {
@@ -388,44 +401,44 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
 
   private String updateSecret(@NonNull String accountId, @NonNull EncryptedData encryptedData, @NonNull char[] secret) {
     secretManager.updateSecretText(accountId, encryptedData.getUuid(),
-            SecretText.builder()
-                    .value(String.valueOf(secret))
-                    .name(encryptedData.getName())
-                    .scopedToAccount(encryptedData.isScopedToAccount())
-                    .usageRestrictions(encryptedData.getUsageRestrictions())
-                    .hideFromListing(true)
-                    .build(),
-            false);
+        SecretText.builder()
+            .value(String.valueOf(secret))
+            .name(encryptedData.getName())
+            .scopedToAccount(encryptedData.isScopedToAccount())
+            .usageRestrictions(encryptedData.getUsageRestrictions())
+            .hideFromListing(true)
+            .build(),
+        false);
     return encryptedData.getUuid();
   }
 
   private String createSecret(@NonNull String accountId, @NonNull char[] secret, @NonNull SettingVariableTypes type) {
     return secretManager.saveSecretText(accountId,
-            (SecretText) SecretText.builder()
-                    .value(String.valueOf(secret))
-                    .name(UUID.randomUUID().toString())
-                    .hideFromListing(true)
-                    .build(),
-            false);
+        (SecretText) SecretText.builder()
+            .value(String.valueOf(secret))
+            .name(UUID.randomUUID().toString())
+            .hideFromListing(true)
+            .build(),
+        false);
   }
 
   private <T extends PersistentEntity> void updateEncryptionReferencesIfNecessary(
-          @NonNull T entity, @NonNull String parentId, T savedEntity) {
+      @NonNull T entity, @NonNull String parentId, T savedEntity) {
     Optional<EncryptableSetting> encryptableSettingOptional = getEncryptableSetting(entity);
     Optional<EncryptableSetting> savedEncryptableSettingOptional =
-            savedEntity != null ? getEncryptableSetting(savedEntity) : Optional.empty();
+        savedEntity != null ? getEncryptableSetting(savedEntity) : Optional.empty();
 
     try {
       Map<String, Set<EncryptedDataParent>> currentState = encryptableSettingOptional.isPresent()
-              ? buildSecretIdsToParentsMap(encryptableSettingOptional.get(), parentId)
-              : new HashMap<>();
+          ? buildSecretIdsToParentsMap(encryptableSettingOptional.get(), parentId)
+          : new HashMap<>();
       Map<String, Set<EncryptedDataParent>> previousState = savedEncryptableSettingOptional.isPresent()
-              ? buildSecretIdsToParentsMap(savedEncryptableSettingOptional.get(), parentId)
-              : new HashMap<>();
+          ? buildSecretIdsToParentsMap(savedEncryptableSettingOptional.get(), parentId)
+          : new HashMap<>();
 
       if (!previousState.isEmpty() || !currentState.isEmpty()) {
         List<SecretParentsUpdateDetail> secretParentsUpdateDetails =
-                fetchSecretParentsUpdateDetailList(previousState, currentState);
+            fetchSecretParentsUpdateDetailList(previousState, currentState);
 
         for (SecretParentsUpdateDetail secretParentsUpdateDetail : secretParentsUpdateDetails) {
           updateParent(secretParentsUpdateDetail);
@@ -434,10 +447,10 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
 
     } catch (IllegalAccessException e) {
       throw new EncryptDecryptException(
-              String.format(
-                      "Illegal access exception while accessing the encrypted fields of object of Class %s while updating parents",
-                      entity.getClass()),
-              e);
+          String.format(
+              "Illegal access exception while accessing the encrypted fields of object of Class %s while updating parents",
+              entity.getClass()),
+          e);
     }
   }
 
@@ -448,11 +461,11 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
         String parentId = ((UuidAware) savedEntityOptional.get()).getUuid();
         Optional<EncryptableSetting> encryptableSettingOptional = getEncryptableSetting(savedEntityOptional.get());
         Map<String, Set<EncryptedDataParent>> secretIdsToParentsMap = encryptableSettingOptional.isPresent()
-                ? buildSecretIdsToParentsMap(encryptableSettingOptional.get(), parentId)
-                : new HashMap<>();
+            ? buildSecretIdsToParentsMap(encryptableSettingOptional.get(), parentId)
+            : new HashMap<>();
         if (secretIdsToParentsMap.size() > 0) {
           List<SecretParentsUpdateDetail> secretParentsUpdateDetails =
-                  fetchSecretParentsUpdateDetailList(secretIdsToParentsMap, new HashMap<>());
+              fetchSecretParentsUpdateDetailList(secretIdsToParentsMap, new HashMap<>());
           for (SecretParentsUpdateDetail secretParentsUpdateDetail : secretParentsUpdateDetails) {
             updateParent(secretParentsUpdateDetail);
           }
@@ -460,16 +473,15 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
       }
     } catch (IllegalAccessException e) {
       throw new EncryptDecryptException(
-              String.format(
-                      "Illegal access exception while accessing the encrypted fields of object of Class %s while removing parents",
-                      entity.getClass()),
-              e);
+          String.format(
+              "Illegal access exception while accessing the encrypted fields of object of Class %s while removing parents",
+              entity.getClass()),
+          e);
     }
   }
-
   private void updateParent(@NonNull SecretParentsUpdateDetail secretParentsUpdateDetail) {
     EncryptedData encryptedData =
-            Optional.ofNullable(get(EncryptedData.class, secretParentsUpdateDetail.getSecretId())).orElse(null);
+        Optional.ofNullable(get(EncryptedData.class, secretParentsUpdateDetail.getSecretId())).orElse(null);
 
     if (encryptedData == null) {
       return;
@@ -485,16 +497,53 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
     save(encryptedData);
   }
 
-  private <T extends PersistentEntity> Query<T> authorizeQuery(Class<T> collectionClass, Query query) {
-    if (authFilters(query, collectionClass)) {
-      return query;
-    }
+  private <T> boolean authFilters(PageRequest<T> pageRequest, Class<T> beanClass) {
     User user = UserThreadLocal.get();
-    if (user != null) {
-      log.error("User [{}] doesn't have enough permission to perform operation. ", user);
+    // If its not a user operation, return
+    if (user == null) {
+      return true;
     }
-    throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+
+    UserRequestContext userRequestContext = user.getUserRequestContext();
+
+    // No user request context set by the filter.
+    if (userRequestContext == null) {
+      return true;
+    }
+
+    if (userRequestContext.isAppIdFilterRequired()) {
+      if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
+        UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+        if (AccountAccess.class.isAssignableFrom(beanClass) && userPermissionInfo.isHasAllAppAccess()) {
+          pageRequest.addFilter("accountId", SearchFilter.Operator.EQ, userRequestContext.getAccountId());
+        } else {
+          pageRequest.addFilter("appId", SearchFilter.Operator.IN, userRequestContext.getAppIds().toArray());
+        }
+      } else {
+        return false;
+      }
+    }
+
+    if (userRequestContext.isEntityIdFilterRequired()) {
+      String beanClassName = beanClass.getName();
+
+      UserRequestContext.EntityInfo entityInfo = userRequestContext.getEntityInfoMap().get(beanClassName);
+
+      if (entityInfo == null) {
+        return true;
+      }
+
+      if (CollectionUtils.isNotEmpty(entityInfo.getEntityIds())) {
+        pageRequest.addFilter(
+            entityInfo.getEntityFieldName(), SearchFilter.Operator.IN, entityInfo.getEntityIds().toArray());
+      } else {
+        return false;
+      }
+    }
+
+    return true;
   }
+
   private <T> boolean authFilters(Query query, Class<T> beanClass) {
     User user = UserThreadLocal.get();
     // If its not a user operation, return
@@ -541,4 +590,14 @@ public class DMSMongoPersistence extends MongoPersistence implements WingsPersis
     return true;
   }
 
+  private <T extends PersistentEntity> Query<T> authorizeQuery(Class<T> collectionClass, Query query) {
+    if (authFilters(query, collectionClass)) {
+      return query;
+    }
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      log.error("User [{}] doesn't have enough permission to perform operation. ", user);
+    }
+    throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+  }
 }

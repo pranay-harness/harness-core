@@ -14,8 +14,8 @@ import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -29,11 +29,11 @@ import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
 public class PerpetualTaskRecordDao {
-  private final HPersistence persistence;
+  private final DMSPersistence persistence;
   private static final int MAX_FIBONACCI_INDEX_FOR_TASK_ASSIGNMENT = 8;
 
   @Inject
-  public PerpetualTaskRecordDao(HPersistence persistence) {
+  public PerpetualTaskRecordDao(DMSPersistence persistence) {
     this.persistence = persistence;
   }
 

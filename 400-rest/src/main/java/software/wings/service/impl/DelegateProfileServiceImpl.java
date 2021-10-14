@@ -37,7 +37,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 import io.harness.secrets.SecretService;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateProfileObserver;
@@ -82,7 +82,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   // Command to use secrets in startUp script is ${secrets.getValue("secretName")}. Hence the pattern is like this.
   private static final Pattern secretNamePattern = Pattern.compile("\\$\\{secrets.getValue\\([^{}]+\\)}");
 
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretService secretService;

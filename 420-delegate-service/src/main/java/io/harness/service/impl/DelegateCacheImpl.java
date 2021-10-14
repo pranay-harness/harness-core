@@ -11,7 +11,7 @@ import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 import io.harness.service.intfc.DelegateCache;
 
 import com.google.common.cache.CacheBuilder;
@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 public class DelegateCacheImpl implements DelegateCache {
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
 
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
 
   private LoadingCache<String, Optional<Delegate>> delegateCache =
       CacheBuilder.newBuilder()

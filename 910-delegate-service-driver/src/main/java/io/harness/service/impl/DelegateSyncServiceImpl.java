@@ -13,7 +13,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskRespon
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.BinaryResponseData;
@@ -35,7 +35,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateSyncServiceImpl implements DelegateSyncService {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
   @Inject @Named("disableDeserialization") private boolean disableDeserialization;
 

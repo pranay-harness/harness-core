@@ -9,6 +9,7 @@ import static java.lang.System.currentTimeMillis;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateProgressService;
@@ -29,7 +30,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateProgressServiceImpl implements DelegateProgressService {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("disableDeserialization") private boolean disableDeserialization;

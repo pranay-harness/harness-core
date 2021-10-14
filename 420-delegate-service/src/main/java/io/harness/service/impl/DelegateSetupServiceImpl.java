@@ -32,6 +32,7 @@ import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateInsightsService;
@@ -62,7 +63,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateSetupServiceImpl implements DelegateSetupService {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private DelegateCache delegateCache;
   @Inject private DelegateInsightsService delegateInsightsService;
   @Inject private DelegateConnectionDao delegateConnectionDao;

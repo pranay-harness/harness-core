@@ -150,6 +150,7 @@ import io.harness.pcf.CfDeploymentManager;
 import io.harness.perpetualtask.PerpetualTaskScheduleService;
 import io.harness.perpetualtask.PerpetualTaskScheduleServiceImpl;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.polling.client.PollResourceClientModule;
 import io.harness.queue.QueueController;
@@ -892,14 +893,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(PipelineConfig.class).toInstance(configuration.getPipelineConfig());
     bind(DelegateConfiguration.class).toInstance(DelegateConfiguration.builder().build());
     bind(QueueController.class).to(ConfigurationController.class);
-    if (configuration.isDisableDelegateMgmtInManager()){
-        bind(HPersistence.class).to(DMSMongoPersistence.class);
-    }else{
-        bind(HPersistence.class).to(WingsMongoPersistence.class);
-    }
-
-
+    bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
+    bind(DMSPersistence.class).to(DMSMongoPersistence.class);
     bind(AppService.class).to(AppServiceImpl.class);
     bind(HarnessSampleAppService.class).to(HarnessSampleAppServiceImpl.class);
     bind(SampleDataProviderService.class).to(SampleDataProviderServiceImpl.class);

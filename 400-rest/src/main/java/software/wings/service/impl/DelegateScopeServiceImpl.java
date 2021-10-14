@@ -24,7 +24,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 
 import software.wings.beans.Event;
 import software.wings.service.intfc.DelegateScopeService;
@@ -46,7 +46,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 public class DelegateScopeServiceImpl implements DelegateScopeService {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private DelegateService delegateService;
   @Inject private AuditServiceHelper auditServiceHelper;
 

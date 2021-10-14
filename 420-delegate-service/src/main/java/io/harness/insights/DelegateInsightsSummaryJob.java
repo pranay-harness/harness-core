@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateInsightsType;
 import io.harness.insights.DelegateInsightsSummaryKey.DelegateInsightsSummaryKeyBuilder;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 
@@ -46,7 +47,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(DEL)
 @Slf4j
 public class DelegateInsightsSummaryJob implements Runnable {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private DelegateCache delegateCache;
 
   @Override

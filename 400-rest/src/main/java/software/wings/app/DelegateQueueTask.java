@@ -31,6 +31,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -69,7 +70,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class DelegateQueueTask implements Runnable {
   private static final SecureRandom random = new SecureRandom();
 
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;

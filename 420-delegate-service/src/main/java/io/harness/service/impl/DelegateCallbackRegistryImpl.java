@@ -7,7 +7,7 @@ import io.harness.callback.DelegateCallback;
 import io.harness.delegate.beans.DelegateCallbackRecord;
 import io.harness.delegate.beans.DelegateCallbackRecord.DelegateCallbackRecordKeys;
 import io.harness.exception.UnexpectedException;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateTaskResultsProvider;
@@ -34,7 +34,7 @@ import org.apache.commons.codec.binary.Base64;
 @ValidateOnExecution
 @Slf4j
 public class DelegateCallbackRegistryImpl implements DelegateCallbackRegistry {
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
 
   private LoadingCache<String, DelegateCallbackService> delegateCallbackServiceCache =
       CacheBuilder.newBuilder()

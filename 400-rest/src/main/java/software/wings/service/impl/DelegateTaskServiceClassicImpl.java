@@ -110,7 +110,7 @@ import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.SafeHttpCall;
 import io.harness.observer.Subject;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.DMSPersistence;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
@@ -219,7 +219,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
   private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
 
-  @Inject private HPersistence persistence;
+  @Inject private DMSPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private EventEmitter eventEmitter;
@@ -751,7 +751,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                           .getPeriodUntilNextValidation(capabilityCheckDetails.getCapabilityParameters())
                           .toMillis());
 
-            persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
+            persistence.findAndModify(query, updateOperations, DMSPersistence.returnNewOptions);
 
             if (isNotBlank(blockedTaskSelectionDetailsId)
                 && capabilityCheckDetails.getPermissionResult() == PermissionResult.ALLOWED) {
@@ -766,7 +766,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
               setUnset(selectionDetailsUpdateOperations, CapabilityTaskSelectionDetailsKeys.blocked, false);
 
               persistence.findAndModify(
-                  selectionDetailsQuery, selectionDetailsUpdateOperations, HPersistence.returnNewOptions);
+                  selectionDetailsQuery, selectionDetailsUpdateOperations, DMSPersistence.returnNewOptions);
             }
           }
         } else if ((delegateResponseData instanceof RemoteMethodReturnValueData)
@@ -823,7 +823,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         setUnset(selectionDetailsUpdateOperations, CapabilityTaskSelectionDetailsKeys.blocked, true);
 
         persistence.findAndModify(
-            selectionDetailsQuery, selectionDetailsUpdateOperations, HPersistence.returnNewOptions);
+            selectionDetailsQuery, selectionDetailsUpdateOperations, DMSPersistence.returnNewOptions);
       }
     }
 
@@ -1487,7 +1487,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             .set(DelegateTaskKeys.delegateId, delegateId)
             .set(DelegateTaskKeys.status, STARTED)
             .set(DelegateTaskKeys.expiry, currentTimeMillis() + delegateTask.getData().getTimeout());
-    DelegateTask task = persistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
+    DelegateTask task = persistence.findAndModifySystemData(query, updateOperations, DMSPersistence.returnNewOptions);
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in
     // case client is retrying the request
     if (task != null) {
@@ -1591,7 +1591,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         persistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status);
 
     DelegateTask oldTask =
-        persistence.findAndModify(delegateTaskQuery, updateOperations, HPersistence.returnOldOptions);
+        persistence.findAndModify(delegateTaskQuery, updateOperations, DMSPersistence.returnOldOptions);
 
     broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true)
         .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
