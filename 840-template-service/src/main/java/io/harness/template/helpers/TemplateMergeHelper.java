@@ -158,7 +158,7 @@ public class TemplateMergeHelper {
       throw new NGTemplateResolveException("Exception in resolving template refs in given yaml.", USER, errorResponse);
     }
     Map<String, Object> resMap = generateMergedYamlMap(accountId, orgId, projectId, pipelineJsonNode);
-    return TemplateMergeResponseDTO.builder().mergedPipelineYaml(convertToYaml(resMap)).valid(true).build();
+    return TemplateMergeResponseDTO.builder().mergedPipelineYaml(convertToYaml(resMap)).build();
   }
 
   /**

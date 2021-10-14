@@ -32,6 +32,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
@@ -126,10 +127,15 @@ public class PipelineResource implements YamlSchemaResource {
         pipelineEntity.getIdentifier(), projectId, orgId, accountId));
 
     // Apply all the templateRefs(if any) then check for schema validation.
-    String resolveTemplateRefsInPipeline = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
+    String resolveTemplateRefsInPipeline = templateMergeResponseDTO.getMergedPipelineYaml();
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, resolveTemplateRefsInPipeline);
     // validate unique fqn in resolveTemplateRefsInPipeline
     pmsYamlSchemaService.validateUniqueFqn(resolveTemplateRefsInPipeline);
+    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
+      pipelineEntity.setHasTemplateReferences(true);
+    }
 
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
 
@@ -148,7 +154,8 @@ public class PipelineResource implements YamlSchemaResource {
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     // Apply all the templateRefs(if any) then check for variables.
-    String resolveTemplateRefsInPipeline = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
+    String resolveTemplateRefsInPipeline =
+        pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity).getMergedPipelineYaml();
     VariableMergeServiceResponse variablesResponse =
         pmsPipelineService.createVariablesResponse(resolveTemplateRefsInPipeline);
 
@@ -196,8 +203,9 @@ public class PipelineResource implements YamlSchemaResource {
         projectId, orgId, accountId));
 
     // Apply all the templateRefs(if any) then check for schema validation.
-    String resolveTemplateRefsInPipeline =
+    TemplateMergeResponseDTO templateMergeResponseDTO =
         pipelineTemplateHelper.resolveTemplateRefsInPipeline(accountId, orgId, projectId, yaml);
+    String resolveTemplateRefsInPipeline = templateMergeResponseDTO.getMergedPipelineYaml();
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, resolveTemplateRefsInPipeline);
     // validate unique fqn in yaml
     pmsYamlSchemaService.validateUniqueFqn(resolveTemplateRefsInPipeline);
@@ -205,6 +213,9 @@ public class PipelineResource implements YamlSchemaResource {
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     if (!pipelineEntity.getIdentifier().equals(pipelineId)) {
       throw new InvalidRequestException("Pipeline identifier in URL does not match pipeline identifier in yaml");
+    }
+    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
+      pipelineEntity.setHasTemplateReferences(true);
     }
 
     PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);

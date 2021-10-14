@@ -26,6 +26,7 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
@@ -146,7 +147,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreatePipeline() throws IOException {
     doReturn(entityWithVersion).when(pmsPipelineService).create(entity);
-    doReturn(yaml).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(entity);
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(yaml).build();
+    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(entity);
     ResponseDTO<String> identifier =
         pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml);
     assertThat(identifier.getData()).isNotEmpty();
@@ -157,7 +160,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
   public void testCreatePipelineWithSchemaErrors() {
-    doReturn(yaml).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(entity);
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(yaml).build();
+    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(entity);
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
         .validateYamlSchema(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
@@ -201,7 +206,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdatePipelineWithWrongIdentifier() {
     String incorrectPipelineIdentifier = "notTheIdentifierWeNeed";
-    doReturn(yaml)
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(yaml).build();
+    doReturn(templateMergeResponseDTO)
         .when(pipelineTemplateHelper)
         .resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
     assertThatThrownBy(()
@@ -216,7 +223,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdatePipeline() throws IOException {
     doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity, ChangeType.MODIFY);
-    doReturn(yaml)
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(yaml).build();
+    doReturn(templateMergeResponseDTO)
         .when(pipelineTemplateHelper)
         .resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
     ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
@@ -229,7 +238,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   @Ignore("Ignored till Schema validation is behind FF")
   public void testUpdatePipelineWithSchemaErrors() {
-    doReturn(yaml)
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(yaml).build();
+    doReturn(templateMergeResponseDTO)
         .when(pipelineTemplateHelper)
         .resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
     doThrow(JsonSchemaValidationException.class)

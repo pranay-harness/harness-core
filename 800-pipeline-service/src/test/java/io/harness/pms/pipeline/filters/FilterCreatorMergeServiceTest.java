@@ -15,6 +15,7 @@ import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.SetupMetadata;
@@ -133,7 +134,9 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
                                         .projectIdentifier(PROJECT_ID)
                                         .orgIdentifier(ORG_ID)
                                         .build();
-    doReturn(pipelineYaml).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(pipelineYaml).build();
+    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
     FilterCreatorMergeServiceResponse filterCreatorMergeServiceResponse =
         filterCreatorMergeService.getPipelineInfo(pipelineEntity);
 

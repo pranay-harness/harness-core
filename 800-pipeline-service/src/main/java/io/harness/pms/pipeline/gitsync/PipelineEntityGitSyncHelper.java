@@ -18,6 +18,7 @@ import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -25,6 +26,7 @@ import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -37,10 +39,13 @@ import java.util.function.Supplier;
 public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<PipelineEntity, PipelineConfig>
     implements GitSdkEntityHandlerInterface<PipelineEntity, PipelineConfig> {
   private final PMSPipelineService pmsPipelineService;
+  private final PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   @Inject
-  public PipelineEntityGitSyncHelper(PMSPipelineService pmsPipelineService) {
+  public PipelineEntityGitSyncHelper(
+      PMSPipelineService pmsPipelineService, PMSPipelineTemplateHelper pipelineTemplateHelper) {
     this.pmsPipelineService = pmsPipelineService;
+    this.pipelineTemplateHelper = pipelineTemplateHelper;
   }
 
   @Override
@@ -77,6 +82,10 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   @Override
   public PipelineConfig save(String accountIdentifier, String yaml) {
     PipelineEntity entity = PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml);
+    TemplateMergeResponseDTO templateMergeResponseDTO = pipelineTemplateHelper.resolveTemplateRefsInPipeline(entity);
+    if (!templateMergeResponseDTO.getTemplateReferenceSummaries().isEmpty()) {
+      entity.setHasTemplateReferences(true);
+    }
     PipelineEntity pipelineEntity = pmsPipelineService.create(entity);
     return PipelineYamlDtoMapper.toDto(pipelineEntity);
   }
@@ -85,6 +94,11 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   public PipelineConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
     PipelineEntity pipelineEntity = pmsPipelineService.updatePipelineYaml(
         PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml), changeType);
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
+    if (!templateMergeResponseDTO.getTemplateReferenceSummaries().isEmpty()) {
+      pipelineEntity.setHasTemplateReferences(true);
+    }
     return PipelineYamlDtoMapper.toDto(pipelineEntity);
   }
 
