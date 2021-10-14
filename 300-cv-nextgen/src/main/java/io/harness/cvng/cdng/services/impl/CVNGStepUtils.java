@@ -10,7 +10,9 @@ public class CVNGStepUtils {
   public static final String ENVIRONMENT_REF_KEY = "environmentRef";
   public static final String SPEC_KEY = "spec";
   public static final String STAGE_KEY = "stage";
+  public static final String STAGES_KEY = "stages";
   public static final String EXECUTION_KEY = "execution";
+  public static final String USE_FROM_STAGE_KEY = "useFromStage";
 
   public static YamlNode getServiceRefNode(YamlNode stageYaml) {
     return stageYaml.getField(SPEC_KEY)
@@ -19,6 +21,11 @@ public class CVNGStepUtils {
         .getNode()
         .getField(SERVICE_REF_KEY)
         .getNode();
+  }
+
+  public static boolean hasServiceIdentifier(YamlNode stageYaml) {
+    return stageYaml.getField(SPEC_KEY).getNode().getField(SERVICE_CONFIG_KEY).getNode().getField(SERVICE_REF_KEY)
+        != null;
   }
 
   public static YamlNode getEnvRefNode(YamlNode stageYaml) {
