@@ -198,7 +198,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
                 accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
       String latestTemplate = validateAndMergeHelper.getPipelineTemplate(
-          accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier());
+          accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), null);
       String yaml = pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
       String template = pipelineExecutionSummaryEntityOptional.get().getPipelineTemplate();
       if (resolveExpressions && EmptyPredicate.isNotEmpty(yaml)) {
@@ -210,10 +210,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
         if (entityGitDetails != null) {
           template = validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId,
               pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), entityGitDetails.getBranch(),
-              entityGitDetails.getRepoIdentifier());
+              entityGitDetails.getRepoIdentifier(), null);
         } else {
           template = validateAndMergeHelper.getPipelineTemplate(
-              accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier());
+              accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), null);
         }
       }
       return InputSetYamlWithTemplateDTO.builder()
