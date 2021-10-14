@@ -13,6 +13,7 @@ import io.harness.cdng.creator.plan.steps.K8sRollingRollbackPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.cdng.provision.terraform.variablecreator.TerraformStepsVariableCreator;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
@@ -76,6 +77,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
         StepInfo.newBuilder()
             .setName("Rolling Deployment")
             .setType(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_ROLLING_DEPLOY.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
@@ -83,18 +85,21 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
         StepInfo.newBuilder()
             .setName("Canary Deployment")
             .setType(StepSpecTypeConstants.K8S_CANARY_DEPLOY)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_CANARY_DEPLOY.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
     StepInfo canaryDelete =
         StepInfo.newBuilder()
             .setName("Canary Delete")
             .setType(StepSpecTypeConstants.K8S_CANARY_DELETE)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_CANARY_DELETE.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
     StepInfo delete =
         StepInfo.newBuilder()
             .setName("Delete")
             .setType(StepSpecTypeConstants.K8S_DELETE)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_DELETE.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
@@ -102,12 +107,14 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
         StepInfo.newBuilder()
             .setName("Stage Deployment")
             .setType(StepSpecTypeConstants.K8S_BLUE_GREEN_DEPLOY)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_BLUE_GREEN_DEPLOY.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
     StepInfo bgSwapServices =
         StepInfo.newBuilder()
             .setName("BG Swap Services")
             .setType(StepSpecTypeConstants.K8S_BG_SWAP_SERVICES)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_BG_SWAP_SERVICES.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
@@ -115,12 +122,14 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
         StepInfo.newBuilder()
             .setName("Apply")
             .setType(StepSpecTypeConstants.K8S_APPLY)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_APPLY.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
     StepInfo scale =
         StepInfo.newBuilder()
             .setName("Scale")
             .setType(StepSpecTypeConstants.K8S_SCALE)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_SCALE.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
@@ -128,12 +137,14 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
         StepInfo.newBuilder()
             .setName("Rolling Rollback")
             .setType(StepSpecTypeConstants.K8S_ROLLING_ROLLBACK)
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_ROLLING_ROLLBACK.name())
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
     StepInfo terraformApply = StepInfo.newBuilder()
                                   .setName("Terraform Apply")
                                   .setType(StepSpecTypeConstants.TERRAFORM_APPLY)
+                                  .setFeatureRestrictionName(FeatureRestrictionName.TERRAFORM_APPLY.name())
                                   .setStepMetaData(StepMetaData.newBuilder()
                                                        .addAllCategory(TERRAFORM_CATEGORY)
                                                        .addFolderPaths(TERRAFORM_STEP_METADATA)
@@ -142,6 +153,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     StepInfo terraformPlan = StepInfo.newBuilder()
                                  .setName("Terraform Plan")
                                  .setType(StepSpecTypeConstants.TERRAFORM_PLAN)
+                                 .setFeatureRestrictionName(FeatureRestrictionName.TERRAFORM_PLAN.name())
                                  .setStepMetaData(StepMetaData.newBuilder()
                                                       .addAllCategory(TERRAFORM_CATEGORY)
                                                       .addFolderPaths(TERRAFORM_STEP_METADATA)
@@ -150,6 +162,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     StepInfo terraformDestroy = StepInfo.newBuilder()
                                     .setName("Terraform Destroy")
                                     .setType(StepSpecTypeConstants.TERRAFORM_DESTROY)
+                                    .setFeatureRestrictionName(FeatureRestrictionName.TERRAFORM_DESTROY.name())
                                     .setStepMetaData(StepMetaData.newBuilder()
                                                          .addAllCategory(TERRAFORM_CATEGORY)
                                                          .addFolderPaths(TERRAFORM_STEP_METADATA)
@@ -158,6 +171,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     StepInfo terraformRollback = StepInfo.newBuilder()
                                      .setName("Terraform Rollback")
                                      .setType(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
+                                     .setFeatureRestrictionName(FeatureRestrictionName.TERRAFORM_ROLLBACK.name())
                                      .setStepMetaData(StepMetaData.newBuilder()
                                                           .addAllCategory(TERRAFORM_CATEGORY)
                                                           .addFolderPaths(TERRAFORM_STEP_METADATA)

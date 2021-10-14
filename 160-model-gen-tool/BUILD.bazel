@@ -26,6 +26,7 @@ java_binary(
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_clojure_clojure",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit_ssh_jsch",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_slf4j_slf4j_api",
     ],

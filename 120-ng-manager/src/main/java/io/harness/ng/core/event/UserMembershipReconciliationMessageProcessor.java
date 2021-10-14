@@ -15,6 +15,7 @@ import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.user.NGRemoveUserFilter;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.utils.ScopeUtils;
@@ -104,7 +105,8 @@ public class UserMembershipReconciliationMessageProcessor implements MessageList
     List<String> userIds = ngUserService.listUserIds(scope);
     AtomicBoolean success = new AtomicBoolean(true);
     userIds.forEach(userId -> {
-      if (!ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.SYSTEM)) {
+      if (!ngUserService.removeUserFromScope(
+              userId, scope, UserMembershipUpdateSource.SYSTEM, NGRemoveUserFilter.STRICTLY_FORCE_REMOVE_USER)) {
         log.error("Delete operation failed for users with at scope [{}]", ScopeUtils.toString(scope));
         success.set(false);
       }

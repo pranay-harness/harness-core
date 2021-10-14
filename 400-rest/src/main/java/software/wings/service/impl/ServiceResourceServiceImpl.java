@@ -658,6 +658,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           ArtifactStream clonedArtifactStream = artifactStream.cloneInternal();
           clonedArtifactStream.setServiceId(clonedService.getUuid());
           clonedArtifactStream.setMetadataOnly(true);
+          clonedArtifactStream.setCollectionEnabled(artifactStream.getCollectionEnabled());
           artifactStreamService.createWithBinding(originalService.getAppId(), clonedArtifactStream, false);
         });
       }

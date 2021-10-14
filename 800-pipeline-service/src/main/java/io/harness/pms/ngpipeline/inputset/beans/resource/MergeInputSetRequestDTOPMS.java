@@ -24,4 +24,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class MergeInputSetRequestDTOPMS {
   @NotEmpty List<String> inputSetReferences;
   boolean withMergedPipelineYaml;
+  List<String> stageIdentifiers;
 }

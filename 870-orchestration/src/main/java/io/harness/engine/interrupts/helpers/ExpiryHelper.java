@@ -1,6 +1,7 @@
 package io.harness.engine.interrupts.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.eraro.ErrorCode.TIMEOUT_ENGINE_EXCEPTION;
 import static io.harness.logging.UnitStatus.EXPIRED;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -8,6 +9,7 @@ import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
+import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -15,6 +17,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.interrupts.InterruptType;
@@ -27,6 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 @Slf4j
 public class ExpiryHelper {
+  protected static final String EXPIRE_ERROR_MESSAGE =
+      "Please Check the timeout configuration on the step to extend the duration of the step";
+
   @Inject private OrchestrationEngine engine;
   @Inject private InterruptHelper interruptHelper;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -53,8 +59,14 @@ public class ExpiryHelper {
           StepResponseProto.newBuilder()
               .setStatus(Status.EXPIRED)
               .setFailureInfo(FailureInfo.newBuilder()
-                                  .setErrorMessage("Step timed out before completion")
+                                  .setErrorMessage(EXPIRE_ERROR_MESSAGE)
                                   .addFailureTypes(FailureType.TIMEOUT_FAILURE)
+                                  .addFailureData(FailureData.newBuilder()
+                                                      .addFailureTypes(FailureType.TIMEOUT_FAILURE)
+                                                      .setLevel(Level.ERROR.name())
+                                                      .setCode(TIMEOUT_ENGINE_EXCEPTION.name())
+                                                      .setMessage(EXPIRE_ERROR_MESSAGE)
+                                                      .build())
                                   .build())
               .addAllUnitProgress(unitProgressList)
               .build();

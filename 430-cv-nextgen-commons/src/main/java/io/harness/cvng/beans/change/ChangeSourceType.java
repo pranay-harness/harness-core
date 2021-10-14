@@ -14,7 +14,7 @@ import org.apache.commons.collections4.MapUtils;
 
 @AllArgsConstructor
 public enum ChangeSourceType {
-  @JsonProperty("HarnessCDNextGen") HARNESS_CD(ChangeCategory.DEPLOYMENT, ActivityType.HARNESS_CD),
+  @JsonProperty("HarnessCDNextGen") HARNESS_CD(ChangeCategory.DEPLOYMENT, ActivityType.DEPLOYMENT),
   @JsonProperty("PagerDuty") PAGER_DUTY(ChangeCategory.ALERTS, ActivityType.PAGER_DUTY),
   @JsonProperty("K8sCluster") KUBERNETES(ChangeCategory.INFRASTRUCTURE, ActivityType.KUBERNETES),
   @JsonProperty("HarnessCD") HARNESS_CD_CURRENT_GEN(ChangeCategory.DEPLOYMENT, ActivityType.HARNESS_CD_CURRENT_GEN);

@@ -14,9 +14,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
@@ -60,6 +62,7 @@ public class K8sApplyState extends AbstractK8sState {
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
+  @Inject private FeatureFlagService featureFlagService;
 
   public static final String K8S_APPLY_STATE = "Apply";
 
@@ -154,18 +157,21 @@ public class K8sApplyState extends AbstractK8sState {
       }
     }
 
-    K8sTaskParameters k8sTaskParameters = builder.activityId(activityId)
-                                              .releaseName(fetchReleaseName(context, infraMapping))
-                                              .commandName(K8S_APPLY_STATE)
-                                              .k8sTaskType(K8sTaskType.APPLY)
-                                              .timeoutIntervalInMin(Integer.parseInt(stateTimeoutInMinutes))
-                                              .filePaths(filePaths)
-                                              .k8sDelegateManifestConfig(createDelegateManifestConfig(
-                                                  context, appManifestMap.get(K8sValuesLocation.Service)))
-                                              .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
-                                              .skipDryRun(skipDryRun)
-                                              .skipRendering(skipRendering)
-                                              .build();
+    K8sTaskParameters k8sTaskParameters =
+        builder.activityId(activityId)
+            .releaseName(fetchReleaseName(context, infraMapping))
+            .commandName(K8S_APPLY_STATE)
+            .k8sTaskType(K8sTaskType.APPLY)
+            .timeoutIntervalInMin(Integer.parseInt(stateTimeoutInMinutes))
+            .filePaths(filePaths)
+            .k8sDelegateManifestConfig(
+                createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
+            .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
+            .skipDryRun(skipDryRun)
+            .skipRendering(skipRendering)
+            .useLatestKustomizeVersion(
+                featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, infraMapping.getAccountId()))
+            .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);
   }

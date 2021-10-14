@@ -28,6 +28,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -38,6 +39,7 @@ import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate
 import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -177,14 +179,17 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
         .when(mockAwsServiceDiscoveryHelperServiceDelegate)
         .getRecordValueForService(any(), any(), anyString(), eq(oldSvcArn));
 
-    EcsBGRoute53DNSWeightUpdateRequest request = EcsBGRoute53DNSWeightUpdateRequest.builder()
-                                                     .rollback(true)
-                                                     .newServiceDiscoveryArn(newSvcArn)
-                                                     .oldServiceDiscoveryArn(oldSvcArn)
-                                                     .build();
+    AwsAutoScalarConfig previousAwsAutoScalarConfig = AwsAutoScalarConfig.builder().resourceId("abc").build();
+    EcsBGRoute53DNSWeightUpdateRequest request =
+        EcsBGRoute53DNSWeightUpdateRequest.builder()
+            .rollback(true)
+            .newServiceDiscoveryArn(newSvcArn)
+            .oldServiceDiscoveryArn(oldSvcArn)
+            .previousAwsAutoScalarConfigs(Arrays.asList(previousAwsAutoScalarConfig))
+            .build();
     EcsCommandExecutionResponse response = task.executeTaskInternal(request, null, mockCallback);
 
-    verify(mockCallback, times(3)).saveExecutionLog(anyString());
+    verify(mockCallback, times(4)).saveExecutionLog(anyString());
 
     verify(mockEcsSwapRoutesCommandTaskHelper)
         .upsizeOlderService(
@@ -194,6 +199,9 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
             any(), any(), anyString(), anyString(), anyString(), eq(100), eq(oldValue), eq(0), eq(newValue), anyInt());
     verify(mockEcsSwapRoutesCommandTaskHelper)
         .updateServiceTags(any(), any(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
+    verify(mockEcsSwapRoutesCommandTaskHelper)
+        .restoreAwsAutoScalarConfig(
+            any(), any(), anyString(), eq(Arrays.asList(previousAwsAutoScalarConfig)), eq(true), any());
 
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);

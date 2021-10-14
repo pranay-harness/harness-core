@@ -97,6 +97,14 @@ if [[ "" != "$PIPELINE_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE pipelineServiceSecret $PIPELINE_SERVICE_SECRET
 fi
 
+if [[ "" != "$TEMPLATE_SERVICE_ENDPOINT" ]]; then
+  yq write -i $CONFIG_FILE templateServiceClientConfig.baseUrl $TEMPLATE_SERVICE_ENDPOINT
+fi
+
+if [[ "" != "$TEMPLATE_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE templateServiceSecret $TEMPLATE_SERVICE_SECRET
+fi
+
 if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.baseUrl $CI_MANAGER_BASE_URL
 fi

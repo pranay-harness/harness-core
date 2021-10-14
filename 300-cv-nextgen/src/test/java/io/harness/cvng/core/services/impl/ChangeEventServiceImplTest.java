@@ -9,7 +9,7 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.entities.Activity;
-import io.harness.cvng.activity.entities.HarnessCDActivity;
+import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeSourceType;
@@ -114,7 +114,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testGet_withoutCategory() {
-    HarnessCDActivity harnessCDActivity = builderFactory.getHarnessCDActivityBuilder().build();
+    DeploymentActivity harnessCDActivity = builderFactory.getDeploymentActivityBuilder().build();
     hPersistence.save(harnessCDActivity);
 
     List<ChangeEventDTO> changeEventDTOS =
@@ -129,21 +129,21 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetPaginated() {
     Activity harnessCDActivity_1 =
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build();
-    Activity harnessCDActivity_2 = builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build();
+    Activity harnessCDActivity_2 = builderFactory.getDeploymentActivityBuilder()
                                        .serviceIdentifier("service2")
                                        .environmentIdentifier("env2")
                                        .eventTime(Instant.ofEpochSecond(200))
                                        .build();
     Activity harnessCDActivity_3 =
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build();
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build();
     hPersistence.save(Arrays.asList(harnessCDActivity_1, harnessCDActivity_2, harnessCDActivity_3));
     PageResponse<ChangeEventDTO> firstPage = changeEventService.getChangeEvents(
         builderFactory.getContext().getProjectParams(), null, null, Instant.ofEpochSecond(100),
-        Instant.ofEpochSecond(400), null, PageRequest.builder().pageIndex(0).pageSize(2).build());
+        Instant.ofEpochSecond(400), PageRequest.builder().pageIndex(0).pageSize(2).build());
     PageResponse<ChangeEventDTO> secondPage = changeEventService.getChangeEvents(
         builderFactory.getContext().getProjectParams(), null, null, Instant.ofEpochSecond(100),
-        Instant.ofEpochSecond(400), null, PageRequest.builder().pageIndex(1).pageSize(2).build());
+        Instant.ofEpochSecond(400), PageRequest.builder().pageIndex(1).pageSize(2).build());
 
     assertThat(firstPage.getPageIndex()).isEqualTo(0);
     assertThat(firstPage.getPageItemCount()).isEqualTo(2);
@@ -163,19 +163,18 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetPaginated_withServiceFiltering() {
     Activity harnessCDActivity_1 =
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build();
-    Activity harnessCDActivity_2 = builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build();
+    Activity harnessCDActivity_2 = builderFactory.getDeploymentActivityBuilder()
                                        .serviceIdentifier("service2")
                                        .environmentIdentifier("env2")
                                        .eventTime(Instant.ofEpochSecond(200))
                                        .build();
     Activity harnessCDActivity_3 =
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build();
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build();
     hPersistence.save(Arrays.asList(harnessCDActivity_1, harnessCDActivity_2, harnessCDActivity_3));
-    PageResponse<ChangeEventDTO> firstPage =
-        changeEventService.getChangeEvents(builderFactory.getContext().getProjectParams(),
-            Arrays.asList(harnessCDActivity_1.getServiceIdentifier()), null, Instant.ofEpochSecond(100),
-            Instant.ofEpochSecond(400), null, PageRequest.builder().pageIndex(0).pageSize(2).build());
+    PageResponse<ChangeEventDTO> firstPage = changeEventService.getChangeEvents(
+        builderFactory.getContext().getProjectParams(), Arrays.asList(harnessCDActivity_1.getServiceIdentifier()), null,
+        Instant.ofEpochSecond(100), Instant.ofEpochSecond(400), PageRequest.builder().pageIndex(0).pageSize(2).build());
 
     assertThat(firstPage.getPageIndex()).isEqualTo(0);
     assertThat(firstPage.getPageItemCount()).isEqualTo(2);
@@ -192,15 +191,15 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetChangeSummary() {
     hPersistence.save(Arrays.asList(
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
-        builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
+        builderFactory.getDeploymentActivityBuilder()
             .serviceIdentifier("service2")
             .environmentIdentifier("env2")
             .eventTime(Instant.ofEpochSecond(200))
             .build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder()
             .eventTime(Instant.ofEpochSecond(300))
             .build()));
@@ -225,15 +224,15 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetChangeSummary_withServiceFiltering() {
     hPersistence.save(Arrays.asList(
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
-        builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
+        builderFactory.getDeploymentActivityBuilder()
             .serviceIdentifier("service2")
             .environmentIdentifier("env2")
             .eventTime(Instant.ofEpochSecond(200))
             .build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder()
             .eventTime(Instant.ofEpochSecond(300))
             .build()));
@@ -259,15 +258,15 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetChangeSummary_withEnvironmentFiltering() {
     hPersistence.save(Arrays.asList(
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
-        builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
+        builderFactory.getDeploymentActivityBuilder()
             .serviceIdentifier("service2")
             .environmentIdentifier("env2")
             .eventTime(Instant.ofEpochSecond(200))
             .build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder()
             .eventTime(Instant.ofEpochSecond(300))
             .build()));
@@ -293,15 +292,15 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetTimeline() {
     hPersistence.save(Arrays.asList(
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
-        builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
+        builderFactory.getDeploymentActivityBuilder()
             .serviceIdentifier("service2")
             .environmentIdentifier("env2")
             .eventTime(Instant.ofEpochSecond(200))
             .build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder()
             .eventTime(Instant.ofEpochSecond(300))
             .build()));
@@ -329,15 +328,15 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetTimeline_withServiceFiltering() {
     hPersistence.save(Arrays.asList(
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
-        builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
+        builderFactory.getDeploymentActivityBuilder()
             .serviceIdentifier("service2")
             .environmentIdentifier("env2")
             .eventTime(Instant.ofEpochSecond(200))
             .build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder()
             .eventTime(Instant.ofEpochSecond(300))
             .build()));
@@ -366,15 +365,15 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetTimeline_withEnvironmentFiltering() {
     hPersistence.save(Arrays.asList(
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
-        builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
+        builderFactory.getDeploymentActivityBuilder()
             .serviceIdentifier("service2")
             .environmentIdentifier("env2")
             .eventTime(Instant.ofEpochSecond(200))
             .build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder()
             .eventTime(Instant.ofEpochSecond(300))
             .build()));
@@ -404,10 +403,10 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetPaginated_withEnvironmentFiltering() {
     hPersistence.save(Arrays.asList(
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
         builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
-        builderFactory.getHarnessCDActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
-        builderFactory.getHarnessCDActivityBuilder()
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
+        builderFactory.getDeploymentActivityBuilder()
             .serviceIdentifier("service2")
             .environmentIdentifier("env2")
             .eventTime(Instant.ofEpochSecond(200))
@@ -418,7 +417,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
     PageResponse<ChangeEventDTO> firstPage =
         changeEventService.getChangeEvents(builderFactory.getContext().getProjectParams(), null,
             Arrays.asList(builderFactory.getContext().getEnvIdentifier()), Instant.ofEpochSecond(100),
-            Instant.ofEpochSecond(400), null, PageRequest.builder().pageIndex(0).pageSize(2).build());
+            Instant.ofEpochSecond(400), PageRequest.builder().pageIndex(0).pageSize(2).build());
 
     assertThat(firstPage.getPageIndex()).isEqualTo(0);
     assertThat(firstPage.getPageItemCount()).isEqualTo(2);
@@ -434,7 +433,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testGet_withCategory() {
-    HarnessCDActivity harnessCDActivity = builderFactory.getHarnessCDActivityBuilder().build();
+    DeploymentActivity harnessCDActivity = builderFactory.getDeploymentActivityBuilder().build();
     hPersistence.save(harnessCDActivity);
 
     List<ChangeEventDTO> changeEventDTOS =
@@ -448,8 +447,8 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testGetChangeSummary_WithServiceParams() {
-    hPersistence.save(builderFactory.getHarnessCDActivityBuilder().build());
-    hPersistence.save(builderFactory.getHarnessCDActivityBuilder()
+    hPersistence.save(builderFactory.getDeploymentActivityBuilder().build());
+    hPersistence.save(builderFactory.getDeploymentActivityBuilder()
                           .eventTime(builderFactory.getClock().instant().minus(Duration.ofMinutes(15)))
                           .build());
 

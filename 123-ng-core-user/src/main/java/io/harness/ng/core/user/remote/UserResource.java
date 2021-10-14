@@ -11,6 +11,7 @@ import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
@@ -24,6 +25,7 @@ import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -31,6 +33,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.AddUsersDTO;
 import io.harness.ng.core.user.AddUsersResponse;
+import io.harness.ng.core.user.NGRemoveUserFilter;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
@@ -165,6 +168,35 @@ public class UserResource {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
   }
 
+  @GET
+  @Path("projects-count")
+  @ApiOperation(value = "Get count of projects accessible to a user", nickname = "getAccessibleProjectsCount")
+  public ResponseDTO<ActiveProjectsCountDTO> getAccessibleProjectsCount(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(
+        projectService.accessibleProjectsCount(userId, accountIdentifier, startInterval, endInterval));
+  }
+
+  @GET
+  @Path("last-admin")
+  @ApiOperation(value = "check if user is last admin at the scope", nickname = "checkIfLastAdmin")
+  public ResponseDTO<Boolean> checkIfLastAdmin(@QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, null), VIEW_USER_PERMISSION);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    return ResponseDTO.newResponse(ngUserService.isUserLastAdminAtScope(userId, scope));
+  }
+
   @POST
   @Path("batch")
   @ApiOperation(value = "Get a list of users", nickname = "getUsers")
@@ -296,6 +328,21 @@ public class UserResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    return removeUserInternal(
+        userId, accountIdentifier, orgIdentifier, projectIdentifier, NGRemoveUserFilter.ACCOUNT_LAST_ADMIN_CHECK);
+  }
+
+  @DELETE
+  @Path("internal/{userId}")
+  @Produces("application/json")
+  @Consumes()
+  @InternalApi
+  @ApiOperation(value = "Remove user from the scope", nickname = "removeUserInternal", hidden = true)
+  public ResponseDTO<Boolean> removeUserInternal(@NotNull @PathParam("userId") String userId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam("removeUserFilter") @DefaultValue("ACCOUNT_LAST_ADMIN_CHECK") NGRemoveUserFilter removeUserFilter) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USER, userId), MANAGE_USER_PERMISSION);
     Scope scope = Scope.builder()
@@ -303,8 +350,8 @@ public class UserResource {
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
-    return ResponseDTO.newResponse(
-        TRUE.equals(ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER)));
+    return ResponseDTO.newResponse(TRUE.equals(
+        ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER, removeUserFilter)));
   }
 
   public Optional<String> getUserIdentifierFromSecurityContext() {

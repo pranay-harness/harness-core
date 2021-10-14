@@ -38,4 +38,6 @@ public class GitSyncErrorDTO {
   GitSyncErrorStatus status;
   GitSyncErrorType errorType;
   GitSyncErrorDetailsDTO additionalErrorDetails;
+
+  long createdAt;
 }

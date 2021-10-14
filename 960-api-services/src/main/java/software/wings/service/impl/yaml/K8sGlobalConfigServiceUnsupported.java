@@ -32,7 +32,7 @@ public class K8sGlobalConfigServiceUnsupported implements K8sGlobalConfigService
   }
 
   @Override
-  public String getKustomizePath() {
+  public String getKustomizePath(boolean useLatestVersion) {
     throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
   }
 

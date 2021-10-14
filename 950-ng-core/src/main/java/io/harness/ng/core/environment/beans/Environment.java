@@ -2,6 +2,7 @@ package io.harness.ng.core.environment.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -34,6 +35,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "environmentsNG", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
 @Document("environmentsNG")
+@ChangeDataCapture(table = "environments", dataStore = "ng-harness", fields = {}, handler = "Environments")
 @TypeAlias("io.harness.ng.core.environment.beans.Environment")
 public class Environment implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {

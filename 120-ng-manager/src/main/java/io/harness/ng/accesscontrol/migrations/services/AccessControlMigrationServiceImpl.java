@@ -30,7 +30,6 @@ import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
 
@@ -68,7 +67,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   private final OrganizationService organizationService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
-  private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
   private final ExecutorService executorService = Executors.newFixedThreadPool(5);
 
@@ -76,13 +74,12 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   public AccessControlMigrationServiceImpl(AccessControlMigrationDAO accessControlMigrationDAO,
       ProjectService projectService, OrganizationService organizationService,
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, UserClient userClient,
-      ResourceGroupClient resourceGroupClient, NgUserService ngUserService) {
+      NgUserService ngUserService) {
     this.accessControlMigrationDAO = accessControlMigrationDAO;
     this.projectService = projectService;
     this.organizationService = organizationService;
     this.accessControlAdminClient = accessControlAdminClient;
     this.userClient = userClient;
-    this.resourceGroupClient = resourceGroupClient;
     this.ngUserService = ngUserService;
   }
 
@@ -187,7 +184,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     try {
-      ensureManagedResourceGroup(scope);
       assignViewerRoleToUsers(scope);
       if (!hasAdmin(scope)) {
         assignAdminRoleToUsers(scope);
@@ -229,11 +225,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     List<UserMetadataDTO> admins = ngUserService.listUsersHavingRole(scope, getManagedAdminRole(scope));
     log.info("Admins in scope {} are {}", scope, admins == null ? emptyList() : admins);
     return !isEmpty(admins);
-  }
-
-  private void ensureManagedResourceGroup(Scope scope) {
-    NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
-        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
   }
 
   private void assignAdminRoleToUsers(Scope scope) {

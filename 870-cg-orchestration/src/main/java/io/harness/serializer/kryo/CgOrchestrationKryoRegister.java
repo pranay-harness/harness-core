@@ -12,6 +12,7 @@ import io.harness.beans.ShellScriptProvisionOutputVariables;
 import io.harness.beans.WorkflowType;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.sm.BarrierStatusData;
@@ -37,5 +38,6 @@ public class CgOrchestrationKryoRegister implements KryoRegistrar {
     // Put promoted classes here and do not change the id
     kryo.register(CommandType.class, 5038);
     kryo.register(TailFilePatternEntry.class, 5059);
+    kryo.register(EcsBGSetupData.class, 5611);
   }
 }

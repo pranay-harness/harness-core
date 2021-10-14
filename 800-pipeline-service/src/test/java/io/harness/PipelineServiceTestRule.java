@@ -24,6 +24,7 @@ import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.lock.PersistentLocker;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.opaclient.OpaServiceClient;
@@ -165,6 +166,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
         bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
         bind(GitSyncSdkService.class).to(NoOpGitSyncSdkServiceImpl.class);
+        bind(PersistentLocker.class).toInstance(mock(PersistentLocker.class));
       }
     });
 

@@ -12,6 +12,7 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(DX)
+@Schema(name = "ConnectorFilterProperties",
+    description = "This is the Connector Filter Properties entity as defined in harness")
 public class ConnectorFilterPropertiesDTO extends FilterPropertiesDTO {
   List<String> connectorNames;
   List<String> connectorIdentifiers;

@@ -6,78 +6,75 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>100-ng-migration</artifactId>
+    <artifactId>99-ng-migration-manager</artifactId>
     <dependencies>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <classifier>standalone</classifier>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <scope>test</scope>
+            <groupId>software.wings</groupId>
+            <artifactId>390-db-migration</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-delegate-tasks-beans</artifactId>
+            <artifactId>400-rest</artifactId>
             <version>${project.parent.version}</version>
-            <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>960-persistence</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>970-api-services-beans</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>970-grpc</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>970-rbac-core</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>980-commons</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.sonatype.nexus.plugins</groupId>
-            <artifactId>nexus-restlet1x-model</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.http-client</groupId>
-            <artifactId>google-http-client-apache-v2</artifactId>
-        </dependency>
-
     </dependencies>
+    <build>
+        <finalName>cg-manager</finalName>
+        <plugins>
+            <plugin>
+                <groupId>com.github.chrisdchristo</groupId>
+                <artifactId>capsule-maven-plugin</artifactId>
+                <configuration>
+                    <appClass>io.harness.ngmigration.NGMigrationApplication</appClass>
+                    <type>fat</type>
+                    <manifest>
+                        <entry>
+                            <key>Boot-Class-Path-P</key>
+                            <value>alpn-boot-${alpnboot.version}.jar</value>
+                        </entry>
+                        <entry>
+                            <key>Min-Java-Version</key>
+                            <value>1.8.0</value>
+                        </entry>
+                        <entry>
+                            <key>Min-Update-Version</key>
+                            <value>8=91</value>
+                        </entry>
+                        <entry>
+                            <key>Args</key>
+                            <value>$*</value>
+                        </entry>
+                    </manifest>
+                    <execPluginConfig>root</execPluginConfig>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <mainClass>io.harness.ngmigration.NGMigrationApplication</mainClass>
+                    <arguments>
+                        <argument>server</argument>
+                        <argument>./config.yml</argument>
+                    </arguments>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

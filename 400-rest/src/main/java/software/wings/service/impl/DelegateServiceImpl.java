@@ -565,7 +565,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails) {
-    validateSetupDetails(delegateSetupDetails);
+    validateSetupDetails(accountId, delegateSetupDetails);
     delegateSetupDetails.setSessionIdentifier(generateUuid());
     return delegateSetupDetails;
   }
@@ -573,7 +573,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
       String verificationServiceUrl, MediaType fileFormat) throws IOException {
-    validateSetupDetails(delegateSetupDetails);
+    validateSetupDetails(accountId, delegateSetupDetails);
     if (isBlank(delegateSetupDetails.getSessionIdentifier())) {
       throw new InvalidRequestException("Session identifier must be provided.", USER);
     }
@@ -678,10 +678,11 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void validateSetupDetails(DelegateSetupDetails delegateSetupDetails) {
-    if (isBlank(delegateSetupDetails.getDelegateConfigurationId())) {
-      throw new InvalidRequestException("Delegate Configuration must be provided.", USER);
+  private void validateSetupDetails(String accoutnId, DelegateSetupDetails delegateSetupDetails) {
+    if (null == delegateSetupDetails) {
+      throw new InvalidRequestException("Delegate Setup Details must be provided.", USER);
     }
+    validateDelegateProfileId(accoutnId, delegateSetupDetails.getDelegateConfigurationId());
 
     if (isBlank(delegateSetupDetails.getName())) {
       throw new InvalidRequestException("Delegate Name must be provided.", USER);
@@ -696,6 +697,17 @@ public class DelegateServiceImpl implements DelegateService {
       throw new InvalidRequestException("K8s permission type must be provided.", USER);
     } else if (k8sConfigDetails.getK8sPermissionType() == NAMESPACE_ADMIN && isBlank(k8sConfigDetails.getNamespace())) {
       throw new InvalidRequestException("K8s namespace must be provided for this type of permission.", USER);
+    }
+  }
+
+  @VisibleForTesting
+  void validateDelegateProfileId(String accountId, String delegateProfileId) throws InvalidRequestException {
+    if (isBlank(delegateProfileId)) {
+      return;
+    }
+    DelegateProfile profile = delegateProfileService.get(accountId, delegateProfileId);
+    if (profile == null) {
+      throw new InvalidRequestException("Delegate configuration (profile) id does not match any record", USER);
     }
   }
 
@@ -2361,6 +2373,13 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateEntityOwner owner =
         DelegateEntityOwnerHelper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
 
+    String delegateProfileId = delegateParams.getDelegateProfileId();
+    try {
+      validateDelegateProfileId(delegateParams.getAccountId(), delegateProfileId);
+    } catch (InvalidRequestException e) {
+      log.warn("No delegate configuration (profile) with id {} exists: {}", delegateProfileId, e);
+    }
+
     Delegate delegate =
         Delegate.builder()
             .uuid(delegateParams.getDelegateId())
@@ -2375,7 +2394,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateGroupName(delegateParams.getDelegateGroupName())
             .delegateGroupId(isNotBlank(delegateGroupId) ? delegateGroupId : null)
             .delegateName(delegateParams.getDelegateName())
-            .delegateProfileId(delegateParams.getDelegateProfileId())
+            .delegateProfileId(delegateProfileId)
             .lastHeartBeat(delegateParams.getLastHeartBeat())
             .version(delegateParams.getVersion())
             .sequenceNum(delegateParams.getSequenceNum())
@@ -2924,6 +2943,19 @@ public class DelegateServiceImpl implements DelegateService {
 
   private boolean hasVersionCheckDisabled(String accountId) {
     return accountService.getAccountPrimaryDelegateVersion(accountId) != null;
+  }
+
+  @Override
+  public void updateLastExpiredEventHeartbeatTime(
+      long lastExpiredEventHeartbeatTime, String delegateId, String accountId) {
+    final Query<Delegate> delegateFindQuery = persistence.createQuery(Delegate.class)
+                                                  .field(DelegateKeys.uuid)
+                                                  .equal(delegateId)
+                                                  .field(DelegateKeys.accountId)
+                                                  .equal(accountId);
+    persistence.update(delegateFindQuery,
+        persistence.createUpdateOperations(Delegate.class)
+            .set(DelegateKeys.lastExpiredEventHeartbeatTime, lastExpiredEventHeartbeatTime));
   }
 
   @NotNull

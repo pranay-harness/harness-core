@@ -5,9 +5,11 @@ import static io.harness.cvng.beans.DataCollectionType.KUBERNETES;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.InternalServerErrorException;
@@ -16,6 +18,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private RequestExecutor requestExecutor;
   @Inject private NextGenService nextGenService;
+
   @Override
   public String createDataCollectionTask(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
@@ -129,6 +132,15 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
     return requestExecutor
         .execute(verificationManagerClient.getKubernetesWorkloads(
             accountId, orgIdentifier, projectIdentifier, namespace, filter, bundle))
+        .getResource();
+  }
+
+  @Override
+  public List<HarnessCDCurrentGenEventMetadata> getCurrentGenEvents(String accountId, String harnessApplicationId,
+      String harnessEnvironmentId, String harnessServiceId, Instant startTime, Instant endTime) {
+    return requestExecutor
+        .execute(verificationManagerClient.getCDCurrentGenChangeEvents(accountId, harnessApplicationId,
+            harnessServiceId, harnessEnvironmentId, startTime.toEpochMilli(), endTime.toEpochMilli()))
         .getResource();
   }
 }

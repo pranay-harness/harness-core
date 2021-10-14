@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -80,10 +79,6 @@ public interface UserClient {
   @POST(USER_IN_ACCOUNT_VERIFICATION)
   Call<RestResponse<Boolean>> addUserToAccount(
       @Query(value = "userId") String userId, @Query(value = "accountId") String accountId);
-
-  @DELETE(USER_SAFE_DELETE)
-  Call<RestResponse<Boolean>> safeDeleteUser(
-      @Path(value = "userId") String userId, @Query(value = "accountId") String accountId);
 
   @GET(USER_TWO_FACTOR_AUTH_SETTINGS)
   Call<RestResponse<Optional<TwoFactorAuthSettingsInfo>>> getUserTwoFactorAuthSettings(

@@ -25,4 +25,6 @@ public class OrchestrationStepTypes {
   public static final String STEP_GROUP = "STEP_GROUP";
   public static final String APPROVAL_STAGE = "APPROVAL_STAGE";
   public static final String FLAG_CONFIGURATION = "FLAG_CONFIGURATION";
+
+  public static final String IDENTITY_STEP = "IDENTITY_STEP";
 }

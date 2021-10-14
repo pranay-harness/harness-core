@@ -8,11 +8,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.rule.Owner;
 
+import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -89,5 +91,42 @@ public class PipelineExecutionSummaryDtoMapperTest extends CategoryTest {
     assertThat(executionSummaryDTO.getGitDetails().getObjectId()).isEqualTo(objectId);
     assertThat(executionSummaryDTO.getGitDetails().getFilePath()).isEqualTo(file);
     assertThat(executionSummaryDTO.getGitDetails().getRootFolder()).isEqualTo(rootFolder);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testToDtoForStagesExecutionMetadata() {
+    PipelineExecutionSummaryEntity executionSummaryEntity = PipelineExecutionSummaryEntity.builder()
+                                                                .accountId(accountId)
+                                                                .orgIdentifier(orgId)
+                                                                .projectIdentifier(projId)
+                                                                .pipelineIdentifier(pipelineId)
+                                                                .runSequence(1)
+                                                                .planExecutionId(planId)
+                                                                .build();
+    PipelineExecutionSummaryDTO executionSummaryDTO =
+        PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, null);
+    assertThat(executionSummaryDTO.isStagesExecution()).isFalse();
+    assertThat(executionSummaryDTO.getStagesExecuted()).isNull();
+
+    PipelineExecutionSummaryEntity executionSummaryEntityWithStages =
+        PipelineExecutionSummaryEntity.builder()
+            .accountId(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projId)
+            .pipelineIdentifier(pipelineId)
+            .runSequence(1)
+            .planExecutionId(planId)
+            .stagesExecutionMetadata(StagesExecutionMetadata.builder()
+                                         .isStagesExecution(true)
+                                         .stageIdentifiers(Collections.singletonList("s1"))
+                                         .build())
+            .build();
+    PipelineExecutionSummaryDTO executionSummaryDTOWithStages =
+        PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithStages, null);
+    assertThat(executionSummaryDTOWithStages.isStagesExecution()).isTrue();
+    assertThat(executionSummaryDTOWithStages.getStagesExecuted()).hasSize(1);
+    assertThat(executionSummaryDTOWithStages.getStagesExecuted().contains("s1")).isTrue();
   }
 }

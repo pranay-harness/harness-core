@@ -16,10 +16,13 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
+import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.Service;
@@ -30,6 +33,7 @@ import com.amazonaws.services.ecs.model.UntagResourceRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDP)
 @Singleton
@@ -40,6 +44,8 @@ public class EcsSwapRoutesCommandTaskHelper {
   private static final String BG_BLUE = "BLUE";
   @Inject private AwsHelperService awsHelperService;
   @Inject private EcsContainerService ecsContainerService;
+  @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
+  @Inject private EcsCommandTaskHelper ecsCommandTaskHelper;
 
   public void upsizeOlderService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
       String cluster, int count, String serviceName, ExecutionLogCallback executionLogCallback, int timeout,
@@ -161,5 +167,36 @@ public class EcsSwapRoutesCommandTaskHelper {
     } else {
       logCallback.saveExecutionLog("No Service needs to be downsized");
     }
+  }
+
+  public void restoreAwsAutoScalarConfig(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs, boolean isRollback,
+      ExecutionLogCallback executionLogCallback) {
+    if (!isRollback) {
+      return;
+    }
+
+    if (isEmpty(previousAwsAutoScalarConfigs)) {
+      executionLogCallback.saveExecutionLog("No Auto-scalar configs to restore");
+      return;
+    }
+
+    previousAwsAutoScalarConfigs.forEach(awsAutoScalarConfig -> {
+      if (StringUtils.isNotBlank(awsAutoScalarConfig.getScalableTargetJson())) {
+        ScalableTarget scalableTarget =
+            awsAppAutoScalingService.getScalableTargetFromJson(awsAutoScalarConfig.getScalableTargetJson());
+
+        ecsCommandTaskHelper.registerScalableTargetForEcsService(
+            awsAppAutoScalingService, region, awsConfig, encryptedDataDetails, executionLogCallback, scalableTarget);
+
+        if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+          for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
+            ecsCommandTaskHelper.upsertScalingPolicyIfRequired(policyJson, scalableTarget.getResourceId(),
+                scalableTarget.getScalableDimension(), region, awsConfig, awsAppAutoScalingService,
+                encryptedDataDetails, executionLogCallback);
+          }
+        }
+      }
+    });
   }
 }

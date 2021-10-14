@@ -6,6 +6,7 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.HarnessCDActivity;
+import io.harness.cvng.activity.entities.HarnessCDCurrentGenActivity;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
@@ -166,6 +167,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(PagerDutyWebhook.class);
     set.add(PagerDutyActivity.class);
     set.add(HarnessCDCurrentGenChangeSource.class);
+    set.add(HarnessCDCurrentGenActivity.class);
   }
 
   @Override

@@ -48,3 +48,8 @@ fi
 if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
 fi
+
+if [[ "" != "$ALLOWED_ORIGINS" ]]; then
+  yq delete -i $CONFIG_FILE allowedOrigins
+  yq write -i $CONFIG_FILE allowedOrigins "$ALLOWED_ORIGINS"
+fi

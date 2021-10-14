@@ -12,7 +12,6 @@ import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanService;
-import io.harness.engine.executions.retry.RetryExecutionHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.execution.PlanExecution;
@@ -30,6 +29,7 @@ import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.ExecArgs;
@@ -69,6 +69,7 @@ public class ExecutionHelper {
   OrchestrationService orchestrationService;
   PlanService planService;
   PlanExecutionMetadataService planExecutionMetadataService;
+  PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public PipelineEntity fetchPipelineEntity(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier) {
@@ -156,6 +157,8 @@ public class ExecutionHelper {
       pipelineYaml =
           InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), mergedRuntimeInputYaml, true);
     }
+    // TODO(archit): Add check on template resolve when templateReferences is implemented.
+    pipelineYaml = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity).getMergedPipelineYaml();
     pipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
     pmsYamlSchemaService.validateYamlSchema(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
         pipelineEntity.getProjectIdentifier(), pipelineYaml);

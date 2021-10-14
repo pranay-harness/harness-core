@@ -24,6 +24,7 @@ java_library(
         "//888-pms-client:module",
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",
+        "//942-enforcement-sdk:module",
         "//945-license-usage-sdk:module",
         "//948-access-control-sdk:module",
         "//954-connector-beans:module",
@@ -51,6 +52,7 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//942-enforcement-sdk:module",
         "//955-delegate-beans:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",

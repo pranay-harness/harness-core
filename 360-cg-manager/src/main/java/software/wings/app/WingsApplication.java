@@ -58,6 +58,7 @@ import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
+import io.harness.dms.DmsModule;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -75,6 +76,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.insights.DelegateInsightsSummaryJob;
+import io.harness.iterator.DelegateTaskExpiryCheckIterator;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
@@ -710,6 +712,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         return MANAGER.getServiceId();
       }
     });
+    modules.add(DmsModule.getInstance(shouldEnableDelegateMgmt(configuration)));
   }
 
   private void registerEventConsumers(final Injector injector) {
@@ -1114,6 +1117,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
+    injector.getInstance(DelegateTaskExpiryCheckIterator.class).registerIterators();
   }
 
   public static void registerIteratorsManager(Injector injector) {

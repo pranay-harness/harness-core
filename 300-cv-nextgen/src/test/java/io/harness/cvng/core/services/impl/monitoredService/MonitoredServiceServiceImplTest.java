@@ -1,9 +1,11 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.ANJAN;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static java.util.stream.Collectors.toList;
@@ -460,20 +462,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
 
-    when(nextGenService.listService(anyString(), anyString(), anyString(), any()))
-        .thenReturn(Arrays.asList(ServiceResponse.builder()
-                                      .service(builderFactory.serviceResponseDTOBuilder()
-                                                   .identifier(serviceIdentifier)
-                                                   .name("serviceName")
-                                                   .build())
-                                      .build()));
-    when(nextGenService.listEnvironment(anyString(), anyString(), anyString(), any()))
-        .thenReturn(Arrays.asList(EnvironmentResponse.builder()
-                                      .environment(builderFactory.environmentResponseDTOBuilder()
-                                                       .identifier(environmentIdentifier)
-                                                       .name("environmentName")
-                                                       .build())
-                                      .build()));
+    when(nextGenService.getServiceIdNameMap(any(), any())).thenReturn(new HashMap<String, String>() {
+      { put(serviceIdentifier, "serviceName"); }
+    });
+    when(nextGenService.getEnvironmentIdNameMap(any(), any())).thenReturn(new HashMap<String, String>() {
+      { put(environmentIdentifier, "environmentName"); }
+    });
     PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse =
         monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, null, 0, 10, null);
     assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
@@ -944,6 +938,46 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(responseDTOs.get(2).getMonitoredServiceDTO().getIdentifier()).isEqualTo(dto1.getIdentifier());
     assertThat(responseDTOs.get(2).getMonitoredServiceDTO().getEnvironmentRef()).isEqualTo(dto1.getEnvironmentRef());
     assertThat(responseDTOs.get(2).getMonitoredServiceDTO().getServiceRef()).isEqualTo(dto1.getServiceRef());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreate_withDependency() {
+    String dependentService = generateUuid();
+    ServiceDependencyDTO dependencyDTO =
+        ServiceDependencyDTO.builder().monitoredServiceIdentifier(dependentService).build();
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceDTO.setDependencies(Sets.newHashSet(dependencyDTO));
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+
+    MonitoredServiceResponse response = monitoredServiceService.get(projectParams, monitoredServiceDTO.getIdentifier());
+    assertThat(response.getMonitoredServiceDTO().getDependencies()).isNotNull();
+    Set<ServiceDependencyDTO> dependencyDTOS = response.getMonitoredServiceDTO().getDependencies();
+    assertThat(dependencyDTOS.size()).isEqualTo(1);
+    assertThat(dependencyDTOS).containsExactly(dependencyDTO);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdate_removeExistingDependency() {
+    String dependentService = generateUuid();
+    ServiceDependencyDTO dependencyDTO =
+        ServiceDependencyDTO.builder().monitoredServiceIdentifier(dependentService).build();
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceDTO.setDependencies(Sets.newHashSet(dependencyDTO));
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+
+    MonitoredServiceResponse response = monitoredServiceService.get(projectParams, monitoredServiceDTO.getIdentifier());
+    Set<ServiceDependencyDTO> dependencyDTOS = response.getMonitoredServiceDTO().getDependencies();
+    assertThat(dependencyDTOS).containsExactly(dependencyDTO);
+
+    monitoredServiceDTO.setDependencies(null);
+
+    monitoredServiceService.update(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    response = monitoredServiceService.get(projectParams, monitoredServiceDTO.getIdentifier());
+    assertThat(response.getMonitoredServiceDTO().getDependencies()).isNullOrEmpty();
   }
 
   MonitoredServiceDTO createMonitoredServiceDTO() {

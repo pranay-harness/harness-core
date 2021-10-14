@@ -1,5 +1,9 @@
 package software.wings.api.ecs;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.api.ExecutionDataValue;
@@ -17,6 +21,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EcsRoute53WeightUpdateStateExecutionData
     extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
