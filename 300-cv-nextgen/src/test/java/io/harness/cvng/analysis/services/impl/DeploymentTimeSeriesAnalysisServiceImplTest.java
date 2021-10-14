@@ -625,7 +625,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
     assertThat(
         deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
-        .isEqualTo(Risk.OBSERVE);
+        .isEqualTo(Risk.MEDIUM);
   }
 
   @Test
@@ -661,7 +661,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis2);
     assertThat(
         deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
-        .isEqualTo(Risk.OBSERVE);
+        .isEqualTo(Risk.MEDIUM);
   }
 
   private VerificationJobInstance createVerificationJobInstance() {
@@ -745,7 +745,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     return DeploymentTimeSeriesAnalysis.builder()
         .accountId(accountId)
         .score(.7)
-        .risk(Risk.OBSERVE)
+        .risk(Risk.MEDIUM)
         .verificationTaskId(verificationTaskId)
         .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
         .hostSummaries(Arrays.asList(hostInfo1, hostInfo2, hostInfo3))

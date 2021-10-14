@@ -309,7 +309,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
       String txnName = txnMetricAnalysis.getKey();
       ServiceGuardTxnMetricAnalysisDataDTO analysisDataDTO = txnMetricAnalysis.getValue().get(TREND_METRIC_NAME);
       LogAnalysisCluster cluster = logAnalysisClusterMap.get(Long.valueOf(txnName));
-      if (analysisDataDTO.getRisk().isGreaterThanEq(Risk.OBSERVE)) {
+      if (analysisDataDTO.getRisk().isGreaterThanEq(Risk.MEDIUM)) {
         unexpectedClustersWithRiskScore.put(cluster.getLabel(), analysisDataDTO.getScore());
       }
       int index = cluster.getFrequencyTrend().size() - 1;
