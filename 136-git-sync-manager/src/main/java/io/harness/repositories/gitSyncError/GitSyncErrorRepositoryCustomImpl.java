@@ -53,6 +53,11 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
   }
 
   @Override
+  public GitSyncError find(Criteria criteria) {
+    Query query = query(criteria);
+    return mongoTemplate.findOne(query, GitSyncError.class);
+  }
+
   public long count(Criteria criteria) {
     return mongoTemplate.count(query(criteria), GitSyncError.class);
   }

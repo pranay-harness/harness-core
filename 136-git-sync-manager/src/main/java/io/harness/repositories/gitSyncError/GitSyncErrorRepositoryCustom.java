@@ -25,5 +25,7 @@ public interface GitSyncErrorRepositoryCustom {
 
   Page<GitSyncError> findAll(Criteria criteria, Pageable pageable);
 
+  GitSyncError find(Criteria criteria);
+
   long count(Criteria criteria);
 }

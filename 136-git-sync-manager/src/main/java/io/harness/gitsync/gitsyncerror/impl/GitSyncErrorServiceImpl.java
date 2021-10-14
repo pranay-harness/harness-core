@@ -7,6 +7,7 @@ import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.ROOT;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
@@ -21,7 +22,6 @@ import static org.springframework.data.mongodb.core.query.Update.update;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
-import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
@@ -29,7 +29,6 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncErrorKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit.GitSyncErrorAggregateByCommitKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
-import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
@@ -48,6 +47,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -126,7 +126,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         emptyIfNull(gitSyncErrorAggregateByCommitList)
             .stream()
             .map(GitSyncErrorMapper::toGitSyncErrorAggregateByCommitDTO)
-            .collect(Collectors.toList());
+            .collect(toList());
     Set<String> repoUrls = emptyIfNull(gitSyncErrorAggregateByCommitDTOList)
                                .stream()
                                .map(gitSyncErrorAggregateByCommitDTO
@@ -139,7 +139,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
           gitSyncErrorAggregateByCommitDTO.setRepoId(repoIds.get(repoUrl));
           return gitSyncErrorAggregateByCommitDTO;
         })
-        .collect(Collectors.toList());
+        .collect(toList());
     Page<GitSyncErrorAggregateByCommitDTO> page =
         new PageImpl<>(gitSyncErrorAggregateByCommitDTOList, pageable, gitSyncErrorAggregateByCommitDTOList.size());
     return getNGPageResponse(page);
@@ -183,7 +183,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                              String defaultBranch = yamlGitConfigDTO.getBranch();
                              return Pair.of(repo, defaultBranch);
                            })
-                           .collect(Collectors.toList());
+                           .collect(toList());
     } else { // when repo filter is applied
       YamlGitConfigDTO yamlGitConfigDTO =
           yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoId);
@@ -234,6 +234,11 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     return getNGPageResponse(gitSyncErrorPage.map(GitSyncErrorMapper::toGitSyncErrorDTO));
   }
 
+  @Override
+  public GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO) {
+    return save(GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()));
+  }
+
   private GitSyncErrorDTO save(GitSyncError gitSyncError) {
     try {
       validate(gitSyncError);
@@ -245,8 +250,62 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   @Override
-  public GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO) {
-    return save(GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()));
+  public List<GitSyncErrorDTO> saveAll(List<GitSyncErrorDTO> gitSyncErrorDTOList) {
+    List<GitSyncError> gitSyncErrors =
+        gitSyncErrorDTOList.stream()
+            .map(gitSyncErrorDTO
+                -> GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()))
+            .collect(toList());
+    List<GitSyncError> gitSyncErrorsSaved = new ArrayList<>();
+    gitSyncErrorRepository.saveAll(gitSyncErrors).iterator().forEachRemaining(gitSyncErrorsSaved::add);
+    return gitSyncErrorsSaved.stream().map(GitSyncErrorMapper::toGitSyncErrorDTO).collect(toList());
+  }
+
+  @Override
+  public void markOverriddenErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths) {
+    Criteria criteria = createActiveErrorsFilterCriteria(accountId, repoUrl, branchName, new ArrayList<>(filePaths));
+    Update update = update(GitSyncErrorKeys.status, GitSyncErrorStatus.OVERRIDDEN);
+    gitSyncErrorRepository.upsertGitError(criteria, update);
+  }
+
+  @Override
+  public void markResolvedErrors(
+      String accountId, String repoUrl, String branchName, Set<String> filePaths, String commitId) {
+    Criteria criteria = createActiveErrorsFilterCriteria(accountId, repoUrl, branchName, new ArrayList<>(filePaths));
+    Update update =
+        update(GitSyncErrorKeys.status, GitSyncErrorStatus.RESOLVED).set(GitSyncErrorKeys.resolvedByCommitId, commitId);
+    gitSyncErrorRepository.upsertGitError(criteria, update);
+  }
+
+  private Criteria createActiveErrorsFilterCriteria(
+      String accountId, String repoUrl, String branchName, List<String> filePaths) {
+    return Criteria.where(GitSyncErrorKeys.accountIdentifier)
+        .is(accountId)
+        .and(GitSyncErrorKeys.repoUrl)
+        .is(repoUrl)
+        .and(GitSyncErrorKeys.branchName)
+        .is(branchName)
+        .and(GitSyncErrorKeys.completeFilePath)
+        .in(filePaths)
+        .and(GitSyncErrorKeys.status)
+        .is(GitSyncErrorStatus.ACTIVE);
+  }
+
+  @Override
+  public Optional<GitSyncErrorDTO> getGitToHarnessError(
+      String accountId, String commitId, String repoUrl, String branchName, String filePath) {
+    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(GitSyncErrorKeys.gitCommitId)
+                            .is(commitId)
+                            .and(GitSyncErrorKeys.repoUrl)
+                            .is(repoUrl)
+                            .and(GitSyncErrorKeys.branchName)
+                            .is(branchName)
+                            .and(GitSyncErrorKeys.completeFilePath)
+                            .is(filePath);
+    GitSyncError error = gitSyncErrorRepository.find(criteria);
+    return Optional.ofNullable(GitSyncErrorMapper.toGitSyncErrorDTO(error));
   }
 
   private void markExpiredErrors() {
@@ -254,48 +313,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         Criteria.where(GitSyncErrorKeys.createdAt).lte(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
     Update update = update(GitSyncErrorKeys.status, GitSyncErrorStatus.EXPIRED);
     gitSyncErrorRepository.upsertGitError(criteria, update);
-  }
-
-  @Override
-  public void upsertGitSyncErrors(
-      GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig) {
-    upsertGitToHarnessError(failedChange, errorMessage, yamlGitConfig);
-  }
-
-  private void upsertGitToHarnessError(
-      GitFileChange failedGitFileChange, String errorMessage, YamlGitConfigDTO yamlGitConfig) {
-    log.info("Upsert git to harness sync issue for file: [{}]", failedGitFileChange.getFilePath());
-
-    /*GitToHarnessErrorDetails gitToHarnessErrorDetails = getGitToHarnessErrorDetails(failedGitFileChange);
-    final GitSyncError previousGitSyncError =
-        gitSyncErrorRepository.findByAccountIdentifierAndCompleteFilePathAndErrorType(
-            failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(), GitSyncErrorType.GIT_TO_HARNESS);
-    addPreviousCommitDetailsToErrorDetails(failedGitFileChange, gitToHarnessErrorDetails, previousGitSyncError);
-    gitSyncErrorRepository.upsertGitError(failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(),
-        GIT_TO_HARNESS, errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info",
-        false, failedGitFileChange.getChangeType(), gitToHarnessErrorDetails, yamlGitConfig.getGitConnectorRef(),
-        yamlGitConfig.getRepo(), yamlGitConfig.getBranch(),
-        GitFileLocationHelper.getRootPathSafely(failedGitFileChange.getFilePath()), yamlGitConfig.getIdentifier(),
-        yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier());*/
-  }
-
-  private GitToHarnessErrorDetails getGitToHarnessErrorDetails(GitFileChange failedGitFileChange) {
-    String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
-    if (failedCommitId.equals("")) {
-      log.info("Unexpected behaviour: The git commitId is null for the git to harness error");
-    }
-    return GitToHarnessErrorDetails.builder()
-        .gitCommitId(failedCommitId)
-        .yamlContent(failedGitFileChange.getFileContent())
-        .commitMessage(failedGitFileChange.getCommitMessage())
-        .build();
-  }
-
-  @Override
-  public List<GitSyncError> getActiveGitToHarnessSyncErrors(String accountId, String gitConnectorId, String repoName,
-      String branchName, String rootFolder, long fromTimestamp) {
-    return null; // gitSyncErrorRepository.getActiveGitSyncError(
-                 // accountId, fromTimestamp, GIT_TO_HARNESS, gitConnectorId, repoName, branchName, rootFolder);
   }
 
   @Override
