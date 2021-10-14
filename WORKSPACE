@@ -4810,7 +4810,7 @@ plain_artifacts = [
     "org.hamcrest:hamcrest-all:1.3",
     "org.hamcrest:hamcrest-core:1.3",
     "org.hdrhistogram:HdrHistogram:2.1.9",
-    "org.hibernate:hibernate-validator:6.1.5.Final",
+    "org.hibernate.validator:hibernate-validator:6.1.5.Final",
     "org.jacoco:org.jacoco.agent:0.8.5",
     "org.jacorb:jacorb-omgapi:3.9",
     "org.javassist:javassist:3.20.0-GA",

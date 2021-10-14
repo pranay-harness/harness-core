@@ -62,7 +62,7 @@ java_library(
         "@maven//:javax_validation_validation_api",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_bouncycastle_bcprov_jdk15on",
-        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_hibernate_validator_hibernate_validator",
         "@maven//:org_jetbrains_annotations",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_mongodb_morphia_morphia",

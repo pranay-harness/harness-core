@@ -152,7 +152,7 @@ java_library(
         "@maven//:org_eclipse_jetty_jetty_util",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
         "@maven//:org_glassfish_javax_el",
-        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_hibernate_validator_hibernate_validator",
         "@maven//:org_javassist_javassist",
         "@maven//:org_jboss_logging_jboss_logging",
         "@maven//:org_modelmapper_modelmapper",

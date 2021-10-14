@@ -37,7 +37,7 @@ java_library(
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_codehaus_jackson_jackson_core_asl",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
-        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_hibernate_validator_hibernate_validator",
         "@maven//:org_jetbrains_annotations",
         "@maven//:org_json_json",
         "@maven//:org_mongodb_mongo_java_driver",
