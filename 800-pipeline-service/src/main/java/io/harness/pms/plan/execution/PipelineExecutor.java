@@ -12,6 +12,7 @@ import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.execution.beans.ExecArgs;
 import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
 
@@ -35,6 +36,7 @@ public class PipelineExecutor {
   ValidateAndMergeHelper validateAndMergeHelper;
   PlanExecutionMetadataService planExecutionMetadataService;
   RetryExecutionHelper retryExecutionHelper;
+  PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
