@@ -47,7 +47,7 @@ public class PipelineExecutor {
       String projectIdentifier, String pipelineIdentifier, String moduleType, List<String> inputSetReferences,
       String pipelineBranch, String pipelineRepoID) {
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
-        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
+        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID, null);
     return startPlanExecution(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, null, moduleType,
         mergedRuntimeInputYaml, Collections.emptyList(), false);
   }
@@ -70,7 +70,7 @@ public class PipelineExecutor {
       String projectIdentifier, String pipelineIdentifier, String moduleType, String originalExecutionId,
       List<String> inputSetReferences, String pipelineBranch, String pipelineRepoID) {
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
-        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
+        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID, null);
     return startPlanExecution(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, originalExecutionId,
         moduleType, mergedRuntimeInputYaml, Collections.emptyList(), false);
   }

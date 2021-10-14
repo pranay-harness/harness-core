@@ -121,7 +121,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
         .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, !PIPELINE_DELETED);
     doReturn(null).when(pmsGitSyncHelper).getEntityGitDetailsFromBytes(any());
-    doReturn(template).when(validateAndMergeHelper).getPipelineTemplate(any(), any(), any(), any());
+    doReturn(template).when(validateAndMergeHelper).getPipelineTemplate(any(), any(), any(), any(), any());
 
     String inputSet = pmsExecutionService
                           .getInputSetYamlWithTemplate(
@@ -140,7 +140,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
         .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, INVALID_PLAN_EXECUTION_ID, !PIPELINE_DELETED);
     doReturn(null).when(pmsGitSyncHelper).getEntityGitDetailsFromBytes(any());
-    doReturn(template).when(validateAndMergeHelper).getPipelineTemplate(any(), any(), any(), any());
+    doReturn(template).when(validateAndMergeHelper).getPipelineTemplate(any(), any(), any(), any(), any());
 
     assertThatThrownBy(()
                            -> pmsExecutionService.getInputSetYamlWithTemplate(ACCOUNT_ID, ORG_IDENTIFIER,
