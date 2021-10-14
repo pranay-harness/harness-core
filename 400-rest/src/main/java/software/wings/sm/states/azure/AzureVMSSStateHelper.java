@@ -231,8 +231,8 @@ public class AzureVMSSStateHelper {
   public boolean isWebAppNonContainerDeployment(ExecutionContext context) {
     Service service = getServiceByAppId(context, context.getAppId());
     ArtifactType artifactType = service.getArtifactType();
-    return (ArtifactType.WAR.equals(artifactType) || ArtifactType.ZIP.equals(artifactType)
-        || ArtifactType.NUGET.equals(artifactType));
+    return ArtifactType.WAR.equals(artifactType) || ArtifactType.ZIP.equals(artifactType)
+        || ArtifactType.NUGET.equals(artifactType);
   }
 
   public ExecutionContext getExecutionContext(

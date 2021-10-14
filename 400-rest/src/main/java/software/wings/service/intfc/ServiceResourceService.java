@@ -12,7 +12,6 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 
 import software.wings.api.DeploymentType;
-import software.wings.beans.Activity;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.InfrastructureMapping;

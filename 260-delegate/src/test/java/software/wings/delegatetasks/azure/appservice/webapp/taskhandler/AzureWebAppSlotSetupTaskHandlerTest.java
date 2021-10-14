@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
-import static io.harness.rule.OwnerRule.*;
+import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.IVAN;
+import static io.harness.rule.OwnerRule.JELENA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

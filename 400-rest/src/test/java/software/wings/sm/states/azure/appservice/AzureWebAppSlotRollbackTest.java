@@ -58,7 +58,6 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecut
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
 import software.wings.sm.states.azure.appservices.manifest.AzureAppServiceManifestUtils;
-import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -66,7 +65,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.annotation.Generated;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -1,12 +1,9 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.AZURE_APP_SVC_ARTIFACT_DOWNLOAD_DIR_PATH;
-import static io.harness.azure.model.AzureConstants.REPOSITORY_DIR_PATH;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.JELENA;
-
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
