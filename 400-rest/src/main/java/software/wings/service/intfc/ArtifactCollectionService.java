@@ -2,7 +2,9 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface ArtifactCollectionService {
   Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails);
 

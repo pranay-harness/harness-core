@@ -13,10 +13,12 @@ import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.pipeline.observer.OrchestrationObserverUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
+import io.harness.repositories.executions.AccountExecutionMetadataRepository;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
 import com.google.inject.Inject;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -25,12 +27,15 @@ import org.springframework.data.mongodb.core.query.Update;
 public class PipelineStatusUpdateEventHandler implements PlanStatusUpdateObserver, OrchestrationEndObserver {
   private final PlanExecutionService planExecutionService;
   private final PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
+  private final AccountExecutionMetadataRepository accountExecutionMetadataRepository;
 
   @Inject
-  public PipelineStatusUpdateEventHandler(
-      PlanExecutionService planExecutionService, PmsExecutionSummaryRespository pmsExecutionSummaryRepository) {
+  public PipelineStatusUpdateEventHandler(PlanExecutionService planExecutionService,
+      PmsExecutionSummaryRespository pmsExecutionSummaryRepository,
+      AccountExecutionMetadataRepository accountExecutionMetadataRepository) {
     this.planExecutionService = planExecutionService;
     this.pmsExecutionSummaryRepository = pmsExecutionSummaryRepository;
+    this.accountExecutionMetadataRepository = accountExecutionMetadataRepository;
   }
 
   @Override
@@ -61,12 +66,16 @@ public class PipelineStatusUpdateEventHandler implements PlanStatusUpdateObserve
                 AmbianceUtils.getAccountId(ambiance), AmbianceUtils.getOrgIdentifier(ambiance),
                 AmbianceUtils.getProjectIdentifier(ambiance), ambiance.getPlanExecutionId(), true);
     if (pipelineExecutionSummaryEntity.isPresent()) {
+      Set<String> executedModules =
+          OrchestrationObserverUtils.getExecutedModulesInPipeline(pipelineExecutionSummaryEntity.get());
       Update update = new Update();
-      update.set(PlanExecutionSummaryKeys.executedModules,
-          OrchestrationObserverUtils.getExecutedModulesInPipeline(pipelineExecutionSummaryEntity.get()));
+      update.set(PlanExecutionSummaryKeys.executedModules, executedModules);
       Criteria criteria = Criteria.where(PlanExecutionSummaryKeys.planExecutionId).is(ambiance.getPlanExecutionId());
       Query query = new Query(criteria);
-      pmsExecutionSummaryRepository.update(query, update);
+      PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity1 =
+          pmsExecutionSummaryRepository.update(query, update);
+      accountExecutionMetadataRepository.updateAccountExecutionMetadata(
+          AmbianceUtils.getAccountId(ambiance), executedModules, pipelineExecutionSummaryEntity1.getStartTs());
     }
   }
 }

@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
 
 import software.wings.beans.JenkinsConfig;
@@ -16,6 +18,7 @@ import java.util.List;
  * @author rktummala on 11/19/17
  */
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class JenkinsConfigVerificationYamlHandler
     extends VerificationProviderYamlHandler<VerificationYaml, JenkinsConfig> {
   @Override
@@ -33,6 +36,9 @@ public class JenkinsConfigVerificationYamlHandler
                     : null)
             .authMechanism(jenkinsConfig.getAuthMechanism())
             .build();
+
+    yaml.setUseConnectorUrlForJobExecution(jenkinsConfig.isUseConnectorUrlForJobExecution());
+
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
@@ -54,6 +60,7 @@ public class JenkinsConfigVerificationYamlHandler
                                .encryptedToken(yaml.getToken())
                                .authMechanism(yaml.getAuthMechanism())
                                .username(yaml.getUsername())
+                               .useConnectorUrlForJobExecution(yaml.isUseConnectorUrlForJobExecution())
                                .build();
 
     try {

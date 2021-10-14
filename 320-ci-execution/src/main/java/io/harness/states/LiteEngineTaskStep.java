@@ -184,7 +184,8 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   private LiteEnginePodDetailsOutcome getPodDetailsOutcome(CiK8sTaskResponse ciK8sTaskResponse) {
     if (ciK8sTaskResponse != null && ciK8sTaskResponse.getPodStatus() != null) {
       String ip = ciK8sTaskResponse.getPodStatus().getIp();
-      return LiteEnginePodDetailsOutcome.builder().ipAddress(ip).build();
+      String namespace = ciK8sTaskResponse.getPodNamespace();
+      return LiteEnginePodDetailsOutcome.builder().ipAddress(ip).namespace(namespace).build();
     }
     return null;
   }

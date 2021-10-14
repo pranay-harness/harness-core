@@ -489,7 +489,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                 featureFlagService.isEnabled(DISABLE_WINRM_COMMAND_ENCODING, executionContext.getApp().getAccountId()))
             .disableWinRMEnvVariables(featureFlagService.isEnabled(
                 FeatureName.DISABLE_WINRM_ENV_VARIABLES, executionContext.getApp().getAccountId()))
-            .saveExecutionLogs(true);
+            .saveExecutionLogs(true)
+            .enableJSchLogs(isJSchLogsEnabledPerAccount(executionContext.getApp().getAccountId()));
     Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
@@ -616,6 +617,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
           ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
     }
     return winRmConnectionAttributes;
+  }
+
+  private boolean isJSchLogsEnabledPerAccount(final String accountId) {
+    return featureFlagService.isEnabled(FeatureName.SSH_JSCH_LOGS, accountId);
   }
 
   @Override

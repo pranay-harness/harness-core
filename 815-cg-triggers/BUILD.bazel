@@ -12,6 +12,7 @@ java_library(
         "//870-cg-orchestration:module",
         "//890-sm-core:module",
         "//920-delegate-service-beans:module",
+        "//930-delegate-tasks:module",
         "//940-feature-flag:module",
         "//950-delegate-tasks-beans:module",
         "//950-wait-engine:module",

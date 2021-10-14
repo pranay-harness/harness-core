@@ -58,6 +58,7 @@ import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
+import io.harness.dms.DmsModule;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -711,6 +712,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         return MANAGER.getServiceId();
       }
     });
+    modules.add(DmsModule.getInstance(shouldEnableDelegateMgmt(configuration)));
   }
 
   private void registerEventConsumers(final Injector injector) {

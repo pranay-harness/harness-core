@@ -39,9 +39,10 @@ public class DashboardRBACServiceImpl implements DashboardRBACService {
         listAccessibleOrganizations(accountIdentifier, orgIdentifiers);
 
     Map<String, String> mapOfOrganizationIdentifierAndOrganizationName = new HashMap<>();
-    listOfAccessibleOrganizations.getContent().stream().map(organizationResponse
-        -> mapOfOrganizationIdentifierAndOrganizationName.put(
-            organizationResponse.getOrganization().getIdentifier(), organizationResponse.getOrganization().getName()));
+    for (OrganizationResponse organizationResponse : listOfAccessibleOrganizations.getContent()) {
+      mapOfOrganizationIdentifierAndOrganizationName.put(
+          organizationResponse.getOrganization().getIdentifier(), organizationResponse.getOrganization().getName());
+    }
     return mapOfOrganizationIdentifierAndOrganizationName;
   }
 }

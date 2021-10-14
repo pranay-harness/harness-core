@@ -166,7 +166,7 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
     ARTIFACT_STREAM.setFailedCronAttempts(10);
     artifactCollectionResponseHandler.processArtifactCollectionResult(
         ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
-    verify(artifactStreamService, times(1)).updateFailedCronAttempts(ACCOUNT_ID, ARTIFACT_STREAM_ID, 0);
+    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(ACCOUNT_ID, ARTIFACT_STREAM_ID, 0);
   }
 
   @Test
