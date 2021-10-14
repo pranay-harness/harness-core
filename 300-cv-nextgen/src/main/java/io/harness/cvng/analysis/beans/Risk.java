@@ -7,10 +7,9 @@ import java.util.Map;
 public enum Risk {
   NO_DATA(-2),
   NO_ANALYSIS(-1),
-  HEALTHY(0),
-  OBSERVE(1),
-  NEED_ATTENTION(2),
-  UNHEALTHY(3);
+  LOW(0),
+  MEDIUM(1),
+  HIGH(2);
   private static final Map<Integer, Risk> INT_TO_RISK_MAP = new HashMap<>();
   static {
     for (Risk r : Risk.values()) {
@@ -32,27 +31,17 @@ public enum Risk {
   }
 
   public static Risk getRiskFromRiskScore(double riskScore) {
-    Integer healthScore = getHealthScoreFromRiskScore(riskScore);
     if (riskScore == -2.0) {
       return Risk.NO_DATA;
     } else if (riskScore < 0.0) {
       return Risk.NO_ANALYSIS;
-    } else if (healthScore >= 75) {
-      return Risk.HEALTHY;
-    } else if (healthScore >= 50) {
-      return Risk.OBSERVE;
-    } else if (healthScore >= 25) {
-      return Risk.NEED_ATTENTION;
+    } else if (riskScore < .3) {
+      return Risk.LOW;
+    } else if (riskScore < .5) {
+      return Risk.MEDIUM;
     } else {
-      return Risk.UNHEALTHY;
+      return Risk.HIGH;
     }
-  }
-
-  public static Integer getHealthScoreFromRiskScore(double riskScore) {
-    if (riskScore < 0) {
-      return null;
-    }
-    return Integer.valueOf(100 - (int) Math.round(100 * riskScore));
   }
 
   public boolean isGreaterThanEq(Risk other) {

@@ -49,7 +49,7 @@ public class DataGenerator {
     return DeploymentTimeSeriesAnalysis.builder()
         .accountId(accountId)
         .score(.7)
-        .risk(Risk.OBSERVE)
+        .risk(Risk.MEDIUM)
         .verificationTaskId(verificationTaskId)
         .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
         .hostSummaries(Arrays.asList(hostInfo1, hostInfo2))

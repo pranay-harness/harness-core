@@ -58,7 +58,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     List<Double> controlData;
     List<Double> testData;
     public boolean isAnomalous() {
-      return getRisk().getValue() >= Risk.OBSERVE.getValue();
+      return getRisk().getValue() >= Risk.MEDIUM.getValue();
     }
     public Optional<String> getHostName() {
       return Optional.ofNullable(hostName);
@@ -95,7 +95,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     }
 
     public boolean isAnomalous() {
-      return getRisk().getValue() >= Risk.OBSERVE.getValue();
+      return getRisk().getValue() >= Risk.MEDIUM.getValue();
     }
   }
 }
