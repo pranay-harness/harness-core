@@ -24,6 +24,7 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDetailsDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorDetailsDTO;
@@ -221,5 +222,18 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(3);
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_getErrorCount() {
+    long createdAt = OffsetDateTime.now().minusDays(12).toInstant().toEpochMilli();
+    gitSyncErrorRepository.save(build("filepath1", additionalErrorDetails, createdAt));
+    gitSyncErrorRepository.save(build("filePath2", additionalErrorDetails, createdAt));
+    GitSyncErrorCountDTO gitSyncErrorCountDTO =
+        gitSyncErrorService.getErrorCount(accountId, orgId, projectId, null, repoId, branch);
+    assertThat(gitSyncErrorCountDTO.getGitToHarnessErrorCount()).isEqualTo(2);
+    assertThat(gitSyncErrorCountDTO.getConnectivityErrorCount()).isEqualTo(0);
   }
 }
