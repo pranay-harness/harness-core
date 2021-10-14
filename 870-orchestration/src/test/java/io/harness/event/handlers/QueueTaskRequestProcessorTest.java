@@ -101,13 +101,13 @@ public class QueueTaskRequestProcessorTest extends OrchestrationTestBase {
             .setExecutableResponse(ExecutableResponse.newBuilder().setTask(taskBuilder.build()).build())
             .build();
 
-    queueTaskResponseHandler.handleEvent(
-        SdkResponseEventProto.newBuilder()
-            .setSdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
-            .setQueueTaskRequest(queueTaskRequest)
-            .setAmbiance(
-                Ambiance.newBuilder().addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build()).build())
-            .build());
+    Ambiance ambiance =
+        Ambiance.newBuilder().addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build()).build();
+    queueTaskResponseHandler.handleEvent(SdkResponseEventProto.newBuilder()
+                                             .setSdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
+                                             .setQueueTaskRequest(queueTaskRequest)
+                                             .setAmbiance(ambiance)
+                                             .build());
 
     verify(nodeExecutionService)
         .updateStatusWithOps(nExIDCaptor.capture(), sCaptor.capture(), uCaptor.capture(), esCaptor.capture());
@@ -120,7 +120,7 @@ public class QueueTaskRequestProcessorTest extends OrchestrationTestBase {
     assertThat(update.getUpdateObject().keySet()).containsExactly("$addToSet");
     assertThat(update.getUpdateObject().values()).hasSize(1);
     verify(waitNotifyEngine)
-        .waitForAllOn(null, EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build(),
-            EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build(), taskId);
+        .waitForAllOn(null, EngineResumeCallback.builder().ambiance(ambiance).build(),
+            EngineProgressCallback.builder().ambiance(ambiance).build(), taskId);
   }
 }
