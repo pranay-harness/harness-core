@@ -6,6 +6,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -21,7 +22,9 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hazelcast.util.Preconditions;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -60,10 +63,13 @@ public class NextGenServiceImpl implements NextGenService {
           .build(new CacheLoader<EntityKey, ServiceResponseDTO>() {
             @Override
             public ServiceResponseDTO load(EntityKey entityKey) {
-              return requestExecutor
-                  .execute(nextGenClient.getService(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
-                      entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
-                  .getData();
+              ServiceResponse serviceResponse =
+                  requestExecutor
+                      .execute(nextGenClient.getService(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
+                          entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
+                      .getData();
+              Preconditions.checkNotNull(serviceResponse, "Service Response from Ng Manager cannot be null");
+              return serviceResponse.getService();
             }
           });
 
@@ -219,6 +225,28 @@ public class NextGenServiceImpl implements NextGenService {
             nextGenClient.listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null, null))
         .getData()
         .getTotalItems();
+  }
+
+  @Override
+  public Map<String, String> getServiceIdNameMap(ProjectParams projectParams, List<String> serviceIdentifiers) {
+    Map<String, String> serviceIdNameMap = new HashMap<>();
+    listService(projectParams.getAccountIdentifier(), projectParams.getOrgIdentifier(),
+        projectParams.getProjectIdentifier(), serviceIdentifiers)
+        .forEach(serviceResponse
+            -> serviceIdNameMap.put(
+                serviceResponse.getService().getIdentifier(), serviceResponse.getService().getName()));
+    return serviceIdNameMap;
+  }
+
+  @Override
+  public Map<String, String> getEnvironmentIdNameMap(ProjectParams projectParams, List<String> environmentIdentifiers) {
+    Map<String, String> environmentIdNameMap = new HashMap<>();
+    listEnvironment(projectParams.getAccountIdentifier(), projectParams.getOrgIdentifier(),
+        projectParams.getProjectIdentifier(), environmentIdentifiers)
+        .forEach(environmentResponse
+            -> environmentIdNameMap.put(
+                environmentResponse.getEnvironment().getIdentifier(), environmentResponse.getEnvironment().getName()));
+    return environmentIdNameMap;
   }
 
   @Value

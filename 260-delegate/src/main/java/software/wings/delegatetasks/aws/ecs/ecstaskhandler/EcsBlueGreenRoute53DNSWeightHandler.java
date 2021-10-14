@@ -88,6 +88,13 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
           request.getRegion(), request.getParentRecordName(), request.getParentRecordHostedZoneId(), blueServiceWeight,
           blueServiceValue, greenServiceWeight, greenServiceValue, request.getTtl());
 
+      if (request.isRollback()) {
+        executionLogCallback.saveExecutionLog(
+            format("Registering Scalable target with old service: [%s]", request.getServiceNameDownsized()));
+        ecsSwapRoutesCommandTaskHelper.restoreAwsAutoScalarConfig(request.getAwsConfig(), encryptedDataDetails,
+            request.getRegion(), request.getPreviousAwsAutoScalarConfigs(), request.isRollback(), executionLogCallback);
+      }
+
       executionLogCallback.saveExecutionLog("Swapping ECS tags Blue and Green");
       ecsSwapRoutesCommandTaskHelper.updateServiceTags(request.getAwsConfig(), encryptedDataDetails,
           request.getRegion(), request.getCluster(), request.getServiceName(), request.getServiceNameDownsized(),

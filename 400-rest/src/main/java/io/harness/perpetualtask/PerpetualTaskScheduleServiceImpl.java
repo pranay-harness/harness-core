@@ -11,8 +11,7 @@ import io.harness.delegate.beans.perpetualtask.PerpetualTaskScheduleConfig.Perpe
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-
-import software.wings.dl.WingsPersistence;
+import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class PerpetualTaskScheduleServiceImpl implements PerpetualTaskScheduleService {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private PerpetualTaskService perpetualTaskService;
 
   @Override
@@ -36,10 +35,10 @@ public class PerpetualTaskScheduleServiceImpl implements PerpetualTaskScheduleSe
       try (AutoLogContext ignore1 = new AccountLogContext(accountId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR);) {
         Query<PerpetualTaskScheduleConfig> query =
             queryToGetRecordByAccountIdAndPerpetualTaskType(accountId, perpetualTaskType);
-        UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(PerpetualTaskScheduleConfig.class);
+        UpdateOperations updateOperations = persistence.createUpdateOperations(PerpetualTaskScheduleConfig.class);
         updateOperations.set(PerpetualTaskScheduleConfigKeys.timeIntervalInMillis, timeIntervalInMillis);
-        perpetualTaskScheduleConfig = wingsPersistence.findAndModify(
-            query, updateOperations, new FindAndModifyOptions().upsert(true).returnNew(true));
+        perpetualTaskScheduleConfig =
+            persistence.findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true).returnNew(true));
         if (perpetualTaskScheduleConfig != null) {
           perpetualTaskService.updateTasksSchedule(accountId, perpetualTaskType, timeIntervalInMillis);
           return perpetualTaskScheduleConfig;
@@ -76,7 +75,7 @@ public class PerpetualTaskScheduleServiceImpl implements PerpetualTaskScheduleSe
       try (AutoLogContext ignore1 = new AccountLogContext(accountId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR);) {
         Query<PerpetualTaskScheduleConfig> query =
             queryToGetRecordByAccountIdAndPerpetualTaskType(accountId, perpetualTaskType);
-        isDeleted = wingsPersistence.delete(query);
+        isDeleted = persistence.delete(query);
         if (isDeleted) {
           perpetualTaskService.updateTasksSchedule(accountId, perpetualTaskType, timeIntervalInMillis);
           return true;
@@ -100,7 +99,7 @@ public class PerpetualTaskScheduleServiceImpl implements PerpetualTaskScheduleSe
 
   private Query<PerpetualTaskScheduleConfig> queryToGetRecordByAccountIdAndPerpetualTaskType(
       String accountId, String perpetualTaskType) {
-    return wingsPersistence.createQuery(PerpetualTaskScheduleConfig.class)
+    return persistence.createQuery(PerpetualTaskScheduleConfig.class)
         .field(PerpetualTaskScheduleConfigKeys.accountId)
         .equal(accountId)
         .field(PerpetualTaskScheduleConfigKeys.perpetualTaskType)

@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.accountpermission.AddManageTagsPermission;
 import io.harness.migrations.accountpermission.AlertNotificationAccountPermissionMigration;
 import io.harness.migrations.accountpermission.CreateCustomDashboardPermissionMigration;
+import io.harness.migrations.accountpermission.ManageAccountDefaultsPermissionMigration;
 import io.harness.migrations.accountpermission.ManageApiKeyPermissionMigration;
 import io.harness.migrations.accountpermission.ManageApplicationsPermissionMigration;
 import io.harness.migrations.accountpermission.ManageAuthenticationSettingsPermissionMigration;
@@ -75,6 +76,8 @@ import io.harness.migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import io.harness.migrations.all.DeleteServiceGuardAlertMigration;
 import io.harness.migrations.all.DeleteStaleSecretUsageLogs;
 import io.harness.migrations.all.DeleteStaleYamlChangeSetsMigration;
+import io.harness.migrations.all.DisableAddingServiceVarsToEcsSpecFFMigration;
+import io.harness.migrations.all.DisableWinrmVariablesFFMigration;
 import io.harness.migrations.all.DropAppIdIndexOnCommandLogs;
 import io.harness.migrations.all.DropDelegateScopeCollectionMigration;
 import io.harness.migrations.all.DropExistingIndexForGitFileActivityMigration;
@@ -92,6 +95,7 @@ import io.harness.migrations.all.EntityNameValidationMigration_All_02;
 import io.harness.migrations.all.EntityNameValidationMigration_All_03;
 import io.harness.migrations.all.EntityNameValidationMigration_All_04;
 import io.harness.migrations.all.FixCVDashboardStatusMigration;
+import io.harness.migrations.all.GcpServiceAccountMigration;
 import io.harness.migrations.all.GcsArtifactProjectIdMigration;
 import io.harness.migrations.all.GitCommitStatusMigration;
 import io.harness.migrations.all.GitSyncToAllAccounts;
@@ -434,6 +438,11 @@ public class MigrationList {
         .add(Pair.of(364, BaseMigration.class))
         .add(Pair.of(365, BaseMigration.class))
         .add(Pair.of(366, EnableIteratorsForLdapSync.class))
+        .add(Pair.of(367, GcpServiceAccountMigration.class))
+        .add(Pair.of(368, DisableWinrmVariablesFFMigration.class))
+        .add(Pair.of(369, DisableAddingServiceVarsToEcsSpecFFMigration.class))
+        .add(Pair.of(370, ManageAccountDefaultsPermissionMigration.class))
+        .add(Pair.of(371, BaseMigration.class))
         .build();
   }
 }

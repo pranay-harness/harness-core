@@ -19,6 +19,7 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptUtils;
 import io.harness.engine.pms.resume.EngineResumeAllCallback;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
@@ -112,7 +113,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
     // Update status
-    nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.PAUSED,
+    NodeExecution nodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.PAUSED,
         ops
         -> ops.addToSet(NodeExecutionKeys.interruptHistories,
             InterruptEffect.builder()
@@ -123,8 +124,8 @@ public class PauseAllInterruptHandler implements InterruptHandler {
                 .build()),
         EnumSet.noneOf(Status.class));
 
-    waitNotifyEngine.waitForAllOn(
-        publisherName, EngineResumeAllCallback.builder().nodeExecutionId(nodeExecutionId).build(), interrupt.getUuid());
+    waitNotifyEngine.waitForAllOn(publisherName,
+        EngineResumeAllCallback.builder().ambiance(nodeExecution.getAmbiance()).build(), interrupt.getUuid());
     return interrupt;
   }
 }

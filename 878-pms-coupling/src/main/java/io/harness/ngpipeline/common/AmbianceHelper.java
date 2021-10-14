@@ -4,11 +4,11 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 
 import lombok.experimental.UtilityClass;
 
-@UtilityClass
-@Deprecated
 /*
  DEPRECATED : Please use Ambiance Utils and move this logic there
  */
+@UtilityClass
+@Deprecated
 public class AmbianceHelper {
   public String getAccountId(Ambiance ambiance) {
     return ambiance.getSetupAbstractionsMap().get("accountId");

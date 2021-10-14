@@ -22,6 +22,16 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(HarnessTeam.PIPELINE)
 public class RollbackUtility {
+  /**
+   * It publishes the information of failedNodeIds in the output at the step level. Note that it publishes setupIds of
+   * failed Children
+   *
+   * Follows a recursive approach to fill in the failedNodeIds so failedNodeIds contain only failed leaf nodes.
+   * Example:
+   * Let us say a shell script failed. It will reach its parent, for that parent the shell script is failed. Now for its
+   * grandParent, the failedNodeId will be of shellScript only as we kind of move the id of leaf node up
+   *
+   */
   public void publishRollbackInformation(Ambiance ambiance, Map<String, ResponseData> responseDataMap,
       ExecutionSweepingOutputService executionSweepingOutputService) {
     SectionStepSweepingOutputBuilder builder = SectionStepSweepingOutput.builder();

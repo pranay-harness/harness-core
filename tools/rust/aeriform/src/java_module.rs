@@ -161,6 +161,18 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
     let prefix = &format!("{}:", chunk);
     let directory = &format!("{}/", chunk.strip_prefix("//").unwrap());
 
+    let annotations_filename = &format!(
+        "{}/{}{}_srcs_annotations.txt",
+        BAZEL_BAZEL_GENFILES_DIR.as_str(),
+        directory,
+        module_type
+    );
+
+    if Path::new(annotations_filename).exists() {
+        // TODO: load the systemized file and read the annotations for the class from there
+        //       this should be significantly faster than processing the whole java file
+    }
+
     let filename = &format!(
         "{}/.aeriform/{}_aeriform_sources.txt",
         BAZEL_BAZEL_GENFILES_DIR.as_str(),
@@ -392,7 +404,7 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
             .take(3)
             .collect::<String>()
             .parse::<f32>()
-            .expect("the model index was ot resolved")
+            .expect("the model index was not resolved")
             + index_fraction(name),
         directory: directory,
         jar: jar,

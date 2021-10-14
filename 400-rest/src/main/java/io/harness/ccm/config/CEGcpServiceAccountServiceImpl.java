@@ -81,6 +81,11 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
 
   @Override
   public GcpServiceAccount getByAccountId(String accountId) {
+    return gcpServiceAccountDao.getByAccountId(accountId);
+  }
+
+  @Override
+  public GcpServiceAccount getByServiceAccountId(String accountId) {
     Account account = accountService.get(accountId);
     String serviceAccountId = getServiceAccountId(account);
     return gcpServiceAccountDao.getByServiceAccountId(serviceAccountId);

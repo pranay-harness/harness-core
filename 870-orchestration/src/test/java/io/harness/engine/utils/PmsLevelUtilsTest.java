@@ -24,7 +24,7 @@ public class PmsLevelUtilsTest extends OrchestrationTestBase {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testBuildLevelFromPlanNode() {
-    Level level = PmsLevelUtils.buildLevelFromPlanNode("rid1",
+    Level level = PmsLevelUtils.buildLevelFromNode("rid1",
         PlanNode.builder()
             .uuid("uuid")
             .identifier("i1")
@@ -43,7 +43,7 @@ public class PmsLevelUtilsTest extends OrchestrationTestBase {
     assertThat(level.getStartTs()).isGreaterThan(0);
     assertThat(level.getNodeType()).isEqualTo(PLAN_NODE.toString());
 
-    level = PmsLevelUtils.buildLevelFromPlanNode("rid2", 1,
+    level = PmsLevelUtils.buildLevelFromNode("rid2", 1,
         PlanNode.builder()
             .uuid("uuid")
             .identifier("i2")

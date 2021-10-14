@@ -114,10 +114,6 @@ if [[ "" != "$SHOULD_CONFIGURE_WITH_PMS" ]]; then
   yq write -i $CONFIG_FILE shouldConfigureWithPMS $SHOULD_CONFIGURE_WITH_PMS
 fi
 
-if [[ "" != "$PMS_MONGO_URI" ]]; then
-  yq write -i $CONFIG_FILE pmsMongo.uri "${PMS_MONGO_URI//\\&/&}"
-fi
-
 if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi

@@ -7,12 +7,14 @@ import static io.harness.accesscontrol.AccessControlPermissions.VIEW_ROLE_PERMIS
 import static io.harness.accesscontrol.AccessControlResourceTypes.ROLE;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
+import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ACCOUNT_LEVEL_PARAM_NAME;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
@@ -28,6 +30,8 @@ import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -150,7 +154,10 @@ public class RoleResource {
 
   @POST
   @ApiOperation(value = "Create Role", nickname = "createRole")
-  public ResponseDTO<RoleResponseDTO> create(@BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.CUSTOM_ROLES)
+  public ResponseDTO<RoleResponseDTO> create(
+      @QueryParam(ACCOUNT_LEVEL_PARAM_NAME) @AccountIdentifier String accountIdentifier,
+      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),

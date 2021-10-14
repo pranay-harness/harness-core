@@ -410,6 +410,7 @@ import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.s3.S3FileRequest;
@@ -417,6 +418,9 @@ import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
+import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
+import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
+import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -428,6 +432,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
@@ -797,6 +802,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitApiTaskResponse.class, 543273);
     kryo.register(AwsCodeCommitDataObtainmentTaskResult.class, 543274);
     kryo.register(AwsCodeCommitRequestType.class, 543275);
+    kryo.register(AwsLambdaVpcConfig.class, 5450);
+    kryo.register(LambdaTestEvent.class, 5604);
 
     kryo.register(CIK8ExecuteStepTaskParams.class, 543276);
     kryo.register(LiteEngineConnectionCapability.class, 543277);
@@ -914,14 +921,17 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmCommandResponse.class, 5261);
     kryo.register(AwsAmiPreDeploymentData.class, 5519);
     kryo.register(EcsCommandResponse.class, 5608);
+    kryo.register(EcsServiceDeployResponse.class, 7149);
     kryo.register(ExistingStackInfo.class, 5479);
     kryo.register(AwsLambdaDetails.class, 5701);
     kryo.register(S3FileRequest.class, 8067);
     kryo.register(CodeDeployParams.class, 5189);
     kryo.register(ServiceNowAction.class, 7156);
     kryo.register(ServiceNowFields.class, 7169);
+    kryo.register(HelmInstallCommandResponse.class, 5263);
 
     kryo.register(CEKubernetesConnectionTaskParams.class, 543437);
     kryo.register(CEK8sValidationParams.class, 543438);
+    kryo.register(ReleaseInfo.class, 543439);
   }
 }

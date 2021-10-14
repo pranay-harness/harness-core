@@ -2,28 +2,36 @@ package io.harness.template.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.template.resources.NGTemplateResource.TEMPLATE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.template.TemplateEntityType;
+import io.harness.ng.core.template.TemplateSummaryResponseDTO;
 import io.harness.rule.Owner;
+import io.harness.template.beans.PermissionTypes;
 import io.harness.template.beans.TemplateDeleteListRequestDTO;
-import io.harness.template.beans.TemplateEntityType;
 import io.harness.template.beans.TemplateListType;
 import io.harness.template.beans.TemplateResponseDTO;
-import io.harness.template.beans.TemplateSummaryResponseDTO;
+import io.harness.template.beans.TemplateWrapperResponseDTO;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
+import io.harness.template.helpers.TemplateMergeHelper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
 
@@ -52,6 +60,8 @@ public class NGTemplateResourceTest extends CategoryTest {
   NGTemplateResource templateResource;
   @Mock NGTemplateService templateService;
   @Mock NGTemplateServiceHelper templateServiceHelper;
+  @Mock AccessControlClient accessControlClient;
+  @Mock TemplateMergeHelper templateMergeHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -67,7 +77,8 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
-    templateResource = new NGTemplateResource(templateService, templateServiceHelper);
+    templateResource =
+        new NGTemplateResource(templateService, templateServiceHelper, accessControlClient, templateMergeHelper);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "template.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -108,11 +119,15 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateTemplate() throws IOException {
     doReturn(entityWithMongoVersion).when(templateService).create(entity, false, "");
-    ResponseDTO<TemplateResponseDTO> responseDTO =
+    ResponseDTO<TemplateWrapperResponseDTO> responseDTO =
         templateResource.create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml, false, "");
     assertThat(responseDTO.getData()).isNotNull();
-    assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
-    assertThat(responseDTO.getData().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
+    assertThat(responseDTO.getData().isValid()).isTrue();
+    assertThat(responseDTO.getData().getTemplateResponseDTO().getVersion()).isEqualTo(1L);
+    assertThat(responseDTO.getData().getTemplateResponseDTO().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
   }
 
   @Test
@@ -127,6 +142,9 @@ public class NGTemplateResourceTest extends CategoryTest {
     assertThat(responseDTO.getData()).isNotNull();
     assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getData().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, TEMPLATE_IDENTIFIER), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
   }
 
   @Test
@@ -148,10 +166,14 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdateTemplate() {
     doReturn(entityWithMongoVersion).when(templateService).updateTemplateEntity(entity, ChangeType.MODIFY, false, "");
-    ResponseDTO<TemplateResponseDTO> responseDTO = templateResource.updateExistingTemplateLabel("", ACCOUNT_ID,
+    ResponseDTO<TemplateWrapperResponseDTO> responseDTO = templateResource.updateExistingTemplateLabel("", ACCOUNT_ID,
         ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, yaml, false, "");
     assertThat(responseDTO.getData()).isNotNull();
-    assertThat(responseDTO.getData().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, TEMPLATE_IDENTIFIER), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
+    assertThat(responseDTO.getData().isValid()).isTrue();
+    assertThat(responseDTO.getData().getTemplateResponseDTO().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
   }
 
   @Test
@@ -166,6 +188,9 @@ public class NGTemplateResourceTest extends CategoryTest {
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
     assertThat(responseDTO.getData()).isNotNull();
     assertThat(responseDTO.getData()).isEqualTo(TEMPLATE_VERSION_LABEL);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, TEMPLATE_IDENTIFIER), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
   }
 
   @Test
@@ -190,6 +215,9 @@ public class NGTemplateResourceTest extends CategoryTest {
     ResponseDTO<Boolean> responseDTO = templateResource.deleteTemplate(
         "", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
     assertThat(responseDTO.getData()).isEqualTo(true);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, TEMPLATE_IDENTIFIER), PermissionTypes.TEMPLATE_DELETE_PERMISSION);
   }
 
   @Test
@@ -207,6 +235,9 @@ public class NGTemplateResourceTest extends CategoryTest {
         TemplateDeleteListRequestDTO.builder().templateVersionLabels(new ArrayList<>(templateVersions)).build(), null,
         "");
     assertThat(responseDTO.getData()).isEqualTo(true);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, TEMPLATE_IDENTIFIER), PermissionTypes.TEMPLATE_DELETE_PERMISSION);
   }
 
   @Test
@@ -220,6 +251,9 @@ public class NGTemplateResourceTest extends CategoryTest {
     ResponseDTO<Boolean> responseDTO = templateResource.updateTemplateSettings(ACCOUNT_ID, ORG_IDENTIFIER,
         PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, Scope.PROJECT, Scope.ORG, null, false);
     assertThat(responseDTO.getData()).isEqualTo(true);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, TEMPLATE_IDENTIFIER), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
   }
 
   @Test
@@ -243,5 +277,8 @@ public class NGTemplateResourceTest extends CategoryTest {
     assertThat(responseDTO.getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
     assertThat(responseDTO.getName()).isEqualTo(TEMPLATE_IDENTIFIER);
     assertThat(responseDTO.getVersion()).isEqualTo(1L);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
   }
 }

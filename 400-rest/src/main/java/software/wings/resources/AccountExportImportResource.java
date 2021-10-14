@@ -229,7 +229,9 @@ public class AccountExportImportResource {
       @QueryParam("collectionName") String collectionNameToBeExported,
       @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchNumber") int batchNumber,
       @QueryParam("batchSize") int batchSize, @QueryParam("mongoBatchSize") int mongoBatchSize,
-      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter) throws Exception {
+      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter,
+      @QueryParam("exportRecordsCreatedAfter") long exportRecordsCreatedAfter,
+      @QueryParam("identifiers") List<String> identifiers) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
@@ -341,7 +343,8 @@ public class AccountExportImportResource {
             }
             String collectionName = getCollectionName(entityClazz);
             mongoExportImport.exportRecords(zipOutputStream, fileOutputStream, exportFilter, collectionName,
-                batchNumber, batchSize, mongoBatchSize, exportRecordsUpdatedAfter);
+                batchNumber, batchSize, mongoBatchSize, identifiers, exportRecordsUpdatedAfter,
+                exportRecordsCreatedAfter);
           }
         }
       }
@@ -382,7 +385,9 @@ public class AccountExportImportResource {
       @QueryParam("collectionName") String collectionNameToBeExported,
       @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchSize") int batchSize,
       @QueryParam("mongoBatchSize") int mongoBatchSize,
-      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter) throws Exception {
+      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter,
+      @QueryParam("exportRecordsCreatedAfter") long exportRecordsCreatedAfter,
+      @QueryParam("identifiers") List<String> identifiers) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
@@ -494,7 +499,7 @@ public class AccountExportImportResource {
             }
             String collectionName = getCollectionName(entityClazz);
             mongoExportImport.exportRecords(zipOutputStream, fileOutputStream, exportFilter, collectionName, batchSize,
-                mongoBatchSize, exportRecordsUpdatedAfter);
+                mongoBatchSize, identifiers, exportRecordsUpdatedAfter, exportRecordsCreatedAfter);
           }
         }
       }
@@ -777,8 +782,8 @@ public class AccountExportImportResource {
       @QueryParam("singleCollectionImport") boolean singleCollectionImport,
       @QueryParam("disableSchemaCheck") boolean disableSchemaCheck, @QueryParam("adminUser") String adminUserEmail,
       @QueryParam("adminPassword") String adminPassword, @QueryParam("accountName") String newAccountName,
-      @QueryParam("companyName") String newCompanyName, @FormDataParam("file") final InputStream uploadInputStream)
-      throws Exception {
+      @QueryParam("companyName") String newCompanyName, @FormDataParam("file") final InputStream uploadInputStream,
+      @QueryParam("updateAccountAttributes") boolean updateAccountAttributes) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the import operation.";
@@ -887,7 +892,7 @@ public class AccountExportImportResource {
     }
 
     // 8. Update license to the previously set license (unit, type etc.)
-    if (licenseInfo != null) {
+    if (updateAccountAttributes && licenseInfo != null) {
       licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
       licenseService.updateAccountLicense(accountId, licenseInfo);
       log.info("Updated license of account {} to: {}", accountId, licenseInfo);
@@ -900,7 +905,7 @@ public class AccountExportImportResource {
 
     // PL-3126: When the 'accountName' query parameter is provided, it means the account name need to be renamed at
     // account migration/import time.
-    if (isNotEmpty(newAccountName)) {
+    if (updateAccountAttributes && isNotEmpty(newAccountName)) {
       accountService.updateAccountName(accountId, newAccountName, newCompanyName);
     }
 

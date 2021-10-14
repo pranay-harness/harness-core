@@ -89,8 +89,10 @@ public class PagerDutyServiceImpl implements PagerDutyService {
   public void deletePagerdutyWebhook(ProjectParams projectParams, PagerDutyChangeSource pagerDutyChangeSource) {
     PagerDutyWebhook pagerDutyWebhook =
         webhookService.getPagerdutyWebhook(projectParams, pagerDutyChangeSource.getIdentifier());
-    DataCollectionRequest request =
-        PagerdutyDeleteWebhookRequest.builder().webhookId(pagerDutyWebhook.getWebhookId()).build();
+    DataCollectionRequest request = PagerdutyDeleteWebhookRequest.builder()
+                                        .type(DataCollectionRequestType.PAGERDUTY_DELETE_WEBHOOK)
+                                        .webhookId(pagerDutyWebhook.getWebhookId())
+                                        .build();
     OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
                                                     .dataCollectionRequest(request)
                                                     .connectorIdentifier(pagerDutyChangeSource.getConnectorIdentifier())

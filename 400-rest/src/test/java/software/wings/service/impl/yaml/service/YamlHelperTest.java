@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.AppManifestKind.PCF_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 
@@ -159,5 +160,20 @@ public class YamlHelperTest extends WingsBaseTest {
         yamlHelper.getApplicationManifest("appId", "Setup/Applications/App1/Services/ser1/Values/values.yaml");
     assertThat(applicationManifest).isNotNull();
     verify(applicationManifestService).getAppManifest("appId", null, "serviceId", VALUES);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetAppManifestByKindForManifestFilesYaml() {
+    when(serviceResourceService.getServiceByName("appId", "test2"))
+        .thenReturn(Service.builder().uuid("serviceId").build());
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, null)).thenReturn(true);
+    when(applicationManifestService.getAppManifest("appId", null, "serviceId", K8S_MANIFEST))
+        .thenReturn(ApplicationManifest.builder().storeType(StoreType.Remote).build());
+    ApplicationManifest applicationManifest = yamlHelper.getApplicationManifest(
+        "appId", "Setup/Applications/App1/Services/test2/Manifests/Files/values.yaml");
+    assertThat(applicationManifest).isNotNull();
+    verify(applicationManifestService).getAppManifest("appId", null, "serviceId", K8S_MANIFEST);
   }
 }

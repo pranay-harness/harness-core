@@ -1,9 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.beans.Permit.PERMIT_KEY_ID;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.logging.AutoLogContext;
 
@@ -17,8 +21,10 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PermitServiceImpl implements PermitService {
   static class PermitLogContext extends AutoLogContext {
     public static final String PERMIT_KEY = "permitKey";

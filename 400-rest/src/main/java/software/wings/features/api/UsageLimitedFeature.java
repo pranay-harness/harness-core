@@ -6,7 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-@TargetModule(HarnessModule._950_FEATURE_FLAG)
+@TargetModule(HarnessModule._940_FEATURE_FLAG)
 @OwnedBy(PL)
 public interface UsageLimitedFeature extends RestrictedFeature {
   int getMaxUsageAllowedForAccount(String accountId);

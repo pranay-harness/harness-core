@@ -15,9 +15,13 @@ import io.harness.cache.CacheModule;
 import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
-import io.harness.engine.OrchestrationEngine;
-import io.harness.engine.OrchestrationService;
-import io.harness.engine.OrchestrationServiceImpl;
+import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
+import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
+import io.harness.enforcement.client.usage.RestrictionUsageInterface;
+import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.enforcement.executions.BuildRestrictionUsageImpl;
+import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -26,6 +30,7 @@ import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.interrupts.InterruptMonitor;
 import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
+import io.harness.engine.pms.execution.strategy.plan.PlanExecutionStrategy;
 import io.harness.engine.timeouts.TimeoutInstanceRemover;
 import io.harness.event.OrchestrationEndGraphHandler;
 import io.harness.event.OrchestrationLogPublisher;
@@ -55,6 +60,7 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.plan.consumers.PartialPlanResponseRedisConsumer;
@@ -68,6 +74,8 @@ import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
+import io.harness.pms.instrumentaion.InstrumentNodeStatusUpdateHandler;
+import io.harness.pms.instrumentaion.InstrumentationPipelineEndEventHandler;
 import io.harness.pms.migration.PipelineCoreMigrationProvider;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetValidationObserver;
@@ -87,7 +95,6 @@ import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
 import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
-import io.harness.pms.plan.execution.handlers.ExecutionSummaryStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
@@ -120,7 +127,6 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.service.impl.GraphGenerationServiceImpl;
 import io.harness.springdata.HMongoTemplate;
 import io.harness.steps.barriers.BarrierInitializer;
 import io.harness.steps.barriers.event.BarrierDropper;
@@ -150,6 +156,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -302,6 +309,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerHealthCheck(environment, injector);
     registerObservers(injector);
     registerRequestContextFilter(environment);
+    initializeEnforcementFramework(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
@@ -363,9 +371,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
-        injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
+        injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(TimeoutInstanceRemover.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(InstrumentNodeStatusUpdateHandler.class)));
 
     // NodeUpdateObservers
     nodeExecutionService.getNodeUpdateObserverSubject().register(
@@ -394,30 +404,29 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     planExecutionService.getPlanStatusUpdateSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
-    OrchestrationServiceImpl orchestrationService =
-        (OrchestrationServiceImpl) injector.getInstance(Key.get(OrchestrationService.class));
-    orchestrationService.getOrchestrationStartSubject().register(
+    PlanExecutionStrategy planExecutionStrategy = injector.getInstance(Key.get(PlanExecutionStrategy.class));
+    // StartObservers
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(PipelineStartNotificationHandler.class)));
-    orchestrationService.getOrchestrationStartSubject().register(
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(BarrierInitializer.class)));
-    orchestrationService.getOrchestrationStartSubject().register(
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(ResourceRestraintInitializer.class)));
-    orchestrationService.getOrchestrationStartSubject().register(
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(OrchestrationStartEventHandler.class)));
-    orchestrationService.getOrchestrationStartSubject().register(
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(ExecutionSummaryCreateEventHandler.class)));
-
-    OrchestrationEngine orchestrationEngine = injector.getInstance(Key.get(OrchestrationEngine.class));
-    orchestrationEngine.getOrchestrationEndSubject().register(
+    // End Observers
+    planExecutionStrategy.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(OrchestrationEndGraphHandler.class)));
-    orchestrationEngine.getOrchestrationEndSubject().register(
+    planExecutionStrategy.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(OrchestrationEndInterruptHandler.class)));
-    orchestrationEngine.getOrchestrationEndSubject().register(
+    planExecutionStrategy.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(NotificationInformHandler.class)));
-    GraphGenerationServiceImpl graphGenerationService =
-        (GraphGenerationServiceImpl) injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
-    graphGenerationService.getGraphNodeUpdateObserverSubject().register(
-        injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
+    planExecutionStrategy.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(InstrumentationPipelineEndEventHandler.class)));
+    planExecutionStrategy.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(PipelineStatusUpdateEventHandler.class)));
 
     HMongoTemplate mongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
     mongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
@@ -442,11 +451,14 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
   }
 
+  /**------------------Health Check -----------------------------------------------*/
   private void registerHealthCheck(Environment environment, Injector injector) {
     final HealthService healthService = injector.getInstance(HealthService.class);
     environment.healthChecks().register("PMS", healthService);
     healthService.registerMonitor((HealthMonitor) injector.getInstance(MongoTemplate.class));
   }
+
+  /**------------------Pms Sdk --------------------------------------------------*/
 
   private void registerPmsSdk(PipelineServiceConfiguration config, Injector injector) {
     PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
@@ -491,6 +503,41 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     return aliases;
   }
 
+  private void registerEventListeners(Injector injector) {
+    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
+    queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
+  }
+
+  private void registerWaitEnginePublishers(Injector injector) {
+    final QueuePublisher<NotifyEvent> publisher =
+        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+    final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+        injector.getInstance(NotifyQueuePublisherRegister.class);
+    notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
+    notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
+  }
+
+  private void registerPmsSdkEvents(Injector injector) {
+    log.info("Initializing pms sdk redis abstract consumers...");
+    PipelineEventConsumerController pipelineEventConsumerController =
+        injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
+    pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
+    pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(PlanNotifyEventConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(PmsNotifyEventConsumerRedis.class), 2);
+  }
+
+  /**-----------------------------Git sync --------------------------------------*/
   private void registerGitSyncSdk(PipelineServiceConfiguration config, Injector injector, Environment environment) {
     GitSyncSdkConfiguration sdkConfig = getGitSyncConfiguration(config);
     try {
@@ -532,21 +579,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .build();
   }
 
-  private void registerEventListeners(Injector injector) {
-    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
-  }
-
-  private void registerWaitEnginePublishers(Injector injector) {
-    final QueuePublisher<NotifyEvent> publisher =
-        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
-    final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
-        injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
-    notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
-  }
-
   private void registerScheduledJobs(Injector injector, PipelineServiceConfiguration appConfig) {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L,
@@ -574,25 +606,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.lifecycle().manage(injector.getInstance(PipelineEventConsumerController.class));
   }
 
-  private void registerPmsSdkEvents(Injector injector) {
-    log.info("Initializing pms sdk redis abstract consumers...");
-    PipelineEventConsumerController pipelineEventConsumerController =
-        injector.getInstance(PipelineEventConsumerController.class);
-    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
-    pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
-    pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(PlanNotifyEventConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(PmsNotifyEventConsumerRedis.class), 2);
-  }
-
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {
     FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
     String allowedOrigins = String.join(",", appConfig.getAllowedOrigins());
@@ -616,6 +629,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
+    environment.jersey().register(NGTemplateResolveExceptionMapper.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
@@ -654,5 +668,31 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
           { add(PipelineCoreMigrationProvider.class); } // Add all migration provider classes here
         })
         .build();
+  }
+
+  private void initializeEnforcementFramework(Injector injector) {
+    Map<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>> featureRestrictionNameClassHashMap =
+        new HashMap<>();
+    featureRestrictionNameClassHashMap.put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class);
+    featureRestrictionNameClassHashMap.put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class);
+
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap
+                    .<FeatureRestrictionName,
+                        Class<? extends io.harness.enforcement.client.custom.CustomRestrictionInterface>>builder()
+                    .build())
+            .build();
+    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
+        RestrictionUsageRegisterConfiguration.builder()
+            .restrictionNameClassMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
+                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
+                    .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
+                    .build())
+            .build();
+    injector.getInstance(EnforcementSdkRegisterService.class)
+        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }

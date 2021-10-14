@@ -6,6 +6,7 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
+import io.harness.mongo.index.FdSparseIndex;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -16,18 +17,18 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("DEPLOYMENT")
 @FieldNameConstants(innerTypeName = "DeploymentActivityKeys")
 @Data
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class DeploymentActivity extends Activity {
@@ -37,6 +38,13 @@ public class DeploymentActivity extends Activity {
   Integer newHostsTrafficSplitPercentage;
   String deploymentTag;
   @Getter(AccessLevel.NONE) @NotNull Long verificationStartTime;
+  @FdSparseIndex String planExecutionId;
+  String pipelineId;
+  String stageStepId;
+  String stageId;
+  String artifactType;
+  String artifactTag;
+  String deploymentStatus;
 
   @Override
   public ActivityType getType() {
@@ -67,9 +75,7 @@ public class DeploymentActivity extends Activity {
   }
 
   @Override
-  public void validateActivityParams() {
-    Preconditions.checkNotNull(deploymentTag, "Deployment tag can not be null");
-  }
+  public void validateActivityParams() {}
 
   @Override
   public boolean deduplicateEvents() {
@@ -87,7 +93,10 @@ public class DeploymentActivity extends Activity {
 
   @JsonIgnore
   public Instant getVerificationStartTime() {
-    return Instant.ofEpochMilli(this.verificationStartTime);
+    if (verificationStartTime != null) {
+      return Instant.ofEpochMilli(this.verificationStartTime);
+    }
+    return null;
   }
 
   public static class DeploymentActivityUpdatableEntity
@@ -97,15 +106,29 @@ public class DeploymentActivity extends Activity {
       return DeploymentActivity.class;
     }
 
-    @Override
-    public Query<DeploymentActivity> populateKeyQuery(Query<DeploymentActivity> query, DeploymentActivity changeEvent) {
-      throw new UnsupportedOperationException("DeploymentActivity events have no unique key");
+    public Query<DeploymentActivity> populateKeyQuery(Query<DeploymentActivity> query, DeploymentActivity activity) {
+      return super.populateKeyQuery(query, activity)
+          .filter(DeploymentActivityKeys.planExecutionId, activity.getPlanExecutionId())
+          .filter(DeploymentActivityKeys.stageStepId, activity.getStageStepId());
     }
 
     @Override
     public void setUpdateOperations(
         UpdateOperations<DeploymentActivity> updateOperations, DeploymentActivity activity) {
       setCommonUpdateOperations(updateOperations, activity);
+      updateOperations.set(DeploymentActivityKeys.planExecutionId, activity.getPlanExecutionId())
+          .set(DeploymentActivityKeys.pipelineId, activity.getPipelineId())
+          .set(DeploymentActivityKeys.stageStepId, activity.getStageStepId())
+          .set(DeploymentActivityKeys.stageId, activity.getStageId());
+      if (activity.getArtifactType() != null) {
+        updateOperations.set(DeploymentActivityKeys.artifactType, activity.getArtifactType());
+      }
+      if (activity.getArtifactTag() != null) {
+        updateOperations.set(DeploymentActivityKeys.artifactTag, activity.getArtifactTag());
+      }
+      if (activity.getDeploymentStatus() != null) {
+        updateOperations.set(DeploymentActivityKeys.deploymentStatus, activity.getDeploymentStatus());
+      }
     }
   }
 }

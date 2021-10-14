@@ -15,6 +15,7 @@ import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.SetupMetadata;
@@ -24,6 +25,7 @@ import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.rule.Owner;
@@ -99,12 +101,13 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Mock PmsSdkHelper pmsSdkHelper;
   @Mock PipelineSetupUsageHelper pipelineSetupUsageHelper;
   @Mock PmsGitSyncHelper pmsGitSyncHelper;
+  @Mock PMSPipelineTemplateHelper pipelineTemplateHelper;
   FilterCreatorMergeService filterCreatorMergeService;
 
   @Before
   public void init() {
-    filterCreatorMergeService =
-        spy(new FilterCreatorMergeService(pmsSdkHelper, pipelineSetupUsageHelper, pmsGitSyncHelper));
+    filterCreatorMergeService = spy(new FilterCreatorMergeService(
+        pmsSdkHelper, pipelineSetupUsageHelper, pmsGitSyncHelper, pipelineTemplateHelper));
   }
 
   @After
@@ -125,24 +128,20 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
     doReturn(FilterCreationBlobResponse.newBuilder().build())
         .when(filterCreatorMergeService)
         .obtainFiltersRecursively(any(), any(), any(), any());
-
+    PipelineEntity pipelineEntity = PipelineEntity.builder()
+                                        .yaml(pipelineYaml)
+                                        .accountId(ACCOUNT_ID)
+                                        .projectIdentifier(PROJECT_ID)
+                                        .orgIdentifier(ORG_ID)
+                                        .build();
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(pipelineYaml).build();
+    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
     FilterCreatorMergeServiceResponse filterCreatorMergeServiceResponse =
-        filterCreatorMergeService.getPipelineInfo(PipelineEntity.builder()
-                                                      .yaml(pipelineYaml)
-                                                      .accountId(ACCOUNT_ID)
-                                                      .projectIdentifier(PROJECT_ID)
-                                                      .orgIdentifier(ORG_ID)
-                                                      .build());
+        filterCreatorMergeService.getPipelineInfo(pipelineEntity);
 
     verify(pmsSdkHelper).getServices();
-    verify(pipelineSetupUsageHelper)
-        .publishSetupUsageEvent(PipelineEntity.builder()
-                                    .yaml(pipelineYaml)
-                                    .accountId(ACCOUNT_ID)
-                                    .projectIdentifier(PROJECT_ID)
-                                    .orgIdentifier(ORG_ID)
-                                    .build(),
-            new ArrayList<>());
+    verify(pipelineSetupUsageHelper).publishSetupUsageEvent(pipelineEntity, new ArrayList<>());
   }
 
   @Test

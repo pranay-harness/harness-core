@@ -43,6 +43,7 @@ public class WebhookServiceImpl implements WebhookService {
   @Override
   public PagerDutyWebhook getPagerdutyWebhook(ProjectParams projectParams, String changeSourceId) {
     return (PagerDutyWebhook) hPersistence.createQuery(Webhook.class)
+        .disableValidation()
         .filter(PagerDutyWebhookKeys.pagerdutyChangeSourceId, changeSourceId)
         .filter(WebhookKeys.accountId, projectParams.getAccountIdentifier())
         .filter(WebhookKeys.projectIdentifier, projectParams.getProjectIdentifier())

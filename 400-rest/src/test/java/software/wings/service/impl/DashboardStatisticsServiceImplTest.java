@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.ALEXANDRU_CIOFU;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.MEET;
 import static io.harness.rule.OwnerRule.PRABU;
@@ -751,6 +752,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void shouldUpdateLastWorkflowExecutionAndManifestInActiveInstance() {
+    Long startTS = 1630969310005L;
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(APP_1_ID)
                                               .status(ExecutionStatus.SUCCESS)
@@ -760,6 +762,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                               .workflowId(WORKFLOW_ID)
                                               .uuid(WORKFLOW_EXECUTION_ID)
                                               .name(WORKFLOW_NAME)
+                                              .startTs(startTS)
                                               .build();
     persistence.save(workflowExecution);
     Instance instance = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
@@ -945,5 +948,48 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     PageResponse<CompareEnvironmentAggregationResponseInfo> compareEnvironmentAggregationResponseInfos3 =
         dashboardService.getCompareServicesByEnvironment(ACCOUNT_3_ID, APP_6_ID, ENV_9_ID, ENV_10_ID, 5, 5);
     assertThat(compareEnvironmentAggregationResponseInfos3).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testLastWorkflowExecutionDate() {
+    Long startTS = 1630969310005L;
+    Long deployedAt = 1630969317105L;
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .appId(APP_1_ID)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .envIds(asList(ENV_1_ID))
+                                              .serviceIds(asList(SERVICE_1_ID, SERVICE_2_ID))
+                                              .infraMappingIds(asList(INFRA_MAPPING_1_ID, INFRA_MAPPING_2_ID))
+                                              .workflowId(WORKFLOW_ID)
+                                              .uuid(WORKFLOW_EXECUTION_ID)
+                                              .name(WORKFLOW_NAME)
+                                              .startTs(startTS)
+                                              .build();
+    persistence.save(workflowExecution);
+    Instance instance = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
+        INFRA_MAPPING_1_NAME, CONTAINER_1_ID, currentTime);
+    instance.setInstanceInfo(
+        K8sPodInfo.builder()
+            .helmChartInfo(HelmChartInfo.builder().name(CHART_NAME).repoUrl(REPO_URL).version("1").build())
+            .build());
+
+    instance.setLastWorkflowExecutionId(WORKFLOW_EXECUTION_ID);
+    persistence.save(instance);
+    DashboardStatisticsServiceImpl dashboardStatisticsService = (DashboardStatisticsServiceImpl) dashboardService;
+    List<CurrentActiveInstances> activeInstances =
+        dashboardStatisticsService.getCurrentActiveInstances(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
+    assertThat(activeInstances).hasSize(1);
+    assertThat(activeInstances.get(0).getLastWorkflowExecutionDate().getTime()).isEqualTo(startTS.longValue());
+
+    instance.setLastWorkflowExecutionId(WORKFLOW_EXECUTION_ID + "ABC");
+    instance.setLastDeployedAt(deployedAt);
+    persistence.save(instance);
+    dashboardStatisticsService = (DashboardStatisticsServiceImpl) dashboardService;
+    activeInstances = dashboardStatisticsService.getCurrentActiveInstances(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
+    assertThat(activeInstances).hasSize(1);
+    assertThat(activeInstances.get(0).getLastWorkflowExecutionDate().getTime()).isEqualTo(deployedAt.longValue());
   }
 }

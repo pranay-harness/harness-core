@@ -13,7 +13,6 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.retry.RetryExecutionHelper;
 import io.harness.engine.executions.retry.RetryInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
@@ -68,7 +67,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @PipelineServiceAuth
 @Slf4j
 public class PlanExecutionResource {
-  @Inject private final PipelineExecuteHelper pipelineExecuteHelper;
+  @Inject private final PipelineExecutor pipelineExecutor;
   @Inject private final PMSExecutionService pmsExecutionService;
   @Inject private final OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private final AccessControlClient accessControlClient;
@@ -91,14 +90,9 @@ public class PlanExecutionResource {
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    try {
-      PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml, false);
-      return ResponseDTO.newResponse(planExecutionResponseDto);
-    } catch (IOException ex) {
-      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-    }
+    PlanExecutionResponseDto planExecutionResponseDto = pipelineExecutor.runPipelineWithInputSetPipelineYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml, false);
+    return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
   @POST
@@ -116,14 +110,9 @@ public class PlanExecutionResource {
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    try {
-      PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml, true);
-      return ResponseDTO.newResponse(planExecutionResponseDto);
-    } catch (IOException ex) {
-      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-    }
+    PlanExecutionResponseDto planExecutionResponseDto = pipelineExecutor.runPipelineWithInputSetPipelineYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml, true);
+    return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
   @POST
@@ -138,8 +127,8 @@ public class PlanExecutionResource {
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
-      @ApiParam(hidden = true) RunStageRequestDTO runStageRequestDTO) throws IOException {
-    return ResponseDTO.newResponse(pipelineExecuteHelper.runStagesWithRuntimeInputYaml(
+      RunStageRequestDTO runStageRequestDTO) {
+    return ResponseDTO.newResponse(pipelineExecutor.runStagesWithRuntimeInputYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, runStageRequestDTO, false));
   }
 
@@ -159,15 +148,10 @@ public class PlanExecutionResource {
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    try {
-      PlanExecutionResponseDto planExecutionResponseDto =
-          pipelineExecuteHelper.rerunPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
-              pipelineIdentifier, moduleType, originalExecutionId, inputSetPipelineYaml, false);
-      return ResponseDTO.newResponse(planExecutionResponseDto);
-    } catch (IOException ex) {
-      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-    }
+    PlanExecutionResponseDto planExecutionResponseDto =
+        pipelineExecutor.rerunPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, moduleType, originalExecutionId, inputSetPipelineYaml, false);
+    return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
   @POST
@@ -186,15 +170,10 @@ public class PlanExecutionResource {
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    try {
-      PlanExecutionResponseDto planExecutionResponseDto =
-          pipelineExecuteHelper.rerunPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
-              pipelineIdentifier, moduleType, originalExecutionId, inputSetPipelineYaml, true);
-      return ResponseDTO.newResponse(planExecutionResponseDto);
-    } catch (IOException ex) {
-      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-    }
+    PlanExecutionResponseDto planExecutionResponseDto =
+        pipelineExecutor.rerunPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, moduleType, originalExecutionId, inputSetPipelineYaml, true);
+    return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
   @GET
@@ -241,16 +220,11 @@ public class PlanExecutionResource {
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) {
-    try {
-      PlanExecutionResponseDto planExecutionResponseDto =
-          pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
-              pipelineIdentifier, moduleType, mergeInputSetRequestDTO.getInputSetReferences(),
-              gitEntityBasicInfo.getBranch(), gitEntityBasicInfo.getYamlGitConfigId());
-      return ResponseDTO.newResponse(planExecutionResponseDto);
-    } catch (IOException ex) {
-      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-    }
+    PlanExecutionResponseDto planExecutionResponseDto =
+        pipelineExecutor.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, moduleType, mergeInputSetRequestDTO.getInputSetReferences(),
+            gitEntityBasicInfo.getBranch(), gitEntityBasicInfo.getYamlGitConfigId());
+    return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
   @POST
@@ -269,16 +243,11 @@ public class PlanExecutionResource {
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) {
-    try {
-      PlanExecutionResponseDto planExecutionResponseDto =
-          pipelineExecuteHelper.rerunPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
-              pipelineIdentifier, moduleType, originalExecutionId, mergeInputSetRequestDTO.getInputSetReferences(),
-              gitEntityBasicInfo.getBranch(), gitEntityBasicInfo.getYamlGitConfigId());
-      return ResponseDTO.newResponse(planExecutionResponseDto);
-    } catch (IOException ex) {
-      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-    }
+    PlanExecutionResponseDto planExecutionResponseDto =
+        pipelineExecutor.rerunPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, moduleType, originalExecutionId, mergeInputSetRequestDTO.getInputSetReferences(),
+            gitEntityBasicInfo.getBranch(), gitEntityBasicInfo.getYamlGitConfigId());
+    return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
   @PUT
@@ -406,14 +375,9 @@ public class PlanExecutionResource {
       @QueryParam(NGCommonEntityConstants.RUN_ALL_STAGES) @DefaultValue("true") boolean runAllStages,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    try {
-      PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.retryPipelineWithInputSetPipelineYaml(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml,
-          previousExecutionId, retryStagesIdentifier, runAllStages, false);
-      return ResponseDTO.newResponse(planExecutionResponseDto);
-    } catch (IOException ex) {
-      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
-    }
+    PlanExecutionResponseDto planExecutionResponseDto = pipelineExecutor.retryPipelineWithInputSetPipelineYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml,
+        previousExecutionId, retryStagesIdentifier, runAllStages, false);
+    return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 }

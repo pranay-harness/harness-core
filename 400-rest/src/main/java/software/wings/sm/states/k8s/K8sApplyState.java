@@ -2,6 +2,8 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 
 import static software.wings.sm.StateType.K8S_APPLY;
 
@@ -12,21 +14,28 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters.K8sApplyTaskParametersBuilder;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
+import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -53,6 +62,7 @@ public class K8sApplyState extends AbstractK8sState {
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
+  @Inject private FeatureFlagService featureFlagService;
 
   public static final String K8S_APPLY_STATE = "Apply";
 
@@ -69,6 +79,8 @@ public class K8sApplyState extends AbstractK8sState {
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
   @Getter @Setter @Attributes(title = "Skip manifest rendering") private boolean skipRendering;
+  @Getter @Setter @Attributes(title = "Export manifests") private boolean exportManifests;
+  @Getter @Setter @Attributes(title = "Inherit manifests") private boolean inheritManifests;
 
   @Override
   public Integer getTimeoutMillis() {
@@ -97,8 +109,10 @@ public class K8sApplyState extends AbstractK8sState {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-
-    if (isBlank(filePaths)) {
+    if (exportManifests && inheritManifests) {
+      invalidFields.put("Export manifests & inherit manifests", "Can't export and inherit manifests at the same time");
+    }
+    if (isBlank(filePaths) && !inheritManifests) {
       invalidFields.put("File paths", "File paths must not be blank");
     }
 
@@ -107,6 +121,11 @@ public class K8sApplyState extends AbstractK8sState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    if (inheritManifests && k8sStateHelper.isExportManifestsEnabled(context.getAccountId())) {
+      Activity activity = createK8sActivity(
+          context, commandName(), stateType(), activityService, commandUnitList(false, context.getAccountId()));
+      return executeK8sTask(context, activity.getUuid());
+    }
     return executeWrapperWithManifest(this, context, K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
@@ -123,19 +142,36 @@ public class K8sApplyState extends AbstractK8sState {
 
     renderStateVariables(context);
 
-    K8sTaskParameters k8sTaskParameters = K8sApplyTaskParameters.builder()
-                                              .activityId(activityId)
-                                              .releaseName(fetchReleaseName(context, infraMapping))
-                                              .commandName(K8S_APPLY_STATE)
-                                              .k8sTaskType(K8sTaskType.APPLY)
-                                              .timeoutIntervalInMin(Integer.parseInt(stateTimeoutInMinutes))
-                                              .filePaths(filePaths)
-                                              .k8sDelegateManifestConfig(createDelegateManifestConfig(
-                                                  context, appManifestMap.get(K8sValuesLocation.Service)))
-                                              .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
-                                              .skipDryRun(skipDryRun)
-                                              .skipRendering(skipRendering)
-                                              .build();
+    K8sApplyTaskParametersBuilder builder = K8sApplyTaskParameters.builder();
+
+    if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId())) {
+      builder.exportManifests(exportManifests);
+      if (inheritManifests) {
+        List<KubernetesResource> kubernetesResources =
+            k8sStateHelper.getResourcesFromSweepingOutput(context, getStateType());
+        if (isEmpty(kubernetesResources)) {
+          throw new InvalidRequestException("No kubernetes resources found to inherit", USER);
+        }
+        builder.inheritManifests(inheritManifests);
+        builder.kubernetesResources(kubernetesResources);
+      }
+    }
+
+    K8sTaskParameters k8sTaskParameters =
+        builder.activityId(activityId)
+            .releaseName(fetchReleaseName(context, infraMapping))
+            .commandName(K8S_APPLY_STATE)
+            .k8sTaskType(K8sTaskType.APPLY)
+            .timeoutIntervalInMin(Integer.parseInt(stateTimeoutInMinutes))
+            .filePaths(filePaths)
+            .k8sDelegateManifestConfig(
+                createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
+            .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
+            .skipDryRun(skipDryRun)
+            .skipRendering(skipRendering)
+            .useLatestKustomizeVersion(
+                featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, infraMapping.getAccountId()))
+            .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);
   }
@@ -156,6 +192,14 @@ public class K8sApplyState extends AbstractK8sState {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
+    K8sApplyResponse k8sApplyResponse = (K8sApplyResponse) executionResponse.getK8sTaskResponse();
+
+    if (k8sApplyResponse != null && k8sApplyResponse.getResources() != null
+        && k8sStateHelper.isExportManifestsEnabled(context.getAccountId())) {
+      k8sStateHelper.saveResourcesToSweepingOutput(context, k8sApplyResponse.getResources(), getStateType());
+      stateExecutionData.setExportManifests(true);
+    }
+
     return ExecutionResponse.builder().executionStatus(executionStatus).stateExecutionData(stateExecutionData).build();
   }
 
@@ -165,21 +209,22 @@ public class K8sApplyState extends AbstractK8sState {
   @Override
   public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
     List<CommandUnit> applyCommandUnits = new ArrayList<>();
-
-    if (remoteStoreType) {
-      applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
+    if (!(k8sStateHelper.isExportManifestsEnabled(accountId) && inheritManifests)) {
+      if (remoteStoreType) {
+        applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
+      }
     }
 
     applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
+    if (!(k8sStateHelper.isExportManifestsEnabled(accountId) && exportManifests)) {
+      applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
+      applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
 
-    if (!skipSteadyStateCheck) {
-      applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
+      if (!skipSteadyStateCheck) {
+        applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
+      }
+      applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
     }
-
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
-
     return applyCommandUnits;
   }
 

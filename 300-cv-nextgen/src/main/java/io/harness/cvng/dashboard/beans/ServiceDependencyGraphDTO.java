@@ -24,13 +24,13 @@ public class ServiceDependencyGraphDTO {
   @Builder
   @FieldDefaults(level = AccessLevel.PRIVATE)
   public static class ServiceSummaryDetails {
+    String identifierRef;
     String serviceRef;
+    String serviceName;
     String environmentRef;
+    String environmentName;
     double riskScore;
     Risk riskLevel;
-    long anomalousMetricsCount;
-    long anomalousLogsCount;
-    long changeCount;
   }
 
   @Data

@@ -78,7 +78,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(CI)
 public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementParameters, K8sTaskExecutionResponse> {
-  public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
+  public static final String TASK_TYPE_INITIALIZATION_PHASE = "INITIALIZATION_PHASE";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
@@ -130,7 +130,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
     final TaskData taskData = TaskData.builder()
                                   .async(true)
                                   .timeout(stepParameters.getTimeout())
-                                  .taskType(TASK_TYPE_CI_BUILD)
+                                  .taskType(TASK_TYPE_INITIALIZATION_PHASE)
                                   .parameters(new Object[] {buildSetupTaskParams})
                                   .build();
 
@@ -184,7 +184,8 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   private LiteEnginePodDetailsOutcome getPodDetailsOutcome(CiK8sTaskResponse ciK8sTaskResponse) {
     if (ciK8sTaskResponse != null && ciK8sTaskResponse.getPodStatus() != null) {
       String ip = ciK8sTaskResponse.getPodStatus().getIp();
-      return LiteEnginePodDetailsOutcome.builder().ipAddress(ip).build();
+      String namespace = ciK8sTaskResponse.getPodNamespace();
+      return LiteEnginePodDetailsOutcome.builder().ipAddress(ip).namespace(namespace).build();
     }
     return null;
   }

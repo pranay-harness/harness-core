@@ -9,6 +9,7 @@ import io.harness.AccessControlClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
@@ -121,6 +122,11 @@ public class ResourceGroupServiceModule extends AbstractModule {
     if (appConfig.getResoureGroupServiceConfig().isExportMetricsToStackDriver()) {
       install(new MetricsModule());
     }
+
+    install(EnforcementClientModule.getInstance(appConfig.getNgManagerServiceConfig(),
+        appConfig.getPlatformSecrets().getNgManagerServiceSecret(), RESOUCE_GROUP_SERVICE.getServiceId(),
+        appConfig.getEnforcementClientConfiguration()));
+
     install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, RESOUCE_GROUP_SERVICE.getServiceId(),
         appConfig.getResoureGroupServiceConfig().isExportMetricsToStackDriver()));
 
@@ -140,7 +146,7 @@ public class ResourceGroupServiceModule extends AbstractModule {
   @Named("lock")
   @Singleton
   RedisConfig redisLockConfig() {
-    return appConfig.getResoureGroupServiceConfig().getRedisConfig();
+    return appConfig.getResoureGroupServiceConfig().getRedisLockConfig();
   }
 
   @Provides

@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.beans.source.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.ngtriggers.Constants.GCR;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
@@ -24,6 +25,11 @@ public class GcrSpec implements ArtifactTypeSpec {
   @Override
   public String fetchConnectorRef() {
     return connectorRef;
+  }
+
+  @Override
+  public String fetchBuildType() {
+    return GCR;
   }
 
   @Override

@@ -26,8 +26,11 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.yaml.BaseEntityYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +67,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "pipelines", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
+public class Pipeline
+    extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
@@ -74,6 +78,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
                  .build())
         .build();
   }
+
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";
 
@@ -141,6 +146,12 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
     Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, PIPELINE.name()));
     return keywords;
+  }
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getMigrationEntityType() {
+    return NGMigrationEntityType.PIPELINE;
   }
 
   @Data

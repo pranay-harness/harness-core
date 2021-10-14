@@ -75,6 +75,12 @@ public interface Constants {
   String DOT_GIT = ".git";
   String MANIFEST = "Manifest";
   String ARTIFACT = "Artifact";
+  String ARTIFACT_REF = "artifactRef";
+  String MANIFEST_REF = "manifestRef";
+  String DOCKER_REGISTRY = "DockerRegistry";
+  String GCR = "Gcr";
+  String ECR = "Ecr";
+  String HELM_CHART = "HelmChart";
 
   String MANIFEST_VERSION = "<+trigger.manifest.version>";
   String ARTIFACT_VERSION = "<+trigger.artifact.build>";

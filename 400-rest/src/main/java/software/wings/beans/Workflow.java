@@ -32,8 +32,11 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -58,7 +61,8 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
+public class Workflow
+    extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
@@ -396,6 +400,12 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
       keywords.addAll(services.stream().map(Service::getName).distinct().collect(toList()));
     }
     return keywords;
+  }
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getMigrationEntityType() {
+    return NGMigrationEntityType.WORKFLOW;
   }
 
   public static final class WorkflowBuilder {

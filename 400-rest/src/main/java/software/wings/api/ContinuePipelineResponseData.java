@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.tasks.ResponseData;
 
 import software.wings.sm.ExecutionInterrupt;
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ContinuePipelineResponseData implements ResponseData {
   private Map<String, String> workflowVariables;
   private ExecutionInterrupt interrupt;

@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.dto.FailureInfoDTO;
+import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -20,6 +21,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
@@ -31,6 +33,7 @@ import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -39,6 +42,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -89,6 +93,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @Builder.Default Map<String, org.bson.Document> moduleInfo = new HashMap<>();
   @Builder.Default Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();
   List<String> modules;
+  Set<String> executedModules;
   String startingNodeId;
 
   ExecutionTriggerInfo executionTriggerInfo;
@@ -96,6 +101,8 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @Deprecated ByteString gitSyncBranchContext;
   EntityGitDetails entityGitDetails;
   FailureInfoDTO failureInfo;
+  GovernanceMetadata governanceMetadata;
+  StagesExecutionMetadata stagesExecutionMetadata;
 
   Long startTs;
   Long endTs;
@@ -145,7 +152,20 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .field(PlanExecutionSummaryKeys.accountId)
                  .field(PlanExecutionSummaryKeys.createdAt)
                  .build())
-
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_executed_modules_startTs_idx")
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.executedModules)
+                 .field(PlanExecutionSummaryKeys.startTs)
+                 .build())
         .build();
+  }
+
+  @UtilityClass
+  public static class PlanExecutionSummaryKeys {
+    public String triggerType = PlanExecutionSummaryKeys.executionTriggerInfo + "."
+        + "triggerType";
+    public String triggeredBy = PlanExecutionSummaryKeys.executionTriggerInfo + "."
+        + "triggeredBy";
   }
 }

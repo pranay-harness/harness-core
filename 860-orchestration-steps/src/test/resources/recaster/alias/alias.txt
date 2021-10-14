@@ -64,3 +64,5 @@ io.harness.yaml.core.failurestrategy.OnFailureConfig
 io.harness.yaml.core.failurestrategy.FailureStrategyConfig
 io.harness.yaml.core.failurestrategy.marksuccess.MarkAsSuccessFailureActionConfig
 io.harness.yaml.core.failurestrategy.rollback.StageRollbackFailureActionConfig
+io.harness.advisers.rollback.RollbackTriggeredOutput
+io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo

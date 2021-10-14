@@ -3,6 +3,7 @@ package io.harness.overviewdashboard.dtos;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -10,8 +11,8 @@ import lombok.Value;
 @Builder
 @OwnedBy(HarnessTeam.PL)
 public class DeploymentsOverview {
-  long runningCount;
-  long pendingApprovalsCount;
-  long manualInterventionsCount;
-  long failedCount;
+  List<PipelineExecutionInfo> runningExecutions;
+  List<PipelineExecutionInfo> pendingApprovalExecutions;
+  List<PipelineExecutionInfo> pendingManualInterventionExecutions;
+  List<PipelineExecutionInfo> failed24HrsExecutions;
 }

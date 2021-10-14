@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactsStep;
 import io.harness.cdng.artifact.steps.SidecarsStep;
+import io.harness.cdng.infra.steps.EnvironmentStep;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.k8s.K8sApplyStep;
@@ -40,7 +41,6 @@ import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.registrars.OrchestrationStepsModuleSdkStepRegistrar;
-import io.harness.steps.shellscript.ShellScriptStep;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -76,7 +76,6 @@ public class NgStepRegistrar {
     engineSteps.put(K8sCanaryDeleteStep.STEP_TYPE, K8sCanaryDeleteStep.class);
     engineSteps.put(K8sBlueGreenStep.STEP_TYPE, K8sBlueGreenStep.class);
     engineSteps.put(K8sBGSwapServicesStep.STEP_TYPE, K8sBGSwapServicesStep.class);
-    engineSteps.put(ShellScriptStep.STEP_TYPE, ShellScriptStep.class);
     engineSteps.put(K8sApplyStep.STEP_TYPE, K8sApplyStep.class);
     engineSteps.put(TerraformApplyStep.STEP_TYPE, TerraformApplyStep.class);
     engineSteps.put(TerraformPlanStep.STEP_TYPE, TerraformPlanStep.class);
@@ -88,6 +87,7 @@ public class NgStepRegistrar {
     engineSteps.put(StepGroupRollbackStep.STEP_TYPE, RollbackStepsStep.class);
     engineSteps.put(CDNGExecutionStep.STEP_TYPE, CDNGExecutionStep.class);
     engineSteps.put(CDStepsStep.STEP_TYPE, CDStepsStep.class);
+    engineSteps.put(EnvironmentStep.STEP_TYPE, EnvironmentStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;

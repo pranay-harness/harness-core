@@ -1,13 +1,13 @@
 package io.harness.template.events;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.template.beans.TemplateEntityConstants.OTHERS;
-import static io.harness.template.beans.TemplateEntityConstants.TEMPLATE_CHANGE_SCOPE;
-import static io.harness.template.beans.TemplateEntityConstants.TEMPLATE_LAST_UPDATED_FALSE;
-import static io.harness.template.beans.TemplateEntityConstants.TEMPLATE_LAST_UPDATED_TRUE;
-import static io.harness.template.beans.TemplateEntityConstants.TEMPLATE_STABLE_FALSE;
-import static io.harness.template.beans.TemplateEntityConstants.TEMPLATE_STABLE_TRUE;
-import static io.harness.template.beans.TemplateEntityConstants.TEMPLATE_STABLE_TRUE_WITH_YAML_CHANGE;
+import static io.harness.ng.core.template.TemplateEntityConstants.OTHERS;
+import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_CHANGE_SCOPE;
+import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_LAST_UPDATED_FALSE;
+import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_LAST_UPDATED_TRUE;
+import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_STABLE_FALSE;
+import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_STABLE_TRUE;
+import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_STABLE_TRUE_WITH_YAML_CHANGE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.template.beans.TemplateListType;

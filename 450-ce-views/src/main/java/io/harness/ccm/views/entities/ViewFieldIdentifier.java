@@ -7,6 +7,7 @@ public enum ViewFieldIdentifier {
   AZURE("Azure"),
   COMMON("Common"),
   CUSTOM("Custom"),
+  BUSINESS_MAPPING("Business Mapping"),
   LABEL("Label");
 
   public String getDisplayName() {

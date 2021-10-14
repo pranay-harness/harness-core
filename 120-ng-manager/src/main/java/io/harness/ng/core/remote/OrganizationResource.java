@@ -36,7 +36,9 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -44,6 +46,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -70,6 +79,19 @@ import org.springframework.data.domain.Page;
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Tag(name = "Organization", description = "This contains APIs related to Organization as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -81,10 +103,17 @@ public class OrganizationResource {
 
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
+  @Operation(operationId = "createOrganization", summary = "Creates an Organization",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns created organization")
+      })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = CREATE_ORGANIZATION_PERMISSION)
-  public ResponseDTO<OrganizationResponse> create(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @Valid OrganizationRequest organizationDTO) {
+  public ResponseDTO<OrganizationResponse>
+  create(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @RequestBody(required = true, description = "Details of the Organization to be created") @NotNull
+      @Valid OrganizationRequest organizationDTO) {
     if (DEFAULT_ORG_IDENTIFIER.equals(organizationDTO.getOrganization().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as org identifier", DEFAULT_ORG_IDENTIFIER), USER);
@@ -96,9 +125,15 @@ public class OrganizationResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get an Organization by identifier", nickname = "getOrganization")
+  @Operation(operationId = "getOrganization", summary = "Get the Organization by accountIdentifier and orgIdentifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the organization with the passed accountIdentifier and orgIdentifier")
+      })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
-  public ResponseDTO<OrganizationResponse> get(
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+  public ResponseDTO<OrganizationResponse>
+  get(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, identifier);
     if (!organizationOptional.isPresent()) {
@@ -110,9 +145,17 @@ public class OrganizationResource {
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  public ResponseDTO<PageResponse<OrganizationResponse>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+  @Operation(operationId = "getOrganizationList",
+      summary = "Get the list of organizations satisfying the criteria (if any) in the request",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a page of Organization")
+      })
+  public ResponseDTO<PageResponse<OrganizationResponse>>
+  list(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = "list of projectIdentifiers to filter results by") @QueryParam(
+          NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
@@ -129,13 +172,38 @@ public class OrganizationResource {
     return ResponseDTO.newResponse(getNGPageResponse(orgsPage.map(OrganizationMapper::toResponseWrapper)));
   }
 
+  @GET
+  @Path("all-organizations")
+  @ApiOperation(value = "Get All Organizations list", nickname = "getAllOrganizationList", hidden = true)
+  @InternalApi
+  public ResponseDTO<PageResponse<OrganizationResponse>> listAllOrganizations(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = "list of projectIdentifiers to filter results by") @QueryParam(
+          NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    OrganizationFilterDTO organizationFilterDTO =
+        OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
+    Page<Organization> orgsPage = organizationService.listPermittedOrgs(accountIdentifier,
+        PageUtils.getPageRequest(0, NGCommonEntityConstants.MAX_PAGE_SIZE, new ArrayList<>()), organizationFilterDTO);
+    return ResponseDTO.newResponse(getNGPageResponse(orgsPage.map(OrganizationMapper::toResponseWrapper)));
+  }
+
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update an Organization by identifier", nickname = "putOrganization")
+  @Operation(operationId = "putOrganization", summary = "Updates the Organization",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Organization")
+      })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = EDIT_ORGANIZATION_PERMISSION)
-  public ResponseDTO<OrganizationResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
+  public ResponseDTO<OrganizationResponse>
+  update(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @RequestBody(required = true,
+          description = "This is the updated Organization. This should have all the fields not just the updated ones")
       @NotNull @Valid OrganizationRequest organizationDTO) {
     if (DEFAULT_ORG_IDENTIFIER.equals(identifier)) {
       throw new InvalidRequestException(
@@ -152,8 +220,15 @@ public class OrganizationResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete an Organization by identifier", nickname = "deleteOrganization")
+  @Operation(operationId = "deleteOrganization", summary = "Deletes Organization by identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the boolean status")
+      })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = DELETE_ORGANIZATION_PERMISSION)
-  public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
+  public ResponseDTO<Boolean>
+  delete(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     if (DEFAULT_ORG_IDENTIFIER.equals(identifier)) {

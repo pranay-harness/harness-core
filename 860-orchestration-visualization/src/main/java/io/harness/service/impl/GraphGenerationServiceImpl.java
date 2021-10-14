@@ -17,7 +17,6 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.event.GraphNodeUpdateObserver;
 import io.harness.event.GraphStatusUpdateHelper;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.event.StepDetailsUpdateEventHandler;
@@ -25,7 +24,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
-import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.service.GraphGenerationService;
@@ -37,7 +35,6 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -55,7 +52,6 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
   @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private StepDetailsUpdateEventHandler stepDetailsUpdateEventHandler;
-  @Getter private final Subject<GraphNodeUpdateObserver> graphNodeUpdateObserverSubject = new Subject<>();
 
   @Override
   public void updateGraph(String planExecutionId) {
@@ -94,7 +90,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
       cachePartialOrchestrationGraph(orchestrationGraph, lastUpdatedAt);
-      log.info("[[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
+      log.info("[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
           unprocessedEventLogs.size(), System.currentTimeMillis() - startTs);
     }
   }
@@ -113,8 +109,8 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     mongoStore.upsert(orchestrationGraph, SpringCacheEntity.TTL, entityUpdatedAt);
   }
 
-  @Deprecated
   @Override
+  @Deprecated
   public OrchestrationGraphDTO generateOrchestrationGraph(String planExecutionId) {
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);

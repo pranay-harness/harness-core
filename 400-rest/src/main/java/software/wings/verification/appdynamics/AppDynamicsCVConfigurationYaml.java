@@ -6,7 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.verification.CVConfigurationYaml;
+import software.wings.verification.MetricCVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -17,14 +17,14 @@ import lombok.EqualsAndHashCode;
 /**
  * The type Yaml.
  */
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 @Data
 @JsonPropertyOrder({"type", "harnessApiVersion"})
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CV)
-public final class AppDynamicsCVConfigurationYaml extends CVConfigurationYaml {
+public final class AppDynamicsCVConfigurationYaml extends MetricCVConfigurationYaml {
   private String appDynamicsApplicationName;
   private String tierName;
 }

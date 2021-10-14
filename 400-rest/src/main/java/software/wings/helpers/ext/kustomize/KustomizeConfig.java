@@ -1,7 +1,12 @@
 package software.wings.helpers.ext.kustomize;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 
 import javax.annotation.Nullable;
@@ -14,6 +19,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
+@OwnedBy(PL)
 public class KustomizeConfig {
   @Trimmed private String pluginRootDir;
   @Builder.Default @Trimmed private String kustomizeDirPath = EMPTY;

@@ -3,6 +3,8 @@ package io.harness.rule;
 import static java.lang.String.format;
 
 import io.harness.NoopStatement;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.CategoryConfigException;
 import io.harness.rule.UserInfo.UserInfoBuilder;
 import io.harness.scm.ScmSecret;
@@ -25,6 +27,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class OwnerRule implements TestRule {
   @Getter(lazy = true) private static final JiraClient jira = connect();
   public static final String ASSIGNEE = "assignee";
@@ -92,6 +95,7 @@ public class OwnerRule implements TestRule {
   public static final String DEEPAK = "deepak.patankar";
   public static final String DHRUV = "dhruv.upadhyay";
   public static final String DINESH = "dinesh.garg";
+  public static final String FILIP = "filip.petrovic";
   public static final String GARVIT = "garvit.pahal";
   public static final String GEORGE = "george";
   public static final String GUNA = "guna.chandrasekaran";
@@ -207,6 +211,9 @@ public class OwnerRule implements TestRule {
   public static final String NANA_XU = "nana.xu";
   public static final String JELENA = "jelena.arsenijevic";
   public static final String BHAVYA = "bhavya.agrawal";
+  public static final String BHARAT_GOEL = "bharat.goel";
+  public static final String DEEPAK_CHHIKARA = "deepak.chhikara";
+  public static final String KAPIL = "kapil.choudhary";
 
   @Deprecated public static final String UNKNOWN = "unknown";
 
@@ -256,6 +263,7 @@ public class OwnerRule implements TestRule {
           .put(JUHI, defaultUserInfo(JUHI).slack("UL1KX4K1S").build())
           .put(KAMAL, defaultUserInfo(KAMAL).slack("UKFQ1PQBH").team(CV).build())
           .put(KANHAIYA, defaultUserInfo(KANHAIYA).slack("U01HFBAT8A2").team(CV).build())
+          .put(KAPIL, defaultUserInfo(KAPIL).slack("U02E2J40E21").team(CV).build())
           .put(KARAN, defaultUserInfo(KARAN).slack("U015LRX21FD").team(PL).build())
           .put(LUCAS, defaultUserInfo(LUCAS).slack("U01C8MPTS2J").team(DEL).build())
           .put(MARKO, defaultUserInfo(MARKO).slack("UVDT91N9W").team(DEL).build())
@@ -357,9 +365,12 @@ public class OwnerRule implements TestRule {
           .put(ALEXANDRU_CIOFU, defaultUserInfo(ALEXANDRU_CIOFU).slack("U025JKQMRSA").team(DX).build())
           .put(NANA_XU, defaultUserInfo(NANA_XU).slack("U01QWLCSUHL").team(GTM).build())
           .put(JELENA, defaultUserInfo(JELENA).slack("U02AGRC9D0S").team(CDP).build())
+          .put(FILIP, defaultUserInfo(FILIP).slack("U02E3L2S803").team(CDP).build())
           .put(ABHINAV2, defaultUserInfo(ABHINAV2).slack("U02D3KJKF33").team(CDP).build())
           .put(BHAVYA, defaultUserInfo(BHAVYA).slack("U024WB5P1NF").team(PL).build())
           .put(MLUKIC, defaultUserInfo(MLUKIC).slack("U02DS8RGUSV").team(CDP).build())
+          .put(BHARAT_GOEL, defaultUserInfo(BHARAT_GOEL).slack("U02053C1QMA").team(DEL).build())
+          .put(DEEPAK_CHHIKARA, defaultUserInfo(DEEPAK_CHHIKARA).slack("U02D8V7PVFG").team(CV).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));

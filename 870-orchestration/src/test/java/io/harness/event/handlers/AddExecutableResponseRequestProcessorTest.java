@@ -13,6 +13,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
@@ -60,7 +62,8 @@ public class AddExecutableResponseRequestProcessorTest extends CategoryTest {
             .build();
     addExecutableResponseEventHandler.handleEvent(
         SdkResponseEventProto.newBuilder()
-            .setNodeExecutionId(nodeExecutionId)
+            .setAmbiance(
+                Ambiance.newBuilder().addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build()).build())
             .setAddExecutableResponseRequest(request)
             .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .build());

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plan.Node;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.repositories.PlanRepository;
@@ -36,7 +37,7 @@ public class PlanServiceImpl implements PlanService {
   }
 
   @Override
-  public PlanNode fetchNode(String planId, String nodeId) {
+  public Node fetchNode(String planId, String nodeId) {
     Plan plan = fetchPlan(planId);
     if (isNotEmpty(plan.getPlanNodes())) {
       return plan.fetchPlanNode(nodeId);

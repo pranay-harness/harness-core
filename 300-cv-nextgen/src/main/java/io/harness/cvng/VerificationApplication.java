@@ -24,12 +24,9 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
-import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
-import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.jobs.ActivityStatusJob;
-import io.harness.cvng.activity.jobs.K8ActivityCollectionHandler;
+import io.harness.cvng.activity.jobs.HarnessCDCurrentGenEventsHandler;
 import io.harness.cvng.activity.jobs.KubernetesChangeSourceCollectionHandler;
-import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.cdng.jobs.CVNGStepTaskHandler;
@@ -46,6 +43,7 @@ import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
+import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.DataCollectionTaskCreateNextTaskHandler;
@@ -564,28 +562,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.injectMembers(monitoringSourceIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(() -> monitoringSourceIterator.process(), 0, 30, TimeUnit.SECONDS);
 
-    K8ActivityCollectionHandler k8ActivityCollectionHandler = injector.getInstance(K8ActivityCollectionHandler.class);
-    PersistenceIterator activityCollectionIterator =
-        MongoPersistenceIterator.<KubernetesActivitySource, MorphiaFilterExpander<KubernetesActivitySource>>builder()
-            .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(KubernetesActivitySource.class)
-            .fieldName(ActivitySourceKeys.dataCollectionTaskIteration)
-            .targetInterval(ofMinutes(5))
-            .acceptableNoAlertDelay(ofMinutes(1))
-            .executorService(dataCollectionExecutor)
-            .semaphore(new Semaphore(5))
-            .handler(k8ActivityCollectionHandler)
-            .schedulingType(REGULAR)
-            .filterExpander(query
-                -> query.filter(ActivitySourceKeys.type, ActivitySourceType.KUBERNETES)
-                       .criteria(ActivitySourceKeys.dataCollectionTaskId)
-                       .doesNotExist())
-            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
-            .redistribute(true)
-            .build();
-    injector.injectMembers(activityCollectionIterator);
-    dataCollectionExecutor.scheduleWithFixedDelay(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
-
     KubernetesChangeSourceCollectionHandler k8ChangeSourceCollectionHandler =
         injector.getInstance(KubernetesChangeSourceCollectionHandler.class);
     PersistenceIterator changeSourceCollectionIterator =
@@ -610,6 +586,27 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.injectMembers(changeSourceCollectionIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(
         () -> changeSourceCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+
+    HarnessCDCurrentGenEventsHandler harnessCDCurrentGenEventsHandler =
+        injector.getInstance(HarnessCDCurrentGenEventsHandler.class);
+    PersistenceIterator harnessCDIterator =
+        MongoPersistenceIterator
+            .<HarnessCDCurrentGenChangeSource, MorphiaFilterExpander<HarnessCDCurrentGenChangeSource>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(HarnessCDCurrentGenChangeSource.class)
+            .fieldName(ChangeSourceKeys.dataCollectionTaskIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(5))
+            .handler(harnessCDCurrentGenEventsHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.filter(ChangeSourceKeys.type, ChangeSourceType.HARNESS_CD_CURRENT_GEN))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(harnessCDIterator);
+    dataCollectionExecutor.scheduleWithFixedDelay(() -> harnessCDIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerCreateNextDataCollectionTaskIterator(Injector injector) {

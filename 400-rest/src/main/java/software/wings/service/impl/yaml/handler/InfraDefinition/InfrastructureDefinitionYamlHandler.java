@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -40,7 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @OwnedBy(CDP)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public class InfrastructureDefinitionYamlHandler
     extends BaseYamlHandler<InfrastructureDefinitionYaml, InfrastructureDefinition> {
   @Inject private YamlHelper yamlHelper;

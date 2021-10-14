@@ -1,5 +1,6 @@
 package io.harness.cvng.client;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.CD_CURRENT_GEN_CHANGE_EVENTS_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_RESOURCE_PATH;
@@ -11,6 +12,7 @@ import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
+import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.rest.RestResponse;
 
@@ -79,4 +81,9 @@ public interface VerificationManagerClient {
   Call<RestResponse<List<String>>> checkCapabilityToGetEvents(@Query("accountId") String accountId,
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Body DataCollectionConnectorBundle bundle);
+
+  @GET(CD_CURRENT_GEN_CHANGE_EVENTS_PATH)
+  Call<RestResponse<List<HarnessCDCurrentGenEventMetadata>>> getCDCurrentGenChangeEvents(
+      @Query("accountId") String accountId, @Query("appId") String appId, @Query("serviceId") String serviceId,
+      @Query("environmentId") String environmentId, @Query("startTime") Long startTime, @Query("endTime") Long endTime);
 }

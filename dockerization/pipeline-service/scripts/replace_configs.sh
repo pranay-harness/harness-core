@@ -97,6 +97,14 @@ if [[ "" != "$PIPELINE_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE pipelineServiceSecret $PIPELINE_SERVICE_SECRET
 fi
 
+if [[ "" != "$TEMPLATE_SERVICE_ENDPOINT" ]]; then
+  yq write -i $CONFIG_FILE templateServiceClientConfig.baseUrl $TEMPLATE_SERVICE_ENDPOINT
+fi
+
+if [[ "" != "$TEMPLATE_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE templateServiceSecret $TEMPLATE_SERVICE_SECRET
+fi
+
 if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.baseUrl $CI_MANAGER_BASE_URL
 fi
@@ -315,3 +323,6 @@ replace_key_value opaServerConfig.baseUrl "$OPA_SERVER_BASEURL"
 replace_key_value delegatePollingConfig.syncDelay "$POLLING_SYNC_DELAY"
 replace_key_value delegatePollingConfig.asyncDelay "$POLLING_ASYNC_DELAY"
 replace_key_value delegatePollingConfig.progressDelay "$POLLING_PROGRESS_DELAY"
+
+replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"

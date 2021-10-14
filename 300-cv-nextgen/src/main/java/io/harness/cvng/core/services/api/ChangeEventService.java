@@ -21,9 +21,8 @@ public interface ChangeEventService {
 
   ChangeSummaryDTO getChangeSummary(ServiceEnvironmentParams serviceEnvironmentParams,
       List<String> changeSourceIdentifiers, Instant startTime, Instant endTime);
-  PageResponse<ChangeEventDTO> getPaginated(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifier, Instant startTime, Instant endTime, List<ChangeCategory> changeCategories,
-      PageRequest pageRequest);
+  PageResponse<ChangeEventDTO> getChangeEvents(ProjectParams projectParams, List<String> serviceIdentifiers,
+      List<String> environmentIdentifier, Instant startTime, Instant endTime, PageRequest pageRequest);
   ChangeTimeline getTimeline(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifier, Instant startTime, Instant endTime, Integer pointCount);
   ChangeSummaryDTO getChangeSummary(ProjectParams projectParams, List<String> serviceIdentifiers,

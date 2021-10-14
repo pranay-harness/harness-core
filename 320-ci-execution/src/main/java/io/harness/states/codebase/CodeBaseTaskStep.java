@@ -5,21 +5,37 @@ import static io.harness.beans.execution.ExecutionSource.Type.WEBHOOK;
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
+import static io.harness.delegate.beans.connector.ConnectorType.GIT;
+import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
+import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
 import static software.wings.beans.TaskType.SCM_GIT_REF_TASK;
+
+import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
+import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
+import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput.CodeBaseCommit;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
@@ -110,7 +126,12 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       scmGitRefTaskResponseData = responseDataSupplier.get();
       log.info("Successfully retrieved codebase info from returned delegate response");
     } catch (Exception ex) {
-      log.info("Failed to retrieve codebase info from returned delegate response");
+      ManualExecutionSource manualExecutionSource = (ManualExecutionSource) stepParameters.getExecutionSource();
+      String prNumber = manualExecutionSource.getPrNumber();
+      if (scmGitRefTaskResponseData == null && isNotEmpty(prNumber)) {
+        throw new CIStageExecutionException("Failed to retrieve PrNumber: " + prNumber + " details");
+      }
+      log.error("Failed to retrieve codebase info from returned delegate response");
     }
 
     CodebaseSweepingOutput codebaseSweepingOutput = null;
@@ -119,7 +140,9 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       codebaseSweepingOutput = buildPRCodebaseSweepingOutput(scmGitRefTaskResponseData);
     } else if (scmGitRefTaskResponseData != null
         && scmGitRefTaskResponseData.getGitRefType() == GitRefType.LATEST_COMMIT_ID) {
-      codebaseSweepingOutput = buildCommitShaCodebaseSweepingOutput(scmGitRefTaskResponseData);
+      ManualExecutionSource manualExecutionSource = (ManualExecutionSource) stepParameters.getExecutionSource();
+      codebaseSweepingOutput =
+          buildCommitShaCodebaseSweepingOutput(scmGitRefTaskResponseData, manualExecutionSource.getTag());
     }
     if (codebaseSweepingOutput != null) {
       saveCodebaseSweepingOutput(ambiance, codebaseSweepingOutput);
@@ -149,13 +172,15 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       ManualExecutionSource manualExecutionSource, ConnectorDetails connectorDetails, String repoName) {
     ScmConnector scmConnector = (ScmConnector) connectorDetails.getConnectorConfig();
     String completeUrl = scmConnector.getUrl();
-    if (isNotEmpty(repoName)) {
+    GitConnectionType gitConnectionType = getGitConnectionType(connectorDetails);
+    if (isNotEmpty(repoName) && (gitConnectionType == null || gitConnectionType == GitConnectionType.ACCOUNT)) {
       completeUrl = StringUtils.stripEnd(scmConnector.getUrl(), "/") + "/" + StringUtils.stripStart(repoName, "/");
     }
     scmConnector.setUrl(completeUrl);
 
     String branch = manualExecutionSource.getBranch();
     String prNumber = manualExecutionSource.getPrNumber();
+    String tag = manualExecutionSource.getTag();
     if (isNotEmpty(branch)) {
       return ScmGitRefTaskParams.builder()
           .branch(branch)
@@ -170,37 +195,96 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
           .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
           .scmConnector((ScmConnector) connectorDetails.getConnectorConfig())
           .build();
+    } else if (isNotEmpty(tag)) {
+      return ScmGitRefTaskParams.builder()
+          .ref(tag)
+          .gitRefType(GitRefType.LATEST_COMMIT_ID)
+          .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
+          .scmConnector(scmConnector)
+          .build();
     } else {
       throw new CIStageExecutionException("Manual codebase git task needs at least PR number or branch");
     }
   }
 
+  public GitConnectionType getGitConnectionType(ConnectorDetails gitConnector) {
+    if (gitConnector == null) {
+      return null;
+    }
+
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getConnectionType();
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getConnectionType();
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getConnectionType();
+    } else if (gitConnector.getConnectorType() == CODECOMMIT) {
+      AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrlType() == AwsCodeCommitUrlType.REPO ? GitConnectionType.REPO
+                                                                    : GitConnectionType.ACCOUNT;
+    } else if (gitConnector.getConnectorType() == GIT) {
+      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getGitConnectionType();
+    } else {
+      throw new CIStageExecutionException("Unsupported git connector type" + gitConnector.getConnectorType());
+    }
+  }
+
   @VisibleForTesting
-  CodebaseSweepingOutput buildCommitShaCodebaseSweepingOutput(ScmGitRefTaskResponseData scmGitRefTaskResponseData)
-      throws InvalidProtocolBufferException {
-    CodebaseSweepingOutput codebaseSweepingOutput;
+  CodebaseSweepingOutput buildCommitShaCodebaseSweepingOutput(
+      ScmGitRefTaskResponseData scmGitRefTaskResponseData, String tag) throws InvalidProtocolBufferException {
     final byte[] getLatestCommitResponseByteArray = scmGitRefTaskResponseData.getGetLatestCommitResponse();
     if (isEmpty(getLatestCommitResponseByteArray)) {
       throw new CIStageExecutionException("Codebase git commit information can't be obtained");
     }
     GetLatestCommitResponse listCommitsResponse = GetLatestCommitResponse.parseFrom(getLatestCommitResponseByteArray);
 
-    if (isEmpty(listCommitsResponse.getCommitId())) {
-      throw new CIStageExecutionException("Codebase git commit information can't be obtained");
+    if (listCommitsResponse.getCommit() == null || isEmpty(listCommitsResponse.getCommit().getSha())) {
+      return null;
     }
-    codebaseSweepingOutput = CodebaseSweepingOutput.builder()
-                                 .branch(scmGitRefTaskResponseData.getBranch())
-                                 .commitSha(listCommitsResponse.getCommitId())
-                                 .repoUrl(scmGitRefTaskResponseData.getRepoUrl())
-                                 .build();
-    return codebaseSweepingOutput;
+    return CodebaseSweepingOutput.builder()
+        .branch(scmGitRefTaskResponseData.getBranch())
+        .tag(tag)
+        .commits(asList(CodeBaseCommit.builder()
+                            .id(listCommitsResponse.getCommit().getSha())
+                            .link(listCommitsResponse.getCommit().getLink())
+                            .message(listCommitsResponse.getCommit().getMessage())
+                            .ownerEmail(listCommitsResponse.getCommit().getAuthor().getEmail())
+                            .ownerName(listCommitsResponse.getCommit().getAuthor().getName())
+                            .ownerId(listCommitsResponse.getCommit().getAuthor().getLogin())
+                            .timeStamp(listCommitsResponse.getCommit().getAuthor().getDate().getSeconds())
+                            .build()))
+        .commitSha(listCommitsResponse.getCommit().getSha())
+        .repoUrl(scmGitRefTaskResponseData.getRepoUrl())
+        .build();
   }
 
   @VisibleForTesting
   CodebaseSweepingOutput buildWebhookCodebaseSweepingOutput(WebhookExecutionSource webhookExecutionSource) {
+    List<CodebaseSweepingOutput.CodeBaseCommit> codeBaseCommits = new ArrayList<>();
     if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
       PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
+
+      if (isNotEmpty(prWebhookEvent.getCommitDetailsList())) {
+        for (CommitDetails commit : prWebhookEvent.getCommitDetailsList()) {
+          codeBaseCommits.add(CodebaseSweepingOutput.CodeBaseCommit.builder()
+                                  .id(commit.getCommitId())
+                                  .message(commit.getMessage())
+                                  .link(commit.getLink())
+                                  .timeStamp(commit.getTimeStamp())
+                                  .ownerEmail(commit.getOwnerEmail())
+                                  .ownerId(commit.getOwnerId())
+                                  .ownerName(commit.getOwnerName())
+                                  .build());
+        }
+      }
+
       return CodebaseSweepingOutput.builder()
+          .commits(codeBaseCommits)
+          .state(getState(prWebhookEvent))
           .branch(prWebhookEvent.getTargetBranch())
           .targetBranch(prWebhookEvent.getTargetBranch())
           .sourceBranch(prWebhookEvent.getSourceBranch())
@@ -217,8 +301,24 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
           .build();
     } else if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
       BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
+
+      if (isNotEmpty(branchWebhookEvent.getCommitDetailsList())) {
+        for (CommitDetails commit : branchWebhookEvent.getCommitDetailsList()) {
+          codeBaseCommits.add(CodebaseSweepingOutput.CodeBaseCommit.builder()
+                                  .id(commit.getCommitId())
+                                  .message(commit.getMessage())
+                                  .link(commit.getLink())
+                                  .timeStamp(commit.getTimeStamp())
+                                  .ownerEmail(commit.getOwnerEmail())
+                                  .ownerId(commit.getOwnerId())
+                                  .ownerName(commit.getOwnerName())
+                                  .build());
+        }
+      }
+
       return CodebaseSweepingOutput.builder()
           .branch(branchWebhookEvent.getBranchName())
+          .commits(codeBaseCommits)
           .targetBranch(branchWebhookEvent.getBranchName())
           .commitSha(branchWebhookEvent.getBaseAttributes().getAfter())
           .repoUrl(branchWebhookEvent.getRepository().getLink())
@@ -277,6 +377,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
                                  .prNumber(String.valueOf(pr.getNumber()))
                                  .prTitle(pr.getTitle())
                                  .commitSha(pr.getSha())
+                                 .event("pull_request")
                                  .baseCommitSha(pr.getBase().getSha())
                                  .commitRef(pr.getRef())
                                  .repoUrl(repoUrl) // Add repo url to scm.PullRequest and get it from there
@@ -310,6 +411,17 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     if (pr.getClosed()) {
       state = "closed";
     } else if (pr.getMerged()) {
+      state = "merged";
+    }
+    return state;
+  }
+
+  @NotNull
+  private String getState(PRWebhookEvent pr) {
+    String state = "open";
+    if (pr.isClosed()) {
+      state = "closed";
+    } else if (pr.isMerged()) {
       state = "merged";
     }
     return state;

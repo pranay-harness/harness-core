@@ -31,6 +31,8 @@ import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Update;
 
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.security.ScopedEntity;
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingVariableTypes;
@@ -73,9 +75,9 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
-public class EncryptedData
-    implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-               UpdatedByAware, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity, NGAccess {
+public class EncryptedData implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                      UpdatedAtAware, UpdatedByAware, NameAccess, PersistentRegularIterable,
+                                      AccountAccess, ScopedEntity, NGAccess, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -393,6 +395,12 @@ public class EncryptedData
   @Override
   public AdditionalMetadata getAdditionalMetadata() {
     return additionalMetadata;
+  }
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getMigrationEntityType() {
+    return NGMigrationEntityType.SECRET;
   }
 
   @UtilityClass

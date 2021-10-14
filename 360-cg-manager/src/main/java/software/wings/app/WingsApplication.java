@@ -24,14 +24,10 @@ import static com.google.inject.name.Names.named;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.GraphQLModule;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
-import io.harness.beans.FeatureName;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
 import io.harness.capability.service.CapabilityService;
@@ -62,6 +58,7 @@ import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
+import io.harness.dms.DmsModule;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -79,6 +76,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.insights.DelegateInsightsSummaryJob;
+import io.harness.iterator.DelegateTaskExpiryCheckIterator;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
@@ -160,7 +158,6 @@ import io.harness.workers.background.iterator.InstanceSyncHandler;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
-import software.wings.beans.Account;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.User;
@@ -251,7 +248,6 @@ import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -283,11 +279,9 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -449,7 +443,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerWaitEnginePublishers(injector);
     if (isManager()) {
-      registerQueueListeners(injector);
+      registerQueueListeners(configuration, injector);
     }
 
     // Schedule jobs
@@ -718,6 +712,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         return MANAGER.getServiceId();
       }
     });
+    modules.add(DmsModule.getInstance(shouldEnableDelegateMgmt(configuration)));
   }
 
   private void registerEventConsumers(final Injector injector) {
@@ -810,27 +805,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     // Required to Publish Feature Flag Events to Events Framework
     if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
-      enableFeatureFlagsIndividuallyForOnPremAccount(injector, mainConfiguration.getFeatureNames());
-    }
-  }
-
-  private void enableFeatureFlagsIndividuallyForOnPremAccount(Injector injector, String featureNames) {
-    Optional<Account> onPremAccount = injector.getInstance(AccountService.class).getOnPremAccount();
-    if (!onPremAccount.isPresent()) {
-      return;
-    }
-
-    FeatureFlagService featureFlagService = injector.getInstance(FeatureFlagService.class);
-    List<String> enabled = isBlank(featureNames)
-        ? emptyList()
-        : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(featureNames);
-    for (String name : Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet())) {
-      if (enabled.contains(name)) {
-        featureFlagService.enableAccount(FeatureName.valueOf(name), onPremAccount.get().getUuid());
-      }
-    }
-    if (enabled.contains("NEXT_GEN_ENABLED")) {
-      injector.getInstance(AccountService.class).updateNextGenEnabled(onPremAccount.get().getUuid(), true);
+      injector.getInstance(AccountService.class).updateFeatureFlagsForOnPremAccount();
     }
   }
 
@@ -938,7 +913,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
-  private void registerQueueListeners(Injector injector) {
+  private void registerQueueListeners(MainConfiguration configuration, Injector injector) {
     log.info("Initializing queue listeners...");
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
@@ -948,14 +923,20 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     queueListenerController.register(injector.getInstance(ArtifactCollectEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(DeploymentEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(InstanceEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(DeploymentTimeSeriesEventListener.class), 2);
+    queueListenerController.register(injector.getInstance(DeploymentEventListener.class),
+        configuration.getEventListenersCountConfig().getDeploymentEventListenerCount());
+    queueListenerController.register(injector.getInstance(InstanceEventListener.class),
+        configuration.getEventListenersCountConfig().getInstanceEventListenerCount());
+    queueListenerController.register(injector.getInstance(DeploymentTimeSeriesEventListener.class),
+        configuration.getEventListenersCountConfig().getDeploymentTimeSeriesEventListenerCount());
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
-    queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(ExecutionEventListener.class),
+        configuration.getEventListenersCountConfig().getExecutionEventListenerCount());
     queueListenerController.register(injector.getInstance(SecretMigrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class),
+        configuration.getEventListenersCountConfig().getGeneralNotifyEventListenerCount());
+    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class),
+        configuration.getEventListenersCountConfig().getOrchestrationNotifyEventListenerCount());
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
   }
 
@@ -1142,6 +1123,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
+    injector.getInstance(DelegateTaskExpiryCheckIterator.class).registerIterators();
   }
 
   public static void registerIteratorsManager(Injector injector) {

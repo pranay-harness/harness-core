@@ -121,16 +121,43 @@ filegroup(
 )
 
 load("//tools/bazel/sonarqube:defs.bzl", "sonarqube")
-load("//project/flags:sonarqube_targets.bzl", "get_sonarqube_targets")
+load("//project/flags:sonarqube_targets_seperated.bzl", "get_sonarqube_targets_seperated")
 
 sonarqube(
-    name = "sq",
+    name = "sq_below_400",
     srcs = [],
     coverage_report = ":coverage_report",
-    modules = get_sonarqube_targets(),
-    project_key = "portal_bazel",
-    project_name = "Bazel Portal",
+    modules = get_sonarqube_targets_seperated(),
+    project_key = "portal_bazel_below_400",
+    project_name = "Bazel Portal Below 400",
     scm_info = [":git"],
+    sq_properties_filename = "sonar-project-below-400.properties",
+    tags = ["manual"],
+    targets = [],
+)
+
+sonarqube(
+    name = "sq_400",
+    srcs = [],
+    coverage_report = ":coverage_report",
+    modules = get_sonarqube_targets_seperated(),
+    project_key = "portal_bazel_400",
+    project_name = "Bazel Portal 400",
+    scm_info = [":git"],
+    sq_properties_filename = "sonar-project-400.properties",
+    tags = ["manual"],
+    targets = [],
+)
+
+sonarqube(
+    name = "sq_above_400",
+    srcs = [],
+    coverage_report = ":coverage_report",
+    modules = get_sonarqube_targets_seperated(),
+    project_key = "portal_bazel_above_400",
+    project_name = "Bazel Portal Above 400",
+    scm_info = [":git"],
+    sq_properties_filename = "sonar-project-above-400.properties",
     tags = ["manual"],
     targets = [],
 )

@@ -87,7 +87,7 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName) {
+  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName, String ref) {
     return null;
   }
 

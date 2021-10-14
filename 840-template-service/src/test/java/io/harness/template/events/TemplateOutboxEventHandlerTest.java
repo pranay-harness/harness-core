@@ -24,6 +24,7 @@ import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import io.harness.encryption.Scope;
+import io.harness.eventsframework.api.Producer;
 import io.harness.outbox.OutboxEvent;
 import io.harness.rule.Owner;
 import io.harness.security.SourcePrincipalContextData;
@@ -46,6 +47,7 @@ import org.mockito.ArgumentCaptor;
 public class TemplateOutboxEventHandlerTest extends CategoryTest {
   private ObjectMapper objectMapper;
   private AuditClientService auditClientService;
+  private Producer eventProducer;
   private TemplateOutboxEventHandler templateOutboxEventHandler;
   String newYaml;
   String oldYaml;
@@ -54,7 +56,8 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
   public void setup() throws IOException {
     objectMapper = NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER;
     auditClientService = mock(AuditClientService.class);
-    templateOutboxEventHandler = spy(new TemplateOutboxEventHandler(auditClientService));
+    eventProducer = mock(Producer.class);
+    templateOutboxEventHandler = spy(new TemplateOutboxEventHandler(auditClientService, eventProducer));
     newYaml = Resources.toString(this.getClass().getClassLoader().getResource("template.yaml"), Charsets.UTF_8);
     oldYaml = Resources.toString(this.getClass().getClassLoader().getResource("template_updated.yaml"), Charsets.UTF_8);
   }

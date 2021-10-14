@@ -157,7 +157,7 @@ pub fn populate_internal_info(
 
     let class_name = &location[location.rfind('/').unwrap() + 1..location.len() - 5];
     let deprecated_pattern = Regex::new(&format!(
-        r"@Deprecated[\s\S]+public (class|interface|@interface) {}",
+        r"@Deprecated[^\r\n]*[\r\n]*public (class|interface|@interface) {}",
         class_name
     ))
     .unwrap();

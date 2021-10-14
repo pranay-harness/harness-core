@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NewRelicCVConfigurationYamlHandler
-    extends CVConfigurationYamlHandler<NewRelicCVConfigurationYaml, NewRelicCVServiceConfiguration> {
+    extends MetricCVConfigurationYamlHandler<NewRelicCVConfigurationYaml, NewRelicCVServiceConfiguration> {
   @Inject NewRelicService newRelicService;
 
   @Override

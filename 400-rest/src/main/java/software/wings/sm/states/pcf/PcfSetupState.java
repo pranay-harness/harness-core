@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.CF_ALLOW_SPECIAL_CHARACTERS;
 import static io.harness.beans.FeatureName.CF_APP_NON_VERSIONING_INACTIVE_ROLLBACK;
 import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
@@ -277,7 +278,7 @@ public class PcfSetupState extends State {
         pcfStateHelper.generateManifestMap(context, appManifestMap, serviceElement, activityId);
 
     String applicationManifestYmlContent = pcfManifestsPackage.getManifestYml();
-    String pcfAppNameSuffix = generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage);
+    String pcfAppNameSuffix = generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage, pcfConfig);
     boolean isOriginalRoute = shouldUseOriginalRoute();
     List<String> tempRouteMaps = fetchTempRoutes(context, pcfInfrastructureMapping);
     List<String> routeMaps = fetchRouteMaps(context, pcfManifestsPackage, pcfInfrastructureMapping);
@@ -562,13 +563,21 @@ public class PcfSetupState extends State {
 
   @VisibleForTesting
   String generateAppNamePrefix(ExecutionContext context, Application app, ServiceElement serviceElement,
-      Environment env, PcfManifestsPackage pcfManifestsPackage) {
-    String pcfAppNameSuffix = isNotBlank(pcfAppName) ? normalizeExpression(context.renderExpression(pcfAppName))
-                                                     : normalizeExpression(ServiceVersionConvention.getPrefix(
-                                                         app.getName(), serviceElement.getName(), env.getName()));
+      Environment env, PcfManifestsPackage pcfManifestsPackage, CfInternalConfig cfConfig) {
+    String pcfAppNameSuffix = isNotBlank(pcfAppName)
+        ? normalizeApplicationName(context.renderExpression(pcfAppName), cfConfig)
+        : normalizeApplicationName(
+            ServiceVersionConvention.getPrefix(app.getName(), serviceElement.getName(), env.getName()), cfConfig);
 
     pcfAppNameSuffix = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, pcfAppNameSuffix);
-    return normalizeExpression(context.renderExpression(pcfAppNameSuffix));
+    return normalizeApplicationName(context.renderExpression(pcfAppNameSuffix), cfConfig);
+  }
+
+  private String normalizeApplicationName(String appName, CfInternalConfig cfConfig) {
+    if (featureFlagService.isEnabled(CF_ALLOW_SPECIAL_CHARACTERS, cfConfig.getAccountId())) {
+      return appName;
+    }
+    return normalizeExpression(appName);
   }
 
   @VisibleForTesting

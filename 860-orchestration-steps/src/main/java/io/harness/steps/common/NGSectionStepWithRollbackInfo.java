@@ -18,6 +18,15 @@ import io.harness.tasks.ResponseData;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ *
+ * Flow for rollback execution:
+ * - If a step fails, onFailRollbackAdviser publishes the information of the nextNodeId to run which is the
+ * rollbackSteps
+ * - The failed node id traverses to the parent using RollbackUtility#publishRollbackInformation, till the parent on
+ * which the RollbackCustomAdviser is attached.
+ * - RollbackCustomAdviser gets called and the rollbackSteps start executing
+ */
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class NGSectionStepWithRollbackInfo extends ChildExecutableWithRollbackAndRbac<NGSectionStepParameters> {

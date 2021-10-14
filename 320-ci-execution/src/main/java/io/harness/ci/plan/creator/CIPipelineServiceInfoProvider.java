@@ -2,6 +2,7 @@ package io.harness.ci.plan.creator;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.steps.StepSpecTypeConstants;
 import io.harness.ci.creator.variables.CIStageVariableCreator;
 import io.harness.ci.creator.variables.CIStepVariableCreator;
 import io.harness.ci.creator.variables.RunStepVariableCreator;
@@ -10,6 +11,7 @@ import io.harness.ci.plan.creator.stage.IntegrationStagePMSPlanCreator;
 import io.harness.ci.plan.creator.step.CIPMSStepFilterJsonCreator;
 import io.harness.ci.plan.creator.step.CIPMSStepPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.variables.ExecutionVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -60,5 +62,106 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
   @Override
   public List<StepInfo> getStepInfo() {
     return new ArrayList<>();
+  }
+
+  public List<StepInfo> getStepInfo1() {
+    StepInfo runStepInfo = StepInfo.newBuilder()
+                               .setName("Run")
+                               .setType(StepSpecTypeConstants.RUN)
+                               .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
+                               .build();
+
+    StepInfo runTestsStepInfo = StepInfo.newBuilder()
+                                    .setName("Run Tests")
+                                    .setType(StepSpecTypeConstants.RUN_TEST)
+                                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
+                                    .build();
+
+    StepInfo pluginStepInfo = StepInfo.newBuilder()
+                                  .setName("Plugin")
+                                  .setType(StepSpecTypeConstants.PLUGIN)
+                                  .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
+                                  .build();
+    StepInfo restoreCacheFromGCS = StepInfo.newBuilder()
+                                       .setName("Restore Cache From GCS")
+                                       .setType(StepSpecTypeConstants.RESTORE_CACHE_GCS)
+                                       .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
+                                       .build();
+
+    StepInfo restoreCacheFromS3 = StepInfo.newBuilder()
+                                      .setName("Restore Cache From S3")
+                                      .setType(StepSpecTypeConstants.RESTORE_CACHE_S3)
+                                      .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
+                                      .build();
+
+    StepInfo saveCacheToS3 = StepInfo.newBuilder()
+                                 .setName("Save Cache to S3")
+                                 .setType(StepSpecTypeConstants.SAVE_CACHE_S3)
+                                 .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
+                                 .build();
+
+    StepInfo saveCacheToGCS = StepInfo.newBuilder()
+                                  .setName("Save Cache to GCS")
+                                  .setType(StepSpecTypeConstants.SAVE_CACHE_GCS)
+                                  .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
+                                  .build();
+
+    StepInfo ecrPushBuilds =
+        StepInfo.newBuilder()
+            .setName("Build and Push to ECR")
+            .setType(StepSpecTypeConstants.BUILD_AND_PUSH_ECR)
+            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").addFolderPaths("Build").build())
+            .build();
+
+    StepInfo uploadArtifactsToJfrogBuild =
+        StepInfo.newBuilder()
+            .setName("Upload Artifacts to JFrog Artifactory")
+            .setType(StepSpecTypeConstants.ARTIFACTORY_UPLOAD)
+            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").addFolderPaths("Build").build())
+            .build();
+
+    StepInfo dockerPushBuild =
+        StepInfo.newBuilder()
+            .setName("Build and Push an image to Docker Registry")
+            .setType(StepSpecTypeConstants.BUILD_AND_PUSH_DOCKER_REGISTRY)
+            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").addFolderPaths("Build").build())
+            .build();
+
+    StepInfo gcrPushBuilds =
+        StepInfo.newBuilder()
+            .setName("Build and Push to GCR")
+            .setType(StepSpecTypeConstants.BUILD_AND_PUSH_GCR)
+            .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").addFolderPaths("Build").build())
+            .build();
+
+    StepInfo uploadToGCS = StepInfo.newBuilder()
+                               .setName("Upload Artifacts to GCS")
+                               .setType(StepSpecTypeConstants.GCS_UPLOAD)
+                               .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").build())
+                               .build();
+
+    StepInfo uploadToS3 = StepInfo.newBuilder()
+                              .setName("Upload Artifacts to S3")
+                              .setType(StepSpecTypeConstants.S3_UPLOAD)
+                              .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Artifacts").build())
+                              .build();
+
+    List<StepInfo> stepInfos = new ArrayList<>();
+
+    stepInfos.add(runStepInfo);
+    stepInfos.add(uploadToGCS);
+    stepInfos.add(ecrPushBuilds);
+    stepInfos.add(uploadToS3);
+    stepInfos.add(gcrPushBuilds);
+    stepInfos.add(restoreCacheFromGCS);
+    stepInfos.add(runTestsStepInfo);
+    stepInfos.add(pluginStepInfo);
+    stepInfos.add(restoreCacheFromS3);
+    stepInfos.add(dockerPushBuild);
+    stepInfos.add(uploadArtifactsToJfrogBuild);
+    stepInfos.add(saveCacheToGCS);
+    stepInfos.add(saveCacheToS3);
+
+    return stepInfos;
   }
 }

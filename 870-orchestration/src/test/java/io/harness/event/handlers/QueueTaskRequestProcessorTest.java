@@ -20,6 +20,8 @@ import io.harness.engine.pms.resume.EngineResumeCallback;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.engine.progress.EngineProgressCallback;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
@@ -99,10 +101,12 @@ public class QueueTaskRequestProcessorTest extends OrchestrationTestBase {
             .setExecutableResponse(ExecutableResponse.newBuilder().setTask(taskBuilder.build()).build())
             .build();
 
+    Ambiance ambiance =
+        Ambiance.newBuilder().addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build()).build();
     queueTaskResponseHandler.handleEvent(SdkResponseEventProto.newBuilder()
                                              .setSdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
                                              .setQueueTaskRequest(queueTaskRequest)
-                                             .setNodeExecutionId(nodeExecutionId)
+                                             .setAmbiance(ambiance)
                                              .build());
 
     verify(nodeExecutionService)
@@ -116,7 +120,7 @@ public class QueueTaskRequestProcessorTest extends OrchestrationTestBase {
     assertThat(update.getUpdateObject().keySet()).containsExactly("$addToSet");
     assertThat(update.getUpdateObject().values()).hasSize(1);
     verify(waitNotifyEngine)
-        .waitForAllOn(null, EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build(),
-            EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build(), taskId);
+        .waitForAllOn(null, EngineResumeCallback.builder().ambiance(ambiance).build(),
+            EngineProgressCallback.builder().ambiance(ambiance).build(), taskId);
   }
 }

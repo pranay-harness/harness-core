@@ -12,6 +12,9 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
@@ -24,16 +27,21 @@ import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.template.TemplateApplyRequestDTO;
+import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
+import io.harness.ng.core.template.TemplateSummaryResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.template.beans.TemplateApplyRequestDTO;
+import io.harness.template.beans.PermissionTypes;
 import io.harness.template.beans.TemplateDeleteListRequestDTO;
 import io.harness.template.beans.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.TemplateListType;
 import io.harness.template.beans.TemplateResponseDTO;
-import io.harness.template.beans.TemplateSummaryResponseDTO;
+import io.harness.template.beans.TemplateWrapperResponseDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
+import io.harness.template.helpers.TemplateMergeHelper;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
@@ -79,14 +87,19 @@ import retrofit2.http.Body;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
+          @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
+              message = "TemplateRefs Resolved failed in given yaml.")
     })
 @NextGenManagerAuth
 @Slf4j
 public class NGTemplateResource {
+  public static final String TEMPLATE = "TEMPLATE";
   private static final String INCLUDE_ALL_TEMPLATES_ACCESSIBLE = "includeAllTemplatesAvailableAtScope";
   private final NGTemplateService templateService;
   private final NGTemplateServiceHelper templateServiceHelper;
+  private final AccessControlClient accessControlClient;
+  private final TemplateMergeHelper templateMergeHelper;
 
   @GET
   @Path("{templateIdentifier}")
@@ -100,7 +113,8 @@ public class NGTemplateResource {
       @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     // if label is not given, return stable template
-
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
     log.info(
         String.format("Retrieving Template with identifier %s and versionLabel %s in project %s, org %s, account %s",
             templateIdentifier, versionLabel, projectId, orgId, accountId));
@@ -121,21 +135,27 @@ public class NGTemplateResource {
 
   @POST
   @ApiOperation(value = "Creates a Template", nickname = "createTemplate")
-  public ResponseDTO<TemplateResponseDTO> create(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  public ResponseDTO<TemplateWrapperResponseDTO> create(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull String templateYaml,
       @QueryParam("setDefaultTemplate") @DefaultValue("false") boolean setDefaultTemplate,
       @QueryParam("comments") String comments) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountId, orgId, projectId, templateYaml);
     log.info(String.format("Creating Template with identifier %s with label %s in project %s, org %s, account %s",
         templateEntity.getIdentifier(), templateEntity.getVersionLabel(), projectId, orgId, accountId));
 
     // TODO(archit): Add schema validations
     TemplateEntity createdTemplate = templateService.create(templateEntity, setDefaultTemplate, comments);
-    return ResponseDTO.newResponse(
-        createdTemplate.getVersion().toString(), NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate));
+    TemplateWrapperResponseDTO templateWrapperResponseDTO =
+        TemplateWrapperResponseDTO.builder()
+            .isValid(true)
+            .templateResponseDTO(NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate))
+            .build();
+    return ResponseDTO.newResponse(createdTemplate.getVersion().toString(), templateWrapperResponseDTO);
   }
 
   @PUT
@@ -148,6 +168,8 @@ public class NGTemplateResource {
       @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
       @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @QueryParam("comments") String comments) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
     log.info(String.format(
         "Updating Stable Template with identifier %s with versionLabel %s in project %s, org %s, account %s",
         templateIdentifier, versionLabel, projectId, orgId, accountId));
@@ -160,7 +182,7 @@ public class NGTemplateResource {
   @PUT
   @Path("/update/{templateIdentifier}/{versionLabel}")
   @ApiOperation(value = "Updating existing template label", nickname = "updateExistingTemplateLabel")
-  public ResponseDTO<TemplateResponseDTO> updateExistingTemplateLabel(@HeaderParam(IF_MATCH) String ifMatch,
+  public ResponseDTO<TemplateWrapperResponseDTO> updateExistingTemplateLabel(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
@@ -169,6 +191,8 @@ public class NGTemplateResource {
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull String templateYaml,
       @QueryParam("setDefaultTemplate") @DefaultValue("false") boolean setDefaultTemplate,
       @QueryParam("comments") String comments) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(
         accountId, orgId, projectId, templateIdentifier, versionLabel, templateYaml);
     log.info(
@@ -179,8 +203,12 @@ public class NGTemplateResource {
     // TODO(archit): Add schema validations
     TemplateEntity createdTemplate =
         templateService.updateTemplateEntity(templateEntity, ChangeType.MODIFY, setDefaultTemplate, comments);
-    return ResponseDTO.newResponse(
-        createdTemplate.getVersion().toString(), NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate));
+    TemplateWrapperResponseDTO templateWrapperResponseDTO =
+        TemplateWrapperResponseDTO.builder()
+            .isValid(true)
+            .templateResponseDTO(NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate))
+            .build();
+    return ResponseDTO.newResponse(createdTemplate.getVersion().toString(), templateWrapperResponseDTO);
   }
 
   @DELETE
@@ -193,6 +221,8 @@ public class NGTemplateResource {
       @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
       @NotNull @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
       @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo, @QueryParam("comments") String comments) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_DELETE_PERMISSION);
     log.info(String.format("Deleting Template with identifier %s and versionLabel %s in project %s, org %s, account %s",
         templateIdentifier, versionLabel, projectId, orgId, accountId));
 
@@ -212,6 +242,8 @@ public class NGTemplateResource {
       @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
       @Body TemplateDeleteListRequestDTO templateDeleteListRequestDTO,
       @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo, @QueryParam("comments") String comments) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_DELETE_PERMISSION);
     log.info(
         String.format("Deleting Template with identifier %s and versionLabel list %s in project %s, org %s, account %s",
             templateIdentifier, templateDeleteListRequestDTO.toString(), projectId, orgId, accountId));
@@ -235,6 +267,8 @@ public class NGTemplateResource {
       @QueryParam(INCLUDE_ALL_TEMPLATES_ACCESSIBLE) Boolean includeAllTemplatesAccessibleAtScope,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @Body TemplateFilterPropertiesDTO filterProperties,
       @QueryParam("getDistinctFromBranches") Boolean getDistinctFromBranches) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
     log.info(String.format("Get List of templates in project: %s, org: %s, account: %s", projectId, orgId, accountId));
     Criteria criteria = templateServiceHelper.formCriteria(
         accountId, orgId, projectId, filterIdentifier, filterProperties, false, searchTerm, false);
@@ -267,6 +301,8 @@ public class NGTemplateResource {
       @QueryParam("currentScope") Scope currentScope, @QueryParam("updateScope") Scope updateScope,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("getDistinctFromBranches") Boolean getDistinctFromBranches) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
     log.info(
         String.format("Updating Template Settings with identifier %s in project %s, org %s, account %s to scope %s",
             templateIdentifier, projectId, orgId, accountId, updateScope));
@@ -284,20 +320,26 @@ public class NGTemplateResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String templateLabel) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
     // if label not given, then consider stable template label
     // returns templateInputs yaml
-    return null;
+    log.info(String.format("Get Template inputs for template with identifier %s in project %s, org %s, account %s",
+        templateIdentifier, projectId, orgId, accountId));
+    return ResponseDTO.newResponse(
+        templateMergeHelper.getTemplateInputs(accountId, orgId, projectId, templateIdentifier, templateLabel));
   }
 
   @POST
   @Path("/applyTemplates")
   @ApiOperation(value = "Gets complete yaml with templateRefs resolved", nickname = "getYamlWithTemplateRefsResolved")
-  public ResponseDTO<String> applyTemplates(
+  public ResponseDTO<TemplateMergeResponseDTO> applyTemplates(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      TemplateApplyRequestDTO templateApplyRequestDTO) {
-    return null;
+      @NotNull TemplateApplyRequestDTO templateApplyRequestDTO) {
+    return ResponseDTO.newResponse(templateMergeHelper.mergeTemplateSpecToPipelineYaml(
+        accountId, orgId, projectId, templateApplyRequestDTO.getOriginalEntityYaml()));
   }
 
   @GET

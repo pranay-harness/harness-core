@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse.DelegateAsyncTaskResp
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueController;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.tasks.BinaryResponseData;
@@ -39,15 +40,21 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("disableDeserialization") private boolean disableDeserialization;
+  @Inject @Named("enablePrimaryCheck") private boolean enablePrimaryCheck;
   private static final int DELETE_THRESHOLD = 20;
   private static final long MAX_PROCESSING_DURATION_MILLIS = 60000L;
+  @Inject private QueueController queueController;
 
   @Override
   public void run() {
     // TODO - method guaranties at least one delivery
     Set<String> responsesToBeDeleted = new HashSet<>();
 
-    while (true) {
+    boolean consumeResponse = true;
+    if (enablePrimaryCheck && queueController != null) {
+      consumeResponse = queueController.isPrimary();
+    }
+    while (consumeResponse) {
       try {
         Query<DelegateAsyncTaskResponse> taskResponseQuery =
             persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)

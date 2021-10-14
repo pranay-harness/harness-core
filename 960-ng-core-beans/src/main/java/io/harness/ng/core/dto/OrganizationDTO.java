@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -28,6 +29,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Organization")
+@Schema(name = "Organization", description = "View of Organization entity as defined in Harness.")
 public class OrganizationDTO {
   @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;

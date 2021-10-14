@@ -21,11 +21,13 @@ import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
-import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
@@ -39,6 +41,8 @@ import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.cdng.entities.CVNGStepTask;
+import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
@@ -55,6 +59,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Executio
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
@@ -83,7 +88,9 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -103,6 +110,9 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private Injector injector;
   @Inject private Map<ActivityType, ActivityUpdatableEntity> activityUpdatableEntityMap;
+  @Inject private Map<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMap;
+  // TODO: remove the dependency once UI moves to new APIs
+  @Inject private CVNGStepTaskService cvngStepTaskService;
 
   @Override
   public Activity get(String activityId) {
@@ -259,6 +269,10 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public DeploymentActivitySummaryDTO getDeploymentSummary(String activityId) {
+    CVNGStepTask cvngStepTask = cvngStepTaskService.getByCallBackId(activityId);
+    if (cvngStepTask != null && StringUtils.isNotEmpty(cvngStepTask.getVerificationJobInstanceId())) {
+      return cvngStepTaskService.getDeploymentSummary(activityId);
+    }
     DeploymentActivity activity = (DeploymentActivity) get(activityId);
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         getDeploymentVerificationJobInstanceSummary(activity);
@@ -706,14 +720,19 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public io.harness.beans.PageResponse<Activity> getPaginated(PageRequest pageRequest) {
-    return hPersistence.query(Activity.class, pageRequest);
+    return hPersistence.query(Activity.class, pageRequest, HQuery.excludeValidate);
   }
 
   private List<String> getVerificationJobInstanceId(String activityId) {
     Preconditions.checkNotNull(activityId);
-    Activity activity = get(activityId);
-    Preconditions.checkNotNull(activity, String.format("Activity does not exists with activityID %s", activityId));
-    return activity.getVerificationJobInstanceIds();
+    CVNGStepTask cvngStepTask = cvngStepTaskService.getByCallBackId(activityId);
+    if (cvngStepTask != null && StringUtils.isBlank(cvngStepTask.getVerificationJobInstanceId())) {
+      Activity activity = get(activityId);
+      Preconditions.checkNotNull(activity, String.format("Activity does not exists with activityID %s", activityId));
+      return activity.getVerificationJobInstanceIds();
+    } else {
+      return Arrays.asList(cvngStepTask.getVerificationJobInstanceId());
+    }
   }
 
   private void validateJob(VerificationJob verificationJob) {
@@ -742,9 +761,6 @@ public class ActivityServiceImpl implements ActivityService {
       case INFRASTRUCTURE:
         activity = InfrastructureActivity.builder().build();
         break;
-      case CUSTOM:
-        activity = CustomActivity.builder().build();
-        break;
       case KUBERNETES:
         throw new IllegalStateException("KUBERNETES events are handled by its own service");
       default:
@@ -756,17 +772,37 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public void upsert(Activity activity) {
+  public String upsert(Activity activity) {
+    ActivityUpdateHandler handler = activityUpdateHandlerMap.get(activity.getType());
     ActivityUpdatableEntity activityUpdatableEntity = activityUpdatableEntityMap.get(activity.getType());
     Optional<Activity> optionalFromDb =
         StringUtils.isEmpty(activity.getUuid()) ? getFromDb(activity) : Optional.ofNullable(get(activity.getUuid()));
     if (optionalFromDb.isPresent()) {
+      List<String> verificationInstanceIds =
+          ListUtils.defaultIfNull(optionalFromDb.get().getVerificationJobInstanceIds(), new ArrayList<>());
+      ListUtils.emptyIfNull(activity.getVerificationJobInstanceIds())
+          .stream()
+          .filter(id -> !verificationInstanceIds.contains(id))
+          .forEach(verificationInstanceIds::add);
+      activity.setVerificationJobInstanceIds(verificationInstanceIds);
       UpdateOperations<Activity> updateOperations =
           hPersistence.createUpdateOperations(activityUpdatableEntity.getEntityClass());
       activityUpdatableEntity.setUpdateOperations(updateOperations, activity);
+      if (handler != null) {
+        handler.handleUpdate(optionalFromDb.get(), activity);
+      }
       hPersistence.update(optionalFromDb.get(), updateOperations);
+      return optionalFromDb.get().getUuid();
     } else {
+      if (handler != null) {
+        handler.handleCreate(activity);
+      }
       register(activity);
+
+      hPersistence.save(activity);
+      log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(),
+          activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
+      return activity.getUuid();
     }
   }
 
@@ -793,14 +829,22 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public Long getCount(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifiers, Instant startTime, Instant endTime, List<ActivityType> activityTypes) {
-    Query<Activity> query = createQuery(projectParams, startTime, endTime);
-    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
-      query = query.field(ActivityKeys.serviceIdentifier).in(serviceIdentifiers);
+    Query<Activity> query = createQuery(projectParams, startTime, endTime).disableValidation();
+    if (EmptyPredicate.isNotEmpty(serviceIdentifiers)) {
+      query.or(new Criteria[] {query.criteria(ActivityKeys.serviceIdentifier).in(serviceIdentifiers),
+          query
+              .criteria(
+                  KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
+              .in(serviceIdentifiers)});
     }
-    if (CollectionUtils.isNotEmpty(environmentIdentifiers)) {
-      query = query.field(ActivityKeys.environmentIdentifier).in(environmentIdentifiers);
+    if (EmptyPredicate.isNotEmpty(environmentIdentifiers)) {
+      query.or(new Criteria[] {query.criteria(ActivityKeys.environmentIdentifier).in(environmentIdentifiers),
+          query
+              .criteria(
+                  KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.environmentIdentifier)
+              .in(environmentIdentifiers)});
     }
-    if (CollectionUtils.isNotEmpty(activityTypes)) {
+    if (EmptyPredicate.isNotEmpty(activityTypes)) {
       query = query.field(ActivityKeys.type).in(activityTypes);
     }
     return query.count();

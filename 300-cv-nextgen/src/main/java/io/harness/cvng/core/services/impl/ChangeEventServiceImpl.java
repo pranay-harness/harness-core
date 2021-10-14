@@ -1,13 +1,13 @@
 package io.harness.cvng.core.services.impl;
 
-import static org.apache.commons.collections4.iterators.PeekingIterator.peekingIterator;
+import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Group.id;
 
-import io.harness.beans.PageRequest.PageRequestBuilder;
-import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.change.ChangeCategory;
@@ -26,27 +26,36 @@ import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.persistence.HPersistence;
+import io.harness.persistence.HQuery;
 
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.iterators.PeekingIterator;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
+// TODO: merge ChangeEventService and ActivityService
 public class ChangeEventServiceImpl implements ChangeEventService {
   @Inject ChangeSourceService changeSourceService;
   @Inject ChangeEventEntityAndDTOTransformer transformer;
   @Inject ActivityService activityService;
+  @Inject HPersistence hPersistence;
 
   @Override
   public Boolean register(ChangeEventDTO changeEventDTO) {
@@ -95,175 +104,157 @@ public class ChangeEventServiceImpl implements ChangeEventService {
   @Override
   public ChangeSummaryDTO getChangeSummary(ServiceEnvironmentParams serviceEnvironmentParams,
       List<String> changeSourceIdentifiers, Instant startTime, Instant endTime) {
-    return ChangeSummaryDTO.builder()
-        .categoryCountMap(Arrays.stream(ChangeCategory.values())
-                              .collect(Collectors.toMap(Function.identity(),
-                                  changeCategory
-                                  -> getCountDetails(serviceEnvironmentParams, changeSourceIdentifiers, startTime,
-                                      endTime, changeCategory))))
-        .build();
+    return getChangeSummary(serviceEnvironmentParams, Arrays.asList(serviceEnvironmentParams.getServiceIdentifier()),
+        Arrays.asList(serviceEnvironmentParams.getEnvironmentIdentifier()), startTime, endTime);
   }
 
   @Override
-  public PageResponse<ChangeEventDTO> getPaginated(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifier, Instant startTime, Instant endTime, List<ChangeCategory> changeCategories,
-      PageRequest pageRequest) {
-    PageRequestBuilder pageRequestBuilder =
-        PageRequestBuilder.aPageRequest()
-            .withOffset(String.valueOf(pageRequest.getPageIndex() * pageRequest.getPageSize()))
-            .withLimit(String.valueOf(pageRequest.getPageSize()))
-            .addFilter(ActivityKeys.accountId, Operator.EQ, projectParams.getAccountIdentifier())
-            .addFilter(ActivityKeys.orgIdentifier, Operator.EQ, projectParams.getOrgIdentifier())
-            .addFilter(ActivityKeys.projectIdentifier, Operator.EQ, projectParams.getProjectIdentifier())
-            .addFilter(ActivityKeys.eventTime, Operator.GE, startTime)
-            .addFilter(ActivityKeys.eventTime, Operator.LT, endTime)
-            .addOrder(SortOrder.Builder.aSortOrder().withField(ActivityKeys.eventTime, OrderType.DESC).build());
-
-    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
-      pageRequestBuilder.addFilter(ActivityKeys.serviceIdentifier, Operator.IN, serviceIdentifiers.toArray());
-    }
-    if (CollectionUtils.isNotEmpty(environmentIdentifier)) {
-      pageRequestBuilder.addFilter(ActivityKeys.environmentIdentifier, Operator.IN, environmentIdentifier.toArray());
-    }
-    if (CollectionUtils.isNotEmpty(changeCategories)) {
-      List<ActivityType> activityTypes = changeCategories.stream()
-                                             .map(ChangeSourceType::getForCategory)
-                                             .flatMap(Collection::stream)
-                                             .map(ChangeSourceType::getActivityType)
-                                             .collect(Collectors.toList());
-      pageRequestBuilder.addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray());
-    } else {
-      List<ActivityType> activityTypes = Arrays.stream(ChangeSourceType.values())
-                                             .map(ChangeSourceType::getActivityType)
-                                             .distinct()
-                                             .collect(Collectors.toList());
-      pageRequestBuilder.addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray());
-    }
-    io.harness.beans.PageResponse<Activity> pageResponse = activityService.getPaginated(pageRequestBuilder.build());
-    Long totalPages = (pageResponse.getTotal() / pageResponse.getPageSize())
-        + ((pageResponse.getTotal() % pageRequest.getPageSize()) == 0 ? 0 : 1);
+  public PageResponse<ChangeEventDTO> getChangeEvents(ProjectParams projectParams, List<String> serviceIdentifiers,
+      List<String> environmentIdentifier, Instant startTime, Instant endTime, PageRequest pageRequest) {
+    List<Activity> activities =
+        createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier)
+            .order(Sort.descending(ActivityKeys.eventTime))
+            .asList(new FindOptions()
+                        .skip(pageRequest.getPageIndex() * pageRequest.getPageSize())
+                        .limit(pageRequest.getPageSize()));
+    Long total = createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier).count();
+    Long totalPages = (total / pageRequest.getPageSize()) + ((total % pageRequest.getPageSize()) == 0 ? 0 : 1);
     return PageResponse.<ChangeEventDTO>builder()
         .pageIndex(pageRequest.getPageIndex())
         .totalPages(totalPages)
         .pageSize(pageRequest.getPageSize())
-        .totalItems(pageResponse.getTotal())
-        .pageItemCount(pageResponse.size())
-        .content(pageResponse.stream().map(transformer::getDto).collect(Collectors.toList()))
+        .totalItems(total)
+        .pageItemCount(activities.size())
+        .content(activities.stream().map(transformer::getDto).collect(Collectors.toList()))
         .build();
   }
 
   @Override
   public ChangeTimeline getTimeline(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifier, Instant startTime, Instant endTime, Integer pointCount) {
-    List<ActivityType> activityTypes = Arrays.stream(ChangeSourceType.values())
-                                           .map(ChangeSourceType::getActivityType)
-                                           .distinct()
-                                           .collect(Collectors.toList());
-    PageRequestBuilder pageRequestBuilder =
-        PageRequestBuilder.aPageRequest()
-            .addFieldsIncluded(ActivityKeys.type, ActivityKeys.eventTime)
-            .addFilter(ActivityKeys.accountId, Operator.EQ, projectParams.getAccountIdentifier())
-            .addFilter(ActivityKeys.orgIdentifier, Operator.EQ, projectParams.getOrgIdentifier())
-            .addFilter(ActivityKeys.projectIdentifier, Operator.EQ, projectParams.getProjectIdentifier())
-            .addFilter(ActivityKeys.eventTime, Operator.GE, startTime)
-            .addFilter(ActivityKeys.eventTime, Operator.LT, endTime)
-            .addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray())
-            .addOrder(SortOrder.Builder.aSortOrder().withField(ActivityKeys.eventTime, OrderType.ASC).build());
-    pageRequestBuilder.addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray());
-    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
-      pageRequestBuilder.addFilter(ActivityKeys.serviceIdentifier, Operator.IN, serviceIdentifiers.toArray());
-    }
-    if (CollectionUtils.isNotEmpty(environmentIdentifier)) {
-      pageRequestBuilder.addFilter(ActivityKeys.environmentIdentifier, Operator.IN, environmentIdentifier.toArray());
-    }
-    io.harness.beans.PageResponse<Activity> pageResponse = activityService.getPaginated(pageRequestBuilder.build());
-    Map<ChangeCategory, List<Activity>> changeCategoryActivitiesMap = pageResponse.stream().collect(
-        Collectors.groupingBy(activity -> ChangeSourceType.ofActivityType(activity.getType()).getChangeCategory()));
+    Map<ChangeCategory, Map<Integer, TimeRangeDetail>> categoryMilliSecondFromStartDetailMap = new HashMap<>();
+    Duration timeRangeDuration = Duration.between(startTime, endTime).dividedBy(pointCount);
+    getTimelineObject(projectParams, serviceIdentifiers, environmentIdentifier, startTime, endTime, pointCount)
+        .forEachRemaining(timelineObject -> {
+          ChangeCategory changeCategory = ChangeSourceType.ofActivityType(timelineObject.id.type).getChangeCategory();
+          Map<Integer, TimeRangeDetail> milliSecondFromStartDetailMap =
+              categoryMilliSecondFromStartDetailMap.getOrDefault(changeCategory, new HashMap<>());
+          categoryMilliSecondFromStartDetailMap.put(changeCategory, milliSecondFromStartDetailMap);
+          TimeRangeDetail timeRangeDetail = milliSecondFromStartDetailMap.getOrDefault(timelineObject.id.index,
+              TimeRangeDetail.builder()
+                  .count(0L)
+                  .startTime(startTime.plus(timeRangeDuration.multipliedBy(timelineObject.id.index)).toEpochMilli())
+                  .endTime(startTime.plus(timeRangeDuration.multipliedBy(timelineObject.id.index))
+                               .plus(timeRangeDuration)
+                               .toEpochMilli())
+                  .build());
+          timeRangeDetail.incrementCount();
+          milliSecondFromStartDetailMap.put(timelineObject.id.index, timeRangeDetail);
+        });
     ChangeTimelineBuilder changeTimelineBuilder = ChangeTimeline.builder();
-    Arrays.asList(ChangeCategory.values())
-        .forEach(changeCategory
-            -> changeTimelineBuilder.categoryTimeline(changeCategory,
-                getAggregateDetails(changeCategoryActivitiesMap.getOrDefault(changeCategory, Collections.EMPTY_LIST),
-                    startTime, endTime, pointCount)));
+    categoryMilliSecondFromStartDetailMap.forEach(
+        (key, value) -> changeTimelineBuilder.categoryTimeline(key, new ArrayList<>(value.values())));
     return changeTimelineBuilder.build();
+  }
+
+  private Iterator<TimelineObject> getTimelineObject(ProjectParams projectParams, List<String> serviceIdentifiers,
+      List<String> environmentIdentifier, Instant startTime, Instant endTime, Integer pointCount) {
+    Duration timeRangeDuration = Duration.between(startTime, endTime).dividedBy(pointCount);
+    return hPersistence.getDatastore(Activity.class)
+        .createAggregation(Activity.class)
+        .match(createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier))
+        .group(id(grouping("type", "type"),
+                   grouping("index",
+                       accumulator("$divide",
+                           Arrays.asList(accumulator("$subtract",
+                                             Arrays.asList("$eventTime", new Date(startTime.toEpochMilli()))),
+                               timeRangeDuration.toMillis())))),
+            grouping("count", accumulator("$sum", 1)))
+        .aggregate(TimelineObject.class);
   }
 
   @Override
   public ChangeSummaryDTO getChangeSummary(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifier, Instant startTime, Instant endTime) {
+    Map<ChangeCategory, Map<Integer, Integer>> changeCategoryToIndexToCount =
+        Arrays.stream(ChangeCategory.values()).collect(Collectors.toMap(Function.identity(), c -> new HashMap<>()));
+    getTimelineObject(projectParams, serviceIdentifiers, environmentIdentifier,
+        startTime.minus(Duration.between(startTime, endTime)), endTime, 2)
+        .forEachRemaining(timelineObject -> {
+          ChangeCategory changeCategory = ChangeSourceType.ofActivityType(timelineObject.id.type).getChangeCategory();
+          Map<Integer, Integer> indexToCountMap = changeCategoryToIndexToCount.get(changeCategory);
+          Integer index = timelineObject.id.index;
+          Integer countSoFar = indexToCountMap.getOrDefault(index, 0);
+          countSoFar = countSoFar + timelineObject.count;
+          changeCategoryToIndexToCount.get(changeCategory).put(timelineObject.id.index, countSoFar);
+        });
     return ChangeSummaryDTO.builder()
-        .categoryCountMap(Arrays.stream(ChangeCategory.values())
-                              .collect(Collectors.toMap(Function.identity(),
-                                  changeCategory
-                                  -> getCountDetails(projectParams, serviceIdentifiers, environmentIdentifier,
-                                      startTime, endTime, changeCategory))))
+        .categoryCountMap(changeCategoryToIndexToCount.entrySet().stream().collect(Collectors.toMap(entry
+            -> entry.getKey(),
+            entry
+            -> CategoryCountDetails.builder()
+                   .count(entry.getValue().getOrDefault(1, 0))
+                   .countInPrecedingWindow(entry.getValue().getOrDefault(0, 0))
+                   .build())))
         .build();
   }
 
-  private List<TimeRangeDetail> getAggregateDetails(
-      List<Activity> activitiesSortedByTime, Instant startTime, Instant endTime, Integer pointCount) {
-    Duration aggregationDuration = Duration.between(startTime, endTime).dividedBy(pointCount);
-    Instant timeRangeStart = startTime, timeRangeEnd = startTime.plus(aggregationDuration);
-    Long count = 0L;
-    PeekingIterator<Activity> activityIterator = peekingIterator(activitiesSortedByTime.iterator());
-    List<TimeRangeDetail> result = new ArrayList<>();
-    while (activityIterator.hasNext()) {
-      Activity activity = activityIterator.peek();
-      if (activity.getEventTime().isBefore(timeRangeEnd)) {
-        count++;
-        activityIterator.next();
-      } else {
-        if (count > 0) {
-          TimeRangeDetail timeRangeDetail = TimeRangeDetail.builder()
-                                                .count(count)
-                                                .startTime(timeRangeStart.toEpochMilli())
-                                                .endTime(timeRangeEnd.toEpochMilli())
-                                                .build();
-          result.add(timeRangeDetail);
-        }
-        count = 0L;
-        timeRangeStart = timeRangeEnd;
-        timeRangeEnd = timeRangeStart.plus(aggregationDuration);
-      }
+  private List<Criteria> getCriterias(
+      Query<Activity> q, ProjectParams projectParams, Instant startTime, Instant endTime) {
+    return new ArrayList<>(Arrays.asList(q.criteria(ActivityKeys.accountId).equal(projectParams.getAccountIdentifier()),
+        q.criteria(ActivityKeys.orgIdentifier).equal(projectParams.getOrgIdentifier()),
+        q.criteria(ActivityKeys.projectIdentifier).equal(projectParams.getProjectIdentifier()),
+        q.criteria(ActivityKeys.type)
+            .in(Arrays.stream(ChangeSourceType.values())
+                    .map(ChangeSourceType::getActivityType)
+                    .collect(Collectors.toList())),
+        q.criteria(ActivityKeys.eventTime).lessThan(endTime),
+        q.criteria(ActivityKeys.eventTime).greaterThanOrEq(startTime)));
+  }
+
+  private Criteria[] getCriteriasForInfraEvents(Query<Activity> q, ProjectParams projectParams, Instant startTime,
+      Instant endTime, List<String> serviceIdentifiers, List<String> environmentIdentifier) {
+    List<Criteria> criterias = getCriterias(q, projectParams, startTime, endTime);
+    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
+      criterias.add(
+          q.criteria(KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
+              .in(serviceIdentifiers));
     }
-    if (count > 0) {
-      TimeRangeDetail timeRangeDetail = TimeRangeDetail.builder()
-                                            .count(count)
-                                            .startTime(timeRangeStart.toEpochMilli())
-                                            .endTime(timeRangeEnd.toEpochMilli())
-                                            .build();
-      result.add(timeRangeDetail);
+    if (CollectionUtils.isNotEmpty(environmentIdentifier)) {
+      criterias.add(q.criteria(KubernetesClusterActivityKeys.relatedAppServices + "."
+                         + ServiceEnvironmentKeys.environmentIdentifier)
+                        .in(environmentIdentifier));
     }
-    return result;
+    return criterias.toArray(new Criteria[criterias.size()]);
   }
 
-  private CategoryCountDetails getCountDetails(ServiceEnvironmentParams serviceEnvironmentParams,
-      List<String> changeSourceIdentifiers, Instant startTime, Instant endTime, ChangeCategory changeCategory) {
-    Instant startTimeOfPreviousWindow = startTime.minus(Duration.between(startTime, endTime));
-    List<ActivityType> activityTypes = ChangeSourceType.getForCategory(changeCategory)
-                                           .stream()
-                                           .map(changeSourceType -> changeSourceType.getActivityType())
-                                           .collect(Collectors.toList());
-    return CategoryCountDetails.builder()
-        .count(activityService.getCount(
-            serviceEnvironmentParams, changeSourceIdentifiers, startTime, endTime, activityTypes))
-        .countInPrecedingWindow(activityService.getCount(
-            serviceEnvironmentParams, changeSourceIdentifiers, startTimeOfPreviousWindow, startTime, activityTypes))
-        .build();
+  private Criteria[] getCriteriasForAppEvents(Query<Activity> q, ProjectParams projectParams, Instant startTime,
+      Instant endTime, List<String> serviceIdentifiers, List<String> environmentIdentifier) {
+    List<Criteria> criterias = getCriterias(q, projectParams, startTime, endTime);
+    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
+      criterias.add(q.criteria(ActivityKeys.serviceIdentifier).in(serviceIdentifiers));
+    }
+    if (CollectionUtils.isNotEmpty(environmentIdentifier)) {
+      criterias.add(q.criteria(ActivityKeys.environmentIdentifier).in(environmentIdentifier));
+    }
+    return criterias.toArray(new Criteria[criterias.size()]);
   }
 
-  private CategoryCountDetails getCountDetails(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifiers, Instant startTime, Instant endTime, ChangeCategory changeCategory) {
-    Instant startTimeOfPreviousWindow = startTime.minus(Duration.between(startTime, endTime));
-    List<ActivityType> activityTypes = ChangeSourceType.getForCategory(changeCategory)
-                                           .stream()
-                                           .map(changeSourceType -> changeSourceType.getActivityType())
-                                           .collect(Collectors.toList());
-    return CategoryCountDetails.builder()
-        .count(activityService.getCount(
-            projectParams, serviceIdentifiers, environmentIdentifiers, startTime, endTime, activityTypes))
-        .countInPrecedingWindow(activityService.getCount(projectParams, serviceIdentifiers, environmentIdentifiers,
-            startTimeOfPreviousWindow, startTime, activityTypes))
-        .build();
+  private Query<Activity> createQuery(ProjectParams projectParams, Instant startTime, Instant endTime,
+      List<String> services, List<String> environments) {
+    Query<Activity> query = hPersistence.createQuery(Activity.class, HQuery.excludeValidate);
+    query.or(query.and(getCriteriasForAppEvents(query, projectParams, startTime, endTime, services, environments)),
+        query.and(getCriteriasForInfraEvents(query, projectParams, startTime, endTime, services, environments)));
+    return query;
+  }
+
+  private static class TimelineObject {
+    @Id TimelineKey id;
+    Integer count;
+  }
+
+  private static class TimelineKey {
+    ActivityType type;
+    Integer index;
   }
 }

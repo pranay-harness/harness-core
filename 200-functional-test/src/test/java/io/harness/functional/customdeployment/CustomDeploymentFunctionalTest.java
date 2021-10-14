@@ -24,6 +24,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -81,10 +83,12 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
@@ -157,6 +161,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testCustomDeploymentWorkflowSuccess() throws IOException {
     final String accountId = owners.obtainAccount().getUuid();
     resetCache(accountId);
@@ -194,6 +199,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testEmptyFetchInstanceSciptFail() throws IOException {
     resetCache(owners.obtainAccount().getUuid());
     CustomDeploymentTypeTemplate customDeploymentTypeTemplate = CustomDeploymentTypeTemplate.builder()
@@ -244,6 +250,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testTemplateLinkedWithInfraNotGetDeleted() throws IOException {
     assertThatThrownBy(() -> templateService.delete(owners.obtainAccount().getUuid(), template.getUuid()))
         .isInstanceOf(TemplateException.class);

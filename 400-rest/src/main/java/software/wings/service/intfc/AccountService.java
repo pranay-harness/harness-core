@@ -109,6 +109,8 @@ public interface AccountService {
 
   DelegateConfiguration getDelegateConfiguration(String accountId);
 
+  String getAccountPrimaryDelegateVersion(String accountId);
+
   List<Account> listAllAccounts();
 
   List<Account> listAllActiveAccounts();
@@ -222,6 +224,8 @@ public interface AccountService {
   void ensureDataRetention(List<Class<? extends AccountDataRetentionEntity>> entityClasses);
 
   boolean updateAccountPreference(String accountId, String preferenceKey, Object value);
+
+  void updateFeatureFlagsForOnPremAccount();
 
   boolean enableHarnessUserGroupAccess(String accountId);
 

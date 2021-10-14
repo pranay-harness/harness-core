@@ -18,8 +18,8 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(HarnessTeam.GITOPS)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = ConnectedArgoGitOpsInfoDTO.class, name = "ConnectedArgoProvider")
-  , @JsonSubTypes.Type(value = ManagedArgoGitOpsInfoDTO.class, name = "ManagedArgoProvider")
+  @JsonSubTypes.Type(value = ConnectedArgoGitOpsInfoDTO.class, name = "CONNECTED_ARGO_PROVIDER")
+  , @JsonSubTypes.Type(value = ManagedArgoGitOpsInfoDTO.class, name = "MANAGED_ARGO_PROVIDER")
 })
 public abstract class GitOpsInfoDTO {
   @JsonProperty("type") public abstract GitOpsProviderType getGitProviderType();

@@ -116,6 +116,8 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
             .entityGitDetails(pmsGitSyncHelper.getEntityGitDetailsFromBytes(metadata.getGitSyncBranchContext()))
             .tags(pipelineEntity.get().getTags())
             .modules(new ArrayList<>(modules))
+            .governanceMetadata(planExecution.getGovernanceMetadata())
+            .stagesExecutionMetadata(orchestrationStartInfo.getPlanExecutionMetadata().getStagesExecutionMetadata())
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }

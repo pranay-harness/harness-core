@@ -39,11 +39,11 @@ import org.hibernate.validator.constraints.NotEmpty;
  */
 @OwnedBy(CDC)
 @JsonTypeName("ECR")
-@Deprecated
 @Data
 @Builder
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
+@Deprecated
 public class EcrConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Amazon ECR Registry URL", required = true) @NotEmpty private String ecrUrl;
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;

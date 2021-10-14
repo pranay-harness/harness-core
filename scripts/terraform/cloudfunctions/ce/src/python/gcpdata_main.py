@@ -7,6 +7,8 @@ import util
 from util import create_dataset, if_tbl_exists, createTable, print_
 
 """
+This CF is used in Current Gen
+
 This is for BQ Transfer
 {
 	'dataSourceId': 'cross_region_copy',

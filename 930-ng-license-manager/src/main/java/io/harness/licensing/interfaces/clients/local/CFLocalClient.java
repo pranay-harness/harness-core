@@ -1,6 +1,5 @@
 package io.harness.licensing.interfaces.clients.local;
 
-import static io.harness.licensing.LicenseConstant.UNLIMITED;
 import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
 
 import io.harness.exception.UnsupportedOperationException;
@@ -47,7 +46,7 @@ public class CFLocalClient implements CFModuleLicenseClient {
       case FREE:
         return builder.numberOfUsers(FREE_FEATURE_FLAG_UNITS)
             .numberOfClientMAUs(FREE_CLIENT_MAUS)
-            .expiryTime(Long.valueOf(UNLIMITED))
+            .expiryTime(Long.MAX_VALUE)
             .build();
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");

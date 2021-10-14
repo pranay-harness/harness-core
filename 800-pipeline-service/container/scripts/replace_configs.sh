@@ -61,6 +61,10 @@ if [[ "" != "$MONGO_TRANSACTIONS_ALLOWED" ]]; then
   yq write -i $CONFIG_FILE mongo.transactionsEnabled $MONGO_TRANSACTIONS_ALLOWED
 fi
 
+if [[ "" != "$DISTRIBUTED_LOCK_IMPLEMENTATION" ]]; then
+  yq write -i $CONFIG_FILE distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
+fi
+
 if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE grpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
@@ -95,6 +99,14 @@ fi
 
 if [[ "" != "$PIPELINE_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE pipelineServiceSecret $PIPELINE_SERVICE_SECRET
+fi
+
+if [[ "" != "$TEMPLATE_SERVICE_ENDPOINT" ]]; then
+  yq write -i $CONFIG_FILE templateServiceClientConfig.baseUrl $TEMPLATE_SERVICE_ENDPOINT
+fi
+
+if [[ "" != "$TEMPLATE_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE templateServiceSecret $TEMPLATE_SERVICE_SECRET
 fi
 
 if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
@@ -285,6 +297,22 @@ replace_key_value eventsFramework.redis.password $EVENTS_FRAMEWORK_REDIS_PASSWOR
 replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDIS_SSL_ENABLED
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
+
+if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+replace_key_value redisLockConfig.redisUrl "$LOCK_CONFIG_REDIS_URL"
+replace_key_value redisLockConfig.envNamespace "$LOCK_CONFIG_ENV_NAMESPACE"
+replace_key_value redisLockConfig.sentinel "$LOCK_CONFIG_USE_SENTINEL"
+replace_key_value redisLockConfig.masterName "$LOCK_CONFIG_SENTINEL_MASTER_NAME"
+replace_key_value redisLockConfig.userName "$LOCK_CONFIG_REDIS_USERNAME"
+replace_key_value redisLockConfig.password "$LOCK_CONFIG_REDIS_PASSWORD"
 
 replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 

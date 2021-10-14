@@ -124,8 +124,8 @@ public class EntitySetupUsageResource {
   // use eveent fmwk
   @POST
   @Path("internal")
-  @Deprecated
   @ApiOperation(value = "Saves the entity reference", nickname = "postEntitySetupUsage", hidden = true)
+  @Deprecated
   public ResponseDTO<EntitySetupUsageDTO> save(EntitySetupUsageDTO entitySetupUsageDTO) {
     return ResponseDTO.newResponse(entitySetupUsageService.save(entitySetupUsageDTO));
   }
@@ -135,8 +135,8 @@ public class EntitySetupUsageResource {
   // for any crud of setup usage use the event framework
   @DELETE
   @Path("internal")
-  @Deprecated
   @ApiOperation(value = "Deletes the entity reference record", nickname = "deleteEntitySetupUsage", hidden = true)
+  @Deprecated
   public ResponseDTO<Boolean> delete(
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN,

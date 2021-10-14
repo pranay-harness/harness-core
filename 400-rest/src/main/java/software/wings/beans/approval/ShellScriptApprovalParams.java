@@ -29,7 +29,7 @@ public class ShellScriptApprovalParams {
     this.delegateSelectors = delegateSelectors;
   }
 
-  public List<String> getDelegateSelectors() {
+  public List<String> fetchDelegateSelectors() {
     return this.delegateSelectors;
   }
 }

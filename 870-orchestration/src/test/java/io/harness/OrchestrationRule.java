@@ -24,6 +24,7 @@ import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.opaclient.OpaServiceClient;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -45,6 +46,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.user.remote.UserClient;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyResponseCleaner;
@@ -154,6 +156,8 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(UserClient.class).toInstance(mock(UserClient.class));
+        bind(OpaServiceClient.class).toInstance(mock(OpaServiceClient.class));
         bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
         bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {

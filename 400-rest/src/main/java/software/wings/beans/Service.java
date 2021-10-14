@@ -26,10 +26,13 @@ import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
+import software.wings.ngmigration.NGMigrationEntity;
+import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseEntityYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
@@ -62,8 +65,8 @@ import org.mongodb.morphia.annotations.Version;
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(_957_CG_BEANS)
-public class Service
-    extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware {
+public class Service extends Base
+    implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -200,6 +203,12 @@ public class Service
   @Override
   public void setDeploymentTypeName(String theCustomDeploymentName) {
     customDeploymentName = theCustomDeploymentName;
+  }
+
+  @JsonIgnore
+  @Override
+  public NGMigrationEntityType getMigrationEntityType() {
+    return NGMigrationEntityType.SERVICE;
   }
 
   @Data

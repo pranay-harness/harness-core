@@ -7,7 +7,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.execution.utils.SdkResponseEventUtils;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,9 +22,9 @@ public class HandleStepResponseRequestProcessor implements SdkResponseProcessor 
   public void handleEvent(SdkResponseEventProto event) {
     HandleStepResponseRequest request = event.getHandleStepResponseRequest();
     if (request.hasExecutableResponse()) {
-      nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
+      nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance()),
           ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
     }
-    engine.handleStepResponse(SdkResponseEventUtils.getNodeExecutionId(event), request.getStepResponse());
+    engine.processStepResponse(event.getAmbiance(), request.getStepResponse());
   }
 }

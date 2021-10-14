@@ -45,11 +45,11 @@ public class NextStepHandlerTest extends OrchestrationTestBase {
             .build();
 
     when(nodeExecutionService.updateStatusWithOps(anyString(), any(), any(), any())).thenReturn(null);
-    doNothing().when(engine).endTransition(any());
+    doNothing().when(engine).endNodeExecution(any());
 
     nextStepHandler.handleAdvise(NodeExecution.builder().build(), adviserResponse);
 
     verify(nodeExecutionService).updateStatusWithOps(anyString(), any(), any(), any());
-    verify(engine).endTransition(any());
+    verify(engine).endNodeExecution(any());
   }
 }

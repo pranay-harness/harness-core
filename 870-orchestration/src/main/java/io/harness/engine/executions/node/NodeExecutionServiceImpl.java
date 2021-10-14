@@ -3,7 +3,6 @@ package io.harness.engine.executions.node;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.pms.PmsCommonConstants.AUTO_ABORT_PIPELINE_THROUGH_TRIGGER;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
@@ -32,7 +31,7 @@ import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.observer.Subject;
-import io.harness.plan.PlanNode;
+import io.harness.plan.Node;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -45,11 +44,9 @@ import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
 import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -62,6 +59,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -106,7 +104,13 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   public Optional<NodeExecution> getByNodeIdentifier(String nodeIdentifier, String planExecutionId) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.planNodeIdentifier).in(nodeIdentifier));
-    return Optional.ofNullable(mongoTemplate.findOne(query, NodeExecution.class));
+    Optional<NodeExecution> nodeExecution = Optional.ofNullable(mongoTemplate.findOne(query, NodeExecution.class));
+    if (!nodeExecution.isPresent()) {
+      query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                  .addCriteria(where(NodeExecutionKeys.nodeIdentifier).in(nodeIdentifier));
+      return Optional.ofNullable(mongoTemplate.findOne(query, NodeExecution.class));
+    }
+    return nodeExecution;
   }
 
   @Override
@@ -180,8 +184,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                             .setServiceName(nodeExecution.getNode().getServiceName());
 
       if (nodeExecution.getResolvedStepParameters() != null) {
-        builder.setStepParameters(ByteString.copyFromUtf8(
-            emptyIfNull(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))));
+        builder.setStepParameters(nodeExecution.getResolvedStepParametersBytes());
       }
       eventEmitter.emitEvent(builder.build());
       nodeExecutionStartSubject.fireInform(
@@ -209,16 +212,22 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status status,
       Consumer<Update> ops, EnumSet<Status> overrideStatusSet) {
+    Update updateOps = new Update();
+    if (ops != null) {
+      ops.accept(updateOps);
+    }
+    return updateStatusWithUpdate(nodeExecutionId, status, updateOps, overrideStatusSet);
+  }
+
+  @Override
+  public NodeExecution updateStatusWithUpdate(
+      @NotNull String nodeExecutionId, @NotNull Status status, Update ops, EnumSet<Status> overrideStatusSet) {
     EnumSet<Status> allowedStartStatuses =
         isEmpty(overrideStatusSet) ? StatusUtils.nodeAllowedStartSet(status) : overrideStatusSet;
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).in(allowedStartStatuses));
-    Update updateOps = new Update()
-                           .set(NodeExecutionKeys.status, status)
-                           .set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
-    if (ops != null) {
-      ops.accept(updateOps);
-    }
+    Update updateOps =
+        ops.set(NodeExecutionKeys.status, status).set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
     NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
@@ -377,11 +386,6 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   private void emitEvent(NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType) {
-    Map<String, Object> resolvedStepParameters =
-        nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
-    String stepParametersJson =
-        resolvedStepParameters != null ? RecastOrchestrationUtils.toJson(resolvedStepParameters) : null;
-
     TriggerPayload triggerPayload = TriggerPayload.newBuilder().build();
     if (nodeExecution != null && nodeExecution.getAmbiance() != null) {
       PlanExecutionMetadata metadata =
@@ -395,7 +399,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Builder eventBuilder = OrchestrationEvent.newBuilder()
                                .setAmbiance(nodeExecution.getAmbiance())
                                .setStatus(nodeExecution.getStatus())
-                               .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParametersJson)))
+                               .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
                                .setEventType(orchestrationEventType)
                                .setServiceName(nodeExecution.getNode().getServiceName())
                                .setTriggerPayload(triggerPayload);
@@ -460,16 +464,39 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
   @Override
   public List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId) {
+    return fetchStageDetailFromNodeExecution(fetchStageExecutions(planExecutionId));
+  }
+
+  @Override
+  public List<NodeExecution> fetchStageExecutions(String planExecutionId) {
     Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
                             .is(planExecutionId)
-                            .and(NodeExecutionKeys.stepCategory)
-                            .is(StepCategory.STAGE);
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.IdentityNodeStepCategory).is(StepCategory.STAGE));
 
     Query query = new Query().addCriteria(criteria);
     query.with(by(NodeExecutionKeys.createdAt));
-    List<NodeExecution> nodeExecutionList = mongoTemplate.find(query, NodeExecution.class);
+    return mongoTemplate.find(query, NodeExecution.class);
+  }
 
-    return fetchStageDetailFromNodeExecution(nodeExecutionList);
+  @Override
+  public Map<String, String> fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(
+      List<String> identifierOfSkipStages, String planExecutionId) {
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.planNodeId).in(identifierOfSkipStages));
+    List<NodeExecution> nodeExecutionList = mongoTemplate.find(query, NodeExecution.class);
+    return mapNodeExecutionUuidWithPlanNodeUuid(nodeExecutionList);
+  }
+
+  private Map<String, String> mapNodeExecutionUuidWithPlanNodeUuid(List<NodeExecution> nodeExecutionList) {
+    Map<String, String> uuidMapper = new HashMap<>();
+    for (NodeExecution nodeExecution : nodeExecutionList) {
+      uuidMapper.put(nodeExecution.getNodeId(), nodeExecution.getUuid());
+    }
+    return uuidMapper;
   }
 
   public List<RetryStageInfo> fetchStageDetailFromNodeExecution(List<NodeExecution> nodeExecutionList) {
@@ -480,7 +507,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     }
 
     for (NodeExecution nodeExecution : nodeExecutionList) {
-      PlanNode node = nodeExecution.getNode();
+      Node node = nodeExecution.getNode();
       String nextId = nodeExecution.getNextId();
       String parentId = nodeExecution.getParentId();
       RetryStageInfo stageDetail = RetryStageInfo.builder()
@@ -494,5 +521,72 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       stageDetails.add(stageDetail);
     }
     return stageDetails;
+  }
+
+  @Override
+  public List<NodeExecution> getStageNodesFromPlanExecutionId(String planExecutionId) {
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.STAGE));
+
+    Query query = new Query().addCriteria(criteria);
+    query.with(by(NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class);
+  }
+
+  @Override
+  public NodeExecution getPipelineNodeFromPlanExecutionId(String planExecutionId) {
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.PIPELINE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.PIPELINE));
+
+    Query query = new Query().addCriteria(criteria);
+    query.with(by(NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class).get(0);
+  }
+
+  @Override
+  public List<String> fetchStageFqnFromStageIdentifiers(String planExecutionId, List<String> stageIdentifiers) {
+    // Adding IdentityNodeStepCategory, since this is required to retry the retried pipeline,
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .orOperator(Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.IdentityNodeStepCategory).is(StepCategory.STAGE))
+                            .and(NodeExecutionKeys.planNodeIdentifier)
+                            .in(stageIdentifiers);
+
+    Query query = new Query().addCriteria(criteria);
+
+    List<NodeExecution> nodeExecutions = mongoTemplate.find(query, NodeExecution.class);
+
+    // fetching stageFqn of stage Nodes
+    return nodeExecutions.stream()
+        .map(nodeExecution -> nodeExecution.getNode().getStageFqn())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public Map<String, Node> mapNodeExecutionIdWithPlanNodeForGivenStageFQN(
+      String planExecutionId, List<String> stageFQNs) {
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .and(NodeExecutionKeys.stageFqn)
+                            .in(stageFQNs);
+
+    Query query = new Query().addCriteria(criteria);
+
+    List<NodeExecution> nodeExecutions = mongoTemplate.find(query, NodeExecution.class);
+
+    // fetching stageFqn of stage Nodes
+    Map<String, Node> nodeExecutionIdToPlanNode = new HashMap<>();
+    nodeExecutions.forEach(
+        nodeExecution -> nodeExecutionIdToPlanNode.put(nodeExecution.getUuid(), nodeExecution.getNode()));
+    return nodeExecutionIdToPlanNode;
   }
 }

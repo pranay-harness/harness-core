@@ -76,6 +76,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static lombok.AccessLevel.PACKAGE;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -196,6 +197,8 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -294,10 +297,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String DUPLICATE_DELEGATE_ERROR_MESSAGE =
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
 
+  private final String delegateTags = System.getenv().get("DELEGATE_TAGS");
   private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
   private final String delegateOrgIdentifier = System.getenv().get("DELEGATE_ORG_IDENTIFIER");
   private final String delegateProjectIdentifier = System.getenv().get("DELEGATE_PROJECT_IDENTIFIER");
-  private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
   private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
   // TODO remove this dependency of delegateNg on SESSION_ID once DEL-2413 has gone into prod for several weeks.
   private final boolean delegateNg = isNotBlank(delegateSessionIdentifier)
@@ -310,7 +313,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private static volatile String delegateId;
 
-  @Inject private DelegateConfiguration delegateConfiguration;
+  @Inject
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting }))
+  private DelegateConfiguration delegateConfiguration;
   @Inject private RestartableServiceManager restartableServiceManager;
 
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
@@ -403,15 +408,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return Optional.ofNullable(delegateId);
   }
 
-  boolean kubectlInstalled;
-  boolean goTemplateInstalled;
-  boolean harnessPywinrmInstalled;
-  boolean helmInstalled;
-  boolean chartMuseumInstalled;
-  boolean tfConfigInspectInstalled;
-  boolean ocInstalled;
-  boolean kustomizeInstalled;
-  boolean scmInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kubectlInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean goTemplateInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean harnessPywinrmInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean helmInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean chartMuseumInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean tfConfigInspectInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean ocInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kustomizeInstalled;
+  @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean scmInstalled;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -427,7 +432,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
 
       logProxyConfiguration();
-
+      if (delegateConfiguration.isVersionCheckDisabled()) {
+        DelegateAgentManagerClientFactory.setSendVersionHeader(false);
+      }
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
                                 .version(getVersion())
@@ -524,7 +531,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .sessionIdentifier(delegateSessionIdentifier)
                                           .orgIdentifier(delegateOrgIdentifier)
                                           .projectIdentifier(delegateProjectIdentifier)
-                                          .delegateSize(delegateSize)
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)
@@ -536,6 +542,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())
                                           .ng(delegateNg)
+                                          .tags(isNotBlank(delegateTags) ? new ArrayList<>(
+                                                    Arrays.asList(delegateTags.trim().split("\\s*,+\\s*,*\\s*")))
+                                                                         : Collections.emptyList())
                                           .sampleDelegate(isSample)
                                           .location(Paths.get("").toAbsolutePath().toString())
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
@@ -603,10 +612,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       startProfileCheck();
 
-      if (!areAllClientToolsInstalled()) {
+      if (!isClientToolsInstallationFinished()) {
         systemExecutor.submit(() -> {
           int retries = CLIENT_TOOL_RETRIES;
-          while (!areAllClientToolsInstalled() && retries > 0) {
+          while (!isClientToolsInstallationFinished() && retries > 0) {
             sleep(ofSeconds(15L));
             if (!kubectlInstalled) {
               kubectlInstalled = installKubectl(delegateConfiguration);
@@ -697,9 +706,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  public boolean areAllClientToolsInstalled() {
-    return kubectlInstalled && goTemplateInstalled && helmInstalled && chartMuseumInstalled && tfConfigInspectInstalled
-        && ocInstalled && kustomizeInstalled && harnessPywinrmInstalled && scmInstalled;
+  public boolean isClientToolsInstallationFinished() {
+    return getDelegateConfiguration().isClientToolsDownloadDisabled()
+        || (this.isKubectlInstalled() && this.isGoTemplateInstalled() && this.isHelmInstalled()
+            && this.isChartMuseumInstalled() && this.isTfConfigInspectInstalled() && this.isOcInstalled()
+            && this.isKustomizeInstalled() && this.isHarnessPywinrmInstalled() && this.isScmInstalled());
   }
 
   private RequestBuilder prepareRequestBuilder() {
@@ -717,6 +728,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       // Stream the request body
       RequestBuilder requestBuilder =
           client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
+      if (delegateConfiguration.isVersionCheckDisabled()) {
+        requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
+      }
 
       requestBuilder
           .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
@@ -814,7 +828,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           log.warn("Failed to connect.", e);
           restartNeeded.set(true);
         } else if (e instanceof ConcurrentModificationException) {
-          log.error("Concurrent modification exception. Ignoring.", e);
+          log.warn("ConcurrentModificationException on WebSocket ignoring");
+          log.debug("ConcurrentModificationException on WebSocket.", e);
         } else {
           log.error("Exception: ", e);
           try {
@@ -1590,8 +1605,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         || ((now - lastHeartbeatReceivedAt.get()) > HEARTBEAT_TIMEOUT);
     boolean freezeIntervalExpired = (now - frozenAt.get()) > FROZEN_TIMEOUT;
 
-    return new File(START_SH).exists()
+    final boolean doRestart = new File(START_SH).exists()
         && (restartNeeded.get() || (!frozen.get() && heartbeatExpired) || (frozen.get() && freezeIntervalExpired));
+    if (doRestart) {
+      log.error(
+          "Restarting delegate - variable values: restartNeeded:[{}], frozen: [{}], freezeIntervalExpired: [{}],  heartbeatExpired:[{}], lastHeartbeatReceivedAt:[{}], lastHeartbeatSentAt:[{}]",
+          restartNeeded.get(), frozen.get(), freezeIntervalExpired, heartbeatExpired, lastHeartbeatReceivedAt.get(),
+          lastHeartbeatSentAt.get());
+    }
+    return doRestart;
   }
 
   private void sendHeartbeat(DelegateParamsBuilder builder, Socket socket) {
@@ -1956,7 +1978,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return delegateConnectionResults -> {
       try (AutoLogContext ignored = new TaskLogContext(taskId, OVERRIDE_ERROR)) {
         // Tools might be installed asynchronously, so get the flag early on
-        final boolean areAllClientToolsInstalled = areAllClientToolsInstalled();
+        final boolean areAllClientToolsInstalled = isClientToolsInstallationFinished();
         currentlyValidatingTasks.remove(taskId);
         currentlyValidatingFutures.remove(taskId);
         log.info("Removed from validating futures on post validation");

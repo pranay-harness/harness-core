@@ -120,10 +120,10 @@ spec:
           value: "delConfigId"
         - name: DELEGATE_TYPE
           value: "KUBERNETES"
-        - name: DELEGATE_SIZE
-          value: "LARGE"
         - name: DELEGATE_SESSION_IDENTIFIER
           value: "9S5HMP0xROugl3_QgO62rQ"
+        - name: DELEGATE_TAGS
+          value: ""
         - name: DELEGATE_TASK_LIMIT
           value: "50"
         - name: DELEGATE_ORG_IDENTIFIER
@@ -154,8 +154,6 @@ spec:
           value: "false"
         - name: HELM_DESIRED_VERSION
           value: ""
-        - name: CF_PLUGIN_HOME
-          value: ""
         - name: USE_CDN
           value: "false"
         - name: CDN_URL
@@ -166,13 +164,7 @@ spec:
           value: ""
         - name: HELM_PATH
           value: ""
-        - name: CF_CLI6_PATH
-          value: ""
-        - name: CF_CLI7_PATH
-          value: ""
         - name: KUSTOMIZE_PATH
-          value: ""
-        - name: OC_PATH
           value: ""
         - name: KUBECTL_PATH
           value: ""
@@ -182,10 +174,8 @@ spec:
           value: "false"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "0"
-        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
+        - name: VERSION_CHECK_DISABLED
           value: "false"
-        - name: INSTALL_CLIENT_TOOLS_IN_BACKGROUND
-          value: "true"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

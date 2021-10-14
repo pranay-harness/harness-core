@@ -2,7 +2,7 @@ package io.harness.perpetualtask.k8s.informer.handlers;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.health.HealthStatusService;
+import io.harness.ccm.commons.constants.Constants;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -29,7 +29,6 @@ import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import io.kubernetes.client.util.Yaml;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +43,7 @@ import org.joor.Reflect;
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public abstract class BaseHandler<ApiType extends KubernetesObject> implements ResourceEventHandler<ApiType> {
   private static final String METADATA = "metadata";
+  private static final String STATUS = "status";
   public static final Integer VERSION = 1;
 
   static {
@@ -86,7 +86,7 @@ public abstract class BaseHandler<ApiType extends KubernetesObject> implements R
                                       .setClusterName(clusterDetails.getClusterName())
                                       .setKubeSystemUid(clusterDetails.getKubeSystemUid())
                                       .build(),
-        occurredAt, ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId()));
+        occurredAt, ImmutableMap.of(Constants.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId()));
   }
 
   final void publishWorkloadSpec(K8sWorkloadSpec workloadSpecProto, Timestamp occurredAt) {
@@ -96,7 +96,7 @@ public abstract class BaseHandler<ApiType extends KubernetesObject> implements R
                                       .setClusterName(clusterDetails.getClusterName())
                                       .setKubeSystemUid(clusterDetails.getKubeSystemUid())
                                       .build(),
-        occurredAt, ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId()));
+        occurredAt, ImmutableMap.of(Constants.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId()));
   }
 
   @Override
@@ -144,6 +144,13 @@ public abstract class BaseHandler<ApiType extends KubernetesObject> implements R
 
   @Override
   public void onUpdate(ApiType oldResource, ApiType newResource) {
+    // Publish change event only if the spec changes, and the resource does not have a controlling owner (in which case
+    // the change will be captured in owner)
+    V1OwnerReference controller = getController(oldResource);
+    if (controller != null) {
+      log.debug("Skipping publish for resource updated as it has controller: {}", controller);
+      return;
+    }
     handleMissingKindAndApiVersion(oldResource);
     handleMissingKindAndApiVersion(newResource);
     ResourceDetails oldResourceDetails = ResourceDetails.ofResource(oldResource);
@@ -152,57 +159,52 @@ public abstract class BaseHandler<ApiType extends KubernetesObject> implements R
         newResourceDetails.getResourceVersion());
     String oldYaml = yamlDump(oldResource);
     String newYaml = yamlDump(newResource);
-    // Publish change event only if the spec changes, and the resource does not have a controlling owner (in which case
-    // the change will be captured in owner)
     boolean specChanged = !StringUtils.equals(oldYaml, newYaml);
-    V1OwnerReference controller = getController(oldResource);
     K8sObjectReference objectReference = createObjectReference(oldResource);
-    log.debug("Updated Resource: {}, SpecChanged: {}, controller:{}", objectReference, specChanged, controller);
-    if (controller != null) {
-      log.debug("Skipping publish for resource updated as it has controller: {}", controller);
-    } else if (!specChanged) {
+    log.debug("Updated Resource: {}, SpecChanged: {}", objectReference, specChanged);
+    if (!specChanged) {
       log.debug("Skipping publish for resource updated since no yaml change");
     } else {
       Timestamp occurredAt = HTimestamps.fromInstant(Instant.now());
-      publishWatchEvent(K8sWatchEvent.newBuilder()
-                            .setType(K8sWatchEvent.Type.TYPE_UPDATED)
-                            .setResourceRef(objectReference)
-                            .setOldResourceVersion(getResourceVersion(oldResource))
-                            .setOldResourceYaml(oldYaml)
-                            .setNewResourceVersion(getResourceVersion(newResource))
-                            .setNewResourceYaml(newYaml)
-                            .setDescription(String.format("%s updated", getKind()))
-                            .build(),
-          occurredAt);
+      K8sWatchEvent k8sWatchEvent = K8sWatchEvent.newBuilder()
+                                        .setType(K8sWatchEvent.Type.TYPE_UPDATED)
+                                        .setResourceRef(objectReference)
+                                        .setOldResourceVersion(getResourceVersion(oldResource))
+                                        .setOldResourceYaml(oldYaml)
+                                        .setNewResourceVersion(getResourceVersion(newResource))
+                                        .setNewResourceYaml(newYaml)
+                                        .setDescription(String.format("%s updated", getKind()))
+                                        .build();
+      publishWatchEvent(k8sWatchEvent, occurredAt);
       publishWorkloadSpecIfChangedOnUpdate(oldResource, newResource, occurredAt);
     }
   }
 
-  private ApiType clone(ApiType resource) {
-    try {
-      @SuppressWarnings("unchecked") ApiType copy = (ApiType) Yaml.load(Yaml.dump(resource));
-      return copy;
-    } catch (IOException e) {
-      log.warn("Serialization round trip should clone", e);
-      return resource;
-    }
-  }
-
   private String yamlDump(ApiType resource) {
-    // to avoid mutating resource
-    ApiType copy = clone(resource);
-    Reflect.on(copy).set("status", null);
-    V1ObjectMetaBuilder newV1ObjectMetaBuilder = new V1ObjectMetaBuilder();
-    V1ObjectMeta objectMeta = getMetadata(copy);
-    if (objectMeta != null) {
-      newV1ObjectMetaBuilder.withName(objectMeta.getName())
-          .withNamespace(objectMeta.getNamespace())
-          .withLabels(objectMeta.getLabels())
-          .withAnnotations(objectMeta.getAnnotations())
-          .withUid(objectMeta.getUid());
+    Reflect resourceReflection = Reflect.on(resource);
+    // Save status and metadata values.
+    Object savedStatus = resourceReflection.get(STATUS);
+    V1ObjectMeta savedMetadata = getMetadata(resource);
+    try {
+      resourceReflection.set(STATUS, null);
+      resourceReflection.set(METADATA, null);
+
+      V1ObjectMetaBuilder builder = new V1ObjectMetaBuilder();
+      if (savedMetadata != null) {
+        builder.withName(savedMetadata.getName())
+            .withNamespace(savedMetadata.getNamespace())
+            .withLabels(savedMetadata.getLabels())
+            .withAnnotations(savedMetadata.getAnnotations())
+            .withUid(savedMetadata.getUid());
+      }
+      resourceReflection.set(METADATA, builder.build());
+
+      return Yaml.dump(resource);
+    } finally {
+      // Restore status and metadata.
+      resourceReflection.set(STATUS, savedStatus);
+      resourceReflection.set(METADATA, savedMetadata);
     }
-    Reflect.on(copy).set(METADATA, newV1ObjectMetaBuilder.build());
-    return Yaml.dump(copy);
   }
 
   @Override

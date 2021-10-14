@@ -14,6 +14,7 @@ import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 
 import com.google.protobuf.ByteString;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -38,8 +39,10 @@ public interface PMSExecutionService {
 
   Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
-      String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted,
+      String searchTerm, List<ExecutionStatus> statusList, boolean myDeployments, boolean pipelineDeleted,
       ByteString gitEntityBasicInfo);
 
   void deleteExecutionsOnPipelineDeletion(PipelineEntity pipelineEntity);
+
+  long getCountOfExecutions(Criteria criteria);
 }

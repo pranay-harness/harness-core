@@ -151,8 +151,11 @@ public class PmsSdkInitHelper {
   private static List<SdkStep> mapToSdkStep(List<StepType> stepTypeList, List<StepInfo> stepInfos) {
     Map<String, StepType> stepTypeStringToStepType =
         stepTypeList.stream().collect(Collectors.toMap(StepType::getType, stepType -> stepType));
-    Map<String, StepInfo> stepTypeStringToStepInfo =
-        stepInfos.stream().collect(Collectors.toMap(StepInfo::getType, stepType -> stepType));
+    Map<String, StepInfo> stepTypeStringToStepInfo = new HashMap<>();
+    for (StepInfo stepInfo : stepInfos) {
+      stepTypeStringToStepInfo.put(stepInfo.getType(), stepInfo);
+    }
+
     List<SdkStep> pmsSdkStepTypeWithInfos = new ArrayList<>();
     for (String stepType : stepTypeStringToStepType.keySet()) {
       SdkStep.Builder sdkStepWrapper = SdkStep.newBuilder();

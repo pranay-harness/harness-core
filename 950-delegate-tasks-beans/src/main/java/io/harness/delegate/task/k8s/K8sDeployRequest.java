@@ -39,6 +39,7 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
   ManifestDelegateConfig getManifestDelegateConfig();
   Integer getTimeoutIntervalInMin();
   CommandUnitsProgress getCommandUnitsProgress();
+  boolean isUseLatestKustomizeVersion();
 
   @Override
   default List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

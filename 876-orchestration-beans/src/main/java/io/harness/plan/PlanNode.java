@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.springframework.data.annotation.TypeAlias;
 
 @Value
@@ -44,11 +45,14 @@ public class PlanNode implements Node {
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
   @Singular List<TimeoutObtainment> timeoutObtainments;
 
-  String serviceName;
+  @Deprecated String serviceName;
 
   // Skip
   String skipCondition;
   String whenCondition;
+
+  // stage fqn
+  @NonFinal String stageFqn;
 
   // Config
   boolean skipExpressionChain;
@@ -62,6 +66,7 @@ public class PlanNode implements Node {
     return PlanNode.builder()
         .uuid(planNodeProto.getUuid())
         .name(planNodeProto.getName())
+        .stageFqn(planNodeProto.getStageFqn())
         .stepType(planNodeProto.getStepType())
         .identifier(planNodeProto.getIdentifier())
         .group(planNodeProto.getGroup())
@@ -83,5 +88,10 @@ public class PlanNode implements Node {
   @Override
   public NodeType getNodeType() {
     return NodeType.PLAN_NODE;
+  }
+
+  @Override
+  public String getStageFqn() {
+    return this.stageFqn;
   }
 }

@@ -7,12 +7,9 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.data.structure.HarnessStringUtils;
-import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
-import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -49,20 +46,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NodeStartHelper {
   @Inject private PmsEventSender eventSender;
-  @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
 
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
-    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
-        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    if (!check.isProceed()) {
-      log.info("Not Proceeding with Execution : {}", check.getReason());
-      return;
-    }
-
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     Status targetStatus = calculateStatusFromMode(facilitatorResponse.getExecutionMode());
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(nodeExecutionId, targetStatus);
@@ -80,15 +69,13 @@ public class NodeStartHelper {
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
     PlanNode planNode = nodeExecution.getNode();
     String serviceName = planNode.getServiceName();
-    NodeStartEvent nodeStartEvent =
-        NodeStartEvent.newBuilder()
-            .setAmbiance(nodeExecution.getAmbiance())
-            .addAllRefObjects(planNode.getRefObjects())
-            .setFacilitatorPassThoroughData(passThroughData)
-            .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
-                RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))))
-            .setMode(nodeExecution.getMode())
-            .build();
+    NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
+                                        .setAmbiance(nodeExecution.getAmbiance())
+                                        .addAllRefObjects(planNode.getRefObjects())
+                                        .setFacilitatorPassThoroughData(passThroughData)
+                                        .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+                                        .setMode(nodeExecution.getMode())
+                                        .build();
     eventSender.sendEvent(
         nodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, true);
   }

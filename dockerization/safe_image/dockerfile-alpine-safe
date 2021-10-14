@@ -1,4 +1,4 @@
-# Filename: Dockerfile
+# Filename:  Dockerfile
 FROM harness/alpine:safe-alpine3.12-sec1338
 CMD ["/bin/sh"]
 

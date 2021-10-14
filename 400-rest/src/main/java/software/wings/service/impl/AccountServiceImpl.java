@@ -35,7 +35,10 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofHours;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
@@ -56,8 +59,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
-import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -149,6 +150,7 @@ import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -163,6 +165,7 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -200,7 +203,6 @@ import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -235,7 +237,6 @@ public class AccountServiceImpl implements AccountService {
       + "-d '{\"application\":\"4qPkwP5dQI2JduECqGZpcg\","
       + "\"parameters\":{\"Environment\":\"%s\",\"delegate\":\"delegate\","
       + "\"account_id\":\"%s\",\"account_id_short\":\"%s\",\"account_secret\":\"%s\"}}'";
-  private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   private static final String DELIMITER = "####";
   private static final String DEFAULT_EXPERIENCE = "defaultExperience";
@@ -270,13 +271,13 @@ public class AccountServiceImpl implements AccountService {
   @Inject private EventPublisher eventPublisher;
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
   @Inject private Morphia morphia;
-  @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private DeleteAccountHelper deleteAccountHelper;
   @Inject private AccountDao accountDao;
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
+  @Inject private DelegateService delegateService;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -461,7 +462,6 @@ public class AccountServiceImpl implements AccountService {
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
     featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
     featureFlagService.enableAccount(FeatureName.DISABLE_WINRM_ENV_VARIABLES, account.getUuid());
-    featureFlagService.enableAccount(FeatureName.HELM_CHART_NAME_SPLIT, account.getUuid());
 
     if (fromDataGen) {
       updateNextGenEnabled(account.getUuid(), true);
@@ -954,6 +954,25 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public String getAccountPrimaryDelegateVersion(String accountId) {
+    if (licenseService.isAccountDeleted(accountId)) {
+      throw new InvalidRequestException("Deleted AccountId: " + accountId);
+    }
+    Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                          .filter(AccountKeys.uuid, accountId)
+                          .project("delegateConfiguration", true)
+                          .get();
+    if (account.getDelegateConfiguration() == null) {
+      return null;
+    }
+    return account.getDelegateConfiguration()
+        .getDelegateVersions()
+        .stream()
+        .reduce((first, last) -> last)
+        .orElse(EMPTY);
+  }
+
+  @Override
   public boolean updateAccountPreference(String accountId, String preferenceKey, Object value) {
     Account account = get(accountId);
     notNullCheck("Invalid Account for the given Id: " + accountId, USER);
@@ -985,6 +1004,26 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
     return false;
+  }
+
+  @Override
+  public void updateFeatureFlagsForOnPremAccount() {
+    Optional<Account> onPremAccount = getOnPremAccount();
+    if (!onPremAccount.isPresent()) {
+      return;
+    }
+    String featureNames = mainConfiguration.getFeatureNames();
+    List<String> enabled = isBlank(featureNames)
+        ? emptyList()
+        : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(featureNames);
+    for (String name : Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet())) {
+      if (enabled.contains(name)) {
+        featureFlagService.enableAccount(FeatureName.valueOf(name), onPremAccount.get().getUuid());
+      }
+    }
+    if (enabled.contains("NEXT_GEN_ENABLED")) {
+      updateNextGenEnabled(onPremAccount.get().getUuid(), true);
+    }
   }
 
   @Override
@@ -1181,18 +1220,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean sampleDelegateExists(String accountId) {
     assertTrialAccount(accountId);
-
-    Key<Delegate> delegateKey = wingsPersistence.createQuery(Delegate.class)
-                                    .filter(DelegateKeys.accountId, accountId)
-                                    .filter(DelegateKeys.delegateName, SAMPLE_DELEGATE_NAME)
-                                    .getKey();
-
-    if (delegateKey == null) {
-      return false;
-    }
-
-    return delegateConnectionDao.checkDelegateConnected(
-        accountId, delegateKey.getId().toString(), versionInfoManager.getVersionInfo().getVersion());
+    return delegateService.sampleDelegateExists(accountId);
   }
 
   @Override

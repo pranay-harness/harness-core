@@ -70,7 +70,7 @@ func (h *logProxyHandler) UploadLink(ctx context.Context, in *pb.UploadLinkReque
 	return &pb.UploadLinkResponse{Link: link.Value}, nil
 }
 
-// UploadUsingLink uploads using the link generated above.
+// UploadUsingLink uploads logs to an uploadable link (directly to blob storage).
 func (h *logProxyHandler) UploadUsingLink(stream pb.LogProxy_UploadUsingLinkServer) error {
 	var err error
 	lc, err := remoteLogClient()
@@ -105,6 +105,48 @@ func (h *logProxyHandler) UploadUsingLink(stream pb.LogProxy_UploadUsingLinkServ
 		return err
 	}
 	err = stream.SendAndClose(&pb.UploadUsingLinkResponse{})
+	if err != nil {
+		h.log.Errorw("could not close upload protobuf stream", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// Upload uploads logs to log service (which in turn uploads to blob storage).
+func (h *logProxyHandler) Upload(stream pb.LogProxy_UploadServer) error {
+	var err error
+	lc, err := remoteLogClient()
+	if err != nil {
+		h.log.Errorw("could not create a client to the log service", zap.Error(err))
+		return err
+	}
+	data := new(bytes.Buffer)
+	key := ""
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			h.log.Errorw("received error from client stream while trying to receive log data to upload for UploadRPC", zap.Error(err))
+			continue
+		}
+		key = msg.GetKey()
+		for _, line := range msg.GetLines() {
+			data.Write([]byte(line))
+		}
+	}
+
+	if key == "" {
+		return errors.New("no key received from client for UploadRPC")
+	}
+
+	err = lc.Upload(stream.Context(), key, data)
+	if err != nil {
+		h.log.Errorw("could not upload logs using uploadRPC", zap.Error(err))
+		return err
+	}
+	err = stream.SendAndClose(&pb.UploadResponse{})
 	if err != nil {
 		h.log.Errorw("could not close upload protobuf stream", zap.Error(err))
 		return err
