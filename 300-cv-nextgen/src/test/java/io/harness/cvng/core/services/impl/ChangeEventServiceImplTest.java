@@ -140,10 +140,10 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
     hPersistence.save(Arrays.asList(harnessCDActivity_1, harnessCDActivity_2, harnessCDActivity_3));
     PageResponse<ChangeEventDTO> firstPage = changeEventService.getChangeEvents(
         builderFactory.getContext().getProjectParams(), null, null, Instant.ofEpochSecond(100),
-        Instant.ofEpochSecond(400), null, PageRequest.builder().pageIndex(0).pageSize(2).build());
+        Instant.ofEpochSecond(400), PageRequest.builder().pageIndex(0).pageSize(2).build());
     PageResponse<ChangeEventDTO> secondPage = changeEventService.getChangeEvents(
         builderFactory.getContext().getProjectParams(), null, null, Instant.ofEpochSecond(100),
-        Instant.ofEpochSecond(400), null, PageRequest.builder().pageIndex(1).pageSize(2).build());
+        Instant.ofEpochSecond(400), PageRequest.builder().pageIndex(1).pageSize(2).build());
 
     assertThat(firstPage.getPageIndex()).isEqualTo(0);
     assertThat(firstPage.getPageItemCount()).isEqualTo(2);
@@ -172,10 +172,9 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
     Activity harnessCDActivity_3 =
         builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build();
     hPersistence.save(Arrays.asList(harnessCDActivity_1, harnessCDActivity_2, harnessCDActivity_3));
-    PageResponse<ChangeEventDTO> firstPage =
-        changeEventService.getChangeEvents(builderFactory.getContext().getProjectParams(),
-            Arrays.asList(harnessCDActivity_1.getServiceIdentifier()), null, Instant.ofEpochSecond(100),
-            Instant.ofEpochSecond(400), null, PageRequest.builder().pageIndex(0).pageSize(2).build());
+    PageResponse<ChangeEventDTO> firstPage = changeEventService.getChangeEvents(
+        builderFactory.getContext().getProjectParams(), Arrays.asList(harnessCDActivity_1.getServiceIdentifier()), null,
+        Instant.ofEpochSecond(100), Instant.ofEpochSecond(400), PageRequest.builder().pageIndex(0).pageSize(2).build());
 
     assertThat(firstPage.getPageIndex()).isEqualTo(0);
     assertThat(firstPage.getPageItemCount()).isEqualTo(2);
@@ -418,7 +417,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
     PageResponse<ChangeEventDTO> firstPage =
         changeEventService.getChangeEvents(builderFactory.getContext().getProjectParams(), null,
             Arrays.asList(builderFactory.getContext().getEnvIdentifier()), Instant.ofEpochSecond(100),
-            Instant.ofEpochSecond(400), null, PageRequest.builder().pageIndex(0).pageSize(2).build());
+            Instant.ofEpochSecond(400), PageRequest.builder().pageIndex(0).pageSize(2).build());
 
     assertThat(firstPage.getPageIndex()).isEqualTo(0);
     assertThat(firstPage.getPageItemCount()).isEqualTo(2);
