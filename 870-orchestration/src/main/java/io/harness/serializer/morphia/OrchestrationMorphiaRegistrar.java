@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.AbortInterruptCallback;
 import io.harness.engine.pms.resume.EngineResumeAllCallback;
 import io.harness.engine.pms.resume.EngineResumeCallback;
-import io.harness.engine.pms.resume.EngineWaitResumeCallback;
 import io.harness.engine.pms.resume.EngineWaitRetryCallback;
 import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.morphia.MorphiaRegistrar;
@@ -24,7 +23,6 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     // Engine Callback
     h.put("engine.resume.EngineResumeAllCallback", EngineResumeAllCallback.class);
     h.put("engine.resume.EngineResumeCallback", EngineResumeCallback.class);
-    h.put("engine.resume.EngineWaitResumeCallback", EngineWaitResumeCallback.class);
     h.put("engine.resume.EngineWaitRetryCallback", EngineWaitRetryCallback.class);
     h.put("engine.progress.EngineProgressCallback", EngineProgressCallback.class);
     h.put("engine.interrupts.InterruptCallback", AbortInterruptCallback.class);
