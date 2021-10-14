@@ -268,7 +268,7 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
                 .filter(hostData
                     -> hostData.getHostName().isPresent()
                         && hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
-                        && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                        && hostData.getRisk().isGreaterThanEq(Risk.OBSERVE))
                 .count());
       }
       for (DeploymentLogAnalysis deploymentLogAnalysis : deploymentLogAnalysisList) {
@@ -281,7 +281,7 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
                   hostSummary.getResultSummary()
                       .getTestClusterSummaries()
                       .stream()
-                      .filter(clusterSummary -> clusterSummary.getRiskLevel().isGreaterThanEq(Risk.MEDIUM))
+                      .filter(clusterSummary -> clusterSummary.getRiskLevel().isGreaterThanEq(Risk.OBSERVE))
                       .count());
         }
       }

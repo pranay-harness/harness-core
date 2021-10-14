@@ -445,6 +445,7 @@ import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerIm
 import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
+import software.wings.service.impl.cvng.CDChangeSourceIntegrationServiceImpl;
 import software.wings.service.impl.datadog.DatadogServiceImpl;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
@@ -658,6 +659,7 @@ import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
+import software.wings.service.intfc.cvng.CDChangeSourceIntegrationService;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
@@ -1366,6 +1368,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
     install(new CVCommonsServiceModule());
+    bind(CDChangeSourceIntegrationService.class).to(CDChangeSourceIntegrationServiceImpl.class);
   }
 
   private void bindFeatures() {

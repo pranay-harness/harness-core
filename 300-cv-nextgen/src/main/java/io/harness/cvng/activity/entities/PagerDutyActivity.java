@@ -5,6 +5,7 @@ import static io.harness.cvng.beans.activity.ActivityType.PAGER_DUTY;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
+import io.harness.mongo.index.FdIndex;
 
 import java.time.Instant;
 import lombok.AllArgsConstructor;
@@ -21,7 +22,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class PagerDutyActivity extends Activity {
-  private String eventId;
+  @FdIndex private String eventId;
   private String pagerDutyUrl;
   String status;
   Instant triggeredAt;

@@ -338,6 +338,7 @@ shared_dependencies = [
     "@maven//:org_eclipse_jetty_jetty_xml",
     "@maven//:org_eclipse_jetty_toolchain_setuid_jetty_setuid_java",
     "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+    "@maven//:org_eclipse_jgit_org_eclipse_jgit_ssh_jsch",
     "@maven//:org_freemarker_freemarker",
     "@maven//:org_glassfish_hk2_external_aopalliance_repackaged",
     "@maven//:org_glassfish_hk2_external_javax_inject",

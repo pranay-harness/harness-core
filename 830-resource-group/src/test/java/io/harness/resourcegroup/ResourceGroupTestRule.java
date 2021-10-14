@@ -197,6 +197,7 @@ public class ResourceGroupTestRule implements MethodRule, InjectorRuleMixin, Mon
                                                       .resourceGroupService(serviceConfig)
                                                       .manager(serviceConfig)
                                                       .ngManager(serviceConfig)
+                                                      .templateService(serviceConfig)
                                                       .build();
     configuration.setResourceClientConfigs(resourceClientConfigs);
     return configuration;

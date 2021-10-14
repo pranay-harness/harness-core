@@ -173,16 +173,39 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       }
     }
 
-    boolean canAssign = canAssignCgNg(delegate, task.getSetupAbstractions())
-        && canAssignOwner(batch, delegate, task.getSetupAbstractions())
-        && canAssignDelegateScopes(batch, delegate, task)
-        && canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions())
-        && canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
-
-    if (canAssign) {
-      delegateSelectionLogsService.logCanAssign(batch, task.getAccountId(), delegateId);
+    boolean canAssignCgNg = canAssignCgNg(delegate, task.getSetupAbstractions());
+    if (!canAssignCgNg) {
+      log.info("can not assign canAssignCgNg {}", canAssignCgNg);
+      return canAssignCgNg;
     }
-    return canAssign;
+    boolean canAssignOwner = canAssignOwner(batch, delegate, task.getSetupAbstractions());
+    if (!canAssignOwner) {
+      log.info("can not assign canAssignOwner {}", canAssignOwner);
+      return canAssignOwner;
+    }
+
+    boolean canAssignDelegateScopes = canAssignDelegateScopes(batch, delegate, task);
+    if (!canAssignDelegateScopes) {
+      log.info("can not assign canAssignDelegateScopes {}", canAssignDelegateScopes);
+      return canAssignDelegateScopes;
+    }
+
+    boolean canAssignDelegateProfileScopes =
+        canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions());
+
+    if (!canAssignDelegateProfileScopes) {
+      log.info("can not assign canAssignDelegateProfileScopes {}", canAssignDelegateProfileScopes);
+      return canAssignDelegateProfileScopes;
+    }
+
+    boolean canAssignSelectors = canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
+    if (!canAssignSelectors) {
+      log.info("can not assign canAssignSelectors {}", canAssignSelectors);
+      return canAssignSelectors;
+    }
+
+    delegateSelectionLogsService.logCanAssign(batch, task.getAccountId(), delegateId);
+    return true;
   }
 
   public List<String> extractSelectors(DelegateTask task) {

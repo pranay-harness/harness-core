@@ -61,6 +61,18 @@ pipeline:
                             script: echo 1
                       timeout: 1234
               - step:
+                  name: shell script step 12
+                  identifier: shellScriptStep12
+                  template:
+                    templateRef: template1 # if no versionLabel, should fetch stable template
+                    templateInputs:
+                      type: ShellScript
+                      spec:
+                        source:
+                          type: Inline
+                          spec:
+                            script: echo 1
+              - step:
                   name: Approval
                   identifier: approval
                   template:

@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -65,7 +66,7 @@ public class PmsEventSender {
           .expireAfterAccess(300, TimeUnit.MINUTES)
           .build(new CacheLoader<ProducerCacheKey, Producer>() {
             @Override
-            public Producer load(ProducerCacheKey cacheKey) {
+            public Producer load(@NotNull ProducerCacheKey cacheKey) {
               return obtainProducer(cacheKey);
             }
           });

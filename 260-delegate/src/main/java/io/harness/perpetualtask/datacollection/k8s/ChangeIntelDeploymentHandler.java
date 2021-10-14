@@ -41,9 +41,10 @@ public class ChangeIntelDeploymentHandler extends BaseChangeHandler<V1Deployment
   @Override
   void processAndSendAddEvent(V1Deployment v1Deployment) {
     log.info("OnAdd of DeploymentChange.");
-    if (!hasOwnerReference(v1Deployment)) {
+    ChangeEventDTO eventDTO = buildChangeEvent(v1Deployment);
+    if (!hasOwnerReference(v1Deployment) && shouldProcessEvent(eventDTO)) {
       log.info("Deployment doesn't have an ownerReference. Sending event Data");
-      ChangeEventDTO eventDTO = buildChangeEvent(v1Deployment);
+
       String newYaml = k8sHandlerUtils.yamlDump(v1Deployment);
       ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setNewYaml(newYaml);
       DateTime dateTime = v1Deployment.getMetadata().getCreationTimestamp();

@@ -134,7 +134,9 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
     List<V1ResourceAttributes> cePermissions = new ArrayList<>();
 
     cePermissions.addAll(ImmutableList.copyOf(v1ResourceAttributesListBuilder(new String[] {""},
-        new String[] {"pods", "nodes", "events", "namespaces"}, new String[] {"get", "list", "watch"})));
+        new String[] {
+            "pods", "nodes", "nodes/proxy", "events", "namespaces", "persistentvolumes", "persistentvolumeclaims"},
+        new String[] {"get", "list", "watch"})));
 
     cePermissions.addAll(ImmutableList.copyOf(v1ResourceAttributesListBuilder(new String[] {"apps", "extensions"},
         new String[] {"statefulsets", "deployments", "daemonsets", "replicasets"},
@@ -145,6 +147,9 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
 
     cePermissions.addAll(ImmutableList.copyOf(v1ResourceAttributesListBuilder(
         new String[] {"metrics.k8s.io"}, new String[] {"pods", "nodes"}, new String[] {"get", "list"})));
+
+    cePermissions.addAll(ImmutableList.copyOf(v1ResourceAttributesListBuilder(
+        new String[] {"storage.k8s.io"}, new String[] {"storageclasses"}, new String[] {"get", "list", "watch"})));
 
     return cePermissions;
   }
@@ -177,6 +182,9 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
           message = statuses.get(i).getReason();
         } else if (statuses.get(i).getEvaluationError() != null) {
           message = statuses.get(i).getEvaluationError();
+        } else {
+          message = String.format("%s not allowed on %s in apiGroup %s by the configured service account",
+              resourceAttributes.getVerb(), resourceAttributes.getResource(), resourceAttributes.getGroup());
         }
       }
       if (message != null) {

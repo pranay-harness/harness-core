@@ -212,6 +212,8 @@ public class OwnerRule implements TestRule {
   public static final String JELENA = "jelena.arsenijevic";
   public static final String BHAVYA = "bhavya.agrawal";
   public static final String BHARAT_GOEL = "bharat.goel";
+  public static final String DEEPAK_CHHIKARA = "deepak.chhikara";
+  public static final String KAPIL = "kapil.choudhary";
 
   @Deprecated public static final String UNKNOWN = "unknown";
 
@@ -261,6 +263,7 @@ public class OwnerRule implements TestRule {
           .put(JUHI, defaultUserInfo(JUHI).slack("UL1KX4K1S").build())
           .put(KAMAL, defaultUserInfo(KAMAL).slack("UKFQ1PQBH").team(CV).build())
           .put(KANHAIYA, defaultUserInfo(KANHAIYA).slack("U01HFBAT8A2").team(CV).build())
+          .put(KAPIL, defaultUserInfo(KAPIL).slack("U02E2J40E21").team(CV).build())
           .put(KARAN, defaultUserInfo(KARAN).slack("U015LRX21FD").team(PL).build())
           .put(LUCAS, defaultUserInfo(LUCAS).slack("U01C8MPTS2J").team(DEL).build())
           .put(MARKO, defaultUserInfo(MARKO).slack("UVDT91N9W").team(DEL).build())
@@ -367,6 +370,7 @@ public class OwnerRule implements TestRule {
           .put(BHAVYA, defaultUserInfo(BHAVYA).slack("U024WB5P1NF").team(PL).build())
           .put(MLUKIC, defaultUserInfo(MLUKIC).slack("U02DS8RGUSV").team(CDP).build())
           .put(BHARAT_GOEL, defaultUserInfo(BHARAT_GOEL).slack("U02053C1QMA").team(DEL).build())
+          .put(DEEPAK_CHHIKARA, defaultUserInfo(DEEPAK_CHHIKARA).slack("U02D8V7PVFG").team(CV).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));

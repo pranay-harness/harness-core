@@ -183,6 +183,8 @@ public class K8sRollingDeploy extends AbstractK8sState {
                 featureFlagService.isEnabled(FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE, infraMapping.getAccountId()))
             .skipVersioningForAllK8sObjects(serviceApplicationManifest.getSkipVersioningForAllK8sObjects())
             .isPruningEnabled(featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, infraMapping.getAccountId()))
+            .useLatestKustomizeVersion(
+                featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
             .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);

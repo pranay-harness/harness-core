@@ -70,8 +70,12 @@ public class InstallUtils {
   private static String kubectlPath = "kubectl";
 
   private static String kustomizeBaseDir = "./client-tools/kustomize/";
-  private static String kustomizeVersion = "v3.5.4";
+  private static String kustomizeVersionOld = "v3.5.4";
+  private static String kustomizeVersionNew = "v4.0.0";
   private static String kustomizePath = "kustomize";
+  private static String kustomizeBinaryName = "kustomize";
+
+  private static final List<String> kustomizeVersions = Arrays.asList(kustomizeVersionOld, kustomizeVersionNew);
 
   private static String goTemplateToolPath = "go-template";
   private static String harnessPywinrmToolPath = "harness-pywinrm";
@@ -172,6 +176,20 @@ public class InstallUtils {
 
   public static String getKustomizePath() {
     return kustomizePath;
+  }
+
+  public static String getKustomizePath(boolean useLatestVersion) {
+    if (useLatestVersion) {
+      return Paths.get(kustomizeBaseDir, kustomizeVersionNew, kustomizeBinaryName)
+          .toAbsolutePath()
+          .normalize()
+          .toString();
+    } else {
+      return Paths.get(kustomizeBaseDir, kustomizeVersionOld, kustomizeBinaryName)
+          .toAbsolutePath()
+          .normalize()
+          .toString();
+    }
   }
 
   public static boolean installKubectl(DelegateConfiguration configuration) {
@@ -1027,6 +1045,14 @@ public class InstallUtils {
   }
 
   public static boolean installKustomize(DelegateConfiguration configuration) {
+    boolean kustomizeInstalled = true;
+    for (String version : kustomizeVersions) {
+      kustomizeInstalled = kustomizeInstalled && installKustomize(configuration, version);
+    }
+    return kustomizeInstalled;
+  }
+
+  public static boolean installKustomize(DelegateConfiguration configuration, String kustomizeVersion) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKustomizePath())) {
         kustomizePath = configuration.getKustomizePath();
@@ -1077,7 +1103,7 @@ public class InstallUtils {
           return false;
         }
       } else {
-        log.error("kustomize install failed");
+        log.error("kustomize version {} install failed", kustomizeVersion);
         log.error(result.outputUTF8());
         return false;
       }

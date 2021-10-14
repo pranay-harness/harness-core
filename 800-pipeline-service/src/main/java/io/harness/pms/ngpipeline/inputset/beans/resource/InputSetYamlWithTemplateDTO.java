@@ -22,4 +22,5 @@ import lombok.experimental.FieldDefaults;
 public class InputSetYamlWithTemplateDTO {
   String inputSetTemplateYaml;
   String inputSetYaml;
+  String latestTemplateYaml;
 }

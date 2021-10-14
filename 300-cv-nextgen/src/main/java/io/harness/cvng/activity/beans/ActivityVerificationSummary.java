@@ -3,8 +3,10 @@ package io.harness.cvng.activity.beans;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
+import net.minidev.json.annotate.JsonIgnore;
 
 @Data
 @Builder
@@ -21,6 +23,7 @@ public class ActivityVerificationSummary {
   Long startTime;
   Long durationMs;
   Risk risk;
+  @JsonIgnore Map<String, ActivityVerificationStatus> verficationStatusMap;
 
   public ActivityVerificationStatus getAggregatedStatus() {
     if (total == passed) {
