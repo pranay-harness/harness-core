@@ -13,8 +13,9 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OpaPolicySetEvaluationResponse {
-  String policyset_id;
-  String policyset_name;
-  boolean deny;
-  List<OpaPolicyEvaluationResponse> policy_details;
+  String status;
+  String identifier;
+  String name;
+  long created;
+  List<OpaPolicyEvaluationResponse> details;
 }
