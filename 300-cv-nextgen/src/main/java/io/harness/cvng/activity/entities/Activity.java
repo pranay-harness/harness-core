@@ -5,6 +5,8 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -81,13 +83,25 @@ public abstract class Activity
                 .field(ActivityKeys.activityStartTime)
                 .build(),
             CompoundMongoIndex.builder()
-                .name("change_event_query_index")
+                .name("change_event_app_service_query_index")
                 .field(ActivityKeys.accountId)
                 .field(ActivityKeys.orgIdentifier)
                 .field(ActivityKeys.projectIdentifier)
-                .field(ActivityKeys.eventTime)
-                .field(ActivityKeys.environmentIdentifier)
                 .field(ActivityKeys.serviceIdentifier)
+                .field(ActivityKeys.environmentIdentifier)
+                .field(ActivityKeys.eventTime)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("change_event_infra_service_query_index")
+                .field(ActivityKeys.accountId)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(
+                    KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
+                .field(KubernetesClusterActivityKeys.relatedAppServices + "."
+                    + ServiceEnvironmentKeys.environmentIdentifier)
+                .field(ActivityKeys.eventTime)
+                .sparse(true)
                 .build())
         .build();
   }
