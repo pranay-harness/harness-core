@@ -10,6 +10,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildFailureInfo;
+import io.harness.app.beans.entities.CIUsageResult;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsActiveAndFailedInfo;
@@ -121,5 +122,17 @@ public class CIDashboardOverviewResource {
 
     return ResponseDTO.newResponse(
         DashboardBuildsActiveAndFailedInfo.builder().failed(failureInfos).active(activeInfos).build());
+  }
+
+  @GET
+  @Path("/usage/ci")
+  @ApiOperation(value = "Get usage", nickname = "getUsage")
+  @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
+  public ResponseDTO<CIUsageResult> getCIUsageData(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.TIMESTAMP) long timestamp) {
+    log.info("Getting usage data");
+
+    return ResponseDTO.newResponse(ciOverviewDashboardService.getCIUsageResult(accountIdentifier, timestamp));
   }
 }

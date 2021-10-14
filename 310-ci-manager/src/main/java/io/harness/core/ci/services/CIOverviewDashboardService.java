@@ -3,6 +3,7 @@ package io.harness.core.ci.services;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildFailureInfo;
 import io.harness.app.beans.entities.BuildHealth;
+import io.harness.app.beans.entities.CIUsageResult;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
@@ -24,4 +25,6 @@ public interface CIOverviewDashboardService {
 
   DashboardBuildRepositoryInfo getDashboardBuildRepository(String accountId, String orgId, String projectId,
       long startInterval, long endInterval, long previousStartInterval);
+
+  CIUsageResult getCIUsageResult(String accountId, long timestamp);
 }
