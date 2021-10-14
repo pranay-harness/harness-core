@@ -12,7 +12,11 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PolicyData {
-  String id;
+  String identifier;
   String name;
-  String severity;
+  String account_id;
+  String org_id;
+  String project_id;
+  long created;
+  long updated;
 }
