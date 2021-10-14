@@ -15,13 +15,11 @@ import io.harness.advisers.rollback.OnFailRollbackAdviser;
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.advisers.rollback.OnFailRollbackParameters.OnFailRollbackParametersBuilder;
 import io.harness.advisers.rollback.RollbackStrategy;
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
-import io.harness.plancreator.beans.OrchestrationConstants;
+import io.harness.plancreator.PipelineServiceUtilPlanCreationConstants;
 import io.harness.plancreator.steps.common.WithStepElementParameters;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -82,7 +80,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(PIPELINE)
-@TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
 // Todo: Refactor this so as to split into more classes (PIE-1339)
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
   @Inject protected KryoSerializer kryoSerializer;
@@ -383,8 +380,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
   protected Map<RollbackStrategy, String> getRollbackStrategyMap(YamlField currentField) {
     String stageNodeId = getStageNodeId(currentField);
     Map<RollbackStrategy, String> rollbackStrategyStringMap = new HashMap<>();
-    rollbackStrategyStringMap.put(
-        RollbackStrategy.STAGE_ROLLBACK, stageNodeId + OrchestrationConstants.COMBINED_ROLLBACK_ID_SUFFIX);
+    rollbackStrategyStringMap.put(RollbackStrategy.STAGE_ROLLBACK,
+        stageNodeId + PipelineServiceUtilPlanCreationConstants.COMBINED_ROLLBACK_ID_SUFFIX);
     rollbackStrategyStringMap.put(RollbackStrategy.STEP_GROUP_ROLLBACK, getStepGroupRollbackStepsNodeId(currentField));
     return rollbackStrategyStringMap;
   }
