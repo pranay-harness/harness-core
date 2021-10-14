@@ -356,7 +356,7 @@ public class PipelineResource implements YamlSchemaResource {
   @Path("/v2/steps")
   @ApiOperation(value = "Get Steps for given modules Version 2", nickname = "getStepsV2")
   public ResponseDTO<StepCategory> getStepsV2(
-      @QueryParam("accountId") String accountId, StepPalleteFilterWrapper stepPalleteFilterWrapper) {
+      @NotNull @QueryParam("accountId") String accountId, @NotNull StepPalleteFilterWrapper stepPalleteFilterWrapper) {
     return ResponseDTO.newResponse(pmsPipelineService.getStepsV2(accountId, stepPalleteFilterWrapper));
   }
 
