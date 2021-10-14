@@ -126,6 +126,7 @@ public class GitSyncErrorResource {
   }
 
   @GET
+  @Path("/count")
   @ApiOperation(value = "Gets Error Count", nickname = "getGitSyncErrorsCount")
   @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<GitSyncErrorCountDTO> getErrorCount(
