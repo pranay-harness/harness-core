@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -83,8 +84,8 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   public PipelineConfig save(String accountIdentifier, String yaml) {
     PipelineEntity entity = PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml);
     TemplateMergeResponseDTO templateMergeResponseDTO = pipelineTemplateHelper.resolveTemplateRefsInPipeline(entity);
-    if (!templateMergeResponseDTO.getTemplateReferenceSummaries().isEmpty()) {
-      entity.setHasTemplateReferences(true);
+    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
+      entity.setTemplateReference(true);
     }
     PipelineEntity pipelineEntity = pmsPipelineService.create(entity);
     return PipelineYamlDtoMapper.toDto(pipelineEntity);
@@ -96,8 +97,8 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
         PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml), changeType);
     TemplateMergeResponseDTO templateMergeResponseDTO =
         pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
-    if (!templateMergeResponseDTO.getTemplateReferenceSummaries().isEmpty()) {
-      pipelineEntity.setHasTemplateReferences(true);
+    if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
+      pipelineEntity.setTemplateReference(true);
     }
     return PipelineYamlDtoMapper.toDto(pipelineEntity);
   }

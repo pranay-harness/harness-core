@@ -134,7 +134,7 @@ public class PipelineResource implements YamlSchemaResource {
     // validate unique fqn in resolveTemplateRefsInPipeline
     pmsYamlSchemaService.validateUniqueFqn(resolveTemplateRefsInPipeline);
     if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
-      pipelineEntity.setHasTemplateReferences(true);
+      pipelineEntity.setTemplateReference(true);
     }
 
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
@@ -215,7 +215,7 @@ public class PipelineResource implements YamlSchemaResource {
       throw new InvalidRequestException("Pipeline identifier in URL does not match pipeline identifier in yaml");
     }
     if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
-      pipelineEntity.setHasTemplateReferences(true);
+      pipelineEntity.setTemplateReference(true);
     }
 
     PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
