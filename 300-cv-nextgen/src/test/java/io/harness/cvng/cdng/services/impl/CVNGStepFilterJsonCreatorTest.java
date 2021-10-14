@@ -40,8 +40,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
 public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
-  private static final List<String> YAML_FILE_PATHS =
-      Arrays.asList("pipeline/pipeline-with-verify.yaml", "pipeline/pipeline-canary-with-verify.yaml");
+  private static final List<String> YAML_FILE_PATHS = Arrays.asList("pipeline/pipeline-with-verify.yaml",
+      "pipeline/pipeline-canary-with-verify.yaml", "pipeline/pipeline-service-propagation-with-verify.yaml");
   @Inject private CVNGStepFilterJsonCreator cvngStepFilterJsonCreator;
   @Inject private MonitoredServiceService monitoredServiceService;
   @Inject private ChangeSourceService changeSourceService;
