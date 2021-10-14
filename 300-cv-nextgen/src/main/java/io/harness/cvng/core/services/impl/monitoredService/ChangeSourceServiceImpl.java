@@ -5,12 +5,14 @@ import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeSourceType;
+import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
+import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
@@ -21,6 +23,7 @@ import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +32,12 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@Slf4j
 public class ChangeSourceServiceImpl implements ChangeSourceService {
   @Inject private HPersistence hPersistence;
   @Inject private ChangeSourceEntityAndDTOTransformer changeSourceTransformer;
@@ -242,5 +247,26 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     hPersistence.createQuery(ChangeSource.class)
         .filter(ChangeSourceKeys.accountId, accountId)
         .forEach(hPersistence::delete);
+  }
+
+  @Override
+  public void handleCurrentGenEvents(HarnessCDCurrentGenChangeSource changeSource) {
+    List<HarnessCDCurrentGenEventMetadata> events = verificationManagerService.getCurrentGenEvents(
+        changeSource.getAccountId(), changeSource.getHarnessApplicationId(), changeSource.getHarnessEnvironmentId(),
+        changeSource.getHarnessServiceId(), Instant.now().minus(5, ChronoUnit.MINUTES), Instant.now());
+    events.forEach(event -> {
+      ChangeEventDTO changeEventDTO = ChangeEventDTO.builder()
+                                          .accountId(changeSource.getAccountId())
+                                          .orgIdentifier(changeSource.getOrgIdentifier())
+                                          .projectIdentifier(changeSource.getProjectIdentifier())
+                                          .changeSourceIdentifier(changeSource.getIdentifier())
+                                          .envIdentifier(changeSource.getEnvIdentifier())
+                                          .serviceIdentifier(changeSource.getServiceIdentifier())
+                                          .type(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
+                                          .eventTime(event.getWorkflowStartTime())
+                                          .metadata(event)
+                                          .build();
+      changeEventService.register(changeEventDTO);
+    });
   }
 }

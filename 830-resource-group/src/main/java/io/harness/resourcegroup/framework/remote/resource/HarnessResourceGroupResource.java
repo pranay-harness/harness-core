@@ -29,7 +29,6 @@ import io.harness.resourcegroup.remote.dto.ManagedFilter;
 import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
-import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.collect.Sets;
@@ -126,19 +125,6 @@ public class HarnessResourceGroupResource {
     ResourceGroupResponse resourceGroupResponse =
         resourceGroupService.create(resourceGroupRequest.getResourceGroup(), false);
     return ResponseDTO.newResponse(resourceGroupResponse);
-  }
-
-  @POST
-  @Path("/createManaged")
-  @InternalApi
-  @ApiOperation(
-      value = "Create default/harness managed resource group", nickname = "createManagedResourceGroup", hidden = true)
-  public ResponseDTO<Boolean>
-  createManagedResourceGroup(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    resourceGroupService.createManagedResourceGroup(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier));
-    return ResponseDTO.newResponse(true);
   }
 
   @PUT

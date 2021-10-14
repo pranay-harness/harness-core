@@ -9,7 +9,9 @@ import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -56,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionService {
   @Inject private BuildSourceService buildSourceService;
   @Inject private ArtifactService artifactService;
@@ -94,7 +97,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
           artifactCollectionUtils.getArtifact(artifactStream, buildDetails), artifactStream, false);
     }
     if (artifactStream.getFailedCronAttempts() != 0) {
-      artifactStreamService.updateFailedCronAttempts(
+      artifactStreamService.updateFailedCronAttemptsAndLastIteration(
           artifactStream.getAccountId(), savedArtifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
       alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
@@ -134,7 +137,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
             artifactStream.getUuid());
         // TODO:: mark inactive maybe
         int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
-        artifactStreamService.updateFailedCronAttempts(
+        artifactStreamService.updateFailedCronAttemptsAndLastIteration(
             artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
         if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
           String appId = artifactStream.fetchAppId();

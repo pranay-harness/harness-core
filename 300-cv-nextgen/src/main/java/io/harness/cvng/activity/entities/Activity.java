@@ -79,6 +79,15 @@ public abstract class Activity
                 .field(ActivityKeys.orgIdentifier)
                 .field(ActivityKeys.projectIdentifier)
                 .field(ActivityKeys.activityStartTime)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("change_event_query_index")
+                .field(ActivityKeys.accountId)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(ActivityKeys.eventTime)
+                .field(ActivityKeys.environmentIdentifier)
+                .field(ActivityKeys.serviceIdentifier)
                 .build())
         .build();
   }
@@ -188,7 +197,8 @@ public abstract class Activity
     public abstract Class getEntityClass();
 
     public Query<T> populateKeyQuery(Query<T> query, D activity) {
-      return query.filter(ActivityKeys.orgIdentifier, activity.getOrgIdentifier())
+      return query.filter(ActivityKeys.accountId, activity.getAccountId())
+          .filter(ActivityKeys.orgIdentifier, activity.getOrgIdentifier())
           .filter(ActivityKeys.projectIdentifier, activity.getProjectIdentifier())
           .filter(ActivityKeys.serviceIdentifier, activity.getServiceIdentifier())
           .filter(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier());

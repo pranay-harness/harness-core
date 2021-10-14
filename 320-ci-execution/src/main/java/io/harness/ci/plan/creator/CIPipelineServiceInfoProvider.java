@@ -61,6 +61,10 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
 
   @Override
   public List<StepInfo> getStepInfo() {
+    return new ArrayList<>();
+  }
+
+  public List<StepInfo> getStepInfo1() {
     StepInfo runStepInfo = StepInfo.newBuilder()
                                .setName("Run")
                                .setType(StepSpecTypeConstants.RUN)

@@ -23,6 +23,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import io.dropwizard.jersey.PATCH;
 import io.swagger.annotations.Api;
 import java.util.Collections;
 import java.util.List;
@@ -231,5 +232,14 @@ public class ArtifactStreamResource {
   @ExceptionMetered
   public RestResponse<List<String>> listArtifactStreamParameters(@PathParam("id") String id) {
     return new RestResponse<>(artifactStreamService.getArtifactStreamParameters(id));
+  }
+
+  @PATCH
+  @Timed
+  @Path("resetCollection/{id}")
+  @ExceptionMetered
+  public RestResponse<ArtifactStream> resetArtifactCollection(
+      @QueryParam("appId") String appId, @PathParam("id") String id) {
+    return new RestResponse<>(artifactStreamService.resetStoppedArtifactCollection(appId, id));
   }
 }

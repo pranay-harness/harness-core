@@ -30,6 +30,7 @@ java_library(
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit_ssh_jsch",
         "@maven//:org_jboss_aerogear_aerogear_otp_java",
         "@maven//:org_jsoup_jsoup",
         "@maven//:org_mockito_mockito_core",

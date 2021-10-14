@@ -89,15 +89,6 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     }
   }
 
-  @Override
-  public void createManagedResourceGroup(Scope scope) {
-    try {
-      create(ResourceGroup.getHarnessManagedResourceGroup(scope));
-    } catch (DuplicateFieldException ex) {
-      // Ignore
-    }
-  }
-
   private ResourceGroup createInternal(ResourceGroup resourceGroup) {
     boolean sanitized = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
     if (sanitized && resourceGroup.getResourceSelectors().isEmpty()) {

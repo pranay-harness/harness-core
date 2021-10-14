@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ConnectorMigrationService implements NgMigration {
@@ -41,6 +42,10 @@ public class ConnectorMigrationService implements NgMigration {
                                      .entity(settingAttribute)
                                      .build();
     Set<CgEntityId> children = new HashSet<>();
+    String secret = ConnectorFactory.getSecretId(settingAttribute);
+    if (StringUtils.isNotBlank(secret)) {
+      children.add(CgEntityId.builder().id(secret).type(NGMigrationEntityType.SECRET).build());
+    }
     return DiscoveryNode.builder().children(children).entityNode(connectorNode).build();
   }
 

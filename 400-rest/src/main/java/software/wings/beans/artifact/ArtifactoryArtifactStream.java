@@ -11,6 +11,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -37,6 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonTypeName("ARTIFACTORY")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@BreakDependencyOn("io.harness.ff.FeatureFlagService")
 public class ArtifactoryArtifactStream extends ArtifactStream {
   private String repositoryType = "any";
   @NotEmpty private String jobname;

@@ -11,6 +11,8 @@ public class NgMigrationFactory {
   @Inject ConnectorMigrationService connectorMigrationService;
   @Inject ServiceMigrationService serviceMigrationService;
   @Inject ArtifactStreamMigrationService artifactStreamMigrationService;
+  @Inject SecretMigrationService secretMigrationService;
+  @Inject SecretManagerMigrationService secretManagerMigrationService;
 
   public NgMigration getMethod(NGMigrationEntityType type) {
     switch (type) {
@@ -24,6 +26,10 @@ public class NgMigrationFactory {
         return serviceMigrationService;
       case ARTIFACT_STREAM:
         return artifactStreamMigrationService;
+      case SECRET:
+        return secretMigrationService;
+      case SECRET_MANAGER:
+        return secretManagerMigrationService;
       default:
         throw new IllegalStateException();
     }

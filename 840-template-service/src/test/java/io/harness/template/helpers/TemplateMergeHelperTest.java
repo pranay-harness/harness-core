@@ -10,8 +10,8 @@ import io.harness.TemplateServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
-import io.harness.ng.core.template.TemplateMergeResponse;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
+import io.harness.ng.core.template.exception.NGTemplateResolveException;
 import io.harness.rule.Owner;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.services.NGTemplateService;
@@ -84,6 +84,8 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     when(templateService.get(ACCOUNT_ID, ORG_ID, null, "template1", "1", false))
         .thenReturn(Optional.of(templateEntity));
+    when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "", false))
+        .thenReturn(Optional.of(templateEntity));
 
     String approvalTemplateStepYaml = readFile("approval-step-template.yaml");
     TemplateEntity approvalTemplateEntity = TemplateEntity.builder()
@@ -98,7 +100,7 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     String pipelineYamlFile = "pipeline-with-template-step-diff-scope.yaml";
     String pipelineYaml = readFile(pipelineYamlFile);
-    TemplateMergeResponse pipelineMergeResponse =
+    TemplateMergeResponseDTO pipelineMergeResponse =
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
     String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
@@ -125,6 +127,8 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "1", false))
         .thenReturn(Optional.of(templateEntity));
+    when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "", false))
+        .thenReturn(Optional.of(templateEntity));
 
     String approvalTemplateStepYaml = readFile("approval-step-template.yaml");
     TemplateEntity approvalTemplateEntity = TemplateEntity.builder()
@@ -139,7 +143,7 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     String pipelineYamlFile = "pipeline-with-template-step.yaml";
     String pipelineYaml = readFile(pipelineYamlFile);
-    TemplateMergeResponse pipelineMergeResponse =
+    TemplateMergeResponseDTO pipelineMergeResponse =
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
     String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
@@ -193,7 +197,7 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     String pipelineYamlFile = "pipeline-with-stage-template.yaml";
     String pipelineYaml = readFile(pipelineYamlFile);
-    TemplateMergeResponse pipelineMergeResponse =
+    TemplateMergeResponseDTO pipelineMergeResponse =
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
     String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
@@ -234,12 +238,11 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     String pipelineYamlFile = "pipeline-with-invalid-template-steps.yaml";
     String pipelineYaml = readFile(pipelineYamlFile);
-    TemplateMergeResponse pipelineMergeResponse =
-        templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
-    assertThat(pipelineMergeResponse.isValid()).isFalse();
-    assertThat(pipelineMergeResponse.getErrorResponse()).isNotNull();
-
-    TemplateInputsErrorResponseDTO errorResponse = pipelineMergeResponse.getErrorResponse();
-    assertThat(errorResponse.getErrorMap()).hasSize(3);
+    try {
+      templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
+    } catch (NGTemplateResolveException ngTemplateResolveException) {
+      assertThat(ngTemplateResolveException.getErrorResponseDTO()).isNotNull();
+      assertThat(ngTemplateResolveException.getErrorResponseDTO().getErrorMap()).hasSize(3);
+    }
   }
 }
