@@ -2,6 +2,7 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -31,6 +32,7 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.remote.GitSyncErrorMapper;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
@@ -53,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jooq.tools.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -90,7 +91,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm, String repoId,
       String branch, Integer numberOfErrorsInSummary) {
     Pageable pageable = getPageRequest(pageRequest);
-    Criteria criteria = createGitSyncErrorFilterCriteria(
+    Criteria criteria = createGitToHarnessErrorFilterCriteria(
         accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, repoId, branch);
     criteria.and(GitSyncErrorKeys.status).in(GitSyncErrorStatus.ACTIVE, GitSyncErrorStatus.RESOLVED);
     GroupOperation groupOperation = group(GitSyncErrorKeys.gitCommitId)
@@ -154,7 +155,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   public PageResponse<GitSyncErrorDTO> listAllGitToHarnessErrors(PageRequest pageRequest, String accountId,
       String orgIdentifier, String projectIdentifier, String searchTerm, String repoId, String branch) {
     Criteria criteria =
-        createGitSyncErrorFilterCriteria(accountId, orgIdentifier, projectIdentifier, searchTerm, repoId, branch);
+        createGitToHarnessErrorFilterCriteria(accountId, orgIdentifier, projectIdentifier, searchTerm, repoId, branch);
     criteria.and(GitSyncErrorKeys.status).is(GitSyncErrorStatus.ACTIVE);
     Page<GitSyncErrorDTO> gitSyncErrorPage =
         gitSyncErrorRepository.findAll(criteria, PageUtils.getPageRequest(pageRequest))
@@ -168,11 +169,11 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     return getNGPageResponse(gitSyncErrorPage);
   }
 
-  private Criteria createGitSyncErrorFilterCriteria(String accountIdentifier, String orgIdentifier,
+  private Criteria createGitToHarnessErrorFilterCriteria(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, String repoId, String branch) {
     // when no filter is chosen - take all repos and their default branches
     List<Pair<String, String>> repoBranchList = new ArrayList<>();
-    if (StringUtils.isEmpty(repoId)) {
+    if (isEmpty(repoId)) {
       List<YamlGitConfigDTO> yamlGitConfigDTOS =
           yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
       repoBranchList = emptyIfNull(yamlGitConfigDTOS)
@@ -186,7 +187,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     } else { // when repo filter is applied
       YamlGitConfigDTO yamlGitConfigDTO =
           yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoId);
-      branch = StringUtils.isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
+      branch = isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
       repoBranchList.add(Pair.of(yamlGitConfigDTO.getRepo(), branch));
     }
 
@@ -323,6 +324,16 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public PageResponse<GitSyncErrorDTO> listConnectivityErrors(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String repoIdentifier, String branch, PageRequest pageRequest) {
+    Criteria criteria = createConnectivityErrorFilterCriteria(
+        accountIdentifier, orgIdentifier, projectIdentifier, repoIdentifier, branch);
+
+    Page<GitSyncError> gitSyncErrors = gitSyncErrorRepository.findAll(criteria, PageUtils.getPageRequest(pageRequest));
+    Page<GitSyncErrorDTO> dtos = gitSyncErrors.map(GitSyncErrorMapper::toGitSyncErrorDTO);
+    return getNGPageResponse(dtos);
+  }
+
+  private Criteria createConnectivityErrorFilterCriteria(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoIdentifier, String branch) {
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(GitSyncErrorKeys.orgIdentifier)
@@ -331,19 +342,42 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                             .is(projectIdentifier)
                             .and(GitSyncErrorKeys.errorType)
                             .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE);
-    if (!org.apache.commons.lang3.StringUtils.isEmpty(repoIdentifier)) {
+    if (!isEmpty(repoIdentifier)) {
       YamlGitConfigDTO yamlGitConfigDTO =
           yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
       if (yamlGitConfigDTO != null) {
         criteria.and(GitSyncErrorKeys.repoUrl).is(yamlGitConfigDTO.getRepo());
       }
-      if (!org.apache.commons.lang3.StringUtils.isEmpty(branch)) {
+      if (!isEmpty(branch)) {
         criteria.and(GitSyncErrorKeys.branchName).is(branch);
       }
     }
+    return criteria;
+  }
 
-    Page<GitSyncError> gitSyncErrors = gitSyncErrorRepository.findAll(criteria, PageUtils.getPageRequest(pageRequest));
-    Page<GitSyncErrorDTO> dtos = gitSyncErrors.map(GitSyncErrorMapper::toGitSyncErrorDTO);
-    return getNGPageResponse(dtos);
+  @Override
+  public GitSyncErrorCountDTO getErrorCount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String searchTerm, String repoId, String branch) {
+    return GitSyncErrorCountDTO.builder()
+        .gitToHarnessErrorCount(
+            getGitToHarnessErrorCount(accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, repoId, branch))
+        .connectivityErrorCount(
+            getConnectivityErrorCount(accountIdentifier, orgIdentifier, projectIdentifier, repoId, branch))
+        .build();
+  }
+
+  private long getGitToHarnessErrorCount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String searchTerm, String repoId, String branch) {
+    Criteria criteria = createGitToHarnessErrorFilterCriteria(
+        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, repoId, branch);
+    criteria.and(GitSyncErrorKeys.status).is(GitSyncErrorStatus.ACTIVE);
+    return gitSyncErrorRepository.count(criteria);
+  }
+
+  private long getConnectivityErrorCount(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoId, String branch) {
+    Criteria criteria =
+        createConnectivityErrorFilterCriteria(accountIdentifier, orgIdentifier, projectIdentifier, repoId, branch);
+    return gitSyncErrorRepository.count(criteria);
   }
 }
