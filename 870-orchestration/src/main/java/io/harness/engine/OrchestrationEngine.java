@@ -41,13 +41,6 @@ public class OrchestrationEngine {
     return (T) strategy.triggerNode(ambiance, node, metadata);
   }
 
-  // Just for backward compatibility will be removed in next release
-  @Deprecated
-  public void startNodeExecution(String nodeExecutionId) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    startNodeExecution(nodeExecution.getAmbiance());
-  }
-
   public void startNodeExecution(Ambiance ambiance) {
     NodeExecutionStrategy strategy = strategyFactory.obtainStrategy(OrchestrationUtils.currentNodeType(ambiance));
     strategy.startExecution(ambiance);
