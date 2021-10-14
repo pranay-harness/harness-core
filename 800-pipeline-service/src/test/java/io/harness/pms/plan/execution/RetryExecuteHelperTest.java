@@ -1,4 +1,4 @@
-package io.harness.engine.retry;
+package io.harness.pms.plan.execution;
 
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
@@ -7,11 +7,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
-import io.harness.engine.executions.retry.RetryExecutionHelper;
 import io.harness.engine.executions.retry.RetryGroup;
 import io.harness.engine.executions.retry.RetryInfo;
 import io.harness.engine.executions.retry.RetryStageInfo;
@@ -48,7 +48,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class RetryExecuteHelperTest {
+public class RetryExecuteHelperTest extends CategoryTest {
   @InjectMocks private RetryExecutionHelper retryExecuteHelper;
   @Mock private NodeExecutionServiceImpl nodeExecutionService;
 

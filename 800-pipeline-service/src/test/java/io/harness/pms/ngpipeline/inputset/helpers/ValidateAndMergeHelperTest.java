@@ -24,6 +24,7 @@ import io.harness.rule.Owner;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -205,5 +206,34 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
 
     return base + (hasOrg ? orgId : "") + (hasProj ? projectId : "") + (hasPipeline ? pipelineId : "")
         + (hasReferences ? references : noReferences);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetPipelineTemplate() {
+    String pipelineStart = "pipeline:\n"
+        + "  stages:\n";
+    String stage1 = "  - stage:\n"
+        + "      identifier: \"s1\"\n"
+        + "      name: \"<+input>\"\n";
+    String stage2 = "  - stage:\n"
+        + "      identifier: \"s2\"\n"
+        + "      name: \"<+input>\"\n";
+    String pipelineYaml = pipelineStart + stage1 + stage2;
+
+    PipelineEntity pipelineEntity = PipelineEntity.builder().yaml(pipelineYaml).build();
+    doReturn(Optional.of(pipelineEntity)).when(pmsPipelineService).get(accountId, orgId, projectId, pipelineId, false);
+    String pipelineTemplate = validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId, pipelineId, null);
+    assertThat(pipelineTemplate).isEqualTo(pipelineYaml);
+
+    String s1Template = validateAndMergeHelper.getPipelineTemplate(
+        accountId, orgId, projectId, pipelineId, Collections.singletonList("s1"));
+    assertThat(s1Template).isEqualTo(pipelineStart + stage1);
+
+    doReturn(Optional.empty()).when(pmsPipelineService).get(accountId, orgId, projectId, pipelineId, false);
+    assertThatThrownBy(() -> validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId, pipelineId, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Could not find pipeline");
   }
 }

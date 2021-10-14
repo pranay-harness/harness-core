@@ -13,6 +13,7 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -47,6 +48,7 @@ import io.harness.ng.core.invites.utils.InviteUtils;
 import io.harness.ng.core.user.AddUserResponse;
 import io.harness.ng.core.user.AddUsersDTO;
 import io.harness.ng.core.user.AddUsersResponse;
+import io.harness.ng.core.user.NGRemoveUserFilter;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserGroup;
@@ -616,9 +618,7 @@ public class NgUserServiceImpl implements NgUserService {
                                                 .build();
       NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(scope.getAccountIdentifier(),
           scope.getOrgIdentifier(), scope.getProjectIdentifier(), true,
-          RoleAssignmentCreateRequestDTO.builder()
-              .roleAssignments(Collections.singletonList(roleAssignmentDTO))
-              .build()));
+          RoleAssignmentCreateRequestDTO.builder().roleAssignments(singletonList(roleAssignmentDTO)).build()));
     } catch (Exception e) {
       /**
        *  It's expected that user might already have this roleassignment.
@@ -660,7 +660,8 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source) {
+  public boolean removeUserFromScope(
+      String userId, Scope scope, UserMembershipUpdateSource source, NGRemoveUserFilter removeUserFilter) {
     log.info("Trying to remove user {} from scope {}", userId, ScopeUtils.toString(scope));
     try (TimeLogger timeLogger = new TimeLogger(LoggerFactory.getLogger(getClass().getName()))) {
       Optional<UserMembership> currentScopeUserMembership = getUserMembership(userId, scope);
@@ -669,20 +670,11 @@ public class NgUserServiceImpl implements NgUserService {
       }
       Criteria userMembershipCriteria = getCriteriaForFetchingChildScopes(userId, scope);
       List<UserMembership> userMemberships = userMembershipRepository.findAll(userMembershipCriteria);
-      log.info(
-          "User {} is part of {} scopes in account {}", userId, userMemberships.size(), scope.getAccountIdentifier());
-
-      if (!UserMembershipUpdateSource.SYSTEM.equals(source)) {
-        List<Scope> childScopes = userMemberships.stream().map(UserMembership::getScope).collect(toList());
-        List<Scope> lastAdminScopes = getLastAdminScopes(userId, childScopes);
-        if (!lastAdminScopes.isEmpty()) {
-          throw new InvalidUserRemoveRequestException(
-              InvalidUserRemoveRequestException.getExceptionMessageForUserRemove(lastAdminScopes), lastAdminScopes);
-        }
-      }
+      validateUserMembershipsDeletion(scope, userId, removeUserFilter);
 
       Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
       String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+
       userMemberships.forEach(
           userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
             userMembershipRepository.delete(userMembership);
@@ -690,17 +682,25 @@ public class NgUserServiceImpl implements NgUserService {
                 new RemoveCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
             return userMembership;
           })));
-
-      UserMembership anotherMembership =
-          userMembershipRepository.findOne(Criteria.where(UserMetadataKeys.userId).is(userId));
-      if (anotherMembership == null) {
-        RestClientUtils.getResponse(userClient.safeDeleteUser(userId, scope.getAccountIdentifier()));
-      }
     }
     return true;
   }
 
-  private List<Scope> getLastAdminScopes(String userId, List<Scope> scopes) {
+  private void validateUserMembershipsDeletion(Scope scope, String userId, NGRemoveUserFilter removeUserFilter) {
+    if (!NGRemoveUserFilter.STRICTLY_FORCE_REMOVE_USER.equals(removeUserFilter) && isEmpty(scope.getOrgIdentifier())) {
+      checkIfUserIsLastAccountAdmin(scope.getAccountIdentifier(), userId);
+    }
+  }
+
+  private void checkIfUserIsLastAccountAdmin(String accountIdentifier, String userId) {
+    if (isNotEmpty(getLastAdminScopes(userId, singletonList(Scope.of(accountIdentifier, null, null))))) {
+      throw new InvalidUserRemoveRequestException(
+          "Removing this user will remove the last Account Admin from NG. Cannot remove the user.",
+          singletonList(Scope.of(accountIdentifier, null, null)));
+    }
+  }
+
+  protected List<Scope> getLastAdminScopes(String userId, List<Scope> scopes) {
     List<Callable<Boolean>> tasks = new ArrayList<>();
     scopes.forEach(scope -> tasks.add(() -> isUserLastAdminAtScope(userId, scope)));
     List<Future<Boolean>> futures;
@@ -744,7 +744,8 @@ public class NgUserServiceImpl implements NgUserService {
     return criteria;
   }
 
-  private Boolean isUserLastAdminAtScope(String userId, Scope scope) {
+  @Override
+  public boolean isUserLastAdminAtScope(String userId, Scope scope) {
     String roleIdentifier;
     if (!isBlank(scope.getProjectIdentifier())) {
       roleIdentifier = PROJECT_ADMIN;

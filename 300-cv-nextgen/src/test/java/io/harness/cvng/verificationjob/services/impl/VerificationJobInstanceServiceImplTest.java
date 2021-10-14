@@ -450,7 +450,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
                        .total(1)
                        .progress(1)
                        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .risk(Risk.OBSERVE)
+                       .risk(Risk.MEDIUM)
                        .notStarted(0)
                        .durationMs(Duration.ofMinutes(15).toMillis())
                        .remainingTimeMs(1200000)
@@ -1091,7 +1091,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     Optional<Risk> riskScore =
         verificationJobInstanceAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceIds.get(0));
     assertThat(riskScore).isPresent();
-    assertThat(riskScore.get()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(riskScore.get()).isEqualTo(Risk.HIGH);
   }
 
   private VerificationJobDTO newCanaryVerificationJobDTO() {
