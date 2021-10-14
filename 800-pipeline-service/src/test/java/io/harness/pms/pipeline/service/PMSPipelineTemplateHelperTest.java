@@ -1,5 +1,6 @@
 package io.harness.pms.pipeline.service;
 
+import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,7 +59,8 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
   public void testResolveTemplateRefsInPipelineWhenFFIsOff() {
     doReturn(false).when(pmsFeatureFlagHelper).isEnabled(ACCOUNT_ID, FeatureName.NG_TEMPLATES);
     String resolveTemplateRefsInPipeline =
-        pipelineTemplateHelper.resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_ID, PROJECT_ID, GIVEN_YAML);
+        pipelineTemplateHelper.resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_ID, PROJECT_ID, GIVEN_YAML)
+            .getMergedPipelineYaml();
     assertThat(resolveTemplateRefsInPipeline).isEqualTo(GIVEN_YAML);
   }
 
@@ -74,10 +76,11 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
         .applyTemplatesOnGivenYaml(
             ACCOUNT_ID, ORG_ID, PROJECT_ID, TemplateApplyRequestDTO.builder().originalEntityYaml(GIVEN_YAML).build());
     when(callRequest.execute())
-        .thenReturn(Response.success(ResponseDTO.newResponse(
-            TemplateMergeResponseDTO.builder().mergedPipelineYaml(mergedYaml).valid(true).build())));
+        .thenReturn(Response.success(
+            ResponseDTO.newResponse(TemplateMergeResponseDTO.builder().mergedPipelineYaml(mergedYaml).build())));
     String resolveTemplateRefsInPipeline =
-        pipelineTemplateHelper.resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_ID, PROJECT_ID, GIVEN_YAML);
+        pipelineTemplateHelper.resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_ID, PROJECT_ID, GIVEN_YAML)
+            .getMergedPipelineYaml();
     assertThat(resolveTemplateRefsInPipeline).isEqualTo(mergedYaml);
   }
 
@@ -85,7 +88,6 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testInValidTemplateInPipelineWhenFFIsOn() throws IOException {
-    String invalidMergedYaml = "INVALID_MERGED_YAML";
     String errorYaml = "ERROR_YAML";
     doReturn(true).when(pmsFeatureFlagHelper).isEnabled(ACCOUNT_ID, FeatureName.NG_TEMPLATES);
     Call<ResponseDTO<TemplateMergeResponseDTO>> callRequest = mock(Call.class);
@@ -96,11 +98,8 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
     TemplateInputsErrorResponseDTO templateInputsErrorResponseDTO = new TemplateInputsErrorResponseDTO(
         Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION, "Template Ref resolved failed.", "", errorYaml, new HashMap<>());
     when(callRequest.execute())
-        .thenReturn(Response.success(ResponseDTO.newResponse(TemplateMergeResponseDTO.builder()
-                                                                 .mergedPipelineYaml(invalidMergedYaml)
-                                                                 .valid(false)
-                                                                 .errorResponse(templateInputsErrorResponseDTO)
-                                                                 .build())));
+        .thenThrow(new NGTemplateResolveException(
+            "Exception in resolving template refs in given yaml.", USER, templateInputsErrorResponseDTO));
     assertThatThrownBy(
         () -> pipelineTemplateHelper.resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_ID, PROJECT_ID, GIVEN_YAML))
         .isInstanceOf(NGTemplateResolveException.class)
