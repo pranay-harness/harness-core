@@ -6,7 +6,6 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
@@ -32,7 +31,6 @@ public class GitSyncErrorDTO {
   ChangeType changeType;
   String completeFilePath;
   EntityType entityType;
-  EntityReference entityReference;
 
   String failureReason;
   GitSyncErrorStatus status;
