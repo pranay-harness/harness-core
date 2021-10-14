@@ -31,7 +31,7 @@ public interface ResourceGroupService {
   Optional<ResourceGroupResponse> update(
       ResourceGroupDTO resourceGroupDTO, boolean sanitizeResourceSelectors, boolean harnessManaged);
 
-  void delete(Scope scope, String identifier);
+  boolean delete(Scope scope, String identifier);
 
   void deleteManaged(@NotEmpty String identifier);
 
