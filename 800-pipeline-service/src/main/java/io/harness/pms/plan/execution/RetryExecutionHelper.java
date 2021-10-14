@@ -1,4 +1,4 @@
-package io.harness.engine.executions.retry;
+package io.harness.pms.plan.execution;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -6,6 +6,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
+import io.harness.engine.executions.retry.RetryGroup;
+import io.harness.engine.executions.retry.RetryInfo;
+import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plan.IdentityPlanNode;
 import io.harness.plan.Node;
@@ -14,6 +17,7 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
+import io.harness.steps.identity.IdentityStep;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -192,6 +196,11 @@ public class RetryExecutionHelper {
               .set(stageCounter,
                   replaceStagesInParallelGroup(stage.get("parallel"), retryStages,
                       currentRootJsonNode.get("pipeline").get("stages").get(stageCounter), identifierOfSkipStages));
+
+          // replacing uuid for parallel node
+          ((ObjectNode) ((ArrayNode) currentRootJsonNode.get("pipeline").get("stages")).get(stageCounter))
+              .set("__uuid", stage.get("__uuid"));
+
           break;
         }
       }
@@ -215,6 +224,7 @@ public class RetryExecutionHelper {
       }
       stageCounter++;
     }
+
     return currentParallelStageNode;
   }
 
@@ -258,9 +268,9 @@ public class RetryExecutionHelper {
 
     // converting planNode to IdentityNode
     List<Node> finalUpdatedPlanNodes = updatedPlanNodes;
-    nodeUuidToNodeExecutionUuid.forEach(
-        (nodeExecutionUuid, planNode)
-            -> finalUpdatedPlanNodes.add(IdentityPlanNode.mapPlanNodeToIdentityNode(planNode, nodeExecutionUuid)));
+    nodeUuidToNodeExecutionUuid.forEach((nodeExecutionUuid, planNode)
+                                            -> finalUpdatedPlanNodes.add(IdentityPlanNode.mapPlanNodeToIdentityNode(
+                                                planNode, IdentityStep.STEP_TYPE, nodeExecutionUuid)));
 
     return Plan.builder()
         .uuid(plan.getUuid())

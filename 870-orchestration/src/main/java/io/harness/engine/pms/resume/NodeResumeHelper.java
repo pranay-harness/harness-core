@@ -6,7 +6,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.resume.publisher.NodeResumeEventPublisher;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.PlanNode;
+import io.harness.plan.Node;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -37,7 +37,7 @@ public class NodeResumeHelper {
       List<NodeExecution> childExecutions =
           nodeExecutionService.fetchNodeExecutionsByParentId(nodeExecution.getUuid(), false);
       for (NodeExecution childExecution : childExecutions) {
-        PlanNode node = childExecution.getNode();
+        Node node = childExecution.getNode();
         StepResponseNotifyData notifyData =
             StepResponseNotifyData.builder()
                 .nodeUuid(node.getUuid())
