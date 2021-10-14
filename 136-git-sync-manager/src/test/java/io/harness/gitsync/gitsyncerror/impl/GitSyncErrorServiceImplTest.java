@@ -37,7 +37,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -137,8 +141,8 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = BHAVYA)
   @Category(UnitTests.class)
   public void test_listGitToHarnessErrorsForACommit() {
-    gitSyncErrorService.save(buildDTO("filePath1", additionalErrorDetails));
-    gitSyncErrorService.save(buildDTO("filePath2", additionalErrorDetails));
+    gitSyncErrorService.save(buildDTO("filePath1", additionalErrorDetailsDTO));
+    gitSyncErrorService.save(buildDTO("filePath2", additionalErrorDetailsDTO));
     PageRequest pageRequest = PageRequest.builder().pageSize(10).pageIndex(0).build();
     List<GitSyncErrorDTO> dto =
         gitSyncErrorService
@@ -152,12 +156,61 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = BHAVYA)
   @Category(UnitTests.class)
   public void test_save() {
-    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetails);
-    GitSyncErrorDTO savedDto = gitSyncErrorService.save(dto);
-    assertThat(savedDto).isEqualTo(dto);
+    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
+    gitSyncErrorService.save(dto);
+    Optional<GitSyncErrorDTO> savedError =
+        gitSyncErrorService.getGitToHarnessError(accountId, commitId, repoUrl, branch, "filePath");
+    assertThat(savedError.isPresent()).isEqualTo(true);
+    assertThat(savedError.get()).isEqualTo(dto);
   }
 
-  private GitSyncErrorDTO buildDTO(String filepath, GitSyncErrorDetails additionalErrorDetails) {
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_saveAll() {
+    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
+    gitSyncErrorService.saveAll(Collections.singletonList(dto));
+    Iterable<GitSyncError> savedErrors = gitSyncErrorRepository.findAll();
+    assertThat(savedErrors.iterator().hasNext()).isEqualTo(true);
+    assertThat(savedErrors.iterator().next()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_markOverriddenErrors() {
+    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
+    gitSyncErrorService.save(dto);
+    Set<String> filePathsHavingError = new HashSet<>();
+    filePathsHavingError.add("filePath");
+    filePathsHavingError.add("filePath1");
+    gitSyncErrorService.markOverriddenErrors(accountId, repoUrl, branch, filePathsHavingError);
+    Optional<GitSyncErrorDTO> savedError =
+        gitSyncErrorService.getGitToHarnessError(accountId, commitId, repoUrl, branch, "filePath");
+    assertThat(savedError.isPresent()).isEqualTo(true);
+    assertThat(savedError.get().getStatus()).isEqualByComparingTo(GitSyncErrorStatus.OVERRIDDEN);
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_markResolvedErrors() {
+    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
+    gitSyncErrorService.save(dto);
+    Set<String> filePathsWithoutError = new HashSet<>();
+    filePathsWithoutError.add("filePath");
+    filePathsWithoutError.add("filePath1");
+    gitSyncErrorService.markResolvedErrors(accountId, repoUrl, branch, filePathsWithoutError, "commitId1");
+    Optional<GitSyncErrorDTO> savedError =
+        gitSyncErrorService.getGitToHarnessError(accountId, commitId, repoUrl, branch, "filePath");
+    assertThat(savedError.isPresent()).isEqualTo(true);
+    GitToHarnessErrorDetailsDTO errorDetails =
+        (GitToHarnessErrorDetailsDTO) savedError.get().getAdditionalErrorDetails();
+    assertThat(savedError.get().getStatus()).isEqualByComparingTo(GitSyncErrorStatus.RESOLVED);
+    assertThat(errorDetails.getResolvedByCommitId()).isEqualTo("commitId1");
+  }
+
+  private GitSyncErrorDTO buildDTO(String filepath, GitSyncErrorDetailsDTO additionalErrorDetails) {
     return GitSyncErrorDTO.builder()
         .accountIdentifier(accountId)
         .errorType(errorType)
@@ -166,7 +219,7 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         .branchName(branch)
         .status(status)
         .failureReason(failureReason)
-        .additionalErrorDetails(additionalErrorDetailsDTO)
+        .additionalErrorDetails(additionalErrorDetails)
         .build();
   }
 
