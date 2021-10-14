@@ -18,7 +18,5 @@ import lombok.Value;
 @ApiModel("TemplateMergeResponse")
 public class TemplateMergeResponseDTO {
   String mergedPipelineYaml;
-  boolean valid;
-  TemplateInputsErrorResponseDTO errorResponse;
   List<TemplateReferenceSummary> templateReferenceSummaries;
 }
