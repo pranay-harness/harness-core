@@ -428,7 +428,7 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
     Optional<Risk> risk = heatMapService.getVerificationRisk(accountId, verificationJobInstanceId);
 
     assertThat(risk).isPresent();
-    assertThat(risk.get()).isEqualTo(Risk.HEALTHY);
+    assertThat(risk.get()).isEqualTo(Risk.LOW);
   }
 
   private void validateHeatMaps(HealthVerificationHeatMap heatMap, Double riskScore, Instant endTime,
