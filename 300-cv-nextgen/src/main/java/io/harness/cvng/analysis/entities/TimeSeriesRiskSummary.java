@@ -73,7 +73,7 @@ public final class TimeSeriesRiskSummary implements PersistentEntity, UuidAware 
       return Risk.valueOf(metricRisk);
     }
     public boolean isAnomalous() {
-      return getMetricRisk().isGreaterThanEq(Risk.OBSERVE);
+      return getMetricRisk().isGreaterThanEq(Risk.MEDIUM);
     }
   }
 }
