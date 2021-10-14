@@ -222,4 +222,18 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(3);
   }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testListConnectivityErrorsForDefaultBranchesOfAllRepos() {
+    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
+        repoUrl, branch, "Unable to connect to git provider");
+    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+    PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isNotEmpty();
+    assertThat(gitSyncErrorList.getContent()).hasSize(1);
+  }
 }
