@@ -156,7 +156,7 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), DELETE_RESOURCEGROUP_PERMISSION);
-    resourceGroupService.delete(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier);
-    return ResponseDTO.newResponse(true);
+    return ResponseDTO.newResponse(
+        resourceGroupService.delete(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier));
   }
 }
