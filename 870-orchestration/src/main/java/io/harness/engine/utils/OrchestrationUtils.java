@@ -26,11 +26,11 @@ public class OrchestrationUtils {
   }
 
   public static boolean isStageNode(NodeExecution nodeExecution) {
-    return nodeExecution.getNode().getStepType().getStepCategory() == StepCategory.STAGE;
+    return nodeExecution.getNode().getStepCategory() == StepCategory.STAGE;
   }
 
   public static boolean isPipelineNode(NodeExecution nodeExecution) {
-    return nodeExecution.getNode().getStepType().getStepCategory() == StepCategory.PIPELINE;
+    return nodeExecution.getNode().getStepCategory() == StepCategory.PIPELINE;
   }
 
   public static NodeType currentNodeType(Ambiance ambiance) {

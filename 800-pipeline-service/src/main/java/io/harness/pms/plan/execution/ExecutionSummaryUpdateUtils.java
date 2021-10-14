@@ -6,6 +6,7 @@ import io.harness.beans.ExecutionErrorInfo;
 import io.harness.dto.converter.FailureInfoDTOConverter;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.NodeType;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -34,8 +35,12 @@ public class ExecutionSummaryUpdateUtils {
     if (!OrchestrationUtils.isStageNode(nodeExecution)) {
       return;
     }
-    update.set(
-        PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
+    // If the nodes is of type Identity, there is no need to update the status. We want to update the status only when
+    // there is a PlanNode
+    if (!nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+      update.set(
+          PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
+    }
     update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".startTs",
         nodeExecution.getStartTs());
     update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".nodeRunInfo",
