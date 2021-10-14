@@ -28,6 +28,7 @@ import io.harness.cache.CacheModule;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
+import io.harness.cdng.licenserestriction.ServiceRestrictionsUsageImpl;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.cdng.pipeline.executions.CdngOrchestrationExecutionEventHandlerRegistrar;
 import io.harness.cf.AbstractCfModule;
@@ -758,6 +759,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                     .put(FeatureRestrictionName.TEST3, ExampleRateLimitUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_PROJECTS, ProjectRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
+                    .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)
                     .build())
             .build();
     CustomRestrictionRegisterConfiguration customConfig =
