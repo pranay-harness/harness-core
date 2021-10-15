@@ -942,14 +942,23 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     // Find the timestamp of latest instance alive at toTimestamp
     long rhsCreatedAt = getCreatedTimeOfInstanceAtTimestamp(accountId, toTimestamp, query, false);
 
+    ReadPreference readPreference;
+    if (Objects.isNull(mongoTagSet)) {
+      readPreference = ReadPreference.secondaryPreferred();
+    } else {
+      readPreference = ReadPreference.secondary(mongoTagSet);
+    }
+
     DBCollection dbCollection = wingsPersistence.getCollection(Instance.class);
     BasicDBObject instanceQuery = new BasicDBObject();
     List<BasicDBObject> conditions = new ArrayList<>();
+
     conditions.add(new BasicDBObject(InstanceKeys.accountId, accountId));
     conditions.add(new BasicDBObject(Instance.CREATED_AT_KEY, new BasicDBObject("$gte", lhsCreatedAt)));
     conditions.add(new BasicDBObject(Instance.CREATED_AT_KEY, new BasicDBObject("$lte", rhsCreatedAt)));
     instanceQuery.put("$and", conditions);
-    Set<String> appIdsFromInstances = new HashSet<>(dbCollection.distinct(InstanceKeys.appId, instanceQuery));
+    Set<String> appIdsFromInstances =
+        new HashSet<>(dbCollection.distinct(InstanceKeys.appId, instanceQuery, readPreference));
 
     List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);
     Set<String> existingApps = appsByAccountId.stream().map(Application::getUuid).collect(Collectors.toSet());
