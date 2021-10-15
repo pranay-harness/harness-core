@@ -8,6 +8,8 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
 
 import software.wings.beans.Account;
+import software.wings.beans.Application;
+import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
@@ -93,9 +95,8 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     List<InstanceStatsSnapshot> stats = aggregate(accountId, from, to);
     log.info("Aggregate Time: {} ms, accountId={}, from={} to={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId,
         from, to);
-    Set<String> deletedAppIds = dashboardStatsService.getDeletedAppIds(accountId, fromTsMillis, toTsMillis);
+    Set<String> deletedAppIds = getDeletedAppIds(stats, accountId);
     log.info("Get Deleted App Time: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
-
     User user = UserThreadLocal.get();
     if (null != user) {
       TimelineRbacFilters rbacFilters = new TimelineRbacFilters(user, accountId, appService, userService);
@@ -109,6 +110,23 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     } else {
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
     }
+  }
+
+  private Set<String> getDeletedAppIds(List<InstanceStatsSnapshot> stats, String accountId) {
+    List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);
+    Set<String> appsFromInstances = getAllAppIdsOfInstances(stats);
+    // Remove the active appIds, so that we get list of deleted appIds
+    appsFromInstances.removeAll(appsByAccountId);
+    return appsFromInstances;
+  }
+
+  private Set<String> getAllAppIdsOfInstances(List<InstanceStatsSnapshot> stats) {
+    final List<InstanceStatsSnapshot.AggregateCount> aggregateCounts =
+        stats.stream().flatMap(aggregate -> aggregate.getAggregateCounts().stream()).collect(Collectors.toList());
+    return aggregateCounts.stream()
+        .filter(ac -> ac.getEntityType() == EntityType.APPLICATION)
+        .map(InstanceStatsSnapshot.AggregateCount::getId)
+        .collect(Collectors.toSet());
   }
 
   @Override
