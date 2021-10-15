@@ -34,6 +34,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.Store;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
@@ -231,7 +232,6 @@ public class DelegateQueueTask implements Runnable {
   protected void rebroadcastUnassignedTasks() {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
     long now = clock.millis();
-
     Query<DelegateTask> unassignedTasksQuery =
         persistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter(DelegateTaskKeys.status, QUEUED)

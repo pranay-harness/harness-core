@@ -3,6 +3,7 @@ package io.harness.delegate.beans;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -38,6 +39,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateScopes", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @OwnedBy(HarnessTeam.DEL)
+@StoreIn("dms")
 public class DelegateScope implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

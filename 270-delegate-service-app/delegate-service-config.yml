@@ -184,6 +184,15 @@ events-mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
+dms-mongo:
+  uri: mongodb://localhost:27017/dms
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+
 watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
 
 delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt

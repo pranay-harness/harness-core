@@ -1,6 +1,7 @@
 package io.harness.delegate.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -33,6 +34,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "TaskSelectorMapKeys")
 @Entity(value = "taskSelectorMaps", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn("dms")
 public class TaskSelectorMap implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                         UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

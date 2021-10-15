@@ -1,6 +1,7 @@
 package io.harness.delegate.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -37,6 +38,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateProfileKeys")
 @OwnedBy(HarnessTeam.DEL)
+@StoreIn("dms")
 public final class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                                               UpdatedAtAware, UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

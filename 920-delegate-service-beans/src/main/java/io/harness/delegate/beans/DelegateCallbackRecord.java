@@ -1,5 +1,6 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.PersistentEntity;
 
@@ -15,6 +16,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "delegateCallbacks", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "DelegateCallbackRecordKeys")
+@StoreIn("dms")
 public class DelegateCallbackRecord implements PersistentEntity {
   @Id private String uuid;
   private byte[] callbackMetadata;

@@ -1,6 +1,7 @@
 package io.harness.selection.log;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -32,6 +33,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateSelectionLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateSelectionLogKeys")
+@StoreIn("dms")
 public class DelegateSelectionLog implements PersistentEntity, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

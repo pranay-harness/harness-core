@@ -2,6 +2,7 @@ package io.harness.capability;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -30,6 +31,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "capabilityTaskSelectionDetails", noClassnameStored = true)
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._955_DELEGATE_BEANS)
+@StoreIn("dms")
 public class CapabilityTaskSelectionDetails implements PersistentEntity, PersistentFibonacciIterable {
   @Id private String uuid;
   @FdIndex private String accountId;

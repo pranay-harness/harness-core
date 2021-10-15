@@ -112,6 +112,7 @@ import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
+import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
@@ -428,7 +429,15 @@ public class WingsApplication extends Application<MainConfiguration> {
       registerHealthChecksDelegateService(environment, injector);
     }
 
-    registerStores(configuration, injector);
+    if (isManager()) {
+      registerStores(configuration, injector);
+    }
+    if (shouldEnableDelegateMgmt) {
+      registerStoresDMS(configuration, injector);
+    }
+
+
+
     if (configuration.getMongoConnectionFactory().getTraceMode() == TraceMode.ENABLED) {
       registerQueryTracer(injector);
     }
@@ -841,6 +850,14 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (isNotEmpty(configuration.getEventsMongo().getUri())
         && !configuration.getEventsMongo().getUri().equals(configuration.getMongoConnectionFactory().getUri())) {
       persistence.register(Store.builder().name("events").build(), configuration.getEventsMongo().getUri());
+    }
+  }
+
+  private void registerStoresDMS(MainConfiguration configuration, Injector injector) {
+    final DMSPersistence persistence = injector.getInstance(DMSPersistence.class);
+    if (isNotEmpty(configuration.getDmsMongo().getUri())
+            && !configuration.getDmsMongo().getUri().equals(configuration.getMongoConnectionFactory().getUri())) {
+      persistence.register(Store.builder().name("dms").build(), configuration.getDmsMongo().getUri());
     }
   }
 
