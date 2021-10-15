@@ -17,6 +17,7 @@ import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
 import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -671,25 +672,17 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void initializeEnforcementFramework(Injector injector) {
-    Map<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>> featureRestrictionNameClassHashMap =
-        new HashMap<>();
-    featureRestrictionNameClassHashMap.put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class);
-    featureRestrictionNameClassHashMap.put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class);
-
-    CustomRestrictionRegisterConfiguration customConfig =
-        CustomRestrictionRegisterConfiguration.builder()
-            .customRestrictionMap(
-                ImmutableMap
-                    .<FeatureRestrictionName,
-                        Class<? extends io.harness.enforcement.client.custom.CustomRestrictionInterface>>builder()
-                    .build())
-            .build();
     RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
         RestrictionUsageRegisterConfiguration.builder()
             .restrictionNameClassMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder().build())
+            .build();
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
                     .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
+                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
                     .build())
             .build();
     injector.getInstance(EnforcementSdkRegisterService.class)
