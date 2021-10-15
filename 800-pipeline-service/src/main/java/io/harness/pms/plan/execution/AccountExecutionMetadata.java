@@ -8,10 +8,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.DbAliases;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
+import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
@@ -31,6 +34,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class AccountExecutionMetadata {
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   String accountId;
-  Map<String, Long> moduleToExecutionCount;
-  Map<String, AccountExecutionInfo> moduleToExecutionInfoMap;
+  @Builder.Default Map<String, Long> moduleToExecutionCount = new HashMap<>();
+  @NonFinal @Builder.Default @Setter Map<String, AccountExecutionInfo> moduleToExecutionInfoMap = new HashMap<>();
 }

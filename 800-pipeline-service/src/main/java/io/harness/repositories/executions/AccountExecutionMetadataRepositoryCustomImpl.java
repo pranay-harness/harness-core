@@ -65,7 +65,14 @@ public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExec
         accountExecutionMetadata.getModuleToExecutionCount().put(module, currentCount + 1);
 
         // Increase count per month
-        AccountExecutionInfo accountExecutionInfo = accountExecutionMetadata.getModuleToExecutionInfoMap().get(module);
+        AccountExecutionInfo accountExecutionInfo;
+        if (accountExecutionMetadata.getModuleToExecutionInfoMap() != null) {
+          accountExecutionInfo = accountExecutionMetadata.getModuleToExecutionInfoMap().getOrDefault(
+              module, AccountExecutionInfo.builder().build());
+        } else {
+          accountExecutionInfo = AccountExecutionInfo.builder().build();
+          accountExecutionMetadata.setModuleToExecutionInfoMap(new HashMap<>());
+        }
         LocalDate startDate = Instant.ofEpochMilli(startTS).atZone(ZoneId.systemDefault()).toLocalDate();
         Long countOfMonth = accountExecutionInfo.getCountPerMonth().getOrDefault(
             YearMonth.of(startDate.getYear(), startDate.getMonth()), 0L);
