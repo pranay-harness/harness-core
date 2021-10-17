@@ -581,6 +581,9 @@
                 }
               ]
             },
+            "reports": {
+              "$ref": "#/definitions/UnitTestReport"
+            },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
             },
