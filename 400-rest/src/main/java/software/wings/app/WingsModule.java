@@ -138,6 +138,7 @@ import io.harness.logstreaming.LogStreamingServiceClientFactory;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
+import io.harness.mongo.DMSMongoModule;
 import io.harness.mongo.DMSMongoPersistence;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.event.MessageListener;
@@ -867,6 +868,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
+    install(new DMSMongoModule(configuration.getDmsMongo()));
 
     install(new EventsFrameworkModule(
         configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));

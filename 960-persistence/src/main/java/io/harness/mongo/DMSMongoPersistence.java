@@ -72,9 +72,9 @@ public class DMSMongoPersistence implements DMSPersistence {
     @Inject UserProvider userProvider;
 
     @Inject
-    public DMSMongoPersistence(@Named("primaryDatastore") AdvancedDatastore primaryDatastore) {
+    public DMSMongoPersistence(@Named("dms") AdvancedDatastore primaryDatastore) {
         datastoreMap = new HashMap<>();
-        datastoreMap.put(DEFAULT_STORE.getName(), primaryDatastore);
+        datastoreMap.put(DMS_STORE.getName(), primaryDatastore);
     }
 
     @Override
@@ -102,12 +102,13 @@ public class DMSMongoPersistence implements DMSPersistence {
 
     @Override
     public AdvancedDatastore getDatastore(Store store) {
-        return datastoreMap.computeIfAbsent(store.getName(), key -> {
-            DMSMongoPersistence.Info info = storeInfo.get(store.getName());
+      Store store1 = Store.builder().name("dms").build();
+        return datastoreMap.computeIfAbsent(store1.getName(), key -> {
+            DMSMongoPersistence.Info info = storeInfo.get(store1.getName());
             if (info == null || isEmpty(info.getUri())) {
                 return getDatastore(DEFAULT_STORE);
             }
-            return MongoModule.createDatastore(morphia, info.getUri());
+            return DMSMongoModule.createDatastore(morphia, info.getUri());
         });
     }
 

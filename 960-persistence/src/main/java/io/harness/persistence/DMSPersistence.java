@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public interface DMSPersistence extends HPersistence {
   Store DEFAULT_STORE = Store.builder().name("default").build();
+  Store DMS_STORE = Store.builder().name("dms").build();
 
   static Logger logger() {
     return LoggerFactory.getLogger(HPersistence.class);
@@ -69,7 +70,7 @@ public interface DMSPersistence extends HPersistence {
    */
 
   default AdvancedDatastore getDatastore(Class cls) {
-    return getDatastore(getClassStores().computeIfAbsent(cls, klass -> {
+    AdvancedDatastore advancedDatastore =  getDatastore(getClassStores().computeIfAbsent(cls, klass -> {
       return Arrays.stream(cls.getDeclaredAnnotations())
               .filter(annotation -> annotation.annotationType().equals(StoreIn.class))
               .map(annotation -> ((StoreIn) annotation).value())
@@ -77,6 +78,7 @@ public interface DMSPersistence extends HPersistence {
               .findFirst()
               .orElseGet(() -> DEFAULT_STORE);
     }));
+    return advancedDatastore;
   }
 
   /**
