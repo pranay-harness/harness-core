@@ -19,5 +19,5 @@ public abstract class ServiceDependencyMetadata {
 
   public abstract Set<ChangeSourceType> getSupportedChangeSourceTypes();
 
-  enum DependencyMetadataType { KUBERNETES; }
+  public enum DependencyMetadataType { KUBERNETES; }
 }

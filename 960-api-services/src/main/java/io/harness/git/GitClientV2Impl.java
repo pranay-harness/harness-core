@@ -109,6 +109,9 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.TagOpt;
+import org.eclipse.jgit.transport.TransportHttp;
+import org.eclipse.jgit.transport.http.HttpConnectionFactory;
+import org.eclipse.jgit.transport.http.apache.HttpClientConnectionFactory;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 @Singleton
@@ -116,6 +119,12 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 @OwnedBy(CDP)
 public class GitClientV2Impl implements GitClientV2 {
   @Inject private GitClientHelper gitClientHelper;
+  /**
+   * factory for creating HTTP connections. By default, JGit uses JDKHttpConnectionFactory which doesn't work well with
+   * proxy. See:
+   * https://stackoverflow.com/questions/67492788/eclipse-egit-tfs-git-connection-authentication-not-supported
+   */
+  public static final HttpConnectionFactory connectionFactory = new HttpClientConnectionFactory();
 
   private void cleanup(GitBaseRequest request) {
     if (request.getRepoType() == null) {
@@ -1151,6 +1160,7 @@ public class GitClientV2Impl implements GitClientV2 {
 
   /**
    * Ensure repo locally cloned. This is called before performing any git operation with remote
+   *
    * @param request
    */
   private synchronized void cloneRepoForFilePathCheckout(GitBaseRequest request) {
@@ -1230,6 +1240,12 @@ public class GitClientV2Impl implements GitClientV2 {
           "The password is null in git config for the git connector " + gitBaseRequest.getConnectorId());
       gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(
           authRequest.getUsername(), authRequest.getPassword()));
+      gitCommand.setTransportConfigCallback(transport -> {
+        if (transport instanceof TransportHttp) {
+          TransportHttp http = (TransportHttp) transport;
+          http.setHttpConnectionFactory(connectionFactory);
+        }
+      });
     } else if (gitBaseRequest.getAuthRequest().getAuthType() == AuthInfo.AuthType.SSH_KEY) {
       JgitSshAuthRequest authRequest = (JgitSshAuthRequest) gitBaseRequest.getAuthRequest();
       gitCommand.setTransportConfigCallback(transport -> {

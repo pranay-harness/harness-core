@@ -42,12 +42,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.CgEventConfig;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.service.EventConfigService;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -130,6 +132,7 @@ public class YamlHelper {
   @Inject TemplateFolderService templateFolderService;
   @Inject SecretManager secretManager;
   @Inject ServiceTemplateService serviceTemplateService;
+  @Inject EventConfigService eventConfigService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -606,6 +609,15 @@ public class YamlHelper {
         extractEntityNameFromYamlPath(YamlType.PIPELINE.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     notNullCheck("Pipeline name null in the given yaml file: " + yamlFilePath, pipelineName);
     return pipelineService.getPipelineByName(appId, pipelineName);
+  }
+
+  public CgEventConfig getEventConfig(String accountId, String yamlFilePath) {
+    String appId = getAppId(accountId, yamlFilePath);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    String eventConfigName =
+        extractEntityNameFromYamlPath(YamlType.EVENT_RULE.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    notNullCheck("Config name null in the given yaml file: " + yamlFilePath, eventConfigName);
+    return eventConfigService.getEventsConfigByName(accountId, appId, eventConfigName);
   }
 
   public String extractTemplateLibraryName(String yamlFilePath, String appId) {

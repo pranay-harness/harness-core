@@ -30,13 +30,13 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.sun.istack.internal.NotNull;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -140,6 +140,30 @@ public class MonitoredServiceResource {
                                       .build();
     return ResponseDTO.newResponse(monitoredServiceService.getOverAllHealthScore(
         projectParams, identifier, durationDTO, Instant.ofEpochMilli(endTime)));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("overall-health-score")
+  @ApiOperation(value = "get monitored service overall health score data using service and environment identifiers",
+      nickname = "getMonitoredServiceOverAllHealthScoreWithServiceAndEnv")
+  public ResponseDTO<HistoricalTrend>
+  getOverAllHealthScore(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @QueryParam("duration") DurationDTO durationDTO, @NotNull @QueryParam("endTime") Long endTime) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .build();
+    return ResponseDTO.newResponse(monitoredServiceService.getOverAllHealthScore(
+        serviceEnvironmentParams, durationDTO, Instant.ofEpochMilli(endTime)));
   }
 
   @GET

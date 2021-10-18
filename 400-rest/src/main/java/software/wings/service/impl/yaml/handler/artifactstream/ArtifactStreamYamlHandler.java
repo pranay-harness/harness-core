@@ -133,6 +133,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
 
     yaml.setTemplateUri(templateUri);
     yaml.setTemplateVariables(TemplateHelper.convertToTemplateVariables(bean.getTemplateVariables()));
+    yaml.setCollectionEnabled(bean.getCollectionEnabled());
   }
 
   @Override
@@ -205,6 +206,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
       bean.setTemplateVersion(TemplateHelper.obtainTemplateVersion(templateUri));
     }
     bean.setTemplateVariables(TemplateHelper.convertToEntityVariables(yaml.getTemplateVariables()));
+    bean.setCollectionEnabled(yaml.getCollectionEnabled());
   }
 
   protected abstract B getNewArtifactStreamObject();

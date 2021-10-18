@@ -57,14 +57,30 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
       waitNotifyEngine.doneWith(entity.getCallbackId(), CVNGResponseData.builder().skip(true).build());
       markDone(entity.getUuid());
     } else {
+      DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+          getDeploymentVerificationJobInstanceSummary(entity);
       ActivityStatusDTO activityStatusDTO =
-          activityService.getActivityStatus(entity.getAccountId(), entity.getActivityId());
+          ActivityStatusDTO.builder()
+              .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
+              .remainingTimeMs(deploymentVerificationJobInstanceSummary.getRemainingTimeMs())
+              .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())
+              .activityId(entity.getCallbackId())
+              .status(deploymentVerificationJobInstanceSummary.getStatus())
+              .build();
       // send final progress even if the status is a final status.
       waitNotifyEngine.progressOn(entity.getCallbackId(),
-          CVNGResponseData.builder().activityId(entity.getActivityId()).activityStatusDTO(activityStatusDTO).build());
+          CVNGResponseData.builder()
+              .activityId(entity.getCallbackId())
+              .verifyStepExecutionId(entity.getCallbackId())
+              .activityStatusDTO(activityStatusDTO)
+              .build());
       if (ActivityVerificationStatus.getFinalStates().contains(activityStatusDTO.getStatus())) {
         waitNotifyEngine.doneWith(entity.getCallbackId(),
-            CVNGResponseData.builder().activityId(entity.getActivityId()).activityStatusDTO(activityStatusDTO).build());
+            CVNGResponseData.builder()
+                .activityId(entity.getCallbackId())
+                .verifyStepExecutionId(entity.getCallbackId())
+                .activityStatusDTO(activityStatusDTO)
+                .build());
         markDone(entity.getUuid());
       }
     }
@@ -84,7 +100,6 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
         deploymentTimeSeriesAnalysisService.getAnalysisSummary(Arrays.asList(stepTask.getVerificationJobInstanceId())));
     deploymentVerificationJobInstanceSummary.setLogsAnalysisSummary(deploymentLogAnalysisService.getAnalysisSummary(
         stepTask.getAccountId(), Arrays.asList(stepTask.getVerificationJobInstanceId())));
-
     return DeploymentActivitySummaryDTO.builder()
         .deploymentVerificationJobInstanceSummary(deploymentVerificationJobInstanceSummary)
         .serviceIdentifier(stepTask.getServiceIdentifier())
@@ -99,7 +114,7 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
     List<String> verificationJobInstanceIds = Arrays.asList(stepTask.getVerificationJobInstanceId());
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(verificationJobInstanceIds);
-    deploymentVerificationJobInstanceSummary.setActivityId(stepTask.getActivityId());
+    deploymentVerificationJobInstanceSummary.setActivityId(stepTask.getCallbackId());
     deploymentVerificationJobInstanceSummary.setActivityStartTime(stepTask.getCreatedAt());
     return deploymentVerificationJobInstanceSummary;
   }

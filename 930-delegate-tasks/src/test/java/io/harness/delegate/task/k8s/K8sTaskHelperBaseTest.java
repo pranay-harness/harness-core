@@ -26,6 +26,7 @@ import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.k8s.model.Kind.Service;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.rule.OwnerRule.ABHINAV2;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -67,12 +68,17 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.connector.CEFeatures;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -88,6 +94,7 @@ import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.GitOperationException;
 import io.harness.exception.HintException;
@@ -123,9 +130,11 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -146,6 +155,7 @@ import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ContainerStatus;
 import io.kubernetes.client.openapi.models.V1ContainerStatusBuilder;
@@ -233,6 +243,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private SecretDecryptionService mockSecretDecryptionService;
   @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Mock private KubernetesHelperService kubernetesHelperService;
+  @Mock private NGErrorHelper ngErrorHelper;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
   @Spy @InjectMocks private K8sTaskHelperBase spyK8sTaskHelperBase;
@@ -2646,5 +2657,96 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   private Object[] badUrlExceptions() {
     return new Object[] {
         new UrlNotProvidedException("URL not provided"), new UrlNotReachableException("URL not reachable")};
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testCEKubernetesClusterWithException() {
+    ConnectorConfigDTO connector =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                            .build())
+            .build();
+    doReturn(KUBERNETES_CONFIG)
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(any(KubernetesClusterConfigDTO.class));
+    doReturn(ErrorDetail.builder().message(DEFAULT).build()).when(ngErrorHelper).createErrorDetail(anyString());
+    doReturn(DEFAULT).when(ngErrorHelper).getErrorSummary(anyString());
+    doThrow(ApiException.class).when(mockKubernetesContainerService).validateMetricsServer(any(KubernetesConfig.class));
+
+    ConnectorValidationResult result =
+        k8sTaskHelperBase.validateCEKubernetesCluster(connector, DEFAULT, emptyList(), emptyList());
+
+    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
+    assertThat(result.getErrorSummary()).isEqualTo(DEFAULT);
+    assertThat(result.getErrors().get(0).getMessage()).isEqualTo(DEFAULT);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testCEKubernetesClusterWithErrors() throws Exception {
+    ConnectorConfigDTO connector =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                            .build())
+            .build();
+    CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
+        CEK8sDelegatePrerequisite.MetricsServerCheck.builder().isInstalled(false).build();
+    CEK8sDelegatePrerequisite.Rule rule = CEK8sDelegatePrerequisite.Rule.builder().build();
+
+    doReturn(KUBERNETES_CONFIG)
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(any(KubernetesClusterConfigDTO.class));
+    doReturn(metricsServerCheck)
+        .when(mockKubernetesContainerService)
+        .validateMetricsServer(any(KubernetesConfig.class));
+    doReturn(singletonList(rule))
+        .when(mockKubernetesContainerService)
+        .validateCEResourcePermissions(any(KubernetesConfig.class));
+    doReturn(emptyList())
+        .when(mockKubernetesContainerService)
+        .validateLightwingResourceExists(any(KubernetesConfig.class));
+    doReturn(emptyList())
+        .when(mockKubernetesContainerService)
+        .validateLightwingResourcePermissions(any(KubernetesConfig.class));
+
+    ConnectorValidationResult result = k8sTaskHelperBase.validateCEKubernetesCluster(
+        connector, DEFAULT, emptyList(), singletonList(CEFeatures.OPTIMIZATION));
+
+    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
+    assertThat(result.getErrors().size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testCEKubernetesCluster() {
+    ConnectorConfigDTO connector =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                            .build())
+            .build();
+    CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
+        CEK8sDelegatePrerequisite.MetricsServerCheck.builder().isInstalled(true).build();
+
+    doReturn(KUBERNETES_CONFIG)
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(any(KubernetesClusterConfigDTO.class));
+    doReturn(metricsServerCheck)
+        .when(mockKubernetesContainerService)
+        .validateMetricsServer(any(KubernetesConfig.class));
+    doReturn(emptyList())
+        .when(mockKubernetesContainerService)
+        .validateCEResourcePermissions(any(KubernetesConfig.class));
+
+    ConnectorValidationResult result =
+        k8sTaskHelperBase.validateCEKubernetesCluster(connector, DEFAULT, emptyList(), emptyList());
+
+    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
   }
 }

@@ -51,4 +51,14 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
     return PageableExecutionUtils.getPage(
         gitSyncErrors, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), GitSyncError.class));
   }
+
+  @Override
+  public GitSyncError find(Criteria criteria) {
+    Query query = query(criteria);
+    return mongoTemplate.findOne(query, GitSyncError.class);
+  }
+
+  public long count(Criteria criteria) {
+    return mongoTemplate.count(query(criteria), GitSyncError.class);
+  }
 }

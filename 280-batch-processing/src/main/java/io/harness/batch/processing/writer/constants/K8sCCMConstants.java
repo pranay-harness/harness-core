@@ -9,6 +9,7 @@ public class K8sCCMConstants {
   public static final String K8SV1_RELEASE_NAME = "harness.io/service-infra-id";
   public static final String OPERATING_SYSTEM = "beta.kubernetes.io/os";
   public static final String PREEMPTIBLE_KEY = "preemptible";
+  public static final String PREEMPTIBLE_NODE_KEY = "preemptible-node";
   public static final String REGION = "failure-domain.beta.kubernetes.io/region";
   public static final String ZONE = "failure-domain.beta.kubernetes.io/zone";
   public static final String INSTANCE_FAMILY = "beta.kubernetes.io/instance-type";

@@ -2,9 +2,11 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.BHAVYA;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -22,17 +24,24 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDetailsDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorDetailsDTO;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.repositories.gitSyncError.GitSyncErrorRepository;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -132,8 +141,8 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = BHAVYA)
   @Category(UnitTests.class)
   public void test_listGitToHarnessErrorsForACommit() {
-    gitSyncErrorService.save(buildDTO("filePath1", additionalErrorDetails));
-    gitSyncErrorService.save(buildDTO("filePath2", additionalErrorDetails));
+    gitSyncErrorService.save(buildDTO("filePath1", additionalErrorDetailsDTO));
+    gitSyncErrorService.save(buildDTO("filePath2", additionalErrorDetailsDTO));
     PageRequest pageRequest = PageRequest.builder().pageSize(10).pageIndex(0).build();
     List<GitSyncErrorDTO> dto =
         gitSyncErrorService
@@ -147,12 +156,61 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = BHAVYA)
   @Category(UnitTests.class)
   public void test_save() {
-    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetails);
-    GitSyncErrorDTO savedDto = gitSyncErrorService.save(dto);
-    assertThat(savedDto).isEqualTo(dto);
+    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
+    gitSyncErrorService.save(dto);
+    Optional<GitSyncErrorDTO> savedError =
+        gitSyncErrorService.getGitToHarnessError(accountId, commitId, repoUrl, branch, "filePath");
+    assertThat(savedError.isPresent()).isEqualTo(true);
+    assertThat(savedError.get()).isEqualTo(dto);
   }
 
-  private GitSyncErrorDTO buildDTO(String filepath, GitSyncErrorDetails additionalErrorDetails) {
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_saveAll() {
+    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
+    gitSyncErrorService.saveAll(Collections.singletonList(dto));
+    Iterable<GitSyncError> savedErrors = gitSyncErrorRepository.findAll();
+    assertThat(savedErrors.iterator().hasNext()).isEqualTo(true);
+    assertThat(savedErrors.iterator().next()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_markOverriddenErrors() {
+    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
+    gitSyncErrorService.save(dto);
+    Set<String> filePathsHavingError = new HashSet<>();
+    filePathsHavingError.add("filePath");
+    filePathsHavingError.add("filePath1");
+    gitSyncErrorService.markOverriddenErrors(accountId, repoUrl, branch, filePathsHavingError);
+    Optional<GitSyncErrorDTO> savedError =
+        gitSyncErrorService.getGitToHarnessError(accountId, commitId, repoUrl, branch, "filePath");
+    assertThat(savedError.isPresent()).isEqualTo(true);
+    assertThat(savedError.get().getStatus()).isEqualByComparingTo(GitSyncErrorStatus.OVERRIDDEN);
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_markResolvedErrors() {
+    GitSyncErrorDTO dto = buildDTO("filePath", additionalErrorDetailsDTO);
+    gitSyncErrorService.save(dto);
+    Set<String> filePathsWithoutError = new HashSet<>();
+    filePathsWithoutError.add("filePath");
+    filePathsWithoutError.add("filePath1");
+    gitSyncErrorService.markResolvedErrors(accountId, repoUrl, branch, filePathsWithoutError, "commitId1");
+    Optional<GitSyncErrorDTO> savedError =
+        gitSyncErrorService.getGitToHarnessError(accountId, commitId, repoUrl, branch, "filePath");
+    assertThat(savedError.isPresent()).isEqualTo(true);
+    GitToHarnessErrorDetailsDTO errorDetails =
+        (GitToHarnessErrorDetailsDTO) savedError.get().getAdditionalErrorDetails();
+    assertThat(savedError.get().getStatus()).isEqualByComparingTo(GitSyncErrorStatus.RESOLVED);
+    assertThat(errorDetails.getResolvedByCommitId()).isEqualTo("commitId1");
+  }
+
+  private GitSyncErrorDTO buildDTO(String filepath, GitSyncErrorDetailsDTO additionalErrorDetails) {
     return GitSyncErrorDTO.builder()
         .accountIdentifier(accountId)
         .errorType(errorType)
@@ -161,7 +219,7 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         .branchName(branch)
         .status(status)
         .failureReason(failureReason)
-        .additionalErrorDetails(additionalErrorDetailsDTO)
+        .additionalErrorDetails(additionalErrorDetails)
         .build();
   }
 
@@ -177,5 +235,72 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         .additionalErrorDetails(additionalErrorDetails)
         .createdAt(createdAt)
         .build();
+  }
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testRecordConnectivityIssue() {
+    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
+        repoUrl, branch, "Unable to connect to git provider");
+    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+    PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, repoId, branch, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isNotEmpty();
+    assertThat(gitSyncErrorList.getContent()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testListGitSyncErrors() {
+    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
+        repoUrl, branch, "Unable to connect to git provider");
+
+    gitSyncErrorService.recordConnectivityError(
+        accountId, orgId, projectId, GitSyncErrorType.FULL_SYNC, repoUrl, branch, "Unable to connect to git provider");
+
+    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.FULL_SYNC, "repoUrl1",
+        branch, "Unable to connect to git provider");
+
+    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+
+    PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, repoId, branch, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isNotEmpty();
+    assertThat(gitSyncErrorList.getContent()).hasSize(2);
+
+    gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isNotEmpty();
+    assertThat(gitSyncErrorList.getContent()).hasSize(3);
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void test_getErrorCount() {
+    long createdAt = OffsetDateTime.now().minusDays(12).toInstant().toEpochMilli();
+    gitSyncErrorRepository.save(build("filepath1", additionalErrorDetails, createdAt));
+    gitSyncErrorRepository.save(build("filePath2", additionalErrorDetails, createdAt));
+    GitSyncErrorCountDTO gitSyncErrorCountDTO =
+        gitSyncErrorService.getErrorCount(accountId, orgId, projectId, null, repoId, branch);
+    assertThat(gitSyncErrorCountDTO.getGitToHarnessErrorCount()).isEqualTo(2);
+    assertThat(gitSyncErrorCountDTO.getConnectivityErrorCount()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testListConnectivityErrorsForDefaultBranchesOfAllRepos() {
+    gitSyncErrorService.recordConnectivityError(accountId, orgId, projectId, GitSyncErrorType.CONNECTIVITY_ISSUE,
+        repoUrl, branch, "Unable to connect to git provider");
+    when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(YamlGitConfigDTO.builder().repo(repoUrl).branch(branch).build());
+    PageResponse<GitSyncErrorDTO> gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
+        accountId, orgId, projectId, null, null, new PageRequest(0, 10, new ArrayList<>()));
+    assertThat(gitSyncErrorList.getContent()).isNotEmpty();
+    assertThat(gitSyncErrorList.getContent()).hasSize(1);
   }
 }

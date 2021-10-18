@@ -2,7 +2,9 @@ package io.harness.cvng.client;
 
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface VerificationManagerService {
@@ -22,4 +24,7 @@ public interface VerificationManagerService {
       String connectorIdentifier, String namespace, String filter);
   List<String> checkCapabilityToGetKubernetesEvents(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
+
+  List<HarnessCDCurrentGenEventMetadata> getCurrentGenEvents(String accountId, String harnessApplicationId,
+      String harnessEnvironmentId, String harnessServiceId, Instant startTime, Instant endTime);
 }

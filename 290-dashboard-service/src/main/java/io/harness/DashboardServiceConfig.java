@@ -7,9 +7,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 import io.dropwizard.Configuration;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.Path;
@@ -27,6 +29,7 @@ public class DashboardServiceConfig extends Configuration {
   @JsonProperty("ciServiceClientConfig") private ServiceHttpClientConfig ciServiceClientConfig;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
   @JsonProperty("secrets") private DashboardSecretsConfig dashboardSecretsConfig;
+  @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
 
   public static Collection<Class<?>> getResourceClasses() {
     // todo @Deepak: Add the packages here in the reflection

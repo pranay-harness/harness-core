@@ -14,10 +14,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.Delegate.DelegateKeys;
-import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
-import io.harness.ff.FeatureFlagService;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.app.MainConfiguration;
@@ -31,6 +28,7 @@ import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.utils.EmailHelperUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -71,7 +69,7 @@ public class AlertCheckJob implements Job {
   @Inject private EmailHelperUtils emailHelperUtils;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private DelegateConnectionDao delegateConnectionDao;
-  @Inject private FeatureFlagService featureFlagService;
+  @Inject private DelegateService delegateService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private Clock clock;
 
@@ -117,7 +115,7 @@ public class AlertCheckJob implements Job {
   @VisibleForTesting
   void executeInternal(String accountId) {
     log.info("Checking account " + accountId + " for alert conditions.");
-    List<Delegate> delegates = getDelegatesForAccount(accountId);
+    List<Delegate> delegates = delegateService.getNonDeletedDelegatesForAccount(accountId);
 
     if (isEmpty(delegates)) {
       Account account = wingsPersistence.get(Account.class, accountId);
@@ -137,14 +135,6 @@ public class AlertCheckJob implements Job {
       checkIfAnyDelegatesAreDown(accountId, delegates);
     }
     checkForInvalidValidSMTP(accountId);
-  }
-
-  private List<Delegate> getDelegatesForAccount(String accountId) {
-    return wingsPersistence.createQuery(Delegate.class)
-        .filter(DelegateKeys.accountId, accountId)
-        .field(DelegateKeys.status)
-        .notEqual(DelegateInstanceStatus.DELETED)
-        .asList();
   }
 
   @VisibleForTesting

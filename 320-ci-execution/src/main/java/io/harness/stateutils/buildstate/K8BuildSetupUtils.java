@@ -29,6 +29,7 @@ import static io.harness.common.CIExecutionConstants.AWS_CODE_COMMIT_URL_REGEX;
 import static io.harness.common.CIExecutionConstants.BUILD_NUMBER_ATTR;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_CI_INDIRECT_LOG_UPLOAD_FF;
 import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
@@ -64,6 +65,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
@@ -112,6 +114,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.ff.CIFeatureFlagService;
 import io.harness.git.GitClientHelper;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logserviceclient.CILogServiceUtils;
@@ -161,6 +164,7 @@ public class K8BuildSetupUtils {
   @Inject private ConnectorUtils connectorUtils;
   @Inject private InternalContainerParamsProvider internalContainerParamsProvider;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
+  @Inject private CIFeatureFlagService featureFlagService;
   @Inject CILogServiceUtils logServiceUtils;
   @Inject TIServiceUtils tiServiceUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
@@ -312,8 +316,26 @@ public class K8BuildSetupUtils {
     }
 
     CodebaseSweepingOutput codebaseSweeping = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+
+    /* Bitbucket SAAS does not generate refs/pull-requests/* which requires us to do this special handling.
+      Override commit ref to source branch instead of pull request ref
+     */
+    String commitRef = codebaseSweeping.getCommitRef();
+    if (isNotEmpty(codebaseSweeping.getPullRequestLink())
+        && codebaseSweeping.getPullRequestLink().contains("bitbucket.org")) {
+      commitRef = format("+refs/heads/%s", codebaseSweeping.getSourceBranch());
+    }
+
+    if (isNotEmpty(commitRef)) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_REF, commitRef);
+    }
+
     if (isNotEmpty(codebaseSweeping.getBranch())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
+    }
+
+    if (isNotEmpty(codebaseSweeping.getEvent())) {
+      codebaseRuntimeVars.put(DRONE_BUILD_EVENT, codebaseSweeping.getEvent());
     }
 
     if (!isEmpty(codebaseSweeping.getTag())) {
@@ -329,9 +351,6 @@ public class K8BuildSetupUtils {
       codebaseRuntimeVars.put(DRONE_SOURCE_BRANCH, codebaseSweeping.getSourceBranch());
     }
 
-    if (!isEmpty(codebaseSweeping.getSourceBranch())) {
-      codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getSourceBranch());
-    }
     if (!isEmpty(codebaseSweeping.getGitUserEmail())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_AUTHOR_EMAIL, codebaseSweeping.getGitUserEmail());
     }
@@ -344,9 +363,6 @@ public class K8BuildSetupUtils {
     }
     if (isNotEmpty(codebaseSweeping.getBaseCommitSha())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_BEFORE, codebaseSweeping.getBaseCommitSha());
-    }
-    if (isNotEmpty(codebaseSweeping.getCommitRef())) {
-      codebaseRuntimeVars.put(DRONE_COMMIT_REF, codebaseSweeping.getCommitRef());
     }
     if (isNotEmpty(codebaseSweeping.getCommitSha())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_SHA, codebaseSweeping.getCommitSha());
@@ -630,6 +646,12 @@ public class K8BuildSetupUtils {
 
     // Add runtime git vars, i.e. manual pull request execution data.
     envVars.putAll(runtimeCodebaseVars);
+
+    // Check whether FF to enable blob upload to log service (as opposed to directly blob storage) is enabled
+    if (featureFlagService.isEnabled(FeatureName.CI_INDIRECT_LOG_UPLOAD, accountID)) {
+      log.info("Indirect log upload FF is enabled for accountID: {}", accountID);
+      envVars.put(HARNESS_CI_INDIRECT_LOG_UPLOAD_FF, "true");
+    }
 
     // Add other environment variables needed in the containers
     envVars.put(HARNESS_WORKSPACE, workDirPath);

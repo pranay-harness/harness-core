@@ -2,13 +2,9 @@ package io.harness.resourcegroup.model;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import static java.util.Collections.singleton;
-
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.Scope;
-import io.harness.beans.ScopeLevel;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
@@ -19,11 +15,9 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
-import io.harness.utils.ScopeUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -114,22 +108,5 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @Override
   public String getUuid() {
     return this.id;
-  }
-
-  public static ResourceGroup getHarnessManagedResourceGroup(Scope scope) {
-    return builder()
-        .accountIdentifier(scope.getAccountIdentifier())
-        .orgIdentifier(scope.getOrgIdentifier())
-        .projectIdentifier(scope.getProjectIdentifier())
-        .tags(Collections.emptyList())
-        .name("All Resources")
-        .identifier(ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER)
-        .description(String.format("All the resources in this %s are included in this resource group.",
-            ScopeUtils.getMostSignificantScope(scope).toString().toLowerCase()))
-        .resourceSelectors(Collections.emptyList())
-        .allowedScopeLevels(singleton(ScopeLevel.of(scope).toString().toLowerCase()))
-        .fullScopeSelected(true)
-        .harnessManaged(true)
-        .build();
   }
 }

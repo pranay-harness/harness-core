@@ -1425,8 +1425,9 @@ go_repository(
 go_repository(
     name = "com_github_docker_cli",
     importpath = "github.com/docker/cli",
-    sum = "h1:2HQmlpI3yI9deH18Q6xiSOIjXD4sLI55Y/gfpa8/558=",
-    version = "v0.0.0-20191017083524-a8ff7f821017",
+    strip_prefix = "cli-a8ff7f821017ae3d5347392c82718d6cba221681",
+    type = "zip",
+    urls = ["https://github.com/docker/cli/archive/a8ff7f821017ae3d5347392c82718d6cba221681.zip"],
 )
 
 go_repository(
@@ -3008,96 +3009,108 @@ go_repository(
     name = "io_k8s_api",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/api",
-    sum = "h1:ud1c3W3YNzGd6ABJlbFfKXBKXO+1KdGfcgGGNgFR03E=",
-    version = "v0.20.1",
+    strip_prefix = "api-0.20.1",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/api/archive/refs/tags/v0.20.1.zip"],
 )
 
 go_repository(
     name = "io_k8s_apimachinery",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/apimachinery",
-    sum = "h1:LAhz8pKbgR8tUwn7boK+b2HZdt7MiTu2mkYtFMUjTRQ=",
-    version = "v0.20.1",
+    strip_prefix = "apimachinery-0.20.1",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/apimachinery/archive/refs/tags/v0.20.1.zip"],
 )
 
 go_repository(
     name = "io_k8s_apiserver",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/apiserver",
-    sum = "h1:Au4kMn8sb1zFdyKqc8iMHLsYLxRI6Y+iAhRNKKQtlBY=",
-    version = "v0.18.8",
+    strip_prefix = "apiserver-0.18.8",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/apiserver/archive/refs/tags/v0.18.8.zip"],
 )
 
 go_repository(
     name = "io_k8s_client_go",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/client-go",
-    sum = "h1:SdbLpIxk5j5YbFr1b7fq8S7mDgDjYmUxSbszyoesoDM=",
-    version = "v0.18.8",
+    strip_prefix = "client-go-0.18.8",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/client-go/archive/refs/tags/v0.18.8.zip"],
 )
 
 go_repository(
     name = "io_k8s_cloud_provider",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/cloud-provider",
-    sum = "h1:XNCJIzKFtoXhn6cyyXe7JWde0KjK6o8vo2Dtat7hb6Q=",
-    version = "v0.18.8",
+    strip_prefix = "cloud-provider-0.18.8",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/cloud-provider/archive/refs/tags/v0.18.8.zip"],
 )
 
 go_repository(
     name = "io_k8s_code_generator",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/code-generator",
-    sum = "h1:pTwl3rLB1fUyxmvEzmVPMM0tBSdUehd7z+bDzpj4lPE=",
-    version = "v0.17.2",
+    strip_prefix = "code-generator-0.17.2",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/code-generator/archive/refs/tags/v0.17.2.zip"],
 )
 
 go_repository(
     name = "io_k8s_component_base",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/component-base",
-    sum = "h1:BW5CORobxb6q5mb+YvdwQlyXXS6NVH5fDXWbU7tf2L8=",
-    version = "v0.18.8",
+    strip_prefix = "component-base-0.18.8",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/component-base/archive/refs/tags/v0.18.8.zip"],
 )
 
 go_repository(
     name = "io_k8s_csi_translation_lib",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/csi-translation-lib",
-    sum = "h1:HdyTgN4+O0zPDsF3rDGVYNwuhsG16HLQvC7lKuIxBq4=",
-    version = "v0.18.8",
+    strip_prefix = "csi-translation-lib-0.18.8",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/csi-translation-lib/archive/refs/tags/v0.18.8.zip"],
 )
 
 go_repository(
     name = "io_k8s_gengo",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/gengo",
-    sum = "h1:sAvhNk5RRuc6FNYGqe7Ygz3PSo/2wGWbulskmzRX8Vs=",
-    version = "v0.0.0-20200413195148-3a45101e95ac",
+    strip_prefix = "gengo-3a45101e95ac3a2015e6bf3e41269d624610c946",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/gengo/archive/3a45101e95ac3a2015e6bf3e41269d624610c946.zip"],
 )
 
 go_repository(
     name = "io_k8s_klog",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/klog",
-    sum = "h1:Pt+yjF5aB1xDSVbau4VsWe+dQNzA0qv1LlXdC2dF6Q8=",
-    version = "v1.0.0",
+    strip_prefix = "klog-1.0.0",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/klog/archive/refs/tags/v1.0.0.zip"],
 )
 
 go_repository(
     name = "io_k8s_kube_openapi",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/kube-openapi",
-    sum = "h1:sOHNzJIkytDF6qadMNKhhDRpc6ODik8lVC6nOur7B2c=",
-    version = "v0.0.0-20201113171705-d219536bb9fd",
+    strip_prefix = "kube-openapi-d219536bb9fd63731fa65ca4b42f14bc2f10c61b",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/kube-openapi/archive/d219536bb9fd63731fa65ca4b42f14bc2f10c61b.zip"],
 )
 
 go_repository(
     name = "io_k8s_legacy_cloud_providers",
     build_file_proto_mode = "disable_global",
     importpath = "k8s.io/legacy-cloud-providers",
-    sum = "h1:IGASZSYJjkMk5d1HU9+zskZqoRG3zccVzvA3hV7hCL0=",
-    version = "v0.18.8",
+    strip_prefix = "legacy-cloud-providers-0.18.8",
+    type = "zip",
+    urls = ["https://github.com/kubernetes/legacy-cloud-providers/archive/refs/tags/v0.18.8.zip"],
 )
 
 go_repository(
@@ -4476,8 +4489,8 @@ plain_artifacts = [
     "guru.nidi:graphviz-java:0.16.3",
     "guru.nidi:graphviz-rough:0.16.3",
     "info.jerrinot:subzero-core:0.7",
-    "io.cloudsoft.windows:winrm4j-client:0.9.0-SNAPSHOT",
-    "io.cloudsoft.windows:winrm4j:0.9.0-SNAPSHOT",
+    "io.cloudsoft.windows:winrm4j-client:0.12.3",
+    "io.cloudsoft.windows:winrm4j:0.12.3",
     "io.confluent:common-config:5.5.1",
     "io.confluent:common-config:5.5.1",
     "io.confluent:common-utils:5.5.1",
@@ -4660,16 +4673,16 @@ plain_artifacts = [
     "org.apache.commons:commons-math3:3.6.1",
     "org.apache.commons:commons-text:1.2",
     "org.apache.cxf:cxf-core:3.3.10",
-    "org.apache.cxf:cxf-rt-bindings-soap:3.3.5",
-    "org.apache.cxf:cxf-rt-bindings-xml:3.3.5",
-    "org.apache.cxf:cxf-rt-databinding-jaxb:3.3.5",
-    "org.apache.cxf:cxf-rt-frontend-jaxws:3.3.5",
-    "org.apache.cxf:cxf-rt-frontend-simple:3.3.5",
-    "org.apache.cxf:cxf-rt-transports-http-hc:3.3.5",
-    "org.apache.cxf:cxf-rt-transports-http:3.3.5",
-    "org.apache.cxf:cxf-rt-ws-addr:3.3.5",
-    "org.apache.cxf:cxf-rt-ws-policy:3.3.5",
-    "org.apache.cxf:cxf-rt-wsdl:3.3.5",
+    "org.apache.cxf:cxf-rt-bindings-soap:3.3.10",
+    "org.apache.cxf:cxf-rt-bindings-xml:3.3.10",
+    "org.apache.cxf:cxf-rt-databinding-jaxb:3.3.10",
+    "org.apache.cxf:cxf-rt-frontend-jaxws:3.3.10",
+    "org.apache.cxf:cxf-rt-frontend-simple:3.3.10",
+    "org.apache.cxf:cxf-rt-transports-http-hc:3.3.10",
+    "org.apache.cxf:cxf-rt-transports-http:3.3.10",
+    "org.apache.cxf:cxf-rt-ws-addr:3.3.10",
+    "org.apache.cxf:cxf-rt-ws-policy:3.3.10",
+    "org.apache.cxf:cxf-rt-wsdl:3.3.10",
     "org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1",
     "org.apache.geronimo.specs:geronimo-ws-metadata_2.0_spec:1.1.3",
     "org.apache.httpcomponents:fluent-hc:4.5.13",
@@ -4758,8 +4771,9 @@ plain_artifacts = [
     "org.eclipse.jetty:jetty-util:9.4.41.v20210516",
     "org.eclipse.jetty:jetty-webapp:9.4.41.v20210516",
     "org.eclipse.jetty:jetty-xml:9.4.41.v20210516",
-    "org.eclipse.jgit:org.eclipse.jgit.http.apache:5.3.0.201903130848-r",
-    "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
+    "org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:jar:5.13.0.202109080827-r",
+    "org.eclipse.jgit:org.eclipse.jgit.http.apache:5.13.0.202109080827-r",
+    "org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r",
     "org.elasticsearch.client:elasticsearch-rest-client:7.7.0",
     "org.elasticsearch.client:elasticsearch-rest-high-level-client:7.7.0",
     "org.elasticsearch.plugin:aggs-matrix-stats-client:7.7.0",

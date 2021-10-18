@@ -1,6 +1,5 @@
 package io.harness.engine.interrupts.handlers.publisher;
 
-import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.data.structure.CollectionUtils;
@@ -15,10 +14,8 @@ import io.harness.pms.contracts.interrupts.InterruptEvent.Builder;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.InterruptEventUtils;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
 
 public class RedisInterruptEventPublisher implements InterruptEventPublisher {
   @Inject private NodeExecutionService nodeExecutionService;
@@ -35,8 +32,7 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
                           .setType(interruptType)
                           .putAllMetadata(CollectionUtils.emptyIfNull(interrupt.getMetadata()))
                           .setNotifyId(generateUuid())
-                          .setStepParameters(ByteString.copyFromUtf8(
-                              emptyIfNull(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))));
+                          .setStepParameters(nodeExecution.getResolvedStepParametersBytes());
     InterruptEvent event = populateResponse(nodeExecution, builder);
 
     eventSender.sendEvent(

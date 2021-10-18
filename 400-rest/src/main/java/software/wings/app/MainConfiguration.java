@@ -195,6 +195,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
+  @JsonProperty("eventListenersCountConfig") private EventListenersCountConfig eventListenersCountConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

@@ -295,6 +295,33 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
     assertThat(requiredPermissions.get(0).getMessage()).isEqualTo(REASON);
   }
 
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testValidateCEPermissions2WithOnlyAllowedParamSet() {
+    v1SubjectAccessReviewStatus = v1SubjectAccessReviewStatus.allowed(false);
+
+    stubFor(postForPathAccessReviewCall().willReturn(
+        aResponse().withStatus(200).withBody(GSON.toJson(v1SelfSubjectAccessReview))));
+
+    List<CEK8sDelegatePrerequisite.Rule> requiredPermissions = k8sResourceValidator.validateCEPermissions2(apiClient);
+
+    WireMock.verify(postRequestedFor(urlPathEqualTo("/apis/authorization.k8s.io/v1/selfsubjectaccessreviews")));
+    assertThat(requiredPermissions).isNotNull();
+    assertThat(requiredPermissions).isNotEmpty();
+
+    // This is the very first out of all permissions we verify in order
+    assertThat(requiredPermissions.get(0).getApiGroups()).isEqualTo("");
+    assertThat(requiredPermissions.get(0).getResources()).isEqualTo("pods");
+    assertThat(requiredPermissions.get(0).getVerbs()).isEqualTo("get");
+
+    // This is the last out of all permissions we verify in order
+    int lastIndex = requiredPermissions.size() - 1;
+    assertThat(requiredPermissions.get(lastIndex).getApiGroups()).isEqualTo("storage.k8s.io");
+    assertThat(requiredPermissions.get(lastIndex).getResources()).isEqualTo("storageclasses");
+    assertThat(requiredPermissions.get(lastIndex).getVerbs()).isEqualTo("watch");
+  }
+
   private static MappingBuilder postForPathAccessReviewCall() {
     return post(urlPathMatching("^/apis/authorization.k8s.io/v1/selfsubjectaccessreviews" + URL_REGEX_SUFFIX));
   }

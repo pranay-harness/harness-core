@@ -118,6 +118,7 @@ public class MonitoringSourcePerpetualTaskServiceImpl
             .connectorIdentifier(monitoringSourcePerpetualTask.getConnectorIdentifier())
             .sourceIdentifier(monitoringSourcePerpetualTask.getMonitoringSourceIdentifier())
             .dataCollectionType(DataCollectionType.CV)
+            .dataCollectionWorkerId(getWorkerId(monitoringSourcePerpetualTask))
             .build());
   }
 

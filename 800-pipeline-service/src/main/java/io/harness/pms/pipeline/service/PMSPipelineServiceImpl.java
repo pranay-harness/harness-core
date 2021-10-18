@@ -275,28 +275,32 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       String module = request.getModule();
       String category = request.getCategory();
       List<StepInfo> stepInfoList = serviceInstanceNameToSupportedSteps.get(module).getStepTypes();
+      String displayModuleName = serviceInstanceNameToSupportedSteps.get(module).getModuleName();
       if (EmptyPredicate.isEmpty(stepInfoList)) {
         continue;
       }
+      StepCategory moduleCategory;
       if (EmptyPredicate.isNotEmpty(category)) {
-        stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategoryV2(
-            module, category, stepInfoList, accountId));
+        moduleCategory = pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategoryV2(
+            displayModuleName, category, stepInfoList, accountId);
       } else {
-        stepCategory.addStepCategory(
-            pmsPipelineServiceStepHelper.calculateStepsForCategory(module, stepInfoList, accountId));
+        moduleCategory =
+            pmsPipelineServiceStepHelper.calculateStepsForCategory(displayModuleName, stepInfoList, accountId);
+      }
+      stepCategory.addStepCategory(moduleCategory);
+      if (request.isShouldShowCommonSteps()) {
+        pmsPipelineServiceStepHelper.addStepsToStepCategory(
+            moduleCategory, commonStepInfo.getCommonSteps(request.getCommonStepCategory()), accountId);
       }
     }
-    if (stepPalleteFilterWrapper.isShouldShowCommonSteps()) {
-      stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForCategory(
-          "Common", commonStepInfo.getCommonSteps(stepPalleteFilterWrapper.getCommonStepCategory()), accountId));
-    }
+
     return stepCategory;
   }
 
   @Override
-  public VariableMergeServiceResponse createVariablesResponse(PipelineEntity pipelineEntity) {
+  public VariableMergeServiceResponse createVariablesResponse(String yaml) {
     try {
-      return variableCreatorMergeService.createVariablesResponse(pipelineEntity.getYaml());
+      return variableCreatorMergeService.createVariablesResponse(yaml);
     } catch (Exception ex) {
       log.error("Error happened while creating variables for pipeline:", ex);
       throw new InvalidRequestException(

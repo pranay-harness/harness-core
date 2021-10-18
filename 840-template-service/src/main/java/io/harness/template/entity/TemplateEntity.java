@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.encryption.Scope;
@@ -65,7 +66,7 @@ public class TemplateEntity
   @NotEmpty String accountId;
   @Wither @Trimmed String orgIdentifier;
   @Wither @Trimmed String projectIdentifier;
-  @NotEmpty String identifier;
+  @NotEmpty @EntityIdentifier String identifier;
 
   @Wither @EntityName String name;
   @Wither @Size(max = 1024) String description;

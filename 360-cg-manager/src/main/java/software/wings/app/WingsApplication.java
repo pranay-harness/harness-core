@@ -58,6 +58,7 @@ import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
+import io.harness.dms.DmsModule;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -75,6 +76,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.insights.DelegateInsightsSummaryJob;
+import io.harness.iterator.DelegateTaskExpiryCheckIterator;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
@@ -441,7 +443,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerWaitEnginePublishers(injector);
     if (isManager()) {
-      registerQueueListeners(injector);
+      registerQueueListeners(configuration, injector);
     }
 
     // Schedule jobs
@@ -710,6 +712,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         return MANAGER.getServiceId();
       }
     });
+    modules.add(DmsModule.getInstance(shouldEnableDelegateMgmt(configuration)));
   }
 
   private void registerEventConsumers(final Injector injector) {
@@ -910,7 +913,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
-  private void registerQueueListeners(Injector injector) {
+  private void registerQueueListeners(MainConfiguration configuration, Injector injector) {
     log.info("Initializing queue listeners...");
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
@@ -920,14 +923,20 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     queueListenerController.register(injector.getInstance(ArtifactCollectEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(DeploymentEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(InstanceEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(DeploymentTimeSeriesEventListener.class), 2);
+    queueListenerController.register(injector.getInstance(DeploymentEventListener.class),
+        configuration.getEventListenersCountConfig().getDeploymentEventListenerCount());
+    queueListenerController.register(injector.getInstance(InstanceEventListener.class),
+        configuration.getEventListenersCountConfig().getInstanceEventListenerCount());
+    queueListenerController.register(injector.getInstance(DeploymentTimeSeriesEventListener.class),
+        configuration.getEventListenersCountConfig().getDeploymentTimeSeriesEventListenerCount());
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
-    queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(ExecutionEventListener.class),
+        configuration.getEventListenersCountConfig().getExecutionEventListenerCount());
     queueListenerController.register(injector.getInstance(SecretMigrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class),
+        configuration.getEventListenersCountConfig().getGeneralNotifyEventListenerCount());
+    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class),
+        configuration.getEventListenersCountConfig().getOrchestrationNotifyEventListenerCount());
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
   }
 
@@ -1114,6 +1123,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
+    injector.getInstance(DelegateTaskExpiryCheckIterator.class).registerIterators();
   }
 
   public static void registerIteratorsManager(Injector injector) {

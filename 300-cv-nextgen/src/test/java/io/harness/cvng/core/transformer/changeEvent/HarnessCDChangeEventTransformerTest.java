@@ -7,7 +7,7 @@ import static org.mockito.Mockito.any;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
-import io.harness.cvng.activity.entities.HarnessCDActivity;
+import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.HarnessCDEventMetadata;
 import io.harness.cvng.client.NextGenService;
@@ -46,7 +46,7 @@ public class HarnessCDChangeEventTransformerTest {
   @Category(UnitTests.class)
   public void testGetEntity() {
     ChangeEventDTO changeEventDTO = builderFactory.getHarnessCDChangeEventDTOBuilder().build();
-    HarnessCDActivity harnessCDActivity = harnessCDChangeEventTransformer.getEntity(changeEventDTO);
+    DeploymentActivity harnessCDActivity = harnessCDChangeEventTransformer.getEntity(changeEventDTO);
     verifyEqual(harnessCDActivity, changeEventDTO);
   }
 
@@ -54,7 +54,7 @@ public class HarnessCDChangeEventTransformerTest {
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testGetMetadata() {
-    HarnessCDActivity harnessCDActivity = builderFactory.getHarnessCDActivityBuilder().build();
+    DeploymentActivity harnessCDActivity = builderFactory.getDeploymentActivityBuilder().build();
     ChangeEventDTO changeEventDTO = harnessCDChangeEventTransformer.getDTO(harnessCDActivity);
     verifyEqual(harnessCDActivity, changeEventDTO);
     assertThat(changeEventDTO.getServiceName()).isEqualTo(serviceName);
@@ -62,7 +62,7 @@ public class HarnessCDChangeEventTransformerTest {
     assertThat(harnessCDActivity.getUuid()).isEqualTo(changeEventDTO.getId());
   }
 
-  private void verifyEqual(HarnessCDActivity harnessCDActivity, ChangeEventDTO changeEventDTO) {
+  private void verifyEqual(DeploymentActivity harnessCDActivity, ChangeEventDTO changeEventDTO) {
     assertThat(harnessCDActivity.getAccountId()).isEqualTo(changeEventDTO.getAccountId());
     assertThat(harnessCDActivity.getOrgIdentifier()).isEqualTo(changeEventDTO.getOrgIdentifier());
     assertThat(harnessCDActivity.getProjectIdentifier()).isEqualTo(changeEventDTO.getProjectIdentifier());

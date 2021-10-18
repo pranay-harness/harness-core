@@ -134,7 +134,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
           k8EventHandler.stopEventWatch(watch);
         }
 
-        k8sTaskResponse = CiK8sTaskResponse.builder().podStatus(podStatus).podName(podName).build();
+        k8sTaskResponse =
+            CiK8sTaskResponse.builder().podStatus(podStatus).podName(podName).podNamespace(namespace).build();
         boolean isPodRunning = podStatus.getStatus() == RUNNING;
         if (isPodRunning) {
           result = K8sTaskExecutionResponse.builder()

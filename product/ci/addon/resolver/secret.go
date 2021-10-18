@@ -13,7 +13,11 @@ const (
 )
 
 var (
-	secretRegex = regexp.MustCompile(`\${ngSecretManager.obtain\("([^"]*)", [^\)]*\)}`)
+	// Allowed values for the regex:
+	// 1. ${ngSecretManager.obtain(\"account.testSecret\", 12345)}
+	// 2. ${ngSecretManager.obtain(\\\\\\\"account.testSecret\\\\\\\", 115)}
+	// 2. ${ngSecretManager.obtain("account.testSecret", 12345)}
+	secretRegex = regexp.MustCompile(`\${ngSecretManager.obtain\((\\+|)"([^\\"]*)(\\+|)", [^\)]*\)}`)
 )
 
 // ResolveSecretInList replaces secrets in the given list
@@ -52,8 +56,8 @@ func ResolveSecretInString(expr string) (string, error) {
 	resolved := expr
 	matches := secretRegex.FindAllStringSubmatch(expr, -1)
 	for _, v := range matches {
-		if len(v) == 2 {
-			env, err := getSecretEnvVal(v[1])
+		if len(v) == 4 {
+			env, err := getSecretEnvVal(v[2])
 			if err != nil {
 				return "", err
 			}

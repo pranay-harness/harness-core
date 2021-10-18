@@ -1,18 +1,24 @@
 package io.harness.batch.processing.tasklet.util;
 
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
 public class InstanceMetaDataUtils {
+  private static final String AWS_SPOT_INSTANCE = "spot";
+  private static final String AZURE_SPOT_INSTANCE = "spot";
+
   public static String getValueForKeyFromInstanceMetaData(@NotNull String metaDataKey, InstanceData instanceData) {
     return getValueForKeyFromInstanceMetaData(metaDataKey, instanceData.getMetaData());
   }
@@ -49,5 +55,56 @@ public class InstanceMetaDataUtils {
     if (null != nodePoolValue) {
       metaData.put(InstanceMetaDataConstants.NODE_POOL_NAME, nodePoolValue);
     }
+  }
+
+  public static boolean checkIfKeyExistsAndIsTrue(@NonNull String key, @NonNull Map<String, String> labelsMap) {
+    if (labelsMap.containsKey(key)) {
+      if ("true".equalsIgnoreCase(labelsMap.get(key))) {
+        return true;
+      } else if ("false".equalsIgnoreCase(labelsMap.get(key))) {
+        return false;
+      } else {
+        log.warn("Fix it, got unexpected value for key {}: [{}], labelsMap: {}", key, labelsMap.get(key), labelsMap);
+      }
+    }
+
+    return false;
+  }
+
+  @NotNull
+  public static InstanceCategory getInstanceCategory(
+      @NonNull CloudProvider k8SCloudProvider, @NonNull Map<String, String> labelsMap) {
+    InstanceCategory instanceCategory = InstanceCategory.ON_DEMAND;
+
+    switch (k8SCloudProvider) {
+      case GCP:
+        if (checkIfKeyExistsAndIsTrue(K8sCCMConstants.PREEMPTIBLE_KEY, labelsMap)) {
+          instanceCategory = InstanceCategory.SPOT;
+        } else if (checkIfKeyExistsAndIsTrue(K8sCCMConstants.PREEMPTIBLE_NODE_KEY, labelsMap)) {
+          instanceCategory = InstanceCategory.SPOT;
+        }
+        break;
+      case AWS:
+        boolean isPreemptiable = labelsMap.keySet()
+                                     .stream()
+                                     .filter(key
+                                         -> key.contains(K8sCCMConstants.AWS_LIFECYCLE_KEY)
+                                             || key.contains(K8sCCMConstants.AWS_CAPACITY_TYPE_KEY))
+                                     .anyMatch(key -> labelsMap.get(key).toLowerCase().contains(AWS_SPOT_INSTANCE));
+
+        if (isPreemptiable) {
+          instanceCategory = InstanceCategory.SPOT;
+        }
+        break;
+      case AZURE:
+        if (labelsMap.containsKey(K8sCCMConstants.AZURE_LIFECYCLE_KEY)
+            && labelsMap.get(K8sCCMConstants.AZURE_LIFECYCLE_KEY).toLowerCase().contains(AZURE_SPOT_INSTANCE)) {
+          instanceCategory = InstanceCategory.SPOT;
+        }
+        break;
+      default:
+    }
+
+    return instanceCategory;
   }
 }
