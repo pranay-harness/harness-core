@@ -73,6 +73,14 @@ mongo:
 accountConfig:
   deploymentClusterName: ""
 
+ngIteratorsConfig:
+  ngVaultSecretManagerRenewalIteratorConfig:
+    threadPoolSize: ${NG_VAULT_ITERATOR_THREAD_POOL_SIZE:-5}
+  webhookEventProcessingServiceIteratorConfig:
+    threadPoolSize: ${WEBHOOK_EVENT_PROCESSING_SERVICE_THREAD_SIZE:-5}
+  gitFullSyncEntityIteratorConfig:
+    threadPoolSize: ${GIT_FULLSYNC_ENTITY_ITERATOR_THREAD_POOL_SIZE:-5}
+
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
 #uri : mongodb:  // localhost:27017/cd-nextgen-secondary
