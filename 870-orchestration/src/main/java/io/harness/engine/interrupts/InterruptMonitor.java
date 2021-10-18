@@ -27,6 +27,7 @@ import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -63,11 +64,11 @@ public class InterruptMonitor implements Handler<Interrupt> {
   @Inject private AbortHelper abortHelper;
   @Inject private ExpiryHelper expiryHelper;
 
-  public void registerIterators() {
+  public void registerIterators(IteratorConfig iteratorConfig) {
     PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()
                                               .name("InterruptMonitor")
-                                              .poolSize(1)
-                                              .interval(ofMinutes(TARGET_INTERVAL_MINUTES))
+                                              .poolSize(iteratorConfig.getThreadPoolCount())
+                                              .interval(ofSeconds(iteratorConfig.getTargetIntervalInSeconds()))
                                               .build();
 
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(executorOptions, InterruptMonitor.class,
