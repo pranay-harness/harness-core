@@ -291,34 +291,6 @@ public class K8sNodeInfoEventTaskletTest extends BaseTaskletTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  public void shouldReturnAwsSpotInstance() {
-    Map<String, String> label = new HashMap<>();
-    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
-    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
-    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
-    label.put(K8sCCMConstants.AWS_LIFECYCLE_KEY, "Ec2");
-    label.put("kubernetes.io/lifecycle", "spot");
-    InstanceCategory instanceCategory = k8sNodeInfoTasklet.getInstanceCategory(CloudProvider.AWS, label);
-    assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldReturnAwsSpotInstance2() {
-    Map<String, String> label = new HashMap<>();
-    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
-    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
-    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
-    label.put(K8sCCMConstants.AWS_LIFECYCLE_KEY, "Ec2");
-    label.put("eks.amazonaws.com/capacityType", "spot");
-    InstanceCategory instanceCategory = k8sNodeInfoTasklet.getInstanceCategory(CloudProvider.AWS, label);
-    assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
   public void shouldReturnCloudProviderInstance() {
     String providerId = "aws:///eu-west-2c/i-072ecaefff88547de";
     String cloudProviderInstanceId = k8sNodeInfoTasklet.getCloudProviderInstanceId(providerId, CloudProvider.AWS);
@@ -339,31 +311,6 @@ public class K8sNodeInfoEventTaskletTest extends BaseTaskletTest {
   public void shouldReturnCloudProviderInstanceAzureVM() {
     String cloudProviderInstanceId = k8sNodeInfoTasklet.getCloudProviderInstanceId(PROVIDER_ID_AZURE_VM, AZURE);
     assertThat(cloudProviderInstanceId).isEqualTo(PROVIDER_ID_AZURE_VM.toLowerCase());
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldReturnAzureSpotInstance() {
-    Map<String, String> label = new HashMap<>();
-    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
-    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
-    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
-    label.put(K8sCCMConstants.AZURE_LIFECYCLE_KEY, "spot");
-    InstanceCategory instanceCategory = k8sNodeInfoTasklet.getInstanceCategory(CloudProvider.AZURE, label);
-    assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldReturnAzureOndemandInstance() {
-    Map<String, String> label = new HashMap<>();
-    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
-    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
-    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
-    InstanceCategory instanceCategory = k8sNodeInfoTasklet.getInstanceCategory(CloudProvider.AZURE, label);
-    assertThat(instanceCategory).isEqualTo(InstanceCategory.ON_DEMAND);
   }
 
   private Quantity getQuantity(long amount, String unit) {
