@@ -15,10 +15,8 @@ import io.harness.exception.HintException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
-import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -26,7 +24,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-@Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class CEYamlResourceTest extends CategoryTest {
   @Mock private HttpServletRequest mockHttpServletRequest;

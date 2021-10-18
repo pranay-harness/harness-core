@@ -13,7 +13,7 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.config.CEFeatures;
 import io.harness.ccm.remote.beans.K8sClusterSetupRequest;
-import io.harness.ccm.service.impl.K8sServiceAccountDelegateTaskClient;
+import io.harness.ccm.service.impl.K8sConnectorValidationTaskClient;
 import io.harness.ccm.service.intf.CEYamlService;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.exception.DelegateNotAvailableException;
@@ -67,7 +67,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @OwnedBy(CE)
 public class CEYamlResource {
   @Inject private CEYamlService ceYamlService;
-  @Inject private K8sServiceAccountDelegateTaskClient k8sTaskClient;
+  @Inject private K8sConnectorValidationTaskClient validationTaskClient;
 
   private static final String CONTENT_DISPOSITION = "Content-Disposition";
   private static final String ATTACHMENT_FILENAME = "attachment; filename=";
@@ -95,12 +95,12 @@ public class CEYamlResource {
     }
   }
 
-  @Deprecated
   @POST
   @Path(CLOUD_COST_K8S_CLUSTER_SETUP)
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get k8s cluster setup yaml based on features enabled", nickname = CLOUD_COST_K8S_CLUSTER_SETUP)
+  @Deprecated
   public Response cloudCostK8sClusterSetup(@Context HttpServletRequest request,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @Valid @NotNull @RequestBody K8sClusterSetupRequest body) {
@@ -188,7 +188,7 @@ public class CEYamlResource {
       @Valid @NotNull @RequestBody K8sClusterSetupRequest body) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountIdentifier, OVERRIDE_ERROR)) {
       try {
-        final ConnectorValidationResult response = k8sTaskClient.validateConnectorForCePermissions(
+        final ConnectorValidationResult response = validationTaskClient.validateConnectorForCePermissions(
             body.getConnectorIdentifier(), accountIdentifier, body.getOrgIdentifier(), body.getProjectIdentifier());
         return ResponseDTO.newResponse(response);
       } catch (DelegateServiceDriverException ex) {
