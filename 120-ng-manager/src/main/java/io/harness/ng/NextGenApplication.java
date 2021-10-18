@@ -18,6 +18,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.ModuleType;
+import io.harness.NgIteratorsConfig;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
@@ -344,7 +345,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
-    registerIterators(injector);
+    registerIterators(appConfig.getNgIteratorsConfig(), injector);
     registerJobs(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
@@ -452,11 +453,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
   }
 
-  public void registerIterators(Injector injector) {
-    injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
-    injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+  public void registerIterators(NgIteratorsConfig ngIteratorsConfig, Injector injector) {
+    injector.getInstance(NGVaultSecretManagerRenewalHandler.class)
+        .registerIterators(ngIteratorsConfig.getNgVaultSecretManagerRenewalIteratorConfig().getThreadPoolSize());
+    injector.getInstance(WebhookEventProcessingService.class)
+        .registerIterators(ngIteratorsConfig.getWebhookEventProcessingServiceIteratorConfig().getThreadPoolSize());
     injector.getInstance(InstanceStatsIteratorHandler.class).registerIterators();
-    injector.getInstance(GitFullSyncEntityIterator.class).registerIterators();
+    injector.getInstance(GitFullSyncEntityIterator.class)
+        .registerIterators(ngIteratorsConfig.getGitFullSyncEntityIteratorConfig().getThreadPoolSize());
   }
 
   public void registerJobs(Injector injector) {
