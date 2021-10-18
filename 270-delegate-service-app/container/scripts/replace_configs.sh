@@ -480,4 +480,9 @@ if [[ "" != "$OPENJDK_JRE_TAR_PATH" ]]; then
   yq write -i $CONFIG_FILE jreConfigs.openjdk8u242.jreTarPath "$OPENJDK_JRE_TAR_PATH"
 fi
 
+if [[ "" != "$FILE_STORAGE" ]]; then
+  yq write -i $CONFIG_FILE fileStorageMode "$FILE_STORAGE"
+fi
+
+
 
