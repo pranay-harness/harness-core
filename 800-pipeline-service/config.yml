@@ -262,6 +262,34 @@ hostname: ${HOSTNAME:-localhost}
 
 basePathPrefix: ${BASE_PATH_PREFIX:-}
 
+pipelineEventConsumersConfig:
+  interrupt:
+    threads: 1
+  orchestrationEvent:
+    threads: 1
+  facilitatorEvent:
+    threads: 1
+  nodeStart:
+    threads: 2
+  progress:
+    threads: 1
+  advise:
+    threads: 2
+  resume:
+    threads: 2
+  sdkResponse:
+    threads: 3
+  graphUpdate:
+    threads: 3
+  partialPlanResponse:
+    threads: 1
+  createPlan:
+    threads: 1
+  planNotify:
+    threads: 1
+  pmsNotify:
+    threads: 1
+
 delegatePollingConfig:
   syncDelay: 2000
   asyncDelay: 2000

@@ -90,6 +90,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
   @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("pipelineEventConsumersConfig") PipelineServiceConsumersConfig pipelineServiceConsumersConfig;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
 
   private String managerServiceSecret;
