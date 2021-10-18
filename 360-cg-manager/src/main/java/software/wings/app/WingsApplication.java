@@ -415,9 +415,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(new Key<Map<String, Cache<?, ?>>>() {});
 
     boolean shouldEnableDelegateMgmt = shouldEnableDelegateMgmt(configuration);
-    if (shouldEnableDelegateMgmt) {
-      registerAtmosphereStreams(environment, injector);
-    }
+
+    registerAtmosphereStreams(environment, injector);
 
     initializeFeatureFlags(configuration, injector);
 
@@ -1125,9 +1124,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class)
         .registerIterators(
             iteratorsConfig.getBlockingCapabilityPermissionsRecordHandlerIteratorConfig().getThreadPoolSize());
-    injector.getInstance(PerpetualTaskRecordHandler.class)
-        .registerIterators(iteratorsConfig.getPerpetualTaskAssignmentIteratorConfig().getThreadPoolSize(),
-            iteratorsConfig.getPerpetualTaskRebalanceIteratorConfig().getThreadPoolSize());
+    injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
     injector.getInstance(DelegateTaskExpiryCheckIterator.class)
         .registerIterators(iteratorsConfig.getDelegateTaskExpiryCheckIteratorConfig().getThreadPoolSize());
   }
