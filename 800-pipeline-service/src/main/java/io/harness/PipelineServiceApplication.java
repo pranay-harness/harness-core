@@ -338,7 +338,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
-    registerPmsSdkEvents(injector);
+    registerPmsSdkEvents(appConfig.getPipelineServiceConsumersConfig(), injector);
     registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
@@ -522,23 +522,36 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
   }
 
-  private void registerPmsSdkEvents(Injector injector) {
+  private void registerPmsSdkEvents(PipelineServiceConsumersConfig pipelineServiceConsumersConfig, Injector injector) {
     log.info("Initializing pms sdk redis abstract consumers...");
     PipelineEventConsumerController pipelineEventConsumerController =
         injector.getInstance(PipelineEventConsumerController.class);
-    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
-    pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
-    pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(PlanNotifyEventConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(PmsNotifyEventConsumerRedis.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getInterrupt().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getOrchestrationEvent().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getFacilitatorEvent().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getNodeStart().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getProgress().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getAdvise().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getResume().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getSdkResponse().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class),
+        pipelineServiceConsumersConfig.getGraphUpdate().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class),
+        pipelineServiceConsumersConfig.getPartialPlanResponse().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class),
+        pipelineServiceConsumersConfig.getCreatePlan().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(PlanNotifyEventConsumer.class),
+        pipelineServiceConsumersConfig.getPlanNotify().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(PmsNotifyEventConsumerRedis.class),
+        pipelineServiceConsumersConfig.getPmsNotify().getThreads());
   }
 
   /**-----------------------------Git sync --------------------------------------*/
