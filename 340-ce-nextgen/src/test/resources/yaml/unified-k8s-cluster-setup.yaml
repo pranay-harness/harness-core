@@ -8,8 +8,8 @@ roleRef:
   name: ce-clusterrole
 subjects:
   - kind: ServiceAccount
-    name: env-admin
-    namespace: env-harness-delegate
+    name: VALUE_REPLACED_BY_UNIT_TEST_env-admin
+    namespace: VALUE_REPLACED_BY_UNIT_TEST_env-harness-delegate
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -141,27 +141,13 @@ rules:
       - update
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: ce-clusterrolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: ce-clusterrole
-subjects:
-  - kind: ServiceAccount
-    name: env-admin
-    namespace: env-harness-delegate
-
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: harness-autostopping-config
 data:
-  account_id: aId
-  connector_id: ccmId
+  account_id: VALUE_REPLACED_BY_UNIT_TEST_aId
+  connector_id: VALUE_REPLACED_BY_UNIT_TEST_ccmId
 
 ---
 apiVersion: apiextensions.k8s.io/v1
@@ -294,7 +280,7 @@ data:
             - endpoint:
                 address:
                   socket_address:
-                    address: sName
+                    address: VALUE_REPLACED_BY_UNIT_TEST_sName
                     port_value: 443
         transport_socket:
           name: envoy.transport_sockets.tls
@@ -388,11 +374,11 @@ spec:
         imagePullPolicy: Always
         env:
         - name: HARNESS_API
-          value: "hHost/gateway/lw/api"
+          value: "VALUE_REPLACED_BY_UNIT_TEST_hHost/gateway/lw/api"
         - name: CONNECTOR_ID
-          value: ccmId
+          value: VALUE_REPLACED_BY_UNIT_TEST_ccmId
         - name: REMOTE_ACCOUNT_ID
-          value: aId
+          value: VALUE_REPLACED_BY_UNIT_TEST_aId
         ports:
         - containerPort: 18000
           name: envoy-snapshot
@@ -455,3 +441,47 @@ subjects:
   - kind: ServiceAccount
     name: harness-autostopping-sa
     namespace: harness-autostopping
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: harness-progress
+  name: harness-progress
+  namespace: harness-autostopping
+spec:
+  selector:
+    matchLabels:
+      app: harness-progress
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: harness-progress
+    spec:
+      containers:
+      - name: harness-progress
+        image: navaneethknharness/autostopping-progress:latest
+        imagePullPolicy: Always
+        env:
+        - name: HARNESS_API_URL
+          value: "VALUE_REPLACED_BY_UNIT_TEST_hHost/gateway/lw/api/"
+        ports:
+        - containerPort: 8093
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: harness-progress
+  namespace: harness-autostopping
+  labels:
+    app: harness-progress
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8093
+  selector:
+    app: harness-progress
