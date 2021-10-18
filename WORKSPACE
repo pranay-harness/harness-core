@@ -8,7 +8,7 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
-    sha256 = "4698e467ed72b09227afcb7b8d289f8ec0eaead3494f7b80aefc6610e0ae855b",
+    sha256 = "8130cd78a92b620d188db7f31518b25c4fee61a5853c54eb511fc9f5c982e4cb",
     strip_prefix = "buildtools-master",
     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
 )
