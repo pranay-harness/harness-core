@@ -169,9 +169,34 @@ opaServerConfig:
   baseUrl: http://localhost:3000
 
 iteratorsConfig:
-  approvalInstanceIteratorConfig:
+  webhook:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 5
+  scheduledTrigger:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 15
+  timeoutEngine:
+    threadPoolCount: 5
+    enabled: true
+    targetIntervalInSeconds: 10
+  barrier:
+    threadPoolCount: 2
     enabled: true
     targetIntervalInSeconds: 60
+  approvalInstance:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 60
+  resourceRestraint:
+    threadPoolCount: 5
+    enabled: true
+    targetIntervalInSeconds: 60
+  interruptMonitor:
+    threadPoolCount: 1
+    enabled: true
+    targetIntervalInSeconds: 180
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
@@ -249,3 +274,5 @@ segmentConfiguration:
 
 enforcementClientConfiguration:
   enforcementCheckEnabled: false
+
+
