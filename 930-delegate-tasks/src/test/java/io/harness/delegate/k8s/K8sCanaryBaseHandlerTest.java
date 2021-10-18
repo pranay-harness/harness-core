@@ -1,6 +1,7 @@
 package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.k8s.K8sTestConstants.CONFIG_MAP_YAML;
 import static io.harness.delegate.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static io.harness.delegate.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -9,14 +10,15 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +28,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
+import io.harness.exception.KubernetesTaskException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessLabelValues;
@@ -74,37 +83,79 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeploymentWorkloadsForCanaryNoWorkload() throws Exception {
+    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = prepareNoWorkloadNoResource();
+    boolean result =
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
+    assertInvalidWorkloadsInManifest(result,
+        "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeploymentWorkloadsForCanaryNoWorkloadIsErrorFrameworkEnabled() {
+    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = prepareNoWorkloadNoResource();
+    assertThatThrownBy(()
+                           -> k8sCanaryBaseHandler.prepareForCanary(
+                               k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.CANARY_NO_WORKLOADS_FOUND);
+          assertThat(explanation).hasMessageContaining(KubernetesExceptionExplanation.CANARY_NO_WORKLOADS_FOUND);
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.NO_WORKLOADS_FOUND);
+
+          return true;
+        });
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeploymentWorkloadsForCanaryMultipleWorkloads() throws Exception {
+    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = prepareMultipleWorkloads();
+    boolean result =
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
+    assertInvalidWorkloadsInManifest(result,
+        "\nMore than one workloads found in the Manifests. Canary deploy supports only one workload. Others should be marked with annotation harness.io/direct-apply: true");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeploymentWorkloadsForCanaryMultipleWorkloadsIsErrorFrameworkEnabled() {
+    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = prepareMultipleWorkloads();
+    assertThatThrownBy(()
+                           -> k8sCanaryBaseHandler.prepareForCanary(
+                               k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.CANARY_MULTIPLE_WORKLOADS);
+          assertThat(explanation)
+              .hasMessageContaining(format(KubernetesExceptionExplanation.CANARY_MULTIPLE_WORKLOADS, 2,
+                  "Deployment/deployment, Deployment/deployment"));
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.MULTIPLE_WORKLOADS);
+
+          return true;
+        });
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDeploymentWorkloadsForCanary() throws Exception {
-    List<KubernetesResource> kubernetesResources = new ArrayList<>();
-    kubernetesResources.addAll(ManifestHelper.processYaml(DAEMON_SET_YAML));
-    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = new K8sCanaryHandlerConfig();
-    k8sCanaryHandlerConfig.setResources(kubernetesResources);
-
-    boolean result =
-        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
-    assertInvalidWorkloadsInManifest(result,
-        "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.");
-
-    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
-    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
-    k8sCanaryHandlerConfig.setResources(kubernetesResources);
-    reset(k8sTaskHelperBase);
-    reset(logCallback);
-
-    result = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
-    assertInvalidWorkloadsInManifest(result,
-        "\nMore than one workloads found in the Manifests. Canary deploy supports only one workload. Others should be marked with annotation harness.io/direct-apply: true");
-
-    kubernetesResources = new ArrayList<>();
-    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
-    k8sCanaryHandlerConfig.setResources(kubernetesResources);
+    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = prepareValidWorkloads();
     k8sCanaryHandlerConfig.setReleaseHistory(ReleaseHistory.createNew());
-    reset(k8sTaskHelperBase);
-    reset(logCallback);
+
     doNothing().when(k8sTaskHelperBase).cleanup(any(), any(), any(), any());
-    result = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
+    boolean result =
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
     assertThat(result).isTrue();
     verify(k8sTaskHelperBase, times(1)).cleanup(any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).getResourcesInTableFormat(any());
@@ -122,7 +173,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     k8sCanaryHandlerConfig.setResources(kubernetesResources);
 
     boolean result =
-        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
     assertInvalidWorkloadsInManifest(result,
         "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.");
   }
@@ -198,7 +249,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     canaryHandlerConfig.setResources(resources);
 
     boolean success = k8sCanaryBaseHandler.prepareForCanary(
-        canaryHandlerConfig, K8sDelegateTaskParams.builder().build(), false, logCallback);
+        canaryHandlerConfig, K8sDelegateTaskParams.builder().build(), false, logCallback, false);
 
     assertThat(success).isFalse();
   }
@@ -212,7 +263,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     canaryHandlerConfig.setResources(resources);
 
     boolean success = k8sCanaryBaseHandler.prepareForCanary(
-        canaryHandlerConfig, K8sDelegateTaskParams.builder().build(), false, logCallback);
+        canaryHandlerConfig, K8sDelegateTaskParams.builder().build(), false, logCallback, false);
 
     assertThat(success).isFalse();
   }
@@ -234,7 +285,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     canaryHandlerConfig.setClient(client);
 
     boolean success =
-        k8sCanaryBaseHandler.prepareForCanary(canaryHandlerConfig, delegateTaskParams, false, logCallback);
+        k8sCanaryBaseHandler.prepareForCanary(canaryHandlerConfig, delegateTaskParams, false, logCallback, false);
 
     assertThat(success).isTrue();
     assertThat(canaryHandlerConfig.getCanaryWorkload()).isNotNull();
@@ -316,5 +367,34 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     assertThat(logLevelCaptor.getValue()).isEqualTo(ERROR);
     assertThat(commandExecutionStatusCaptor.getValue()).isEqualTo(FAILURE);
     assertThat(msgCaptor.getValue()).isEqualTo(expectedMessage);
+  }
+
+  private K8sCanaryHandlerConfig prepareNoWorkloadNoResource() {
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = new K8sCanaryHandlerConfig();
+    kubernetesResources.addAll(ManifestHelper.processYaml(DAEMON_SET_YAML));
+    k8sCanaryHandlerConfig.setResources(kubernetesResources);
+
+    return k8sCanaryHandlerConfig;
+  }
+
+  private K8sCanaryHandlerConfig prepareMultipleWorkloads() {
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = new K8sCanaryHandlerConfig();
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    k8sCanaryHandlerConfig.setResources(kubernetesResources);
+
+    return k8sCanaryHandlerConfig;
+  }
+
+  private K8sCanaryHandlerConfig prepareValidWorkloads() {
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    K8sCanaryHandlerConfig k8sCanaryHandlerConfig = new K8sCanaryHandlerConfig();
+    kubernetesResources.addAll(ManifestHelper.processYaml(CONFIG_MAP_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    k8sCanaryHandlerConfig.setResources(kubernetesResources);
+
+    return k8sCanaryHandlerConfig;
   }
 }

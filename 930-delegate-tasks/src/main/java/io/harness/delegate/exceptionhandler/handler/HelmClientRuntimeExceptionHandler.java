@@ -5,10 +5,16 @@ import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_401_UNAUTHORIZED;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_403_FORBIDDEN;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_404_HELM_REPO;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_CHART_VERSION_IMPROPER_CONSTRAINT;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_MALFORMED_URL;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_MISSING_PROTOCOL_HANDLER;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_NO_CHART_FOUND;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_NO_CHART_VERSION_FOUND;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.HelmCliErrorMessages.CHART_VERSION_IMPROPER_CONSTRAINT;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.HelmCliErrorMessages.FORBIDDEN_403;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.HelmCliErrorMessages.NOT_FOUND_404;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.HelmCliErrorMessages.NO_CHART_FOUND;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.HelmCliErrorMessages.NO_CHART_VERSION_FOUND;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.HelmCliErrorMessages.NO_SUCH_HOST;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.HelmCliErrorMessages.PROTOCOL_HANDLER_MISSING;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.HelmCliErrorMessages.UNAUTHORIZED_401;
@@ -16,8 +22,11 @@ import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.DEFAULT
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_401_UNAUTHORIZED;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_403_FORBIDDEN;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_404_HELM_REPO;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_CHART_VERSION_IMPROPER_CONSTRAINT;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_MALFORMED_URL;
 import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_MISSING_PROTOCOL_HANDLER;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_NO_CHART_FOUND;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_NO_CHART_VERSION_FOUND;
 
 import static com.amazonaws.util.StringUtils.lowerCase;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
@@ -49,6 +58,11 @@ public class HelmClientRuntimeExceptionHandler implements ExceptionHandler {
     if (isRepoAddCommand(cause)) {
       return handleRepoAddException(cause);
     }
+
+    if (isFetchCommand(cause)) {
+      return handleFetchException(cause);
+    }
+
     return new InvalidRequestException(defaultIfEmpty(cause.getMessage(), ""));
   }
 
@@ -75,7 +89,28 @@ public class HelmClientRuntimeExceptionHandler implements ExceptionHandler {
         DEFAULT_HINT_REPO_ADD, DEFAULT_EXPLAIN_REPO_ADD, new InvalidRequestException(message));
   }
 
+  private WingsException handleFetchException(HelmClientException helmClientException) {
+    final String lowerCaseMessage = lowerCase(helmClientException.getMessage());
+
+    if (lowerCaseMessage.contains(NO_CHART_FOUND)) {
+      return NestedExceptionUtils.hintWithExplanationException(
+          HINT_NO_CHART_FOUND, EXPLAIN_NO_CHART_FOUND, helmClientException);
+    } else if (lowerCaseMessage.contains(NO_CHART_VERSION_FOUND)) {
+      return NestedExceptionUtils.hintWithExplanationException(
+          HINT_NO_CHART_VERSION_FOUND, EXPLAIN_NO_CHART_VERSION_FOUND, helmClientException);
+    } else if (lowerCaseMessage.contains(CHART_VERSION_IMPROPER_CONSTRAINT)) {
+      return NestedExceptionUtils.hintWithExplanationException(
+          HINT_CHART_VERSION_IMPROPER_CONSTRAINT, EXPLAIN_CHART_VERSION_IMPROPER_CONSTRAINT, helmClientException);
+    }
+
+    return helmClientException;
+  }
+
   private boolean isRepoAddCommand(HelmClientException helmClientException) {
     return helmClientException.getHelmCliCommandType() == HelmCliCommandType.REPO_ADD;
+  }
+
+  private boolean isFetchCommand(HelmClientException helmClientException) {
+    return helmClientException.getHelmCliCommandType() == HelmCliCommandType.FETCH;
   }
 }

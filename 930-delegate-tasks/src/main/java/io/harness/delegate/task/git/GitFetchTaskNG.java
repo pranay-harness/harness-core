@@ -21,11 +21,10 @@ import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
@@ -102,11 +101,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
           String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
           log.error(msg, ex);
           executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
-          return GitFetchResponse.builder()
-              .errorMessage(exceptionMsg)
-              .taskStatus(TaskStatus.FAILURE)
-              .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
-              .build();
+          throw ex;
         }
 
         filesFromMultipleRepo.put(gitFetchFilesConfig.getIdentifier(), gitFetchFilesResult);
@@ -117,20 +112,9 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
           .filesFromMultipleRepo(filesFromMultipleRepo)
           .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
           .build();
-    } catch (WingsException exception) {
-      log.error("Exception in Git Fetch Files Task", exception);
-      return GitFetchResponse.builder()
-          .errorMessage(ExceptionUtils.getMessage(exception))
-          .taskStatus(TaskStatus.FAILURE)
-          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
-          .build();
     } catch (Exception exception) {
       log.error("Exception in Git Fetch Files Task", exception);
-      return GitFetchResponse.builder()
-          .errorMessage("Some Error occurred in Git Fetch Files Task")
-          .taskStatus(TaskStatus.FAILURE)
-          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
-          .build();
+      throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), exception);
     }
   }
 
@@ -167,5 +151,10 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   @Override
   public GitFetchResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 }
