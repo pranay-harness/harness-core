@@ -63,6 +63,7 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void shouldIdentifyGCPSpotInstances() {
+    assertTrue(isGCPSpotInstance(ImmutableMap.of("cloud.google.com/gke-preemptible", "true")));
     assertTrue(isGCPSpotInstance(ImmutableMap.of("preemptible", "true", "preemptible-node", "true")));
     assertTrue(isGCPSpotInstance(ImmutableMap.of("preemptible-node", "true", "preemptible", "true")));
     assertTrue(isGCPSpotInstance(ImmutableMap.of("preemptible", "true")));
@@ -73,6 +74,7 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void shouldIdentifyGCPOnDemandInstances() {
+    assertFalse(isGCPSpotInstance(ImmutableMap.of("cloud.google.com/gke-preemptible", "false")));
     assertFalse(isGCPSpotInstance(ImmutableMap.of("preemptible", "false", "preemptible-node", "false")));
     assertFalse(isGCPSpotInstance(ImmutableMap.of("preemptible-node", "false", "preemptible", "false")));
     assertFalse(isGCPSpotInstance(ImmutableMap.of("preemptible", "false")));
