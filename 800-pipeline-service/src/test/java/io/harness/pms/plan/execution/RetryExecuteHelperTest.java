@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.retry.RetryGroup;
+import io.harness.engine.executions.retry.RetryHistoryResponseDto;
 import io.harness.engine.executions.retry.RetryInfo;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +27,8 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +54,7 @@ import org.mockito.MockitoAnnotations;
 public class RetryExecuteHelperTest extends CategoryTest {
   @InjectMocks private RetryExecutionHelper retryExecuteHelper;
   @Mock private NodeExecutionServiceImpl nodeExecutionService;
+  @Mock private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
 
   @Before
   public void setUp() throws IOException {
@@ -721,5 +725,46 @@ public class RetryExecuteHelperTest extends CategoryTest {
     assertThat(updatedNodes.get(1).getIdentifier()).isEqualTo("test");
     assertThat(updatedNodes.get(1).getName()).isEqualTo("Test Node");
     assertThat(updatedNodes.get(1).getUuid()).isEqualTo(uuid);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetHistory() {
+    String rootExecutionId = "rootExecutionId";
+    List<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntities =
+        Arrays.asList(PipelineExecutionSummaryEntity.builder().build());
+
+    // entities are <=1. Checking error message
+    when(pmsExecutionSummaryRespository.fetchPipelineSummaryEntityFromRootParentId(rootExecutionId))
+        .thenReturn(pipelineExecutionSummaryEntities);
+    RetryHistoryResponseDto retryHistory = retryExecuteHelper.getRetryHistory(rootExecutionId);
+    assertThat(retryHistory.getErrorMessage()).isNotNull();
+
+    pipelineExecutionSummaryEntities = Arrays.asList(PipelineExecutionSummaryEntity.builder()
+                                                         .planExecutionId("uuid1")
+                                                         .startTs(10L)
+                                                         .endTs(11L)
+                                                         .status(ExecutionStatus.FAILED)
+                                                         .build(),
+        PipelineExecutionSummaryEntity.builder()
+            .planExecutionId("uuid2")
+            .startTs(20L)
+            .endTs(21L)
+            .status(ExecutionStatus.FAILED)
+            .build(),
+        PipelineExecutionSummaryEntity.builder()
+            .planExecutionId("uuid3")
+            .startTs(30L)
+            .endTs(31L)
+            .status(ExecutionStatus.ABORTED)
+            .build());
+
+    when(pmsExecutionSummaryRespository.fetchPipelineSummaryEntityFromRootParentId(rootExecutionId))
+        .thenReturn(pipelineExecutionSummaryEntities);
+    retryHistory = retryExecuteHelper.getRetryHistory(rootExecutionId);
+    assertThat(retryHistory.getErrorMessage()).isNull();
+    assertThat(retryHistory.getLatestExecutionId()).isEqualTo("uuid3");
+    assertThat(retryHistory.getExecutionInfos().size()).isEqualTo(3);
   }
 }

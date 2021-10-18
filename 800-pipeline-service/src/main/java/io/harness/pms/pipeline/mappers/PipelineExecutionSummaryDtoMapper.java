@@ -48,6 +48,10 @@ public class PipelineExecutionSummaryDtoMapper {
                 ? new ArrayList<>()
                 : pipelineExecutionSummaryEntity.getModules())
         .gitDetails(entityGitDetails)
+        .canRetry(pipelineExecutionSummaryEntity.isLatestExecution())
+        .showRetryHistory(!pipelineExecutionSummaryEntity.isLatestExecution()
+            || !pipelineExecutionSummaryEntity.getPlanExecutionId().equals(
+                pipelineExecutionSummaryEntity.getRetryExecutionMetadata().getRootExecutionId()))
         .governanceMetadata(pipelineExecutionSummaryEntity.getGovernanceMetadata())
         .isStagesExecution(stagesExecutionMetadata != null && stagesExecutionMetadata.isStagesExecution())
         .stagesExecuted(stagesExecutionMetadata == null ? null : stagesExecutionMetadata.getStageIdentifiers())
