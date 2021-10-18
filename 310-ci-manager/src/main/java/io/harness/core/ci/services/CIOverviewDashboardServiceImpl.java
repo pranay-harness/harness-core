@@ -7,8 +7,6 @@ import io.harness.app.beans.entities.BuildFailureInfo;
 import io.harness.app.beans.entities.BuildHealth;
 import io.harness.app.beans.entities.BuildInfo;
 import io.harness.app.beans.entities.BuildRepositoryCount;
-import io.harness.app.beans.entities.CIUsageActiveCommitters;
-import io.harness.app.beans.entities.CIUsageReference;
 import io.harness.app.beans.entities.CIUsageResult;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
@@ -18,6 +16,8 @@ import io.harness.app.beans.entities.RepositoryBuildInfo;
 import io.harness.app.beans.entities.RepositoryInfo;
 import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
+import io.harness.licensing.usage.beans.ReferenceDTO;
+import io.harness.licensing.usage.beans.UsageDataDTO;
 import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.timescaledb.DBUtils;
@@ -183,20 +183,20 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         statement.setLong(2, timestamp);
         statement.setLong(3, timestamp - 60 * DAY_IN_MS);
         resultSet = statement.executeQuery();
-        List<CIUsageReference> usageReferences = new ArrayList<>();
+        List<ReferenceDTO> usageReferences = new ArrayList<>();
         while (resultSet != null && resultSet.next()) {
-          CIUsageReference reference = CIUsageReference.builder()
-                                           .identifier(resultSet.getString("moduleinfo_author_id"))
-                                           .projectIdentifier(resultSet.getString("projectidentifier"))
-                                           .orgIdentifier(resultSet.getString("orgidentifierd"))
-                                           .build();
+          ReferenceDTO reference = ReferenceDTO.builder()
+                                       .identifier(resultSet.getString("moduleinfo_author_id"))
+                                       .projectIdentifier(resultSet.getString("projectidentifier"))
+                                       .orgIdentifier(resultSet.getString("orgidentifierd"))
+                                       .build();
           usageReferences.add(reference);
         }
         return CIUsageResult.builder()
             .accountIdentifier(accountId)
             .timestamp(timestamp)
             .module("CI")
-            .activeCommitters(CIUsageActiveCommitters.builder()
+            .activeCommitters(UsageDataDTO.builder()
                                   .count(usageReferences.size())
                                   .displayName("Last 60 Days")
                                   .references(usageReferences)
