@@ -88,17 +88,10 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
       activityHistoryService.save(activityHistory);
     }
 
-    for (int i = 0; i < 8; i++) {
-      NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
-          referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.CONNECTIVITY_CHECK);
-      activityHistoryService.save(activityHistory);
-    }
-
     ConnectivityCheckSummaryDTO connectivityCheckSummaryDTO = activityHistoryService.getConnectivityCheckSummary(
         accountIdentifier, null, null, referredEntityIdentifier, startTime, startTime + 100L);
     assertThat(connectivityCheckSummaryDTO).isNotNull();
     assertThat(connectivityCheckSummaryDTO.getFailureCount()).isEqualTo(6);
-    assertThat(connectivityCheckSummaryDTO.getSuccessCount()).isEqualTo(8);
     assertThat(connectivityCheckSummaryDTO.getStartTime()).isEqualTo(startTime);
     assertThat(connectivityCheckSummaryDTO.getEndTime()).isEqualTo(startTime + 100L);
   }
