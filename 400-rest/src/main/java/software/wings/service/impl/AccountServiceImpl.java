@@ -60,6 +60,7 @@ import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.dms.DmsProxy;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -150,7 +151,6 @@ import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -277,7 +277,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
-  @Inject private DelegateService delegateService;
+  @Inject private DmsProxy dmsProxy;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -1220,7 +1220,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean sampleDelegateExists(String accountId) {
     assertTrialAccount(accountId);
-    return delegateService.sampleDelegateExists(accountId);
+    return dmsProxy.sampleDelegateExists(accountId);
   }
 
   @Override

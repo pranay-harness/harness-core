@@ -549,7 +549,11 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public boolean shouldEnableDelegateMgmt(final MainConfiguration configuration) {
-    return startupMode.equals(StartupMode.DELEGATE_SERVICE) || !configuration.isDisableDelegateMgmtInManager();
+    return isDms() || !configuration.isDisableDelegateMgmtInManager();
+  }
+
+  public boolean isDms() {
+    return startupMode.equals(StartupMode.DELEGATE_SERVICE);
   }
 
   public void addModules(final MainConfiguration configuration, List<Module> modules) {
@@ -711,7 +715,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         return MANAGER.getServiceId();
       }
     });
-    modules.add(DmsModule.getInstance(shouldEnableDelegateMgmt(configuration)));
+    final boolean isDmsMode = isDms();
+    modules.add(DmsModule.getInstance(isDmsMode));
   }
 
   private void registerEventConsumers(final Injector injector) {

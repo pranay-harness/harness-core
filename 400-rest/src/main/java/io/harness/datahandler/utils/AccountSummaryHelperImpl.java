@@ -6,12 +6,12 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.datahandler.models.AccountSummary;
+import io.harness.dms.DmsProxy;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.secretmanagers.SecretManagerConfigService;
 
 import software.wings.beans.Account;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 
 import com.google.common.collect.Lists;
@@ -27,7 +27,7 @@ public class AccountSummaryHelperImpl implements AccountSummaryHelper {
   @Inject private LimitConfigurationService limitConfigurationService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
-  @Inject private DelegateService delegateService;
+  @Inject private DmsProxy dmsProxy;
 
   private AccountSummary mapToBasicAccountSummary(@NotNull Account account) {
     AccountSummary accountSummary = AccountSummary.builder()
@@ -81,7 +81,7 @@ public class AccountSummaryHelperImpl implements AccountSummaryHelper {
   }
 
   private void populateNumberOfDelegates(List<AccountSummary> accountSummaryList) {
-    List<Integer> numberOfDelegatesPerAccount = delegateService.getCountOfDelegatesForAccounts(
+    List<Integer> numberOfDelegatesPerAccount = dmsProxy.getCountOfDelegatesForAccounts(
         accountSummaryList.stream().map(AccountSummary::getAccountId).collect(Collectors.toList()));
     for (int i = 0; i < numberOfDelegatesPerAccount.size(); i++) {
       accountSummaryList.get(i).setNumDelegates(numberOfDelegatesPerAccount.get(i));

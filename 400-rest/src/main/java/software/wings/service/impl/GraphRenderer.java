@@ -33,6 +33,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusCategory;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateTaskDetails;
+import io.harness.dms.DmsProxy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 
@@ -42,7 +43,6 @@ import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
 import software.wings.common.WorkflowConstants;
-import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.StateExecutionData;
@@ -85,7 +85,7 @@ public class GraphRenderer {
 
   @Inject private WorkflowExecutionService workflowExecutionService;
 
-  @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Inject private DmsProxy dmsProxy;
 
   static boolean isSubWorkflow(StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance == null) {
@@ -534,8 +534,7 @@ public class GraphRenderer {
           .stream()
           .map(delegateTaskDetails -> {
             Optional<DelegateSelectionLogParams> logParamsOptional =
-                delegateSelectionLogsService.fetchSelectedDelegateForTask(
-                    instance.getAccountId(), delegateTaskDetails.getDelegateTaskId());
+                dmsProxy.fetchSelectedDelegateForTask(instance.getAccountId(), delegateTaskDetails.getDelegateTaskId());
             if (logParamsOptional.isPresent()) {
               delegateTaskDetails.setSelectedDelegateId(logParamsOptional.get().getDelegateId());
               delegateTaskDetails.setSelectedDelegateName(logParamsOptional.get().getDelegateName());

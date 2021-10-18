@@ -8,10 +8,10 @@ public class DmsModule extends AbstractModule {
 
   private DmsModule() {}
 
-  public static DmsModule getInstance(boolean isDmsEnabled) {
+  public static DmsModule getInstance(boolean isDmsMode) {
     if (instance == null) {
       instance = new DmsModule();
-      isDmsMode = isDmsEnabled;
+      DmsModule.isDmsMode = isDmsMode;
     }
     return instance;
   }

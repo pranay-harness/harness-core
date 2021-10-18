@@ -41,6 +41,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.dms.DmsProxy;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.model.Event;
@@ -73,7 +74,6 @@ import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
@@ -116,7 +116,7 @@ public class EventPublishHelper {
   @Inject private UserService userService;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private DelegateCache delegateCache;
-  @Inject private DelegateService delegateService;
+  @Inject private DmsProxy dmsProxy;
   @Inject private WhitelistService whitelistService;
   @Inject private UserGroupService userGroupService;
   @Inject private CVConfigurationService cvConfigurationService;
@@ -476,7 +476,7 @@ public class EventPublishHelper {
                                             .addFieldsIncluded(DelegateKeys.uuid)
                                             .withLimit("1")
                                             .build();
-    PageResponse<Delegate> pageResponse = delegateService.list(pageRequest);
+    PageResponse<Delegate> pageResponse = dmsProxy.list(pageRequest);
     List<Delegate> delegates = pageResponse.getResponse();
     if (isEmpty(delegates)) {
       return false;

@@ -111,7 +111,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
-  @Inject private DelegateServiceImpl delegateService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
