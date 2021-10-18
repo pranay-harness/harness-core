@@ -394,7 +394,7 @@ public class PipelineResource implements YamlSchemaResource {
     }
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
         filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, statusesList,
-        myDeployments, false, gitSyncBranchContext);
+        myDeployments, false, gitSyncBranchContext, true);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));

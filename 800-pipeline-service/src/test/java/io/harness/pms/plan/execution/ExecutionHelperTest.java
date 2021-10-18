@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,6 +22,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.retry.RetryExecutionParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -31,6 +33,7 @@ import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.RerunInfo;
+import io.harness.pms.contracts.plan.RetryExecutionInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
@@ -44,6 +47,7 @@ import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.ExecArgs;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
@@ -77,6 +81,7 @@ public class ExecutionHelperTest extends CategoryTest {
   @Mock OrchestrationService orchestrationService;
   @Mock PlanExecutionMetadataService planExecutionMetadataService;
   @Mock PMSPipelineTemplateHelper pipelineTemplateHelper;
+  @Mock PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
 
   String accountId = "accountId";
   String orgId = "orgId";
@@ -213,7 +218,7 @@ public class ExecutionHelperTest extends CategoryTest {
         .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
             pipelineEntity.getProjectIdentifier(), mergedYaml);
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml,
-        Collections.emptyList(), executionTriggerInfo, null, false, null, null, null);
+        Collections.emptyList(), executionTriggerInfo, null, RetryExecutionParameters.builder().isRetry(false).build());
     executionMetadataAssertions(execArgs.getMetadata());
 
     PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
@@ -241,7 +246,7 @@ public class ExecutionHelperTest extends CategoryTest {
             entityWithTemplateReference.getOrgIdentifier(), entityWithTemplateReference.getProjectIdentifier(),
             mergedYaml);
     ExecArgs execArgs = executionHelper.buildExecutionArgs(entityWithTemplateReference, moduleType, runtimeInputYaml,
-        Collections.emptyList(), executionTriggerInfo, null, false, null, null, null);
+        Collections.emptyList(), executionTriggerInfo, null, RetryExecutionParameters.builder().isRetry(false).build());
     executionMetadataAssertions(execArgs.getMetadata());
 
     PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
@@ -276,7 +281,8 @@ public class ExecutionHelperTest extends CategoryTest {
         .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
             pipelineEntity.getProjectIdentifier(), mergedYaml);
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml,
-        Collections.singletonList("s2"), executionTriggerInfo, null, false, null, null, null);
+        Collections.singletonList("s2"), executionTriggerInfo, null,
+        RetryExecutionParameters.builder().isRetry(false).build());
     executionMetadataAssertions(execArgs.getMetadata());
 
     PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
@@ -358,5 +364,29 @@ public class ExecutionHelperTest extends CategoryTest {
     verify(planCreatorMergeService, times(1))
         .createPlan(accountId, orgId, projectId, executionMetadata, planExecutionMetadata);
     verify(orchestrationService, times(1)).startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testBuildRetryInfo() {
+    // isRetry: false
+    RetryExecutionInfo retryExecutionInfo = executionHelper.buildRetryInfo(false, null);
+    assertThat(retryExecutionInfo.getIsRetry()).isEqualTo(false);
+
+    // isRetry: true and originalId: null
+    retryExecutionInfo = executionHelper.buildRetryInfo(true, null);
+    assertThat(retryExecutionInfo.getIsRetry()).isEqualTo(false);
+
+    // isRetry: true and originalId: empty
+    retryExecutionInfo = executionHelper.buildRetryInfo(true, "");
+    assertThat(retryExecutionInfo.getIsRetry()).isEqualTo(false);
+
+    // isRetry: true
+    when(pmsExecutionSummaryRespository.fetchRootRetryExecutionId("originalId")).thenReturn("rootParentId");
+    retryExecutionInfo = executionHelper.buildRetryInfo(true, "originalId");
+    assertThat(retryExecutionInfo.getIsRetry()).isEqualTo(true);
+    assertThat(retryExecutionInfo.getParentRetryId()).isEqualTo("originalId");
+    assertThat(retryExecutionInfo.getRootExecutionId()).isEqualTo("rootParentId");
   }
 }
