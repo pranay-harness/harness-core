@@ -716,7 +716,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         return MANAGER.getServiceId();
       }
     });
-    final boolean isDmsMode = isDms();
+    final boolean isDmsMode = !shouldEnableDelegateMgmt(configuration);
     modules.add(DmsModule.getInstance(isDmsMode));
   }
 
