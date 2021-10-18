@@ -111,6 +111,7 @@ import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskC
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
+import static java.util.stream.Collectors.partitioningBy;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
@@ -158,6 +159,7 @@ import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
@@ -326,6 +328,9 @@ public class WingsApplication extends Application<MainConfiguration> {
   private HarnessMetricRegistry harnessMetricRegistry;
   private StartupMode startupMode;
 
+  private String DELEGATE_SERVICE_RESOURCE_PACKAGE = "io.harness.delegate.resources";
+  private String MANGER_RESOURCE_PACAKGE = "software.wings.resources";
+
   public WingsApplication(StartupMode startupMode) {
     this.startupMode = startupMode;
   }
@@ -443,6 +448,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     registerResources(environment, injector);
+
+    if (startupMode.equals(StartupMode.DELEGATE_SERVICE)) {
+      registerDelegateServiceResource(environment, injector);
+    }
 
     // Managed beans
     registerManagedBeansCommon(configuration, environment, injector);
@@ -883,13 +892,45 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void registerResources(Environment environment, Injector injector) {
     Reflections reflections =
         new Reflections(AppResource.class.getPackage().getName(), DelegateTaskResource.class.getPackage().getName());
+    Set<Class<? extends Object>> excludeResources = resourceMap(reflections);
 
     Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     for (Class<?> resource : resourceClasses) {
+      if (Resource.isAcceptable(resource) && !excludeResources.contains(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
+  }
+
+  private void registerDelegateServiceResource(Environment environment, Injector injector) {
+    Reflections reflections = new Reflections(DELEGATE_SERVICE_RESOURCE_PACKAGE);
+    Set<Class<? extends Object>> delegateResources = reflections.getTypesAnnotatedWith(Path.class);
+
+    // filter resources classes that are shared with manager
+    Reflections managerResources = new Reflections(MANGER_RESOURCE_PACAKGE);
+    Map<Boolean, List<Class<?>>> resources =
+            managerResources.getTypesAnnotatedWith(Path.class)
+                    .stream()
+                    .collect(partitioningBy(resource -> resource.isAnnotationPresent(DelegateServiceResource.class)));
+    delegateResources.addAll(resources.get(true));
+
+    for (Class<?> resource : delegateResources) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+  }
+
+
+  private Set<Class<? extends Object>> resourceMap(Reflections managerResources){
+    Reflections reflections = new Reflections(DELEGATE_SERVICE_RESOURCE_PACKAGE);
+    Set<Class<? extends Object>> delegateResources = reflections.getTypesAnnotatedWith(Path.class);
+    Map<Boolean, List<Class<?>>> resources =
+            managerResources.getTypesAnnotatedWith(Path.class)
+                    .stream()
+                    .collect(partitioningBy(resource -> resource.isAnnotationPresent(DelegateServiceResource.class)));
+    delegateResources.addAll(resources.get(true));
+    return  delegateResources;
   }
 
   private void registerManagedBeansCommon(MainConfiguration configuration, Environment environment, Injector injector) {

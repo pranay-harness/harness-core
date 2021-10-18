@@ -17,6 +17,7 @@ import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.ScopingRules;
 import io.harness.rest.RestResponse;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.DelegateProfileManagerService;
@@ -50,6 +51,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AuthRule(permissionType = LOGGED_IN)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
+@DelegateServiceResource
 public class DelegateProfileResource {
   private DelegateProfileService delegateProfileService;
   private DelegateProfileManagerService delegateProfileManagerService;

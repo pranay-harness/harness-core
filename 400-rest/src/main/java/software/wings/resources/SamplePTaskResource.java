@@ -14,11 +14,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.annotations.DelegateServiceResource;
 
 @Slf4j
 @Api("perpetual-task")
 @Path("/perpetual-task")
 @Produces(MediaType.APPLICATION_JSON)
+@DelegateServiceResource
 public class SamplePTaskResource {
   @Inject private SamplePTaskService samplePTaskService;
 
