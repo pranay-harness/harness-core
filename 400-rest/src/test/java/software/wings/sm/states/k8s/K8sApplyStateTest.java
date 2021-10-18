@@ -38,6 +38,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.rule.Owner;
@@ -89,6 +90,7 @@ public class K8sApplyStateTest extends CategoryTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private AppService appService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private ActivityService activityService;
   @InjectMocks K8sApplyState k8sApplyState = spy(new K8sApplyState(K8S_APPLY.name()));
 

@@ -27,11 +27,12 @@ import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.template.TemplateMergeResponse;
+import io.harness.ng.core.template.TemplateApplyRequestDTO;
+import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.template.beans.PermissionTypes;
-import io.harness.template.beans.TemplateApplyRequestDTO;
 import io.harness.template.beans.TemplateDeleteListRequestDTO;
 import io.harness.template.beans.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.TemplateListType;
@@ -86,7 +87,9 @@ import retrofit2.http.Body;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
+          @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
+              message = "TemplateRefs Resolved failed in given yaml.")
     })
 @NextGenManagerAuth
 @Slf4j
@@ -330,13 +333,11 @@ public class NGTemplateResource {
   @POST
   @Path("/applyTemplates")
   @ApiOperation(value = "Gets complete yaml with templateRefs resolved", nickname = "getYamlWithTemplateRefsResolved")
-  public ResponseDTO<TemplateMergeResponse> applyTemplates(
+  public ResponseDTO<TemplateMergeResponseDTO> applyTemplates(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      TemplateApplyRequestDTO templateApplyRequestDTO) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
-        Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_ACCESS_PERMISSION);
+      @NotNull TemplateApplyRequestDTO templateApplyRequestDTO) {
     return ResponseDTO.newResponse(templateMergeHelper.mergeTemplateSpecToPipelineYaml(
         accountId, orgId, projectId, templateApplyRequestDTO.getOriginalEntityYaml()));
   }

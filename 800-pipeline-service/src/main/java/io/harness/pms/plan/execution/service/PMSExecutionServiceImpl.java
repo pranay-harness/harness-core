@@ -31,7 +31,6 @@ import io.harness.pms.helpers.YamlExpressionResolveHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
@@ -197,6 +196,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
             .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
                 accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
+      String latestTemplate = validateAndMergeHelper.getPipelineTemplate(
+          accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), null);
       String yaml = pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
       String template = pipelineExecutionSummaryEntityOptional.get().getPipelineTemplate();
       if (resolveExpressions && EmptyPredicate.isNotEmpty(yaml)) {
@@ -208,13 +209,17 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
         if (entityGitDetails != null) {
           template = validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId,
               pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), entityGitDetails.getBranch(),
-              entityGitDetails.getRepoIdentifier());
+              entityGitDetails.getRepoIdentifier(), null);
         } else {
           template = validateAndMergeHelper.getPipelineTemplate(
-              accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier());
+              accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), null);
         }
       }
-      return InputSetYamlWithTemplateDTO.builder().inputSetTemplateYaml(template).inputSetYaml(yaml).build();
+      return InputSetYamlWithTemplateDTO.builder()
+          .inputSetTemplateYaml(template)
+          .inputSetYaml(yaml)
+          .latestTemplateYaml(latestTemplate)
+          .build();
     }
     throw new InvalidRequestException(
         "Invalid request : Input Set did not exist or pipeline execution has been deleted");
@@ -316,7 +321,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
   @Override
   public long getCountOfExecutions(Criteria criteria) {
-    Pageable pageRequest = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
+    Pageable pageRequest = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, PlanExecutionSummaryKeys.startTs));
     return pmsExecutionSummaryRespository.findAll(criteria, pageRequest).getTotalElements();
   }
 }

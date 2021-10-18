@@ -56,4 +56,7 @@ public class PipelineExecutionSummaryDTO {
   long failedStagesCount;
   long totalStagesCount;
   EntityGitDetails gitDetails;
+
+  boolean isStagesExecution;
+  List<String> stagesExecuted;
 }

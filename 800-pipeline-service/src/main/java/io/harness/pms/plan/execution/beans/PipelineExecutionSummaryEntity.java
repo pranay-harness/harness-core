@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.dto.FailureInfoDTO;
+import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -101,6 +102,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   EntityGitDetails entityGitDetails;
   FailureInfoDTO failureInfo;
   GovernanceMetadata governanceMetadata;
+  StagesExecutionMetadata stagesExecutionMetadata;
 
   Long startTs;
   Long endTs;

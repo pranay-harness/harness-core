@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
-import io.harness.engine.executions.retry.RetryExecutionHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -12,6 +11,7 @@ import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.execution.beans.ExecArgs;
 import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
 
@@ -35,6 +35,7 @@ public class PipelineExecutor {
   ValidateAndMergeHelper validateAndMergeHelper;
   PlanExecutionMetadataService planExecutionMetadataService;
   RetryExecutionHelper retryExecutionHelper;
+  PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
@@ -47,7 +48,7 @@ public class PipelineExecutor {
       String projectIdentifier, String pipelineIdentifier, String moduleType, List<String> inputSetReferences,
       String pipelineBranch, String pipelineRepoID) {
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
-        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
+        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID, null);
     return startPlanExecution(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, null, moduleType,
         mergedRuntimeInputYaml, Collections.emptyList(), false);
   }
@@ -70,7 +71,7 @@ public class PipelineExecutor {
       String projectIdentifier, String pipelineIdentifier, String moduleType, String originalExecutionId,
       List<String> inputSetReferences, String pipelineBranch, String pipelineRepoID) {
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
-        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
+        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID, null);
     return startPlanExecution(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, originalExecutionId,
         moduleType, mergedRuntimeInputYaml, Collections.emptyList(), false);
   }

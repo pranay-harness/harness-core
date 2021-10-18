@@ -39,6 +39,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -405,7 +406,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream get(String artifactStreamId) {
-    return wingsPersistence.get(ArtifactStream.class, artifactStreamId);
+    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, artifactStreamId);
+    if (artifactStream != null) {
+      artifactStream.setMaxAttempts(ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS);
+    }
+    return artifactStream;
   }
 
   @Override
@@ -778,6 +783,42 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new InvalidRequestException(
           "The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
     }
+  }
+
+  @Override
+  public boolean updateLastIterationFields(String accountId, String uuid, boolean success) {
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
+                                      .filter(ArtifactStreamKeys.accountId, accountId)
+                                      .filter(ArtifactStreamKeys.uuid, uuid);
+    long currentTime = System.currentTimeMillis();
+    UpdateOperations<ArtifactStream> updateOperations = wingsPersistence.createUpdateOperations(ArtifactStream.class)
+                                                            .set(ArtifactStreamKeys.lastIteration, currentTime);
+    if (success) {
+      updateOperations.set(ArtifactStreamKeys.lastSuccessfulIteration, currentTime);
+    }
+    UpdateResults update = wingsPersistence.update(query, updateOperations);
+    return update.getUpdatedCount() == 1;
+  }
+
+  @Override
+  public ArtifactStream resetStoppedArtifactCollection(String appId, String artifactStreamId) {
+    Query<ArtifactStream> query =
+        wingsPersistence.createQuery(ArtifactStream.class)
+            .filter(ArtifactStreamKeys.appId, appId)
+            .filter(ArtifactStreamKeys.uuid, artifactStreamId)
+            .filter(ArtifactStreamKeys.collectionStatus, ArtifactStreamCollectionStatus.STOPPED);
+    UpdateOperations<ArtifactStream> updateOperations =
+        wingsPersistence.createUpdateOperations(ArtifactStream.class)
+            .set(ArtifactStreamKeys.collectionStatus, ArtifactStreamCollectionStatus.UNSTABLE)
+            .set(ArtifactStreamKeys.failedCronAttempts, 0);
+
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+    if (updateResults.getUpdatedCount() == 0) {
+      throw new InvalidRequestException(format(
+          "No valid artifact source available to reset with id %s and artifact collection STOPPED", artifactStreamId));
+    }
+    alertService.deleteByArtifactStream(appId, artifactStreamId);
+    return get(artifactStreamId);
   }
 
   private void populateCustomArtifactStreamFields(
@@ -1340,12 +1381,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public boolean updateFailedCronAttempts(String accountId, String artifactStreamId, int counter) {
+  public boolean updateFailedCronAttemptsAndLastIteration(String accountId, String artifactStreamId, int counter) {
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
                                       .filter(ArtifactStreamKeys.accountId, accountId)
                                       .filter(ArtifactStreamKeys.uuid, artifactStreamId);
     UpdateOperations<ArtifactStream> updateOperations = wingsPersistence.createUpdateOperations(ArtifactStream.class)
                                                             .set(ArtifactStreamKeys.failedCronAttempts, counter);
+    long currentTime = System.currentTimeMillis();
+    updateOperations.set(ArtifactStreamKeys.lastIteration, currentTime);
+
     UpdateResults update = wingsPersistence.update(query, updateOperations);
     return update.getUpdatedCount() == 1;
   }

@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
@@ -25,6 +27,7 @@ import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEn
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetSummaryResponseDTOPMS;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateRequestDTO;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
@@ -35,7 +38,9 @@ import io.harness.rule.Owner;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
@@ -68,20 +73,29 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
   InputSetEntity inputSetEntity;
   InputSetEntity overlayInputSetEntity;
 
+  List<String> stages =
+      Arrays.asList("using", "a", "list", "to", "ensure", "that", "this", "param", "is", "not", "ignored");
+
+  private String readFile(String filename) {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    try {
+      return Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not read file " + filename, e);
+    }
+  }
+
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
     inputSetResourcePMS = new InputSetResourcePMS(pmsInputSetService, validateAndMergeHelper);
-    ClassLoader classLoader = this.getClass().getClassLoader();
+
     String inputSetFilename = "inputSet1.yml";
-    inputSetYaml =
-        Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFilename)), StandardCharsets.UTF_8);
+    inputSetYaml = readFile(inputSetFilename);
     String overlayInputSetFilename = "overlay1.yml";
-    overlayInputSetYaml = Resources.toString(
-        Objects.requireNonNull(classLoader.getResource(overlayInputSetFilename)), StandardCharsets.UTF_8);
+    overlayInputSetYaml = readFile(overlayInputSetFilename);
     String pipelineYamlFileName = "pipeline.yml";
-    pipelineYaml = Resources.toString(
-        Objects.requireNonNull(classLoader.getResource(pipelineYamlFileName)), StandardCharsets.UTF_8);
+    pipelineYaml = readFile(pipelineYamlFileName);
 
     inputSetEntity = InputSetEntity.builder()
                          .accountId(ACCOUNT_ID)
@@ -121,12 +135,9 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
 
     assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getData().getInputSetYaml()).isEqualTo(inputSetYaml);
-    assertThat(responseDTO.getData().getName()).isEqualTo(INPUT_SET_ID);
-    assertThat(responseDTO.getData().getIdentifier()).isEqualTo(INPUT_SET_ID);
-    assertThat(responseDTO.getData().getPipelineIdentifier()).isEqualTo(PIPELINE_IDENTIFIER);
-    assertThat(responseDTO.getData().getProjectIdentifier()).isEqualTo(PROJ_IDENTIFIER);
-    assertThat(responseDTO.getData().getOrgIdentifier()).isEqualTo(ORG_IDENTIFIER);
-    assertThat(responseDTO.getData().getAccountId()).isEqualTo(ACCOUNT_ID);
+    getCallAssertions(responseDTO.getData().getName(), INPUT_SET_ID, responseDTO.getData().getIdentifier(),
+        responseDTO.getData().getPipelineIdentifier(), responseDTO.getData().getProjectIdentifier(),
+        responseDTO.getData().getOrgIdentifier(), responseDTO.getData().getAccountId());
   }
 
   @Test
@@ -158,12 +169,19 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
 
     assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getData().getOverlayInputSetYaml()).isEqualTo(overlayInputSetYaml);
-    assertThat(responseDTO.getData().getName()).isEqualTo(OVERLAY_INPUT_SET_ID);
-    assertThat(responseDTO.getData().getIdentifier()).isEqualTo(OVERLAY_INPUT_SET_ID);
-    assertThat(responseDTO.getData().getPipelineIdentifier()).isEqualTo(PIPELINE_IDENTIFIER);
-    assertThat(responseDTO.getData().getProjectIdentifier()).isEqualTo(PROJ_IDENTIFIER);
-    assertThat(responseDTO.getData().getOrgIdentifier()).isEqualTo(ORG_IDENTIFIER);
-    assertThat(responseDTO.getData().getAccountId()).isEqualTo(ACCOUNT_ID);
+    getCallAssertions(responseDTO.getData().getName(), OVERLAY_INPUT_SET_ID, responseDTO.getData().getIdentifier(),
+        responseDTO.getData().getPipelineIdentifier(), responseDTO.getData().getProjectIdentifier(),
+        responseDTO.getData().getOrgIdentifier(), responseDTO.getData().getAccountId());
+  }
+
+  private void getCallAssertions(String name, String inputSetId, String identifier, String pipelineIdentifier,
+      String projectIdentifier, String orgIdentifier, String accountId) {
+    assertThat(name).isEqualTo(inputSetId);
+    assertThat(identifier).isEqualTo(inputSetId);
+    assertThat(pipelineIdentifier).isEqualTo(PIPELINE_IDENTIFIER);
+    assertThat(projectIdentifier).isEqualTo(PROJ_IDENTIFIER);
+    assertThat(orgIdentifier).isEqualTo(ORG_IDENTIFIER);
+    assertThat(accountId).isEqualTo(ACCOUNT_ID);
   }
 
   @Test
@@ -189,7 +207,7 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
     doReturn(inputSetEntity).when(pmsInputSetService).create(any());
     ResponseDTO<InputSetResponseDTOPMS> responseDTO = inputSetResourcePMS.createInputSet(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, null, null, inputSetYaml);
-    assertTrue(responseDTO.getData().getInputSetYaml().equals(inputSetYaml));
+    assertEquals(responseDTO.getData().getInputSetYaml(), inputSetYaml);
     assertEquals(responseDTO.getData().getAccountId(), inputSetEntity.getAccountIdentifier());
     assertEquals(responseDTO.getData().getOrgIdentifier(), inputSetEntity.getOrgIdentifier());
     assertEquals(responseDTO.getData().getProjectIdentifier(), inputSetEntity.getProjectIdentifier());
@@ -216,7 +234,7 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
     doReturn(inputSetEntity).when(pmsInputSetService).update(any(), any());
     ResponseDTO<InputSetResponseDTOPMS> responseDTO = inputSetResourcePMS.updateInputSet(null, INPUT_SET_ID, ACCOUNT_ID,
         ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, null, null, inputSetYaml);
-    assertTrue(responseDTO.getData().getInputSetYaml().equals(inputSetYaml));
+    assertEquals(responseDTO.getData().getInputSetYaml(), inputSetYaml);
     assertEquals(responseDTO.getData().getAccountId(), inputSetEntity.getAccountIdentifier());
     assertEquals(responseDTO.getData().getOrgIdentifier(), inputSetEntity.getOrgIdentifier());
     assertEquals(responseDTO.getData().getProjectIdentifier(), inputSetEntity.getProjectIdentifier());
@@ -251,7 +269,7 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
-  public void testlistInputSetsForPipeline() {
+  public void testListInputSetsForPipeline() {
     doReturn(PageableExecutionUtils.getPage(Collections.singletonList(inputSetEntity),
                  PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, InputSetEntityKeys.createdAt)), () -> 1L))
         .when(pmsInputSetService)
@@ -271,12 +289,23 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
   public void testGetTemplateFromPipeline() {
     doReturn(inputSetYaml)
         .when(validateAndMergeHelper)
-        .getPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER);
-    ResponseDTO<InputSetTemplateResponseDTOPMS> inputSetTemplateResponseDTOPMSResponseDTO =
+        .getPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, Collections.emptyList());
+    ResponseDTO<InputSetTemplateResponseDTOPMS> inputSetTemplateResponseDTO =
         inputSetResourcePMS.getTemplateFromPipeline(
-            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
-    assertEquals(inputSetTemplateResponseDTOPMSResponseDTO.getStatus(), Status.SUCCESS);
-    assertTrue(inputSetTemplateResponseDTOPMSResponseDTO.getData().getInputSetTemplateYaml().equals(inputSetYaml));
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, null);
+    assertEquals(inputSetTemplateResponseDTO.getStatus(), Status.SUCCESS);
+    assertEquals(inputSetTemplateResponseDTO.getData().getInputSetTemplateYaml(), inputSetYaml);
+
+    doReturn(inputSetYaml)
+        .when(validateAndMergeHelper)
+        .getPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, stages);
+    inputSetTemplateResponseDTO =
+        inputSetResourcePMS.getTemplateFromPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
+            null, InputSetTemplateRequestDTO.builder().stageIdentifiers(stages).build());
+    assertEquals(inputSetTemplateResponseDTO.getStatus(), Status.SUCCESS);
+    assertEquals(inputSetTemplateResponseDTO.getData().getInputSetTemplateYaml(), inputSetYaml);
+    verify(validateAndMergeHelper, times(1))
+        .getPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, stages);
   }
 
   @Test
@@ -285,19 +314,39 @@ public class InputSetResourcePMSTest extends PipelineServiceTestBase {
   public void testGetMergeInputSetFromPipelineTemplate() {
     doReturn(pipelineYaml)
         .when(validateAndMergeHelper)
-        .getMergeInputSetFromPipelineTemplate(
-            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, null, null);
+        .getMergeInputSetFromPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
+            Collections.emptyList(), null, null, null);
     doReturn(pipelineYaml)
         .when(validateAndMergeHelper)
         .mergeInputSetIntoPipeline(
-            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, pipelineYaml, null, null);
-    MergeInputSetRequestDTOPMS inputSetRequestDTOPMS =
-        MergeInputSetRequestDTOPMS.builder().withMergedPipelineYaml(true).build();
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, pipelineYaml, null, null, null);
+    MergeInputSetRequestDTOPMS inputSetRequestDTOPMS = MergeInputSetRequestDTOPMS.builder()
+                                                           .withMergedPipelineYaml(true)
+                                                           .inputSetReferences(Collections.emptyList())
+                                                           .build();
     ResponseDTO<MergeInputSetResponseDTOPMS> mergeInputSetResponseDTOPMSResponseDTO =
         inputSetResourcePMS.getMergeInputSetFromPipelineTemplate(
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, null, null, inputSetRequestDTOPMS);
     assertEquals(mergeInputSetResponseDTOPMSResponseDTO.getStatus(), Status.SUCCESS);
     assertEquals(mergeInputSetResponseDTOPMSResponseDTO.getData().getCompletePipelineYaml(), pipelineYaml);
     assertEquals(mergeInputSetResponseDTOPMSResponseDTO.getData().getPipelineYaml(), pipelineYaml);
+
+    doReturn(pipelineYaml)
+        .when(validateAndMergeHelper)
+        .getMergeInputSetFromPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
+            Collections.emptyList(), null, null, stages);
+
+    MergeInputSetRequestDTOPMS inputSetRequestDTOPMSWithStages = MergeInputSetRequestDTOPMS.builder()
+                                                                     .withMergedPipelineYaml(false)
+                                                                     .inputSetReferences(Collections.emptyList())
+                                                                     .stageIdentifiers(stages)
+                                                                     .build();
+    mergeInputSetResponseDTOPMSResponseDTO = inputSetResourcePMS.getMergeInputSetFromPipelineTemplate(ACCOUNT_ID,
+        ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, null, null, inputSetRequestDTOPMSWithStages);
+    assertEquals(mergeInputSetResponseDTOPMSResponseDTO.getStatus(), Status.SUCCESS);
+    assertEquals(mergeInputSetResponseDTOPMSResponseDTO.getData().getPipelineYaml(), pipelineYaml);
+    verify(validateAndMergeHelper, times(1))
+        .getMergeInputSetFromPipelineTemplate(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
+            Collections.emptyList(), null, null, stages);
   }
 }

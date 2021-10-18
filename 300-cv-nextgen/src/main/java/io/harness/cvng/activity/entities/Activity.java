@@ -5,6 +5,8 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -79,6 +81,27 @@ public abstract class Activity
                 .field(ActivityKeys.orgIdentifier)
                 .field(ActivityKeys.projectIdentifier)
                 .field(ActivityKeys.activityStartTime)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("change_event_app_service_query_index")
+                .field(ActivityKeys.accountId)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(ActivityKeys.serviceIdentifier)
+                .field(ActivityKeys.environmentIdentifier)
+                .field(ActivityKeys.eventTime)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("change_event_infra_service_query_index")
+                .field(ActivityKeys.accountId)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(
+                    KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
+                .field(KubernetesClusterActivityKeys.relatedAppServices + "."
+                    + ServiceEnvironmentKeys.environmentIdentifier)
+                .field(ActivityKeys.eventTime)
+                .sparse(true)
                 .build())
         .build();
   }
@@ -188,7 +211,8 @@ public abstract class Activity
     public abstract Class getEntityClass();
 
     public Query<T> populateKeyQuery(Query<T> query, D activity) {
-      return query.filter(ActivityKeys.orgIdentifier, activity.getOrgIdentifier())
+      return query.filter(ActivityKeys.accountId, activity.getAccountId())
+          .filter(ActivityKeys.orgIdentifier, activity.getOrgIdentifier())
           .filter(ActivityKeys.projectIdentifier, activity.getProjectIdentifier())
           .filter(ActivityKeys.serviceIdentifier, activity.getServiceIdentifier())
           .filter(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier());

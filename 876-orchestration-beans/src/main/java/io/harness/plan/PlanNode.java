@@ -89,4 +89,9 @@ public class PlanNode implements Node {
   public NodeType getNodeType() {
     return NodeType.PLAN_NODE;
   }
+
+  @Override
+  public String getStageFqn() {
+    return this.stageFqn;
+  }
 }

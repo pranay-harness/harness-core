@@ -38,6 +38,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -90,6 +91,7 @@ public class K8sDeleteTest extends CategoryTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private AppService appService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private ActivityService activityService;
   @InjectMocks K8sDelete k8sDelete = spy(new K8sDelete(K8S_DELETE.name()));
 

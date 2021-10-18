@@ -8,6 +8,6 @@ public interface K8sGlobalConfigService {
   String getHelmPath(HelmVersion helmVersion);
   String getChartMuseumPath(boolean useLatestVersion);
   String getOcPath();
-  String getKustomizePath();
+  String getKustomizePath(boolean useLatestVersion);
   String getScmPath();
 }

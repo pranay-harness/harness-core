@@ -30,7 +30,7 @@ public class GitSyncEventConsumerService implements Managed {
 
   @Override
   public void stop() throws Exception {
-    gitSyncConfigConsumerService.shutdown();
+    gitSyncConfigConsumerService.shutdownNow();
     gitSyncConfigConsumerService.awaitTermination(GIT_CONFIG_STREAM_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
   }
 }

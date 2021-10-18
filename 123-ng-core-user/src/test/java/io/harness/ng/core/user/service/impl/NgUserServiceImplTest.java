@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.invites.mapper.RoleBindingMapper.createRoleAssignmentDTOs;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.USER;
 import static io.harness.rule.OwnerRule.KARAN;
 
 import static java.util.Collections.singletonList;
@@ -12,6 +13,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.fail;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -36,11 +38,14 @@ import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.user.AddUserResponse;
 import io.harness.ng.core.user.AddUsersDTO;
 import io.harness.ng.core.user.AddUsersResponse;
+import io.harness.ng.core.user.NGRemoveUserFilter;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserGroup;
+import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.entities.UserMetadata;
 import io.harness.ng.core.user.entities.UserMetadata.UserMetadataKeys;
+import io.harness.ng.core.user.exception.InvalidUserRemoveRequestException;
 import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.channeldetails.NotificationChannel;
@@ -181,6 +186,67 @@ public class NgUserServiceImplTest extends CategoryTest {
     assertEquals(0, negativeList.size());
 
     assertUserMetadataCriteria(userMetadataCriteriaArgumentCaptor, userId);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testRemoveUserFromAccountScope() {
+    String accountIdentifier = randomAlphabetic(10);
+    Scope scope = Scope.builder().accountIdentifier(accountIdentifier).build();
+    String userId = randomAlphabetic(10);
+    UserMembership userMembership = UserMembership.builder().scope(scope).userId(userId).build();
+
+    preLastAdminFailure(userId, scope, userMembership);
+    try {
+      ngUserService.removeUserFromScope(userId, scope, USER, NGRemoveUserFilter.ACCOUNT_LAST_ADMIN_CHECK);
+      fail();
+    } catch (InvalidUserRemoveRequestException exception) {
+      // ignore
+    }
+
+    try {
+      ngUserService.removeUserFromScope(userId, scope, USER, null);
+      fail();
+    } catch (InvalidUserRemoveRequestException exception) {
+      // ignore
+    }
+
+    assertSuccessfulRemoveUserFromScope(userId, scope, userMembership);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testRemoveUserFromOrgScope() {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    Scope scope = Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build();
+    String userId = randomAlphabetic(10);
+    UserMembership userMembership = UserMembership.builder().scope(scope).userId(userId).build();
+
+    preLastAdminFailure(userId, scope, userMembership);
+
+    assertSuccessfulRemoveUserFromScope(userId, scope, userMembership);
+  }
+
+  private void preLastAdminFailure(String userId, Scope scope, UserMembership userMembership) {
+    when(userMembershipRepository.findOne(any())).thenReturn(userMembership);
+    when(userMembershipRepository.findAll(any(Criteria.class))).thenReturn(Collections.singletonList(userMembership));
+    doReturn(Collections.singletonList(scope))
+        .when(ngUserService)
+        .getLastAdminScopes(userId, Collections.singletonList(scope));
+  }
+
+  private void assertSuccessfulRemoveUserFromScope(String userId, Scope scope, UserMembership userMembership) {
+    when(userMembershipRepository.findOne(any())).thenReturn(userMembership);
+    when(userMembershipRepository.findAll(any(Criteria.class))).thenReturn(Collections.singletonList(userMembership));
+    doReturn(Collections.emptyList()).when(ngUserService).getLastAdminScopes(userId, Collections.singletonList(scope));
+    when(userMetadataRepository.findDistinctByUserId(userId))
+        .thenReturn(Optional.of(UserMetadata.builder().userId(userId).build()));
+    when(transactionTemplate.execute(any())).thenReturn(null);
+    ngUserService.removeUserFromScope(userId, scope, USER, null);
+    verify(transactionTemplate, times(1)).execute(any());
   }
 
   private void assertUserMetadataCriteria(ArgumentCaptor<Criteria> userMetadataCriteriaArgumentCaptor, String userId) {

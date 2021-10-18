@@ -115,10 +115,18 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
 
   @SchemaIgnore private List<String> keywords;
 
+  @FdIndex Long taskExpiryCheckNextIteration;
+
+  Long lastExpiredEventHeartbeatTime;
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (DelegateKeys.capabilitiesCheckNextIteration.equals(fieldName)) {
       this.capabilitiesCheckNextIteration = nextIteration;
+      return;
+    }
+    if (DelegateKeys.taskExpiryCheckNextIteration.equals(fieldName)) {
+      this.taskExpiryCheckNextIteration = nextIteration;
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -128,6 +136,9 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   public Long obtainNextIteration(String fieldName) {
     if (DelegateKeys.capabilitiesCheckNextIteration.equals(fieldName)) {
       return this.capabilitiesCheckNextIteration;
+    }
+    if (DelegateKeys.taskExpiryCheckNextIteration.equals(fieldName)) {
+      return this.taskExpiryCheckNextIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.execution.ExecutionStatus;
@@ -23,6 +24,7 @@ public class PipelineExecutionSummaryDtoMapper {
     entityGitDetails = updateEntityGitDetails(entityGitDetails);
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = pipelineExecutionSummaryEntity.getLayoutNodeMap();
     String startingNodeId = pipelineExecutionSummaryEntity.getStartingNodeId();
+    StagesExecutionMetadata stagesExecutionMetadata = pipelineExecutionSummaryEntity.getStagesExecutionMetadata();
     return PipelineExecutionSummaryDTO.builder()
         .name(pipelineExecutionSummaryEntity.getName())
         .createdAt(pipelineExecutionSummaryEntity.getCreatedAt())
@@ -47,6 +49,8 @@ public class PipelineExecutionSummaryDtoMapper {
                 : pipelineExecutionSummaryEntity.getModules())
         .gitDetails(entityGitDetails)
         .governanceMetadata(pipelineExecutionSummaryEntity.getGovernanceMetadata())
+        .isStagesExecution(stagesExecutionMetadata != null && stagesExecutionMetadata.isStagesExecution())
+        .stagesExecuted(stagesExecutionMetadata == null ? null : stagesExecutionMetadata.getStageIdentifiers())
         .build();
   }
 

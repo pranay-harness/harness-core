@@ -17,6 +17,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.GeneralException;
+import io.harness.ng.NextGenConfiguration;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationService;
 import io.harness.ng.core.AccountOrgProjectValidator;
@@ -28,7 +29,6 @@ import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
 
@@ -57,27 +57,29 @@ public class NGAccountSetupService {
   private final AccessControlAdminClient accessControlAdminClient;
   private final NgUserService ngUserService;
   private final UserClient userClient;
-  private final ResourceGroupClient resourceGroupClient;
   private final AccessControlMigrationService accessControlMigrationService;
   private final HarnessSMManager harnessSMManager;
   private final CIDefaultEntityManager ciDefaultEntityManager;
+  private final boolean shouldAssignAdmins;
 
   @Inject
   public NGAccountSetupService(OrganizationService organizationService,
       AccountOrgProjectValidator accountOrgProjectValidator,
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, NgUserService ngUserService,
-      UserClient userClient, ResourceGroupClient resourceGroupClient,
-      AccessControlMigrationService accessControlMigrationService, HarnessSMManager harnessSMManager,
-      CIDefaultEntityManager ciDefaultEntityManager) {
+      UserClient userClient, AccessControlMigrationService accessControlMigrationService,
+      HarnessSMManager harnessSMManager, CIDefaultEntityManager ciDefaultEntityManager,
+      NextGenConfiguration nextGenConfiguration) {
     this.organizationService = organizationService;
     this.accountOrgProjectValidator = accountOrgProjectValidator;
     this.accessControlAdminClient = accessControlAdminClient;
     this.ngUserService = ngUserService;
     this.userClient = userClient;
-    this.resourceGroupClient = resourceGroupClient;
     this.accessControlMigrationService = accessControlMigrationService;
     this.harnessSMManager = harnessSMManager;
     this.ciDefaultEntityManager = ciDefaultEntityManager;
+    this.shouldAssignAdmins =
+        nextGenConfiguration.getAccessControlAdminClientConfiguration().getMockAccessControlService().equals(
+            Boolean.FALSE);
   }
 
   public void setupAccountForNG(String accountIdentifier) {
@@ -109,9 +111,6 @@ public class NGAccountSetupService {
   }
 
   private void setupRBAC(String accountIdentifier, String orgIdentifier) {
-    NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(accountIdentifier, null, null));
-    NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(accountIdentifier, orgIdentifier, null));
-
     Collection<UserInfo> cgUsers = getCGUsers(accountIdentifier);
     Collection<String> cgAdmins =
         cgUsers.stream().filter(UserInfo::isAdmin).map(UserInfo::getUuid).collect(Collectors.toSet());
@@ -120,7 +119,7 @@ public class NGAccountSetupService {
     if (!hasAdmin(accountScope)) {
       cgUsers.forEach(user -> upsertUserMembership(accountScope, user.getUuid()));
       assignAdminRoleToUsers(accountScope, cgAdmins, getManagedAdminRole(accountScope));
-      if (!hasAdmin(accountScope)) {
+      if (shouldAssignAdmins && !hasAdmin(accountScope)) {
         throw new GeneralException(String.format("No Admin could be assigned in scope %s", accountScope));
       }
       accessControlMigrationService.save(AccessControlMigration.builder().accountIdentifier(accountIdentifier).build());
@@ -130,7 +129,7 @@ public class NGAccountSetupService {
     if (!hasAdmin(orgScope)) {
       cgAdmins.forEach(user -> upsertUserMembership(orgScope, user));
       assignAdminRoleToUsers(orgScope, cgAdmins, getManagedAdminRole(orgScope));
-      if (!hasAdmin(orgScope)) {
+      if (shouldAssignAdmins && !hasAdmin(orgScope)) {
         throw new GeneralException(String.format("No Admin could be assigned in scope %s", orgScope));
       }
       accessControlMigrationService.save(

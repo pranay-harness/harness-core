@@ -23,6 +23,7 @@ pipeline:
             identifier: stage5
             name: stage5
             "__uuid": "oldUuid5"
+      "__uuid": "oldParallel1"
     - stage:
         identifier: stage6
         name: stage6
@@ -40,6 +41,7 @@ pipeline:
             identifier: stage9
             name: stage9
             "__uuid": "newUuid9"
+      "__uuid": "newParallel2"
     - stage:
         identifier: stage10
         name: stage10

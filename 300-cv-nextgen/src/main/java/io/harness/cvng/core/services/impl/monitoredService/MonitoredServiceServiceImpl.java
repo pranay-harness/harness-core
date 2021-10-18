@@ -143,6 +143,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   private void validateDependencyMetadata(ProjectParams projectParams, Set<ServiceDependencyDTO> dependencyDTOs) {
+    if (dependencyDTOs == null) {
+      return;
+    }
     dependencyDTOs.forEach(dependencyDTO -> {
       if (dependencyDTO.getDependencyMetadata() == null) {
         return;
@@ -229,15 +232,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                         .collect(Collectors.toList());
       updateOperations.set(MonitoredServiceKeys.changeSourceIdentifiers, updatedChangeSourceIdentifiers);
     }
-    if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
-      ProjectParams projectParams = ProjectParams.builder()
-                                        .accountIdentifier(monitoredService.getAccountId())
-                                        .orgIdentifier(monitoredService.getOrgIdentifier())
-                                        .projectIdentifier(monitoredService.getProjectIdentifier())
-                                        .build();
-      serviceDependencyService.updateDependencies(
-          projectParams, monitoredService.getIdentifier(), monitoredServiceDTO.getDependencies());
-    }
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(monitoredService.getAccountId())
+                                      .orgIdentifier(monitoredService.getOrgIdentifier())
+                                      .projectIdentifier(monitoredService.getProjectIdentifier())
+                                      .build();
+    validateDependencyMetadata(projectParams, monitoredServiceDTO.getDependencies());
+    serviceDependencyService.updateDependencies(
+        projectParams, monitoredService.getIdentifier(), monitoredServiceDTO.getDependencies());
+
     hPersistence.update(monitoredService, updateOperations);
   }
 

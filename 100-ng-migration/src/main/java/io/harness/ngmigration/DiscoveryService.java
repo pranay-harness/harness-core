@@ -1,5 +1,6 @@
 package io.harness.ngmigration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -14,16 +15,17 @@ import software.wings.ngmigration.NGYamlFile;
 import software.wings.ngmigration.NgMigration;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.CDC)
 public class DiscoveryService {
   @Inject private NgMigrationFactory migrationFactory;
-  @Inject private PipelineMigrationService pipelineMigrationService;
 
   private void travel(String accountId, String appId, Map<CgEntityId, CgEntityNode> entities,
       Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId parent, DiscoveryNode discoveryNode) {
@@ -68,7 +70,55 @@ public class DiscoveryService {
 
   public List<NGYamlFile> migratePipeline(
       Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, String pipelineId) {
-    return pipelineMigrationService.getYamls(
+    return getAllYamlFiles(
         entities, graph, CgEntityId.builder().id(pipelineId).type(NGMigrationEntityType.PIPELINE).build());
+  }
+
+  private List<CgEntityId> getLeafNodes(Map<CgEntityId, Set<CgEntityId>> graph) {
+    if (isEmpty(graph)) {
+      return new ArrayList<>();
+    }
+    return graph.entrySet()
+        .stream()
+        .filter(entry -> isEmpty(entry.getValue()))
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
+  }
+
+  private void removeLeafNodes(Map<CgEntityId, Set<CgEntityId>> graph) {
+    List<CgEntityId> leafNodes = getLeafNodes(graph);
+    if (isEmpty(leafNodes)) {
+      return;
+    }
+    leafNodes.forEach(graph::remove);
+    if (isEmpty(graph)) {
+      return;
+    }
+    for (Map.Entry<CgEntityId, Set<CgEntityId>> entry : graph.entrySet()) {
+      if (isNotEmpty(entry.getValue())) {
+        graph.get(entry.getKey()).removeAll(leafNodes);
+      }
+    }
+  }
+
+  private List<NGYamlFile> getAllYamlFiles(
+      Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {
+    if (!graph.containsKey(entityId) || isEmpty(graph.get(entityId))) {
+      return new ArrayList<>();
+    }
+
+    List<NGYamlFile> files = new ArrayList<>();
+    while (isNotEmpty(graph)) {
+      List<CgEntityId> leafNodes = getLeafNodes(graph);
+      for (CgEntityId entry : leafNodes) {
+        List<NGYamlFile> currentEntity = migrationFactory.getMethod(entry.getType()).getYamls(entities, graph, entry);
+        if (isNotEmpty(currentEntity)) {
+          files.addAll(currentEntity);
+        }
+      }
+      removeLeafNodes(graph);
+    }
+
+    return files;
   }
 }

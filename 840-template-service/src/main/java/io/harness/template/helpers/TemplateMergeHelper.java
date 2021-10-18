@@ -2,6 +2,7 @@ package io.harness.template.helpers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetFormatYamlToOriginYaml;
 import static io.harness.pms.yaml.validation.RuntimeInputValuesValidator.validateStaticValues;
 
@@ -9,10 +10,13 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.NGExpressionUtils;
-import io.harness.exception.NGTemplateException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ngexception.NGTemplateException;
+import io.harness.ng.core.Status;
 import io.harness.ng.core.template.TemplateInputsErrorDTO;
 import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
-import io.harness.ng.core.template.TemplateMergeResponse;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
+import io.harness.ng.core.template.exception.NGTemplateResolveException;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.RuntimeInputFormHelper;
@@ -135,7 +139,7 @@ public class TemplateMergeHelper {
    * @param pipelineYaml - pipeline yaml
    * @return final pipeline yaml with all template occurrences replaced with actual template information.
    */
-  public TemplateMergeResponse mergeTemplateSpecToPipelineYaml(
+  public TemplateMergeResponseDTO mergeTemplateSpecToPipelineYaml(
       String accountId, String orgId, String projectId, String pipelineYaml) {
     if (isEmpty(pipelineYaml)) {
       throw new NGTemplateException("Pipeline yaml cannot be empty.");
@@ -151,10 +155,10 @@ public class TemplateMergeHelper {
     TemplateInputsErrorResponseDTO errorResponse =
         validateLinkedTemplateInputsInYaml(accountId, orgId, projectId, pipelineJsonNode);
     if (errorResponse != null) {
-      return TemplateMergeResponse.builder().isValid(false).errorResponse(errorResponse).build();
+      throw new NGTemplateResolveException("Exception in resolving template refs in given yaml.", USER, errorResponse);
     }
     Map<String, Object> resMap = generateMergedYamlMap(accountId, orgId, projectId, pipelineJsonNode);
-    return TemplateMergeResponse.builder().mergedPipelineYaml(convertToYaml(resMap)).isValid(true).build();
+    return TemplateMergeResponseDTO.builder().mergedPipelineYaml(convertToYaml(resMap)).build();
   }
 
   /**
@@ -214,6 +218,8 @@ public class TemplateMergeHelper {
     }
 
     if (templateInputs == null) {
+      // If runtime inputs are not provided while linking template, we consider them omitted.
+      // TODO[inder]: remove omitted runtime inputs from mergedYaml.
       return templateSpec;
     }
 
@@ -306,10 +312,8 @@ public class TemplateMergeHelper {
     }
     String errorYaml = convertToYaml(errorYamlMap);
     String errorTemplateYaml = convertUuidErrorMapToFqnErrorMap(errorYaml, templateInputsErrorMap);
-    return TemplateInputsErrorResponseDTO.builder()
-        .errorYaml(errorTemplateYaml)
-        .errorMap(templateInputsErrorMap)
-        .build();
+    return new TemplateInputsErrorResponseDTO(Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION,
+        "Template resolve failed in given yaml.", null, errorTemplateYaml, templateInputsErrorMap);
   }
 
   private String convertUuidErrorMapToFqnErrorMap(
@@ -494,7 +498,10 @@ public class TemplateMergeHelper {
 
   private TemplateEntity getLinkedTemplateEntity(String accountId, String orgId, String projectId, JsonNode yaml) {
     String identifier = yaml.get(TEMPLATE_REF).asText();
-    String versionLabel = yaml.get(TEMPLATE_VERSION_LABEL).asText();
+    String versionLabel = "";
+    if (yaml.get(TEMPLATE_VERSION_LABEL) != null) {
+      versionLabel = yaml.get(TEMPLATE_VERSION_LABEL).asText();
+    }
 
     IdentifierRef templateIdentifierRef = IdentifierRefHelper.getIdentifierRef(identifier, accountId, orgId, projectId);
     Optional<TemplateEntity> templateEntity =

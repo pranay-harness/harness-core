@@ -17,6 +17,7 @@ import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
 import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -60,6 +61,7 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.plan.consumers.PartialPlanResponseRedisConsumer;
@@ -94,7 +96,6 @@ import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
 import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
-import io.harness.pms.plan.execution.handlers.ExecutionSummaryStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
@@ -127,7 +128,6 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.service.impl.GraphGenerationServiceImpl;
 import io.harness.springdata.HMongoTemplate;
 import io.harness.steps.barriers.BarrierInitializer;
 import io.harness.steps.barriers.event.BarrierDropper;
@@ -372,7 +372,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
-        injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
+        injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(TimeoutInstanceRemover.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
@@ -428,10 +428,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(InstrumentationPipelineEndEventHandler.class)));
     planExecutionStrategy.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(PipelineStatusUpdateEventHandler.class)));
-
-    GraphGenerationServiceImpl graphGenerationService = injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
-    graphGenerationService.getGraphNodeUpdateObserverSubject().register(
-        injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
 
     HMongoTemplate mongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
     mongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
@@ -634,6 +630,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
+    environment.jersey().register(NGTemplateResolveExceptionMapper.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
@@ -675,25 +672,17 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void initializeEnforcementFramework(Injector injector) {
-    Map<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>> featureRestrictionNameClassHashMap =
-        new HashMap<>();
-    featureRestrictionNameClassHashMap.put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class);
-    featureRestrictionNameClassHashMap.put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class);
-
-    CustomRestrictionRegisterConfiguration customConfig =
-        CustomRestrictionRegisterConfiguration.builder()
-            .customRestrictionMap(
-                ImmutableMap
-                    .<FeatureRestrictionName,
-                        Class<? extends io.harness.enforcement.client.custom.CustomRestrictionInterface>>builder()
-                    .build())
-            .build();
     RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
         RestrictionUsageRegisterConfiguration.builder()
             .restrictionNameClassMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder().build())
+            .build();
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
                     .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
+                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
                     .build())
             .build();
     injector.getInstance(EnforcementSdkRegisterService.class)

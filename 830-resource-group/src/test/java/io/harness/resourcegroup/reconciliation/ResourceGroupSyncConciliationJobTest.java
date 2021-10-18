@@ -120,15 +120,11 @@ public class ResourceGroupSyncConciliationJobTest extends ResourceGroupTestBase 
         consumerMessageId, accountIdentifier, orgIdentifier, EventsFrameworkMetadataConstants.CREATE_ACTION);
 
     when(redisConsumer.read(any())).thenReturn(Lists.newArrayList(consumerMessage));
-    doNothing()
-        .when(resourceGroupServiceMock)
-        .createManagedResourceGroup(Scope.of(accountIdentifier, orgIdentifier, null));
     doNothing().when(redisConsumer).acknowledge(consumerMessageId);
 
     resourceGroupSyncConciliationJobMockService.readEventsFrameworkMessages();
 
     verify(redisConsumer, times(1)).read(any());
-    verify(resourceGroupServiceMock, times(1)).createManagedResourceGroup(any());
     verify(redisConsumer, times(1)).acknowledge(any());
   }
 

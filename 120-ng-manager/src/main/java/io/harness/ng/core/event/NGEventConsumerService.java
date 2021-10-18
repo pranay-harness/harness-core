@@ -78,15 +78,15 @@ public class NGEventConsumerService implements Managed {
 
   @Override
   public void stop() throws InterruptedException {
-    ngAccountSetupConsumerService.shutdown();
-    entityCRUDConsumerService.shutdown();
-    setupUsageConsumerService.shutdown();
-    entityActivityConsumerService.shutdown();
-    userMembershipConsumerService.shutdown();
-    samlAuthorizationConsumerService.shutdown();
-    gitSyncConfigStreamConsumerService.shutdown();
+    ngAccountSetupConsumerService.shutdownNow();
+    entityCRUDConsumerService.shutdownNow();
+    setupUsageConsumerService.shutdownNow();
+    entityActivityConsumerService.shutdownNow();
+    userMembershipConsumerService.shutdownNow();
+    samlAuthorizationConsumerService.shutdownNow();
+    gitSyncConfigStreamConsumerService.shutdownNow();
+    instanceStatsConsumerService.shutdownNow();
     ngAccountSetupConsumerService.awaitTermination(ENTITY_CRUD_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
-    instanceStatsConsumerService.shutdown();
     entityCRUDConsumerService.awaitTermination(ENTITY_CRUD_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     setupUsageConsumerService.awaitTermination(SETUP_USAGE_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     entityActivityConsumerService.awaitTermination(ENTITY_ACTIVITY_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
