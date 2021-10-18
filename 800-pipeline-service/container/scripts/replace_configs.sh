@@ -324,8 +324,6 @@ replace_key_value logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASE
 
 replace_key_value logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
 
-replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
-replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
 replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"
 replace_key_value orchestrationStepConfig.ffServerApiKey "$FF_SERVER_API_KEY"
 
@@ -341,3 +339,33 @@ replace_key_value triggerConfig.webhookBaseUrl "$WEBHOOK_TRIGGER_BASEURL"
 replace_key_value triggerConfig.customBaseUrl "$CUSTOM_TRIGGER_BASEURL"
 
 replace_key_value opaServerConfig.baseUrl "$OPA_SERVER_BASEURL"
+
+
+#Iterators Configuration
+replace_key_value iteratorsConfig.approvalInstance.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.approvalInstance.threadPoolCount "$BARRIER_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.approvalInstance.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.webhook.enabled "$WEBHOOK_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.webhook.threadPoolCount "$WEBHOOK_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.webhook.targetIntervalInSeconds "$WEBHOOK_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.scheduledTrigger.enabled "$SCHEDULED_TRIGGER_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.scheduledTrigger.threadPoolCount "$SCHEDULED_TRIGGER_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.scheduledTrigger.targetIntervalInSeconds "$SCHEDULED_TRIGGER_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.timeoutEngine.enabled "$TIME_OUT_ENGINE_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.timeoutEngine.threadPoolCount "$TIMEOUT_ENGINE_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.timeoutEngine.targetIntervalInSeconds "$TIME_OUT_ENGINE_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.barrier.enabled "$BARRIER_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.barrier.threadPoolCount "$BARRIER_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.barrier.targetIntervalInSeconds "$BARRIER_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.resourceRestraint.enabled "$RESOURCE_RESTRAINT_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.resourceRestraint.threadPoolCount "$RESOURCE_RESTRAINT_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.resourceRestraint.targetIntervalInSeconds "$RESOURCE_RESTRAINT_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.interruptMonitor.enabled "$INTERRUPT_MONITOR_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.interruptMonitor.threadPoolCount "$INTERRUPT_MONITOR_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.interruptMonitor.targetIntervalInSeconds "$INTERRUPT_MONITOR_ITERATOR_INTERVAL_SEC"
