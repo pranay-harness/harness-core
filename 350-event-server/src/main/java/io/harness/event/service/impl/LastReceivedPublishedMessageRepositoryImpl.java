@@ -1,11 +1,12 @@
 package io.harness.event.service.impl;
 
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.commons.entities.LatestClusterInfo;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
-import io.harness.grpc.IdentifierKeys;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -30,7 +31,7 @@ public class LastReceivedPublishedMessageRepositoryImpl implements LastReceivedP
   }
 
   private static boolean containsIdentifierKey(PublishedMessage publishedMessage) {
-    return publishedMessage.getAttributes().keySet().stream().anyMatch(s -> s.startsWith(IdentifierKeys.PREFIX));
+    return publishedMessage.getAttributes().keySet().stream().anyMatch(s -> s.startsWith(CLUSTER_ID_IDENTIFIER));
   }
 
   @Value
@@ -47,7 +48,7 @@ public class LastReceivedPublishedMessageRepositoryImpl implements LastReceivedP
             -> publishedMessage.getAttributes()
                    .entrySet()
                    .stream()
-                   .filter(mapEntry -> mapEntry.getKey().startsWith(IdentifierKeys.PREFIX))
+                   .filter(mapEntry -> mapEntry.getKey().startsWith(CLUSTER_ID_IDENTIFIER))
                    .forEach(identifier
                        -> updateLastReceivedPublishedMessage(publishedMessage.getAccountId(), identifier.getValue())));
   }
