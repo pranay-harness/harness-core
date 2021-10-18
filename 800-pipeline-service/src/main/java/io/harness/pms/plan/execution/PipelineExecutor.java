@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
+import io.harness.engine.executions.retry.RetryExecutionParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -82,8 +83,12 @@ public class PipelineExecutor {
     PipelineEntity pipelineEntity =
         executionHelper.fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     ExecutionTriggerInfo triggerInfo = executionHelper.buildTriggerInfo(originalExecutionId);
+
+    // RetryExecutionParameters
+    RetryExecutionParameters retryExecutionParameters = buildRetryExecutionParameters(false, null, null, null);
+
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stagesToRun,
-        triggerInfo, originalExecutionId, false, null, null, null);
+        triggerInfo, originalExecutionId, retryExecutionParameters);
     PlanExecution planExecution;
     if (useV2) {
       planExecution = executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier,
@@ -119,8 +124,13 @@ public class PipelineExecutor {
     }
     String previousProcessedYaml = optionalPlanExecutionMetadata.get().getProcessedYaml();
     List<String> identifierOfSkipStages = new ArrayList<>();
+
+    // RetryExecutionParameters
+    RetryExecutionParameters retryExecutionParameters =
+        buildRetryExecutionParameters(true, previousProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
+
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null,
-        triggerInfo, null, true, previousProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
+        triggerInfo, previousExecutionId, retryExecutionParameters);
     PlanExecution planExecution;
     if (useV2) {
       planExecution =
@@ -134,6 +144,20 @@ public class PipelineExecutor {
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
+        .build();
+  }
+
+  public RetryExecutionParameters buildRetryExecutionParameters(
+      boolean isRetry, String processedYaml, List<String> stagesIdentifier, List<String> identifierOfSkipStages) {
+    if (!isRetry) {
+      return RetryExecutionParameters.builder().isRetry(false).build();
+    }
+
+    return RetryExecutionParameters.builder()
+        .isRetry(true)
+        .previousProcessedYaml(processedYaml)
+        .retryStagesIdentifier(stagesIdentifier)
+        .identifierOfSkipStages(identifierOfSkipStages)
         .build();
   }
 }

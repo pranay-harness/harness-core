@@ -81,7 +81,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
       String searchTerm, List<ExecutionStatus> statusList, boolean myDeployments, boolean pipelineDeleted,
-      ByteString gitSyncBranchContext) {
+      ByteString gitSyncBranchContext, boolean isLatest) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
       criteria.and(PlanExecutionSummaryKeys.accountId).is(accountId);
@@ -99,6 +99,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
       criteria.and(PlanExecutionSummaryKeys.status).in(statusList);
     }
     criteria.and(PlanExecutionSummaryKeys.pipelineDeleted).ne(!pipelineDeleted);
+
+    criteria.and(PlanExecutionSummaryKeys.isLatestExecution).is(isLatest);
 
     Criteria filterCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
