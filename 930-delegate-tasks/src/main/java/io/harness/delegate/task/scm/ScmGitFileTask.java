@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-import io.harness.task.scm.ScmDelegateClient;
+import io.harness.connector.task.scm.ScmDelegateClient;
 import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(HarnessTeam.DX)

@@ -10,7 +10,7 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.gcp.GcpValidationParams;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
-import io.harness.task.ConnectorValidationHandler;
+import io.harness.connector.ConnectorValidationHandler;
 import io.harness.delegate.task.gcp.GcpRequestMapper;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;

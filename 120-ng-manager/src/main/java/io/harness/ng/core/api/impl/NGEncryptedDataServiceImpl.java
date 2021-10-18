@@ -382,6 +382,11 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     return updatedEncryptedData;
   }
 
+  @Override
+  public DecryptableEntity decryptUsingManager(DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier) {
+    return ngConnectorSecretManagerService.decryptUsingManager(decryptableEntity,encryptedDataDetailList,accountIdentifier);
+  }
+
   private byte[] getInputBytes(InputStream inputStream) {
     byte[] inputBytes = new byte[0];
     if (inputStream != null) {

@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
-import io.harness.task.ConnectorValidationHandler;
+import io.harness.connector.ConnectorValidationHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.task.git.NGGitServiceImpl;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
@@ -26,7 +27,8 @@ import org.mockito.MockitoAnnotations;
 
 public class NGGitServiceImplTest extends CategoryTest implements MockableTestMixin {
   @Mock GitClientV2 gitClientV2;
-  @InjectMocks @Inject NGGitServiceImpl ngGitService;
+  @InjectMocks @Inject
+  NGGitServiceImpl ngGitService;
 
   @Before
   public void setUp() throws Exception {
@@ -46,7 +48,7 @@ public class NGGitServiceImplTest extends CategoryTest implements MockableTestMi
                                     .gitAuthType(GitAuthType.HTTP)
                                     .build();
     final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
-    ngGitService.setGitBaseRequest(gitConfigDTO, accountId, gitBaseRequest, GitRepositoryType.YAML, null);
+//    ngGitService.setGitBaseRequest(gitConfigDTO, accountId, gitBaseRequest, GitRepositoryType.YAML, null);
     assertThat(gitBaseRequest).isNotNull();
     assertThat(gitBaseRequest.getRepoType()).isNotNull();
     assertThat(gitBaseRequest.getAccountId()).isNotNull();

@@ -1,4 +1,4 @@
-package io.harness.task.git;
+package io.harness.connector.task.git;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

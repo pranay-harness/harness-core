@@ -27,4 +27,6 @@ public interface NGEncryptedDataService {
   NGEncryptedData updateSecretText(String accountIdentifier, SecretDTOV2 dto);
 
   NGEncryptedData updateSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
+
+  DecryptableEntity decryptUsingManager(DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier);
 }

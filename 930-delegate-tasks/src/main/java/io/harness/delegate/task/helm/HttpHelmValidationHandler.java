@@ -12,7 +12,7 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
-import io.harness.task.ConnectorValidationHandler;
+import io.harness.connector.ConnectorValidationHandler;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.k8s.model.HelmVersion;

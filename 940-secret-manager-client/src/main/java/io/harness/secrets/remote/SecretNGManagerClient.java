@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -49,6 +50,12 @@ public interface SecretNGManagerClient {
   @KryoResponse
   Call<ResponseDTO<List<EncryptedDataDetail>>> getEncryptionDetails(
       @Body NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer);
+
+  @POST(SECRETS_API + "/decrypt-using-manager")
+  @KryoRequest
+  @KryoResponse
+  Call<ResponseDTO<List<DecryptableEntity>>> decryptUsingManager(
+          DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier);
 
   // get secret manager
   @GET(SECRET_MANAGERS_API + "/{identifier}")

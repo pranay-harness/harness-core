@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.CEK8sValidationParams;
-import io.harness.task.ConnectorValidationHandler;
+import io.harness.connector.ConnectorValidationHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 
 import com.google.inject.Inject;

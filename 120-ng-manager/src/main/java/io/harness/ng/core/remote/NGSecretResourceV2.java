@@ -352,6 +352,18 @@ public class NGSecretResourceV2 {
   }
 
   @POST
+  @Path("decrypt-using-manager")
+  @Consumes("application/x-kryo")
+  @Produces("application/x-kryo")
+  @ApiOperation(hidden = true, value = "Get Encryption", nickname = "postEncryptionDetails")
+  @InternalApi
+  public ResponseDTO<DecryptableEntity> decryptUsingManager(
+          @NotNull DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier) {
+
+  return ResponseDTO.newResponse( encryptedDataService.decryptUsingManager(decryptableEntity,encryptedDataDetailList,accountIdentifier));
+  }
+
+  @POST
   @Path("encryption-details")
   @Consumes("application/x-kryo")
   @Produces("application/x-kryo")

@@ -18,7 +18,7 @@ import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerDTO;
 import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
-import io.harness.task.ConnectorValidationHandler;
+import io.harness.connector.ConnectorValidationHandler;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.SecretManagementDelegateException;

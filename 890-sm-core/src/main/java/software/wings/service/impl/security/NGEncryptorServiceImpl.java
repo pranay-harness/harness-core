@@ -70,6 +70,15 @@ public class NGEncryptorServiceImpl implements NGEncryptorService {
     }
   }
 
+  @Override
+  public DecryptableEntity decryptEncryptionConfigSecrets2( DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier) {
+    for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetailList) {
+      decryptEncryptionConfigSecrets(accountIdentifier, decryptableEntity, encryptedDataDetail);
+    }
+    return null;
+  }
+
+
   private void decryptEncryptionConfigSecrets(
       String accountIdentifier, DecryptableEntity decryptableEntity, EncryptedDataDetail encryptedDataDetail) {
     char[] decryptedValue = fetchSecretValue(

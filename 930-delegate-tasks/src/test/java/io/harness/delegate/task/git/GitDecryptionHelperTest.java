@@ -20,7 +20,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
 import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.task.shell.SshSessionConfigMapper;
+import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -29,7 +29,6 @@ import io.harness.shell.SshSessionConfig;
 
 import java.util.ArrayList;
 
-import io.harness.task.git.GitDecryptionHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

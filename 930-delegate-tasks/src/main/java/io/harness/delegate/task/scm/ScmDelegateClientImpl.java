@@ -15,7 +15,7 @@ import io.grpc.StatusRuntimeException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import io.harness.task.scm.ScmDelegateClient;
+import io.harness.connector.task.scm.ScmDelegateClient;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 

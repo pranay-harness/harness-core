@@ -733,6 +733,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
           fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
       connectorOptional
           .map(item -> {
+
+
+
             String heartbeatTaskId = item.getHeartbeatPerpetualTaskId();
             String connectorFQN = item.getFullyQualifiedIdentifier();
             if (isNotBlank(heartbeatTaskId)) {

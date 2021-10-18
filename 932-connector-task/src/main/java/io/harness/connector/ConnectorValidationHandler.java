@@ -1,6 +1,5 @@
-package io.harness.task;
+package io.harness.connector;
 
-import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 
 /**

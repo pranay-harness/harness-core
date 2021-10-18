@@ -51,6 +51,7 @@ import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.connector.ConnectorModule;
+import io.harness.connector.ConnectorTaskModule;
 import io.harness.connector.events.ConnectorEventHandler;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -187,6 +188,7 @@ import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
@@ -238,6 +240,9 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
+import software.wings.service.impl.security.EncryptionServiceImpl;
+import software.wings.service.impl.security.SecretDecryptionServiceImpl;
+import software.wings.service.intfc.security.EncryptionService;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
@@ -474,6 +479,7 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.isEnableAudit()));
     install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
     install(new InstanceModule());
+    install(new ConnectorTaskModule());
     install(new TokenClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(EnforcementModule.getInstance());
@@ -596,6 +602,8 @@ public class NextGenModule extends AbstractModule {
     bind(FeedbackService.class).to(FeedbackServiceImpl.class);
     bind(PollingService.class).to(PollingServiceImpl.class);
     bind(PollingPerpetualTaskService.class).to(PollingPerpetualTaskServiceImpl.class);
+//    bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
+//    bind(EncryptionService.class).to(EncryptionServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);

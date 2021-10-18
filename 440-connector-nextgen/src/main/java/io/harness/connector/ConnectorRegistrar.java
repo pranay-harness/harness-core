@@ -4,7 +4,6 @@ import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.validator.ConnectionValidator;
-import io.harness.task.ConnectorValidationHandler;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -36,4 +35,8 @@ public class ConnectorRegistrar {
    * Db model to rest model mapper.
    */
   Class<? extends ConnectorEntityToDTOMapper<?, ?>> connectorEntityToDTOMapper;
+
+
+  Class<? extends ConnectorValidationHandler> connectorValidationHandler;
+
 }

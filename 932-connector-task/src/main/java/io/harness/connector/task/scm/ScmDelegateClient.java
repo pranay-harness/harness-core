@@ -1,4 +1,4 @@
-package io.harness.task.scm;
+package io.harness.connector.task.scm;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -18,11 +19,14 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.ng.SecretManagerConfigDTOMapper;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.security.NGEncryptorService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+
+import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +58,12 @@ public class NGConnectorSecretManagerServiceImpl implements NGConnectorSecretMan
 
     return SecretManagerConfigDTOMapper.fromConnectorDTO(
         accountIdentifier, connectorDTO, connectorDTO.getConnectorInfo().getConnectorConfig());
+  }
+
+  @Override
+  public DecryptableEntity decryptUsingManager(DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier
+                               ) {
+   return ngEncryptorService.decryptEncryptionConfigSecrets2(decryptableEntity, encryptedDataDetailList,accountIdentifier );
   }
 
   @Override

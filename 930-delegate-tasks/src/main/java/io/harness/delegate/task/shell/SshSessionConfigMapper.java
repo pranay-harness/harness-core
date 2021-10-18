@@ -1,4 +1,4 @@
-package io.harness.task.shell;
+package io.harness.delegate.task.shell;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;

@@ -27,7 +27,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesTaskHelper;
-import io.harness.task.scm.ScmDelegateClient;
+import io.harness.connector.task.scm.ScmDelegateClient;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.product.ci.scm.proto.FileContent;
