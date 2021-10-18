@@ -70,12 +70,12 @@ public class GitChangeSetRunnable implements Runnable {
   @Override
   public void run() {
     final Stopwatch stopwatch = Stopwatch.createStarted();
-    //    log.info("Started job to pick changesets for processing");
-
     try {
       if (!shouldRun()) {
-        log.info("Not continuing with GitChangeSetRunnable job");
-        Thread.sleep(300);
+        if (shouldPrintStatusLogs()) {
+          lastTimestampForStatusLogPrint.set(System.currentTimeMillis());
+          log.info("Not continuing with GitChangeSetRunnable job");
+        }
         return;
       }
 
@@ -89,6 +89,7 @@ public class GitChangeSetRunnable implements Runnable {
       }
 
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
+        log.info("Successfully handled {} change sets", yamlChangeSets.size());
       }
 
     } catch (WingsException exception) {
@@ -111,7 +112,7 @@ public class GitChangeSetRunnable implements Runnable {
     final String accountId = yamlChangeSet.getAccountId();
     try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
-      log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getChangesetId());
+      log.info("Processing changeSetId: [{}]", yamlChangeSet.getChangesetId());
       yamlChangeSetLifeCycleHandlerService.handleChangeSet(yamlChangeSet);
     } catch (UnsupportedOperationException ex) {
       log.error("Couldn't process change set : {}", yamlChangeSet, ex);
@@ -176,7 +177,6 @@ public class GitChangeSetRunnable implements Runnable {
 
   private void handleStuckChangeSets() {
     if (shouldPerformStuckJobCheck()) {
-      log.info("handling stuck change sets");
       lastTimestampForStuckJobCheck.set(System.currentTimeMillis());
       gitChangeSetRunnableHelper.handleOldQueuedChangeSets(yamlChangeSetService);
       handleStuckRunningChangesets();
@@ -218,7 +218,7 @@ public class GitChangeSetRunnable implements Runnable {
       Map<String, List<YamlChangeSetDTO>> accountIdToStuckChangeSets =
           stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSetDTO::getAccountId));
 
-      // Mark these yamlChagneSets as Queued.
+      // Mark these yamlChangeSets as Queued.
       accountIdToStuckChangeSets.forEach(this::retryOrSkipStuckChangeSets);
     }
   }
@@ -273,7 +273,6 @@ public class GitChangeSetRunnable implements Runnable {
 
   private void handleChangeSetWithMaxRetry() {
     if (shouldPerformMaxRetriedJobCheck()) {
-      log.info("handling max retried queued change sets");
       lastTimestampForQueuedJobCheck.set(System.currentTimeMillis());
       skipChangeSetsWithMaxRetries();
       log.info("Successfully handled max retried stuck queued change sets");
