@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.PRAKHAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,7 +9,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -19,6 +22,7 @@ import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 
 import com.amazonaws.services.cloudformation.model.Tag;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,6 +33,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CloudFormationCreateStackHandlerTest extends WingsBaseTest {
   @Mock private AwsCFHelperServiceDelegate awsCFHelperServiceDelegate;
   @InjectMocks private CloudFormationCreateStackHandler cloudFormationCreateStackHandler;
@@ -84,5 +89,51 @@ public class CloudFormationCreateStackHandlerTest extends WingsBaseTest {
     assertThat(cloudFormationCreateStackHandler.getCapabilities(
                    AwsConfig.builder().build(), "us-east-2", "data", userDefinedCapabilities, "type"))
         .hasSameElementsAs(expectedCapabilities);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testS3TemplatePath() throws MalformedURLException {
+    String s3Path = "https://anil-harness-test.s3.amazonaws.com/anilTest/basicCf.yaml";
+    String s3PathWithPlus = "https://anil-harness-test.s3.amazonaws.com/anil%2Btest/basicCf.yaml";
+    String s3PathWithSpace = "https://anil-harness-test.s3.amazonaws.com/anil+test/basicCf.yaml";
+    String s3PathWithMultipleSpace = "https://anil-harness-test.s3.amazonaws.com/anil+multiple+space+test/basicCf.yaml";
+    String s3SpaceInFileName = "https://anil-harness-test.s3.amazonaws.com/anilSpaceInFileName/basic+test.yaml";
+    String s3PlusInFileName = "https://anil-harness-test.s3.amazonaws.com/anilPlusInFileName/basic%2Btest.yaml";
+    String s3SpaceInFolderAndFileName =
+        "https://anil-harness-test.s3.amazonaws.com/anil+test/folder/folder%2Btest/basic+test.yaml";
+
+    CloudFormationCreateStackRequest request = CloudFormationCreateStackRequest.builder().data(s3Path).build();
+    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
+    assertThat(request.getData()).isEqualTo(s3Path);
+
+    request.setData(s3PathWithPlus);
+    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
+    assertThat(request.getData()).isEqualTo(s3PathWithPlus);
+
+    request.setData(s3PathWithSpace);
+    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
+    assertThat(request.getData()).isEqualTo("https://anil-harness-test.s3.amazonaws.com/anil%20test/basicCf.yaml");
+
+    request.setData(s3PathWithMultipleSpace);
+    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
+    assertThat(request.getData())
+        .isEqualTo("https://anil-harness-test.s3.amazonaws.com/anil%20multiple%20space%20test/basicCf.yaml");
+
+    request.setData(s3SpaceInFileName);
+    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
+    assertThat(request.getData())
+        .isEqualTo("https://anil-harness-test.s3.amazonaws.com/anilSpaceInFileName/basic%20test.yaml");
+
+    request.setData(s3PlusInFileName);
+    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
+    assertThat(request.getData())
+        .isEqualTo("https://anil-harness-test.s3.amazonaws.com/anilPlusInFileName/basic%2Btest.yaml");
+
+    request.setData(s3SpaceInFolderAndFileName);
+    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
+    assertThat(request.getData())
+        .isEqualTo("https://anil-harness-test.s3.amazonaws.com/anil%20test/folder/folder%2Btest/basic%20test.yaml");
   }
 }
