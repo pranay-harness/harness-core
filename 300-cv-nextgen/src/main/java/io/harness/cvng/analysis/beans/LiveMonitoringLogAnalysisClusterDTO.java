@@ -18,9 +18,9 @@ public class LiveMonitoringLogAnalysisClusterDTO {
     public LiveMonitoringLogAnalysisClusterDTOBuilder tag(LogAnalysisTag logAnalysisTag) {
       this.tag = logAnalysisTag;
       if (LogAnalysisTag.getAnomalousTags().contains(logAnalysisTag)) {
-        this.risk(Risk.HIGH);
+        this.risk(Risk.UNHEALTHY);
       } else {
-        this.risk(Risk.LOW);
+        this.risk(Risk.HEALTHY);
       }
       return this;
     }
