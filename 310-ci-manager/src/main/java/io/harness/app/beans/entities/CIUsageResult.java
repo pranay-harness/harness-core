@@ -15,7 +15,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-@OwnedBy(HarnessTeam.GTM)
+@OwnedBy(HarnessTeam.CI)
 @Data
 @Builder
 @NoArgsConstructor
