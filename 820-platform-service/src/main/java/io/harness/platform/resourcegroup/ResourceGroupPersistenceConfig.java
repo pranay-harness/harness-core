@@ -35,7 +35,8 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @OwnedBy(PL)
 @Configuration
-@EnableMongoRepositories(basePackages = {"io.harness"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+@EnableMongoRepositories(basePackages = {"io.harness.resourcegroup", "io.harness.repositories"},
+    includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 @EnableMongoAuditing
 public class ResourceGroupPersistenceConfig extends AbstractMongoConfiguration {
   private final MongoConfig mongoBackendConfiguration;

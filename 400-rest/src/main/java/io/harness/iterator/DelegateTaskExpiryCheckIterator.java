@@ -43,10 +43,10 @@ public class DelegateTaskExpiryCheckIterator implements MongoPersistenceIterator
   @Inject private DelegateService delegateService;
   @Inject private FeatureFlagService featureFlagService;
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
                                       .interval(Duration.ofMinutes(TASK_EXPIRY_CHECK_INTERVAL_IN_MINUTES))
-                                      .poolSize(5)
+                                      .poolSize(threadPoolSize)
                                       .name("DelegateCapabilitiesRecordHandler")
                                       .build();
 
