@@ -32,7 +32,6 @@ import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
@@ -63,6 +62,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -109,6 +109,9 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.TagOpt;
+import org.eclipse.jgit.transport.TransportHttp;
+import org.eclipse.jgit.transport.http.HttpConnectionFactory;
+import org.eclipse.jgit.transport.http.apache.HttpClientConnectionFactory;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 @Singleton
@@ -116,6 +119,12 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 @OwnedBy(CDP)
 public class GitClientV2Impl implements GitClientV2 {
   @Inject private GitClientHelper gitClientHelper;
+  /**
+   * factory for creating HTTP connections. By default, JGit uses JDKHttpConnectionFactory which doesn't work well with
+   * proxy. See:
+   * https://stackoverflow.com/questions/67492788/eclipse-egit-tfs-git-connection-authentication-not-supported
+   */
+  public static final HttpConnectionFactory connectionFactory = new HttpClientConnectionFactory();
 
   private void cleanup(GitBaseRequest request) {
     if (request.getRepoType() == null) {
@@ -936,20 +945,10 @@ public class GitClientV2Impl implements GitClientV2 {
                 CommitResult.builder().commitId(request.useBranch() ? "latest" : request.getCommitId()).build())
             .build();
 
-      } catch (WingsException e) {
-        tryResetWorkingDir(request);
-        throw e;
       } catch (Exception e) {
         tryResetWorkingDir(request);
         log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, e);
-        throw new YamlException(new StringBuilder()
-                                    .append("Failed while fetching files ")
-                                    .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
-                                    .append(request.useBranch() ? request.getBranch() : request.getCommitId())
-                                    .append(", FilePaths: ")
-                                    .append(request.getFilePaths())
-                                    .toString(),
-            USER);
+        throw e;
       }
     }
   }
@@ -973,15 +972,12 @@ public class GitClientV2Impl implements GitClientV2 {
         // GitFetchFilesTask relies on the exception cause whether to fail the deployment or not.
         // If the exception is being changed, make sure that the throwable cause is added to the new exception
         // Unit test testGetFilteredGitFilesNoFileFoundException makes sure that the original exception is not swallowed
-        throw new GitClientException(new StringBuilder("Unable to checkout files for filePath [")
-                                         .append(filePath)
-                                         .append("]")
-                                         .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
-                                         .append(request.useBranch() ? request.getBranch() : request.getCommitId())
-                                         .append(". Reason: ")
-                                         .append(ExceptionUtils.getMessage(e))
-                                         .toString(),
-            USER, e);
+        throw JGitRuntimeException.builder()
+            .message("Unable to checkout file: " + filePath)
+            .cause(e)
+            .branch(request.getBranch())
+            .commitId(request.getCommitId())
+            .build();
       }
     });
 
@@ -1020,11 +1016,20 @@ public class GitClientV2Impl implements GitClientV2 {
         File destinationDir = new File(request.getDestinationDirectory());
 
         for (String filePath : request.getFilePaths()) {
-          File sourceDir = new File(Paths.get(repoPath + "/" + filePath).toString());
-          if (sourceDir.isFile()) {
-            FileUtils.copyFile(sourceDir, Paths.get(request.getDestinationDirectory(), filePath).toFile());
-          } else {
-            FileUtils.copyDirectory(sourceDir, destinationDir);
+          try {
+            File sourceDir = new File(Paths.get(repoPath + "/" + filePath).toString());
+            if (sourceDir.isFile()) {
+              FileUtils.copyFile(sourceDir, Paths.get(request.getDestinationDirectory(), filePath).toFile());
+            } else {
+              FileUtils.copyDirectory(sourceDir, destinationDir);
+            }
+          } catch (FileNotFoundException e) {
+            throw JGitRuntimeException.builder()
+                .message(String.format("File '%s' not found", filePath))
+                .cause(e)
+                .commitId(request.getCommitId())
+                .branch(request.getBranch())
+                .build();
           }
         }
 
@@ -1107,9 +1112,11 @@ public class GitClientV2Impl implements GitClientV2 {
       log.info("Successfully Checked out commitId: " + request.getCommitId());
     } catch (Exception ex) {
       log.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
-      gitClientHelper.checkIfMissingCommitIdIssue(ex, request.getCommitId());
-      gitClientHelper.checkIfGitConnectivityIssue(ex);
-      throw new YamlException("Error in checking out commit id " + request.getCommitId(), USER);
+      throw JGitRuntimeException.builder()
+          .message("Error in checking out commit id " + request.getCommitId())
+          .cause(ex)
+          .commitId(request.getCommitId())
+          .build();
     }
   }
 
@@ -1128,8 +1135,11 @@ public class GitClientV2Impl implements GitClientV2 {
       log.info("Successfully Checked out Branch: " + request.getBranch());
     } catch (Exception ex) {
       log.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
-      gitClientHelper.checkIfGitConnectivityIssue(ex);
-      throw new YamlException("Error in checking out Branch " + request.getBranch(), USER);
+      throw JGitRuntimeException.builder()
+          .message("Error in checking out Branch " + request.getBranch())
+          .cause(ex)
+          .branch(request.getBranch())
+          .build();
     }
   }
 
@@ -1151,6 +1161,7 @@ public class GitClientV2Impl implements GitClientV2 {
 
   /**
    * Ensure repo locally cloned. This is called before performing any git operation with remote
+   *
    * @param request
    */
   private synchronized void cloneRepoForFilePathCheckout(GitBaseRequest request) {
@@ -1230,6 +1241,12 @@ public class GitClientV2Impl implements GitClientV2 {
           "The password is null in git config for the git connector " + gitBaseRequest.getConnectorId());
       gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(
           authRequest.getUsername(), authRequest.getPassword()));
+      gitCommand.setTransportConfigCallback(transport -> {
+        if (transport instanceof TransportHttp) {
+          TransportHttp http = (TransportHttp) transport;
+          http.setHttpConnectionFactory(connectionFactory);
+        }
+      });
     } else if (gitBaseRequest.getAuthRequest().getAuthType() == AuthInfo.AuthType.SSH_KEY) {
       JgitSshAuthRequest authRequest = (JgitSshAuthRequest) gitBaseRequest.getAuthRequest();
       gitCommand.setTransportConfigCallback(transport -> {

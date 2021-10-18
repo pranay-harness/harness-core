@@ -1,6 +1,7 @@
 package io.harness.pms.plan.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
@@ -12,7 +13,7 @@ import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanService;
-import io.harness.engine.executions.retry.RetryExecutionHelper;
+import io.harness.engine.executions.retry.RetryExecutionParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.execution.PlanExecution;
@@ -22,6 +23,7 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.RerunInfo;
+import io.harness.pms.contracts.plan.RetryExecutionInfo;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
@@ -30,12 +32,14 @@ import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.ExecArgs;
 import io.harness.pms.plan.execution.beans.StagesExecutionInfo;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.threading.Morpheus;
 
 import com.google.common.collect.ImmutableList;
@@ -67,8 +71,10 @@ public class ExecutionHelper {
   RetryExecutionHelper retryExecutionHelper;
   PlanCreatorMergeService planCreatorMergeService;
   OrchestrationService orchestrationService;
+  PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
   PlanService planService;
   PlanExecutionMetadataService planExecutionMetadataService;
+  PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public PipelineEntity fetchPipelineEntity(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier) {
@@ -111,12 +117,15 @@ public class ExecutionHelper {
   }
 
   public ExecArgs buildExecutionArgs(PipelineEntity pipelineEntity, String moduleType, String mergedRuntimeInputYaml,
-      List<String> stagesToRun, ExecutionTriggerInfo triggerInfo, String originalExecutionId, boolean isRetry,
-      String previousProcessedYaml, List<String> retryStagesIdentifier, List<String> identifierOfSkipStages) {
+      List<String> stagesToRun, ExecutionTriggerInfo triggerInfo, String originalExecutionId,
+      RetryExecutionParameters retryExecutionParameters) {
     final String executionId = generateUuid();
 
-    ExecutionMetadata executionMetadata =
-        buildExecutionMetadata(pipelineEntity.getIdentifier(), moduleType, triggerInfo, pipelineEntity, executionId);
+    boolean isRetry = retryExecutionParameters.isRetry();
+    // RetryExecutionInfo
+    RetryExecutionInfo retryExecutionInfo = buildRetryInfo(isRetry, originalExecutionId);
+    ExecutionMetadata executionMetadata = buildExecutionMetadata(
+        pipelineEntity.getIdentifier(), moduleType, triggerInfo, pipelineEntity, executionId, retryExecutionInfo);
 
     String pipelineYaml = getPipelineYamlAndValidate(mergedRuntimeInputYaml, pipelineEntity);
     StagesExecutionInfo stagesExecutionInfo =
@@ -124,15 +133,15 @@ public class ExecutionHelper {
     if (EmptyPredicate.isNotEmpty(stagesToRun)) {
       stagesExecutionInfo = StagesExecutionHelper.getStagesExecutionInfo(pipelineYaml, stagesToRun);
     }
-    PlanExecutionMetadata planExecutionMetadata =
-        obtainPlanExecutionMetadata(mergedRuntimeInputYaml, executionId, stagesExecutionInfo, originalExecutionId,
-            isRetry, previousProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
+    PlanExecutionMetadata planExecutionMetadata = obtainPlanExecutionMetadata(
+        mergedRuntimeInputYaml, executionId, stagesExecutionInfo, originalExecutionId, retryExecutionParameters);
 
     return ExecArgs.builder().metadata(executionMetadata).planExecutionMetadata(planExecutionMetadata).build();
   }
 
   private ExecutionMetadata buildExecutionMetadata(@NotNull String pipelineIdentifier, String moduleType,
-      ExecutionTriggerInfo triggerInfo, PipelineEntity pipelineEntity, String executionId) {
+      ExecutionTriggerInfo triggerInfo, PipelineEntity pipelineEntity, String executionId,
+      RetryExecutionInfo retryExecutionInfo) {
     ExecutionMetadata.Builder builder =
         ExecutionMetadata.newBuilder()
             .setExecutionUuid(executionId)
@@ -140,6 +149,7 @@ public class ExecutionHelper {
             .setModuleType(moduleType)
             .setRunSequence(pipelineEntity.getRunSequence())
             .setPipelineIdentifier(pipelineIdentifier)
+            .setRetryInfo(retryExecutionInfo)
             .setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal(pipelineEntity);
     if (gitSyncBranchContext != null) {
@@ -150,12 +160,14 @@ public class ExecutionHelper {
 
   private String getPipelineYamlAndValidate(String mergedRuntimeInputYaml, PipelineEntity pipelineEntity) {
     String pipelineYaml;
-    if (EmptyPredicate.isEmpty(mergedRuntimeInputYaml)) {
+    if (isEmpty(mergedRuntimeInputYaml)) {
       pipelineYaml = pipelineEntity.getYaml();
     } else {
       pipelineYaml =
           InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), mergedRuntimeInputYaml, true);
     }
+    // TODO(archit): Add check on template resolve when templateReferences is implemented.
+    pipelineYaml = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity).getMergedPipelineYaml();
     pipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
     pmsYamlSchemaService.validateYamlSchema(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
         pipelineEntity.getProjectIdentifier(), pipelineYaml);
@@ -166,8 +178,9 @@ public class ExecutionHelper {
   }
 
   private PlanExecutionMetadata obtainPlanExecutionMetadata(String mergedRuntimeInputYaml, String executionId,
-      StagesExecutionInfo stagesExecutionInfo, String originalExecutionId, boolean isRetry,
-      String previousProcessedYaml, List<String> retryStagesIdentifier, List<String> identifierOfSkipStages) {
+      StagesExecutionInfo stagesExecutionInfo, String originalExecutionId,
+      RetryExecutionParameters retryExecutionParameters) {
+    boolean isRetry = retryExecutionParameters.isRetry();
     String pipelineYaml = stagesExecutionInfo.getPipelineYamlToRun();
     PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
         PlanExecutionMetadata.builder()
@@ -185,9 +198,12 @@ public class ExecutionHelper {
     if (isRetry) {
       try {
         currentProcessedYaml = retryExecutionHelper.retryProcessedYaml(
-            previousProcessedYaml, currentProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
+            retryExecutionParameters.getPreviousProcessedYaml(), currentProcessedYaml,
+            retryExecutionParameters.getRetryStagesIdentifier(), retryExecutionParameters.getIdentifierOfSkipStages());
       } catch (IOException e) {
-        log.error("Unable to get processed yaml. Previous Processed yaml:\n" + previousProcessedYaml, e);
+        log.error("Unable to get processed yaml. Previous Processed yaml:\n"
+                + retryExecutionParameters.getPreviousProcessedYaml(),
+            e);
         throw new InvalidYamlException("Unable to get processed yaml for retry.", e);
       }
     }
@@ -278,5 +294,17 @@ public class ExecutionHelper {
     }
     return orchestrationService.startExecutionV2(
         planCreationId, abstractions, executionMetadata, planExecutionMetadata);
+  }
+
+  public RetryExecutionInfo buildRetryInfo(boolean isRetry, String originalExecutionId) {
+    if (!isRetry || isEmpty(originalExecutionId)) {
+      return RetryExecutionInfo.newBuilder().setIsRetry(false).build();
+    }
+    String rootRetryExecutionId = pmsExecutionSummaryRespository.fetchRootRetryExecutionId(originalExecutionId);
+    return RetryExecutionInfo.newBuilder()
+        .setIsRetry(true)
+        .setParentRetryId(originalExecutionId)
+        .setRootExecutionId(rootRetryExecutionId)
+        .build();
   }
 }

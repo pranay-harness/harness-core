@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 
@@ -46,15 +47,12 @@ public class NGVaultFetchEngineTask extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(Object[] parameters) {
-    return run((NGVaultRenewalTaskParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    return run((NGVaultRenewalTaskParameters) parameters);
-  }
-
-  private NGVaultFetchEngineTaskResponse run(NGVaultRenewalTaskParameters ngVaultRenewalTaskParameters) {
+    NGVaultRenewalTaskParameters ngVaultRenewalTaskParameters = (NGVaultRenewalTaskParameters) parameters;
     return runInternal(ngVaultRenewalTaskParameters);
   }
 

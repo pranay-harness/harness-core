@@ -2,7 +2,6 @@ package io.harness.ng.core.impl;
 
 import static io.harness.NGCommonEntityConstants.MONGODB_ID;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
-import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -65,10 +64,7 @@ import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.core.spring.ProjectRepository;
-import io.harness.resourcegroupclient.ResourceGroupResponse;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 import io.harness.utils.PageUtils;
@@ -118,21 +114,18 @@ public class ProjectServiceImpl implements ProjectService {
   private final OutboxService outboxService;
   private final TransactionTemplate transactionTemplate;
   private final NgUserService ngUserService;
-  private final ResourceGroupClient resourceGroupClient;
   private final AccessControlClient accessControlClient;
   private final ScopeAccessHelper scopeAccessHelper;
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
-      NgUserService ngUserService, @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient,
-      AccessControlClient accessControlClient, ScopeAccessHelper scopeAccessHelper) {
+      NgUserService ngUserService, AccessControlClient accessControlClient, ScopeAccessHelper scopeAccessHelper) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.transactionTemplate = transactionTemplate;
     this.outboxService = outboxService;
     this.ngUserService = ngUserService;
-    this.resourceGroupClient = resourceGroupClient;
     this.accessControlClient = accessControlClient;
     this.scopeAccessHelper = scopeAccessHelper;
   }
@@ -180,7 +173,6 @@ public class ProjectServiceImpl implements ProjectService {
       throw new InvalidRequestException("User not found in security context");
     }
     try {
-      createDefaultResourceGroup(scope);
       assignProjectAdmin(scope, principalId, principalType);
       busyPollUntilProjectSetupCompletes(scope, principalId);
     } catch (Exception e) {
@@ -239,21 +231,6 @@ public class ProjectServiceImpl implements ProjectService {
       default: {
         throw new InvalidRequestException("Invalid  principal type" + principalType);
       }
-    }
-  }
-
-  private void createDefaultResourceGroup(Scope scope) {
-    try {
-      ResourceGroupResponse resourceGroupResponse =
-          NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(DEFAULT_RESOURCE_GROUP_IDENTIFIER,
-              scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-      if (resourceGroupResponse != null) {
-        return;
-      }
-      NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
-          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-    } catch (Exception e) {
-      log.error("Couldn't create default resource group for [{}]", ScopeUtils.toString(scope));
     }
   }
 

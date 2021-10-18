@@ -1,8 +1,10 @@
 package io.harness.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -19,7 +21,9 @@ import io.harness.security.encryption.EncryptionConfig;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(PL)
 public class ValidateSecretManagerConfigurationTask extends AbstractDelegateRunnableTask {
   @Inject private VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject private KmsEncryptorsRegistry kmsEncryptorsRegistry;
@@ -32,22 +36,19 @@ public class ValidateSecretManagerConfigurationTask extends AbstractDelegateRunn
 
   @Override
   public DelegateResponseData run(Object[] parameters) {
-    return run((ValidateSecretReferenceTaskParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    return run((ValidateSecretManagerConfigurationTaskParameters) parameters);
-  }
-
-  private ValidateSecretManagerConfigurationTaskResponse run(
-      ValidateSecretManagerConfigurationTaskParameters parameters) {
-    EncryptionConfig encryptionConfig = parameters.getEncryptionConfig();
+    ValidateSecretManagerConfigurationTaskParameters validateSecretManagerConfigurationTaskParameters =
+        (ValidateSecretManagerConfigurationTaskParameters) parameters;
+    EncryptionConfig encryptionConfig = validateSecretManagerConfigurationTaskParameters.getEncryptionConfig();
     switch (encryptionConfig.getType()) {
       case VAULT:
-        return runVaultTask(parameters);
+        return runVaultTask(validateSecretManagerConfigurationTaskParameters);
       case KMS:
-        return runKmsTask(parameters);
+        return runKmsTask(validateSecretManagerConfigurationTaskParameters);
       default:
         throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR,
             String.format("Encryptor for validate reference task for encryption config %s not configured",

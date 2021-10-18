@@ -65,7 +65,7 @@ public class FilterCreatorMergeService {
 
   public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
-    String yaml = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
+    String yaml = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity).getMergedPipelineYaml();
     String processedYaml = YamlUtils.injectUuid(yaml);
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();

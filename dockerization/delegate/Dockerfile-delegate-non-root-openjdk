@@ -38,7 +38,7 @@ ENV PATH="/home/harness/bin:${PATH}"
 WORKDIR /opt/harness-delegate
 
 RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz
-RUN curl -#k https://app.harness.io/public/shared/watchers/builds/openjdk-8u242/72305/watcher.jar -o watcher.jar
+RUN curl -#k https://app.harness.io/public/shared/watchers/builds/openjdk-8u242/72306/watcher.jar -o watcher.jar
 
 CMD ./entrypoint.sh && bash -c ' \
     while [[ ! -e watcher.log ]]; do sleep 1s; done; tail -F watcher.log & \

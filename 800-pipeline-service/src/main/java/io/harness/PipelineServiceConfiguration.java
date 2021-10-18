@@ -12,11 +12,13 @@ import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.opaclient.OpaServiceConfiguration;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -70,6 +72,8 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("templateServiceSecret") private String templateServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
   @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
+  @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
+  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
@@ -86,6 +90,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
   @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("pipelineEventConsumersConfig") PipelineServiceConsumersConfig pipelineServiceConsumersConfig;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
 
   private String managerServiceSecret;

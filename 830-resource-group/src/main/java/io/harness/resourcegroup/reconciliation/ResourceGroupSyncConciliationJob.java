@@ -146,11 +146,6 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
   }
 
   private boolean handleCreateEvent(ResourceInfo resourceInfo) {
-    String resourceType = resourceInfo.getResourceType();
-    if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
-      resourceGroupService.createManagedResourceGroup(Scope.of(
-          resourceInfo.getAccountIdentifier(), resourceInfo.getOrgIdentifier(), resourceInfo.getProjectIdentifier()));
-    }
     return true;
   }
 

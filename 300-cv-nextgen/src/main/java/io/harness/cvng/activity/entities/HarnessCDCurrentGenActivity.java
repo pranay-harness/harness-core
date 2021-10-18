@@ -27,6 +27,8 @@ public class HarnessCDCurrentGenActivity extends Activity {
   Instant workflowEndTime;
   String workflowExecutionId;
   String name;
+  String artifactType;
+  String artifactName;
 
   @Override
   public ActivityType getType() {

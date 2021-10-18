@@ -17,6 +17,7 @@ import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
 import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -312,13 +313,16 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     initializeEnforcementFramework(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
-    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
-    injector.getInstance(TimeoutEngine.class).registerIterators();
-    injector.getInstance(BarrierServiceImpl.class).registerIterators();
+    PipelineServiceIteratorsConfig iteratorsConfig = appConfig.getIteratorsConfig();
+    injector.getInstance(TriggerWebhookExecutionService.class)
+        .registerIterators(iteratorsConfig.getTriggerWebhookConfig());
+    injector.getInstance(ScheduledTriggerHandler.class).registerIterators(iteratorsConfig.getScheduleTriggerConfig());
+    injector.getInstance(TimeoutEngine.class).registerIterators(iteratorsConfig.getTimeoutEngineConfig());
+    injector.getInstance(BarrierServiceImpl.class).registerIterators(iteratorsConfig.getBarrierConfig());
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
-    injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
-    injector.getInstance(InterruptMonitor.class).registerIterators();
+    injector.getInstance(ResourceRestraintPersistenceMonitor.class)
+        .registerIterators(iteratorsConfig.getResourceRestraintConfig());
+    injector.getInstance(InterruptMonitor.class).registerIterators(iteratorsConfig.getInterruptMonitorConfig());
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Initializing gRPC servers...");
@@ -334,7 +338,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
-    registerPmsSdkEvents(injector);
+    registerPmsSdkEvents(appConfig.getPipelineServiceConsumersConfig(), injector);
     registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
@@ -518,23 +522,36 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
   }
 
-  private void registerPmsSdkEvents(Injector injector) {
+  private void registerPmsSdkEvents(PipelineServiceConsumersConfig pipelineServiceConsumersConfig, Injector injector) {
     log.info("Initializing pms sdk redis abstract consumers...");
     PipelineEventConsumerController pipelineEventConsumerController =
         injector.getInstance(PipelineEventConsumerController.class);
-    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
-    pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
-    pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(PlanNotifyEventConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(PmsNotifyEventConsumerRedis.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getInterrupt().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getOrchestrationEvent().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getFacilitatorEvent().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getNodeStart().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getProgress().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getAdvise().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getResume().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class),
+        pipelineServiceConsumersConfig.getSdkResponse().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class),
+        pipelineServiceConsumersConfig.getGraphUpdate().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class),
+        pipelineServiceConsumersConfig.getPartialPlanResponse().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class),
+        pipelineServiceConsumersConfig.getCreatePlan().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(PlanNotifyEventConsumer.class),
+        pipelineServiceConsumersConfig.getPlanNotify().getThreads());
+    pipelineEventConsumerController.register(injector.getInstance(PmsNotifyEventConsumerRedis.class),
+        pipelineServiceConsumersConfig.getPmsNotify().getThreads());
   }
 
   /**-----------------------------Git sync --------------------------------------*/
@@ -671,25 +688,17 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void initializeEnforcementFramework(Injector injector) {
-    Map<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>> featureRestrictionNameClassHashMap =
-        new HashMap<>();
-    featureRestrictionNameClassHashMap.put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class);
-    featureRestrictionNameClassHashMap.put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class);
-
-    CustomRestrictionRegisterConfiguration customConfig =
-        CustomRestrictionRegisterConfiguration.builder()
-            .customRestrictionMap(
-                ImmutableMap
-                    .<FeatureRestrictionName,
-                        Class<? extends io.harness.enforcement.client.custom.CustomRestrictionInterface>>builder()
-                    .build())
-            .build();
     RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
         RestrictionUsageRegisterConfiguration.builder()
             .restrictionNameClassMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder().build())
+            .build();
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
                     .put(FeatureRestrictionName.DEPLOYMENTS, DeploymentRestrictionUsageImpl.class)
+                    .put(FeatureRestrictionName.BUILDS, BuildRestrictionUsageImpl.class)
                     .build())
             .build();
     injector.getInstance(EnforcementSdkRegisterService.class)

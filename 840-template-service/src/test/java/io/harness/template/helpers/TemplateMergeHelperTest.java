@@ -84,6 +84,8 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     when(templateService.get(ACCOUNT_ID, ORG_ID, null, "template1", "1", false))
         .thenReturn(Optional.of(templateEntity));
+    when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "", false))
+        .thenReturn(Optional.of(templateEntity));
 
     String approvalTemplateStepYaml = readFile("approval-step-template.yaml");
     TemplateEntity approvalTemplateEntity = TemplateEntity.builder()
@@ -102,7 +104,6 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
     String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
-    assertThat(pipelineMergeResponse.isValid()).isTrue();
 
     String resFile = "pipeline-with-template-step-replaced.yaml";
     String resPipeline = readFile(resFile);
@@ -125,6 +126,8 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "1", false))
         .thenReturn(Optional.of(templateEntity));
+    when(templateService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, "template1", "", false))
+        .thenReturn(Optional.of(templateEntity));
 
     String approvalTemplateStepYaml = readFile("approval-step-template.yaml");
     TemplateEntity approvalTemplateEntity = TemplateEntity.builder()
@@ -143,7 +146,6 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
     String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
-    assertThat(pipelineMergeResponse.isValid()).isTrue();
 
     String resFile = "pipeline-with-template-step-replaced.yaml";
     String resPipeline = readFile(resFile);
@@ -197,7 +199,6 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
     String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
-    assertThat(pipelineMergeResponse.isValid()).isTrue();
 
     String resFile = "pipeline-with-stage-template-replaced.yaml";
     String resPipeline = readFile(resFile);

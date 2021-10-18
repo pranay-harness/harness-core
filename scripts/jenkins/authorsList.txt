@@ -75,6 +75,7 @@ Juhi Agrawal juhi.agrawal@harness.io
 K Rohit Reddy rohit.reddy@harness.io
 Kamal Joshi kamal.joshi@harness.io
 Kanhaiya Rathi kanhaiya.rathi@harness.io
+Kapil Choudhary kapil.choudhary@harness.io
 Kapil Kumawat kapil.kumawat@harness.io
 Karan Siwach karan.siwach@harness.io
 Lazar Matovic lazar.matovic@harness.io

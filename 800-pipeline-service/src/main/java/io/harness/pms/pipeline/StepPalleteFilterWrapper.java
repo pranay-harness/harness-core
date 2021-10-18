@@ -12,6 +12,4 @@ import lombok.Value;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class StepPalleteFilterWrapper {
   List<StepPalleteModuleInfo> stepPalleteModuleInfos;
-  boolean shouldShowCommonSteps;
-  String commonStepCategory;
 }

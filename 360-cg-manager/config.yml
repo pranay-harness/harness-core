@@ -35,7 +35,7 @@ backgroundScheduler:
   schedulerName: automation_background_scheduler
   instanceId: automation_background
   tablePrefix: quartz
-  threadCount: 25
+  threadCount: ${CRONS_THREAD_COUNT:-25}
   clustered: true #backgroundScheduler
   #mongoUri: mongodb://localhost:27017/background_scheduler
 
@@ -45,7 +45,7 @@ serviceScheduler:
   #instanceId: automation_service
   instanceId: automation_background
   tablePrefix: quartz
-  threadCount: 25
+  threadCount: ${CRONS_THREAD_COUNT:-25}
   enabled: true
   #mongoUri: mongodb://localhost:27017/service_scheduler
 
@@ -625,6 +625,14 @@ auditClientConfig:
   readTimeOutSeconds: 15
 
 enableAudit: false
+
+eventListenersCountConfig:
+  deploymentEventListenerCount: ${DEPLOYMENT_EVENT_LISTENER_COUNT:-2}
+  instanceEventListenerCount: ${INSTANCE_EVENT_LISTENER_COUNT:-2}
+  deploymentTimeSeriesEventListenerCount: ${DEPLOYMENT_TIME_SERIES_EVENT_LISTENER_COUNT:-2}
+  executionEventListenerCount: ${EXECUTION_EVENT_LISTENER_COUNT:-3}
+  generalNotifyEventListenerCount: ${GENERAL_NOTIFY_EVENT_LISTENER_COUNT:-5}
+  orchestrationNotifyEventListenerCount: ${ORCHESTRATION_NOTIFY_EVENT_LISTENER_COUNT:-5}
 
 disableDelegateMgmtInManager: false
 

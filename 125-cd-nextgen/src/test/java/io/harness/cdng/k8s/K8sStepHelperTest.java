@@ -94,6 +94,7 @@ import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -114,6 +115,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KubernetesTaskException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
@@ -1393,7 +1395,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testHandleTaskException() {
+  public void testHandleTaskException() throws Exception {
     K8sExecutionPassThroughData executionPassThroughData =
         K8sExecutionPassThroughData.builder()
             .lastActiveUnitProgressData(
@@ -1415,6 +1417,15 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(stepResponse.getUnitProgressList().get(0).getStatus()).isEqualTo(UnitStatus.SUCCESS);
     assertThat(stepResponse.getUnitProgressList().get(1).getStatus()).isEqualTo(UnitStatus.FAILURE);
     assertThat(stepResponse.getUnitProgressList().get(1).getEndTime()).isNotZero();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleTaskExceptionK8sTaskException() {
+    Exception thrownException = new TaskNGDataException(null, new KubernetesTaskException("Failed"));
+    assertThatThrownBy(() -> k8sStepHelper.handleTaskException(ambiance, null, thrownException))
+        .isSameAs(thrownException);
   }
 
   @Test

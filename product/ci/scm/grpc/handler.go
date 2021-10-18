@@ -186,3 +186,8 @@ func (h *handler) GetUserRepos(ctx context.Context, in *pb.GetUserReposRequest) 
 func (h *handler) FindPR(ctx context.Context, in *pb.FindPRRequest) (*pb.FindPRResponse, error) {
 	return git.FindPR(ctx, in, h.log)
 }
+
+func (h *handler) FindCommit(ctx context.Context, in *pb.FindCommitRequest) (*pb.FindCommitResponse, error) {
+	return git.FindCommit(ctx, in, h.log)
+}
+

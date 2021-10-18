@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
-import io.harness.engine.executions.retry.RetryExecutionHelper;
+import io.harness.engine.executions.retry.RetryExecutionParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -12,6 +12,7 @@ import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.execution.beans.ExecArgs;
 import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
 
@@ -35,6 +36,7 @@ public class PipelineExecutor {
   ValidateAndMergeHelper validateAndMergeHelper;
   PlanExecutionMetadataService planExecutionMetadataService;
   RetryExecutionHelper retryExecutionHelper;
+  PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
@@ -47,7 +49,7 @@ public class PipelineExecutor {
       String projectIdentifier, String pipelineIdentifier, String moduleType, List<String> inputSetReferences,
       String pipelineBranch, String pipelineRepoID) {
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
-        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
+        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID, null);
     return startPlanExecution(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, null, moduleType,
         mergedRuntimeInputYaml, Collections.emptyList(), false);
   }
@@ -70,7 +72,7 @@ public class PipelineExecutor {
       String projectIdentifier, String pipelineIdentifier, String moduleType, String originalExecutionId,
       List<String> inputSetReferences, String pipelineBranch, String pipelineRepoID) {
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
-        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
+        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID, null);
     return startPlanExecution(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, originalExecutionId,
         moduleType, mergedRuntimeInputYaml, Collections.emptyList(), false);
   }
@@ -81,8 +83,12 @@ public class PipelineExecutor {
     PipelineEntity pipelineEntity =
         executionHelper.fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     ExecutionTriggerInfo triggerInfo = executionHelper.buildTriggerInfo(originalExecutionId);
+
+    // RetryExecutionParameters
+    RetryExecutionParameters retryExecutionParameters = buildRetryExecutionParameters(false, null, null, null);
+
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stagesToRun,
-        triggerInfo, originalExecutionId, false, null, null, null);
+        triggerInfo, originalExecutionId, retryExecutionParameters);
     PlanExecution planExecution;
     if (useV2) {
       planExecution = executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier,
@@ -118,8 +124,13 @@ public class PipelineExecutor {
     }
     String previousProcessedYaml = optionalPlanExecutionMetadata.get().getProcessedYaml();
     List<String> identifierOfSkipStages = new ArrayList<>();
+
+    // RetryExecutionParameters
+    RetryExecutionParameters retryExecutionParameters =
+        buildRetryExecutionParameters(true, previousProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
+
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null,
-        triggerInfo, null, true, previousProcessedYaml, retryStagesIdentifier, identifierOfSkipStages);
+        triggerInfo, previousExecutionId, retryExecutionParameters);
     PlanExecution planExecution;
     if (useV2) {
       planExecution =
@@ -133,6 +144,20 @@ public class PipelineExecutor {
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
+        .build();
+  }
+
+  public RetryExecutionParameters buildRetryExecutionParameters(
+      boolean isRetry, String processedYaml, List<String> stagesIdentifier, List<String> identifierOfSkipStages) {
+    if (!isRetry) {
+      return RetryExecutionParameters.builder().isRetry(false).build();
+    }
+
+    return RetryExecutionParameters.builder()
+        .isRetry(true)
+        .previousProcessedYaml(processedYaml)
+        .retryStagesIdentifier(stagesIdentifier)
+        .identifierOfSkipStages(identifierOfSkipStages)
         .build();
   }
 }
