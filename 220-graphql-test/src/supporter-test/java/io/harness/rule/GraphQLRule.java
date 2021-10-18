@@ -19,6 +19,7 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
+import io.harness.dms.DmsModule;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -292,6 +293,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new SSOModule());
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
+    modules.add(DmsModule.getInstance(false));
     return modules;
   }
 
