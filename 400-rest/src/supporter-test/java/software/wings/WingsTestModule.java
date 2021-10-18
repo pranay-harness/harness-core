@@ -22,6 +22,8 @@ import io.harness.azure.impl.AzureNetworkClientImpl;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
+import io.harness.dms.DmsProxy;
+import io.harness.dms.DmsProxyManagerModeImpl;
 import io.harness.exception.WingsException;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
@@ -230,6 +232,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
     bind(CustomManifestService.class).to(CustomManifestServiceImpl.class);
     bind(EncryptDecryptHelper.class).to(EncryptDecryptHelperImpl.class);
+    bind(DmsProxy.class).to(DmsProxyManagerModeImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))
