@@ -18,6 +18,7 @@ import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityUpda
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
+import io.harness.cvng.activity.services.impl.DeploymentActivityUpdateHandler;
 import io.harness.cvng.activity.services.impl.KubernetesClusterActivityUpdateHandler;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.source.services.impl.KubernetesActivitySourceServiceImpl;
@@ -497,6 +498,7 @@ public class CVServiceModule extends AbstractModule {
     MapBinder<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMapBinder =
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdateHandler.class);
     activityUpdateHandlerMapBinder.addBinding(ActivityType.KUBERNETES).to(KubernetesClusterActivityUpdateHandler.class);
+    activityUpdateHandlerMapBinder.addBinding(ActivityType.DEPLOYMENT).to(DeploymentActivityUpdateHandler.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
