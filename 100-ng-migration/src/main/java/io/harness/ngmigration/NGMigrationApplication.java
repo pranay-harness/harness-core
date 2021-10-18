@@ -1092,9 +1092,9 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
   }
 
   public static void registerIteratorsDelegateService(Injector injector) {
-    injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
-    injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
-    injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
+    injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators(5);
+    injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators(5);
+    injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators(5, 5);
   }
 
   public static void registerIteratorsManager(Injector injector) {
@@ -1107,7 +1107,7 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
     injector.getInstance(ArtifactCollectionHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(ArtifactCleanupHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(EventDeliveryHandler.class).registerIterators(eventDeliveryExecutor);
-    injector.getInstance(InstanceSyncHandler.class).registerIterators();
+    injector.getInstance(InstanceSyncHandler.class).registerIterators(10);
     injector.getInstance(LicenseCheckHandler.class).registerIterators();
     injector.getInstance(ApprovalPollingHandler.class).registerIterators();
     injector.getInstance(GCPBillingHandler.class).registerIterators();
@@ -1115,10 +1115,10 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(EntityAuditRecordHandler.class).registerIterators();
     injector.getInstance(UsageMetricsHandler.class).registerIterators();
-    injector.getInstance(ResourceConstraintBackupHandler.class).registerIterators();
-    injector.getInstance(WorkflowExecutionMonitorHandler.class).registerIterators();
-    injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
-    injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
+    injector.getInstance(ResourceConstraintBackupHandler.class).registerIterators(10);
+    injector.getInstance(WorkflowExecutionMonitorHandler.class).registerIterators(5);
+    injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators(5);
+    injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators(5);
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
