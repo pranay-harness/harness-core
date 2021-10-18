@@ -217,12 +217,6 @@ public class TemplateMergeHelper {
       throw new NGTemplateException("Could not read template yaml: " + e.getMessage());
     }
 
-    if (templateInputs == null) {
-      // If runtime inputs are not provided while linking template, we consider them omitted.
-      // TODO[inder]: remove omitted runtime inputs from mergedYaml.
-      return templateSpec;
-    }
-
     return mergeTemplateInputsToTemplateSpecInTemplateYaml(templateInputs, templateSpec);
   }
 
