@@ -2,7 +2,6 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -54,6 +53,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -172,36 +172,12 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private Criteria createGitToHarnessErrorFilterCriteria(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, String repoId, String branch) {
     // when no filter is chosen - take all repos and their default branches
-    List<Pair<String, String>> repoBranchList = new ArrayList<>();
-    if (isEmpty(repoId)) {
-      List<YamlGitConfigDTO> yamlGitConfigDTOS =
-          yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
-      repoBranchList = emptyIfNull(yamlGitConfigDTOS)
-                           .stream()
-                           .map(yamlGitConfigDTO -> {
-                             String repo = yamlGitConfigDTO.getRepo();
-                             String defaultBranch = yamlGitConfigDTO.getBranch();
-                             return Pair.of(repo, defaultBranch);
-                           })
-                           .collect(toList());
-    } else { // when repo filter is applied
-      YamlGitConfigDTO yamlGitConfigDTO =
-          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoId);
-      branch = isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
-      repoBranchList.add(Pair.of(yamlGitConfigDTO.getRepo(), branch));
-    }
-
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(GitSyncErrorKeys.errorType)
                             .is(GitSyncErrorType.GIT_TO_HARNESS);
-    Criteria repoBranchCriteria = new Criteria();
-    for (Pair<String, String> repoBranch : repoBranchList) {
-      repoBranchCriteria.orOperator(Criteria.where(GitSyncErrorKeys.repoUrl)
-                                        .is(repoBranch.getLeft())
-                                        .and(GitSyncErrorKeys.branchName)
-                                        .is(repoBranch.getRight()));
-    }
+    Criteria repoBranchCriteria =
+        getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, repoId, branch);
     criteria.andOperator(repoBranchCriteria)
         .and(GitSyncErrorKeys.createdAt)
         .gt(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
@@ -211,6 +187,36 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
           Criteria.where(GitSyncErrorKeys.entityType).regex(searchTerm, "i"));
     }
     return criteria;
+  }
+
+  Criteria getRepoBranchCriteria(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoIdentifier, String branch) {
+    List<Pair<String, String>> repoBranchList = new ArrayList<>();
+    if (StringUtils.isEmpty(repoIdentifier)) {
+      List<YamlGitConfigDTO> yamlGitConfigDTOS =
+          yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
+      repoBranchList = emptyIfNull(yamlGitConfigDTOS)
+                           .stream()
+                           .map(yamlGitConfigDTO -> {
+                             String repo = yamlGitConfigDTO.getRepo();
+                             String defaultBranch = yamlGitConfigDTO.getBranch();
+                             return Pair.of(repo, defaultBranch);
+                           })
+                           .collect(Collectors.toList());
+    } else { // when repo filter is applied
+      YamlGitConfigDTO yamlGitConfigDTO =
+          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
+      branch = StringUtils.isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
+      repoBranchList.add(Pair.of(yamlGitConfigDTO.getRepo(), branch));
+    }
+    Criteria repoBranchCriteria = new Criteria();
+    for (Pair<String, String> repoBranch : repoBranchList) {
+      repoBranchCriteria.orOperator(Criteria.where(GitSyncErrorKeys.repoUrl)
+                                        .is(repoBranch.getLeft())
+                                        .and(GitSyncErrorKeys.branchName)
+                                        .is(repoBranch.getRight()));
+    }
+    return repoBranchCriteria;
   }
 
   @Override
@@ -334,6 +340,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                                                 .orgIdentifier(orgIdentifier)
                                                                 .projectIdentifier(projectIdentifier)
                                                                 .build())
+                                    .createdAt(System.currentTimeMillis())
                                     .build();
     save(gitSyncError);
   }
@@ -353,22 +360,16 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoIdentifier, String branch) {
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountIdentifier)
-                            .and(GitSyncErrorKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(GitSyncErrorKeys.projectIdentifier)
-                            .is(projectIdentifier)
                             .and(GitSyncErrorKeys.errorType)
                             .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE);
-    if (!isEmpty(repoIdentifier)) {
-      YamlGitConfigDTO yamlGitConfigDTO =
-          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
-      if (yamlGitConfigDTO != null) {
-        criteria.and(GitSyncErrorKeys.repoUrl).is(yamlGitConfigDTO.getRepo());
-      }
-      if (!isEmpty(branch)) {
-        criteria.and(GitSyncErrorKeys.branchName).is(branch);
-      }
-    }
+    Criteria repoBranchCriteria =
+        getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, repoIdentifier, branch);
+
+    criteria.andOperator(repoBranchCriteria);
+    criteria.and(GitSyncErrorKeys.status)
+        .is(GitSyncErrorStatus.ACTIVE)
+        .and(GitSyncErrorKeys.createdAt)
+        .gt(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
     return criteria;
   }
 
