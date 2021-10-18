@@ -413,8 +413,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(new Key<Map<String, Cache<?, ?>>>() {});
 
     boolean shouldEnableDelegateMgmt = shouldEnableDelegateMgmt(configuration);
-
-    registerAtmosphereStreams(environment, injector);
+    if (shouldEnableDelegateMgmt) {
+      registerAtmosphereStreams(environment, injector);
+    }
 
     initializeFeatureFlags(configuration, injector);
 
