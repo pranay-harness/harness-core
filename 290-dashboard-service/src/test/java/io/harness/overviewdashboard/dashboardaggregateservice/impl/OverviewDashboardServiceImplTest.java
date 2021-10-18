@@ -1,13 +1,13 @@
 package io.harness.overviewdashboard.dashboardaggregateservice.impl;
 
-import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_CD_TOP_PROJECT_LIST;
-import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_PROJECTS_COUNT;
 import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_ACTIVE_DEPLOYMENTS_INFO;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_CD_TOP_PROJECT_LIST;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_DEPLOYMENT_STATS_SUMMARY;
 import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_ENV_COUNT;
 import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_MOST_ACTIVE_SERVICES;
 import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_PIPELINES_COUNT;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_PROJECTS_COUNT;
 import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_SERVICES_COUNT;
-import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_DEPLOYMENT_STATS_SUMMARY;
 import static io.harness.rule.OwnerRule.MEET;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,11 +16,24 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.dashboards.*;
+import io.harness.dashboards.DeploymentStatsSummary;
+import io.harness.dashboards.EnvCount;
+import io.harness.dashboards.GroupBy;
+import io.harness.dashboards.PipelineExecutionDashboardInfo;
+import io.harness.dashboards.PipelinesExecutionDashboardInfo;
+import io.harness.dashboards.ProjectDashBoardInfo;
+import io.harness.dashboards.ProjectsDashboardInfo;
+import io.harness.dashboards.ServiceDashboardInfo;
+import io.harness.dashboards.ServicesCount;
+import io.harness.dashboards.ServicesDashboardInfo;
+import io.harness.dashboards.SortBy;
+import io.harness.dashboards.TimeBasedDeploymentInfo;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.overviewdashboard.bean.RestCallResponse;
@@ -37,6 +50,8 @@ import io.harness.overviewdashboard.dtos.ExecutionResponse;
 import io.harness.overviewdashboard.dtos.ExecutionStatus;
 import io.harness.overviewdashboard.dtos.MostActiveServicesList;
 import io.harness.overviewdashboard.dtos.OrgInfo;
+import io.harness.overviewdashboard.dtos.PipelineExecutionInfo;
+import io.harness.overviewdashboard.dtos.PipelineInfo;
 import io.harness.overviewdashboard.dtos.ProjectInfo;
 import io.harness.overviewdashboard.dtos.RateAndRateChangeInfo;
 import io.harness.overviewdashboard.dtos.ServiceInfo;
@@ -51,9 +66,11 @@ import io.harness.rule.Owner;
 import io.harness.userng.remote.UserNGClient;
 
 import dashboards.CDLandingDashboardResourceClient;
-
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -69,10 +86,15 @@ public class OverviewDashboardServiceImplTest {
   String serviceIdentifier = UUIDGenerator.generateUuid();
   String serviceName = UUIDGenerator.generateUuid();
   String projectIdentifier = UUIDGenerator.generateUuid();
+  String projectName = UUIDGenerator.generateUuid();
   String orgIdentifier = UUIDGenerator.generateUuid();
-  String planExecutionId=UUIDGenerator.generateUuid();
+  String orgName = UUIDGenerator.generateUuid();
+  String planExecutionId = UUIDGenerator.generateUuid();
+  String pipelineName = UUIDGenerator.generateUuid();
+  String pipelineIdentifier = UUIDGenerator.generateUuid();
   List<ProjectDTO> listOfAccessibleProjects = new ArrayList<>();
-  Map<String, String> mapOfOrganizationIdentifierAndOrganizationName =new HashMap<>();;
+  Map<String, String> mapOfOrganizationIdentifierAndOrganizationName = new HashMap<>();
+  ;
 
   @InjectMocks OverviewDashboardServiceImpl overviewDashboardService;
   @Mock ParallelRestCallExecutor parallelRestCallExecutor;
@@ -92,6 +114,9 @@ public class OverviewDashboardServiceImplTest {
   public void testGetDeploymentStatsOverview() throws Exception {
     GroupBy groupBy = GroupBy.MONTH;
     SortBy sortBy = SortBy.DEPLOYMENTS;
+    mapOfOrganizationIdentifierAndOrganizationName.put(orgIdentifier, orgName);
+    listOfAccessibleProjects.add(
+        ProjectDTO.builder().identifier(projectIdentifier).orgIdentifier(orgIdentifier).name(projectName).build());
 
     Call<ResponseDTO<DeploymentStatsSummary>> requestDeploymentStatsSummary = Mockito.mock(Call.class);
     Call<ResponseDTO<ServicesDashboardInfo>> requestServicesDashboardInfo = Mockito.mock(Call.class);
@@ -100,11 +125,11 @@ public class OverviewDashboardServiceImplTest {
     when(dashboardRBACService.listAccessibleProject(anyString(), anyString())).thenReturn(listOfAccessibleProjects);
     when(dashboardRBACService.getMapOfOrganizationIdentifierAndOrganizationName(anyString(), anyList()))
         .thenReturn(mapOfOrganizationIdentifierAndOrganizationName);
-    when(cdLandingDashboardResourceClient.getActiveDeploymentStats(
-            anyString(), anyList()))
-            .thenReturn(requestActiveDeploymentStats);
+    doReturn(requestActiveDeploymentStats)
+        .when(cdLandingDashboardResourceClient)
+        .getActiveDeploymentStats(anyString(), anyList());
     when(cdLandingDashboardResourceClient.getDeploymentStatsSummary(
-             anyString(), anyList(), eq(1628899200000L), eq(1631491200000L),any()))
+             anyString(), anyList(), eq(1628899200000L), eq(1631491200000L), any()))
         .thenReturn(requestDeploymentStatsSummary);
     when(cdLandingDashboardResourceClient.get(anyString(), anyList(), eq(1628899200000L), eq(1631491200000L), any()))
         .thenReturn(requestServicesDashboardInfo);
@@ -150,38 +175,38 @@ public class OverviewDashboardServiceImplTest {
             .response(PipelinesExecutionDashboardInfo.builder()
                           .failed24HrsExecutions(Collections.singletonList(PipelineExecutionDashboardInfo.builder()
                                                                                .accountIdentifier(accountIdentifier)
-                                                                               .identifier(serviceIdentifier)
+                                                                               .identifier(pipelineIdentifier)
                                                                                .orgIdentifier(orgIdentifier)
                                                                                .projectIdentifier(projectIdentifier)
-                                                                               .name(serviceName)
+                                                                               .name(pipelineName)
                                                                                .planExecutionId(planExecutionId)
                                                                                .startTs(1628899200000L)
                                                                                .build()))
                           .pendingApprovalExecutions(Collections.singletonList(PipelineExecutionDashboardInfo.builder()
                                                                                    .accountIdentifier(accountIdentifier)
-                                                                                   .identifier(serviceIdentifier)
+                                                                                   .identifier(pipelineIdentifier)
                                                                                    .orgIdentifier(orgIdentifier)
                                                                                    .projectIdentifier(projectIdentifier)
-                                                                                   .name(serviceName)
+                                                                                   .name(pipelineName)
                                                                                    .planExecutionId(planExecutionId)
                                                                                    .startTs(1628899200000L)
                                                                                    .build()))
                           .pendingManualInterventionExecutions(
                               Collections.singletonList(PipelineExecutionDashboardInfo.builder()
                                                             .accountIdentifier(accountIdentifier)
-                                                            .identifier(serviceIdentifier)
+                                                            .identifier(pipelineIdentifier)
                                                             .orgIdentifier(orgIdentifier)
                                                             .projectIdentifier(projectIdentifier)
-                                                            .name(serviceName)
+                                                            .name(pipelineName)
                                                             .planExecutionId(planExecutionId)
                                                             .startTs(1628899200000L)
                                                             .build()))
                           .runningExecutions(Collections.singletonList(PipelineExecutionDashboardInfo.builder()
                                                                            .accountIdentifier(accountIdentifier)
-                                                                           .identifier(serviceIdentifier)
+                                                                           .identifier(pipelineIdentifier)
                                                                            .orgIdentifier(orgIdentifier)
                                                                            .projectIdentifier(projectIdentifier)
-                                                                           .name(serviceName)
+                                                                           .name(pipelineName)
                                                                            .planExecutionId(planExecutionId)
                                                                            .startTs(1628899200000L)
                                                                            .build()))
@@ -223,8 +248,11 @@ public class OverviewDashboardServiceImplTest {
                                              .serviceIdentifier(serviceIdentifier)
                                              .build())
                             .accountInfo(AccountInfo.builder().accountIdentifier(accountIdentifier).build())
-                            .orgInfo(OrgInfo.builder().orgIdentifier(orgIdentifier).build())
-                            .projectInfo(ProjectInfo.builder().projectIdentifier(projectIdentifier).build())
+                            .orgInfo(OrgInfo.builder().orgIdentifier(orgIdentifier).orgName(orgName).build())
+                            .projectInfo(ProjectInfo.builder()
+                                             .projectIdentifier(projectIdentifier)
+                                             .projectName(projectName)
+                                             .build())
                             .countWithSuccessFailureDetails(
                                 CountWithSuccessFailureDetails.builder()
                                     .count(10L)
@@ -237,43 +265,66 @@ public class OverviewDashboardServiceImplTest {
                     .build())
             .deploymentsOverview(
                 DeploymentsOverview.builder()
-                    .failed24HrsExecutions(Collections.singletonList(PipelineExecutionDashboardInfo.builder()
-                                                                         .accountIdentifier(accountIdentifier)
-                                                                         .identifier(serviceIdentifier)
-                                                                         .orgIdentifier(orgIdentifier)
-                                                                         .projectIdentifier(projectIdentifier)
-                                                                         .name(serviceName)
-                                                                         .planExecutionId(planExecutionId)
-                                                                         .startTs(1628899200000L)
-                                                                         .build()))
-                    .pendingApprovalExecutions(Collections.singletonList(PipelineExecutionDashboardInfo.builder()
-                                                                             .accountIdentifier(accountIdentifier)
-                                                                             .identifier(serviceIdentifier)
-                                                                             .orgIdentifier(orgIdentifier)
-                                                                             .projectIdentifier(projectIdentifier)
-                                                                             .name(serviceName)
-                                                                             .planExecutionId(planExecutionId)
-                                                                             .startTs(1628899200000L)
-                                                                             .build()))
-                    .pendingManualInterventionExecutions(
-                        Collections.singletonList(PipelineExecutionDashboardInfo.builder()
-                                                      .accountIdentifier(accountIdentifier)
-                                                      .identifier(serviceIdentifier)
-                                                      .orgIdentifier(orgIdentifier)
-                                                      .projectIdentifier(projectIdentifier)
-                                                      .name(serviceName)
-                                                      .planExecutionId(planExecutionId)
-                                                      .startTs(1628899200000L)
-                                                      .build()))
-                    .runningExecutions(Collections.singletonList(PipelineExecutionDashboardInfo.builder()
-                                                                     .accountIdentifier(accountIdentifier)
-                                                                     .identifier(serviceIdentifier)
-                                                                     .orgIdentifier(orgIdentifier)
-                                                                     .projectIdentifier(projectIdentifier)
-                                                                     .name(serviceName)
-                                                                     .planExecutionId(planExecutionId)
-                                                                     .startTs(1628899200000L)
-                                                                     .build()))
+                    .failed24HrsExecutions(Collections.singletonList(
+                        PipelineExecutionInfo.builder()
+                            .accountInfo(AccountInfo.builder().accountIdentifier(accountIdentifier).build())
+                            .pipelineInfo(PipelineInfo.builder()
+                                              .pipelineName(pipelineName)
+                                              .pipelineIdentifier(pipelineIdentifier)
+                                              .build())
+                            .orgInfo(OrgInfo.builder().orgIdentifier(orgIdentifier).orgName(orgName).build())
+                            .projectInfo(ProjectInfo.builder()
+                                             .projectName(projectName)
+                                             .projectIdentifier(projectIdentifier)
+                                             .build())
+                            .planExecutionId(planExecutionId)
+                            .startTs(1628899200000L)
+                            .build()))
+                    .pendingApprovalExecutions(Collections.singletonList(
+                        PipelineExecutionInfo.builder()
+                            .accountInfo(AccountInfo.builder().accountIdentifier(accountIdentifier).build())
+                            .pipelineInfo(PipelineInfo.builder()
+                                              .pipelineName(pipelineName)
+                                              .pipelineIdentifier(pipelineIdentifier)
+                                              .build())
+                            .orgInfo(OrgInfo.builder().orgIdentifier(orgIdentifier).orgName(orgName).build())
+                            .projectInfo(ProjectInfo.builder()
+                                             .projectName(projectName)
+                                             .projectIdentifier(projectIdentifier)
+                                             .build())
+                            .planExecutionId(planExecutionId)
+                            .startTs(1628899200000L)
+                            .build()))
+                    .pendingManualInterventionExecutions(Collections.singletonList(
+                        PipelineExecutionInfo.builder()
+                            .accountInfo(AccountInfo.builder().accountIdentifier(accountIdentifier).build())
+                            .pipelineInfo(PipelineInfo.builder()
+                                              .pipelineName(pipelineName)
+                                              .pipelineIdentifier(pipelineIdentifier)
+                                              .build())
+                            .orgInfo(OrgInfo.builder().orgIdentifier(orgIdentifier).orgName(orgName).build())
+                            .projectInfo(ProjectInfo.builder()
+                                             .projectName(projectName)
+                                             .projectIdentifier(projectIdentifier)
+                                             .build())
+                            .planExecutionId(planExecutionId)
+                            .startTs(1628899200000L)
+                            .build()))
+                    .runningExecutions(Collections.singletonList(
+                        PipelineExecutionInfo.builder()
+                            .accountInfo(AccountInfo.builder().accountIdentifier(accountIdentifier).build())
+                            .pipelineInfo(PipelineInfo.builder()
+                                              .pipelineName(pipelineName)
+                                              .pipelineIdentifier(pipelineIdentifier)
+                                              .build())
+                            .orgInfo(OrgInfo.builder().orgIdentifier(orgIdentifier).orgName(orgName).build())
+                            .projectInfo(ProjectInfo.builder()
+                                             .projectName(projectName)
+                                             .projectIdentifier(projectIdentifier)
+                                             .build())
+                            .planExecutionId(planExecutionId)
+                            .startTs(1628899200000L)
+                            .build()))
                     .build())
             .build();
 
@@ -290,6 +341,7 @@ public class OverviewDashboardServiceImplTest {
     Call<ResponseDTO<ServicesCount>> requestServicesCount = Mockito.mock(Call.class);
     Call<ResponseDTO<EnvCount>> requestEnvCount = Mockito.mock(Call.class);
     Call<ResponseDTO<PipelinesCount>> requestPipelinesCount = Mockito.mock(Call.class);
+    Call<ResponseDTO<ActiveProjectsCountDTO>> requestProjectsCount = Mockito.mock(Call.class);
 
     when(dashboardRBACService.listAccessibleProject(anyString(), anyString())).thenReturn(listOfAccessibleProjects);
     when(cdLandingDashboardResourceClient.getServicesCount(
@@ -300,6 +352,8 @@ public class OverviewDashboardServiceImplTest {
     when(pmsLandingDashboardResourceClient.getPipelinesCount(
              anyString(), anyList(), eq(1628899200000L), eq(1631491200000L)))
         .thenReturn(requestPipelinesCount);
+    when(userNGClient.getAccessibleProjectsCount(anyString(), anyString(), eq(1628899200000L), eq(1631491200000L)))
+        .thenReturn(requestProjectsCount);
 
     List<RestCallResponse> restCallResponseList = new ArrayList<>();
     restCallResponseList.add(RestCallResponse.<ServicesCount>builder()
@@ -313,6 +367,10 @@ public class OverviewDashboardServiceImplTest {
     restCallResponseList.add(RestCallResponse.<PipelinesCount>builder()
                                  .response(PipelinesCount.builder().newCount(10L).totalCount(12L).build())
                                  .requestType(GET_PIPELINES_COUNT)
+                                 .build());
+    restCallResponseList.add(RestCallResponse.<ActiveProjectsCountDTO>builder()
+                                 .response(ActiveProjectsCountDTO.builder().count(10).build())
+                                 .requestType(GET_PROJECTS_COUNT)
                                  .build());
 
     when(parallelRestCallExecutor.executeRestCalls(anyList())).thenReturn(restCallResponseList);
@@ -333,6 +391,11 @@ public class OverviewDashboardServiceImplTest {
                                           CountChangeAndCountChangeRateInfo.builder().countChange(10L).build())
                                       .count(12L)
                                       .build())
+            .projectsCountDetail(CountChangeDetails.builder()
+                                     .count(12L)
+                                     .countChangeAndCountChangeRateInfo(
+                                         CountChangeAndCountChangeRateInfo.builder().countChange(10L).build())
+                                     .build())
             .build();
 
     ExecutionResponse<CountOverview> actualResponse =

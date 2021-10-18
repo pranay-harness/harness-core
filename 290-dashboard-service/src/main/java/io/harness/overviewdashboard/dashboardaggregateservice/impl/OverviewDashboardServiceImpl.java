@@ -60,22 +60,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 
 @OwnedBy(HarnessTeam.PL)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   private final String SUCCESS_MESSAGE = "Successfully fetched data";
   private final String FAILURE_MESSAGE = "Failed to fetch data";
 
-  private DashboardRBACService dashboardRBACService;
-  @Inject CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
-  @Inject PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
-  @Inject ParallelRestCallExecutor parallelRestCallExecutor;
-  @Inject private UserNGClient userNGClient;
-
-  @Inject
-  public OverviewDashboardServiceImpl(DashboardRBACService dashboardRBACService) {
-    this.dashboardRBACService = dashboardRBACService;
-  }
+  DashboardRBACService dashboardRBACService;
+  CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
+  PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
+  ParallelRestCallExecutor parallelRestCallExecutor;
+  UserNGClient userNGClient;
 
   @Override
   public ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
