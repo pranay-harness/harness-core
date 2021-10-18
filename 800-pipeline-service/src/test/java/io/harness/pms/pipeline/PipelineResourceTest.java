@@ -168,7 +168,7 @@ public class PipelineResourceTest extends CategoryTest {
     doReturn(entityWithVersion).when(pmsPipelineService).create(entity);
     doReturn(GovernanceMetadata.newBuilder().setDeny(true).build())
         .when(mockGovernanceService)
-        .evaluateGovernancePolicies(anyString(), anyString(), anyString());
+        .evaluateGovernancePolicies(anyString(), anyString(), anyString(), anyString(), anyString());
     ResponseDTO<PipelineSaveResponse> responseDTO =
         pipelineResource.createPipelineV2(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData().getGovernanceMetadata()).isNotNull();
@@ -259,7 +259,7 @@ public class PipelineResourceTest extends CategoryTest {
     doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity, ChangeType.MODIFY);
     doReturn(GovernanceMetadata.newBuilder().setDeny(true).build())
         .when(mockGovernanceService)
-        .evaluateGovernancePolicies(anyString(), anyString(), anyString());
+        .evaluateGovernancePolicies(anyString(), anyString(), anyString(), anyString(), anyString());
     ResponseDTO<PipelineSaveResponse> responseDTO = pipelineResource.updatePipelineV2(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData().getGovernanceMetadata().getDeny()).isTrue();

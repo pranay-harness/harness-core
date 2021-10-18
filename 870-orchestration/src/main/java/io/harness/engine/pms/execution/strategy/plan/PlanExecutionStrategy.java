@@ -56,7 +56,9 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
   public PlanExecution triggerNode(Ambiance ambiance, Plan plan, PlanExecutionMetadata metadata) {
     GovernanceMetadata governanceMetadata = governanceService.evaluateGovernancePolicies(metadata.getYaml(),
         ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.accountId),
-        OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_RUN);
+        OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_RUN,
+        ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.orgIdentifier),
+        ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.projectIdentifier));
     PlanExecution planExecution = createPlanExecution(ambiance, metadata, governanceMetadata);
     eventEmitter.emitEvent(
         OrchestrationEvent.newBuilder()

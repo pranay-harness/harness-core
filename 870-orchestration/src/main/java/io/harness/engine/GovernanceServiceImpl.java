@@ -46,7 +46,8 @@ public class GovernanceServiceImpl implements GovernanceService {
   private final UserClient userClient;
 
   @Override
-  public GovernanceMetadata evaluateGovernancePolicies(String yaml, String accountId, String action) {
+  public GovernanceMetadata evaluateGovernancePolicies(
+      String yaml, String accountId, String action, String ordId, String projectId) {
     if (!pmsFeatureFlagService.isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE)) {
       return GovernanceMetadata.newBuilder()
           .setDeny(false)
@@ -67,7 +68,7 @@ public class GovernanceServiceImpl implements GovernanceService {
     OpaEvaluationResponseHolder response;
     try {
       response = SafeHttpCall.executeWithExceptions(opaServiceClient.evaluateWithCredentials(
-          OpaConstants.OPA_EVALUATION_TYPE_PIPELINE, "", "", "", action, context));
+          OpaConstants.OPA_EVALUATION_TYPE_PIPELINE, accountId, ordId, projectId, action, context));
     } catch (Exception ex) {
       log.error("Exception while evluating OPA rules", ex);
       throw new InvalidRequestException(ex.getMessage());
