@@ -148,7 +148,7 @@ public class ChangeEventServiceImpl implements ChangeEventService {
                                .plus(timeRangeDuration)
                                .toEpochMilli())
                   .build());
-          timeRangeDetail.incrementCount();
+          timeRangeDetail.incrementCount(timelineObject.count);
           milliSecondFromStartDetailMap.put(timelineObject.id.index, timeRangeDetail);
         });
     ChangeTimelineBuilder changeTimelineBuilder = ChangeTimeline.builder();
@@ -165,10 +165,11 @@ public class ChangeEventServiceImpl implements ChangeEventService {
         .match(createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier))
         .group(id(grouping("type", "type"),
                    grouping("index",
-                       accumulator("$divide",
-                           Arrays.asList(accumulator("$subtract",
-                                             Arrays.asList("$eventTime", new Date(startTime.toEpochMilli()))),
-                               timeRangeDuration.toMillis())))),
+                       accumulator("$floor",
+                           accumulator("$divide",
+                               Arrays.asList(accumulator("$subtract",
+                                                 Arrays.asList("$eventTime", new Date(startTime.toEpochMilli()))),
+                                   timeRangeDuration.toMillis()))))),
             grouping("count", accumulator("$sum", 1)))
         .aggregate(TimelineObject.class);
   }
