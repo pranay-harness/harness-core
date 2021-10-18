@@ -175,8 +175,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                             .is(accountIdentifier)
                             .and(GitSyncErrorKeys.errorType)
                             .is(GitSyncErrorType.GIT_TO_HARNESS);
-    Criteria repoBranchCriteria = getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier,
-            repoId, branch);
+    Criteria repoBranchCriteria =
+        getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, repoId, branch);
     criteria.andOperator(repoBranchCriteria)
         .and(GitSyncErrorKeys.createdAt)
         .gt(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
@@ -331,10 +331,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String projectIdentifier, String repoIdentifier, String branch, PageRequest pageRequest) {
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountIdentifier)
-                            .and(GitSyncErrorKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(GitSyncErrorKeys.projectIdentifier)
-                            .is(projectIdentifier)
                             .and(GitSyncErrorKeys.errorType)
                             .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE);
 
@@ -342,6 +338,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, repoIdentifier, branch);
 
     criteria.andOperator(repoBranchCriteria);
+    criteria.and(GitSyncErrorKeys.status).is(GitSyncErrorStatus.ACTIVE);
 
     Page<GitSyncError> gitSyncErrors = gitSyncErrorRepository.findAll(criteria, PageUtils.getPageRequest(pageRequest));
     Page<GitSyncErrorDTO> dtos = gitSyncErrors.map(GitSyncErrorMapper::toGitSyncErrorDTO);
