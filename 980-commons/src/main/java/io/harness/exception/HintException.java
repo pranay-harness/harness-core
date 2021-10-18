@@ -56,6 +56,11 @@ public class HintException extends WingsException {
   public static final String HINT_INVALID_GIT_SSH_KEY =
       "Please provide correct git ssh private key with 'git' username.";
 
+  public static final String HINT_MISSING_BRANCH = "Please provide valid git branch";
+  public static final String HINT_MISSING_REFERENCE = "Please provide valid git commit id or git tag";
+  public static final String HINT_GIT_FILE_NOT_FOUND =
+      "Please ensure that provided file path exists in git repository or in reference %s";
+
   public static final String HINT_CHECK_URL_DETAILS = "Please Check URL/Account details.";
   public static final String HINT_CHECK_AUTHORIZATION_DETAILS = "Check Authorization credentials.";
 

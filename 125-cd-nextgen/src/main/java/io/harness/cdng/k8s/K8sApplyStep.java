@@ -135,7 +135,7 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
   @Override
   public StepResponse finalizeExecutionWithSecurityContext(Ambiance ambiance,
       StepElementParameters stepElementParameters, PassThroughData passThroughData,
-      ThrowingSupplier<ResponseData> responseDataSupplier) {
+      ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }
