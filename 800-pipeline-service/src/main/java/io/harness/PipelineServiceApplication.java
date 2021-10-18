@@ -313,13 +313,16 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     initializeEnforcementFramework(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
-    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
-    injector.getInstance(TimeoutEngine.class).registerIterators();
-    injector.getInstance(BarrierServiceImpl.class).registerIterators();
+    PipelineServiceIteratorsConfig iteratorsConfig = appConfig.getIteratorsConfig();
+    injector.getInstance(TriggerWebhookExecutionService.class)
+        .registerIterators(iteratorsConfig.getTriggerWebhookConfig());
+    injector.getInstance(ScheduledTriggerHandler.class).registerIterators(iteratorsConfig.getScheduleTriggerConfig());
+    injector.getInstance(TimeoutEngine.class).registerIterators(iteratorsConfig.getTimeoutEngineConfig());
+    injector.getInstance(BarrierServiceImpl.class).registerIterators(iteratorsConfig.getBarrierConfig());
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
-    injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
-    injector.getInstance(InterruptMonitor.class).registerIterators();
+    injector.getInstance(ResourceRestraintPersistenceMonitor.class)
+        .registerIterators(iteratorsConfig.getResourceRestraintConfig());
+    injector.getInstance(InterruptMonitor.class).registerIterators(iteratorsConfig.getInterruptMonitorConfig());
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Initializing gRPC servers...");
