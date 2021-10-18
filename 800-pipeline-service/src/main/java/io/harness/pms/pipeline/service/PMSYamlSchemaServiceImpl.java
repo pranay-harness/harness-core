@@ -109,6 +109,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       String schemaString = JsonPipelineUtils.writeJsonString(schema);
       Set<String> errors = yamlSchemaValidator.validate(yaml, schemaString);
       if (!errors.isEmpty()) {
+        log.error("Schema validation failed for yaml - " + yaml);
         throw new JsonSchemaValidationException(String.join("\n", errors));
       }
     } catch (Exception ex) {
