@@ -16,8 +16,8 @@ public class ChangeDataCaptureJob implements Runnable {
   private ChangeDataCaptureBulkSyncTask changeDataCaptureBulkSyncTask;
   @Override
   public void run() {
-    changeDataCaptureBulkSyncTask = changeDataCaptureBulkSyncTaskProvider.get();
-    changeDataCaptureBulkSyncTask.run();
+//    changeDataCaptureBulkSyncTask = changeDataCaptureBulkSyncTaskProvider.get();
+//    changeDataCaptureBulkSyncTask.run();
 
     changeDataCaptureTask = changeDataCaptureTaskProvider.get();
 

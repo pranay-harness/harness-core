@@ -13,6 +13,7 @@ public class BuildActiveInfo {
   private String branch;
   private String commit;
   private String commitID;
+  private String triggerType;
   private AuthorInfo author;
   private Long startTs;
   private String status;

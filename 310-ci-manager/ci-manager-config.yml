@@ -105,10 +105,10 @@ ciExecutionServiceConfig:
   defaultCPULimit: 400
   defaultInternalImageConnector: ''
   pvcDefaultStorageSize: 25600
-  delegateServiceEndpointVariableValue: "delegate-service:8080"
+  delegateServiceEndpointVariableValue: "4.tcp.ngrok.io:17577"
   addonImage: harness/ci-addon:release-47
   liteEngineImage: harness/ci-lite-engine:release-17
-  isLocal: false
+  isLocal: true
   stepConfig:
     gitCloneConfig:
       image: harness/drone-git:v1.0.4
@@ -161,9 +161,9 @@ pmsGrpcClientConfig:
 
 apiUrl: https://localhost:8181/#/
 
-shouldConfigureWithPMS: false
+shouldConfigureWithPMS: true
 
-enableDashboardTimescale: false
+enableDashboardTimescale: true
 
 timescaledb:
   timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harness"

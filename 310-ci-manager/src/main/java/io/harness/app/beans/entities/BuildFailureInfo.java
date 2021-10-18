@@ -16,5 +16,7 @@ public class BuildFailureInfo {
   private AuthorInfo author;
   private long startTs;
   private long endTs;
+  private String triggerType;
+  private String planExecutionId;
   String status;
 }

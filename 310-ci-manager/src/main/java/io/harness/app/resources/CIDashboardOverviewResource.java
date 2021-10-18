@@ -57,7 +57,7 @@ public class CIDashboardOverviewResource {
   private final long DAY_IN_MS = 24 * HR_IN_MS;
 
   @GET
-  @Path("/buildHealth")
+  @Path("/ci/buildHealth")
   @ApiOperation(value = "Get build health", nickname = "getBuildHealth")
   @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<DashboardBuildsHealthInfo> getBuildHealth(
@@ -74,7 +74,7 @@ public class CIDashboardOverviewResource {
   }
 
   @GET
-  @Path("/buildExecution")
+  @Path("/ci/buildExecution")
   @ApiOperation(value = "Get build execution", nickname = "getBuildExecution")
   @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<DashboardBuildExecutionInfo> getBuildExecution(
@@ -89,7 +89,7 @@ public class CIDashboardOverviewResource {
   }
 
   @GET
-  @Path("/repositoryBuild")
+  @Path("/ci/repositoryBuild")
   @ApiOperation(value = "Get build getRepositoryBuild", nickname = "getRepositoryBuild")
   @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<DashboardBuildRepositoryInfo> getRepositoryBuild(
@@ -105,7 +105,7 @@ public class CIDashboardOverviewResource {
   }
 
   @GET
-  @Path("/getBuilds")
+  @Path("/ci/getBuilds")
   @ApiOperation(value = "Get builds", nickname = "getBuilds")
   @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<DashboardBuildsActiveAndFailedInfo> getActiveAndFailedBuild(

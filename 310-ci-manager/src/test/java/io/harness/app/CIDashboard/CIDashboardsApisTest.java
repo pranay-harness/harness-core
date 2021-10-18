@@ -507,9 +507,9 @@ public class CIDashboardsApisTest extends CategoryTest {
 
     assertThat(failureBuild)
         .isEqualTo(ciOverviewDashboardServiceImpl.getBuildFailureInfo(
-            "pip1", "pip1", "branch1", "commit1", "id1", 10, 13, null, "status"));
+            "pip1", "pip1", "branch1", "commit1", "id1", 10, 13, null, "status", "Webhook"));
     assertThat(activeInfo)
         .isEqualTo(ciOverviewDashboardServiceImpl.getBuildActiveInfo(
-            "pip2", "pip2", "branch2", "commit2", "id2", null, 10, ExecutionStatus.RUNNING.name(), 13));
+            "pip2", "pip2", "branch2", "commit2", "id2", null, 10, ExecutionStatus.RUNNING.name(), 13, "Webhook"));
   }
 }

@@ -78,7 +78,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private String queryBuilderFailedStatusOrderBy(String accountId, String orgId, String projectId, long limit) {
     String selectStatusQuery =
-        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, endts, status  from "
+        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, trigger_type, endts, status  from "
         + tableName + " where ";
 
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
@@ -109,7 +109,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private String queryBuilderActiveStatusOrderBy(String accountId, String orgId, String projectId, long limit) {
     String selectStatusQuery =
-        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, status  from "
+        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, status, trigger_type  from "
         + tableName + " where ";
 
     StringBuilder totalBuildSqlBuilder = new StringBuilder(1024);
@@ -197,11 +197,12 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   public BuildFailureInfo getBuildFailureInfo(String name, String identifier, String branch_name, String commit,
-      String commit_id, long startTs, long endTs, AuthorInfo author, String status) {
+      String commit_id, long startTs, long endTs, AuthorInfo author, String status, String triggerType) {
     return BuildFailureInfo.builder()
         .piplineName(name)
         .pipelineIdentifier(identifier)
         .branch(branch_name)
+        .triggerType(triggerType)
         .commit(commit)
         .commitID(commit_id)
         .startTs(startTs)
@@ -212,13 +213,14 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   public BuildActiveInfo getBuildActiveInfo(String name, String identifier, String branch_name, String commit,
-      String commit_id, AuthorInfo author, long startTs, String status, long endTs) {
+      String commit_id, AuthorInfo author, long startTs, String status, long endTs, String triggerType) {
     return BuildActiveInfo.builder()
         .piplineName(name)
         .pipelineIdentifier(identifier)
         .branch(branch_name)
         .commit(commit)
         .commitID(commit_id)
+        .triggerType(triggerType)
         .author(author)
         .startTs(startTs)
         .status(status)
@@ -346,7 +348,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           String pipelineIdentifier = resultSet.getString("pipelineidentifier");
           buildFailureInfos.add(getBuildFailureInfo(resultSet.getString("name"), pipelineIdentifier,
               resultSet.getString("moduleinfo_branch_name"), resultSet.getString("moduleinfo_branch_commit_message"),
-              resultSet.getString("moduleinfo_branch_commit_id"), startTime, endTime, author, status));
+              resultSet.getString("moduleinfo_branch_commit_id"), startTime, endTime, author, status,
+              resultSet.getString("trigger_type")));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -379,8 +382,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           String pipelineIdentifier = resultSet.getString("pipelineIdentifier");
           buildActiveInfos.add(getBuildActiveInfo(resultSet.getString("name"), pipelineIdentifier,
               resultSet.getString("moduleinfo_branch_name"), resultSet.getString("moduleinfo_branch_commit_message"),
-              resultSet.getString("moduleinfo_branch_commit_id"), author, startTime, resultSet.getString("status"),
-              -1L));
+              resultSet.getString("moduleinfo_branch_commit_id"), author, startTime, resultSet.getString("status"), -1L,
+              resultSet.getString("trigger_type")));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
