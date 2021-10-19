@@ -10,6 +10,7 @@ import io.harness.engine.executions.retry.ExecutionInfo;
 import io.harness.engine.executions.retry.RetryGroup;
 import io.harness.engine.executions.retry.RetryHistoryResponseDto;
 import io.harness.engine.executions.retry.RetryInfo;
+import io.harness.engine.executions.retry.RetryLatestExecutionResponseDto;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plan.IdentityPlanNode;
@@ -304,6 +305,19 @@ public class RetryExecutionHelper {
         .executionInfos(executionInfos)
         .latestExecutionId(latestRetryExecutionId)
         .build();
+  }
+
+  public RetryLatestExecutionResponseDto getRetryLatestExecutionId(String rootParentId) {
+    List<PipelineExecutionSummaryEntity> entities =
+        pmsExecutionSummaryRespository.fetchPipelineSummaryEntityFromRootParentId(rootParentId);
+
+    if (entities.size() <= 1) {
+      return RetryLatestExecutionResponseDto.builder().errorMessage("This is not a part of retry execution").build();
+    }
+
+    String latestRetryExecutionId = entities.get(entities.size() - 1).getPlanExecutionId();
+
+    return RetryLatestExecutionResponseDto.builder().latestExecutionId(latestRetryExecutionId).build();
   }
 
   private List<ExecutionInfo> fetchExecutionInfoFromPipelineEntities(

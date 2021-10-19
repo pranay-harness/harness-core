@@ -15,6 +15,7 @@ import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.retry.RetryGroup;
 import io.harness.engine.executions.retry.RetryHistoryResponseDto;
 import io.harness.engine.executions.retry.RetryInfo;
+import io.harness.engine.executions.retry.RetryLatestExecutionResponseDto;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plan.IdentityPlanNode;
@@ -766,5 +767,46 @@ public class RetryExecuteHelperTest extends CategoryTest {
     assertThat(retryHistory.getErrorMessage()).isNull();
     assertThat(retryHistory.getLatestExecutionId()).isEqualTo("uuid3");
     assertThat(retryHistory.getExecutionInfos().size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetLatestExecutionId() {
+    String rootExecutionId = "rootExecutionId";
+    List<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntities =
+        Arrays.asList(PipelineExecutionSummaryEntity.builder().build());
+
+    // entities are <=1. Checking error message
+    when(pmsExecutionSummaryRespository.fetchPipelineSummaryEntityFromRootParentId(rootExecutionId))
+        .thenReturn(pipelineExecutionSummaryEntities);
+    RetryLatestExecutionResponseDto retryLatestExecutionResponse =
+        retryExecuteHelper.getRetryLatestExecutionId(rootExecutionId);
+    assertThat(retryLatestExecutionResponse.getErrorMessage()).isNotNull();
+
+    pipelineExecutionSummaryEntities = Arrays.asList(PipelineExecutionSummaryEntity.builder()
+                                                         .planExecutionId("uuid1")
+                                                         .startTs(10L)
+                                                         .endTs(11L)
+                                                         .status(ExecutionStatus.FAILED)
+                                                         .build(),
+        PipelineExecutionSummaryEntity.builder()
+            .planExecutionId("uuid2")
+            .startTs(20L)
+            .endTs(21L)
+            .status(ExecutionStatus.FAILED)
+            .build(),
+        PipelineExecutionSummaryEntity.builder()
+            .planExecutionId("uuid3")
+            .startTs(30L)
+            .endTs(31L)
+            .status(ExecutionStatus.ABORTED)
+            .build());
+
+    when(pmsExecutionSummaryRespository.fetchPipelineSummaryEntityFromRootParentId(rootExecutionId))
+        .thenReturn(pipelineExecutionSummaryEntities);
+    retryLatestExecutionResponse = retryExecuteHelper.getRetryLatestExecutionId(rootExecutionId);
+    assertThat(retryLatestExecutionResponse.getErrorMessage()).isNull();
+    assertThat(retryLatestExecutionResponse.getLatestExecutionId()).isEqualTo("uuid3");
   }
 }
