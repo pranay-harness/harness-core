@@ -349,6 +349,18 @@ jreConfigs:
     jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
     alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
+iteratorsConfig:
+  delegateCapabilitiesRecordIteratorConfig:
+    threadPoolSize: ${DELEGATE_CAPABILITIES_RECORD_ITERATOR_THREAD_COUNT:-5}
+  blockingCapabilityPermissionsRecordHandlerIteratorConfig:
+    threadPoolSize: ${BLOCKING_CAPABILITY_PERMISSIONS_RECORD_ITERATOR_THREAD_COUNT:-5}
+  delegateTaskExpiryCheckIteratorConfig:
+    threadPoolSize: ${DELEGATE_TASK_EXPIRY_CHECK_ITERATOR_THREAD_COUNT:-5}
+  perpetualTaskRebalanceIteratorConfig:
+    threadPoolSize: ${PERPETUAL_TASK_REBALANCE_ITERATOR_THREAD_COUNT:-5}
+  perpetualTaskAssignmentIteratorConfig:
+    threadPoolSize: ${PERPETUAL_TASK_ASSIGNMENT_ITERATOR_THREAD_COUNT:-5}
+
 ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15
