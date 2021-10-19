@@ -1,5 +1,5 @@
   - apiGroups:
-      - lightwing.lightwing.io
+      - ccm.harness.io
     resources:
       - autostoppingrules
       - autostoppingrules/status
@@ -40,6 +40,7 @@
       - extensions
     resources:
       - deployments
+      - statefulsets
     verbs:
       - patch
       - update
@@ -95,14 +96,16 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: autostoppingrules.lightwing.lightwing.io
+  name: autostoppingrules.ccm.harness.io
 spec:
-  group: lightwing.lightwing.io
+  group: ccm.harness.io
   names:
     kind: AutoStoppingRule
     listKind: AutoStoppingRuleList
     plural: autostoppingrules
     singular: autostoppingrule
+    shortNames: 
+    - asr
   scope: Namespaced
   versions:
   - name: v1
@@ -152,7 +155,7 @@ status:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: as-controller-config
+  name: as-router-config
   namespace: harness-autostopping
 data:
   envoy.yaml: >
@@ -204,7 +207,7 @@ data:
             - endpoint:
                 address:
                   socket_address:
-                    address: harness-operator.harness-autostopping.svc.cluster.local
+                    address: autostopping-controller.harness-autostopping.svc.cluster.local
                     port_value: 18000
       - name: harness_api_endpoint
         connect_timeout: 0.25s
@@ -229,19 +232,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: ascontroller
-  name: ascontroller
+    app: autostopping-router
+  name: autostopping-router
   namespace: harness-autostopping
 spec:
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: ascontroller
+      app: autostopping-router
   template:
     metadata:
       labels:
-        app: ascontroller
+        app: autostopping-router
     spec:
       containers:
       - args:
@@ -262,21 +265,21 @@ spec:
         resources: {}
         volumeMounts:
         - mountPath: /etc/envoy.yaml
-          name: as-controller-config
+          name: as-router-config
           subPath: envoy.yaml
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       volumes:
       - configMap:
           defaultMode: 420
-          name: as-controller-config
-        name: as-controller-config
+          name: as-router-config
+        name: as-router-config
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ascontroller
+  name: autostopping-router
   namespace: harness-autostopping
 spec:
   ports:
@@ -284,7 +287,7 @@ spec:
     protocol: TCP
     targetPort: 10000
   selector:
-    app: ascontroller
+    app: autostopping-router
   type: ClusterIP
 
 ---
@@ -292,22 +295,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: harness-operator
-  name: harness-operator
+    app: autostopping-controller
+  name: autostopping-controller
   namespace: harness-autostopping
 spec:
   selector:
     matchLabels:
-      app: harness-operator
+      app: autostopping-controller
   replicas: 1
   template:
     metadata:
       labels:
-        app: harness-operator
+        app: autostopping-controller
     spec:
       containers:
-      - name: harness-operator
-        image: navaneethknharness/autostopping-operator:latest
+      - name: autostopping-controller
+        image: harness/autostopping-controller:latest
         imagePullPolicy: Always
         env:
         - name: HARNESS_API
@@ -318,20 +321,29 @@ spec:
           value: ${accountId}
         ports:
         - containerPort: 18000
+          name: envoy-snapshot
+        - containerPort: 8093
+          protocol: TCP
+          name: progress
       serviceAccountName: harness-autostopping-sa
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: harness-operator
+  name: autostopping-controller
   namespace: harness-autostopping
   labels:
-    app: harness-operator
+    app: autostopping-controller
 spec:
   ports:
   - port: 18000
     protocol: TCP
+    name: envoy-snapshot
+  - port: 80
+    protocol: TCP
+    targetPort: 8093
+    name: progress
   selector:
     app: harness-operator
 
@@ -369,47 +381,3 @@ subjects:
   - kind: ServiceAccount
     name: harness-autostopping-sa
     namespace: harness-autostopping
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: harness-progress
-  name: harness-progress
-  namespace: harness-autostopping
-spec:
-  selector:
-    matchLabels:
-      app: harness-progress
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: harness-progress
-    spec:
-      containers:
-      - name: harness-progress
-        image: navaneethknharness/autostopping-progress:latest
-        imagePullPolicy: Always
-        env:
-        - name: HARNESS_API_URL
-          value: "${harnessHostname}/gateway/lw/api/"
-        ports:
-        - containerPort: 8093
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: harness-progress
-  namespace: harness-autostopping
-  labels:
-    app: harness-progress
-spec:
-  ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 8093
-  selector:
-    app: harness-progress
