@@ -1,7 +1,6 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.logging.LogLevel.ERROR;
@@ -18,20 +17,15 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FileContentBatchResponse;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesTaskHelper;
 import io.harness.delegate.task.scm.ScmDelegateClient;
-import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.product.ci.scm.proto.FileContent;
-import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.ScmServiceClient;
 
@@ -45,7 +39,6 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
-import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
@@ -62,7 +55,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -198,7 +190,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     GitFetchFilesResult gitFetchFilesResult;
     encryptionService.decrypt(gitConfig, encryptedDataDetails, false);
     if (scmFetchFilesHelper.shouldUseScm(optimizedFilesFetch, gitConfig)) {
-      gitFetchFilesResult = fetchFilesFromRepoWithScm(gitFileConfig, gitConfig, filePathsToFetch, executionLogCallback);
+      gitFetchFilesResult = scmFetchFilesHelper.fetchFilesFromRepoWithScm(gitFileConfig, gitConfig, filePathsToFetch);
     } else {
       gitFetchFilesResult =
           gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(),
@@ -209,60 +201,6 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         executionLogCallback, gitFetchFilesResult == null ? Collections.emptyList() : gitFetchFilesResult.getFiles());
 
     return gitFetchFilesResult;
-  }
-
-  private GitFetchFilesResult fetchFilesFromRepoWithScm(GitFileConfig gitFileConfig, GitConfig gitConfig,
-      List<String> filePathList, ExecutionLogCallback executionLogCallback) {
-    ScmConnector scmConnector = scmFetchFilesHelper.getScmConnector(gitConfig);
-    FileContentBatchResponse fileBatchContentResponse;
-
-    if (gitFileConfig.isUseBranch()) {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFilesByFilePaths(
-              scmConnector, filePathList, gitFileConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
-    } else {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFilesByCommitId(
-              scmConnector, filePathList, gitFileConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
-    }
-
-    List<GitFile> gitFiles =
-        fileBatchContentResponse.getFileBatchContentResponse()
-            .getFileContentsList()
-            .stream()
-            .filter(fileContent -> {
-              if (fileContent.getStatus() != 200) {
-                logFailedFileFetch(gitFileConfig, executionLogCallback, fileContent);
-                return false;
-              } else {
-                return true;
-              }
-            })
-            .map(fileContent
-                -> GitFile.builder().fileContent(fileContent.getContent()).filePath(fileContent.getPath()).build())
-            .collect(Collectors.toList());
-
-    if (isNotEmpty(gitFiles)) {
-      gitFiles.forEach(gitFile -> log.info("File fetched : " + gitFile.getFilePath()));
-    }
-    return GitFetchFilesResult.builder()
-        .files(gitFiles)
-        .gitCommitResult(GitCommitResult.builder()
-                             .commitId(gitFileConfig.isUseBranch() ? "latest" : fileBatchContentResponse.getCommitId())
-                             .build())
-        .build();
-  }
-
-  private void logFailedFileFetch(
-      GitFileConfig gitFileConfig, ExecutionLogCallback executionLogCallback, FileContent fileContent) {
-    executionLogCallback.saveExecutionLog(
-        new StringBuilder("Unable to fetch files for filePath [")
-            .append(fileContent.getPath())
-            .append("]")
-            .append(gitFileConfig.isUseBranch() ? " for Branch: " : " for CommitId: ")
-            .append(gitFileConfig.isUseBranch() ? gitFileConfig.getBranch() : gitFileConfig.getCommitId())
-            .toString(),
-        WARN);
   }
 
   @Override

@@ -118,6 +118,11 @@ auditClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+ceNextGenClientConfig:
+  baseUrl: http://localhost:7340/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 enableAuth: true
 
 grpcClient:
