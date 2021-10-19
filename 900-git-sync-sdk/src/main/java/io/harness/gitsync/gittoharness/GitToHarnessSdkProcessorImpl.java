@@ -30,6 +30,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
+import io.harness.ng.core.ValidationError;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -39,8 +40,12 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Path;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -139,6 +144,9 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
           changeSetHelperService.process(changeSet);
           updateFileProcessingResponse(
               FileProcessingStatus.SUCCESS, null, processingResponseMap, changeSet.getFilePath(), commitId, accountId);
+        } catch (ConstraintViolationException ex) {
+          updateFileProcessingResponse(FileProcessingStatus.FAILURE, getErrorMessage(ex), processingResponseMap,
+              changeSet.getFilePath(), commitId, accountId);
         } catch (Exception e) {
           log.error("Exception in processing [{}]", changeSet.getFilePath(), e);
           updateFileProcessingResponse(FileProcessingStatus.FAILURE, getErrorMessage(e), processingResponseMap,
@@ -241,6 +249,22 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   }
 
   private String getErrorMessage(Exception ex) {
-    return ExceptionUtils.getMessage(ex);
+    if (ex instanceof ConstraintViolationException) {
+      ConstraintViolationException exception = (ConstraintViolationException) ex;
+      Set<ConstraintViolation<?>> constraintViolations = exception.getConstraintViolations();
+      List<ValidationError> validationErrors = new ArrayList<>();
+      constraintViolations.forEach(constraintViolation -> {
+        String field = null;
+        for (Path.Node node : constraintViolation.getPropertyPath()) {
+          field = node.getName();
+        }
+        validationErrors.add(ValidationError.of(field, constraintViolation.getMessage()));
+      });
+      return validationErrors.size() == 0
+          ? "wrong field in entity"
+          : validationErrors.get(0).getFieldId() + " " + validationErrors.get(0).getError();
+    } else {
+      return ExceptionUtils.getMessage(ex);
+    }
   }
 }
