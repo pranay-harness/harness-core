@@ -202,10 +202,9 @@ public class K8BuildSetupUtils {
 
     ConnectorDetails k8sConnector = connectorUtils.getConnectorDetails(ngAccess, clusterName);
     String workDir = ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getWorkDir();
-    CIK8PodParams<CIK8ContainerParams> podParams =
-        getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo, liteEngineTaskStepInfo.isUsePVC(),
-            liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone(), logPrefix, ambiance,
-            annotations, labels, stageRunAsUser, serviceAccountName);
+    CIK8PodParams<CIK8ContainerParams> podParams = getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo, false,
+        liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone(), logPrefix, ambiance,
+        annotations, labels, stageRunAsUser, serviceAccountName);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
     return CIK8BuildTaskParams.builder()
@@ -316,8 +315,26 @@ public class K8BuildSetupUtils {
     }
 
     CodebaseSweepingOutput codebaseSweeping = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+
+    /* Bitbucket SAAS does not generate refs/pull-requests/* which requires us to do this special handling.
+      Override commit ref to source branch instead of pull request ref
+     */
+    String commitRef = codebaseSweeping.getCommitRef();
+    if (isNotEmpty(codebaseSweeping.getPullRequestLink())
+        && codebaseSweeping.getPullRequestLink().contains("bitbucket.org")) {
+      commitRef = format("+refs/heads/%s", codebaseSweeping.getSourceBranch());
+    }
+
+    if (isNotEmpty(commitRef)) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_REF, commitRef);
+    }
+
     if (isNotEmpty(codebaseSweeping.getBranch())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
+    }
+
+    if (isNotEmpty(codebaseSweeping.getEvent())) {
+      codebaseRuntimeVars.put(DRONE_BUILD_EVENT, codebaseSweeping.getEvent());
     }
 
     if (!isEmpty(codebaseSweeping.getTag())) {
@@ -345,9 +362,6 @@ public class K8BuildSetupUtils {
     }
     if (isNotEmpty(codebaseSweeping.getBaseCommitSha())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_BEFORE, codebaseSweeping.getBaseCommitSha());
-    }
-    if (isNotEmpty(codebaseSweeping.getCommitRef())) {
-      codebaseRuntimeVars.put(DRONE_COMMIT_REF, codebaseSweeping.getCommitRef());
     }
     if (isNotEmpty(codebaseSweeping.getCommitSha())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_SHA, codebaseSweeping.getCommitSha());

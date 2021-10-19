@@ -9,7 +9,6 @@ import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO.CIModuleLicenseDTOBuilder;
-import io.harness.licensing.beans.stats.CIRuntimeUsageDTO;
 import io.harness.licensing.interfaces.clients.CIModuleLicenseClient;
 
 import java.time.Instant;
@@ -37,10 +36,5 @@ public class CILocalClient implements CIModuleLicenseClient {
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }
-  }
-
-  @Override
-  public CIRuntimeUsageDTO getRuntimeUsage(String accountId) {
-    return null;
   }
 }

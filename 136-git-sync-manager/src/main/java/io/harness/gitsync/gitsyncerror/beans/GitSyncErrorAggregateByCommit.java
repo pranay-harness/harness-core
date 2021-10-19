@@ -19,5 +19,6 @@ public class GitSyncErrorAggregateByCommit {
   String repoId;
   String branchName;
   String commitMessage;
+  long createdAt;
   List<GitSyncError> errorsForSummaryView;
 }

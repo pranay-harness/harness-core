@@ -31,10 +31,10 @@ public class GitSyncErrorMapper {
         .errorType(gitSyncError.getErrorType())
         .changeType(gitSyncError.getChangeType())
         .entityType(gitSyncError.getEntityType())
-        .entityReference(gitSyncError.getEntityReference())
         .status(gitSyncError.getStatus())
         .failureReason(gitSyncError.getFailureReason())
         .additionalErrorDetails(toGitSyncErrorDetailsDTO(gitSyncError.getAdditionalErrorDetails()))
+        .createdAt(gitSyncError.getCreatedAt())
         .build();
   }
 
@@ -47,7 +47,6 @@ public class GitSyncErrorMapper {
         .errorType(gitSyncErrorDTO.getErrorType())
         .changeType(gitSyncErrorDTO.getChangeType())
         .entityType(gitSyncErrorDTO.getEntityType())
-        .entityReference(gitSyncErrorDTO.getEntityReference())
         .status(gitSyncErrorDTO.getStatus())
         .failureReason(gitSyncErrorDTO.getFailureReason())
         .additionalErrorDetails(toGitSyncErrorDetails(gitSyncErrorDTO.getAdditionalErrorDetails()))
@@ -62,6 +61,7 @@ public class GitSyncErrorMapper {
         .repoId(gitSyncErrorAggregateByCommit.getRepoId())
         .branchName(gitSyncErrorAggregateByCommit.getBranchName())
         .commitMessage(gitSyncErrorAggregateByCommit.getCommitMessage())
+        .createdAt(gitSyncErrorAggregateByCommit.getCreatedAt())
         .errorsForSummaryView(gitSyncErrorAggregateByCommit.getErrorsForSummaryView()
                                   .stream()
                                   .map(GitSyncErrorMapper::toGitSyncErrorDTO)

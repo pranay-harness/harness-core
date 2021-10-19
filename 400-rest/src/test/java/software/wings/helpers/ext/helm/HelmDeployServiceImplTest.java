@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -87,6 +88,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.delegatetasks.ScmFetchFilesHelper;
 import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
 import software.wings.delegatetasks.helm.HelmDeployChartSpec;
@@ -153,6 +155,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private HelmHelper helmHelper;
+  @Mock private ScmFetchFilesHelper scmFetchFilesHelper;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
 
   @Captor private ArgumentCaptor<HelmCommandFlag> commandFlagCaptor;
@@ -860,6 +863,33 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     verify(encryptionService, times(1)).decrypt(argumentCaptor.capture(), anyList(), eq(false));
     verify(gitService, times(1)).downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString(), eq(false));
+
+    GitConfig gitConfig = argumentCaptor.getValue();
+    assertThat(gitConfig.getBranch()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testFetchSourceRepoOptimizedFileFetch() {
+    ArgumentCaptor<GitConfig> argumentCaptor = ArgumentCaptor.forClass(GitConfig.class);
+    doReturn(true).when(scmFetchFilesHelper).shouldUseScm(anyBoolean(), any());
+    HelmInstallCommandRequest request =
+        HelmInstallCommandRequest.builder()
+            .sourceRepoConfig(K8sDelegateManifestConfig.builder()
+                                  .manifestStoreTypes(StoreType.HelmSourceRepo)
+                                  .gitConfig(GitConfig.builder().build())
+                                  .gitFileConfig(GitFileConfig.builder().branch("master").useBranch(true).build())
+                                  .optimizedFilesFetch(true)
+                                  .build())
+            .executionLogCallback(executionLogCallback)
+            .build();
+
+    helmDeployService.fetchSourceRepo(request);
+
+    verify(encryptionService, times(1)).decrypt(argumentCaptor.capture(), anyList(), eq(false));
+    verify(scmFetchFilesHelper, times(1)).downloadFilesUsingScm(any(), any(), any(), any());
+    verify(gitService, times(0)).downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString(), eq(false));
 
     GitConfig gitConfig = argumentCaptor.getValue();
     assertThat(gitConfig.getBranch()).isNotEmpty();

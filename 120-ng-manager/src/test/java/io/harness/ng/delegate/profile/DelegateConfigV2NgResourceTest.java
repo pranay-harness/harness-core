@@ -22,7 +22,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
 import io.harness.delegate.beans.ScopingRuleDetailsNg;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
-import io.harness.ng.core.delegate.profile.DelegateConfigNgV2Resource;
+import io.harness.ng.core.delegate.resources.DelegateConfigNgV2Resource;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 

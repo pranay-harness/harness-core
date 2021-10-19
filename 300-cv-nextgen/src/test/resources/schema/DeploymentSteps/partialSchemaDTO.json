@@ -20,6 +20,9 @@
         "type" : "string",
         "pattern" : "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
       },
+      "template" : {
+        "$ref" : "#/definitions/cvng/TemplateLinkConfig"
+      },
       "timeout" : {
         "type" : "string",
         "pattern" : "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
@@ -208,7 +211,6 @@
         },
         "AddRuleYamlSpec" : {
           "type" : "object",
-          "required" : [ "priority" ],
           "properties" : {
             "clauses" : {
               "type" : "array",
@@ -503,7 +505,7 @@
         },
         "ClauseYamlSpec" : {
           "type" : "object",
-          "required" : [ "attribute", "op", "values" ],
+          "required" : [ "op", "values" ],
           "properties" : {
             "attribute" : {
               "type" : "string"
@@ -979,6 +981,76 @@
               }
             }
           } ],
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "JsonNode" : {
+          "type" : "object",
+          "properties" : {
+            "array" : {
+              "type" : "boolean"
+            },
+            "bigDecimal" : {
+              "type" : "boolean"
+            },
+            "bigInteger" : {
+              "type" : "boolean"
+            },
+            "binary" : {
+              "type" : "boolean"
+            },
+            "boolean" : {
+              "type" : "boolean"
+            },
+            "containerNode" : {
+              "type" : "boolean"
+            },
+            "double" : {
+              "type" : "boolean"
+            },
+            "float" : {
+              "type" : "boolean"
+            },
+            "floatingPointNumber" : {
+              "type" : "boolean"
+            },
+            "int" : {
+              "type" : "boolean"
+            },
+            "integralNumber" : {
+              "type" : "boolean"
+            },
+            "long" : {
+              "type" : "boolean"
+            },
+            "missingNode" : {
+              "type" : "boolean"
+            },
+            "nodeType" : {
+              "type" : "string",
+              "enum" : [ "ARRAY", "BINARY", "BOOLEAN", "MISSING", "NULL", "NUMBER", "OBJECT", "POJO", "STRING" ]
+            },
+            "null" : {
+              "type" : "boolean"
+            },
+            "number" : {
+              "type" : "boolean"
+            },
+            "object" : {
+              "type" : "boolean"
+            },
+            "pojo" : {
+              "type" : "boolean"
+            },
+            "short" : {
+              "type" : "boolean"
+            },
+            "textual" : {
+              "type" : "boolean"
+            },
+            "valueNode" : {
+              "type" : "boolean"
+            }
+          },
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
         "KeyValuesCriteriaSpec" : {
@@ -1619,6 +1691,9 @@
               "type" : "string",
               "pattern" : "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
             },
+            "template" : {
+              "$ref" : "#/definitions/cvng/TemplateLinkConfig"
+            },
             "timeout" : {
               "type" : "string",
               "pattern" : "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
@@ -1826,6 +1901,24 @@
               }
             }
           } ],
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "TemplateLinkConfig" : {
+          "type" : "object",
+          "required" : [ "templateRef" ],
+          "properties" : {
+            "templateInputs" : {
+              "$ref" : "#/definitions/cvng/JsonNode"
+            },
+            "templateRef" : {
+              "type" : "string",
+              "pattern" : "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
+            "versionLabel" : {
+              "type" : "string",
+              "pattern" : "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            }
+          },
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
         "TestVerificationJobSpec" : {

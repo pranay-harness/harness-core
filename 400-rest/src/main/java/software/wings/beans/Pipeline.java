@@ -150,7 +150,7 @@ public class Pipeline
 
   @JsonIgnore
   @Override
-  public NGMigrationEntityType getType() {
+  public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.PIPELINE;
   }
 

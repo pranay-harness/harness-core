@@ -12,8 +12,11 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.BuilderFactory.Context;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
@@ -34,12 +37,14 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
   @Inject private ServiceDependencyGraphService serviceDependencyGraphService;
   @Inject private MonitoredServiceService monitoredServiceService;
   @Inject private HeatMapService heatMapService;
   @Inject private HPersistence hPersistence;
+  @Mock private NextGenService nextGenService;
 
   private BuilderFactory builderFactory;
   private Context context;
@@ -53,6 +58,7 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
 
     FieldUtils.writeField(heatMapService, "clock", clock, true);
     FieldUtils.writeField(serviceDependencyGraphService, "heatMapService", heatMapService, true);
+    FieldUtils.writeField(serviceDependencyGraphService, "nextGenService", nextGenService, true);
   }
 
   @Test
@@ -80,10 +86,10 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
     assertThat(graphDTO.getNodes().get(0).getIdentifierRef()).isEqualTo(monitoredServiceDTO.getIdentifier());
     assertThat(graphDTO.getNodes().get(0).getServiceRef()).isEqualTo(context.getServiceIdentifier());
     assertThat(graphDTO.getNodes().get(0).getEnvironmentRef()).isEqualTo(context.getEnvIdentifier());
-    assertThat(graphDTO.getNodes().get(0).getRiskScore()).isEqualTo(0.25);
-    assertThat(graphDTO.getNodes().get(0).getRiskLevel()).isEqualTo(Risk.LOW);
-    assertThat(graphDTO.getNodes().get(0).getAnomalousMetricsCount()).isEqualTo(2);
-    assertThat(graphDTO.getNodes().get(0).getAnomalousLogsCount()).isEqualTo(4);
+    assertThat(graphDTO.getNodes().get(0).getRiskLevel()).isEqualTo(Risk.HEALTHY);
+    assertThat(graphDTO.getNodes().get(0).getRiskData())
+        .isEqualTo(RiskData.builder().riskStatus(Risk.HEALTHY).healthScore(75).build());
+    assertThat(graphDTO.getNodes().get(0).getType()).isEqualTo(MonitoredServiceType.APPLICATION);
     assertThat(graphDTO.getEdges().size()).isEqualTo(2);
   }
 

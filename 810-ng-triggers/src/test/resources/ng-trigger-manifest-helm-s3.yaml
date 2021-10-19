@@ -1,0 +1,48 @@
+trigger:
+  name: first trigger
+  identifier: first_trigger
+  enabled: true
+  orgIdentifier: org
+  projectIdentifier: proj
+  pipelineIdentifier: pipeline
+  source:
+    type: Manifest
+    spec:
+      stageIdentifier: dev
+      manifestRef: man1
+      type: HelmChart
+      spec:
+        store:
+          type: S3
+          spec:
+            connectorRef: account.conn
+            bucketName: bucket1
+            folderPath: path1
+            region: us-west-1
+        chartName: chart1
+        chartVersion: <+trigger.manifest.version>
+        helmVersion: V3
+        skipResourceVersioning: false
+        eventConditions:
+          - key: version
+            operator: Regex
+            value: release.*
+  inputYaml: |
+    pipeline:
+        identifier: pipeline
+        stages:
+            - stage:
+                  identifier: dev
+                  type: Deployment
+                  spec:
+                      serviceConfig:
+                          serviceDefinition:
+                              type: Kubernetes
+                              spec:
+                                  manifests:
+                                      - manifest:
+                                            identifier: man1
+                                            type: HelmChart
+                                            spec:
+                                                chartVersion: <+trigger.manifest.version>
+

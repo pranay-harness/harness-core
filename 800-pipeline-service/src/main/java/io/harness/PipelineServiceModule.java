@@ -2,6 +2,7 @@ package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
+import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
@@ -88,6 +89,8 @@ import io.harness.pms.plan.creation.NodeTypeLookupServiceImpl;
 import io.harness.pms.plan.execution.mapper.PipelineExecutionFilterPropertiesMapper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
+import io.harness.pms.plan.execution.service.PmsExecutionSummaryService;
+import io.harness.pms.plan.execution.service.PmsExecutionSummaryServiceImpl;
 import io.harness.pms.preflight.service.PreflightService;
 import io.harness.pms.preflight.service.PreflightServiceImpl;
 import io.harness.pms.rbac.validator.PipelineRbacService;
@@ -115,6 +118,7 @@ import io.harness.steps.shellscript.ShellScriptHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
+import io.harness.template.TemplateResourceClientModule;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.timescaledb.JooqModule;
@@ -227,6 +231,8 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new TemplateResourceClientModule(configuration.getTemplateServiceClientConfig(),
+        configuration.getTemplateServiceSecret(), TEMPLATE_SERVICE.toString()));
     install(NGTriggersModule.getInstance(configuration.getTriggerConfig(),
         configuration.getPipelineServiceClientConfig(), configuration.getPipelineServiceSecret()));
     install(PersistentLockModule.getInstance());
@@ -273,6 +279,8 @@ public class PipelineServiceModule extends AbstractModule {
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
+    bind(PmsExecutionSummaryService.class).to(PmsExecutionSummaryServiceImpl.class);
+
     bind(PreflightService.class).to(PreflightServiceImpl.class);
     bind(PipelineRbacService.class).to(PipelineRbacServiceImpl.class);
     bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
@@ -441,14 +449,15 @@ public class PipelineServiceModule extends AbstractModule {
   @Provides
   @Singleton
   DistributedLockImplementation distributedLockImplementation() {
-    return MONGO;
+    return configuration.getDistributedLockImplementation() == null ? MONGO
+                                                                    : configuration.getDistributedLockImplementation();
   }
 
   @Provides
   @Named("lock")
   @Singleton
   RedisConfig redisConfig() {
-    return RedisConfig.builder().build();
+    return configuration.getRedisLockConfig();
   }
 
   @Provides

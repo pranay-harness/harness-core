@@ -62,7 +62,6 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull BuildJobEnvInfo buildJobEnvInfo;
-  @NotNull boolean usePVC;
   @NotNull String accountId;
   @NotNull ExecutionElementConfig executionElementConfig;
   CodeBase ciCodebase;
@@ -82,7 +81,6 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.buildJobEnvInfo = buildJobEnvInfo;
-    this.usePVC = usePVC;
     this.executionElementConfig = executionElementConfig;
     this.ciCodebase = ciCodebase;
     this.skipGitClone = skipGitClone;

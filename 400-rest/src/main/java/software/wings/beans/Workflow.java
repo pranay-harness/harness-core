@@ -404,7 +404,7 @@ public class Workflow
 
   @JsonIgnore
   @Override
-  public NGMigrationEntityType getType() {
+  public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.WORKFLOW;
   }
 

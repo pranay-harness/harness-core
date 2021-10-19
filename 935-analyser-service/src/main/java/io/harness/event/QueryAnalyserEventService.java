@@ -23,7 +23,7 @@ public class QueryAnalyserEventService implements Managed {
 
   @Override
   public void stop() throws Exception {
-    queryAnalysisMessageConsumerExecutorService.shutdown();
+    queryAnalysisMessageConsumerExecutorService.shutdownNow();
     queryAnalysisMessageConsumerExecutorService.awaitTermination(Duration.ofSeconds(10).getSeconds(), TimeUnit.SECONDS);
   }
 }

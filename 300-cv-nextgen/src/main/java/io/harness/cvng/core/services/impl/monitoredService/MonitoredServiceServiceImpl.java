@@ -143,6 +143,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   private void validateDependencyMetadata(ProjectParams projectParams, Set<ServiceDependencyDTO> dependencyDTOs) {
+    if (dependencyDTOs == null) {
+      return;
+    }
     dependencyDTOs.forEach(dependencyDTO -> {
       if (dependencyDTO.getDependencyMetadata() == null) {
         return;
@@ -229,15 +232,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                         .collect(Collectors.toList());
       updateOperations.set(MonitoredServiceKeys.changeSourceIdentifiers, updatedChangeSourceIdentifiers);
     }
-    if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
-      ProjectParams projectParams = ProjectParams.builder()
-                                        .accountIdentifier(monitoredService.getAccountId())
-                                        .orgIdentifier(monitoredService.getOrgIdentifier())
-                                        .projectIdentifier(monitoredService.getProjectIdentifier())
-                                        .build();
-      serviceDependencyService.updateDependencies(
-          projectParams, monitoredService.getIdentifier(), monitoredServiceDTO.getDependencies());
-    }
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(monitoredService.getAccountId())
+                                      .orgIdentifier(monitoredService.getOrgIdentifier())
+                                      .projectIdentifier(monitoredService.getProjectIdentifier())
+                                      .build();
+    validateDependencyMetadata(projectParams, monitoredServiceDTO.getDependencies());
+    serviceDependencyService.updateDependencies(
+        projectParams, monitoredService.getIdentifier(), monitoredServiceDTO.getDependencies());
+
     hPersistence.update(monitoredService, updateOperations);
   }
 
@@ -543,6 +546,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     hPersistence.save(monitoredServiceEntity);
   }
 
+  private HistoricalTrend getMonitoredServiceHistorialTrend(
+      MonitoredService monitoredService, ProjectParams projectParams, DurationDTO duration, Instant endTime) {
+    Preconditions.checkNotNull(monitoredService,
+        "Monitored service for provided serviceIdentifier and envIdentifier or monitoredServiceIdentifier does not exist.");
+    return heatMapService.getOverAllHealthScore(projectParams, monitoredService.getServiceIdentifier(),
+        monitoredService.getEnvironmentIdentifier(), duration, endTime);
+  }
+
   @Override
   public List<MonitoredService> list(@NonNull ProjectParams projectParams, @Nullable String serviceIdentifier,
       @Nullable String environmentIdentifier) {
@@ -611,17 +622,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       serviceIdentifiers.add(monitoredServiceListDTOBuilder.getServiceRef());
       environmentIdentifiers.add(monitoredServiceListDTOBuilder.getEnvironmentRef());
     }
-    Map<String, String> serviceIdNameMap = new HashMap<>();
-    Map<String, String> environmentIdNameMap = new HashMap<>();
-
-    nextGenService.listService(accountId, orgIdentifier, projectIdentifier, serviceIdentifiers)
-        .forEach(serviceResponse
-            -> serviceIdNameMap.put(
-                serviceResponse.getService().getIdentifier(), serviceResponse.getService().getName()));
-    nextGenService.listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers)
-        .forEach(environmentResponse
-            -> environmentIdNameMap.put(
-                environmentResponse.getEnvironment().getIdentifier(), environmentResponse.getEnvironment().getName()));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    Map<String, String> serviceIdNameMap =
+        nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers));
+    Map<String, String> environmentIdNameMap =
+        nextGenService.getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers));
 
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);
@@ -809,9 +818,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   public HistoricalTrend getOverAllHealthScore(
       ProjectParams projectParams, String identifier, DurationDTO duration, Instant endTime) {
     MonitoredService monitoredService = getMonitoredService(projectParams, identifier);
-    Preconditions.checkNotNull(monitoredService, "Monitored service with identifier %s does not exists", identifier);
-    return heatMapService.getOverAllHealthScore(projectParams, monitoredService.getServiceIdentifier(),
-        monitoredService.getEnvironmentIdentifier(), duration, endTime);
+    return getMonitoredServiceHistorialTrend(monitoredService, projectParams, duration, endTime);
+  }
+
+  @Override
+  public HistoricalTrend getOverAllHealthScore(
+      ServiceEnvironmentParams serviceEnvironmentParams, DurationDTO duration, Instant endTime) {
+    MonitoredService monitoredService = getMonitoredService(serviceEnvironmentParams);
+    return getMonitoredServiceHistorialTrend(monitoredService, serviceEnvironmentParams, duration, endTime);
   }
 
   @Override

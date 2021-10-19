@@ -23,6 +23,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -93,6 +94,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                                     .normalize()
                                     .toAbsolutePath()
                                     .toString();
+      K8sRequestHandler requestHandler = k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name());
 
       try {
         String kubeconfigFileContent = containerDeploymentDelegateBaseHelper.getKubeconfigFileContent(
@@ -117,20 +119,30 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                 .goTemplateClientPath(k8sGlobalConfigService.getGoTemplateClientPath())
                 .helmPath(k8sGlobalConfigService.getHelmPath(helmVersion))
                 .ocPath(k8sGlobalConfigService.getOcPath())
-                .kustomizeBinaryPath(k8sGlobalConfigService.getKustomizePath())
+                .kustomizeBinaryPath(
+                    k8sGlobalConfigService.getKustomizePath(k8sDeployRequest.isUseLatestKustomizeVersion()))
                 .build();
         // TODO: @anshul/vaibhav , fix this
         //        logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams, commandUnitsProgress);
 
-        K8sDeployResponse k8sDeployResponse = k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
-                                                  .executeTask(k8sDeployRequest, k8SDelegateTaskParams,
-                                                      getLogStreamingTaskClient(), commandUnitsProgress);
+        K8sDeployResponse k8sDeployResponse = requestHandler.executeTask(
+            k8sDeployRequest, k8SDelegateTaskParams, getLogStreamingTaskClient(), commandUnitsProgress);
 
         k8sDeployResponse.setCommandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
         return k8sDeployResponse;
       } catch (Exception ex) {
         log.error("Exception in processing k8s task [{}]",
             k8sDeployRequest.getCommandName() + ":" + k8sDeployRequest.getTaskType(), ex);
+        if (requestHandler != null && requestHandler.isErrorFrameworkSupported()) {
+          try {
+            requestHandler.onTaskFailed(k8sDeployRequest, ex, getLogStreamingTaskClient(), commandUnitsProgress);
+          } catch (Exception e) {
+            throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), e);
+          }
+
+          throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), ex);
+        }
+
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
@@ -165,6 +177,11 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   public void decryptRequestDTOs(K8sDeployRequest k8sDeployRequest) {
     decryptManifestDelegateConfig(k8sDeployRequest.getManifestDelegateConfig());
     containerDeploymentDelegateBaseHelper.decryptK8sInfraDelegateConfig(k8sDeployRequest.getK8sInfraDelegateConfig());
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 
   private void decryptManifestDelegateConfig(ManifestDelegateConfig manifestDelegateConfig) {

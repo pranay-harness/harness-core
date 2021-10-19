@@ -30,7 +30,7 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
 
   @Override
   public ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution,
-      StageElementConfig stageElementConfig, PlanCreationContext context, String podName, CodeBase ciCodeBase,
+      StageElementConfig stageElementConfig, PlanCreationContext context, CodeBase ciCodeBase,
       Infrastructure infrastructure, ExecutionSource executionSource) {
     log.info("Modifying execution plan to add lite engine step for integration stage {}",
         stageElementConfig.getIdentifier());
@@ -47,16 +47,15 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
 
     log.info("Build execution args for integration stage  {}", stageElementConfig.getIdentifier());
     return getCILiteEngineTaskExecution(
-        stageElementConfig, ciExecutionArgs, ciCodeBase, podName, execution.getUuid(), infrastructure);
+        stageElementConfig, ciExecutionArgs, ciCodeBase, execution.getUuid(), infrastructure);
   }
 
   private ExecutionElementConfig getCILiteEngineTaskExecution(StageElementConfig integrationStage,
-      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String podName, String uuid,
-      Infrastructure infrastructure) {
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String uuid, Infrastructure infrastructure) {
     return ExecutionElementConfig.builder()
         .uuid(uuid)
         .steps(ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
-            integrationStage, ciExecutionArgs, ciCodebase, podName, infrastructure))
+            integrationStage, ciExecutionArgs, ciCodebase, infrastructure))
         .build();
   }
 }

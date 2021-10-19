@@ -10,6 +10,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -34,6 +35,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
+@BreakDependencyOn("io.harness.ff.FeatureFlagService")
 public class AzureArtifactsArtifactStream extends ArtifactStream {
   public enum ProtocolType { maven, nuget }
 

@@ -18,7 +18,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.TelemetryReporter;
 
@@ -27,8 +26,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,10 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 public class InstrumentNodeStatusUpdateHandler implements AsyncInformObserver, NodeStatusUpdateObserver {
   @Inject @Named("PipelineExecutorService") ExecutorService executorService;
   @Inject TelemetryReporter telemetryReporter;
-  @Inject PMSExecutionService pmsExecutionService;
-  private static Set<String> noOpSkipConditionExpressions = new HashSet() {
-    { add("OnPipelineSuccess"); }
-  };
 
   @Override
   public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {

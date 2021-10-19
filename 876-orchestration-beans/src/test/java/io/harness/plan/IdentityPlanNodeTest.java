@@ -19,7 +19,7 @@ import org.junit.experimental.categories.Category;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class IdentityPlanNodeTest {
   StepType TEST_STEP_TYPE = StepType.newBuilder().setType("TEST_STEP_PLAN").setStepCategory(StepCategory.STEP).build();
-
+  StepType PMS_IDENTITY = StepType.newBuilder().setType("PMS_IDENTITY").build();
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
@@ -38,9 +38,11 @@ public class IdentityPlanNodeTest {
                                                     .originalNodeExecutionId("originalNodeExecutionId")
                                                     .identifier("test")
                                                     .name("Test Node")
+                                                    .originalStepType(TEST_STEP_TYPE)
+                                                    .stepType(PMS_IDENTITY)
                                                     .build();
     IdentityPlanNode identityPlanNodeActual =
-        IdentityPlanNode.mapPlanNodeToIdentityNode(planNode, "originalNodeExecutionId");
+        IdentityPlanNode.mapPlanNodeToIdentityNode(planNode, PMS_IDENTITY, "originalNodeExecutionId");
     assertThat(identityPlanNodeExpected).isEqualTo(identityPlanNodeActual);
   }
 }

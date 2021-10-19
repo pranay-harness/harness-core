@@ -243,7 +243,7 @@ public class SettingAttribute
 
   @JsonIgnore
   @Override
-  public NGMigrationEntityType getType() {
+  public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.CONNECTOR;
   }
 

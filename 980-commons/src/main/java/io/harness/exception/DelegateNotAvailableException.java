@@ -27,4 +27,9 @@ public class DelegateNotAvailableException extends WingsException {
     super(message, null, DELEGATE_NOT_AVAILABLE, level, reportTargets, EnumSet.of(FailureType.APPLICATION_ERROR));
     param(MESSAGE_KEY, message);
   }
+
+  public DelegateNotAvailableException(String message) {
+    super(message, null, DELEGATE_NOT_AVAILABLE, Level.ERROR, null, EnumSet.of(FailureType.APPLICATION_ERROR));
+    param(MESSAGE_KEY, message);
+  }
 }

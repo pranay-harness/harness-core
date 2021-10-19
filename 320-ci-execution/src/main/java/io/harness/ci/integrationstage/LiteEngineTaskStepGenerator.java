@@ -25,51 +25,27 @@ import com.google.inject.Singleton;
 @OwnedBy(HarnessTeam.CI)
 public class LiteEngineTaskStepGenerator {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
-  private static final String SEPARATOR = "-";
   @Inject private BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
 
   LiteEngineTaskStepInfo createLiteEngineTaskStepInfo(ExecutionElementConfig executionElement, CodeBase ciCodebase,
-      StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, String podName, Integer liteEngineCounter,
-      boolean usePVC, Infrastructure infrastructure) {
-    boolean isFirstPod = isFirstPod(liteEngineCounter);
-    String liteEnginePodName = podName;
-    if (!isFirstPod) {
-      liteEnginePodName = podName + SEPARATOR + liteEngineCounter;
-    }
-
-    BuildJobEnvInfo buildJobEnvInfo = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(
-        stageElementConfig, ciExecutionArgs, executionElement.getSteps(), isFirstPod, liteEnginePodName);
+      StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, Infrastructure infrastructure) {
+    BuildJobEnvInfo buildJobEnvInfo =
+        buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, ciExecutionArgs, executionElement.getSteps());
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
     boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getCloneCodebase());
-    if (isFirstPod) {
-      return LiteEngineTaskStepInfo.builder()
-          .identifier(LITE_ENGINE_TASK + liteEngineCounter)
-          .name(LITE_ENGINE_TASK + liteEngineCounter)
-          .infrastructure(infrastructure)
-          .ciCodebase(ciCodebase)
-          .skipGitClone(!gitClone)
-          .usePVC(usePVC)
-          .buildJobEnvInfo(buildJobEnvInfo)
-          .executionElementConfig(executionElement)
-          .timeout(getTimeout(infrastructure))
-          .build();
-    } else {
-      return LiteEngineTaskStepInfo.builder()
-          .identifier(LITE_ENGINE_TASK + liteEngineCounter)
-          .name(LITE_ENGINE_TASK + liteEngineCounter)
-          .buildJobEnvInfo(buildJobEnvInfo)
-          .infrastructure(infrastructure)
-          .usePVC(usePVC)
-          .executionElementConfig(executionElement)
-          .timeout(getTimeout(infrastructure))
-          .build();
-    }
-  }
 
-  private boolean isFirstPod(Integer liteEngineCounter) {
-    return liteEngineCounter == 1;
+    return LiteEngineTaskStepInfo.builder()
+        .identifier(LITE_ENGINE_TASK)
+        .name(LITE_ENGINE_TASK)
+        .infrastructure(infrastructure)
+        .ciCodebase(ciCodebase)
+        .skipGitClone(!gitClone)
+        .buildJobEnvInfo(buildJobEnvInfo)
+        .executionElementConfig(executionElement)
+        .timeout(getTimeout(infrastructure))
+        .build();
   }
 
   private int getTimeout(Infrastructure infrastructure) {

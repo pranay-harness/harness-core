@@ -8,7 +8,6 @@ import io.harness.engine.interrupts.callback.FailureInterruptCallback;
 import io.harness.engine.interrupts.handlers.AbortAllInterruptCallback;
 import io.harness.engine.pms.resume.EngineResumeAllCallback;
 import io.harness.engine.pms.resume.EngineResumeCallback;
-import io.harness.engine.pms.resume.EngineWaitResumeCallback;
 import io.harness.engine.pms.resume.EngineWaitRetryCallback;
 import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.serializer.KryoRegistrar;
@@ -21,7 +20,6 @@ public class OrchestrationKryoRegistrar implements KryoRegistrar {
   public void register(Kryo kryo) {
     kryo.register(EngineResumeAllCallback.class, 87001);
     kryo.register(EngineResumeCallback.class, 87002);
-    kryo.register(EngineWaitResumeCallback.class, 87003);
     kryo.register(EngineWaitRetryCallback.class, 87004);
     kryo.register(EngineProgressCallback.class, 87007);
     kryo.register(AbortInterruptCallback.class, 87008);

@@ -160,6 +160,9 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public void updateActivityStatus(Activity activity) {
+    if (CollectionUtils.isEmpty(activity.getVerificationJobInstanceIds())) {
+      return;
+    }
     ActivityVerificationSummary summary = verificationJobInstanceService.getActivityVerificationSummary(
         verificationJobInstanceService.get(activity.getVerificationJobInstanceIds()));
     if (!summary.getAggregatedStatus().equals(ActivityVerificationStatus.IN_PROGRESS)
@@ -171,7 +174,6 @@ public class ActivityServiceImpl implements ActivityService {
               .set(ActivityKeys.analysisStatus, summary.getAggregatedStatus())
               .set(ActivityKeys.verificationSummary, summary);
       hPersistence.update(activityQuery, activityUpdateOperations);
-
       log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
     }
 
@@ -797,8 +799,11 @@ public class ActivityServiceImpl implements ActivityService {
       if (handler != null) {
         handler.handleCreate(activity);
       }
+<<<<<<< HEAD
       register(activity);
 
+=======
+>>>>>>> 98028592e376ea8866d9fdb08f4bc420bbd5ef60
       hPersistence.save(activity);
       log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(),
           activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());

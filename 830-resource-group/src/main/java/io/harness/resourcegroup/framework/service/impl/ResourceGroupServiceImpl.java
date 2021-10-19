@@ -89,15 +89,6 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     }
   }
 
-  @Override
-  public void createManagedResourceGroup(Scope scope) {
-    try {
-      create(ResourceGroup.getHarnessManagedResourceGroup(scope));
-    } catch (DuplicateFieldException ex) {
-      // Ignore
-    }
-  }
-
   private ResourceGroup createInternal(ResourceGroup resourceGroup) {
     boolean sanitized = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
     if (sanitized && resourceGroup.getResourceSelectors().isEmpty()) {
@@ -192,10 +183,10 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public void delete(Scope scope, String identifier) {
+  public boolean delete(Scope scope, String identifier) {
     Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(scope, identifier, ManagedFilter.ONLY_CUSTOM);
     if (!resourceGroupOpt.isPresent()) {
-      return;
+      return false;
     }
 
     ResourceGroup resourceGroup = resourceGroupOpt.get();
@@ -203,7 +194,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       throw new InvalidRequestException("Managed resource group cannot be deleted");
     }
 
-    Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       resourceGroupRepository.delete(resourceGroup);
       outboxService.save(
           new ResourceGroupDeleteEvent(scope.getAccountIdentifier(), ResourceGroupMapper.toDTO(resourceGroup)));
