@@ -309,6 +309,7 @@ public class ProjectServiceImpl implements ProjectService {
     Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
     List<UserMembership> userMembershipList = userMembershipPage.getContent();
     if (userMembershipList.isEmpty()) {
+      log.info("in all-projects user membership list is empty");
       return Collections.emptyList();
     }
     Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
@@ -324,6 +325,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
     projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
     List<Project> projectsList = projectRepository.findAll(projectCriteria);
+    log.info("accessible list size is {}",projectsList.size());
     return projectsList.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
   }
 
@@ -341,6 +343,7 @@ public class ProjectServiceImpl implements ProjectService {
     Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
     List<UserMembership> userMembershipList = userMembershipPage.getContent();
     if (userMembershipList.isEmpty()) {
+      log.info("UserMembershipList Is Empty");
       return ActiveProjectsCountDTO.builder().count(0).build();
     }
     Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
@@ -362,10 +365,12 @@ public class ProjectServiceImpl implements ProjectService {
         Criteria.where(ProjectKeys.deleted)
             .is(true)
             .andOperator(Criteria.where(ProjectKeys.lastModifiedAt).gt(startInterval).lt(endInterval));
+    Integer projectCount = projectRepository.findAll(new Criteria().andOperator(accessibleProjectCriteria, deletedFalseCriteria))
+            .size()
+            - projectRepository.findAll(accessibleProjectCriteria.andOperator(deletedTrueCriteria)).size();
+    log.info("projectCount is {}",projectCount);
     return ActiveProjectsCountDTO.builder()
-        .count(projectRepository.findAll(new Criteria().andOperator(accessibleProjectCriteria, deletedFalseCriteria))
-                   .size()
-            - projectRepository.findAll(accessibleProjectCriteria.andOperator(deletedTrueCriteria)).size())
+        .count(projectCount)
         .build();
   }
 

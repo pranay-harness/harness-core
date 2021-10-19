@@ -43,6 +43,8 @@ import io.harness.userng.remote.UserNGClient;
 
 import com.google.inject.Inject;
 import dashboards.CDLandingDashboardResourceClient;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +53,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.PL)
+@Slf4j
 public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   private final String SUCCESS_MESSAGE = "Successfully fetched data";
   private final String FAILURE_MESSAGE = "Failed to fetch data";
@@ -202,6 +205,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         EnvCount envCount = (EnvCount) envCountOptional.get().getResponse();
         PipelinesCount pipelinesCount = (PipelinesCount) pipelinesCountOptional.get().getResponse();
         ActiveProjectsCountDTO projectsNewCount = (ActiveProjectsCountDTO) projectsCountOptional.get().getResponse();
+        log.info("in overview dashboard service projects count is {}",projectsNewCount.getCount());
         return ExecutionResponse.<CountOverview>builder()
             .response(CountOverview.builder()
                           .servicesCountDetail(getServicesCount(servicesCount))
