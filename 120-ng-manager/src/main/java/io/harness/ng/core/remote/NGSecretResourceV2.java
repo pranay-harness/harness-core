@@ -20,6 +20,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.api.NGEncryptedDataService;
@@ -355,12 +356,14 @@ public class NGSecretResourceV2 {
   @Path("decrypt-using-manager")
   @Consumes("application/x-kryo")
   @Produces("application/x-kryo")
-  @ApiOperation(hidden = true, value = "Get Encryption", nickname = "postEncryptionDetails")
+  @ApiOperation(hidden = true, value = "Get Encryption", nickname = "postDecryptionDetails")
   @InternalApi
   public ResponseDTO<DecryptableEntity> decryptUsingManager(
-          @NotNull DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier) {
-
-  return ResponseDTO.newResponse( encryptedDataService.decryptUsingManager(decryptableEntity,encryptedDataDetailList,accountIdentifier));
+      @Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    return ResponseDTO.newResponse(
+        encryptedDataService.decryptUsingManager(decryptableEntityWithEncryptionConsumers.getDecryptableEntity(),
+            decryptableEntityWithEncryptionConsumers.getEncryptedDataDetailList(), accountIdentifier));
   }
 
   @POST

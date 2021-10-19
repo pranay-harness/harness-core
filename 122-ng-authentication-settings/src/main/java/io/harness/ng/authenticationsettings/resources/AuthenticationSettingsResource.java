@@ -86,24 +86,25 @@ public class AuthenticationSettingsResource {
   private final MainConfiguration mainConfiguration;
   private final AccessControlClient accessControlClient;
 
-  @GET
-  @Path("/")
-  @ApiOperation(value = "Get authentication settings for an account", nickname = "getAuthenticationSettings")
-  @Operation(operationId = "getAuthenticationSettings",
-      summary = "Get the authentication settings by accountIdentifier",
-      responses =
-      {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns authentication settings of the account")
-      })
-  public RestResponse<AuthenticationSettingsResponse>
-  getAuthenticationSettings(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
-    accessControlClient.checkForAccessOrThrow(
-        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null), VIEW_AUTHSETTING_PERMISSION);
-    AuthenticationSettingsResponse response =
-        authenticationSettingsService.getAuthenticationSettings(accountIdentifier);
-    return new RestResponse<>(response);
-  }
+  //  @GET
+  //  @Path("/")
+  //  @ApiOperation(value = "Get authentication settings for an account", nickname = "getAuthenticationSettings")
+  //  @Operation(operationId = "getAuthenticationSettings",
+  //      summary = "Get the authentication settings by accountIdentifier",
+  //      responses =
+  //      {
+  //        @io.swagger.v3.oas.annotations.responses.
+  //        ApiResponse(responseCode = "default", description = "Returns authentication settings of the account")
+  //      })
+  //  public RestResponse<AuthenticationSettingsResponse>
+  //  getAuthenticationSettings(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+  //    accessControlClient.checkForAccessOrThrow(
+  //        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTING, null),
+  //        VIEW_AUTHSETTING_PERMISSION);
+  //    AuthenticationSettingsResponse response =
+  //        authenticationSettingsService.getAuthenticationSettings(accountIdentifier);
+  //    return new RestResponse<>(response);
+  //  }
 
   @GET
   @Path("/login-settings/password-strength")

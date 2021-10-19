@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.SSHTaskParams;
+import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.entities.SampleEncryptableSettingImplementation;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
@@ -57,6 +58,7 @@ public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
 
     kryo.register(SampleEncryptableSettingImplementation.class, 54322);
     kryo.register(NGAccessWithEncryptionConsumer.class, 54323);
+    kryo.register(DecryptableEntityWithEncryptionConsumers.class, 54326);
 
     kryo.register(AwsKmsConfigDTO.class, 643283);
     kryo.register(AwsKmsConfigUpdateDTO.class, 643284);

@@ -71,15 +71,15 @@ public class NGEncryptorServiceImpl implements NGEncryptorService {
   }
 
   @Override
-  public DecryptableEntity decryptEncryptionConfigSecrets2( DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier) {
+  public DecryptableEntity decryptEncryptionConfigSecrets2(DecryptableEntity decryptableEntity,
+      List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier) {
     for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetailList) {
       decryptEncryptionConfigSecrets(accountIdentifier, decryptableEntity, encryptedDataDetail);
     }
-    return null;
+    return decryptableEntity;
   }
 
-
-  private void decryptEncryptionConfigSecrets(
+  private DecryptableEntity decryptEncryptionConfigSecrets(
       String accountIdentifier, DecryptableEntity decryptableEntity, EncryptedDataDetail encryptedDataDetail) {
     char[] decryptedValue = fetchSecretValue(
         accountIdentifier, encryptedDataDetail.getEncryptedData(), encryptedDataDetail.getEncryptionConfig());
@@ -90,10 +90,12 @@ public class NGEncryptorServiceImpl implements NGEncryptorService {
       try {
         SecretRefData secretRefData = (SecretRefData) f.get(decryptableEntity);
         secretRefData.setDecryptedValue(decryptedValue);
+
       } catch (IllegalAccessException e) {
         throw new InvalidRequestException("Decryption failed for  " + encryptedDataDetail.toString(), e);
       }
     }
+    return decryptableEntity;
   }
 
   @Override

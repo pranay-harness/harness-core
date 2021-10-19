@@ -7,6 +7,7 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -17,11 +18,7 @@ import io.harness.serializer.kryo.KryoResponse;
 
 import java.util.List;
 import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
+import retrofit2.http.*;
 
 @OwnedBy(PL)
 public interface SecretNGManagerClient {
@@ -54,8 +51,9 @@ public interface SecretNGManagerClient {
   @POST(SECRETS_API + "/decrypt-using-manager")
   @KryoRequest
   @KryoResponse
-  Call<ResponseDTO<List<DecryptableEntity>>> decryptUsingManager(
-          DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetailList, String accountIdentifier);
+  Call<ResponseDTO<DecryptableEntity>> decryptUsingManager(
+      @Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);
 
   // get secret manager
   @GET(SECRET_MANAGERS_API + "/{identifier}")
