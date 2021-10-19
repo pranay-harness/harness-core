@@ -102,6 +102,7 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
                     .environmentName(environmentName)
                     .riskScore(riskScore)
                     .riskLevel(risk)
+                    .type(value.getType())
                     .build());
     });
 
