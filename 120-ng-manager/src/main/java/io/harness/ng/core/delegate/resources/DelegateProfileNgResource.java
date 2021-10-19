@@ -1,4 +1,4 @@
-package io.harness.ng.core.delegate.profile;
+package io.harness.ng.core.delegate.resources;
 
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_CONFIG_DELETE_PERMISSION;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_CONFIG_EDIT_PERMISSION;

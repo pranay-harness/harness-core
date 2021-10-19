@@ -1,4 +1,4 @@
-package io.harness.ng.webhook;
+package io.harness.ng.webhook.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.webhook.UpsertWebhookRequestDTO;
+import io.harness.ng.webhook.UpsertWebhookResponseDTO;
 import io.harness.ng.webhook.services.api.WebhookEventService;
 import io.harness.security.annotations.InternalApi;
 

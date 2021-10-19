@@ -53,7 +53,8 @@ import org.reflections.Reflections;
 @OwnedBy(HarnessTeam.PL)
 public class NextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "ng-manager";
-  public static final String BASE_PACKAGE = "io.harness.ng";
+  public static final String CORE_PACKAGE = "io.harness.ng.core.remote";
+  public static final String INVITE_PACKAGE = "io.harness.ng.core.invites.remote";
   public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
   public static final String GITOPS_PROVIDER_RESOURCE_PACKAGE = "io.harness.gitopsprovider.resource";
   public static final String GIT_SYNC_PACKAGE = "io.harness.gitsync";
@@ -68,6 +69,26 @@ public class NextGenConfiguration extends Configuration {
   public static final String POLLING_PACKAGE = "io.harness.polling.resource";
   public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement.resource";
   public static final String ENFORCEMENT_CLIENT_PACKAGE = "io.harness.enforcement.client.resources";
+  public static final String ARTIFACTS_PACKAGE = "io.harness.ng.core.artifacts.resources";
+  public static final String AUTHENTICATION_SETTINGS_PACKAGE = "io.harness.ng.authenticationsettings.resources";
+  public static final String SERVICE_PACKAGE = "io.harness.ng.core.service.resources";
+  public static final String CD_OVERVIEW_PACKAGE = "io.harness.ng.cdOverview.resource";
+  public static final String ACTIVITY_HISTORY_PACKAGE = "io.harness.ng.core.activityhistory.resource";
+  public static final String SERVICE_ACCOUNTS_PACKAGE = "io.harness.ng.serviceaccounts.resource";
+  public static final String BUCKETS_PACKAGE = "io.harness.ng.core.buckets.resources";
+  public static final String CLUSTER_GCP_PACKAGE = "io.harness.ng.core.k8s.cluster.resources.gcp";
+  public static final String WEBHOOK_PACKAGE = "io.harness.ng.webhook.resources";
+  public static final String ENVIRONMENT_PACKAGE = "io.harness.ng.core.environment.resources";
+  public static final String USERPROFILE_PACKAGE = "io.harness.ng.userprofile.resource";
+  public static final String USER_PACKAGE = "io.harness.ng.core.user.remote";
+  public static final String JIRA_PACKAGE = "io.harness.ng.jira.resources";
+  public static final String EXECUTION_PACKAGE = "io.harness.ng.executions.resources";
+  public static final String ENTITYSETUP_PACKAGE = "io.harness.ng.core.entitysetupusage.resource";
+  public static final String SCHEMA_PACKAGE = "io.harness.ng.core.schema.resource";
+  public static final String DELEGATE_PACKAGE = "io.harness.ng.core.delegate.resources";
+  public static final String ACCESS_CONTROL_PACKAGE = "io.harness.ng.accesscontrol.resources";
+  public static final String FEEDBACK_PACKAGE = "io.harness.ng.feedback.resources";
+  public static final String INSTANCE_SYNC_PACKAGE = "io.harness.ng.instancesync.resources";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -142,10 +163,14 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GITOPS_PROVIDER_RESOURCE_PACKAGE,
+    Reflections reflections = new Reflections(CORE_PACKAGE, CONNECTOR_PACKAGE, GITOPS_PROVIDER_RESOURCE_PACKAGE,
         GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE, OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE,
         SIGNUP_PACKAGE, MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE, ENFORCEMENT_PACKAGE,
-        ENFORCEMENT_CLIENT_PACKAGE);
+        ENFORCEMENT_CLIENT_PACKAGE, ARTIFACTS_PACKAGE, AUTHENTICATION_SETTINGS_PACKAGE, CD_OVERVIEW_PACKAGE,
+        ACTIVITY_HISTORY_PACKAGE, SERVICE_PACKAGE, SERVICE_ACCOUNTS_PACKAGE, BUCKETS_PACKAGE, CLUSTER_GCP_PACKAGE,
+        WEBHOOK_PACKAGE, ENVIRONMENT_PACKAGE, USERPROFILE_PACKAGE, JIRA_PACKAGE, EXECUTION_PACKAGE, ENTITYSETUP_PACKAGE,
+        SCHEMA_PACKAGE, DELEGATE_PACKAGE, ACCESS_CONTROL_PACKAGE, FEEDBACK_PACKAGE, INSTANCE_SYNC_PACKAGE,
+        INVITE_PACKAGE, USER_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
