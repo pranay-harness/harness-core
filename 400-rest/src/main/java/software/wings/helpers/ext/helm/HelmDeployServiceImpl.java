@@ -57,6 +57,7 @@ import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.ScmFetchFilesHelper;
 import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
 import software.wings.delegatetasks.helm.HelmDeployChartSpec;
@@ -136,6 +137,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private GitClientHelper gitClientHelper;
   @Inject private KubernetesContainerService kubernetesContainerService;
+  @Inject private ScmFetchFilesHelper scmFetchFilesHelper;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   protected static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
@@ -441,8 +443,13 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest), gitFileConfig.getFilePath()).toString();
 
     encryptionService.decrypt(gitConfig, sourceRepoConfig.getEncryptedDataDetails(), false);
-    gitService.downloadFiles(gitConfig, gitFileConfig, workingDirectory, false);
-
+    if (scmFetchFilesHelper.shouldUseScm(
+            ((HelmInstallCommandRequest) commandRequest).isOptimizedFilesFetch(), gitConfig)) {
+      scmFetchFilesHelper.downloadFilesUsingScm(
+          workingDirectory, gitFileConfig, gitConfig, commandRequest.getExecutionLogCallback());
+    } else {
+      gitService.downloadFiles(gitConfig, gitFileConfig, workingDirectory, false);
+    }
     commandRequest.setWorkingDir(workingDirectory);
     commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
   }
@@ -888,9 +895,16 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(msg);
       log.info(msg);
 
-      GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
-          gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
-          Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch(), false);
+      GitFetchFilesResult gitFetchFilesResult;
+      if (scmFetchFilesHelper.shouldUseScm(
+              ((HelmInstallCommandRequest) commandRequest).isOptimizedFilesFetch(), gitConfig)) {
+        gitFetchFilesResult = scmFetchFilesHelper.fetchFilesFromRepoWithScm(
+            gitFileConfig, gitConfig, Collections.singletonList(gitFileConfig.getFilePath()));
+      } else {
+        gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
+            gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
+            Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch(), false);
+      }
 
       if (isNotEmpty(gitFetchFilesResult.getFiles())) {
         executionLogCallback.saveExecutionLog(
