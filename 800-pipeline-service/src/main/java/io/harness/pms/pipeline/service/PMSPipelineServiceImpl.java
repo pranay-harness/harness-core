@@ -337,7 +337,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     if (isNotEmpty(projectId)) {
       criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
     }
-    criteria.and(PipelineEntityKeys.deleted).is(deleted);
 
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
