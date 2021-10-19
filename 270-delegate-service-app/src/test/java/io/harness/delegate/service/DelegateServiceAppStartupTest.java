@@ -49,7 +49,7 @@ public class DelegateServiceAppStartupTest extends DelegateServiceAppTestBase {
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
     SUPPORT = new DropwizardTestSupport<>(DelegateServiceApplication.class,
-        getResourceFilePath("test-config-delegate-service.yml"), ConfigOverride.config("mongo.uri", getMongoUri()));
+            getAppResourceFilePath("delegate-service-config.yml"), ConfigOverride.config("mongo.uri", getMongoUri()));
     SUPPORT.before();
   }
 
