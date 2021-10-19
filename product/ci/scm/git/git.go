@@ -194,7 +194,7 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		return nil, err
 	}
 
-	ref, err := gitclient.GetValidRef(*request.Provider, "", request.GetBranch())
+	ref, err := gitclient.GetValidRef(*request.Provider, request.GetRef(), request.GetBranch())
 	if err != nil {
 		log.Errorw("GetLatestCommit failure, bad ref/branch", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
@@ -207,7 +207,6 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		if response == nil {
 			return nil, err
 		}
-
 		// this is an error from the git provider
 		out = &pb.GetLatestCommitResponse{
 			Error:  err.Error(),
@@ -216,10 +215,55 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		return out, nil
 	}
 
+	commit, err := converter.ConvertCommit(refResponse)
+	if err != nil {
+		log.Errorw("GetLatestCommit convert commit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
 	log.Infow("GetLatestCommit success", "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.GetLatestCommitResponse{
 		CommitId: refResponse.Sha,
+		Commit:   commit,
+		Status:   int32(response.Status),
+	}
+	return out, nil
+}
+
+func FindCommit(ctx context.Context, request *pb.FindCommitRequest, log *zap.SugaredLogger) (out *pb.FindCommitResponse, err error) {
+	start := time.Now()
+	log.Infow("FindCommit starting", "slug", request.GetSlug())
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("FindCommit failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	refResponse, response, err := client.Git.FindCommit(ctx, request.GetSlug(), request.GetRef())
+	if err != nil {
+		log.Errorw("FindCommit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", request.GetRef(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		// this is a hard error with no response
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from the git provider
+		out = &pb.FindCommitResponse{
+			Error:  err.Error(),
+			Status: int32(response.Status),
+		}
+		return out, nil
+	}
+
+	commit, err := converter.ConvertCommit(refResponse)
+	if err != nil {
+		log.Errorw("FindCommit convert commit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", request.GetRef(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+	log.Infow("FindCommit success", "slug", request.GetSlug(), "commitId", request.GetRef(), "elapsed_time_ms", utils.TimeSince(start))
+
+	out = &pb.FindCommitResponse{
+		Commit:   commit,
 		Status:   int32(response.Status),
 	}
 	return out, nil

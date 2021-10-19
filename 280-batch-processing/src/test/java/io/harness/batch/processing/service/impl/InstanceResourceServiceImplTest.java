@@ -6,11 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.vmpricing.VMPricingServiceImpl;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
 import io.harness.rule.Owner;
 
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class InstanceResourceServiceImplTest extends CategoryTest {
     assertThat(computeVMResource.getMemoryMb()).isEqualTo(15360.0);
   }
 
-  private VMComputePricingInfo createVMComputePricingInfo() {
-    return VMComputePricingInfo.builder().cpusPerVm(4.0).memPerVm(15.0).type(GCP_INSTANCE_FAMILY).build();
+  private ProductDetails createVMComputePricingInfo() {
+    return ProductDetails.builder().cpusPerVm(4.0).memPerVm(15.0).type(GCP_INSTANCE_FAMILY).build();
   }
 }

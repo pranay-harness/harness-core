@@ -2,9 +2,7 @@ package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.k8s.K8sTestHelper.deployment;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
 
 import static java.util.Collections.emptyList;
@@ -34,14 +32,12 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
-import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
-import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
@@ -78,29 +74,9 @@ public class K8sRollingRequestHandlerTest extends CategoryTest {
         .when(taskHelperBase)
         .getLogCallback(eq(logStreamingTaskClient), anyString(), anyBoolean(), eq(commandUnitsProgress));
 
-    doReturn(true)
-        .when(taskHelperBase)
-        .fetchManifestFilesAndWriteToDirectory(
-            any(ManifestDelegateConfig.class), anyString(), any(LogCallback.class), anyLong(), anyString());
-
-    doReturn(true)
-        .when(taskHelperBase)
-        .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
-            any(LogCallback.class), anyBoolean());
-
-    doReturn(true)
-        .when(taskHelperBase)
-        .doStatusCheckForAllResources(any(Kubectl.class), anyListOf(KubernetesResourceId.class),
-            any(K8sDelegateTaskParams.class), anyString(), any(LogCallback.class), anyBoolean());
-
     doReturn(KubernetesConfig.builder().namespace("default").build())
         .when(containerDeploymentDelegateBaseHelper)
         .createKubernetesConfig(any(K8sInfraDelegateConfig.class));
-
-    doReturn(true)
-        .when(taskHelperBase)
-        .dryRunManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
-            any(LogCallback.class));
   }
 
   @Test
@@ -153,8 +129,7 @@ public class K8sRollingRequestHandlerTest extends CategoryTest {
                                rollingDeployRequest, delegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
         .isEqualTo(thrownException);
 
-    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
-    verify(kubernetesContainerService, times(2))
+    verify(kubernetesContainerService, times(1))
         .saveReleaseHistory(any(KubernetesConfig.class), anyString(), anyString(), anyBoolean());
   }
 }

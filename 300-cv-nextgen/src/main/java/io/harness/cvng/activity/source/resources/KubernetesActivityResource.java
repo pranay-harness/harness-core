@@ -3,17 +3,11 @@ package io.harness.cvng.activity.source.resources;
 import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO;
-import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
-import io.harness.cvng.beans.activity.KubernetesActivityDTO;
-import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.rest.RestResponse;
-import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -23,15 +17,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import retrofit2.http.Body;
 
 @Api(KUBERNETES_RESOURCE)
 @Path(KUBERNETES_RESOURCE)
@@ -44,20 +34,6 @@ import retrofit2.http.Body;
     })
 public class KubernetesActivityResource {
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
-  @Inject private ActivitySourceService activitySourceService;
-
-  @POST
-  @Timed
-  @ExceptionMetered
-  @DelegateAuth
-  @Path("/activities")
-  @ApiOperation(value = "saves a list of kubernetes activities", nickname = "saveKubernetesActivities")
-  public RestResponse<Boolean> saveKubernetesActivities(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("activitySourceId") @NotNull String activitySourceId,
-      @NotNull @Valid @Body List<KubernetesActivityDTO> activities) {
-    return new RestResponse<>(
-        kubernetesActivitySourceService.saveKubernetesActivities(accountId, activitySourceId, activities));
-  }
 
   @GET
   @Timed
@@ -89,32 +65,5 @@ public class KubernetesActivityResource {
       @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
     return ResponseDTO.newResponse(kubernetesActivitySourceService.getKubernetesWorkloads(
         accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace, offset, pageSize, filter));
-  }
-
-  @GET
-  @Path("/source")
-  @Timed
-  @ExceptionMetered
-  @DelegateAuth
-  @ApiOperation(value = "gets kubernetes source for data collection", nickname = "getKubernetesSource")
-  public RestResponse<KubernetesActivitySourceDTO> getKubernetesSource(
-      @QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("dataCollectionWorkerId") @NotNull String dataCollectionWorkerId) {
-    return new RestResponse<>(
-        (KubernetesActivitySourceDTO) activitySourceService.getActivitySource(dataCollectionWorkerId).toDTO());
-  }
-
-  @GET
-  @Timed
-  @ExceptionMetered
-  @NextGenManagerAuth
-  @Path("/event-details")
-  @ApiOperation(value = "gets details of kubernetes events", nickname = "getEventDetails")
-  public ResponseDTO<KubernetesActivityDetailsDTO> getEventDetails(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("activityId") @NotNull String activityId) {
-    return ResponseDTO.newResponse(
-        kubernetesActivitySourceService.getEventDetails(accountId, orgIdentifier, projectIdentifier, activityId));
   }
 }

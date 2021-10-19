@@ -31,14 +31,18 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.license.remote.CeLicenseClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
+import io.harness.licensing.EditionAction;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
+import io.harness.licensing.beans.EditionActionDTO;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
+import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
+import io.harness.licensing.checks.LicenseComplianceResolver;
 import io.harness.licensing.entities.modules.CDModuleLicense;
 import io.harness.licensing.entities.modules.CEModuleLicense;
 import io.harness.licensing.entities.modules.CIModuleLicense;
@@ -52,13 +56,17 @@ import io.harness.rule.Owner;
 import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -72,6 +80,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
   @Mock AccountService accountService;
   @Mock TelemetryReporter telemetryReporter;
   @Mock CeLicenseClient ceLicenseClient;
+  @Mock LicenseComplianceResolver licenseComplianceResolver;
   @InjectMocks DefaultLicenseServiceImpl licenseService;
 
   private StartTrialDTO startTrialRequestDTO;
@@ -186,6 +195,48 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     verify(telemetryReporter, times(1))
         .sendTrackEvent(eq(SUCCEED_START_FREE_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
     assertThat(result).isEqualTo(ciModuleLicenseDTO);
+  }
+
+  @Test
+  @Owner(developers = NATHAN)
+  @Category(UnitTests.class)
+  public void testStartCommunityLicense() {
+    CDModuleLicense cdModuleLicense = CDModuleLicense.builder().workloads(Integer.valueOf(UNLIMITED)).build();
+    cdModuleLicense.setId("id");
+    cdModuleLicense.setAccountIdentifier(ACCOUNT_IDENTIFIER);
+    cdModuleLicense.setModuleType(DEFAULT_MODULE_TYPE);
+    cdModuleLicense.setEdition(Edition.FREE);
+    cdModuleLicense.setStatus(LicenseStatus.ACTIVE);
+    cdModuleLicense.setStartTime(1);
+    cdModuleLicense.setExpiryTime(Long.valueOf(UNLIMITED));
+    cdModuleLicense.setCreatedAt(0L);
+    cdModuleLicense.setLastUpdatedAt(0L);
+
+    CDModuleLicenseDTO cdModuleLicenseDTO = CDModuleLicenseDTO.builder()
+                                                .id("id")
+                                                .workloads(Integer.valueOf(UNLIMITED))
+                                                .accountIdentifier(ACCOUNT_IDENTIFIER)
+                                                .moduleType(DEFAULT_MODULE_TYPE)
+                                                .edition(Edition.FREE)
+                                                .status(LicenseStatus.ACTIVE)
+                                                .startTime(1)
+                                                .expiryTime(Long.valueOf(UNLIMITED))
+                                                .createdAt(0L)
+                                                .lastModifiedAt(0L)
+                                                .build();
+
+    when(licenseObjectConverter.toDTO(cdModuleLicense)).thenReturn(cdModuleLicenseDTO);
+    when(licenseObjectConverter.toEntity(cdModuleLicenseDTO)).thenReturn(cdModuleLicense);
+    when(moduleLicenseRepository.save(cdModuleLicense)).thenReturn(cdModuleLicense);
+    when(moduleLicenseInterface.generateFreeLicense(eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
+        .thenReturn(cdModuleLicenseDTO);
+    when(accountService.getAccount(ACCOUNT_IDENTIFIER)).thenReturn(AccountDTO.builder().build());
+    ModuleLicenseDTO result = licenseService.startFreeLicense(ACCOUNT_IDENTIFIER, CI);
+    verify(accountService, times(1)).updateDefaultExperienceIfApplicable(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
+    verify(telemetryReporter, times(1)).sendGroupEvent(eq(ACCOUNT_IDENTIFIER), any(), any());
+    verify(telemetryReporter, times(1))
+        .sendTrackEvent(eq(SUCCEED_START_FREE_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
+    assertThat(result).isEqualTo(cdModuleLicenseDTO);
   }
 
   @Test
@@ -365,5 +416,26 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     assertThat(checkExpiryResultDTO.isShouldDelete()).isFalse();
     assertThat(checkExpiryResultDTO.getExpiryTime()).isEqualTo(0);
     verify(moduleLicenseRepository, times(1)).save(any());
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testGetEditionActions() {
+    when(licenseComplianceResolver.getEditionStates(any(), eq(ACCOUNT_IDENTIFIER)))
+        .thenReturn(ImmutableMap.<Edition, Set<EditionAction>>builder()
+                        .put(Edition.FREE, Sets.newHashSet(EditionAction.START_FREE))
+                        .put(Edition.TEAM, Sets.newHashSet(EditionAction.DISABLED_BY_ENTERPRISE))
+                        .put(Edition.ENTERPRISE, Sets.newHashSet(EditionAction.CONTACT_SALES))
+                        .build());
+    Map<Edition, Set<EditionActionDTO>> editionActions = licenseService.getEditionActions(ACCOUNT_IDENTIFIER, CD);
+
+    assertThat(editionActions.get(Edition.FREE).size()).isEqualTo(1);
+    assertThat(editionActions.get(Edition.TEAM))
+        .isEqualTo(Sets.newHashSet(EditionActionDTO.builder()
+                                       .action(EditionAction.DISABLED_BY_ENTERPRISE)
+                                       .reason(EditionAction.DISABLED_BY_ENTERPRISE.getReason())
+                                       .build()));
+    assertThat(editionActions.get(Edition.ENTERPRISE).size()).isEqualTo(1);
   }
 }

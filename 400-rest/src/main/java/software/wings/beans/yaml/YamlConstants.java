@@ -139,6 +139,7 @@ public interface YamlConstants {
   String CONN_STRINGS_FILE = "connstrings";
 
   String APP_SERVICE_MANIFEST_FILE_NAME = "appsettings";
+  String EMPTY_SETTINGS_CONTENT = "[]";
 
   // ECS PARAMS
   String ECS_NOT_USED = "ECS_NOT_USED";
@@ -146,4 +147,7 @@ public interface YamlConstants {
   // Governance Folder
   String GOVERNANCE_FOLDER = "Governance";
   String DEPLOYMENT_GOVERNANCE_FOLDER = "Deployment Governance";
+
+  // App Telemetry
+  String CG_EVENT_CONFIG_FOLDER = "Event Rules";
 }

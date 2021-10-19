@@ -180,7 +180,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 77c318c1
+scmVersion: 87448d72
 
 portal:
   url: https://localhost:8000
@@ -274,6 +274,18 @@ ngManagerServiceHttpClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
   enableHttpLogging: true
+
+iteratorsConfig:
+  delegateCapabilitiesRecordIteratorConfig:
+    threadPoolSize: ${DELEGATE_CAPABILITIES_RECORD_ITERATOR_THREAD_COUNT:-5}
+  blockingCapabilityPermissionsRecordHandlerIteratorConfig:
+    threadPoolSize: ${BLOCKING_CAPABILITY_PERMISSIONS_RECORD_ITERATOR_THREAD_COUNT:-5}
+  delegateTaskExpiryCheckIteratorConfig:
+    threadPoolSize: ${DELEGATE_TASK_EXPIRY_CHECK_ITERATOR_THREAD_COUNT:-5}
+  perpetualTaskRebalanceIteratorConfig:
+    threadPoolSize: ${PERPETUAL_TASK_REBALANCE_ITERATOR_THREAD_COUNT:-5}
+  perpetualTaskAssignmentIteratorConfig:
+    threadPoolSize: ${PERPETUAL_TASK_ASSIGNMENT_ITERATOR_THREAD_COUNT:-5}
 
 eventsFramework:
   redis:

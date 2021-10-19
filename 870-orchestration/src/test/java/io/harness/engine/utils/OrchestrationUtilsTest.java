@@ -1,0 +1,78 @@
+package io.harness.engine.utils;
+
+import static io.harness.rule.OwnerRule.PRASHANT;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.execution.NodeExecution;
+import io.harness.plan.NodeType;
+import io.harness.plan.PlanNode;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.rule.Owner;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+public class OrchestrationUtilsTest extends CategoryTest {
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testNodeTypeForPlan() {
+    Ambiance ambiance = Ambiance.newBuilder().build();
+    NodeType nodeType = OrchestrationUtils.currentNodeType(ambiance);
+    assertThat(nodeType).isEqualTo(NodeType.PLAN);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testNodeTypeForPlanNode() {
+    Ambiance ambiance =
+        Ambiance.newBuilder().addLevels(Level.newBuilder().setNodeType(NodeType.PLAN_NODE.toString()).build()).build();
+    NodeType nodeType = OrchestrationUtils.currentNodeType(ambiance);
+    assertThat(nodeType).isEqualTo(NodeType.PLAN_NODE);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testNodeTypeForPlanNodeEmpty() {
+    Ambiance ambiance = Ambiance.newBuilder().addLevels(Level.newBuilder().build()).build();
+    NodeType nodeType = OrchestrationUtils.currentNodeType(ambiance);
+    assertThat(nodeType).isEqualTo(NodeType.PLAN_NODE);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testIsStageNode() {
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .planNode(PlanNode.builder()
+                          .stepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STAGE).build())
+                          .build())
+            .build();
+    assertThat(OrchestrationUtils.isStageNode(nodeExecution)).isTrue();
+    assertThat(OrchestrationUtils.isPipelineNode(nodeExecution)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testIsPipelineNode() {
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .planNode(
+                PlanNode.builder()
+                    .stepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.PIPELINE).build())
+                    .build())
+            .build();
+    assertThat(OrchestrationUtils.isPipelineNode(nodeExecution)).isTrue();
+    assertThat(OrchestrationUtils.isStageNode(nodeExecution)).isFalse();
+  }
+}

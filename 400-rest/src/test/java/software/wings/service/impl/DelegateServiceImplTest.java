@@ -14,6 +14,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.UTSAV;
+import static io.harness.rule.OwnerRule.VLAD;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.utils.Utils.uuidToIdentifier;
@@ -65,6 +66,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.events.DelegateGroupDeleteEvent;
 import io.harness.delegate.events.DelegateGroupUpsertEvent;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.ng.core.ProjectScope;
@@ -107,7 +109,6 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -121,8 +122,10 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -181,6 +184,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private Subject<DelegateTaskRetryObserver> retryObserverSubject;
   @Inject private HPersistence persistence;
   @Inject private OutboxService outboxService;
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws IllegalAccessException {
@@ -950,7 +954,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
             .description("description")
             .delegateConfigurationId("delConfigId")
             .size(DelegateSize.LAPTOP)
-            .tags(ImmutableSet.of("tag1", "tag2"))
             .identifier(DELEGATE_GROUP_IDENTIFIER)
             .build());
 
@@ -963,7 +966,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(returnedDelegateGroup.getDescription()).isEqualTo("description");
     assertThat(returnedDelegateGroup.getDelegateConfigurationId()).isEqualTo("delConfigId");
     assertThat(returnedDelegateGroup.getSizeDetails().getSize()).isEqualTo(DelegateSize.LAPTOP);
-    assertThat(returnedDelegateGroup.getTags()).containsExactlyInAnyOrder("tag1", "tag2");
     assertThat(returnedDelegateGroup.isNg()).isTrue();
     assertThat(returnedDelegateGroup.getIdentifier()).isEqualTo(DELEGATE_GROUP_IDENTIFIER);
 
@@ -991,7 +993,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .description("description")
                        .delegateConfigurationId("delConfigId")
                        .size(DelegateSize.LAPTOP)
-                       .tags(ImmutableSet.of("tag1", "tag2"))
                        .identifier(DELEGATE_GROUP_IDENTIFIER)
                        .build());
 
@@ -1313,6 +1314,38 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateGroup delegateGroup = delegateService.upsertDelegateGroup("name2", ACCOUNT_ID, delegateSetupDetails);
 
     assertThat(delegateGroup.getIdentifier()).isEqualTo("_name1");
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void shouldSaveTagsInDelegate_AndDelegateGroupCollection() {}
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldValidateDelegateProfileWrongProfileId() {
+    setUpDelegatesForInitializationTest();
+    String delegateProfileId = TEST_DELEGATE_PROFILE_ID + "_12345";
+    thrown.expect(InvalidRequestException.class);
+    delegateService.validateDelegateProfileId(ACCOUNT_ID, delegateProfileId);
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldValidateDelegateProfileIdExists() {
+    setUpDelegatesForInitializationTest();
+    String delegateProfileId = TEST_DELEGATE_PROFILE_ID + "_1";
+    delegateService.validateDelegateProfileId(ACCOUNT_ID, delegateProfileId);
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldValidateDelegateProfileIdEmpty() {
+    setUpDelegatesForInitializationTest();
+    delegateService.validateDelegateProfileId(ACCOUNT_ID, null);
   }
 
   private List<String> setUpDelegatesForInitializationTest() {

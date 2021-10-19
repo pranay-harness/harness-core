@@ -7,6 +7,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
 import io.harness.controller.PrimaryVersionChangeScheduler;
@@ -32,6 +33,7 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.request.RequestContextFilter;
 import io.harness.security.NextGenAuthenticationFilter;
@@ -249,6 +251,8 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(MultiPartFeature.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
+    environment.jersey().register(NGTemplateResolveExceptionMapper.class);
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

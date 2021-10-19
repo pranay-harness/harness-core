@@ -18,6 +18,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.ModuleType;
+import io.harness.NgIteratorsConfig;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
@@ -28,6 +29,7 @@ import io.harness.cache.CacheModule;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
+import io.harness.cdng.licenserestriction.ServiceRestrictionsUsageImpl;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.cdng.pipeline.executions.CdngOrchestrationExecutionEventHandlerRegistrar;
 import io.harness.cf.AbstractCfModule;
@@ -37,8 +39,12 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
 import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
-import io.harness.enforcement.client.example.ExampleUsageImpl;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
+import io.harness.enforcement.client.example.ExampleCustomImpl;
+import io.harness.enforcement.client.example.ExampleRateLimitUsageImpl;
+import io.harness.enforcement.client.example.ExampleStaticLimitUsageImpl;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -82,6 +88,8 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.handler.NGVaultSecretManagerRenewalHandler;
 import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
+import io.harness.ng.core.remote.licenserestriction.OrgRestrictionsUsageImpl;
+import io.harness.ng.core.remote.licenserestriction.ProjectRestrictionsUsageImpl;
 import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
 import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.SourceCodeManagerMigrationProvider;
@@ -128,10 +136,12 @@ import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.token.remote.TokenClient;
+import io.harness.tracing.MongoRedisTracer;
 import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
@@ -200,6 +210,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PL)
 @Slf4j
@@ -334,7 +345,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
-    registerIterators(injector);
+    registerIterators(appConfig.getNgIteratorsConfig(), injector);
     registerJobs(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
@@ -365,6 +376,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // register Polling Framework Observer
     PollingServiceImpl pollingService = (PollingServiceImpl) injector.getInstance(Key.get(PollingService.class));
     pollingService.getSubject().register(injector.getInstance(Key.get(PollingPerpetualTaskManager.class)));
+
+    HMongoTemplate mongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
+    mongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerMigrations(Injector injector) {
@@ -439,11 +453,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
   }
 
-  public void registerIterators(Injector injector) {
-    injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
-    injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+  public void registerIterators(NgIteratorsConfig ngIteratorsConfig, Injector injector) {
+    injector.getInstance(NGVaultSecretManagerRenewalHandler.class)
+        .registerIterators(ngIteratorsConfig.getNgVaultSecretManagerRenewalIteratorConfig().getThreadPoolSize());
+    injector.getInstance(WebhookEventProcessingService.class)
+        .registerIterators(ngIteratorsConfig.getWebhookEventProcessingServiceIteratorConfig().getThreadPoolSize());
     injector.getInstance(InstanceStatsIteratorHandler.class).registerIterators();
-    injector.getInstance(GitFullSyncEntityIterator.class).registerIterators();
+    injector.getInstance(GitFullSyncEntityIterator.class)
+        .registerIterators(ngIteratorsConfig.getGitFullSyncEntityIteratorConfig().getThreadPoolSize());
   }
 
   public void registerJobs(Injector injector) {
@@ -742,10 +759,22 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         RestrictionUsageRegisterConfiguration.builder()
             .restrictionNameClassMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.TEST2, ExampleUsageImpl.class)
-                    .put(FeatureRestrictionName.TEST3, ExampleUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST2, ExampleStaticLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST3, ExampleRateLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.MULTIPLE_PROJECTS, ProjectRestrictionsUsageImpl.class)
+                    .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
+                    .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)
                     .build())
             .build();
-    injector.getInstance(EnforcementSdkRegisterService.class).initialize(restrictionUsageRegisterConfiguration);
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
+                    .put(FeatureRestrictionName.TEST4, ExampleCustomImpl.class)
+                    .build())
+            .build();
+
+    injector.getInstance(EnforcementSdkRegisterService.class)
+        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }

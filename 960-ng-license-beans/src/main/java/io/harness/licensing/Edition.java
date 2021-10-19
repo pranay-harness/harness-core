@@ -3,11 +3,13 @@ package io.harness.licensing;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.GTM)
 public enum Edition {
+  COMMUNITY, // Community is exclusively on prem
   FREE,
   TEAM,
   ENTERPRISE;
@@ -20,5 +22,9 @@ public enum Edition {
       }
     }
     return editions;
+  }
+
+  public static List<Edition> getSaasEditions() {
+    return Lists.newArrayList(FREE, TEAM, ENTERPRISE);
   }
 }

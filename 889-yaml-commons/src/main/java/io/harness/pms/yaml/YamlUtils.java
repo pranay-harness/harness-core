@@ -260,6 +260,16 @@ public class YamlUtils {
     return qualifiedNameList;
   }
 
+  public String getStageFqnPath(YamlNode yamlNode) {
+    List<String> qualifiedNames = getQualifiedNameList(yamlNode, "pipeline");
+    StringBuilder response = new StringBuilder();
+    if (qualifiedNames.size() <= 2) {
+      return String.join(".", qualifiedNames);
+    }
+
+    return qualifiedNames.get(0) + "." + qualifiedNames.get(1) + "." + qualifiedNames.get(2);
+  }
+
   private String getQNForNode(YamlNode yamlNode, YamlNode parentNode) {
     if (parentNode == null) {
       return "";

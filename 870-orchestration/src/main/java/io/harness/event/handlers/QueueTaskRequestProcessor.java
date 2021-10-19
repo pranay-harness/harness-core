@@ -11,7 +11,7 @@ import io.harness.engine.pms.resume.EngineResumeCallback;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.NodeExecution;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
@@ -20,6 +20,8 @@ import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -46,9 +48,9 @@ public class QueueTaskRequestProcessor implements SdkResponseProcessor {
   public void handleEvent(SdkResponseEventProto event) {
     // Queue Task
     QueueTaskRequest queueTaskRequest = event.getQueueTaskRequest();
-    String nodeExecutionId = event.getNodeExecutionId();
+    String nodeExecutionId = SdkResponseEventUtils.getNodeExecutionId(event);
     String taskId =
-        queueTask(nodeExecutionId, queueTaskRequest.getTaskRequest(), queueTaskRequest.getSetupAbstractionsMap());
+        queueTask(event.getAmbiance(), queueTaskRequest.getTaskRequest(), queueTaskRequest.getSetupAbstractionsMap());
 
     // this indicates and issue in task execution
     if (taskId == null) {
@@ -82,20 +84,20 @@ public class QueueTaskRequestProcessor implements SdkResponseProcessor {
     return executableResponse;
   }
 
-  private String queueTask(String nodeExecutionId, TaskRequest taskRequest, Map<String, String> setupAbstractionsMap) {
+  private String queueTask(Ambiance ambiance, TaskRequest taskRequest, Map<String, String> setupAbstractionsMap) {
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     try {
       TaskExecutor taskExecutor = taskExecutorMap.get(taskRequest.getTaskCategory());
       String taskId =
           Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractionsMap, taskRequest, Duration.ofSeconds(0)));
       log.info("TaskRequestQueued for NodeExecutionId : {}, TaskId; {}", nodeExecutionId, taskId);
-      EngineResumeCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
-      ProgressCallback progressCallback = EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build();
+      EngineResumeCallback callback = EngineResumeCallback.builder().ambiance(ambiance).build();
+      ProgressCallback progressCallback = EngineProgressCallback.builder().ambiance(ambiance).build();
       waitNotifyEngine.waitForAllOn(publisherName, callback, progressCallback, taskId);
       return taskId;
     } catch (Exception ex) {
       log.error("Error while queuing delegate task for node execution {}", nodeExecutionId, ex);
-      NodeExecution errorNodeExecution = nodeExecutionService.get(nodeExecutionId);
-      orchestrationEngine.handleError(errorNodeExecution.getAmbiance(), ex);
+      orchestrationEngine.handleError(ambiance, ex);
       return null;
     }
   }

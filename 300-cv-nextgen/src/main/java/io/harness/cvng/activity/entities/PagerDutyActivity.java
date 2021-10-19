@@ -5,7 +5,9 @@ import static io.harness.cvng.beans.activity.ActivityType.PAGER_DUTY;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
+import io.harness.mongo.index.FdSparseIndex;
 
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,8 +22,17 @@ import org.mongodb.morphia.query.UpdateOperations;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class PagerDutyActivity extends Activity {
-  private String eventId;
+  @FdSparseIndex private String eventId;
   private String pagerDutyUrl;
+  String status;
+  Instant triggeredAt;
+  String urgency;
+  String htmlUrl;
+  String priority;
+  String assignment;
+  String assignmentUrl;
+  String escalationPolicy;
+  String escalationPolicyUrl;
 
   @Override
   public ActivityType getType() {
@@ -54,16 +65,31 @@ public class PagerDutyActivity extends Activity {
     }
 
     public Query<PagerDutyActivity> populateKeyQuery(Query<PagerDutyActivity> query, PagerDutyActivity activity) {
-      return super.populateKeyQuery(query, activity)
-          .filter(PagerDutyActivityKeys.eventId, activity.getEventId())
-          .filter(PagerDutyActivityKeys.pagerDutyUrl, activity.getPagerDutyUrl());
+      return super.populateKeyQuery(query, activity).filter(PagerDutyActivityKeys.eventId, activity.getEventId());
     }
 
     @Override
     public void setUpdateOperations(UpdateOperations<PagerDutyActivity> updateOperations, PagerDutyActivity activity) {
       setCommonUpdateOperations(updateOperations, activity);
       updateOperations.set(PagerDutyActivityKeys.eventId, activity.getEventId())
+          .set(PagerDutyActivityKeys.status, activity.getStatus())
+          .set(PagerDutyActivityKeys.htmlUrl, activity.getHtmlUrl())
           .set(PagerDutyActivityKeys.pagerDutyUrl, activity.getPagerDutyUrl());
+
+      if (activity.getUrgency() != null) {
+        updateOperations.set(PagerDutyActivityKeys.urgency, activity.getUrgency());
+      }
+      if (activity.getPriority() != null) {
+        updateOperations.set(PagerDutyActivityKeys.priority, activity.getPriority());
+      }
+      if (activity.getAssignment() != null) {
+        updateOperations.set(PagerDutyActivityKeys.assignment, activity.getAssignment());
+        updateOperations.set(PagerDutyActivityKeys.assignmentUrl, activity.getAssignmentUrl());
+      }
+      if (activity.getEscalationPolicy() != null) {
+        updateOperations.set(PagerDutyActivityKeys.escalationPolicy, activity.getEscalationPolicy());
+        updateOperations.set(PagerDutyActivityKeys.escalationPolicyUrl, activity.getEscalationPolicyUrl());
+      }
     }
   }
 }

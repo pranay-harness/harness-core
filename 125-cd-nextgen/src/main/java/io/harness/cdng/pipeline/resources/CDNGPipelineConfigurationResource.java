@@ -17,6 +17,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,13 @@ public class CDNGPipelineConfigurationResource {
   @Path("/strategies/provisioner-yaml-snippets")
   @ApiOperation(value = "Gets Yaml for Execution Strategy based on Provisioner Type",
       nickname = "getProvisionerExecutionStrategyYaml")
+  @Operation(operationId = "getProvisionerExecutionStrategyYaml",
+      summary = "Gets Yaml for Execution Strategy based on Provisioner Type",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns execution strategy yaml")
+      })
   public ResponseDTO<String>
   getProvisionerExecutionStrategyYaml(@NotNull @QueryParam("provisionerType") ProvisionerType provisionerType)
       throws IOException {
@@ -94,7 +102,14 @@ public class CDNGPipelineConfigurationResource {
   @GET
   @Path("/provisioner-steps")
   @ApiOperation(value = "get provisioner steps", nickname = "getProvisionerSteps")
-  public ResponseDTO<StepCategory> getProvisionerSteps() {
+  @Operation(operationId = "getProvisionerSteps", summary = "Get provisioner steps",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns list of provisioner steps")
+      })
+  public ResponseDTO<StepCategory>
+  getProvisionerSteps() {
     return ResponseDTO.newResponse(cdngPipelineConfigurationHelper.getStepsForProvisioners());
   }
 }

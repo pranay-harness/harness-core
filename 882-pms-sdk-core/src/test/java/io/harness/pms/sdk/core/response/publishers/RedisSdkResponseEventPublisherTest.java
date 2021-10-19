@@ -9,6 +9,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.producer.Message;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.events.EventErrorRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
@@ -40,17 +42,20 @@ public class RedisSdkResponseEventPublisherTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void publishEvent() {
-    SdkResponseEventProto event = SdkResponseEventProto.newBuilder()
-                                      .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
-                                      .setEventErrorRequest(EventErrorRequest.newBuilder().build())
-                                      .setNodeExecutionId(NODE_EXECUTION_ID)
-                                      .setPlanExecutionId(PLAN_EXECUTION_ID)
-                                      .build();
+    SdkResponseEventProto event =
+        SdkResponseEventProto.newBuilder()
+            .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
+            .setEventErrorRequest(EventErrorRequest.newBuilder().build())
+            .setAmbiance(Ambiance.newBuilder()
+                             .setPlanExecutionId(PLAN_EXECUTION_ID)
+                             .addLevels(Level.newBuilder().setRuntimeId(NODE_EXECUTION_ID).build())
+                             .build())
+            .build();
     Map<String, String> metadataMap = new HashMap<>();
     metadataMap.put(PIPELINE_MONITORING_ENABLED, "false");
     metadataMap.put("eventType", SdkResponseEventType.ADD_EXECUTABLE_RESPONSE.name());
-    metadataMap.put("nodeExecutionId", event.getNodeExecutionId());
-    metadataMap.put("planExecutionId", event.getPlanExecutionId());
+    metadataMap.put("nodeExecutionId", NODE_EXECUTION_ID);
+    metadataMap.put("planExecutionId", PLAN_EXECUTION_ID);
     sdkResponseEventPublisher.publishEvent(event);
     verify(producer).send(Message.newBuilder().putAllMetadata(metadataMap).setData(event.toByteString()).build());
   }

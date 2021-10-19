@@ -50,7 +50,6 @@ import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.getRen
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.getRenderedTfVarFiles;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.handleDefaultWorkspace;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.isSecretManagerRequired;
-import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.parseTerragruntOutputs;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.resolveTargets;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.validateTerragruntVariables;
 
@@ -670,7 +669,7 @@ public abstract class TerragruntProvisionState extends State {
     saveUserInputs(context, terragruntExecutionData, terragruntProvisioner);
 
     if (terragruntExecutionData.getOutputs() != null) {
-      Map<String, Object> outputs = parseTerragruntOutputs(terragruntExecutionData.getOutputs());
+      Map<String, Object> outputs = terragruntStateHelper.parseTerragruntOutputs(terragruntExecutionData.getOutputs());
       terragruntStateHelper.saveOutputs(context, outputs);
 
       ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(

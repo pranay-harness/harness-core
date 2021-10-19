@@ -67,7 +67,7 @@ eventsConfig:
       - "redis://redis3:26379"
     envNamespace: ${EVENTS_CONFIG_ENV_NAMESPACE:-""}
     readMode: MASTER
-    nettyThreads: 16
+    nettyThreads: ${EVENTS_CONFIG_NETTY_THREADS:-16}
     useScriptCache: true
     userName: ${EVENTS_CONFIG_REDIS_USERNAME:-""}
     password: ${EVENTS_CONFIG_REDIS_PASSWORD:-""}
@@ -230,3 +230,9 @@ serviceAccountClient:
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   serviceAccountServiceSecret: ${SERVICEACCOUNT_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: ${ENFORCEMENT_CHECK_ENABLED:-false}
+
+hostname: ${HOSTNAME:-localhost}
+basePathPrefix: ${BASE_PATH_PREFIX:-""}

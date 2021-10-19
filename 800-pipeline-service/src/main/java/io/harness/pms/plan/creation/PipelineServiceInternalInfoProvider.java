@@ -28,6 +28,7 @@ import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvide
 import io.harness.pms.sdk.core.variables.VariableCreator;
 import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
+import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -77,6 +78,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     variableCreators.add(new PipelineVariableCreator());
     variableCreators.add(new HTTPStepVariableCreator());
     variableCreators.add(new StepGroupVariableCreator());
+    variableCreators.add(new ShellScriptStepVariableCreator());
     injectorUtils.injectMembers(variableCreators);
     return variableCreators;
   }

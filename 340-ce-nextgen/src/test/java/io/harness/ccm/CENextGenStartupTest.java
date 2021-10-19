@@ -1,6 +1,7 @@
 package io.harness.ccm;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.CENextGenConfiguration.SERVICE_ROOT_PATH;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +55,8 @@ public class CENextGenStartupTest extends CategoryTest {
     SUPPORT = new DropwizardTestSupport<>(CENextGenApplication.class,
         String.valueOf(new File("340-ce-nextgen/src/test/resources/test-config.yml")),
         ConfigOverride.config("server.applicationConnectors[0].port", "0"),
-        ConfigOverride.config("events-mongo.uri", getMongoUri()));
+        ConfigOverride.config("events-mongo.uri", getMongoUri()), ConfigOverride.config("hostname", "localhost"),
+        ConfigOverride.config("basePathPrefix", SERVICE_ROOT_PATH));
     SUPPORT.before();
   }
 
@@ -63,7 +65,7 @@ public class CENextGenStartupTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSchemaUrlAccessible() {
     final Client client = new JerseyClientBuilder().build();
-    final String URL = String.format("http://localhost:%d/ccm/api/graphql/schema", SUPPORT.getLocalPort());
+    final String URL = String.format("http://localhost:%d%s/graphql/schema", SUPPORT.getLocalPort(), SERVICE_ROOT_PATH);
     final Response response = client.target(URL).request().get();
 
     assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());

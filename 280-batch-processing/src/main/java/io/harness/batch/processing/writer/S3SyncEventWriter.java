@@ -167,7 +167,8 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
                                         .billingAccountId(ceAwsConnectorDTO.getAwsAccountId())
                                         .curReportName(curAttributes.getReportName())
                                         .billingBucketPath(String.join("/", "s3://" + curAttributes.getS3BucketName(),
-                                            curAttributes.getS3Prefix(), curAttributes.getReportName()))
+                                            curAttributes.getS3Prefix().equals("/") ? "" : curAttributes.getS3Prefix(),
+                                            curAttributes.getReportName()))
                                         .billingBucketRegion(curAttributes.getRegion())
                                         .externalId(crossAccountAccess.getExternalId())
                                         .roleArn(crossAccountAccess.getCrossAccountRoleArn())

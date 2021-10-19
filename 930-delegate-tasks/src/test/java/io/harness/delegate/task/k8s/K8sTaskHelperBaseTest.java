@@ -22,10 +22,12 @@ import static io.harness.k8s.model.K8sExpressions.stableDestinationExpression;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
 import static io.harness.k8s.model.Kind.DeploymentConfig;
+import static io.harness.k8s.model.Kind.Job;
 import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.k8s.model.Kind.Service;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.rule.OwnerRule.ABHINAV2;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -40,6 +42,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -67,12 +70,17 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.connector.CEFeatures;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -88,11 +96,16 @@ import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
+import io.harness.errorhandling.NGErrorHelper;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
-import io.harness.exception.GitOperationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KubernetesTaskException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.UrlNotProvidedException;
 import io.harness.exception.UrlNotReachableException;
@@ -123,9 +136,11 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -146,6 +161,7 @@ import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ContainerStatus;
 import io.kubernetes.client.openapi.models.V1ContainerStatusBuilder;
@@ -175,6 +191,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import junitparams.JUnitParamsRunner;
@@ -206,7 +223,6 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import org.powermock.api.mockito.PowerMockito;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -233,6 +249,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private SecretDecryptionService mockSecretDecryptionService;
   @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Mock private KubernetesHelperService kubernetesHelperService;
+  @Mock private NGErrorHelper ngErrorHelper;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
   @Spy @InjectMocks private K8sTaskHelperBase spyK8sTaskHelperBase;
@@ -533,6 +550,36 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDryRunManifestIsErrorFrameworkEnabled() throws Exception {
+    ProcessResult processResult = new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes()));
+    doReturn(processResult).when(spyK8sTaskHelperBase).runK8sExecutable(any(), any(), any());
+
+    final String workingDirectory = ".";
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory(workingDirectory)
+                                                      .ocPath("oc")
+                                                      .kubectlPath("kubectl")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    assertThatThrownBy(()
+                           -> spyK8sTaskHelperBase.dryRunManifests(
+                               client, emptyList(), k8sDelegateTaskParams, executionLogCallback, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.DRY_RUN_MANIFEST_FAILED);
+          assertThat(explanation).hasMessageContaining("Something went wrong");
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.DRY_RUN_MANIFEST_FAILED);
+          return true;
+        });
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testApplyForOpenshiftResources() throws Exception {
@@ -567,6 +614,40 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     verify(spyK8sTaskHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests.yaml --record");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testApplyIsErrorFrameworkEnabled() throws Exception {
+    ProcessResult processResult = new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes()));
+    doReturn(processResult).when(spyK8sTaskHelperBase).runK8sExecutable(any(), any(), any(AbstractExecutable.class));
+
+    final String workingDirectory = ".";
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory(workingDirectory)
+                                                      .kubectlPath("kubectl")
+                                                      .ocPath("oc")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    assertThatThrownBy(()
+                           -> spyK8sTaskHelperBase.applyManifests(client,
+                               singletonList(KubernetesResource.builder()
+                                                 .spec("")
+                                                 .resourceId(KubernetesResourceId.builder().kind("Deployment").build())
+                                                 .build()),
+                               k8sDelegateTaskParams, executionLogCallback, true, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.APPLY_MANIFEST_FAILED);
+          assertThat(explanation).hasMessageContaining("Something went wrong");
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.APPLY_MANIFEST_FAILED);
+          return true;
+        }, "expected exception message");
   }
 
   @Test
@@ -610,86 +691,166 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void doStatusCheckForJob() throws Exception {
     String RANDOM = "RANDOM";
     K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().workingDirectory(RANDOM).build();
-    GetJobCommand jobStatusCommand = PowerMockito.spy(new GetJobCommand(null, null, null));
+    GetJobCommand jobStatusCommand = spy(new GetJobCommand(null, null, null));
     doReturn(null).when(jobStatusCommand).execute(RANDOM, null, null, false);
 
-    shouldReturnFalseWhenCompletedJobCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
-    shouldReturnFalseWhenCompletedTimeCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
-    shouldReturnTrueWhenCompletedTimeReached(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
-    shouldReturnFalseWhenFailedJobCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
-    shouldReturnFalseWhenJobStatusIsFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand);
+    shouldFailWhenCompletedJobCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand, false);
+    shouldFailWhenCompletedTimeCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand, false);
+    shouldReturnTrueWhenCompletedTimeReached(RANDOM, k8sDelegateTaskParams, jobStatusCommand, false);
+    shouldFailWhenFailedJobCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand, false);
+    shouldFailWhenJobStatusIsFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand, false);
   }
 
-  private void shouldReturnFalseWhenFailedJobCommandFailed(
-      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
-    GetJobCommand jobCompletionStatus = PowerMockito.spy(new GetJobCommand(null, null, null));
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void doStatusCheckForJobIsErrorFrameworkEnabled() throws Exception {
+    String RANDOM = "RANDOM";
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().workingDirectory(RANDOM).build();
+    GetJobCommand jobStatusCommand = spy(new GetJobCommand(null, null, null));
+    doReturn(null).when(jobStatusCommand).execute(RANDOM, null, null, false);
+
+    shouldFailWhenCompletedJobCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand, true);
+    shouldFailWhenCompletedTimeCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand, true);
+    shouldReturnTrueWhenCompletedTimeReached(RANDOM, k8sDelegateTaskParams, jobStatusCommand, true);
+    shouldFailWhenFailedJobCommandFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand, true);
+    shouldFailWhenJobStatusIsFailed(RANDOM, k8sDelegateTaskParams, jobStatusCommand, true);
+  }
+
+  private void shouldFailWhenFailedJobCommandFailed(String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams,
+      GetJobCommand jobStatusCommand, boolean isErrorFrameworkEnabled) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
     ProcessResult jobStatusResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    GetJobCommand jobFailedCommand = PowerMockito.spy(new GetJobCommand(null, null, null));
-    ProcessResult jobFailedResult = new ProcessResult(1, new ProcessOutput("True".getBytes()));
+    GetJobCommand jobFailedCommand = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobFailedResult = new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes()));
 
     doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
     doReturn(jobFailedResult).when(jobFailedCommand).execute(RANDOM, null, null, false);
+    doReturn("kubectl --kubeconfig=file get").when(jobFailedCommand).command();
 
-    assertThat(k8sTaskHelperBase.getJobStatus(
-                   k8sDelegateTaskParams, null, null, jobCompletionStatus, jobFailedCommand, jobStatusCommand, null))
-        .isFalse();
+    if (isErrorFrameworkEnabled) {
+      assertThatThrownBy(()
+                             -> k8sTaskHelperBase.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus,
+                                 jobFailedCommand, jobStatusCommand, null, true))
+          .matches(throwable -> {
+            HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+            ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+            KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+            assertThat(hint).hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED);
+            assertThat(explanation).hasMessageContaining("Something went wrong");
+            assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED);
+            return true;
+          });
+    } else {
+      assertThat(k8sTaskHelperBase.getJobStatus(
+                     k8sDelegateTaskParams, null, null, jobCompletionStatus, jobFailedCommand, jobStatusCommand, null))
+          .isFalse();
+    }
   }
 
-  private void shouldReturnFalseWhenCompletedTimeCommandFailed(
-      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
-    GetJobCommand jobCompletionStatus = PowerMockito.spy(new GetJobCommand(null, null, null));
+  private void shouldFailWhenCompletedTimeCommandFailed(String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams,
+      GetJobCommand jobStatusCommand, boolean isErrorFrameworkEnabled) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
     ProcessResult jobStatusResult = new ProcessResult(0, new ProcessOutput("True".getBytes()));
-    GetJobCommand jobCompletionCommand = PowerMockito.spy(new GetJobCommand(null, null, null));
-    ProcessResult jobCompletionTimeResult = new ProcessResult(1, new ProcessOutput("time".getBytes()));
+    GetJobCommand jobCompletionCommand = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobCompletionTimeResult = new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes()));
 
     doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
     doReturn(jobCompletionTimeResult).when(jobCompletionCommand).execute(RANDOM, null, null, false);
+    doReturn("kubectl --kubeconfig=file get").when(jobCompletionCommand).command();
 
-    assertThat(k8sTaskHelperBase.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus, null,
-                   jobStatusCommand, jobCompletionCommand))
-        .isFalse();
+    if (isErrorFrameworkEnabled) {
+      assertThatThrownBy(()
+                             -> k8sTaskHelperBase.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus,
+                                 null, jobStatusCommand, jobCompletionCommand, true))
+          .matches(throwable -> {
+            HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+            ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+            KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+            assertThat(hint).hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED);
+            assertThat(explanation).hasMessageContaining("Something went wrong");
+            assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED);
+            return true;
+          });
+    } else {
+      assertThat(k8sTaskHelperBase.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus, null,
+                     jobStatusCommand, jobCompletionCommand))
+          .isFalse();
+    }
   }
 
-  private void shouldReturnFalseWhenJobStatusIsFailed(
-      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
-    GetJobCommand jobCompletionStatus = PowerMockito.spy(new GetJobCommand(null, null, null));
+  private void shouldFailWhenJobStatusIsFailed(String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams,
+      GetJobCommand jobStatusCommand, boolean isErrorFrameworkEnabled) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
     ProcessResult jobStatusResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    GetJobCommand jobFailedCommand = PowerMockito.spy(new GetJobCommand(null, null, null));
+    GetJobCommand jobFailedCommand = spy(new GetJobCommand(null, null, null));
     ProcessResult jobFailedResult = new ProcessResult(0, new ProcessOutput("True".getBytes()));
 
     doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
     doReturn(jobFailedResult).when(jobFailedCommand).execute(RANDOM, null, null, false);
 
-    assertThat(k8sTaskHelperBase.getJobStatus(
-                   k8sDelegateTaskParams, null, null, jobCompletionStatus, jobFailedCommand, jobStatusCommand, null))
-        .isFalse();
+    if (isErrorFrameworkEnabled) {
+      assertThatThrownBy(()
+                             -> k8sTaskHelperBase.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus,
+                                 jobFailedCommand, jobStatusCommand, null, true))
+          .matches(throwable -> {
+            HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+            ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+            KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+            assertThat(hint).hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_JOB_FAILED);
+            assertThat(explanation)
+                .hasMessageContaining(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_JOB_FAILED);
+            assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED);
+            return true;
+          });
+    } else {
+      assertThat(k8sTaskHelperBase.getJobStatus(
+                     k8sDelegateTaskParams, null, null, jobCompletionStatus, jobFailedCommand, jobStatusCommand, null))
+          .isFalse();
+    }
   }
 
-  private void shouldReturnTrueWhenCompletedTimeReached(
-      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
-    GetJobCommand jobCompletionStatus = PowerMockito.spy(new GetJobCommand(null, null, null));
+  private void shouldReturnTrueWhenCompletedTimeReached(String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams,
+      GetJobCommand jobStatusCommand, boolean isErrorFrameworkEnabled) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
     ProcessResult jobStatusResult = new ProcessResult(0, new ProcessOutput("True".getBytes()));
-    GetJobCommand jobCompletionCommand = PowerMockito.spy(new GetJobCommand(null, null, null));
+    GetJobCommand jobCompletionCommand = spy(new GetJobCommand(null, null, null));
     ProcessResult jobCompletionTimeResult = new ProcessResult(0, new ProcessOutput("time".getBytes()));
 
     doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
     doReturn(jobCompletionTimeResult).when(jobCompletionCommand).execute(RANDOM, null, null, false);
 
     assertThat(k8sTaskHelperBase.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus, null,
-                   jobStatusCommand, jobCompletionCommand))
+                   jobStatusCommand, jobCompletionCommand, isErrorFrameworkEnabled))
         .isTrue();
   }
 
-  private void shouldReturnFalseWhenCompletedJobCommandFailed(
-      String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams, GetJobCommand jobStatusCommand) throws Exception {
-    GetJobCommand jobCompletionStatus = PowerMockito.spy(new GetJobCommand(null, null, null));
-    ProcessResult jobStatusResult = new ProcessResult(1, new ProcessOutput("FAILURE".getBytes()));
+  private void shouldFailWhenCompletedJobCommandFailed(String RANDOM, K8sDelegateTaskParams k8sDelegateTaskParams,
+      GetJobCommand jobStatusCommand, boolean isErrorFrameworkEnabled) throws Exception {
+    GetJobCommand jobCompletionStatus = spy(new GetJobCommand(null, null, null));
+    ProcessResult jobStatusResult = new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes()));
 
     doReturn(jobStatusResult).when(jobCompletionStatus).execute(RANDOM, null, null, false);
+    doReturn("kubectl --kubeconfig=file get").when(jobCompletionStatus).command();
 
-    assertThat(k8sTaskHelperBase.getJobStatus(
-                   k8sDelegateTaskParams, null, null, jobCompletionStatus, null, jobStatusCommand, null))
-        .isFalse();
+    if (isErrorFrameworkEnabled) {
+      assertThatThrownBy(()
+                             -> k8sTaskHelperBase.getJobStatus(k8sDelegateTaskParams, null, null, jobCompletionStatus,
+                                 null, jobStatusCommand, null, true))
+          .matches(throwable -> {
+            HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+            ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+            KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+            assertThat(hint).hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED);
+            assertThat(explanation).hasMessageContaining("Something went wrong");
+            assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED);
+            return true;
+          });
+    } else {
+      assertThat(k8sTaskHelperBase.getJobStatus(
+                     k8sDelegateTaskParams, null, null, jobCompletionStatus, null, jobStatusCommand, null))
+          .isFalse();
+    }
   }
 
   @Test
@@ -702,7 +863,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         .runK8sExecutable(any(), any(), any());
     final boolean success = spyK8sTaskHelperBase.scale(kubectl, K8sDelegateTaskParams.builder().build(),
         KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5,
-        executionLogCallback);
+        executionLogCallback, false);
     assertThat(success).isFalse();
     ArgumentCaptor<ScaleCommand> captor = ArgumentCaptor.forClass(ScaleCommand.class);
     verify(spyK8sTaskHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
@@ -719,7 +880,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     final boolean success =
         spyK8sTaskHelperBase.scale(kubectl, K8sDelegateTaskParams.builder().workingDirectory(".").build(),
             KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5,
-            executionLogCallback);
+            executionLogCallback, true);
 
     assertThat(success).isTrue();
     ArgumentCaptor<ScaleCommand> captor = ArgumentCaptor.forClass(ScaleCommand.class);
@@ -991,6 +1152,74 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
             eq("oc --kubeconfig=config-path rollout status DeploymentConfig/name --namespace=namespace --watch=true"));
 
     assertThat(result).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllResourcesDeploymentConfigIsErrorFrameworkEnabled() throws Exception {
+    KubernetesResourceId deploymentConfig =
+        KubernetesResourceId.builder().namespace("namespace").kind(DeploymentConfig.name()).name("name").build();
+
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+    final String workingDirectory = ".";
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory(workingDirectory)
+                                                      .ocPath("oc")
+                                                      .kubectlPath("kubectl")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+
+    ProcessResult processResult = new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes()));
+    doReturn(processResult)
+        .when(spyK8sTaskHelperBase)
+        .executeCommandUsingUtils(any(K8sDelegateTaskParams.class), any(), any(), any());
+
+    assertThatThrownBy(()
+                           -> spyK8sTaskHelperBase.doStatusCheckForAllResources(client, singletonList(deploymentConfig),
+                               k8sDelegateTaskParams, "name", executionLogCallback, false, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_FAILED);
+          assertThat(explanation).hasMessageContaining("Something went wrong");
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED);
+          return true;
+        });
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllResourcesJobIsErrorFrameworkEnabled() throws Exception {
+    KubernetesResourceId deploymentConfig =
+        KubernetesResourceId.builder().namespace("namespace").kind(Job.name()).name("name").build();
+
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+    final String workingDirectory = ".";
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory(workingDirectory)
+                                                      .ocPath("oc")
+                                                      .kubectlPath("kubectl")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+
+    ProcessResult processResult = new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes()));
+    doReturn(processResult)
+        .when(spyK8sTaskHelperBase)
+        .executeCommandUsingUtils(any(K8sDelegateTaskParams.class), any(), any(), any());
+
+    assertThatThrownBy(()
+                           -> spyK8sTaskHelperBase.doStatusCheckForAllResources(client, singletonList(deploymentConfig),
+                               k8sDelegateTaskParams, "name", executionLogCallback, false, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED);
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED);
+          return true;
+        });
   }
 
   @Test
@@ -1453,7 +1682,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         .when(spyK8sTaskHelperBase)
         .runK8sExecutable(eq(params), eq(executionLogCallback), any(AbstractExecutable.class));
 
-    spyK8sTaskHelperBase.executeDelete(kubectl, params, kubernetesResourceIds, executionLogCallback, true);
+    spyK8sTaskHelperBase.delete(kubectl, params, kubernetesResourceIds, executionLogCallback, true);
     ArgumentCaptor<AbstractExecutable> captor = ArgumentCaptor.forClass(AbstractExecutable.class);
     verify(spyK8sTaskHelperBase, times(2)).runK8sExecutable(eq(params), eq(executionLogCallback), captor.capture());
     assertThat(captor.getAllValues().get(0)).isInstanceOf(DeleteCommand.class);
@@ -1491,15 +1720,10 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDoStatusCheckForAllCustomResources() throws Exception {
-    String steadyStateCondition = "true";
-    Map<String, Object> resource = ImmutableMap.of("metadata",
+    final String steadyStateCondition = "true";
+    final Map<String, Object> resource = ImmutableMap.of("metadata",
         ImmutableMap.of("annotations", ImmutableMap.of(HarnessAnnotations.steadyStateCondition, steadyStateCondition)));
-    Kubectl client = mock(Kubectl.class);
-    GetCommand getResources = spy(new GetCommand(client));
-    GetCommand getEvent = spy(new GetCommand(client));
-    StartedProcess startedProcess = mock(StartedProcess.class);
-    Process process = mock(Process.class);
-    List<KubernetesResource> resources =
+    final List<KubernetesResource> resources =
         asList(KubernetesResource.builder()
                    .resourceId(KubernetesResourceId.builder().name("test1").kind("foo").namespace("bar").build())
                    .value(resource)
@@ -1513,12 +1737,131 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                 .value(resource)
                 .build());
 
+    boolean result = executeDoStatusCheckForCustomResources(
+        resources, new ProcessResult(0, new ProcessOutput("value: value".getBytes())), false);
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllCustomResourcesFailCli() throws Exception {
+    final List<KubernetesResource> resources = singletonList(
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().name("test2").kind("bar").namespace("default").build())
+            .value(ImmutableMap.of("metadata",
+                ImmutableMap.of("annotations", ImmutableMap.of(HarnessAnnotations.steadyStateCondition, "true"))))
+            .build());
+    boolean result = executeDoStatusCheckForCustomResources(
+        resources, new ProcessResult(1, new ProcessOutput("value: value".getBytes())), false);
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllCustomResourcesFailSteadyCheck() throws Exception {
+    final List<KubernetesResource> resources = singletonList(
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().name("test2").kind("bar").namespace("default").build())
+            .value(ImmutableMap.of("metadata",
+                ImmutableMap.of("annotations", ImmutableMap.of(HarnessAnnotations.steadyStateCondition, "false"))))
+            .build());
+    boolean result = executeDoStatusCheckForCustomResources(
+        resources, new ProcessResult(0, new ProcessOutput("value: value".getBytes())), false);
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllCustomResourcesIsErrorFrameworkEnabled() throws Exception {
+    final String steadyStateCondition = "true";
+    final Map<String, Object> resource = ImmutableMap.of("metadata",
+        ImmutableMap.of("annotations", ImmutableMap.of(HarnessAnnotations.steadyStateCondition, steadyStateCondition)));
+    final List<KubernetesResource> resources =
+        asList(KubernetesResource.builder()
+                   .resourceId(KubernetesResourceId.builder().name("test1").kind("foo").namespace("bar").build())
+                   .value(resource)
+                   .build(),
+            KubernetesResource.builder()
+                .resourceId(KubernetesResourceId.builder().name("test2").kind("bar").namespace("bar").build())
+                .value(resource)
+                .build(),
+            KubernetesResource.builder()
+                .resourceId(KubernetesResourceId.builder().name("test3").kind("boo").namespace("default").build())
+                .value(resource)
+                .build());
+
+    boolean result = executeDoStatusCheckForCustomResources(
+        resources, new ProcessResult(0, new ProcessOutput("value: value".getBytes())), true);
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllCustomResourcesFailSteadyCheckIsErrorFrameworkEnabled() {
+    final List<KubernetesResource> resources = singletonList(
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().name("test2").kind("bar").namespace("default").build())
+            .value(ImmutableMap.of("metadata",
+                ImmutableMap.of("annotations", ImmutableMap.of(HarnessAnnotations.steadyStateCondition, "false"))))
+            .build());
+    assertThatThrownBy(()
+                           -> executeDoStatusCheckForCustomResources(
+                               resources, new ProcessResult(0, new ProcessOutput("value: value".getBytes())), true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanationException = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(
+              format(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CRD_FAILED_CHECK_CONDITION, false));
+          assertThat(hint.getCause())
+              .hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CRD_FAILED_CHECK_CONTROLLER);
+          assertThat(explanationException)
+              .hasMessageContaining(format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_CRD_FAILED, "false"));
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED);
+          return true;
+        });
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllCustomResourcesFailCliIsErrorFrameworkEnabled() {
+    final List<KubernetesResource> resources = singletonList(
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().name("test2").kind("bar").namespace("default").build())
+            .value(ImmutableMap.of("metadata",
+                ImmutableMap.of("annotations", ImmutableMap.of(HarnessAnnotations.steadyStateCondition, "true"))))
+            .build());
+    assertThatThrownBy(()
+                           -> executeDoStatusCheckForCustomResources(resources,
+                               new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes())), true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanationException = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED);
+          assertThat(explanationException).hasMessageContaining("Something went wrong");
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED);
+          return true;
+        });
+  }
+
+  private boolean executeDoStatusCheckForCustomResources(List<KubernetesResource> resources,
+      ProcessResult executeResult, boolean isErrorFrameworkEnabled) throws Exception {
+    Kubectl client = mock(Kubectl.class);
+    GetCommand getResources = spy(new GetCommand(client));
+    GetCommand getEvent = spy(new GetCommand(client));
+    StartedProcess startedProcess = mock(StartedProcess.class);
+    Process process = mock(Process.class);
+
     K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().workingDirectory("pwd").build();
     doReturn(getResources).when(client).get();
     doReturn("kubectl --kubeconfig=test").when(client).command();
-    doReturn(new ProcessResult(0, new ProcessOutput("value: value".getBytes())))
-        .when(getResources)
-        .execute("pwd", null, null, false);
+    doReturn(executeResult).when(getResources).execute("pwd", null, null, false);
     doReturn(getResources).when(getResources).resources("foo/test1");
     doReturn(getResources).when(getResources).resources("bar/test2");
     doReturn(getResources).when(getResources).resources("boo/test3");
@@ -1529,17 +1872,13 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     doReturn(process).when(startedProcess).getProcess();
     doReturn(process).when(process).destroyForcibly();
 
-    boolean result = spyK8sTaskHelperBase.doStatusCheckForAllCustomResources(
-        client, resources, k8sDelegateTaskParams, executionLogCallback, false, 10000);
-    assertThat(result).isTrue();
+    doThrow(new TimeoutException())
+        .when(spyK8sTaskHelperBase)
+        .doStatusCheckForCustomResources(any(Kubectl.class), any(KubernetesResourceId.class), eq("false"),
+            any(K8sDelegateTaskParams.class), any(LogCallback.class), eq(isErrorFrameworkEnabled));
 
-    //    resources = singletonList(KubernetesResource.builder()
-    //            .resourceId(KubernetesResourceId.builder().name("test2").kind("bar").namespace("default").build())
-    //            .value(ImmutableMap.of("metadata", ImmutableMap.of("annotations",
-    //            ImmutableMap.of(HarnessAnnotations.steadyStateCondition, "false")))) .build());
-    //
-    //    result = spyK8sTaskHelperBase.doStatusCheckForAllCustomResources(client, resources, k8sDelegateTaskParams,
-    //    executionLogCallback, false, 10000); assertThat(result).isFalse();
+    return spyK8sTaskHelperBase.doStatusCheckForAllCustomResources(
+        client, resources, k8sDelegateTaskParams, executionLogCallback, false, 10000, isErrorFrameworkEnabled);
   }
 
   @Test
@@ -2219,7 +2558,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testFetchManifestFilesAndWriteToDirectory() throws IOException {
+  public void testFetchManifestFilesAndWriteToDirectory() throws Exception {
     K8sTaskHelperBase spyHelperBase = spy(k8sTaskHelperBase);
     GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
     List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
@@ -2269,13 +2608,13 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     assertThatThrownBy(()
                            -> k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
                                manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId"))
-        .isInstanceOf(GitOperationException.class);
+        .isInstanceOf(KubernetesTaskException.class);
   }
 
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testFetchManifestFilesAndWriteToDirectoryHttpHelm() throws IOException {
+  public void testFetchManifestFilesAndWriteToDirectoryHttpHelm() throws Exception {
     K8sTaskHelperBase spyTaskHelperBase = spy(k8sTaskHelperBase);
     HttpHelmStoreDelegateConfig httpStoreDelegateConfig = HttpHelmStoreDelegateConfig.builder()
                                                               .repoName("repoName")
@@ -2646,5 +2985,96 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   private Object[] badUrlExceptions() {
     return new Object[] {
         new UrlNotProvidedException("URL not provided"), new UrlNotReachableException("URL not reachable")};
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testCEKubernetesClusterWithException() {
+    ConnectorConfigDTO connector =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                            .build())
+            .build();
+    doReturn(KUBERNETES_CONFIG)
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(any(KubernetesClusterConfigDTO.class));
+    doReturn(ErrorDetail.builder().message(DEFAULT).build()).when(ngErrorHelper).createErrorDetail(anyString());
+    doReturn(DEFAULT).when(ngErrorHelper).getErrorSummary(anyString());
+    doThrow(ApiException.class).when(mockKubernetesContainerService).validateMetricsServer(any(KubernetesConfig.class));
+
+    ConnectorValidationResult result =
+        k8sTaskHelperBase.validateCEKubernetesCluster(connector, DEFAULT, emptyList(), emptyList());
+
+    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
+    assertThat(result.getErrorSummary()).isEqualTo(DEFAULT);
+    assertThat(result.getErrors().get(0).getMessage()).isEqualTo(DEFAULT);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testCEKubernetesClusterWithErrors() throws Exception {
+    ConnectorConfigDTO connector =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                            .build())
+            .build();
+    CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
+        CEK8sDelegatePrerequisite.MetricsServerCheck.builder().isInstalled(false).build();
+    CEK8sDelegatePrerequisite.Rule rule = CEK8sDelegatePrerequisite.Rule.builder().build();
+
+    doReturn(KUBERNETES_CONFIG)
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(any(KubernetesClusterConfigDTO.class));
+    doReturn(metricsServerCheck)
+        .when(mockKubernetesContainerService)
+        .validateMetricsServer(any(KubernetesConfig.class));
+    doReturn(singletonList(rule))
+        .when(mockKubernetesContainerService)
+        .validateCEResourcePermissions(any(KubernetesConfig.class));
+    doReturn(emptyList())
+        .when(mockKubernetesContainerService)
+        .validateLightwingResourceExists(any(KubernetesConfig.class));
+    doReturn(emptyList())
+        .when(mockKubernetesContainerService)
+        .validateLightwingResourcePermissions(any(KubernetesConfig.class));
+
+    ConnectorValidationResult result = k8sTaskHelperBase.validateCEKubernetesCluster(
+        connector, DEFAULT, emptyList(), singletonList(CEFeatures.OPTIMIZATION));
+
+    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
+    assertThat(result.getErrors().size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testCEKubernetesCluster() {
+    ConnectorConfigDTO connector =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                            .build())
+            .build();
+    CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
+        CEK8sDelegatePrerequisite.MetricsServerCheck.builder().isInstalled(true).build();
+
+    doReturn(KUBERNETES_CONFIG)
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(any(KubernetesClusterConfigDTO.class));
+    doReturn(metricsServerCheck)
+        .when(mockKubernetesContainerService)
+        .validateMetricsServer(any(KubernetesConfig.class));
+    doReturn(emptyList())
+        .when(mockKubernetesContainerService)
+        .validateCEResourcePermissions(any(KubernetesConfig.class));
+
+    ConnectorValidationResult result =
+        k8sTaskHelperBase.validateCEKubernetesCluster(connector, DEFAULT, emptyList(), emptyList());
+
+    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
   }
 }

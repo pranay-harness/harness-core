@@ -61,6 +61,19 @@ pipeline:
                 outputVariables: []
               timeout: 1234
           - step:
+              name: "shell script step 12"
+              identifier: "shellScriptStep12"
+              type: "ShellScript"
+              spec:
+                shell: "Bash"
+                onDelegate: true
+                source:
+                  type: "Inline"
+                  spec:
+                    script: "echo 1"
+                environmentVariables: []
+                outputVariables: []
+          - step:
               name: "Approval"
               identifier: "approval"
               type: "HarnessApproval"
@@ -71,5 +84,4 @@ pipeline:
                 approvers:
                   minimumCount: 1
                   disallowPipelineExecutor: false
-                  userGroups: "<+input>"
                 approverInputs: []

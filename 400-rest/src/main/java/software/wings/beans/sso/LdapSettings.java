@@ -60,9 +60,9 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
    * Keeping the below two attributes only for migration purpose.
    * Will be removed in subsequent release.
    */
-  @Deprecated @Valid LdapUserSettings userSettings;
+  @Valid @Deprecated LdapUserSettings userSettings;
 
-  @Deprecated @Valid LdapGroupSettings groupSettings;
+  @Valid @Deprecated LdapGroupSettings groupSettings;
 
   @Valid List<LdapUserSettings> userSettingsList;
 

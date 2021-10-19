@@ -32,6 +32,8 @@ import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetHandler;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
+import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.utils.FilePathUtils;
 
 import com.google.inject.Inject;
@@ -50,13 +52,14 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler {
-  private YamlGitConfigService yamlGitConfigService;
-  private ScmOrchestratorService scmOrchestratorService;
-  private GitCommitService gitCommitService;
-  private GitToHarnessProcessorService gitToHarnessProcessorService;
-  private GitToHarnessProgressService gitToHarnessProgressService;
-  private GitToHarnessProgressHelper gitToHarnessProgressHelper;
-  private GitBranchSyncService gitBranchSyncService;
+  private final YamlGitConfigService yamlGitConfigService;
+  private final ScmOrchestratorService scmOrchestratorService;
+  private final GitCommitService gitCommitService;
+  private final GitToHarnessProcessorService gitToHarnessProcessorService;
+  private final GitToHarnessProgressService gitToHarnessProgressService;
+  private final GitToHarnessProgressHelper gitToHarnessProgressHelper;
+  private final GitBranchSyncService gitBranchSyncService;
+  private final GitSyncErrorService gitSyncErrorService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -164,7 +167,12 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
           gitFileChangeDTO -> gitFileChangeDTOListAsString.append(gitFileChangeDTO.toString()).append(" :::: "));
       log.info(gitFileChangeDTOListAsString.toString());
     } catch (Exception ex) {
-      log.error("Error occured while perform step : {}", GitToHarnessProcessingStepType.GET_FILES);
+      log.error("Error occurred while perform step : {}", GitToHarnessProcessingStepType.GET_FILES);
+      yamlGitConfigDTOList.forEach(yamlGitConfigDTO
+          -> gitSyncErrorService.recordConnectivityError(yamlGitConfigDTO.getAccountIdentifier(),
+              yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
+              GitSyncErrorType.CONNECTIVITY_ISSUE, yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch(),
+              "Unable to connect to Git provider due to error: " + ex.getLocalizedMessage()));
       // Mark step status error
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
@@ -324,7 +332,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
 
   private String getCommitIdToBeProcessed(YamlGitConfigDTO yamlGitConfigDTO, String branch) {
     return scmOrchestratorService.processScmRequest(scmClient
-        -> scmClient.getLatestCommit(yamlGitConfigDTO, branch),
+        -> scmClient.getLatestCommit(yamlGitConfigDTO, branch).getSha(),
         yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
         yamlGitConfigDTO.getAccountIdentifier());
   }

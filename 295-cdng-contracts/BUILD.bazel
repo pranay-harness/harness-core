@@ -15,6 +15,7 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:io_swagger_swagger_annotations",
+        "@maven//:org_jooq_jooq",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_springframework_data_spring_data_commons",
     ],

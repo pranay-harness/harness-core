@@ -45,8 +45,10 @@ public interface PMSPipelineService {
 
   StepCategory getStepsV2(String accountId, StepPalleteFilterWrapper stepPalleteFilterWrapper);
 
-  VariableMergeServiceResponse createVariablesResponse(PipelineEntity pipelineEntity);
+  VariableMergeServiceResponse createVariablesResponse(String yaml);
 
   Criteria formCriteria(String accountId, String orgId, String projectId, String filterIdentifier,
       PipelineFilterPropertiesDto filterProperties, boolean deleted, String module, String searchTerm);
+
+  boolean deleteAllPipelinesInAProject(String accountId, String orgId, String projectId);
 }

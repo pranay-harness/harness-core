@@ -11,6 +11,8 @@ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -23,6 +25,7 @@ import io.harness.exception.WingsException;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.beans.GitCommandTaskParameters;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
@@ -51,6 +54,7 @@ import org.apache.commons.lang3.NotImplementedException;
  */
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.DX)
 public class GitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
@@ -63,17 +67,13 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
 
   @Override
   public GitCommandExecutionResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public GitCommandExecutionResponse run(Object[] parameters) {
-    GitCommandType gitCommandType = (GitCommandType) parameters[0];
-    GitConfig gitConfig = (GitConfig) parameters[1];
+    GitCommandTaskParameters gitCommandTaskParameters = (GitCommandTaskParameters) parameters;
+    GitCommandType gitCommandType = gitCommandTaskParameters.getGitCommandType();
+    GitConfig gitConfig = gitCommandTaskParameters.getGitConfig();
     gitConfig.setGitRepoType(GitRepositoryType.YAML); // TODO:: find better place. possibly manager can set this
 
     try {
-      List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) parameters[2];
+      List<EncryptedDataDetail> encryptionDetails = gitCommandTaskParameters.getEncryptedDataDetails();
 
       // Decrypt git config
       decryptGitConfig(gitConfig, encryptionDetails);
@@ -83,7 +83,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
 
       switch (gitCommandType) {
         case COMMIT_AND_PUSH:
-          GitCommitRequest gitCommitRequest = (GitCommitRequest) parameters[3];
+          GitCommitRequest gitCommitRequest = (GitCommitRequest) gitCommandTaskParameters.getGitCommandRequest();
           log.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
 
           gitConnectorId = gitCommitRequest.getYamlGitConfig().getGitConnectorId();
@@ -107,12 +107,12 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .gitCommandStatus(GitCommandStatus.SUCCESS)
               .build();
         case DIFF:
-          GitDiffRequest gitDiffRequest = (GitDiffRequest) parameters[3];
+          GitDiffRequest gitDiffRequest = (GitDiffRequest) gitCommandTaskParameters.getGitCommandRequest();
           log.info(GIT_YAML_LOG_PREFIX + "DIFF: [{}]", gitDiffRequest);
           boolean excludeFilesOutsideSetupFolder = false;
 
           try {
-            excludeFilesOutsideSetupFolder = (boolean) parameters[4];
+            excludeFilesOutsideSetupFolder = gitCommandTaskParameters.getExcludeFilesOutsideSetupFolder();
           } catch (Exception e) {
             log.error("Boolean for excluding external files not found. Set to false by default.");
           }
@@ -148,7 +148,8 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
                 .build();
           }
         case FETCH_FILES:
-          GitFetchFilesRequest gitFetchFilesRequest = (GitFetchFilesRequest) parameters[3];
+          GitFetchFilesRequest gitFetchFilesRequest =
+              (GitFetchFilesRequest) gitCommandTaskParameters.getGitCommandRequest();
           return getFilesFromGitUsingPath(gitFetchFilesRequest, gitConfig);
         default:
           return GitCommandExecutionResponse.builder()
@@ -164,6 +165,11 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
                                                        .errorCode(getErrorCode(ex));
       return builder.build();
     }
+  }
+
+  @Override
+  public GitCommandExecutionResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   private ErrorCode getErrorCode(Exception ex) {
@@ -182,7 +188,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
 
   private GitCommandExecutionResponse getFilesFromGitUsingPath(GitFetchFilesRequest gitRequest, GitConfig gitConfig) {
     try {
-      GitFetchFilesResult gitResult = gitClient.fetchFilesByPath(gitConfig, gitRequest);
+      GitFetchFilesResult gitResult = gitClient.fetchFilesByPath(gitConfig, gitRequest, false);
       return GitCommandExecutionResponse.builder()
           .gitCommandRequest(gitRequest)
           .gitCommandResult(gitResult)

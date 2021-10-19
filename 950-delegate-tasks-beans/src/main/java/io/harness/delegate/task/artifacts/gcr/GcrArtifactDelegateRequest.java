@@ -26,9 +26,13 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(HarnessTeam.PIPELINE)
 public class GcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest {
-  /** Images in repos need to be referenced via a path. */
+  /**
+   * Images in repos need to be referenced via a path.
+   */
   String imagePath;
-  /** Tag refers to exact tag number. */
+  /**
+   * Tag refers to exact tag number.
+   */
   String tag;
   /** Tag regex is used to get latest build from builds matching regex. */
   String tagRegex;
@@ -54,9 +58,8 @@ public class GcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
         populateDelegateSelectorCapability(capabilities, gcpConnectorDTO.getDelegateSelectors());
       } else if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
         populateDelegateSelectorCapability(capabilities, gcpConnectorDTO.getDelegateSelectors());
-        final String GCS_URL = "https://storage.cloud.google.com/";
         capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-            GCS_URL, maskingEvaluator));
+            "https://" + registryHostname, maskingEvaluator));
       } else {
         throw new UnknownEnumTypeException(
             "Gcr Credential Type", String.valueOf(gcpConnectorDTO.getCredential().getGcpCredentialType()));

@@ -140,10 +140,10 @@ spec:
           value: "${delegateProfile}"
         - name: DELEGATE_TYPE
           value: "${delegateType}"
-        - name: DELEGATE_SIZE
-          value: "${delegateSize}"
         - name: DELEGATE_SESSION_IDENTIFIER
           value: "${delegateSessionIdentifier}"
+        - name: DELEGATE_TAGS
+          value: "${delegateTags}"
         - name: DELEGATE_TASK_LIMIT
           value: "${delegateTaskLimit}"
         - name: DELEGATE_ORG_IDENTIFIER
@@ -174,8 +174,6 @@ spec:
           value: "false"
         - name: HELM_DESIRED_VERSION
           value: ""
-        - name: CF_PLUGIN_HOME
-          value: ""
         - name: USE_CDN
           value: "${useCdn}"
         - name: CDN_URL
@@ -186,13 +184,7 @@ spec:
           value: ""
         - name: HELM_PATH
           value: ""
-        - name: CF_CLI6_PATH
-          value: ""
-        - name: CF_CLI7_PATH
-          value: ""
         - name: KUSTOMIZE_PATH
-          value: ""
-        - name: OC_PATH
           value: ""
         - name: KUBECTL_PATH
           value: ""
@@ -202,10 +194,8 @@ spec:
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
-        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
-          value: "false"
-        - name: INSTALL_CLIENT_TOOLS_IN_BACKGROUND
-          value: "true"
+        - name: VERSION_CHECK_DISABLED
+          value: "${versionCheckDisabled}"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

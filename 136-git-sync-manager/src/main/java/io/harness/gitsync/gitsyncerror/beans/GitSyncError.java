@@ -7,7 +7,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.common.EntityReference;
 import io.harness.data.validator.Trimmed;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
@@ -65,7 +64,6 @@ public class GitSyncError
 
   // The entity details
   private EntityType entityType;
-  private EntityReference entityReference;
 
   // The error details
   @NotEmpty private String failureReason;
@@ -81,10 +79,10 @@ public class GitSyncError
   public static final class GitSyncErrorKeys {
     public static final String gitCommitId =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.gitCommitId;
-    public static final String commitTime =
-        GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitTime;
     public static final String commitMessage =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitMessage;
+    public static final String resolvedByCommitId =
+        GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.resolvedByCommitId;
     public static final String orgIdentifier =
         GitSyncErrorKeys.additionalErrorDetails + "." + HarnessToGitErrorDetailsKeys.orgIdentifier;
     public static final String projectIdentifier =
@@ -96,9 +94,9 @@ public class GitSyncError
         .<MongoIndex>builder()
         // for gitToHarness errors
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_errorType_repo_branch_sort_Index")
+                 .name("accountId_errorType_repo_branch_status_sort_Index")
                  .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.errorType,
-                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName))
+                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.status))
                  .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
@@ -108,9 +106,9 @@ public class GitSyncError
                  .unique(true)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("accountId_repo_branch_filePath_Index")
+                 .name("accountId_repo_branch_filePath_status_Index")
                  .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.repoUrl,
-                     GitSyncErrorKeys.branchName, GitSyncErrorKeys.completeFilePath))
+                     GitSyncErrorKeys.branchName, GitSyncErrorKeys.completeFilePath, GitSyncErrorKeys.status))
                  .build())
         // for full sync and connectivity issue errors
         .add(SortCompoundMongoIndex.builder()

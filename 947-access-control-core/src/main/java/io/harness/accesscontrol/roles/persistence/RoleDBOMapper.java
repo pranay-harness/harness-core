@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.PL)
 @UtilityClass
-class RoleDBOMapper {
+public class RoleDBOMapper {
   public static RoleDBO toDBO(Role object) {
     return RoleDBO.builder()
         .identifier(object.getIdentifier())

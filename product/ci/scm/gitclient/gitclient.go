@@ -76,6 +76,8 @@ func GetValidRef(p pb.Provider, inputRef, inputBranch string) (string, error) {
 		switch p.GetHook().(type) {
 		case *pb.Provider_BitbucketCloud:
 			return inputBranch, nil
+		case *pb.Provider_BitbucketServer:
+			return inputBranch, nil
 		default:
 			return scm.ExpandRef(inputBranch, "refs/heads"), nil
 		}

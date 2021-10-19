@@ -3,8 +3,6 @@ package io.harness.pms.plan.creation;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
 
-import static java.lang.String.format;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -23,10 +21,10 @@ import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanCreationResponse;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.exception.PmsExceptionUtils;
+import io.harness.pms.plan.creation.validator.PlanCreationValidator;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
@@ -60,13 +58,15 @@ public class PlanCreatorMergeService {
   private final PmsSdkHelper pmsSdkHelper;
   private final WaitNotifyEngine waitNotifyEngine;
   PmsEventSender pmsEventSender;
+  PlanCreationValidator planCreationValidator;
 
   @Inject
-  public PlanCreatorMergeService(
-      PmsSdkHelper pmsSdkHelper, PmsEventSender pmsEventSender, WaitNotifyEngine waitNotifyEngine) {
+  public PlanCreatorMergeService(PmsSdkHelper pmsSdkHelper, PmsEventSender pmsEventSender,
+      WaitNotifyEngine waitNotifyEngine, PlanCreationValidator planCreationValidator) {
     this.pmsSdkHelper = pmsSdkHelper;
     this.pmsEventSender = pmsEventSender;
     this.waitNotifyEngine = waitNotifyEngine;
+    this.planCreationValidator = planCreationValidator;
   }
 
   public String getPublisher() {
@@ -77,11 +77,14 @@ public class PlanCreatorMergeService {
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
     log.info("Starting plan creation");
     YamlField pipelineField = YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml());
-    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
-    dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
     String notifyId = generateUuid();
+    Dependencies dependencies =
+        Dependencies.newBuilder()
+            .setYaml(planExecutionMetadata.getProcessedYaml())
+            .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
+            .build();
     pmsEventSender.sendEvent(CreatePartialPlanEvent.newBuilder()
-                                 .putAllDependencies(dependencies)
+                                 .setDeps(dependencies)
                                  .putAllContext(createInitialPlanCreationContext(accountId, orgIdentifier,
                                      projectIdentifier, metadata, planExecutionMetadata.getTriggerPayload()))
                                  .setNotifyId(notifyId)
@@ -92,10 +95,9 @@ public class PlanCreatorMergeService {
         PartialPlanResponseCallback.builder()
             .planUuid(planUuid)
             .depth(0)
-            .finalResponse(
-                PartialPlanResponse.newBuilder()
-                    .setBlobResponse(PlanCreationBlobResponse.newBuilder().putAllDependencies(dependencies).build())
-                    .build())
+            .finalResponse(PartialPlanResponse.newBuilder()
+                               .setBlobResponse(PlanCreationBlobResponse.newBuilder().setDeps(dependencies).build())
+                               .build())
             .build(),
         Collections.singletonList(notifyId), Duration.ofMinutes(2));
   }
@@ -116,7 +118,7 @@ public class PlanCreatorMergeService {
             .build();
     PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(accountId, orgIdentifier,
         projectIdentifier, services, dependencies, metadata, planExecutionMetadata.getTriggerPayload());
-    validatePlanCreationBlobResponse(finalResponse);
+    planCreationValidator.validate(accountId, finalResponse);
     log.info("Done with plan creation");
     return finalResponse;
   }
@@ -217,15 +219,5 @@ public class PlanCreatorMergeService {
 
     PmsExceptionUtils.checkAndThrowPlanCreatorException(errorResponses);
     return currIterationResponseBuilder.build();
-  }
-
-  private void validatePlanCreationBlobResponse(PlanCreationBlobResponse finalResponse) {
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDeps().getDependenciesMap())) {
-      throw new InvalidRequestException(
-          format("Unable to interpret nodes: %s", finalResponse.getDeps().getDependenciesMap().keySet().toString()));
-    }
-    if (EmptyPredicate.isEmpty(finalResponse.getStartingNodeId())) {
-      throw new InvalidRequestException("Unable to find out starting node");
-    }
   }
 }

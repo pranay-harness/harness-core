@@ -21,7 +21,6 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.InvalidRequestException;
@@ -41,7 +40,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(DEL)
 @BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
@@ -79,8 +78,8 @@ public interface DelegateService extends OwnedByAccount {
 
   Delegate updateScopes(@Valid Delegate delegate);
 
-  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
-      DelegateSize delegateSize) throws IOException;
+  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost)
+      throws IOException;
 
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost,
       String delegateName) throws IOException;
@@ -169,4 +168,12 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  boolean sampleDelegateExists(String accountId);
+
+  List<Delegate> getNonDeletedDelegatesForAccount(String accountId);
+
+  boolean checkDelegateConnected(String accountId, String delegateId);
+
+  void updateLastExpiredEventHeartbeatTime(long lastExpiredEventHeartbeatTime, String delegateId, String accountId);
 }

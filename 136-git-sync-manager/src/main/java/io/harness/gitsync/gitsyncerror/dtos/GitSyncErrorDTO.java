@@ -6,38 +6,36 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.NotEmpty;
 
-@Value
+@Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @OwnedBy(PL)
 public class GitSyncErrorDTO {
-  @NotEmpty String accountIdentifier;
+  String accountIdentifier;
   String repoUrl;
+  String repoId;
   String branchName;
   ChangeType changeType;
   String completeFilePath;
   EntityType entityType;
-  EntityReference entityReference;
 
   String failureReason;
-  @NotNull GitSyncErrorStatus status;
-  @NotNull GitSyncErrorType errorType;
-  GitSyncErrorDetails additionalErrorDetails;
+  GitSyncErrorStatus status;
+  GitSyncErrorType errorType;
+  GitSyncErrorDetailsDTO additionalErrorDetails;
+
+  long createdAt;
 }

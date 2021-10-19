@@ -22,12 +22,15 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.beans.event.cg.CgPipelineCompletePayload;
+import io.harness.beans.event.cg.CgPipelinePausePayload;
+import io.harness.beans.event.cg.CgPipelineResumePayload;
 import io.harness.beans.event.cg.application.ApplicationEventData;
 import io.harness.beans.event.cg.entities.EnvironmentEntity;
 import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
 import io.harness.beans.event.cg.entities.ServiceEntity;
 import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
 import io.harness.beans.event.cg.pipeline.PipelineEventData;
+import io.harness.beans.event.cg.pipeline.PipelineStageInfo;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
@@ -44,6 +47,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
@@ -62,6 +66,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
+import software.wings.sm.status.StateStatusUpdateInfo;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -372,6 +377,143 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     updateDeploymentInformation(workflowExecution);
     usageMetricsEventPublisher.publishDeploymentTimeSeriesEvent(accountID, workflowExecution);
     reportDeploymentEventToSegment(workflowExecution);
+  }
+
+  public void publish(WorkflowExecution execution, StateStatusUpdateInfo statusUpdateInfo, EventType eventType) {
+    if (execution == null) {
+      return;
+    }
+    String accountId = execution.getAccountId();
+    if (!featureFlagService.isEnabled(FeatureName.APP_TELEMETRY, accountId)) {
+      return;
+    }
+    Application application = appService.get(execution.getAppId());
+    if (application == null) {
+      return;
+    }
+    PipelineSummary summary = execution.getPipelineSummary();
+    if (summary == null) {
+      return;
+    }
+    switch (eventType) {
+      case PIPELINE_START:
+        break;
+      case PIPELINE_END:
+        break;
+      case PIPELINE_CONTINUE:
+        deliverPipelineResume(application, execution, statusUpdateInfo);
+        break;
+      case PIPELINE_PAUSE:
+        deliverPipelinePause(application, execution, statusUpdateInfo);
+        break;
+      default:
+        break;
+    }
+  }
+
+  private void deliverPipelinePause(
+      Application application, WorkflowExecution execution, StateStatusUpdateInfo statusUpdateInfo) {
+    PipelineSummary summary = execution.getPipelineSummary();
+    eventService.deliverEvent(application.getAccountId(), application.getUuid(),
+        EventPayload.builder()
+            .eventType(EventType.PIPELINE_PAUSE.getEventValue())
+            .data(
+                CgPipelinePausePayload.builder()
+                    .application(ApplicationEventData.builder().id(appId).name(application.getName()).build())
+                    .executionId(execution.getUuid())
+                    .services(isEmpty(execution.getServiceIds())
+                            ? Collections.emptyList()
+                            : execution.getServiceIds()
+                                  .stream()
+                                  .map(id -> ServiceEntity.builder().id(id).build())
+                                  .collect(Collectors.toList()))
+                    .infraDefinitions(isEmpty(execution.getInfraDefinitionIds())
+                            ? Collections.emptyList()
+                            : execution.getInfraDefinitionIds()
+                                  .stream()
+                                  .map(id -> InfraDefinitionEntity.builder().id(id).build())
+                                  .collect(Collectors.toList()))
+                    .environments(isEmpty(execution.getEnvIds())
+                            ? Collections.emptyList()
+                            : execution.getEnvIds()
+                                  .stream()
+                                  .map(id -> EnvironmentEntity.builder().id(id).build())
+                                  .collect(Collectors.toList()))
+                    .pipeline(
+                        PipelineEventData.builder().id(summary.getPipelineId()).name(summary.getPipelineName()).build())
+                    .startedAt(execution.getCreatedAt())
+                    .triggeredByType(execution.getCreatedByType())
+                    .triggeredBy(execution.getCreatedBy())
+                    .executionArgs(
+                        ExecutionArgsEventData.builder()
+                            .notes(
+                                execution.getExecutionArgs() == null ? null : execution.getExecutionArgs().getNotes())
+                            .build())
+                    .stages(getStageInfo(execution))
+                    .build())
+            .build());
+  }
+
+  private List<PipelineStageInfo> getStageInfo(WorkflowExecution execution) {
+    if (execution == null || execution.getPipelineExecution() == null
+        || isEmpty(execution.getPipelineExecution().getPipelineStageExecutions())) {
+      return Collections.emptyList();
+    }
+    List<PipelineStageExecution> stageExecutions = execution.getPipelineExecution().getPipelineStageExecutions();
+    return stageExecutions.stream()
+        .map(se
+            -> PipelineStageInfo.builder()
+                   .id(se.getPipelineStageElementId())
+                   .stageType(se.getStateType())
+                   .name(se.getStateName())
+                   .endTime(se.getEndTs())
+                   .startTime(se.getStartTs())
+                   .status(se.getStatus().name())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private void deliverPipelineResume(
+      Application application, WorkflowExecution execution, StateStatusUpdateInfo statusUpdateInfo) {
+    PipelineSummary summary = execution.getPipelineSummary();
+    eventService.deliverEvent(application.getAccountId(), application.getUuid(),
+        EventPayload.builder()
+            .eventType(EventType.PIPELINE_CONTINUE.getEventValue())
+            .data(
+                CgPipelineResumePayload.builder()
+                    .application(ApplicationEventData.builder().id(appId).name(application.getName()).build())
+                    .executionId(execution.getUuid())
+                    .services(isEmpty(execution.getServiceIds())
+                            ? Collections.emptyList()
+                            : execution.getServiceIds()
+                                  .stream()
+                                  .map(id -> ServiceEntity.builder().id(id).build())
+                                  .collect(Collectors.toList()))
+                    .infraDefinitions(isEmpty(execution.getInfraDefinitionIds())
+                            ? Collections.emptyList()
+                            : execution.getInfraDefinitionIds()
+                                  .stream()
+                                  .map(id -> InfraDefinitionEntity.builder().id(id).build())
+                                  .collect(Collectors.toList()))
+                    .environments(isEmpty(execution.getEnvIds())
+                            ? Collections.emptyList()
+                            : execution.getEnvIds()
+                                  .stream()
+                                  .map(id -> EnvironmentEntity.builder().id(id).build())
+                                  .collect(Collectors.toList()))
+                    .pipeline(
+                        PipelineEventData.builder().id(summary.getPipelineId()).name(summary.getPipelineName()).build())
+                    .startedAt(execution.getCreatedAt())
+                    .triggeredByType(execution.getCreatedByType())
+                    .triggeredBy(execution.getCreatedBy())
+                    .executionArgs(
+                        ExecutionArgsEventData.builder()
+                            .notes(
+                                execution.getExecutionArgs() == null ? null : execution.getExecutionArgs().getNotes())
+                            .build())
+                    .stages(getStageInfo(execution))
+                    .build())
+            .build());
   }
 
   @VisibleForTesting

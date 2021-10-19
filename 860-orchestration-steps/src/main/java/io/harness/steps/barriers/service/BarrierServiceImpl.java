@@ -15,6 +15,7 @@ import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
 import static io.harness.pms.contracts.execution.Status.EXPIRED;
 
 import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
@@ -31,6 +32,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
@@ -87,12 +89,12 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
 
-  public void registerIterators() {
+  public void registerIterators(IteratorConfig config) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .name("BarrierExecutionInstanceMonitor")
-            .poolSize(2)
-            .interval(ofMinutes(1))
+            .name("PmsBarrierExecutionInstanceMonitor")
+            .poolSize(config.getThreadPoolCount())
+            .interval(ofSeconds(config.getTargetIntervalInSeconds()))
             .build(),
         BarrierService.class,
         MongoPersistenceIterator.<BarrierExecutionInstance, SpringFilterExpander>builder()

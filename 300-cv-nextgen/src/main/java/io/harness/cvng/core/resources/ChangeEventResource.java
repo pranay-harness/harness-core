@@ -6,7 +6,6 @@ import static io.harness.cvng.core.services.CVNextGenConstants.CHANGE_EVENT_RESO
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.change.ChangeTimeline;
@@ -33,11 +32,12 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
 
-@Api(CHANGE_EVENT_PATH)
+@Api("change-event")
 @Path("")
 @Produces("application/json")
 @ExposeInternalException
@@ -49,7 +49,7 @@ public class ChangeEventResource {
   @Timed
   @ExceptionMetered
   @NextGenManagerAuth
-  @Path(CHANGE_EVENT_RESOURCE + "/register")
+  @Path(CHANGE_EVENT_PATH + "/register")
   @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEvent")
   public RestResponse<Boolean> register(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
@@ -78,11 +78,9 @@ public class ChangeEventResource {
       @ApiParam(required = true) @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
       @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
-      @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime,
-      @ApiParam @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
-      @BeanParam PageRequest pageRequest) {
-    return new RestResponse<>(changeEventService.getPaginated(projectParams, serviceIdentifiers, envIdentifiers,
-        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), changeCategories, pageRequest));
+      @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime, @BeanParam PageRequest pageRequest) {
+    return new RestResponse<>(changeEventService.getChangeEvents(projectParams, serviceIdentifiers, envIdentifiers,
+        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pageRequest));
   }
 
   @GET
@@ -98,6 +96,17 @@ public class ChangeEventResource {
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime) {
     return new RestResponse<>(changeEventService.getChangeSummary(projectParams, serviceIdentifiers, envIdentifiers,
         Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+  }
+
+  @GET
+  @Timed
+  @NextGenManagerAuth
+  @Path(CHANGE_EVENT_PATH + "/{activityId}")
+  @ExceptionMetered
+  @ApiOperation(value = "get ChangeEvent detail", nickname = "getChangeEventDetail")
+  public RestResponse<ChangeEventDTO> getChangeEventDetail(
+      @BeanParam ProjectParams projectParams, @PathParam("activityId") String activityId) {
+    return new RestResponse<>(changeEventService.get(activityId));
   }
 
   @GET

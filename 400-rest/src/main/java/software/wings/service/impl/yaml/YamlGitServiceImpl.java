@@ -84,6 +84,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
+import software.wings.beans.GitCommandTaskParameters;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.GitConfig;
@@ -603,7 +604,7 @@ public class YamlGitServiceImpl implements YamlGitService {
          AppLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR);
          YamlProcessingLogContext ignore3 =
              YamlProcessingLogContext.builder().changeSetId(yamlChangeSetId).build(OVERRIDE_ERROR)) {
-      log.info(GIT_YAML_LOG_PREFIX + "Started handling harness -> git changeset");
+      log.info(GIT_YAML_LOG_PREFIX + "Started handling harness -> git change set");
 
       List<GitFileChange> gitFileChanges = yamlChangeSet.getGitFileChanges();
       YamlGitConfig yamlGitConfig = getYamlGitConfigForHarnessToGitChangeSet(yamlChangeSet);
@@ -621,8 +622,6 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       gitConfigHelperService.convertToRepoGitConfig(gitConfig, yamlGitConfig.getRepositoryName());
 
-      log.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for entity");
-
       String lastProcessedGitCommitId =
           Optional
               .ofNullable(fetchLastProcessedGitCommitId(accountId, Collections.singletonList(yamlGitConfig.getUuid())))
@@ -633,6 +632,19 @@ public class YamlGitServiceImpl implements YamlGitService {
       String waitId = generateUuid();
       List<String> yamlChangeSetIds = new ArrayList<>();
       yamlChangeSetIds.add(yamlChangeSetId);
+      GitCommandTaskParameters gitCommandTaskParameters =
+          GitCommandTaskParameters
+              .builder(GitCommandType.COMMIT_AND_PUSH, gitConfig,
+                  secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+              .gitCommandRequest(GitCommitRequest.builder()
+                                     .gitFileChanges(gitFileChanges)
+                                     .forcePush(true)
+                                     .yamlChangeSetIds(yamlChangeSetIds)
+                                     .yamlGitConfig(yamlGitConfig)
+                                     .lastProcessedGitCommit(lastProcessedGitCommitId)
+                                     .pushOnlyIfHeadSeen(pushOnlyIfHeadSeen)
+                                     .build())
+              .build();
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(accountId)
                                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -640,16 +652,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                       .data(TaskData.builder()
                                                 .async(true)
                                                 .taskType(TaskType.GIT_COMMAND.name())
-                                                .parameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
-                                                    secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
-                                                    GitCommitRequest.builder()
-                                                        .gitFileChanges(gitFileChanges)
-                                                        .forcePush(true)
-                                                        .yamlChangeSetIds(yamlChangeSetIds)
-                                                        .yamlGitConfig(yamlGitConfig)
-                                                        .lastProcessedGitCommit(lastProcessedGitCommitId)
-                                                        .pushOnlyIfHeadSeen(pushOnlyIfHeadSeen)
-                                                        .build()})
+                                                .parameters(new Object[] {gitCommandTaskParameters})
                                                 .timeout(gitRequestTimeout)
                                                 .build())
                                       .build();
@@ -660,8 +663,8 @@ public class YamlGitServiceImpl implements YamlGitService {
           waitId);
       final String taskId = delegateService.queueTask(delegateTask);
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        log.info(
-            GIT_YAML_LOG_PREFIX + "Successfully queued harness->git changeset for processing with delegate taskId=[{}]",
+        log.info(GIT_YAML_LOG_PREFIX
+                + "Successfully queued harness->git change set for processing with delegate taskId=[{}]",
             taskId);
       }
     }
@@ -929,7 +932,7 @@ public class YamlGitServiceImpl implements YamlGitService {
          YamlProcessingLogContext ignore3 =
              getYamlProcessingLogContext(gitConnectorId, branchName, null, yamlChangeSet.getUuid())) {
       log.info(
-          GIT_YAML_LOG_PREFIX + "Started handling Git -> harness changeset with headCommit Id =[{}]", headCommitId);
+          GIT_YAML_LOG_PREFIX + "Started handling Git -> harness change set with headCommit Id =[{}]", headCommitId);
 
       if (isNotEmpty(headCommitId) && isCommitAlreadyProcessed(accountId, headCommitId)) {
         log.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
@@ -954,6 +957,17 @@ public class YamlGitServiceImpl implements YamlGitService {
       String waitId = generateUuid();
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
       gitConfigHelperService.convertToRepoGitConfig(gitConfig, yamlGitConfig.getRepositoryName());
+      GitCommandTaskParameters gitCommandTaskParameters =
+          GitCommandTaskParameters
+              .builder(
+                  GitCommandType.DIFF, gitConfig, secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+              .gitCommandRequest(GitDiffRequest.builder()
+                                     .lastProcessedCommitId(processedCommit)
+                                     .endCommitId(getEndCommitId(headCommitId, accountId))
+                                     .yamlGitConfig(yamlGitConfig)
+                                     .build())
+              .excludeFilesOutsideSetupFolder(true)
+              .build();
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(accountId)
                                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -961,14 +975,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                       .data(TaskData.builder()
                                                 .async(true)
                                                 .taskType(TaskType.GIT_COMMAND.name())
-                                                .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
-                                                    secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
-                                                    GitDiffRequest.builder()
-                                                        .lastProcessedCommitId(processedCommit)
-                                                        .endCommitId(getEndCommitId(headCommitId, accountId))
-                                                        .yamlGitConfig(yamlGitConfig)
-                                                        .build(),
-                                                    true /*excludeFilesOutsideSetupFolder */})
+                                                .parameters(new Object[] {gitCommandTaskParameters})
                                                 .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                                 .build())
                                       .build();
@@ -979,13 +986,13 @@ public class YamlGitServiceImpl implements YamlGitService {
           waitId);
       final String taskId = delegateService.queueTask(delegateTask);
       try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        log.info(
-            GIT_YAML_LOG_PREFIX + "Successfully queued git->harness changeset for processing with delegate taskId=[{}]",
+        log.info(GIT_YAML_LOG_PREFIX
+                + "Successfully queued git->harness change set for processing with delegate taskId=[{}]",
             taskId);
       }
 
     } catch (Exception ex) {
-      log.error(format(GIT_YAML_LOG_PREFIX + "Unexpected error while processing git->harness changeset [%s]",
+      log.error(format(GIT_YAML_LOG_PREFIX + "Unexpected error while processing git->harness change set [%s]",
                     yamlChangeSet.getUuid()),
           ex);
       yamlChangeSetService.updateStatus(accountId, yamlChangeSet.getUuid(), Status.SKIPPED);

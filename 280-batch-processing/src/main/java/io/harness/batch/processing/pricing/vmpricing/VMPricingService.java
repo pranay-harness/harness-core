@@ -1,10 +1,10 @@
 package io.harness.batch.processing.pricing.vmpricing;
 
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
 import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
 
 public interface VMPricingService {
-  VMComputePricingInfo getComputeVMPricingInfo(String instanceType, String region, CloudProvider cloudProvider);
+  ProductDetails getComputeVMPricingInfo(String instanceType, String region, CloudProvider cloudProvider);
 
   EcsFargatePricingInfo getFargatePricingInfo(String region);
 }

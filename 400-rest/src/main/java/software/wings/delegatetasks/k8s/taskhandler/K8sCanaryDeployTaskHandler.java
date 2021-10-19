@@ -41,6 +41,7 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 
+import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -86,17 +87,43 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
         Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString());
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
-    boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
-        k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), canaryHandlerConfig.getManifestFilesDirectory(),
-        getLogCallBack(k8sCanaryDeployTaskParameters, FetchFiles), timeoutInMillis);
-    if (!success) {
-      return getFailureResponse();
-    }
+    GitFetchFilesConfig gitFetchFilesConfig = null;
+    boolean success;
+    if (k8sCanaryDeployTaskParameters.isInheritManifests()) {
+      success = k8sTaskHelper.restore(k8sCanaryDeployTaskParameters.getKubernetesResources(),
+          k8sCanaryDeployTaskParameters.getK8sClusterConfig(), k8sDelegateTaskParams, canaryHandlerConfig,
+          k8sTaskHelper.getExecutionLogCallback(k8sCanaryDeployTaskParameters, Init));
+      if (!success) {
+        return getFailureResponse();
+      }
+    } else {
+      success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
+          k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), canaryHandlerConfig.getManifestFilesDirectory(),
+          getLogCallBack(k8sCanaryDeployTaskParameters, FetchFiles), timeoutInMillis);
+      if (!success) {
+        return getFailureResponse();
+      }
 
-    success =
-        init(k8sCanaryDeployTaskParameters, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Init));
-    if (!success) {
-      return getFailureResponse();
+      if (k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().getGitFileConfig() != null
+          && k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().isShouldSaveManifest()) {
+        gitFetchFilesConfig =
+            GitFetchFilesConfig.builder()
+                .gitFileConfig(k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().getGitFileConfig())
+                .build();
+      }
+
+      success = init(
+          k8sCanaryDeployTaskParameters, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Init));
+      if (!success) {
+        return getFailureResponse();
+      }
+
+      if (k8sCanaryDeployTaskParameters.isExportManifests()) {
+        return K8sTaskExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .k8sTaskResponse(K8sCanaryDeployResponse.builder().resources(canaryHandlerConfig.getResources()).build())
+            .build();
+      }
     }
 
     success = prepareForCanary(
@@ -146,6 +173,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
               .k8sPodList(allPods)
               .currentInstances(canaryHandlerConfig.getTargetInstances())
               .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
+              .gitFetchFilesConfig(gitFetchFilesConfig)
               .helmChartInfo(helmChartInfo)
               .build();
       wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
@@ -190,16 +218,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     Kubectl client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
-    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(
-        kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName());
-
-    ReleaseHistory releaseHistory = (StringUtils.isEmpty(releaseHistoryData))
-        ? ReleaseHistory.createNew()
-        : ReleaseHistory.createFromData(releaseHistoryData);
-
     canaryHandlerConfig.setKubernetesConfig(kubernetesConfig);
     canaryHandlerConfig.setClient(client);
-    canaryHandlerConfig.setReleaseHistory(releaseHistory);
     try {
       k8sTaskHelperBase.deleteSkippedManifestFiles(
           canaryHandlerConfig.getManifestFilesDirectory(), executionLogCallback);
@@ -243,8 +263,16 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   boolean prepareForCanary(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters, ExecutionLogCallback executionLogCallback) {
     try {
+      String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(
+          canaryHandlerConfig.getKubernetesConfig(), k8sCanaryDeployTaskParameters.getReleaseName());
+
+      ReleaseHistory releaseHistory = (StringUtils.isEmpty(releaseHistoryData))
+          ? ReleaseHistory.createNew()
+          : ReleaseHistory.createFromData(releaseHistoryData);
+      canaryHandlerConfig.setReleaseHistory(releaseHistory);
+
       boolean success = k8sCanaryBaseHandler.prepareForCanary(canaryHandlerConfig, k8sDelegateTaskParams,
-          k8sCanaryDeployTaskParameters.getSkipVersioningForAllK8sObjects(), executionLogCallback);
+          k8sCanaryDeployTaskParameters.getSkipVersioningForAllK8sObjects(), executionLogCallback, false);
       if (!success) {
         return false;
       }

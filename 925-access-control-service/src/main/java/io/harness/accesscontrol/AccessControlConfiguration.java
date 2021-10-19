@@ -15,6 +15,7 @@ import io.harness.accesscontrol.scopes.harness.OrganizationClientConfiguration;
 import io.harness.accesscontrol.scopes.harness.ProjectClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.enforcement.client.EnforcementClientConfiguration;
 import io.harness.ff.FeatureFlagClientConfiguration;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
@@ -54,6 +55,7 @@ public class AccessControlConfiguration extends Configuration {
   public static final String ACCESSCONTROL_PREFERENCE_PACKAGE = "io.harness.accesscontrol.preference.api";
   public static final String AGGREGATOR_PACKAGE = "io.harness.accesscontrol.aggregator.api";
   public static final String HEALTH_PACKAGE = "io.harness.accesscontrol.health";
+  public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement.client.resources";
 
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private final List<String> allowedOrigins = Lists.newArrayList();
@@ -79,6 +81,9 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("serviceAccountClient") private ServiceAccountClientConfiguration serviceAccountClientConfiguration;
+  @JsonProperty("enforcementClientConfiguration") private EnforcementClientConfiguration enforcementClientConfiguration;
+  @JsonProperty("hostname") private String hostname;
+  @JsonProperty("basePathPrefix") private String basePathPrefix;
 
   public boolean isAuthEnabled() {
     return this.enableAuth;
@@ -93,7 +98,7 @@ public class AccessControlConfiguration extends Configuration {
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE, ACL_PACKAGE,
-        ACCESSCONTROL_PREFERENCE_PACKAGE, AGGREGATOR_PACKAGE, HEALTH_PACKAGE);
+        ACCESSCONTROL_PREFERENCE_PACKAGE, AGGREGATOR_PACKAGE, HEALTH_PACKAGE, ENFORCEMENT_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.analysis.beans.Risk;
+import io.harness.cvng.beans.MonitoredServiceType;
 
 import java.util.List;
 import lombok.AccessLevel;
@@ -24,13 +25,14 @@ public class ServiceDependencyGraphDTO {
   @Builder
   @FieldDefaults(level = AccessLevel.PRIVATE)
   public static class ServiceSummaryDetails {
+    String identifierRef;
     String serviceRef;
+    String serviceName;
     String environmentRef;
+    String environmentName;
     double riskScore;
     Risk riskLevel;
-    long anomalousMetricsCount;
-    long anomalousLogsCount;
-    long changeCount;
+    MonitoredServiceType type;
   }
 
   @Data

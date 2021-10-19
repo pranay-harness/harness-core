@@ -45,7 +45,7 @@ public class Event implements PersistentEntity, UuidAware, CreatedAtAware, Updat
   @NotNull private String method;
   private int failedRetryCount;
   private long maxRetryAllowed;
-  private Object details;
+  private EventDetail details;
   private EventCreatorSource source;
   private EventPayload payload;
   private long deliveredAt;

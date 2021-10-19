@@ -8,11 +8,14 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
+import io.harness.ngtriggers.beans.source.artifact.BuildAware;
 import io.harness.ngtriggers.buildtriggers.helpers.dtos.BuildTriggerOpsData;
 import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.pms.merger.YamlConfig;
@@ -90,13 +93,20 @@ public class BuildTriggerHelper {
   public void validateBuildType(BuildTriggerOpsData buildTriggerOpsData) {
     EngineExpressionEvaluator engineExpressionEvaluator = new EngineExpressionEvaluator(null);
     TextNode typeFromPipeline = (TextNode) buildTriggerOpsData.getPipelineBuildSpecMap().get("type");
-    String typeFromTrigger =
-        ((TextNode) engineExpressionEvaluator.evaluateExpression("type", buildTriggerOpsData.getTriggerSpecMap()))
-            .asText();
-    if (!typeFromPipeline.asText().equals(typeFromTrigger)) {
-      throw new InvalidRequestException(String.format(
-          "Artifact/Manifest Type in Trigger:{} does not match with Artifact/Manifest Type in Pipeline {}",
-          typeFromTrigger, typeFromPipeline));
+    TextNode typeFromTrigger =
+        (TextNode) engineExpressionEvaluator.evaluateExpression("type", buildTriggerOpsData.getTriggerSpecMap());
+    if (typeFromTrigger == null) {
+      throw new InvalidRequestException(
+          "Type filed is not present in Trigger Spec. Its needed for Artifact/Manifest Triggers");
+    }
+
+    if (!typeFromPipeline.asText().equals(typeFromTrigger.asText())) {
+      throw new InvalidRequestException(new StringBuilder(128)
+                                            .append("Artifact/Manifest Type in Trigger: ")
+                                            .append(typeFromTrigger.asText())
+                                            .append(", does not match with one in Pipeline: ")
+                                            .append(typeFromPipeline.asText())
+                                            .toString());
     }
   }
 
@@ -336,5 +346,28 @@ public class BuildTriggerHelper {
       fieldName = fetchValueFromJsonNode(key, buildTriggerOpsData.getTriggerSpecMap());
     }
     return fieldName;
+  }
+
+  public void verifyStageAndBuildRef(TriggerDetails triggerDetails, String fieldName) {
+    NGTriggerSpecV2 spec = triggerDetails.getNgTriggerConfigV2().getSource().getSpec();
+    if (!BuildAware.class.isAssignableFrom(spec.getClass())) {
+      return;
+    }
+
+    BuildAware buildAware = (BuildAware) spec;
+    StringBuilder msg = new StringBuilder(128);
+    boolean validationFailed = false;
+    if (isBlank(buildAware.fetchStageRef())) {
+      msg.append("stageIdentifier can not be blank/missing. ");
+      validationFailed = true;
+    }
+    if (isBlank(buildAware.fetchbuildRef())) {
+      msg.append(fieldName).append(" can not be blank/missing. ");
+      validationFailed = true;
+    }
+
+    if (validationFailed) {
+      throw new InvalidArgumentsException(msg.toString());
+    }
   }
 }

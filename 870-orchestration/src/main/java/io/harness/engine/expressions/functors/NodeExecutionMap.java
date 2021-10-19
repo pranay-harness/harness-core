@@ -196,7 +196,7 @@ public class NodeExecutionMap extends LateBindingMap {
         return stepParameters;
       }
     }
-    return nodeExecution.getNode().getStepParameters();
+    return NodeExecutionUtils.extractAndProcessObject(nodeExecution.getNode().getStepParameters().toJson());
   }
 
   private static Optional<Object> jsonToObject(String json) {

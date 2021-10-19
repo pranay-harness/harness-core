@@ -13,6 +13,7 @@ import io.harness.delegate.command.CommandExecutionResultMapper;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.CommandExecutionException;
 import io.harness.shell.BaseScriptExecutor;
+import io.harness.shell.JSchLogAdapter;
 import io.harness.shell.ScriptProcessExecutor;
 import io.harness.shell.SshSessionConfig;
 import io.harness.shell.SshSessionManager;
@@ -75,12 +76,14 @@ public class ShellScriptTaskHandler {
               parameters.sshSessionConfig(encryptionService, secretManagementDelegateService);
           BaseScriptExecutor executor =
               sshExecutorFactory.getExecutor(expectedSshConfig, parameters.isSaveExecutionLogs());
+          enableJSchLogsPerSSHTaskExecution(parameters.isEnableJSchLogs());
           return CommandExecutionResultMapper.from(
               executor.executeCommandString(parameters.getScript(), items, secretItems));
         } catch (Exception e) {
           throw new CommandExecutionException("Bash Script Failed to execute", e);
         } finally {
           SshSessionManager.evictAndDisconnectCachedSession(parameters.getActivityId(), parameters.getHost());
+          disableJSchLogsPerSSHTaskExecution();
         }
       }
       case WINRM: {
@@ -101,5 +104,15 @@ public class ShellScriptTaskHandler {
             .errorMessage(format("Unsupported ConnectionType %s", parameters.getConnectionType()))
             .build();
     }
+  }
+
+  private void enableJSchLogsPerSSHTaskExecution(boolean enableJSchLogs) {
+    if (enableJSchLogs) {
+      JSchLogAdapter.attachLogger().enableDebugLogLevel();
+    }
+  }
+
+  private void disableJSchLogsPerSSHTaskExecution() {
+    JSchLogAdapter.detachLogger();
   }
 }

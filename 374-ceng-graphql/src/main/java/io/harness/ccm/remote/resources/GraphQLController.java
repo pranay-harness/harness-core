@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.graphql.dto.GraphQLQuery;
 import io.harness.ccm.graphql.utils.annotations.GraphQLApi;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.annotations.PublicApi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -35,6 +36,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.dataloader.DataLoaderRegistry;
 import org.hibernate.validator.constraints.NotBlank;
@@ -89,9 +91,9 @@ public class GraphQLController {
 
   @GET
   @Path("/schema")
-  @Produces(MediaType.TEXT_PLAIN)
-  public String getSchema() {
-    return schemaAsString;
+  @PublicApi
+  public Response getSchema() {
+    return Response.ok(schemaAsString).type(MediaType.TEXT_PLAIN).build();
   }
 
   @POST

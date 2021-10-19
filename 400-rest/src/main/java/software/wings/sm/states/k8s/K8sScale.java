@@ -9,11 +9,13 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
@@ -73,6 +75,7 @@ public class K8sScale extends AbstractK8sState {
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   public static final String K8S_SCALE_COMMAND_NAME = "Scale";
 
@@ -115,6 +118,8 @@ public class K8sScale extends AbstractK8sState {
                                                 .maxInstances(maxInstances)
                                                 .skipSteadyStateCheck(this.skipSteadyStateCheck)
                                                 .timeoutIntervalInMin(stateTimeoutInMinutes)
+                                                .useLatestKustomizeVersion(featureFlagService.isEnabled(
+                                                    FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
                                                 .build();
 
       return queueK8sDelegateTask(context, k8sTaskParameters, null);

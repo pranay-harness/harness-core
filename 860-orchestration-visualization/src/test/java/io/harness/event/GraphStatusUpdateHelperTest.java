@@ -204,7 +204,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     OutcomeInstance outcome =
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
-            .producedBy(PmsLevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
+            .producedBy(PmsLevelUtils.buildLevelFromNode(dummyStart.getUuid(), dummyStart.getNode()))
             .createdAt(System.currentTimeMillis())
             .outcomeValue(PmsOutcome.parse(doc))
             .build();

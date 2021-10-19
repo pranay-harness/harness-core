@@ -24,6 +24,9 @@ public class InputSetTemplateHelper {
 
   public String createTemplateFromPipelineForGivenStages(String pipelineYaml, List<String> stageIdentifiers) {
     String template = createRuntimeInputForm(pipelineYaml, true);
+    if (EmptyPredicate.isEmpty(template)) {
+      return null;
+    }
     return removeNonRequiredStages(template, pipelineYaml, stageIdentifiers);
   }
 

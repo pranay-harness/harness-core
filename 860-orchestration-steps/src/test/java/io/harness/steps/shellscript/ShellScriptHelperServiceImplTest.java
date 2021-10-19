@@ -1,5 +1,6 @@
 package io.harness.steps.shellscript;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,14 +9,15 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG.ShellScriptTaskParametersNGBuilder;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -26,8 +28,10 @@ import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
+import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.ScriptType;
 import io.harness.steps.OutputExpressionConstants;
@@ -39,19 +43,28 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@Slf4j
+@OwnedBy(CDC)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({NGRestUtils.class})
 public class ShellScriptHelperServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
-  @Mock private SecretCrudService secretCrudService;
+  @Mock private SecretNGManagerClient secretManagerClient;
   @Mock private SshKeySpecDTOHelper sshKeySpecDTOHelper;
   @Mock private ShellScriptHelperService shellScriptHelperService;
 
@@ -194,7 +207,8 @@ public class ShellScriptHelperServiceImplTest extends CategoryTest {
                                                    .build();
     ShellScriptTaskParametersNGBuilder taskParamsBuilder = ShellScriptTaskParametersNG.builder();
 
-    doReturn(Optional.empty()).when(secretCrudService).get("accId", "orgId", "projId", "cref");
+    PowerMockito.mockStatic(NGRestUtils.class);
+    when(NGRestUtils.getResponse(any(), any())).thenReturn(null);
     assertThatThrownBy(()
                            -> shellScriptHelperServiceImpl.prepareTaskParametersForExecutionTarget(
                                ambiance, stepParameters, taskParamsBuilder))
@@ -203,7 +217,8 @@ public class ShellScriptHelperServiceImplTest extends CategoryTest {
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
     Optional<SecretResponseWrapper> secretResponseWrapperOptional =
         Optional.of(SecretResponseWrapper.builder().secret(SecretDTOV2.builder().spec(sshKeySpecDTO).build()).build());
-    doReturn(secretResponseWrapperOptional).when(secretCrudService).get("accId", "orgId", "projId", "cref");
+    when(NGRestUtils.getResponse(any(), any())).thenReturn(secretResponseWrapperOptional.get());
+
     List<EncryptedDataDetail> encryptedDataDetails = Collections.singletonList(EncryptedDataDetail.builder().build());
     doReturn(encryptedDataDetails)
         .when(sshKeySpecDTOHelper)

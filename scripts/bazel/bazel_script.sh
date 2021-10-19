@@ -50,6 +50,7 @@ if [ "${RUN_PMDS}" == "true" ]; then
 fi
 
 BAZEL_MODULES="\
+  //100-ng-migration:module \
   //270-verification:module \
   //280-batch-processing:module \
   //290-dashboard-service:module \
@@ -117,7 +118,6 @@ BAZEL_MODULES="\
   //930-ng-core-clients:module \
   //935-analyser-service:module \
   //937-persistence-tracer:module \
-  //940-enforcement-sdk:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \
@@ -125,6 +125,7 @@ BAZEL_MODULES="\
   //940-notification-client:module_deploy.jar \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
+  //942-enforcement-sdk:module \
   //943-enforcement-beans:module \
   //945-account-mgmt:module \
   //945-license-usage-sdk:module \
@@ -466,4 +467,5 @@ bazel ${bazelrc} run ${BAZEL_ARGUMENTS} //001-microservice-intfc-tool:module | g
 
 if [ "${PLATFORM}" == "jenkins" ]; then
  build_protocol_info 800-pipeline-service pipeline-service
+ build_protocol_info 310-ci-manager ci-manager
 fi

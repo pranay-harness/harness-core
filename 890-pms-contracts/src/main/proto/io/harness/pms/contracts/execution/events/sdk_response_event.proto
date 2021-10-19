@@ -9,6 +9,7 @@ import "io/harness/pms/contracts/facilitators/facilitators.proto";
 import "io/harness/pms/contracts/service/node_execution_event.proto";
 import "io/harness/pms/contracts/execution/failure/failure_info.proto";
 import "io/harness/pms/contracts/advisers/advise.proto";
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
 import "google/protobuf/timestamp.proto";
 
 option java_multiple_files = true;
@@ -16,8 +17,6 @@ option java_multiple_files = true;
 message SdkResponseEventProto {
   SdkResponseEventType sdkResponseEventType = 1;
   google.protobuf.Timestamp createdAt = 3;
-  string nodeExecutionId = 4;
-  string planExecutionId = 5;
   oneof request {
     QueueTaskRequest queueTaskRequest = 6;
     AddExecutableResponseRequest addExecutableResponseRequest = 7;
@@ -32,6 +31,7 @@ message SdkResponseEventProto {
     HandleProgressRequest progressRequest = 16;
     AddStepDetailsInstanceRequest stepDetailsInstanceRequest = 17;
   }
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 18;
 }
 
 message FacilitatorResponseRequest {

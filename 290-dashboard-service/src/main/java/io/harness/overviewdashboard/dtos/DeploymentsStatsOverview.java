@@ -10,6 +10,7 @@ import lombok.Value;
 @Builder
 @OwnedBy(HarnessTeam.PL)
 public class DeploymentsStatsOverview {
+  DeploymentsOverview deploymentsOverview;
   DeploymentsStatsSummary deploymentsStatsSummary;
   MostActiveServicesList mostActiveServicesList;
 }

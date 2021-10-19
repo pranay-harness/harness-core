@@ -14,6 +14,8 @@ import static software.wings.sm.StateType.ENV_STATE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.layer.GraphQLTests;
@@ -53,9 +55,11 @@ import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutio
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class GraphQLExecutionTest extends AbstractFunctionalTest {
   public static final String NOTES = "execution test";
   @Inject private HPersistence persistence;
@@ -96,6 +100,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = GEORGE, intermittent = true)
   @Category({FunctionalTests.class, GraphQLTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void fetchExecutionsInRange() throws Exception {
     final Seed seed = new Seed(0);
     Owners owners = ownerManager.create();
@@ -130,6 +135,7 @@ id
   @Test
   @Owner(developers = GEORGE)
   @Category({FunctionalTests.class, GraphQLTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void fetchWorkflowExecution() throws Exception {
     final Seed seed = new Seed(0);
     Owners owners = ownerManager.create();
@@ -241,6 +247,7 @@ id
   @Test
   @Owner(developers = GEORGE)
   @Category({FunctionalTests.class, GraphQLTests.class})
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void fetchPipelineExecution() throws Exception {
     final Seed seed = new Seed(0);
     Owners owners = ownerManager.create();

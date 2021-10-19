@@ -8,6 +8,7 @@ import io.harness.beans.SweepingOutput;
 import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.ngmigration.NGMigrationEntity;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 
 import java.util.Set;
@@ -21,6 +22,7 @@ public class CgOrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(KeywordsAware.class);
     set.add(TerraGroupProvisioners.class);
     set.add(SweepingOutput.class);
+    set.add(NGMigrationEntity.class);
   }
 
   @Override

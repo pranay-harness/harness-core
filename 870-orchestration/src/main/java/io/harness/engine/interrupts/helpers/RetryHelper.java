@@ -54,8 +54,7 @@ public class RetryHelper {
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(oldAmbiance);
     Ambiance ambiance = AmbianceUtils.cloneForFinish(oldAmbiance);
     int newRetryIndex = currentLevel != null ? currentLevel.getRetryIndex() + 1 : 0;
-    ambiance =
-        ambiance.toBuilder().addLevels(PmsLevelUtils.buildLevelFromPlanNode(newUuid, newRetryIndex, node)).build();
+    ambiance = ambiance.toBuilder().addLevels(PmsLevelUtils.buildLevelFromNode(newUuid, newRetryIndex, node)).build();
     NodeExecution newNodeExecution = cloneForRetry(updatedRetriedNode, newUuid, ambiance, interruptConfig, interruptId);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
 
@@ -133,7 +132,6 @@ public class RetryHelper {
         .status(Status.QUEUED)
         .timeoutInstanceIds(new ArrayList<>())
         .timeoutDetails(null)
-        .outcomeRefs(new ArrayList<>())
         .retryIds(retryIds)
         .oldRetry(false)
         .build();

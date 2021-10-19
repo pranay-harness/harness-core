@@ -44,7 +44,7 @@ public class EndPlanAdviserResponseHandler implements AdviserResponseHandler {
               .build();
       interruptManager.register(interruptPackage);
     } else {
-      engine.endTransition(nodeExecution);
+      engine.endNodeExecution(nodeExecution.getAmbiance());
     }
   }
 }

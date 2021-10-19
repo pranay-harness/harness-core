@@ -50,7 +50,6 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -253,13 +252,6 @@ public class UserResourceNG {
       @QueryParam("userId") String userId, @QueryParam("accountId") String accountId) {
     userService.addUserToAccount(userId, accountId);
     return new RestResponse<>(true);
-  }
-
-  @DELETE
-  @Path("/safeDelete/{userId}")
-  public RestResponse<Boolean> safeDeleteUser(
-      @PathParam("userId") String userId, @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(userService.safeDeleteUser(userId, accountId));
   }
 
   @GET

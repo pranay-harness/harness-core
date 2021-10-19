@@ -28,6 +28,7 @@ import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_STREAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.AZURE_APP_SETTINGS_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.AZURE_CONN_STRINGS_OVERRIDES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.CG_EVENT_CONFIG_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
@@ -73,6 +74,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.CgEventConfig;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -85,6 +87,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.governance.GovernanceFreezeConfig;
+import io.harness.service.EventConfigService;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
@@ -241,6 +244,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private GitSyncErrorService gitSyncErrorService;
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private GovernanceConfigService governanceConfigService;
+  @Inject private EventConfigService eventConfigService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -419,6 +423,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             break;
           case "GovernanceConfig":
             yaml = yamlResourceService.getGovernanceConfig(accountId).getResource().getYaml();
+            break;
+          case "Event Rules":
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getEventConfig(appId, entityId).getResource().getYaml();
             break;
 
           default:
@@ -890,6 +898,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     futureResponseList.add(
         executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
 
+    if (isAppTelemetryEnabled(accountId)) {
+      futureResponseList.add(executorService.submit(() -> doEventConfigs(app, appPath.clone())));
+    }
+
     futureResponseList.add(executorService.submit(
         () -> doTemplateLibraryForApp(app, appPath.clone(), applyPermissions, allowedTemplates)));
 
@@ -923,6 +935,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     appFolder.addChild(map.get(WORKFLOWS_FOLDER));
     appFolder.addChild(map.get(PIPELINES_FOLDER));
     appFolder.addChild(map.get(PROVISIONERS_FOLDER));
+    appFolder.addChild(map.get(CG_EVENT_CONFIG_FOLDER));
     if (isTriggerYamlEnabled(accountId)) {
       appFolder.addChild(map.get(TRIGGER_FOLDER));
     }
@@ -944,6 +957,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private boolean isTriggerYamlEnabled(String accountId) {
     return featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId);
+  }
+
+  private boolean isAppTelemetryEnabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.APP_TELEMETRY, accountId);
   }
 
   private boolean isNewDeploymentFreezeFFenabled(String accountId) {
@@ -2034,6 +2051,23 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return pipelinesFolder;
   }
 
+  private FolderNode doEventConfigs(Application app, DirectoryPath directoryPath) {
+    String accountId = app.getAccountId();
+    FolderNode eventsFolder = new FolderNode(accountId, CG_EVENT_CONFIG_FOLDER, CgEventConfig.class,
+        directoryPath.add(CG_EVENT_CONFIG_FOLDER), app.getUuid());
+
+    List<CgEventConfig> cgEventConfigs = eventConfigService.listAllEventsConfig(accountId, app.getAppId());
+    if (cgEventConfigs != null) {
+      for (CgEventConfig cgEventConfig : cgEventConfigs) {
+        DirectoryPath eventConfigPath = directoryPath.clone();
+        String eventConfigFileName = cgEventConfig.getName() + YAML_EXTENSION;
+        eventsFolder.addChild(new AppLevelYamlNode(accountId, cgEventConfig.getUuid(), cgEventConfig.getAppId(),
+            eventConfigFileName, CgEventConfig.class, eventConfigPath.add(eventConfigFileName), Type.EVENT_RULE));
+      }
+    }
+    return eventsFolder;
+  }
+
   private FolderNode doTriggers(Application app, DirectoryPath directoryPath) {
     String accountId = app.getAccountId();
 
@@ -2543,6 +2577,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         return VALUES_FOLDER;
       case OC_PARAMS:
         return OC_PARAMS_FOLDER;
+      case AZURE_APP_SERVICE_MANIFEST:
+        return MANIFEST_FOLDER_APP_SERVICE;
       default:
         return MANIFEST_FOLDER;
     }
@@ -2719,6 +2755,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       return getRootPathBySettingAttribute(settingAttribute) + PATH_DELIMITER + ARTIFACT_STREAMS_FOLDER;
     }
+  }
+
+  @Override
+  public String getRootPathByEventConfig(CgEventConfig cgEventConfig) {
+    Application app = appService.get(cgEventConfig.getAppId());
+    return getRootPathByApp(app) + PATH_DELIMITER + CG_EVENT_CONFIG_FOLDER;
   }
 
   @Override
@@ -2902,6 +2944,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByTemplate((Template) entity);
     } else if (entity instanceof GovernanceConfig) {
       return getRootPathForGovernanceConfig();
+    } else if (entity instanceof CgEventConfig) {
+      return getRootPathByEventConfig((CgEventConfig) entity);
     }
 
     throw new InvalidRequestException(

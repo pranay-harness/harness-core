@@ -150,7 +150,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                 StepInfo.newBuilder()
                     .setName("testStepCD")
                     .setType("testStepCD")
-                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                     .build()))
             .build());
     serviceInstanceNameToSupportedSteps.put("cv",
@@ -160,7 +160,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                 StepInfo.newBuilder()
                     .setName("testStepCV")
                     .setType("testStepCV")
-                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                     .build()))
             .build());
 
@@ -176,8 +176,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
         .thenReturn(cv);
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", null, accountId);
     String expected =
-        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
-
+        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD, disabled=false, featureRestrictionName=null)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false, featureRestrictionName=null)], stepCategories=[])])])])";
     assertThat(stepCategory.toString()).isEqualTo(expected);
   }
 
@@ -194,7 +193,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                     .setName("testStepCD")
                     .setType("testStepCD")
                     .setStepMetaData(
-                        StepMetaData.newBuilder().addCategory("K8S").setFolderPath("Double/Single").build())
+                        StepMetaData.newBuilder().addCategory("K8S").addFolderPaths("Double/Single").build())
                     .build()))
             .build());
     serviceInstanceNameToSupportedSteps.put("cv",
@@ -204,7 +203,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                 StepInfo.newBuilder()
                     .setName("testStepCV")
                     .setType("testStepCV")
-                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Double/Single").build())
                     .build()))
             .build());
 
@@ -225,7 +224,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform", accountId);
     String expected =
-        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
+        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false, featureRestrictionName=null)], stepCategories=[])])])])";
     assertThat(stepCategory.toString()).isEqualTo(expected);
   }
 

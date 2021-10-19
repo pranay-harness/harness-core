@@ -115,6 +115,8 @@ import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskResponse
 import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
+import io.harness.delegate.beans.connector.k8Connector.CEK8sValidationParams;
+import io.harness.delegate.beans.connector.k8Connector.CEKubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.K8sServiceAccountInfoResponse;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
@@ -182,6 +184,7 @@ import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -315,6 +318,7 @@ import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.delegate.task.k8s.data.K8sCanaryDataException;
 import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
@@ -408,6 +412,7 @@ import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.s3.S3FileRequest;
@@ -415,6 +420,9 @@ import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
+import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
+import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
+import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -426,6 +434,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
@@ -795,6 +804,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitApiTaskResponse.class, 543273);
     kryo.register(AwsCodeCommitDataObtainmentTaskResult.class, 543274);
     kryo.register(AwsCodeCommitRequestType.class, 543275);
+    kryo.register(AwsLambdaVpcConfig.class, 5450);
+    kryo.register(LambdaTestEvent.class, 5604);
 
     kryo.register(CIK8ExecuteStepTaskParams.class, 543276);
     kryo.register(LiteEngineConnectionCapability.class, 543277);
@@ -899,6 +910,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CommandUnitProgress.class, 543428);
     kryo.register(K8sCanaryDeleteRequest.class, 543429);
     kryo.register(K8sRollingDeployRollbackResponse.class, 543430);
+
     kryo.register(PollingDelegateResponse.class, 543431);
     kryo.register(ManifestPollingDelegateResponse.class, 543432);
     kryo.register(ArtifactPollingDelegateResponse.class, 543433);
@@ -911,11 +923,19 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmCommandResponse.class, 5261);
     kryo.register(AwsAmiPreDeploymentData.class, 5519);
     kryo.register(EcsCommandResponse.class, 5608);
+    kryo.register(EcsServiceDeployResponse.class, 7149);
     kryo.register(ExistingStackInfo.class, 5479);
     kryo.register(AwsLambdaDetails.class, 5701);
     kryo.register(S3FileRequest.class, 8067);
     kryo.register(CodeDeployParams.class, 5189);
     kryo.register(ServiceNowAction.class, 7156);
     kryo.register(ServiceNowFields.class, 7169);
+    kryo.register(HelmInstallCommandResponse.class, 5263);
+
+    kryo.register(CEKubernetesConnectionTaskParams.class, 543437);
+    kryo.register(CEK8sValidationParams.class, 543438);
+    kryo.register(ReleaseInfo.class, 543439);
+    kryo.register(TaskNGDataException.class, 543440);
+    kryo.register(K8sCanaryDataException.class, 543441);
   }
 }

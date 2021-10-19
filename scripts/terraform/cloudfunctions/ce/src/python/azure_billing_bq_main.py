@@ -9,7 +9,7 @@ from google.cloud import bigquery
 from google.cloud import storage
 import datetime
 import util
-from util import create_dataset, if_tbl_exists, createTable, print_, TABLE_NAME_FORMAT
+from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, PREAGGREGATED, CEINTERNALDATASET
 from calendar import monthrange
 
 """
@@ -74,9 +74,11 @@ def main(event, context):
     dataset = client.dataset(jsonData["datasetName"])
 
     preAggragatedTableRef = dataset.table("preAggregated")
-    preAggregatedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], "preAggregated")
+    preAggregatedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], PREAGGREGATED)
     unifiedTableRef = dataset.table("unifiedTable")
-    unifiedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], "unifiedTable")
+    unifiedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], UNIFIED)
+    cost_aggregated_table_ref = client.dataset(CEINTERNALDATASET).table(COSTAGGREGATED)
+    cost_aggregated_table_name = "%s.%s.%s" % (PROJECTID, CEINTERNALDATASET, COSTAGGREGATED)
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
@@ -93,6 +95,12 @@ def main(event, context):
         alter_preagg_table(jsonData)
         print_("%s table exists" % preAggregatedTableTableName)
 
+    if not if_tbl_exists(client, cost_aggregated_table_ref):
+        print_("%s table does not exists, creating table..." % cost_aggregated_table_ref)
+        createTable(client, cost_aggregated_table_ref)
+    else:
+        print_("%s table exists" % cost_aggregated_table_name)
+
     # start streaming the data from the gcs
     print_("%s table exists. Starting to write data from gcs into it..." % jsonData["tableName"])
     try:
@@ -104,7 +112,9 @@ def main(event, context):
     get_unique_subs_id(jsonData, azure_column_mapping)
     ingest_data_into_preagg(jsonData, azure_column_mapping)
     ingest_data_into_unified(jsonData, azure_column_mapping)
+    ingest_data_to_costagg(jsonData)
     print_("Completed")
+
 
 def ingest_data_from_csv(jsonData):
     # Determine blob of highest size in this folder
@@ -323,7 +333,7 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
                         MeterName as azureMeterName,
                         %s as azureInstanceId, ResourceLocation as region,  %s as azureResourceGroup,
                         %s as azureSubscriptionGuid, MeterCategory as azureServiceName,
-                        "AZURE" AS cloudProvider, `%s.CE_INTERNAL.jsonStringToLabelsStruct`(Tags) as labels,
+                        "AZURE" AS cloudProvider, `%s.%s.jsonStringToLabelsStruct`(Tags) as labels,
                         ARRAY_REVERSE(SPLIT(%s,REGEXP_EXTRACT(%s, r'(?i)providers/')))[OFFSET(0)] as azureResource,
                         IF(REGEXP_CONTAINS(%s, r'virtualMachineScaleSets'),
                             LOWER(CONCAT('azure://', %s, '/virtualMachines/',
@@ -337,7 +347,7 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
                             azure_column_mapping["cost"], get_cost_markup_factor(jsonData),
                             azure_column_mapping["azureInstanceId"],
                             azure_column_mapping["azureResourceGroup"],
-                            azure_column_mapping["azureSubscriptionGuid"], PROJECTID,
+                            azure_column_mapping["azureSubscriptionGuid"], PROJECTID, CEINTERNALDATASET,
                             azure_column_mapping["azureInstanceId"],
                             azure_column_mapping["azureInstanceId"], azure_column_mapping["azureInstanceId"],
                             azure_column_mapping["azureInstanceId"],
@@ -379,8 +389,8 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
 
 
 def create_bq_udf():
-    create_dataset(client, "CE_INTERNAL")
-    query = """CREATE FUNCTION IF NOT EXISTS `%s.CE_INTERNAL.jsonStringToLabelsStruct`(input STRING)
+    create_dataset(client, CEINTERNALDATASET)
+    query = """CREATE FUNCTION IF NOT EXISTS `%s.%s.jsonStringToLabelsStruct`(input STRING)
                 RETURNS Array<STRUCT<key String, value String>>
                 LANGUAGE js AS \"""
                 var output = []
@@ -405,7 +415,7 @@ def create_bq_udf():
                 };
                 return output;
                 \""";
-    """ % PROJECTID
+    """ % (PROJECTID, CEINTERNALDATASET)
     try:
         query_job = client.query(query)
         query_job.result()
@@ -478,3 +488,24 @@ def get_cost_markup_factor(jsonData):
         return 1 + markuppercent / 100
     else:
         return 1
+
+def ingest_data_to_costagg(jsonData):
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    table_name = "%s.%s.%s" % (PROJECTID, CEINTERNALDATASET, COSTAGGREGATED)
+    source_table = "%s.%s" % (ds, UNIFIED)
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
+    date_start = "%s-%s-01" % (year, month)
+    date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
+    print_("Loading into %s table..." % table_name)
+    query = """DELETE FROM `%s` WHERE DATE(day) >= '%s' AND DATE(day) <= '%s'  AND cloudProvider = "AZURE" AND accountId = '%s';
+               INSERT INTO `%s` (day, cost, cloudProvider, accountId)
+                SELECT TIMESTAMP_TRUNC(startTime, DAY) AS day, SUM(cost) AS cost, "AZURE" AS cloudProvider, '%s' as accountId
+                FROM `%s`  
+                WHERE DATE(startTime) >= '%s' and cloudProvider = "AZURE" 
+                GROUP BY day;
+     """ % (table_name, date_start, date_end, jsonData.get("accountId"), table_name, jsonData.get("accountId"), source_table, date_start)
+
+    job_config = bigquery.QueryJobConfig(
+        priority=bigquery.QueryPriority.BATCH
+    )
+    run_batch_query(client, query, job_config, timeout=120)

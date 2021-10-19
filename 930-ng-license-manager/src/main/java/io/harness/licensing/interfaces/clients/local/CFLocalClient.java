@@ -1,6 +1,5 @@
 package io.harness.licensing.interfaces.clients.local;
 
-import static io.harness.licensing.LicenseConstant.UNLIMITED;
 import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
 
 import io.harness.exception.UnsupportedOperationException;
@@ -9,7 +8,6 @@ import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO.CFModuleLicenseDTOBuilder;
-import io.harness.licensing.beans.stats.CFRuntimUsageDTO;
 import io.harness.licensing.interfaces.clients.CFModuleLicenseClient;
 
 import java.time.Instant;
@@ -47,15 +45,10 @@ public class CFLocalClient implements CFModuleLicenseClient {
       case FREE:
         return builder.numberOfUsers(FREE_FEATURE_FLAG_UNITS)
             .numberOfClientMAUs(FREE_CLIENT_MAUS)
-            .expiryTime(Long.valueOf(UNLIMITED))
+            .expiryTime(Long.MAX_VALUE)
             .build();
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }
-  }
-
-  @Override
-  public CFRuntimUsageDTO getRuntimeUsage(String accountId) {
-    return null;
   }
 }

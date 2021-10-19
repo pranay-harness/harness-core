@@ -34,6 +34,12 @@ import io.harness.aggregator.AggregatorService;
 import io.harness.aggregator.MongoOffsetCleanupJob;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
+import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
+import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
+import io.harness.enforcement.client.usage.RestrictionUsageInterface;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -59,6 +65,7 @@ import io.harness.security.annotations.PublicApi;
 import io.harness.token.remote.TokenClient;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -71,9 +78,19 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
 import java.lang.annotation.Annotation;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -116,7 +133,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     bootstrap.addBundle(new SwaggerBundle<AccessControlConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AccessControlConfiguration appConfig) {
-        return getSwaggerConfiguration();
+        return getSwaggerConfiguration(appConfig);
       }
     });
     // Enable variable substitution with environment variables
@@ -144,6 +161,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerMigrations(injector);
     registerIterators(injector);
     registerScheduledJobs(injector);
+    registerOasResource(appConfig, environment, injector);
+    initializeEnforcementFramework(injector);
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
 
@@ -185,6 +204,40 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   private void registerJerseyFeatures(Environment environment) {
     environment.jersey().register(MultiPartFeature.class);
+  }
+
+  private void registerOasResource(
+      AccessControlConfiguration configuration, Environment environment, Injector injector) {
+    OpenApiResource openApiResource = injector.getInstance(OpenApiResource.class);
+    openApiResource.setOpenApiConfiguration(getOasConfig(configuration));
+    environment.jersey().register(openApiResource);
+  }
+
+  private OpenAPIConfiguration getOasConfig(AccessControlConfiguration appConfig) {
+    OpenAPI oas = new OpenAPI();
+    Info info =
+        new Info()
+            .title("Access Control API Reference")
+            .description(
+                "This is the Open Api Spec 3 for the Access Control Service. This is under active development. Beware of the breaking change with respect to the generated code stub")
+            .termsOfService("https://harness.io/terms-of-use/")
+            .version("1.0")
+            .contact(new Contact().email("contact@harness.io"));
+    oas.info(info);
+    URL baseurl = null;
+    try {
+      baseurl = new URL("https", appConfig.getHostname(), appConfig.getBasePathPrefix());
+      Server server = new Server();
+      server.setUrl(baseurl.toString());
+      oas.servers(Collections.singletonList(server));
+    } catch (MalformedURLException e) {
+      log.error("failed to set baseurl for server, {}/{}", appConfig.getHostname(), appConfig.getBasePathPrefix());
+    }
+    Collection<Class<?>> classes = getResourceClasses();
+    classes.add(AccessControlSwaggerListener.class);
+    Set<String> packages = getUniquePackages(classes);
+    return new SwaggerConfiguration().openAPI(oas).prettyPrint(true).resourcePackages(packages).scannerClass(
+        "io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
   }
 
   private void registerCorsFilter(AccessControlConfiguration appConfig, Environment environment) {
@@ -249,8 +302,10 @@ public class AccessControlApplication extends Application<AccessControlConfigura
         .or(resourceInfoAndRequest
             -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.yaml")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
-                    "/swagger.json"));
+                    "/openapi.json"));
   }
 
   private void registerAccessControlAuthFilter(
@@ -290,7 +345,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
             && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
   }
 
-  private SwaggerBundleConfiguration getSwaggerConfiguration() {
+  private SwaggerBundleConfiguration getSwaggerConfiguration(AccessControlConfiguration appConfig) {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
     Collection<Class<?>> classes = getResourceClasses();
     classes.add(AccessControlSwaggerListener.class);
@@ -298,8 +353,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setVersion("1.0");
-    defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
-    defaultSwaggerBundleConfiguration.setHost("{{host}}");
+    defaultSwaggerBundleConfiguration.setHost(appConfig.getHostname());
+    defaultSwaggerBundleConfiguration.setUriPrefix(appConfig.getBasePathPrefix());
     defaultSwaggerBundleConfiguration.setTitle("Access Control Service API Reference");
     return defaultSwaggerBundleConfiguration;
   }
@@ -320,5 +375,21 @@ public class AccessControlApplication extends Application<AccessControlConfigura
           { add(AccessControlMigrationProvider.class); }
         })
         .build();
+  }
+
+  private void initializeEnforcementFramework(Injector injector) {
+    Map<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>> featureRestrictionNameClassHashMap =
+        ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder().build();
+    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
+        RestrictionUsageRegisterConfiguration.builder()
+            .restrictionNameClassMap(featureRestrictionNameClassHashMap)
+            .build();
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder().build())
+            .build();
+    injector.getInstance(EnforcementSdkRegisterService.class)
+        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }

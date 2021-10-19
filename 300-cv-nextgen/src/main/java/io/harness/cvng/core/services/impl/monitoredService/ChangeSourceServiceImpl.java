@@ -5,22 +5,25 @@ import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeSourceType;
+import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
+import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
-import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +32,12 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@Slf4j
 public class ChangeSourceServiceImpl implements ChangeSourceService {
   @Inject private HPersistence hPersistence;
   @Inject private ChangeSourceEntityAndDTOTransformer changeSourceTransformer;
@@ -108,40 +112,28 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
             .stream()
             .collect(Collectors.toMap(sc -> sc.getIdentifier(), Function.identity()));
 
-    newChangeSourceMap.keySet()
-        .stream()
-        .filter(key -> replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-        .forEach(identifer -> {
-          ChangeSource existingChangeSource = existingChangeSourceMap.get(identifer);
-          ChangeSource newChangeSource = newChangeSourceMap.get(identifer);
-          update(existingChangeSource, newChangeSource);
-          if (changeSourceUpdateHandlerMap.containsKey(newChangeSource.getType())) {
-            changeSourceUpdateHandlerMap.get(newChangeSource.getType())
-                .handleUpdate(existingChangeSource, newChangeSource);
-          }
-        });
+    newChangeSourceMap.forEach((identifier, changeSource) -> {
+      if (replaceable(identifier, newChangeSourceMap, existingChangeSourceMap)) {
+        ChangeSource existingChangeSource = existingChangeSourceMap.remove(identifier);
+        update(existingChangeSource, changeSource);
+        if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+          changeSourceUpdateHandlerMap.get(changeSource.getType()).handleUpdate(existingChangeSource, changeSource);
+        }
+      } else {
+        hPersistence.save(changeSource);
+        if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+          changeSourceUpdateHandlerMap.get(changeSource.getType()).handleCreate(changeSource);
+        }
+      }
+    });
 
-    newChangeSourceMap.keySet()
-        .stream()
-        .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-        .forEach(identifier -> {
-          ChangeSource changeSource = newChangeSourceMap.get(identifier);
-          hPersistence.save(changeSource);
-          if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
-            changeSourceUpdateHandlerMap.get(changeSource.getType()).handleCreate(changeSource);
-          }
-        });
-
-    existingChangeSourceMap.keySet()
-        .stream()
-        .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-        .forEach(identifier -> {
-          ChangeSource changeSource = existingChangeSourceMap.get(identifier);
-          hPersistence.delete(changeSource);
-          if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
-            changeSourceUpdateHandlerMap.get(changeSource.getType()).handleDelete(changeSource);
-          }
-        });
+    existingChangeSourceMap.keySet().forEach(identifier -> {
+      ChangeSource changeSource = existingChangeSourceMap.get(identifier);
+      hPersistence.delete(changeSource);
+      if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+        changeSourceUpdateHandlerMap.get(changeSource.getType()).handleDelete(changeSource);
+      }
+    });
   }
 
   protected void update(ChangeSource existingChangeSource, ChangeSource newChangeSource) {
@@ -201,7 +193,8 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
             .map(entrySet -> entrySet.getKey())
             .findAny();
     if (noUniqueIdentifier.isPresent()) {
-      throw new DuplicateFieldException(Pair.of(ChangeSourceKeys.identifier, noUniqueIdentifier.get()));
+      throw new InvalidRequestException(
+          String.format("Multiple Change Sources exists with the same identifier %s", noUniqueIdentifier.get()));
     }
   }
 
@@ -220,8 +213,8 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
         changeSourceDTOs.stream().map(changeSourceDTO -> changeSourceDTO.getIdentifier()).collect(Collectors.toList()));
 
     if (CollectionUtils.isNotEmpty(changeSourceDTOS)) {
-      throw new DuplicateFieldException(
-          Pair.of(ChangeSourceKeys.identifier, changeSourceDTOS.iterator().next().getIdentifier()));
+      throw new InvalidRequestException(String.format("Multiple Change Sources exists with the same identifier %s",
+          changeSourceDTOS.iterator().next().getIdentifier()));
     }
   }
 
@@ -254,5 +247,26 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     hPersistence.createQuery(ChangeSource.class)
         .filter(ChangeSourceKeys.accountId, accountId)
         .forEach(hPersistence::delete);
+  }
+
+  @Override
+  public void handleCurrentGenEvents(HarnessCDCurrentGenChangeSource changeSource) {
+    List<HarnessCDCurrentGenEventMetadata> events = verificationManagerService.getCurrentGenEvents(
+        changeSource.getAccountId(), changeSource.getHarnessApplicationId(), changeSource.getHarnessEnvironmentId(),
+        changeSource.getHarnessServiceId(), Instant.now().minus(5, ChronoUnit.MINUTES), Instant.now());
+    events.forEach(event -> {
+      ChangeEventDTO changeEventDTO = ChangeEventDTO.builder()
+                                          .accountId(changeSource.getAccountId())
+                                          .orgIdentifier(changeSource.getOrgIdentifier())
+                                          .projectIdentifier(changeSource.getProjectIdentifier())
+                                          .changeSourceIdentifier(changeSource.getIdentifier())
+                                          .envIdentifier(changeSource.getEnvIdentifier())
+                                          .serviceIdentifier(changeSource.getServiceIdentifier())
+                                          .type(ChangeSourceType.HARNESS_CD_CURRENT_GEN)
+                                          .eventTime(event.getWorkflowStartTime())
+                                          .metadata(event)
+                                          .build();
+      changeEventService.register(changeEventDTO);
+    });
   }
 }

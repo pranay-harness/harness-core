@@ -15,6 +15,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Value
@@ -40,6 +41,9 @@ public class PlanNode {
   // Skip
   String skipCondition;
   String whenCondition;
+
+  // stage fqn
+  @NonFinal @lombok.Setter String stageFqn;
 
   // Config
   boolean skipExpressionChain;

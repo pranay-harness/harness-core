@@ -1,0 +1,9 @@
+infrastructure:
+  environmentRef: env1
+  infrastructureDefinition:
+    type: KubernetesDirect
+    spec:
+      connectorRef: account.temp
+      namespace: ss1
+      releaseName: release-<+INFRA_KEY>
+  allowSimultaneousDeployments: false

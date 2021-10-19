@@ -38,4 +38,9 @@ public class ArtifactTriggerConfig implements NGTriggerSpecV2, BuildAware {
   public String fetchbuildRef() {
     return artifactRef;
   }
+
+  @Override
+  public String fetchBuildType() {
+    return spec.fetchBuildType();
+  }
 }

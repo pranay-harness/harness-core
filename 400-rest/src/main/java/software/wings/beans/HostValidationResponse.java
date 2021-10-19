@@ -1,10 +1,13 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 
 /**
  * Created by anubhaw on 2/22/17.
  */
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class HostValidationResponse implements DelegateResponseData {
   private String hostName;
   private String status;

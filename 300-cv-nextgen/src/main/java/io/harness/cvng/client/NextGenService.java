@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
@@ -13,6 +14,7 @@ import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 @OwnedBy(HarnessTeam.CV)
 public interface NextGenService {
@@ -42,4 +44,8 @@ public interface NextGenService {
   ProjectDTO getCachedProject(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   OrganizationDTO getOrganization(String accountIdentifier, String orgIdentifier);
+
+  Map<String, String> getServiceIdNameMap(ProjectParams projectParams, List<String> serviceIdentifiers);
+
+  Map<String, String> getEnvironmentIdNameMap(ProjectParams projectParams, List<String> environmentIdentifiers);
 }

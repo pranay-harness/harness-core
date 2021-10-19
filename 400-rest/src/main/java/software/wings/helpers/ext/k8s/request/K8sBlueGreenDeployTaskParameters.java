@@ -13,6 +13,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.k8s.model.KubernetesResource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,20 +32,29 @@ public class K8sBlueGreenDeployTaskParameters extends K8sTaskParameters implemen
   private boolean skipDryRun;
   private Boolean skipVersioningForAllK8sObjects;
   private boolean isPruningEnabled;
+  private boolean exportManifests;
+  private boolean inheritManifests;
+  private List<KubernetesResource> kubernetesResources;
 
   @Builder
   public K8sBlueGreenDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       boolean skipDryRun, HelmVersion helmVersion, Boolean skipVersioningForAllK8sObjects,
-      Set<String> delegateSelectors, boolean isPruningEnabled, boolean useLatestChartMuseumVersion) {
+      Set<String> delegateSelectors, boolean isPruningEnabled, boolean exportManifests, boolean inheritManifests,
+      List<KubernetesResource> kubernetesResources, boolean useLatestChartMuseumVersion,
+      boolean useLatestKustomizeVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
+        useLatestKustomizeVersion);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.skipDryRun = skipDryRun;
     this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
     this.isPruningEnabled = isPruningEnabled;
+    this.exportManifests = exportManifests;
+    this.inheritManifests = inheritManifests;
+    this.kubernetesResources = kubernetesResources;
   }
 
   @Override

@@ -282,7 +282,7 @@ public enum TaskType {
   HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK),
   HELM_VALUES_FETCH_NG(TaskGroup.HELM_VALUES_FETCH_TASK, "Helm Values Fetch Task"),
   SLACK(TaskGroup.SLACK),
-  CI_BUILD(TaskGroup.CI),
+  INITIALIZATION_PHASE(TaskGroup.CI),
   CI_LE_STATUS(TaskGroup.CI),
   EXECUTE_COMMAND(TaskGroup.CI),
   CI_CLEANUP(TaskGroup.CI),

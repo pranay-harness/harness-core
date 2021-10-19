@@ -10,7 +10,6 @@ import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CDModuleLicenseDTO.CDModuleLicenseDTOBuilder;
 import io.harness.licensing.beans.modules.types.CDLicenseType;
-import io.harness.licensing.beans.stats.CDRuntimeUsageDTO;
 import io.harness.licensing.interfaces.clients.CDModuleLicenseClient;
 
 import java.time.Instant;
@@ -38,14 +37,11 @@ public class CDLocalClient implements CDModuleLicenseClient {
       case TEAM:
         return builder.workloads(TEAM_TRIAL_WORKLOAD).licenseType(LicenseType.TRIAL).build();
       case FREE:
-        return builder.workloads(FREE_WORKLOAD).expiryTime(Long.valueOf(UNLIMITED)).build();
+        return builder.workloads(FREE_WORKLOAD).expiryTime(Long.MAX_VALUE).build();
+      case COMMUNITY:
+        return builder.workloads(Integer.valueOf(UNLIMITED)).expiryTime(Long.MAX_VALUE).build();
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }
-  }
-
-  @Override
-  public CDRuntimeUsageDTO getRuntimeUsage(String accountId) {
-    return null;
   }
 }

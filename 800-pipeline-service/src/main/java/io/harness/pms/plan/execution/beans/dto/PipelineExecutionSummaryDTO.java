@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 
@@ -38,6 +39,7 @@ public class PipelineExecutionSummaryDTO {
 
   ExecutionTriggerInfo executionTriggerInfo;
   ExecutionErrorInfo executionErrorInfo;
+  GovernanceMetadata governanceMetadata;
 
   Map<String, Document> moduleInfo;
   Map<String, GraphLayoutNodeDTO> layoutNodeMap;
@@ -48,10 +50,16 @@ public class PipelineExecutionSummaryDTO {
   Long endTs;
   Long createdAt;
 
+  boolean canRetry;
+  boolean showRetryHistory;
+
   int runSequence;
   long successfulStagesCount;
   long runningStagesCount;
   long failedStagesCount;
   long totalStagesCount;
   EntityGitDetails gitDetails;
+
+  boolean isStagesExecution;
+  List<String> stagesExecuted;
 }

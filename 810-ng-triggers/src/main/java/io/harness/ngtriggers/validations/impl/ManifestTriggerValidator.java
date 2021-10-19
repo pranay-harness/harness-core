@@ -2,6 +2,7 @@ package io.harness.ngtriggers.validations.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngtriggers.Constants.MANIFEST_REF;
 import static io.harness.ngtriggers.beans.source.ManifestType.HELM_MANIFEST;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -44,6 +45,9 @@ public class ManifestTriggerValidator implements TriggerValidator {
       if (!pipelineYmlOptional.isPresent()) {
         return builder.success(false).message("Pipeline doesn't exists").build();
       }
+
+      // make sure, stage and artifact identifiers are given
+      validationHelper.verifyStageAndBuildRef(triggerDetails, MANIFEST_REF);
 
       String pipelineYml = pipelineYmlOptional.get();
       BuildTriggerOpsData buildTriggerOpsData =

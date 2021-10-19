@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
@@ -30,9 +31,18 @@ import lombok.extern.slf4j.Slf4j;
 public class PMSPipelineServiceStepHelper {
   @Inject private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
   @Inject private final CommonStepInfo commonStepInfo;
-  @VisibleForTesting public static String LIBRARY = "Library";
+  @Inject private final PipelineEnforcementService pipelineEnforcementService;
 
-  public List<StepInfo> filterStepsOnFeatureFlag(List<StepInfo> stepInfoList, String accountId) {
+  @VisibleForTesting public static String LIBRARY = "Library";
+  @VisibleForTesting public static String COMMON = "common";
+
+  /**
+   * Filters the step to be shown in the UI based on a feature flag
+   * @param stepInfoList
+   * @param accountId
+   * @return
+   */
+  public List<StepInfo> filterStepsBasedOnFeatureFlag(List<StepInfo> stepInfoList, String accountId) {
     try {
       List<StepInfo> ffEnabledStepInfoList = new ArrayList<>();
       if (!stepInfoList.isEmpty()) {
@@ -50,10 +60,20 @@ public class PMSPipelineServiceStepHelper {
   }
 
   public StepCategory calculateStepsForCategory(String module, List<StepInfo> stepInfoList, String accountId) {
-    List<StepInfo> ffEnabledStepInfoList = filterStepsOnFeatureFlag(stepInfoList, accountId);
     StepCategory stepCategory = StepCategory.builder().name(module).build();
+    return addStepsToStepCategory(stepCategory, stepInfoList, accountId);
+  }
+
+  public StepCategory addStepsToStepCategory(StepCategory stepCategory, List<StepInfo> stepInfoList, String accountId) {
+    List<StepInfo> ffEnabledStepInfoList = filterStepsBasedOnFeatureFlag(stepInfoList, accountId);
+    Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap =
+        pipelineEnforcementService.getFeatureRestrictionMap(accountId,
+            ffEnabledStepInfoList.stream()
+                .filter(stepInfo -> EmptyPredicate.isNotEmpty(stepInfo.getFeatureRestrictionName()))
+                .map(StepInfo::getFeatureRestrictionName)
+                .collect(Collectors.toSet()));
     for (StepInfo stepType : ffEnabledStepInfoList) {
-      addToTopLevel(stepCategory, stepType);
+      addToTopLevel(stepCategory, stepType, featureRestrictionNameBooleanMap);
     }
     return stepCategory;
   }
@@ -87,25 +107,47 @@ public class PMSPipelineServiceStepHelper {
     return calculateStepsForCategory(module, filteredStepTypes, accountId);
   }
 
-  public void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo) {
-    StepCategory currentStepCategory = stepCategory;
+  public void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo,
+      Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap) {
     if (stepInfo != null) {
-      String folderPath = stepInfo.getStepMetaData().getFolderPath();
-      String[] categoryArrayName = folderPath.split("/");
-      for (String categoryName : categoryArrayName) {
-        currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(categoryName);
+      List<String> folderPaths = stepInfo.getStepMetaData().getFolderPathsList();
+      if (EmptyPredicate.isEmpty(folderPaths)) {
+        folderPaths = new ArrayList<>();
+        folderPaths.add(stepInfo.getStepMetaData().getFolderPath());
       }
-      currentStepCategory.addStepData(StepData.builder().name(stepInfo.getName()).type(stepInfo.getType()).build());
+      for (String folderPath : folderPaths) {
+        StepCategory currentStepCategory = stepCategory;
+        String[] categoryArrayName = folderPath.split("/");
+        for (String categoryName : categoryArrayName) {
+          currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(categoryName);
+        }
+        boolean disabled = !stepInfo.getFeatureRestrictionName().isEmpty()
+            && !featureRestrictionNameBooleanMap.get(
+                FeatureRestrictionName.valueOf(stepInfo.getFeatureRestrictionName()));
+        if (!stepInfo.getFeatureRestrictionName().isEmpty()) {
+          currentStepCategory.addStepData(
+              StepData.builder()
+                  .name(stepInfo.getName())
+                  .type(stepInfo.getType())
+                  .disabled(disabled)
+                  .featureRestrictionName(FeatureRestrictionName.valueOf(stepInfo.getFeatureRestrictionName()))
+                  .build());
+        } else {
+          currentStepCategory.addStepData(
+              StepData.builder().name(stepInfo.getName()).type(stepInfo.getType()).disabled(disabled).build());
+        }
+      }
     }
   }
 
   public StepCategory getAllSteps(String accountId, Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps) {
     StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
     for (Map.Entry<String, StepPalleteInfo> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
-      stepCategory.addStepCategory(
-          calculateStepsForCategory(entry.getValue().getModuleName(), entry.getValue().getStepTypes(), accountId));
+      StepCategory moduleCategory =
+          calculateStepsForCategory(entry.getValue().getModuleName(), entry.getValue().getStepTypes(), accountId);
+      stepCategory.addStepCategory(moduleCategory);
+      addStepsToStepCategory(moduleCategory, commonStepInfo.getCommonSteps(""), accountId);
     }
-    stepCategory.addStepCategory(calculateStepsForCategory("Common", commonStepInfo.getCommonSteps(null), accountId));
 
     return stepCategory;
   }

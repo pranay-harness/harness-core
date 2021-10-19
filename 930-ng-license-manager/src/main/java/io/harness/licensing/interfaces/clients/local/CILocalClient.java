@@ -9,7 +9,6 @@ import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO.CIModuleLicenseDTOBuilder;
-import io.harness.licensing.beans.stats.CIRuntimeUsageDTO;
 import io.harness.licensing.interfaces.clients.CIModuleLicenseClient;
 
 import java.time.Instant;
@@ -33,14 +32,9 @@ public class CILocalClient implements CIModuleLicenseClient {
       case TEAM:
         return builder.numberOfCommitters(TEAM_TRIAL_DEVELOPERS).licenseType(LicenseType.TRIAL).build();
       case FREE:
-        return builder.numberOfCommitters(Integer.valueOf(UNLIMITED)).expiryTime(Long.valueOf(UNLIMITED)).build();
+        return builder.numberOfCommitters(Integer.valueOf(UNLIMITED)).expiryTime(Long.MAX_VALUE).build();
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }
-  }
-
-  @Override
-  public CIRuntimeUsageDTO getRuntimeUsage(String accountId) {
-    return null;
   }
 }

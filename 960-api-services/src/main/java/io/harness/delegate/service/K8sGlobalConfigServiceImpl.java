@@ -52,8 +52,8 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
   }
 
   @Override
-  public String getKustomizePath() {
-    return InstallUtils.getKustomizePath();
+  public String getKustomizePath(boolean useLatestVersion) {
+    return InstallUtils.getKustomizePath(useLatestVersion);
   }
 
   @Override

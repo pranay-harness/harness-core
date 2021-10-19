@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.enforcement.client.EnforcementClientConfiguration;
 import io.harness.platform.audit.AuditServiceConfiguration;
 import io.harness.platform.notification.NotificationServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -38,18 +39,21 @@ public class PlatformConfiguration extends Configuration {
   public static final String AUDIT_RESOURCE_PACKAGE = "io.harness.audit.remote";
   public static final String FILTER_RESOURCE_PACKAGE = "io.harness.filter";
   public static final String RESOURCEGROUP_PACKAGE = "io.harness.resourcegroup";
+  public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement.client.resources";
 
   @Setter @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
   @JsonProperty("auditServiceConfig") private AuditServiceConfiguration auditServiceConfig;
   @JsonProperty("resourceGroupServiceConfig") private ResourceGroupServiceConfig resoureGroupServiceConfig;
 
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
-  @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
+  @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerServiceConfig;
+  @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerServiceConfig;
   @JsonProperty("rbacServiceConfig") private ServiceHttpClientConfig rbacServiceConfig;
   @JsonProperty("secrets") private PlatformSecrets platformSecrets;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
   @JsonProperty(value = "accessControlClient") private AccessControlClientConfiguration accessControlClientConfig;
+  @JsonProperty("enforcementClientConfiguration") private EnforcementClientConfiguration enforcementClientConfiguration;
 
   public static Collection<Class<?>> getNotificationServiceResourceClasses() {
     Reflections reflections = new Reflections(NOTIFICATION_RESOURCE_PACKAGE);
@@ -70,6 +74,8 @@ public class PlatformConfiguration extends Configuration {
     Collection<Class<?>> resources = getNotificationServiceResourceClasses();
     resources.addAll(getAuditServiceResourceClasses());
     resources.addAll(getResourceGroupServiceResourceClasses());
+    Reflections reflections = new Reflections(ENFORCEMENT_PACKAGE);
+    resources.addAll(reflections.getTypesAnnotatedWith(Path.class));
     return resources;
   }
 

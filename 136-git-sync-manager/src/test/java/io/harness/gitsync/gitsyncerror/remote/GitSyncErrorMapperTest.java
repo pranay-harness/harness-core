@@ -12,12 +12,17 @@ import io.harness.category.element.UnitTests;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDetailsDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorDetailsDTO;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,6 +39,10 @@ public class GitSyncErrorMapperTest extends GitSyncTestBase {
   private GitSyncErrorDetails gitSyncErrorDetails;
   private GitSyncError gitSyncError;
   private GitSyncErrorDTO gitSyncErrorDTO;
+  private GitSyncErrorDetailsDTO gitSyncErrorDetailsDTO;
+  private GitSyncErrorAggregateByCommit gitSyncErrorAggregateByCommit;
+  private GitSyncErrorAggregateByCommitDTO gitSyncErrorAggregateByCommitDTO;
+  private String commitId;
 
   @Before
   public void setup() {
@@ -44,8 +53,14 @@ public class GitSyncErrorMapperTest extends GitSyncTestBase {
     status = GitSyncErrorStatus.ACTIVE;
     failureReason = "Invalid yaml";
     entityType = EntityType.CONNECTORS;
+    commitId = "commitId";
     gitSyncErrorDetails =
         GitToHarnessErrorDetails.builder().gitCommitId("commitId").commitMessage("Message").yamlContent(null).build();
+    gitSyncErrorDetailsDTO = GitToHarnessErrorDetailsDTO.builder()
+                                 .gitCommitId("commitId")
+                                 .commitMessage("Message")
+                                 .yamlContent(null)
+                                 .build();
 
     gitSyncError = GitSyncError.builder()
                        .accountIdentifier(accountIdentifier)
@@ -66,8 +81,24 @@ public class GitSyncErrorMapperTest extends GitSyncTestBase {
                           .status(status)
                           .failureReason(failureReason)
                           .entityType(entityType)
-                          .additionalErrorDetails(gitSyncErrorDetails)
+                          .additionalErrorDetails(gitSyncErrorDetailsDTO)
                           .build();
+
+    gitSyncErrorAggregateByCommit = GitSyncErrorAggregateByCommit.builder()
+                                        .gitCommitId(commitId)
+                                        .failedCount(1)
+                                        .branchName(branchName)
+                                        .repoId(repoUrl)
+                                        .errorsForSummaryView(ImmutableList.of(gitSyncError))
+                                        .build();
+
+    gitSyncErrorAggregateByCommitDTO = GitSyncErrorAggregateByCommitDTO.builder()
+                                           .gitCommitId(commitId)
+                                           .failedCount(1)
+                                           .branchName(branchName)
+                                           .repoId(repoUrl)
+                                           .errorsForSummaryView(ImmutableList.of(gitSyncErrorDTO))
+                                           .build();
   }
 
   @Test
@@ -84,5 +115,14 @@ public class GitSyncErrorMapperTest extends GitSyncTestBase {
   public void toGitSyncErrorTest() {
     GitSyncError error = GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, accountIdentifier);
     assertThat(error).isEqualTo(gitSyncError);
+  }
+
+  @Test
+  @Owner(developers = BHAVYA)
+  @Category(UnitTests.class)
+  public void toGitSyncErrorAggregateByCommitDTOTest() {
+    GitSyncErrorAggregateByCommitDTO dto =
+        GitSyncErrorMapper.toGitSyncErrorAggregateByCommitDTO(gitSyncErrorAggregateByCommit);
+    assertThat(dto).isEqualTo(gitSyncErrorAggregateByCommitDTO);
   }
 }

@@ -14,7 +14,9 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.UuidAccess;
+import io.harness.plan.NodeType;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -50,7 +52,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"plan"})
 @TypeAlias("planExecution")
 @StoreIn(DbAliases.PMS)
-public class PlanExecution implements PersistentRegularIterable, UuidAccess {
+public class PlanExecution implements PersistentRegularIterable, UuidAccess, PmsNodeExecution {
   public static final String EXEC_TAG_SET_BY_TRIGGER = "execution_trigger_tag_needed_for_abort";
   public static final long TTL_MONTHS = 6;
 
@@ -65,6 +67,7 @@ public class PlanExecution implements PersistentRegularIterable, UuidAccess {
   Long endTs;
 
   ExecutionMetadata metadata;
+  GovernanceMetadata governanceMetadata;
 
   @Wither @LastModifiedDate Long lastUpdatedAt;
   @Wither @Version Long version;
@@ -79,6 +82,16 @@ public class PlanExecution implements PersistentRegularIterable, UuidAccess {
   @Override
   public Long obtainNextIteration(String fieldName) {
     return nextIteration;
+  }
+
+  @Override
+  public String getNodeId() {
+    return planId;
+  }
+
+  @Override
+  public NodeType getNodeType() {
+    return NodeType.PLAN;
   }
 
   @UtilityClass

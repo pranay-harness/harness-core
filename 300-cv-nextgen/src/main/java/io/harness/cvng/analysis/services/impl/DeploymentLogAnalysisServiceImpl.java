@@ -149,7 +149,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
           accountId, verificationJobInstanceId, null, DeploymentLogAnalysisFilter.builder().build());
       int anomClusters = 0, totalClusters = 0;
       for (LogAnalysisClusterDTO logAnalysisClusterDTO : logAnalysisClusters) {
-        if (logAnalysisClusterDTO.getRisk().isGreaterThan(Risk.LOW)) {
+        if (logAnalysisClusterDTO.getRisk().isGreaterThan(Risk.HEALTHY)) {
           anomClusters++;
         }
         totalClusters++;

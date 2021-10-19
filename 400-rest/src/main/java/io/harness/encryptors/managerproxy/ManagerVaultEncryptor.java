@@ -10,6 +10,7 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.TaskType.DELETE_SECRET;
 import static software.wings.beans.TaskType.UPSERT_SECRET;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -40,6 +41,8 @@ import javax.validation.executable.ValidateOnExecution;
 @OwnedBy(PL)
 @Singleton
 @TargetModule(HarnessModule._890_SM_CORE)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
+@BreakDependencyOn("io.harness.beans.DelegateTask")
 public class ManagerVaultEncryptor implements VaultEncryptor {
   private final DelegateService delegateService;
   private final ManagerEncryptorHelper managerEncryptorHelper;

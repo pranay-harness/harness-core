@@ -109,7 +109,6 @@ import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
-import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
@@ -118,9 +117,11 @@ import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraExecutionData.JiraIssueData;
+import software.wings.api.k8s.K8sApplicationManifestSourceInfo;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
+import software.wings.api.k8s.K8sGitConfigMapInfo;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.k8s.K8sSwapServiceElement;
@@ -203,7 +204,6 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
@@ -422,7 +422,6 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
-import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
@@ -438,7 +437,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
-import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -608,7 +606,6 @@ import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
 import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType;
-import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.AwsRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
@@ -740,6 +737,7 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecuti
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
+import software.wings.sm.states.k8s.K8sResourcesSweepingOutput;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
@@ -772,15 +770,16 @@ import com.google.api.services.logging.v2.model.LogEntryOperation;
 import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
+import com.google.gson.internal.LinkedTreeMap;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
 import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
-@Deprecated
 @OwnedBy(PL)
 @TargetModule(_360_CG_MANAGER)
+@Deprecated
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -810,7 +809,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerRollbackRequestElement.class, 4010);
     kryo.register(ContainerServiceElement.class, 5095);
     kryo.register(DeploymentType.class, 5096);
-    kryo.register(EcsBGSetupData.class, 5611);
     kryo.register(EcsSetupElement.class, 5671);
     kryo.register(EcsListenerUpdateExecutionSummary.class, 5612);
     kryo.register(EcsListenerUpdateStateExecutionData.class, 5614);
@@ -980,7 +978,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraConfig.JiraSetupType.class, 5569);
     kryo.register(JiraConfig.class, 5581);
     kryo.register(KubernetesClusterConfig.class, 5244);
-    kryo.register(LambdaTestEvent.class, 5604);
     kryo.register(NameValuePair.class, 5226);
     kryo.register(NewRelicConfig.class, 5175);
     kryo.register(PcfConfig.class, 5296);
@@ -1074,7 +1071,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmInstallCommandRequest.class, 5259);
     kryo.register(HelmReleaseHistoryCommandRequest.class, 5265);
     kryo.register(HelmRollbackCommandRequest.class, 5268);
-    kryo.register(HelmInstallCommandResponse.class, 5263);
     kryo.register(HelmReleaseHistoryCommandResponse.class, 5266);
     kryo.register(BuildDetails.class, 5120);
     kryo.register(LdapResponse.Status.class, 5505);
@@ -1189,7 +1185,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaFunctionResult.class, 5452);
     kryo.register(AwsLambdaRequestType.class, 5447);
     kryo.register(AwsLambdaRequest.class, 5446);
-    kryo.register(AwsLambdaVpcConfig.class, 5450);
     kryo.register(AwsRequest.class, 5380);
     kryo.register(AwsResponse.class, 5381);
     kryo.register(BugsnagApplication.class, 5491);
@@ -1304,7 +1299,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sElement.class, 7144);
     kryo.register(K8sInstanceSyncTaskParameters.class, 7147);
     kryo.register(EcsServiceDeployRequest.class, 7148);
-    kryo.register(EcsServiceDeployResponse.class, 7149);
     kryo.register(EcsRunTaskDeployRequest.class, 7501);
     kryo.register(EcsRunTaskDeployResponse.class, 7502);
     kryo.register(ShellScriptProvisionParameters.class, 7151);
@@ -1637,6 +1631,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackStatus.class, 40113);
     kryo.register(EventsDeliveryCallback.class, 40014);
     kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
+    kryo.register(K8sResourcesSweepingOutput.class, 40019);
     kryo.register(ProviderType.class, 40022);
+    kryo.register(K8sGitConfigMapInfo.class, 40023);
+    kryo.register(K8sApplicationManifestSourceInfo.class, 40024);
+    kryo.register(LinkedTreeMap.class, 40025);
   }
 }

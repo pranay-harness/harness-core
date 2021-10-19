@@ -80,6 +80,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.FindOptions;
@@ -539,7 +540,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       case SUCCESS:
         Optional<Risk> risk = getLatestRisk(verificationJobInstance);
         if (risk.isPresent()) {
-          if (risk.get().isLessThanEq(Risk.MEDIUM)) {
+          if (risk.get().isLessThanEq(Risk.OBSERVE)) {
             return ActivityVerificationStatus.VERIFICATION_PASSED;
           } else {
             return ActivityVerificationStatus.VERIFICATION_FAILED;
@@ -584,6 +585,13 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             .mapToLong(verificationJobInstance -> verificationJobInstance.getRemainingTime(clock.instant()).toMillis())
             .max()
             .getAsLong();
+    Map<String, ActivityVerificationStatus> verficationStatusMap =
+        verificationJobInstances.stream()
+            .filter(verificationJobInstance -> StringUtils.isNotEmpty(verificationJobInstance.getName()))
+            .filter(verificationJobInstance -> verificationJobInstance.getVerificationStatus() != null)
+            .sorted(Comparator.comparing(vji -> vji.getStartTime()))
+            .collect(Collectors.toMap(
+                vji -> vji.getName(), vji -> vji.getVerificationStatus(), (status1, status2) -> status2));
 
     int total = verificationJobInstances.size();
     int progress = 0;
@@ -608,7 +616,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
           if (risk.isPresent()) {
             latestRiskScores.add(risk.get());
-            if (risk.get().isLessThanEq(Risk.MEDIUM)) {
+            if (risk.get().isLessThanEq(Risk.OBSERVE)) {
               passed++;
             } else {
               failed++;
@@ -642,6 +650,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .passed(passed)
         .progress(progress)
         .notStarted(notStarted)
+        .verficationStatusMap(verficationStatusMap)
         .build();
   }
 

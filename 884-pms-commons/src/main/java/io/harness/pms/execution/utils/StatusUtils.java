@@ -142,7 +142,7 @@ public class StatusUtils {
       case APPROVAL_REJECTED:
         return FINALIZABLE_STATUSES;
       case SUCCEEDED:
-        return EnumSet.of(INTERVENTION_WAITING, RUNNING);
+        return EnumSet.of(INTERVENTION_WAITING, RUNNING, QUEUED);
       case IGNORE_FAILED:
         return EnumSet.of(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING);
       default:
@@ -164,6 +164,9 @@ public class StatusUtils {
   }
 
   public boolean isFinalStatus(Status status) {
+    if (status == null) {
+      return false;
+    }
     return FINAL_STATUSES.contains(status);
   }
 

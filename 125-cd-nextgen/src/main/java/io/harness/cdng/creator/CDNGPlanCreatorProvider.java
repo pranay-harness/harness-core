@@ -12,8 +12,8 @@ import io.harness.cdng.creator.plan.steps.K8sRollingDeployPMSStepPlanCreator;
 import io.harness.cdng.creator.plan.steps.K8sRollingRollbackPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
-import io.harness.cdng.creator.variables.ShellScriptStepVariableCreator;
 import io.harness.cdng.provision.terraform.variablecreator.TerraformStepsVariableCreator;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
@@ -68,7 +68,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new K8sStepVariableCreator());
     variableCreators.add(new TerraformStepsVariableCreator());
-    variableCreators.add(new ShellScriptStepVariableCreator());
     return variableCreators;
   }
 
@@ -78,91 +77,104 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
         StepInfo.newBuilder()
             .setName("Rolling Deployment")
             .setType(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_ROLLING_DEPLOY.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
     StepInfo canaryDeploy =
         StepInfo.newBuilder()
             .setName("Canary Deployment")
             .setType(StepSpecTypeConstants.K8S_CANARY_DEPLOY)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_CANARY_DEPLOY.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
     StepInfo canaryDelete =
         StepInfo.newBuilder()
             .setName("Canary Delete")
             .setType(StepSpecTypeConstants.K8S_CANARY_DELETE)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_CANARY_DELETE.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
     StepInfo delete =
         StepInfo.newBuilder()
             .setName("Delete")
             .setType(StepSpecTypeConstants.K8S_DELETE)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_DELETE.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
     StepInfo stageDeployment =
         StepInfo.newBuilder()
             .setName("Stage Deployment")
             .setType(StepSpecTypeConstants.K8S_BLUE_GREEN_DEPLOY)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_BLUE_GREEN_DEPLOY.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
     StepInfo bgSwapServices =
         StepInfo.newBuilder()
             .setName("BG Swap Services")
             .setType(StepSpecTypeConstants.K8S_BG_SWAP_SERVICES)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_BG_SWAP_SERVICES.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
     StepInfo apply =
         StepInfo.newBuilder()
             .setName("Apply")
             .setType(StepSpecTypeConstants.K8S_APPLY)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_APPLY.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
     StepInfo scale =
         StepInfo.newBuilder()
             .setName("Scale")
             .setType(StepSpecTypeConstants.K8S_SCALE)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_SCALE.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
     StepInfo k8sRollingRollback =
         StepInfo.newBuilder()
             .setName("Rolling Rollback")
             .setType(StepSpecTypeConstants.K8S_ROLLING_ROLLBACK)
-            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .setFeatureRestrictionName(FeatureRestrictionName.K8S_ROLLING_ROLLBACK.name())
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").addFolderPaths("Kubernetes").build())
             .build();
 
     StepInfo terraformApply = StepInfo.newBuilder()
                                   .setName("Terraform Apply")
                                   .setType(StepSpecTypeConstants.TERRAFORM_APPLY)
+                                  .setFeatureRestrictionName(FeatureRestrictionName.TERRAFORM_APPLY.name())
                                   .setStepMetaData(StepMetaData.newBuilder()
                                                        .addAllCategory(TERRAFORM_CATEGORY)
-                                                       .setFolderPath(TERRAFORM_STEP_METADATA)
+                                                       .addFolderPaths(TERRAFORM_STEP_METADATA)
                                                        .build())
                                   .build();
     StepInfo terraformPlan = StepInfo.newBuilder()
                                  .setName("Terraform Plan")
                                  .setType(StepSpecTypeConstants.TERRAFORM_PLAN)
+                                 .setFeatureRestrictionName(FeatureRestrictionName.TERRAFORM_PLAN.name())
                                  .setStepMetaData(StepMetaData.newBuilder()
                                                       .addAllCategory(TERRAFORM_CATEGORY)
-                                                      .setFolderPath(TERRAFORM_STEP_METADATA)
+                                                      .addFolderPaths(TERRAFORM_STEP_METADATA)
                                                       .build())
                                  .build();
     StepInfo terraformDestroy = StepInfo.newBuilder()
                                     .setName("Terraform Destroy")
                                     .setType(StepSpecTypeConstants.TERRAFORM_DESTROY)
+                                    .setFeatureRestrictionName(FeatureRestrictionName.TERRAFORM_DESTROY.name())
                                     .setStepMetaData(StepMetaData.newBuilder()
                                                          .addAllCategory(TERRAFORM_CATEGORY)
-                                                         .setFolderPath(TERRAFORM_STEP_METADATA)
+                                                         .addFolderPaths(TERRAFORM_STEP_METADATA)
                                                          .build())
                                     .build();
     StepInfo terraformRollback = StepInfo.newBuilder()
                                      .setName("Terraform Rollback")
                                      .setType(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
+                                     .setFeatureRestrictionName(FeatureRestrictionName.TERRAFORM_ROLLBACK.name())
                                      .setStepMetaData(StepMetaData.newBuilder()
                                                           .addAllCategory(TERRAFORM_CATEGORY)
-                                                          .setFolderPath(TERRAFORM_STEP_METADATA)
+                                                          .addFolderPaths(TERRAFORM_STEP_METADATA)
                                                           .build())
                                      .build();
 

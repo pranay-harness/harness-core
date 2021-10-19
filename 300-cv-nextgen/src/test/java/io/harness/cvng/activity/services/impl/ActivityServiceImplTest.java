@@ -39,7 +39,6 @@ import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
-import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
@@ -59,15 +58,11 @@ import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.activity.InfrastructureActivityDTO;
-import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
-import io.harness.cvng.beans.activity.cd10.CD10EnvMappingDTO;
-import io.harness.cvng.beans.activity.cd10.CD10ServiceMappingDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
@@ -111,7 +106,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceService realVerificationJobInstanceService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
-  @Inject private CVConfigService cvConfigService;
   @Mock private VerificationJobService verificationJobService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private HealthVerificationHeatMapService healthVerificationHeatMapService;
@@ -1073,44 +1067,13 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     return ActivityVerificationSummary.builder()
         .total(1)
         .startTime(startTime.toEpochMilli())
-        .risk(Risk.MEDIUM)
+        .risk(Risk.OBSERVE)
         .progress(1)
         .notStarted(0)
         .durationMs(Duration.ofMinutes(15).toMillis())
         .remainingTimeMs(1200000)
         .progressPercentage(25)
         .build();
-  }
-
-  private CD10ActivitySourceDTO createCD10ActivitySource(String appId, String envId, String serviceId) {
-    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
-    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
-    cd10EnvMappingDTOS.add(createEnvMapping(appId, envId, generateUuid()));
-    cd10ServiceMappingDTOS.add(createServiceMapping(appId, serviceId, generateUuid()));
-    return CD10ActivitySourceDTO.builder()
-        .identifier(CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER)
-        .name("some-name")
-        .envMappings(cd10EnvMappingDTOS)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .serviceMappings(cd10ServiceMappingDTOS)
-        .build();
-  }
-  private CD10EnvMappingDTO createEnvMapping(String appId, String envId, String envIdentifier) {
-    return CD10EnvMappingDTO.builder().appId(appId).envId(envId).envIdentifier(envIdentifier).build();
-  }
-
-  private CD10ServiceMappingDTO createServiceMapping(String appId, String serviceId, String serviceIdentifier) {
-    return CD10ServiceMappingDTO.builder()
-        .appId(appId)
-        .serviceId(serviceId)
-        .serviceIdentifier(serviceIdentifier)
-        .build();
-  }
-
-  private CVConfig createCVConfig() {
-    CVConfig cvConfig = builderFactory.appDynamicsCVConfigBuilder().build();
-    return cvConfigService.save(cvConfig);
   }
 
   private VerificationJobInstance createVerificationJobInstance() {
@@ -1177,7 +1140,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     return DeploymentTimeSeriesAnalysis.builder()
         .accountId(accountId)
         .score(.7)
-        .risk(Risk.MEDIUM)
+        .risk(Risk.OBSERVE)
         .verificationTaskId(verificationTaskId)
         .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
         .hostSummaries(Arrays.asList(hostInfo1, hostInfo2, hostInfo3))

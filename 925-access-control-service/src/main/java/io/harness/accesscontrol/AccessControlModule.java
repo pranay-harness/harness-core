@@ -67,9 +67,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.ff.FeatureFlagClientModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
@@ -103,10 +105,12 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.redisson.api.RedissonClient;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @OwnedBy(PL)
@@ -146,25 +150,40 @@ public class AccessControlModule extends AbstractModule {
   }
 
   @Provides
+  @Named("eventsFrameworkRedissonClient")
+  @Singleton
+  public RedissonClient getRedissonClient() {
+    RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
+    if (config.getEventsConfig().isEnabled()) {
+      return RedisUtils.getClient(redisConfig);
+    }
+    return null;
+  }
+
+  @Provides
   @Named(ENTITY_CRUD)
-  public Consumer getEntityCrudConsumer() {
+  @Singleton
+  public Consumer getEntityCrudConsumer(
+      @Nullable @Named("eventsFrameworkRedissonClient") RedissonClient redissonClient) {
     RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
     if (!config.getEventsConfig().isEnabled()) {
       return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
     }
-    return RedisConsumer.of(ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig,
-        ENTITY_CRUD_MAX_PROCESSING_TIME, ENTITY_CRUD_READ_BATCH_SIZE);
+    return RedisConsumer.of(ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), redissonClient,
+        ENTITY_CRUD_MAX_PROCESSING_TIME, ENTITY_CRUD_READ_BATCH_SIZE, redisConfig.getEnvNamespace());
   }
 
   @Provides
   @Named(USERMEMBERSHIP)
-  public Consumer getUserMembershipConsumer() {
+  @Singleton
+  public Consumer getUserMembershipConsumer(
+      @Nullable @Named("eventsFrameworkRedissonClient") RedissonClient redissonClient) {
     RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
     if (!config.getEventsConfig().isEnabled()) {
       return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
     }
-    return RedisConsumer.of(
-        USERMEMBERSHIP, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig, Duration.ofMinutes(10), 3);
+    return RedisConsumer.of(USERMEMBERSHIP, ACCESS_CONTROL_SERVICE.getServiceId(), redissonClient,
+        Duration.ofMinutes(10), 3, redisConfig.getEnvNamespace());
   }
 
   @Provides
@@ -225,6 +244,11 @@ public class AccessControlModule extends AbstractModule {
         FeatureFlagClientModule.getInstance(config.getFeatureFlagClientConfiguration().getFeatureFlagServiceConfig(),
             config.getFeatureFlagClientConfiguration().getFeatureFlagServiceSecret(),
             ACCESS_CONTROL_SERVICE.getServiceId()));
+
+    install(
+        EnforcementClientModule.getInstance(config.getOrganizationClientConfiguration().getOrganizationServiceConfig(),
+            config.getOrganizationClientConfiguration().getOrganizationServiceSecret(),
+            ACCESS_CONTROL_SERVICE.getServiceId(), config.getEnforcementClientConfiguration()));
 
     install(new TransactionOutboxModule(config.getOutboxPollConfig(), ACCESS_CONTROL_SERVICE.getServiceId(),
         config.getAggregatorConfiguration().isExportMetricsToStackDriver()));

@@ -7,7 +7,7 @@ import time
 from google.cloud import bigquery
 from google.cloud import storage
 
-from util import create_dataset, if_tbl_exists, createTable, print_
+from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, CEINTERNALDATASET
 
 """
 Step1) Ingest data from avro to Bigquery's clusterData table.
@@ -106,6 +106,7 @@ def main(jsonData, context):
     ingest_data_from_avro(jsonData)
     ingest_data_in_unified(jsonData)
     ingest_aggregated_data(jsonData)
+    ingest_data_to_costagg(jsonData)
     print_("Completed")
 
 
@@ -116,8 +117,10 @@ def create_dataset_and_tables(jsonData):
     cluster_data_table_ref = dataset.table(jsonData["tableName"])
     cluster_data_aggregated_table_ref = dataset.table(jsonData["tableNameAggregated"])
     unified_table_ref = dataset.table("unifiedTable")
+    cost_aggregated_table_ref = client.dataset(CEINTERNALDATASET).table(COSTAGGREGATED)
 
-    for table_ref in [cluster_data_table_ref, unified_table_ref, cluster_data_aggregated_table_ref]:
+    for table_ref in [cluster_data_table_ref, unified_table_ref, cluster_data_aggregated_table_ref,
+                      cost_aggregated_table_ref]:
         if not if_tbl_exists(client, table_ref):
             print_("%s table does not exists, creating table..." % table_ref)
             createTable(client, table_ref)
@@ -125,7 +128,7 @@ def create_dataset_and_tables(jsonData):
             print_("%s table exists" % table_ref)
             if table_ref == cluster_data_aggregated_table_ref:
                 alterTableAggregated(jsonData)
-            elif table_ref ==  cluster_data_table_ref:
+            elif table_ref == cluster_data_table_ref:
                 alterTable(jsonData)
 
 
@@ -208,26 +211,7 @@ def delete_existing_data(jsonData):
             )
         ]
     )
-    query_job = client.query(query, job_config=job_config)
-    try:
-        # Experimental
-        print_(query_job.job_id)
-        count = 0
-        while True:
-            query_job = client.get_job(
-                query_job.job_id, location=query_job.location
-            )
-            print_("Job {} is currently in state {}".format(query_job.job_id, query_job.state))
-            if query_job.state in ["DONE", "SUCCESS"] or count >= 24: # 4 minutes
-                break
-            else:
-                time.sleep(10)
-                count += 1
-        if query_job.state not in ["DONE", "SUCCESS"]:
-            raise Exception("Timeout waiting for job in pending state")
-    except Exception as e:
-        print_(query)
-        raise e
+    run_batch_query(client, query, job_config, timeout=240)
     print_("Deleted data from %s..." % jsonData["tableId"])
 
 
@@ -409,6 +393,33 @@ def alterTable(jsonData):
         print_(e)
     else:
         print_("Finished altering %s table" % jsonData["tableId"])
+
+
+def ingest_data_to_costagg(jsonData):
+    if jsonData["isHourly"]:
+        return
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    table_name = "%s.%s.%s" % (PROJECTID, CEINTERNALDATASET, COSTAGGREGATED)
+    source_table = "%s.%s" % (ds, UNIFIED)
+    print_("Loading into %s table..." % table_name)
+    query = """DELETE FROM `%s` WHERE DATE(day) = DATE(%s, %s, %s)  
+                AND cloudProvider like "K8S_%%" AND accountId = '%s';
+               INSERT INTO `%s` (day, cost, cloudProvider, accountId)
+                SELECT TIMESTAMP_TRUNC(startTime, DAY) AS day, SUM(cost) AS cost, CONCAT(clusterType, '_', clusterCloudProvider) AS cloudProvider, '%s' as accountId
+                FROM `%s`  
+                WHERE DATE(startTime) = DATE(%s, %s, %s)  and cloudProvider = "CLUSTER" AND clusterType = "K8S"
+                GROUP BY day, cloudProvider;
+     """ % (table_name, jsonData["fileYear"], jsonData["fileMonth"], jsonData["fileDay"], jsonData.get("accountId"),
+            table_name,
+            jsonData.get("accountId"),
+            source_table,
+            jsonData["fileYear"], jsonData["fileMonth"], jsonData["fileDay"])
+
+    job_config = bigquery.QueryJobConfig(
+        priority=bigquery.QueryPriority.BATCH
+    )
+    run_batch_query(client, query, job_config, timeout=120)
+
 
 MONTHMAP = {
     "JANUARY": 1,

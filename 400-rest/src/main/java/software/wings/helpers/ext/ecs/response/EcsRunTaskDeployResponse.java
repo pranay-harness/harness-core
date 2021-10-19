@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.ecs.response;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -12,6 +15,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class EcsRunTaskDeployResponse extends EcsCommandResponse {
   private List<String> previousRegisteredRunTaskDefinitions;
   private List<String> previousRunTaskArns;

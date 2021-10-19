@@ -96,13 +96,13 @@ public class ModuleLicenseInterfaceImplTest extends CategoryTest {
                                        .numberOfCommitters(Integer.valueOf(UNLIMITED))
                                        .accountIdentifier(ACCOUNT_IDENTIFIER)
                                        .moduleType(ModuleType.CI)
-                                       .edition(Edition.FREE)
                                        .status(LicenseStatus.ACTIVE)
+                                       .edition(Edition.FREE)
                                        .startTime(0)
-                                       .expiryTime(Long.valueOf(UNLIMITED))
+                                       .expiryTime(Long.MAX_VALUE)
                                        .build();
-    CIModuleLicenseDTO dto = (CIModuleLicenseDTO) moduleLicenseInterface.generateTrialLicense(
-        Edition.FREE, ACCOUNT_IDENTIFIER, ModuleType.CI);
+    CIModuleLicenseDTO dto =
+        (CIModuleLicenseDTO) moduleLicenseInterface.generateFreeLicense(ACCOUNT_IDENTIFIER, ModuleType.CI);
     dto.setStartTime(0L);
     assertThat(dto).isEqualTo(expectedDTO);
   }
@@ -161,15 +161,15 @@ public class ModuleLicenseInterfaceImplTest extends CategoryTest {
     ModuleLicenseDTO expectedDTO = CFModuleLicenseDTO.builder()
                                        .numberOfUsers(2)
                                        .numberOfClientMAUs(25000L)
-                                       .accountIdentifier(ACCOUNT_IDENTIFIER)
                                        .moduleType(ModuleType.CF)
                                        .edition(Edition.FREE)
+                                       .accountIdentifier(ACCOUNT_IDENTIFIER)
                                        .status(LicenseStatus.ACTIVE)
                                        .startTime(0)
-                                       .expiryTime(Long.valueOf(UNLIMITED))
+                                       .expiryTime(Long.MAX_VALUE)
                                        .build();
-    CFModuleLicenseDTO dto = (CFModuleLicenseDTO) moduleLicenseInterface.generateTrialLicense(
-        Edition.FREE, ACCOUNT_IDENTIFIER, ModuleType.CF);
+    CFModuleLicenseDTO dto =
+        (CFModuleLicenseDTO) moduleLicenseInterface.generateFreeLicense(ACCOUNT_IDENTIFIER, ModuleType.CF);
     dto.setStartTime(0L);
     assertThat(dto).isEqualTo(expectedDTO);
   }
@@ -230,10 +230,10 @@ public class ModuleLicenseInterfaceImplTest extends CategoryTest {
                                        .edition(Edition.FREE)
                                        .status(LicenseStatus.ACTIVE)
                                        .startTime(0)
-                                       .expiryTime(Long.valueOf(UNLIMITED))
+                                       .expiryTime(Long.MAX_VALUE)
                                        .build();
-    CEModuleLicenseDTO dto = (CEModuleLicenseDTO) moduleLicenseInterface.generateTrialLicense(
-        Edition.FREE, ACCOUNT_IDENTIFIER, ModuleType.CE);
+    CEModuleLicenseDTO dto =
+        (CEModuleLicenseDTO) moduleLicenseInterface.generateFreeLicense(ACCOUNT_IDENTIFIER, ModuleType.CE);
     dto.setStartTime(0L);
     assertThat(dto).isEqualTo(expectedDTO);
   }
@@ -297,10 +297,31 @@ public class ModuleLicenseInterfaceImplTest extends CategoryTest {
                                        .edition(Edition.FREE)
                                        .status(LicenseStatus.ACTIVE)
                                        .startTime(0)
-                                       .expiryTime(Long.valueOf(UNLIMITED))
+                                       .expiryTime(Long.MAX_VALUE)
                                        .build();
-    CDModuleLicenseDTO dto = (CDModuleLicenseDTO) moduleLicenseInterface.generateTrialLicense(
-        Edition.FREE, ACCOUNT_IDENTIFIER, ModuleType.CD);
+    CDModuleLicenseDTO dto =
+        (CDModuleLicenseDTO) moduleLicenseInterface.generateFreeLicense(ACCOUNT_IDENTIFIER, ModuleType.CD);
+    dto.setStartTime(0L);
+    assertThat(dto).isEqualTo(expectedDTO);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.NATHAN)
+  @Category(UnitTests.class)
+  public void testStartCommunityLicenseOnCD() {
+    when(clientMap.get(ModuleType.CD)).thenReturn(new CDLocalClient());
+    ModuleLicenseDTO expectedDTO = CDModuleLicenseDTO.builder()
+                                       .cdLicenseType(CDLicenseType.SERVICES)
+                                       .workloads(Integer.valueOf(UNLIMITED))
+                                       .accountIdentifier(ACCOUNT_IDENTIFIER)
+                                       .moduleType(ModuleType.CD)
+                                       .edition(Edition.COMMUNITY)
+                                       .status(LicenseStatus.ACTIVE)
+                                       .startTime(0)
+                                       .expiryTime(Long.MAX_VALUE)
+                                       .build();
+    CDModuleLicenseDTO dto =
+        (CDModuleLicenseDTO) moduleLicenseInterface.generateCommunityLicense(ACCOUNT_IDENTIFIER, ModuleType.CD);
     dto.setStartTime(0L);
     assertThat(dto).isEqualTo(expectedDTO);
   }

@@ -8,6 +8,7 @@ import static junit.framework.TestCase.assertTrue;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.rule.Owner;
@@ -27,49 +28,54 @@ public class CommonStepInfoTest extends CategoryTest {
       StepInfo.newBuilder()
           .setName("Shell Script")
           .setType("ShellScript")
-          .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Utilities/Scripted").build())
+          .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Utilities/Scripted").build())
           .build();
   StepInfo httpStepInfo =
       StepInfo.newBuilder()
           .setName("Http")
           .setType("Http")
-          .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Utilities/Non-Scripted").build())
+          .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Utilities/Non-Scripted").build())
           .build();
-  StepInfo harnessApprovalStepInfo = StepInfo.newBuilder()
-                                         .setName("Harness Approval")
-                                         .setType("HarnessApproval")
-                                         .setStepMetaData(StepMetaData.newBuilder()
-                                                              .addCategory("Provisioner")
-                                                              .addCategory("Approval")
-                                                              .setFolderPath("Approval")
-                                                              .build())
-                                         .build();
-  StepInfo jiraApprovalStepInfo = StepInfo.newBuilder()
-                                      .setName("Jira Approval")
-                                      .setType("JiraApproval")
-                                      .setStepMetaData(StepMetaData.newBuilder()
-                                                           .addCategory("Provisioner")
-                                                           .addCategory("Approval")
-                                                           .setFolderPath("Approval")
-                                                           .build())
-                                      .build();
+  StepInfo harnessApprovalStepInfo =
+      StepInfo.newBuilder()
+          .setName("Harness Approval")
+          .setType("HarnessApproval")
+          .setStepMetaData(StepMetaData.newBuilder()
+                               .addCategory("Provisioner")
+                               .addCategory("Approval")
+                               .addFolderPaths("Approval")
+                               .build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_HARNESS_UI.name())
+
+          .build();
+  StepInfo jiraApprovalStepInfo =
+      StepInfo.newBuilder()
+          .setName("Jira Approval")
+          .setType("JiraApproval")
+          .setStepMetaData(StepMetaData.newBuilder()
+                               .addCategory("Provisioner")
+                               .addCategory("Approval")
+                               .addFolderPaths("Approval")
+                               .build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
+          .build();
   StepInfo jiraCreateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Create")
           .setType(StepSpecTypeConstants.JIRA_CREATE)
-          .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
+          .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").addFolderPaths("Jira").build())
           .build();
   StepInfo jiraUpdateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Update")
           .setType(StepSpecTypeConstants.JIRA_UPDATE)
-          .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
+          .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").addFolderPaths("Jira").build())
           .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
           .setName("Barrier")
           .setType("Barrier")
-          .setStepMetaData(StepMetaData.newBuilder().setFolderPath("FlowControl/Barrier").build())
+          .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("FlowControl/Barrier").build())
           .build();
 
   @Before

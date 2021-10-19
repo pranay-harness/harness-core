@@ -49,7 +49,7 @@ public class CVNGPipelineServiceInfoProvider implements PipelineServiceInfoProvi
                                 .setType(CVNGStepType.CVNG_VERIFY.getDisplayName())
                                 .setStepMetaData(StepMetaData.newBuilder()
                                                      .addCategory(CVNGStepType.CVNG_VERIFY.getFolderPath())
-                                                     .setFolderPath(CVNGStepType.CVNG_VERIFY.getFolderPath())
+                                                     .addFolderPaths(CVNGStepType.CVNG_VERIFY.getFolderPath())
                                                      .build())
                                 .build();
     stepInfos.add(verification);
