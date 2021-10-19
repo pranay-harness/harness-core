@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class K8sClusterSetupRequest {
-  List<CEFeatures> featuresEnabled;
+  @Deprecated List<CEFeatures> featuresEnabled;
 
   // used by VISIBILITY feature
   String connectorIdentifier;

@@ -10,13 +10,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.commons.beans.config.CEFeatures;
 import io.harness.ccm.remote.beans.K8sClusterSetupRequest;
 import io.harness.delegate.beans.connector.k8Connector.K8sServiceAccountInfoResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
-import com.google.common.collect.ImmutableList;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -62,14 +60,12 @@ public class CEYamlServiceImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
   public void testUnifiedCloudCostK8sClusterYaml_Visibility_Optimization() throws Exception {
-    final K8sClusterSetupRequest request =
-        K8sClusterSetupRequest.builder()
-            .connectorIdentifier(CONNECTOR_IDENTIFIER)
-            .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION))
-            .orgIdentifier(ORG_IDENTIFIER)
-            .projectIdentifier(PROJECT_IDENTIFIER)
-            .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
-            .build();
+    final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
+                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
+                                               .orgIdentifier(ORG_IDENTIFIER)
+                                               .projectIdentifier(PROJECT_IDENTIFIER)
+                                               .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
+                                               .build();
 
     final String yamlContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
         ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request, true, true);
@@ -86,14 +82,12 @@ public class CEYamlServiceImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
   public void testUnifiedCloudCostK8sClusterYamlFileStructure() throws Exception {
-    final K8sClusterSetupRequest request =
-        K8sClusterSetupRequest.builder()
-            .connectorIdentifier(CONNECTOR_IDENTIFIER)
-            .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION))
-            .orgIdentifier(ORG_IDENTIFIER)
-            .projectIdentifier(PROJECT_IDENTIFIER)
-            .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
-            .build();
+    final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
+                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
+                                               .orgIdentifier(ORG_IDENTIFIER)
+                                               .projectIdentifier(PROJECT_IDENTIFIER)
+                                               .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
+                                               .build();
 
     final String actualYamlContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
         ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request, true, true);
@@ -113,7 +107,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
   public void testUnifiedCloudCostK8sClusterYaml_Visibility() throws Exception {
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
                                                .connectorIdentifier(CONNECTOR_IDENTIFIER)
-                                               .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY))
                                                .orgIdentifier(ORG_IDENTIFIER)
                                                .projectIdentifier(PROJECT_IDENTIFIER)
                                                .build();
@@ -139,7 +132,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUnifiedCloudCostK8sClusterYaml_Optimization() throws Exception {
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
-                                               .featuresEnabled(ImmutableList.of(CEFeatures.OPTIMIZATION))
                                                .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
                                                .orgIdentifier(ORG_IDENTIFIER)
                                                .projectIdentifier(PROJECT_IDENTIFIER)
@@ -166,7 +158,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
   public void testUnifiedCloudCostK8sClusterYaml_Visibility_DelegateTaskError() throws Exception {
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
                                                .connectorIdentifier(CONNECTOR_IDENTIFIER)
-                                               .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY))
                                                .orgIdentifier(ORG_IDENTIFIER)
                                                .projectIdentifier(PROJECT_IDENTIFIER)
                                                .build();
