@@ -31,7 +31,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class CEYamlServiceImplTest extends CategoryTest {
-  private static final String CONNECTOR_IDENTIFIER = "VALUE_REPLACED_BY_UNIT_TEST_cId";
+  private static final String CONNECTOR_IDENTIFIER = "cId";
   private static final String CCM_CONNECTOR_IDENTIFIER = "VALUE_REPLACED_BY_UNIT_TEST_ccmId";
   private static final String ACCOUNT_IDENTIFIER = "VALUE_REPLACED_BY_UNIT_TEST_aId";
   private static final String ORG_IDENTIFIER = "VALUE_REPLACED_BY_UNIT_TEST_oId";
@@ -128,7 +128,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
     assertContainsVisibilityParams(yamlContent);
 
     // since optimization is not asked
-    assertThat(yamlContent).doesNotContain(CONNECTOR_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(ACCOUNT_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(HARNESS_HOST);
@@ -185,7 +184,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
     assertThat(yamlContent).contains("namespace: <REPLACE_WITH_NAMESPACE_IN_WHICH_THE_DELEGATE_IS_INSTALLED>");
 
     // since optimization is not asked
-    assertThat(yamlContent).doesNotContain(CONNECTOR_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(ACCOUNT_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(HARNESS_HOST);
@@ -199,7 +197,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
 
   private void assertContainsOptimizationParams(String yamlContent) {
     assertThat(yamlContent).contains(CCM_CONNECTOR_IDENTIFIER);
-    assertThat(yamlContent).doesNotContain(CONNECTOR_IDENTIFIER);
 
     assertThat(yamlContent).contains(ACCOUNT_IDENTIFIER);
     assertThat(yamlContent).contains(HARNESS_HOST);
