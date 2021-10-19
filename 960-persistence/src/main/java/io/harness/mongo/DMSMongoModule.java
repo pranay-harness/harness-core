@@ -96,7 +96,7 @@ public class DMSMongoModule extends AbstractModule {
     @Override
     protected void configure() {
         install(ObjectFactoryModule.getInstance());
-        //install(MorphiaModule.getInstance());
+        install(MorphiaModule.getInstance());
         install(KryoModule.getInstance());
         install(TracerModule.getInstance());
 
@@ -179,55 +179,23 @@ public class DMSMongoModule extends AbstractModule {
     @Singleton
     Set<Class> classes(Set<Class<? extends MorphiaRegistrar>> registrars) {
         Set<Class> classes = new HashSet<>();
-        /*try {
+        try {
             for (Class clazz : registrars) {
                 Constructor<?> constructor = clazz.getConstructor();
-                *//*if (clazz.isAnnotationPresent(StoreIn.class)){
+                if (clazz.isAnnotationPresent(StoreIn.class)){
                     //Arrays.stream(clazz.getAnnotationsByType(StoreIn.class)).filter();
-                }*//*
+                }
                 final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
-                //morphiaRegistrar.registerClasses(classes);
+                morphiaRegistrar.registerClasses(classes);
             }
         } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
             throw new GeneralException("Failed initializing morphia", e);
-        }*/
+        }
 
         return classes;
     }
 
 
-
-   /* @Provides
-    @Singleton
-    public Morphia morphia(@Named("dmsmorphiaClasses") Set<Class> classes,
-                           @Named("dmsmorphiaClasses") Map<Class, String> customCollectionName, ObjectFactory objectFactory, Injector injector,
-                           Set<Class<? extends TypeConverter>> morphiaConverters) {
-        Morphia morphia = new Morphia();
-        morphia.getMapper().getOptions().setObjectFactory(objectFactory);
-        morphia.getMapper().getOptions().setMapSubPackages(true);
-
-        Set<Class> classesCopy = new HashSet<>(classes);
-
-        try {
-            Method method =
-                    morphia.getMapper().getClass().getDeclaredMethod("addMappedClass", MappedClass.class, boolean.class);
-            method.setAccessible(true);
-
-            for (Map.Entry<Class, String> entry : customCollectionName.entrySet()) {
-                classesCopy.remove(entry.getKey());
-
-                HMappedClass mappedClass = new HMappedClass(entry.getValue(), entry.getKey(), morphia.getMapper());
-
-                method.invoke(morphia.getMapper(), mappedClass, Boolean.TRUE);
-            }
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new UnexpectedException("We cannot add morphia MappedClass", e);
-        }
-        morphia.map(classesCopy);
-        morphiaConverters.forEach(
-                converter -> morphia.getMapper().getConverters().addConverter(injector.getInstance(converter)));
-        return morphia;
-    }*/
 
     @HarnessTrace
     @Provides
@@ -242,8 +210,7 @@ public class DMSMongoModule extends AbstractModule {
             for (Class clazz : registrars) {
                 Constructor<?> constructor = clazz.getConstructor();
                 final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
-
-               // morphiaRegistrar.registerImplementationClasses(h, w);
+                morphiaRegistrar.registerImplementationClasses(h, w);
             }
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new GeneralException("Failed to initialize MorphiaInterfaceImplementers", e);
