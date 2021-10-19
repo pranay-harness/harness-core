@@ -43,14 +43,13 @@ import io.harness.userng.remote.UserNGClient;
 
 import com.google.inject.Inject;
 import dashboards.CDLandingDashboardResourceClient;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
@@ -73,7 +72,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   public ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
       String accountIdentifier, String userId, long startInterval, long endInterval) {
     List<ProjectDTO> listOfAccessibleProject = dashboardRBACService.listAccessibleProject(accountIdentifier, userId);
-    log.info("1st project id is {}",listOfAccessibleProject.get(0).getIdentifier());
+    log.info("1st project id is {}", listOfAccessibleProject.get(0).getIdentifier());
     List<String> orgIdentifiers = getOrgIdentifiers(listOfAccessibleProject);
     Map<String, String> mapOfOrganizationIdentifierAndOrganizationName =
         dashboardRBACService.getMapOfOrganizationIdentifierAndOrganizationName(accountIdentifier, orgIdentifiers);
@@ -206,7 +205,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         EnvCount envCount = (EnvCount) envCountOptional.get().getResponse();
         PipelinesCount pipelinesCount = (PipelinesCount) pipelinesCountOptional.get().getResponse();
         ActiveProjectsCountDTO projectsNewCount = (ActiveProjectsCountDTO) projectsCountOptional.get().getResponse();
-        log.info("in overview dashboard service projects count is {}",projectsNewCount.getCount());
+        log.info("in overview dashboard service projects count is {}", projectsNewCount.getCount());
         return ExecutionResponse.<CountOverview>builder()
             .response(CountOverview.builder()
                           .servicesCountDetail(getServicesCount(servicesCount))
@@ -422,7 +421,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
       ProjectsDashboardInfo cdProjectsDashBoardInfo, Map<String, String> mapOfProjectIdentifierAndProjectName,
       Map<String, String> mapOfOrganizationIdentifierAndOrganizationName) {
     List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> cdTopProjectsInfoList = new ArrayList<>();
-    log.info("project identifier from cd side is {}",cdProjectsDashBoardInfo.getProjectDashBoardInfoList().get(0).getProjectIdentifier());
+    log.info("project identifier from cd side is {}",
+        cdProjectsDashBoardInfo.getProjectDashBoardInfoList().get(0).getProjectIdentifier());
     for (ProjectDashBoardInfo projectDashBoardInfo :
         emptyIfNull(cdProjectsDashBoardInfo.getProjectDashBoardInfoList())) {
       cdTopProjectsInfoList.add(
@@ -440,6 +440,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                .build())
               .countDetails(CountWithSuccessFailureDetails.builder()
                                 .count(projectDashBoardInfo.getDeploymentsCount())
+                                .successCount(projectDashBoardInfo.getSuccessDeploymentsCount())
+                                .failureCount(projectDashBoardInfo.getFailedDeploymentsCount())
                                 .countChangeAndCountChangeRateInfo(CountChangeAndCountChangeRateInfo.builder().build())
                                 .build())
               .build());
