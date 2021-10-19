@@ -180,8 +180,8 @@ public class CEYamlServiceImplTest extends CategoryTest {
     assertThat(yamlContent).isNotBlank();
 
     // assert default values for ServiceAccount
-    assertThat(yamlContent).contains("name: <REPLACE_WITH_SERVICEACCOUNT_NAME_USED_BY_DELEGATE>");
-    assertThat(yamlContent).contains("namespace: <REPLACE_WITH_NAMESPACE_IN_WHICH_THE_DELEGATE_IS_INSTALLED>");
+    assertThat(yamlContent).contains("\n    name: <REPLACE_WITH_SERVICEACCOUNT_NAME_USED_BY_DELEGATE>");
+    assertThat(yamlContent).contains("\n    namespace: <REPLACE_WITH_NAMESPACE_IN_WHICH_THE_DELEGATE_IS_INSTALLED>");
 
     // since optimization is not asked
     assertThat(yamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
@@ -191,14 +191,14 @@ public class CEYamlServiceImplTest extends CategoryTest {
   }
 
   private void assertContainsVisibilityParams(String yamlContent) {
-    assertThat(yamlContent).contains(SERVICE_NAME);
-    assertThat(yamlContent).contains(SERVICE_NAMESPACE);
+    assertThat(yamlContent).contains("\n    name: " + SERVICE_NAME);
+    assertThat(yamlContent).contains("\n    namespace: " + SERVICE_NAMESPACE);
   }
 
   private void assertContainsOptimizationParams(String yamlContent) {
-    assertThat(yamlContent).contains(CCM_CONNECTOR_IDENTIFIER);
+    assertThat(yamlContent).contains("\n          value: " + CCM_CONNECTOR_IDENTIFIER);
 
-    assertThat(yamlContent).contains(ACCOUNT_IDENTIFIER);
-    assertThat(yamlContent).contains(HARNESS_HOST);
+    assertThat(yamlContent).contains("\n          value: " + ACCOUNT_IDENTIFIER);
+    assertThat(yamlContent).contains("\n          value: \"" + HARNESS_HOST + "/gateway/lw/api\"");
   }
 }
