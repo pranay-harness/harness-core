@@ -1,4 +1,4 @@
-package io.harness.ccm.service.intf;
+package io.harness.ccm.graphql.core.budget;
 
 import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.ccm.commons.entities.budget.BudgetData;
