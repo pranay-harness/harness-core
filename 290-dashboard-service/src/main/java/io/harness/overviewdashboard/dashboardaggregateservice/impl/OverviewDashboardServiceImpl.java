@@ -73,6 +73,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   public ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
       String accountIdentifier, String userId, long startInterval, long endInterval) {
     List<ProjectDTO> listOfAccessibleProject = dashboardRBACService.listAccessibleProject(accountIdentifier, userId);
+    log.info("1st project id is {}",listOfAccessibleProject.get(0).getIdentifier());
     List<String> orgIdentifiers = getOrgIdentifiers(listOfAccessibleProject);
     Map<String, String> mapOfOrganizationIdentifierAndOrganizationName =
         dashboardRBACService.getMapOfOrganizationIdentifierAndOrganizationName(accountIdentifier, orgIdentifiers);
@@ -421,6 +422,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
       ProjectsDashboardInfo cdProjectsDashBoardInfo, Map<String, String> mapOfProjectIdentifierAndProjectName,
       Map<String, String> mapOfOrganizationIdentifierAndOrganizationName) {
     List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> cdTopProjectsInfoList = new ArrayList<>();
+    log.info("project identifier from cd side is {}",cdProjectsDashBoardInfo.getProjectDashBoardInfoList().get(0).getProjectIdentifier());
     for (ProjectDashBoardInfo projectDashBoardInfo :
         emptyIfNull(cdProjectsDashBoardInfo.getProjectDashBoardInfoList())) {
       cdTopProjectsInfoList.add(
