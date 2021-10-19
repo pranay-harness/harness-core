@@ -12,6 +12,7 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.BuilderFactory.Context;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
@@ -86,6 +87,7 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
     assertThat(graphDTO.getNodes().get(0).getEnvironmentRef()).isEqualTo(context.getEnvIdentifier());
     assertThat(graphDTO.getNodes().get(0).getRiskScore()).isEqualTo(0.25);
     assertThat(graphDTO.getNodes().get(0).getRiskLevel()).isEqualTo(Risk.HEALTHY);
+    assertThat(graphDTO.getNodes().get(0).getType()).isEqualTo(MonitoredServiceType.APPLICATION);
     assertThat(graphDTO.getEdges().size()).isEqualTo(2);
   }
 
