@@ -21,7 +21,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
-import software.wings.service.impl.aws.model.AwsElbListAppElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListAppElbsResponse;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsResponse;
@@ -65,28 +64,13 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
   @Override
   public List<String> listApplicationLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
-    AwsResponse response = executeTask(awsConfig.getAccountId(),
-        AwsElbListAppElbsRequest.builder()
-            .awsConfig(awsConfig)
-            .encryptionDetails(encryptionDetails)
-            .region(region)
-            .build(),
-        appId);
-    List<AwsLoadBalancerDetails> details = ((AwsElbListAppElbsResponse) response).getAppElbs();
-    return details.stream().map(AwsLoadBalancerDetails::getName).collect(toList());
+    return null;
   }
 
   @Override
   public List<AwsLoadBalancerDetails> listApplicationLoadBalancerDetails(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
-    AwsResponse response = executeTask(awsConfig.getAccountId(),
-        AwsElbListAppElbsRequest.builder()
-            .awsConfig(awsConfig)
-            .encryptionDetails(encryptionDetails)
-            .region(region)
-            .build(),
-        appId);
-    return ((AwsElbListAppElbsResponse) response).getAppElbs();
+    return null;
   }
 
   @Override
