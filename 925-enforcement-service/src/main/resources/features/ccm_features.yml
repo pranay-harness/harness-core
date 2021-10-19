@@ -1,0 +1,19 @@
+moduleType: CE
+clients:
+  - name: cenextgen
+    clientConfig: ceNextGenClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
+features:
+  - name: PERSPECTIVES
+    description: Availability & limiting number of custom perspectives
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 20
+        clientName: cenextgen
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true

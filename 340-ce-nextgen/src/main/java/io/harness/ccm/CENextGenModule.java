@@ -58,6 +58,7 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ProviderModule;
@@ -209,6 +210,9 @@ public class CENextGenModule extends AbstractModule {
         configuration.getManagerClientConfig(), configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(new TokenClientModule(configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(),
         CE_NEXT_GEN.getServiceId()));
+    install(EnforcementClientModule.getInstance(configuration.getNgManagerClientConfig(),
+        configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId(),
+        configuration.getEnforcementClientConfiguration()));
 
     install(new SecretNGManagerClientModule(configuration.getNgManagerClientConfig(),
         configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
