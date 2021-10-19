@@ -1180,7 +1180,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  public void shouldReturnListOfTriggerNames() {
+  public void shouldReturnListOfTriggerNames() throws InterruptedException {
     GcbState.GcbDelegateResponse delegateResponse =
         new GcbState.GcbDelegateResponse(ExecutionStatus.NEW, null, GcbTaskParams.builder().build(), null, false);
     delegateResponse.setTriggers(Collections.singletonList(TRIGGER_NAME));
