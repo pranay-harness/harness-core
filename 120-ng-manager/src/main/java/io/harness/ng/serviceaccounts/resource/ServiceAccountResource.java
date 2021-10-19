@@ -1,4 +1,4 @@
-package io.harness.ng.serviceaccounts;
+package io.harness.ng.serviceaccounts.resource;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 import static io.harness.NGCommonEntityConstants.ORG_KEY;

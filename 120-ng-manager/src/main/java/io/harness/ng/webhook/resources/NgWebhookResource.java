@@ -1,4 +1,4 @@
-package io.harness.ng.webhook;
+package io.harness.ng.webhook.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.constants.Constants.UNRECOGNIZED_WEBHOOK;
@@ -8,6 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.webhook.WebhookConstants;
+import io.harness.ng.webhook.WebhookHelper;
 import io.harness.ng.webhook.entities.WebhookEvent;
 import io.harness.ng.webhook.services.api.WebhookService;
 import io.harness.security.annotations.PublicApi;

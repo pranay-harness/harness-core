@@ -1,4 +1,4 @@
-package io.harness.ng.instancesync;
+package io.harness.ng.instancesync.resources;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.HarnessTeam;
