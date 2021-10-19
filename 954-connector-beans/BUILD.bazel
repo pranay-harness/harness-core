@@ -26,7 +26,7 @@ java_library(
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_validation_validation_api",
         "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_hibernate_validator_hibernate_validator",
     ],
 )
 

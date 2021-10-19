@@ -14,7 +14,7 @@ java_library(
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_validation_validation_api",
-        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_hibernate_validator_hibernate_validator",
     ],
 )
 
