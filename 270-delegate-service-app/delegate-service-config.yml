@@ -353,3 +353,5 @@ ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15
   defaultCronExpression: "0 0/15 * 1/1 * ? *"
+
+fileStorageMode: MONGO
