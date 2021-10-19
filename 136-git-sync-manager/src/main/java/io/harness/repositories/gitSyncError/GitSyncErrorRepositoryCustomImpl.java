@@ -40,8 +40,8 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
   }
 
   @Override
-  public UpdateResult upsertGitError(Criteria criteria, Update update) {
-    return mongoTemplate.upsert(query(criteria), update, GitSyncError.class);
+  public UpdateResult updateGitError(Criteria criteria, Update update) {
+    return mongoTemplate.updateMulti(query(criteria), update, GitSyncError.class);
   }
 
   @Override
