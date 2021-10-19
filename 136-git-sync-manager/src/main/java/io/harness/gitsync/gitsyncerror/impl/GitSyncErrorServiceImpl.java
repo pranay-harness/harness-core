@@ -20,7 +20,6 @@ import static org.springframework.data.mongodb.core.query.Update.update;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
@@ -28,6 +27,7 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncErrorKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit.GitSyncErrorAggregateByCommitKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
+import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
@@ -251,7 +251,12 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       GitSyncError savedError = gitSyncErrorRepository.save(gitSyncError);
       return GitSyncErrorMapper.toGitSyncErrorDTO(savedError);
     } catch (DuplicateKeyException ex) {
-      throw new InvalidRequestException("A git sync for this commitId and File already exists.");
+      log.info("A git sync error for this commitId and File already exists.", ex);
+      GitToHarnessErrorDetails additionalErrorDetails =
+          (GitToHarnessErrorDetails) gitSyncError.getAdditionalErrorDetails();
+      return getGitToHarnessError(gitSyncError.getAccountIdentifier(), additionalErrorDetails.getGitCommitId(),
+          gitSyncError.getRepoUrl(), gitSyncError.getBranchName(), gitSyncError.getCompleteFilePath())
+          .get();
     }
   }
 
@@ -263,15 +268,20 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                 -> GitSyncErrorMapper.toGitSyncError(gitSyncErrorDTO, gitSyncErrorDTO.getAccountIdentifier()))
             .collect(toList());
     List<GitSyncError> gitSyncErrorsSaved = new ArrayList<>();
-    gitSyncErrorRepository.saveAll(gitSyncErrors).iterator().forEachRemaining(gitSyncErrorsSaved::add);
-    return gitSyncErrorsSaved.stream().map(GitSyncErrorMapper::toGitSyncErrorDTO).collect(toList());
+    try {
+      gitSyncErrorRepository.saveAll(gitSyncErrors).iterator().forEachRemaining(gitSyncErrorsSaved::add);
+      return gitSyncErrorsSaved.stream().map(GitSyncErrorMapper::toGitSyncErrorDTO).collect(toList());
+    } catch (DuplicateKeyException ex) {
+      log.info("Git sync error already exist", ex);
+      return null;
+    }
   }
 
   @Override
   public void markOverriddenErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths) {
     Criteria criteria = createActiveErrorsFilterCriteria(accountId, repoUrl, branchName, new ArrayList<>(filePaths));
     Update update = update(GitSyncErrorKeys.status, GitSyncErrorStatus.OVERRIDDEN);
-    gitSyncErrorRepository.upsertGitError(criteria, update);
+    gitSyncErrorRepository.updateGitError(criteria, update);
   }
 
   @Override
@@ -280,7 +290,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     Criteria criteria = createActiveErrorsFilterCriteria(accountId, repoUrl, branchName, new ArrayList<>(filePaths));
     Update update =
         update(GitSyncErrorKeys.status, GitSyncErrorStatus.RESOLVED).set(GitSyncErrorKeys.resolvedByCommitId, commitId);
-    gitSyncErrorRepository.upsertGitError(criteria, update);
+    gitSyncErrorRepository.updateGitError(criteria, update);
   }
 
   private Criteria createActiveErrorsFilterCriteria(
@@ -318,7 +328,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     Criteria criteria =
         Criteria.where(GitSyncErrorKeys.createdAt).lte(OffsetDateTime.now().minusDays(30).toInstant().toEpochMilli());
     Update update = update(GitSyncErrorKeys.status, GitSyncErrorStatus.EXPIRED);
-    gitSyncErrorRepository.upsertGitError(criteria, update);
+    gitSyncErrorRepository.updateGitError(criteria, update);
   }
 
   @Override
