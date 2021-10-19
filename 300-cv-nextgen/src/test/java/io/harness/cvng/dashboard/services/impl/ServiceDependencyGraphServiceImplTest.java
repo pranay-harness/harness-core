@@ -16,6 +16,7 @@ import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
@@ -85,8 +86,9 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
     assertThat(graphDTO.getNodes().get(0).getIdentifierRef()).isEqualTo(monitoredServiceDTO.getIdentifier());
     assertThat(graphDTO.getNodes().get(0).getServiceRef()).isEqualTo(context.getServiceIdentifier());
     assertThat(graphDTO.getNodes().get(0).getEnvironmentRef()).isEqualTo(context.getEnvIdentifier());
-    assertThat(graphDTO.getNodes().get(0).getRiskScore()).isEqualTo(0.25);
     assertThat(graphDTO.getNodes().get(0).getRiskLevel()).isEqualTo(Risk.HEALTHY);
+    assertThat(graphDTO.getNodes().get(0).getRiskData())
+        .isEqualTo(RiskData.builder().riskStatus(Risk.HEALTHY).healthScore(75).build());
     assertThat(graphDTO.getNodes().get(0).getType()).isEqualTo(MonitoredServiceType.APPLICATION);
     assertThat(graphDTO.getEdges().size()).isEqualTo(2);
   }

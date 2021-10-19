@@ -12,7 +12,6 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -77,6 +76,7 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -986,6 +986,37 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
+  public void
+  testGetLatestRiskScoreOneServiceEnvironmentOneCategoryWithLatestBucketPresentAndLast10MinDataNotPresent() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
+    SortedSet<HeatMapRisk> risks = new TreeSet<>(heatMap.getHeatMapRisks());
+    risks.remove(risks.last());
+    risks.remove(risks.last());
+    heatMap.setHeatMapRisks(risks.stream().collect(Collectors.toList()));
+    hPersistence.save(heatMap);
+
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+    assertThat(riskDataList.size()).isEqualTo(1);
+    assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HEALTHY);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(75);
+
+    risks.remove(risks.last());
+    heatMap.setHeatMapRisks(risks.stream().collect(Collectors.toList()));
+    hPersistence.save(heatMap);
+
+    riskDataList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)), bufferTimeForLatestHealthScore);
+    assertThat(riskDataList.size()).isEqualTo(1);
+    assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
   public void testGetLatestRiskScoreOneServiceEnvironmentOneCategoryWithOnlyPreviousBucketPresent() {
     Instant endTime = roundDownTo5MinBoundary(clock.instant());
 
@@ -1120,57 +1151,6 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
 
     assertThat(riskDataList.get(1).getRiskStatus()).isEqualTo(Risk.OBSERVE);
     assertThat(riskDataList.get(1).getHealthScore()).isEqualTo(63);
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  public void testGetHeatMaps() {
-    Instant endTime = roundDownTo5MinBoundary(clock.instant());
-    // Heatmap for ERRORS category - - should be included in result
-    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
-    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
-    hPersistence.save(heatMap);
-
-    // Heatmap belonging to different service - should not be included in result
-    String newService = "newService";
-    String newEnv = "newEnv";
-    HeatMap anotherServiceEnvHeatMap = builderFactory.heatMapBuilder()
-                                           .heatMapResolution(FIVE_MIN)
-                                           .serviceIdentifier(newService)
-                                           .envIdentifier(newEnv)
-                                           .build();
-    setStartTimeEndTimeAndRiskScoreWith5MinBucket(anotherServiceEnvHeatMap, endTime, 0.11, 0.37);
-    hPersistence.save(anotherServiceEnvHeatMap);
-
-    // Heatmap belonging to different category - should be included in result with service and env in query
-    heatMap =
-        builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).category(CVMonitoringCategory.PERFORMANCE).build();
-    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.11, 0.37);
-    hPersistence.save(heatMap);
-
-    // Heatmap belonging to different category but last time is before 15 minutes - should not be included in result
-    heatMap = builderFactory.heatMapBuilder()
-                  .heatMapResolution(FIVE_MIN)
-                  .category(CVMonitoringCategory.INFRASTRUCTURE)
-                  .build();
-    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime.minus(20, ChronoUnit.MINUTES), 0.11, 0.37);
-    hPersistence.save(heatMap);
-
-    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(),
-        Collections.singletonList(serviceIdentifier), Collections.singletonList(envIdentifier));
-    assertThat(heatMaps.size()).isEqualTo(2);
-
-    heatMaps = heatMapService.getLatestHeatMaps(
-        builderFactory.getContext().getProjectParams(), Collections.singletonList(serviceIdentifier), null);
-    assertThat(heatMaps.size()).isEqualTo(2);
-
-    heatMaps = heatMapService.getLatestHeatMaps(
-        builderFactory.getContext().getProjectParams(), null, Collections.singletonList(envIdentifier));
-    assertThat(heatMaps.size()).isEqualTo(2);
-
-    heatMaps = heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(), null, null);
-    assertThat(heatMaps.size()).isEqualTo(3);
   }
 
   @Test
