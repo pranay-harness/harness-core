@@ -88,6 +88,7 @@ public class GitSyncModule extends AbstractModule {
     return ImmutableMap.<EntityType, Microservice>builder()
         .put(EntityType.CONNECTORS, Microservice.CORE)
         .put(EntityType.PIPELINES, Microservice.PMS)
+        .put(EntityType.FEATURE_FLAGS, Microservice.CF)
         .put(EntityType.INPUT_SETS, Microservice.PMS)
         .put(EntityType.TEMPLATE, Microservice.TEMPLATESERVICE)
         .build();
