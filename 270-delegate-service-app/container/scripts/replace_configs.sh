@@ -484,5 +484,8 @@ if [[ "" != "$FILE_STORAGE" ]]; then
   yq write -i $CONFIG_FILE fileStorageMode "$FILE_STORAGE"
 fi
 
+if [[ "" != "$CLUSTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE clusterName "$CLUSTER_NAME"
+fi
 
 
