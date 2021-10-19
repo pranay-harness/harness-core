@@ -15,6 +15,10 @@ public class SecretRefHelper {
     return new SecretRefData(secretConfigString);
   }
 
+  public SecretRefData createSecretRef(String secretConfigString, Scope scope, char[] decryptedValue) {
+    return new SecretRefData(secretConfigString, scope, decryptedValue);
+  }
+
   public String getSecretConfigString(SecretRefData secretRefData) {
     if (secretRefData == null) {
       return null;
