@@ -11,20 +11,20 @@ import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.encryption.Scope;
-import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.ArtifactConnectorMapper;
 
 import java.util.Optional;
 
-public final class DockerArtifactStreamMapper extends ArtifactStreamMapper {
+public final class DockerArtifactConnectorMapper extends ArtifactConnectorMapper {
   private static final String PUBLIC_DOCKER_REGISTER_URL = "https://index.docker.io";
 
-  public DockerArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+  public DockerArtifactConnectorMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     super(artifact, artifactStreamAttributes);
   }
 
@@ -33,10 +33,12 @@ public final class DockerArtifactStreamMapper extends ArtifactStreamMapper {
     DockerConfig dockerConfig = (DockerConfig) artifactStreamAttributes.getServerSetting().getValue();
     String dockerUserName = dockerConfig.getUsername();
     String passwordSecretRef = dockerConfig.getEncryptedPassword();
-    SecretRefData secretRefData = new SecretRefData(passwordSecretRef, Scope.ACCOUNT, null);
 
     DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
-        DockerUserNamePasswordDTO.builder().username(dockerUserName).passwordRef(secretRefData).build();
+        DockerUserNamePasswordDTO.builder()
+            .username(dockerUserName)
+            .passwordRef(SecretRefHelper.createSecretRef(passwordSecretRef, Scope.ACCOUNT, null))
+            .build();
     DockerAuthenticationDTO dockerAuthenticationDTO =
         DockerAuthenticationDTO.builder().authType(USER_PASSWORD).credentials(dockerUserNamePasswordDTO).build();
     return DockerConnectorDTO.builder()

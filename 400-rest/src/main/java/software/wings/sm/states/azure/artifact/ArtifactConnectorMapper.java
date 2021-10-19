@@ -11,23 +11,23 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.sm.states.azure.artifact.container.ACRArtifactStreamMapper;
-import software.wings.sm.states.azure.artifact.container.ArtifactoryArtifactStreamMapper;
-import software.wings.sm.states.azure.artifact.container.DockerArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.container.ACRArtifactConnectorMapper;
+import software.wings.sm.states.azure.artifact.container.ArtifactoryArtifactConnectorMapper;
+import software.wings.sm.states.azure.artifact.container.DockerArtifactConnectorMapper;
 import software.wings.utils.ArtifactType;
 
 import java.util.Optional;
 
-public abstract class ArtifactStreamMapper {
+public abstract class ArtifactConnectorMapper {
   protected ArtifactStreamAttributes artifactStreamAttributes;
   protected Artifact artifact;
 
-  protected ArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+  protected ArtifactConnectorMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     this.artifactStreamAttributes = artifactStreamAttributes;
     this.artifact = artifact;
   }
 
-  public static ArtifactStreamMapper getArtifactStreamMapper(
+  public static ArtifactConnectorMapper getArtifactConnectorMapper(
       Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     ArtifactStreamType artifactStreamType =
         ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType());
@@ -43,14 +43,14 @@ public abstract class ArtifactStreamMapper {
     }
   }
 
-  private static ArtifactStreamMapper handleDockerArtifactTypes(
+  private static ArtifactConnectorMapper handleDockerArtifactTypes(
       Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes, ArtifactStreamType artifactStreamType) {
     if (ArtifactStreamType.DOCKER == artifactStreamType) {
-      return new DockerArtifactStreamMapper(artifact, artifactStreamAttributes);
+      return new DockerArtifactConnectorMapper(artifact, artifactStreamAttributes);
     } else if (ArtifactStreamType.ARTIFACTORY == artifactStreamType) {
-      return new ArtifactoryArtifactStreamMapper(artifact, artifactStreamAttributes);
+      return new ArtifactoryArtifactConnectorMapper(artifact, artifactStreamAttributes);
     } else if (ArtifactStreamType.ACR == artifactStreamType) {
-      return new ACRArtifactStreamMapper(artifact, artifactStreamAttributes);
+      return new ACRArtifactConnectorMapper(artifact, artifactStreamAttributes);
     } else {
       throw new InvalidRequestException(
           format("Unsupported artifact stream type for docker artifacts,  artifactStreamType: %s", artifactStreamType));

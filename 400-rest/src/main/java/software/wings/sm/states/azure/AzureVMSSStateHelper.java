@@ -40,7 +40,7 @@ import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.deployment.InstanceDetails;
 import io.harness.encryption.Scope;
-import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -87,7 +87,7 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
-import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.ArtifactConnectorMapper;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ServiceVersionConvention;
 
@@ -493,7 +493,7 @@ public class AzureVMSSStateHelper {
   public AzureConfigDTO createAzureConfigDTO(AzureConfig azureConfig) {
     return AzureConfigDTO.builder()
         .clientId(azureConfig.getClientId())
-        .key(new SecretRefData(azureConfig.getEncryptedKey(), Scope.ACCOUNT, null))
+        .key(SecretRefHelper.createSecretRef(azureConfig.getEncryptedKey(), Scope.ACCOUNT, null))
         .tenantId(azureConfig.getTenantId())
         .azureEnvironmentType(azureConfig.getAzureEnvironmentType())
         .build();
@@ -514,7 +514,7 @@ public class AzureVMSSStateHelper {
     return AzureVMAuthDTO.builder()
         .userName(userName)
         .azureVmAuthType(AzureVMAuthType.valueOf(vmssAuthType.name()))
-        .secretRef(new SecretRefData(secretRefIdentifier, Scope.ACCOUNT, null))
+        .secretRef(SecretRefHelper.createSecretRef(secretRefIdentifier, Scope.ACCOUNT, null))
         .build();
   }
 
@@ -625,7 +625,7 @@ public class AzureVMSSStateHelper {
         .build();
   }
 
-  public ArtifactStreamMapper getConnectorMapper(ExecutionContext context, Artifact artifact) {
+  public ArtifactConnectorMapper getConnectorMapper(ExecutionContext context, Artifact artifact) {
     String artifactStreamId = artifact.getArtifactStreamId();
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
     ArtifactStreamAttributes artifactStreamAttributes =
@@ -639,7 +639,7 @@ public class AzureVMSSStateHelper {
     artifactStreamAttributes.setMetadataOnly(onlyMetaForArtifactType(artifactStream));
     artifactStreamAttributes.setArtifactStreamType(artifactStream.getArtifactStreamType());
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
-    return ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
+    return ArtifactConnectorMapper.getArtifactConnectorMapper(artifact, artifactStreamAttributes);
   }
 
   private boolean onlyMetaForArtifactType(ArtifactStream artifactStream) {

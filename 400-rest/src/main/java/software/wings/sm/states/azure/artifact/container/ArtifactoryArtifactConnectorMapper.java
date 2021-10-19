@@ -8,18 +8,18 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthe
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
 import io.harness.encryption.Scope;
-import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.ArtifactConnectorMapper;
 
 import java.util.Optional;
 
-public final class ArtifactoryArtifactStreamMapper extends ArtifactStreamMapper {
-  public ArtifactoryArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+public final class ArtifactoryArtifactConnectorMapper extends ArtifactConnectorMapper {
+  public ArtifactoryArtifactConnectorMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     super(artifact, artifactStreamAttributes);
   }
 
@@ -28,10 +28,12 @@ public final class ArtifactoryArtifactStreamMapper extends ArtifactStreamMapper 
     String username = artifactoryConfig.getUsername();
     String registryUrl = artifactoryConfig.fetchRegistryUrl();
     String passwordSecretRef = artifactoryConfig.getEncryptedPassword();
-    SecretRefData secretRefData = new SecretRefData(passwordSecretRef, Scope.ACCOUNT, null);
 
     ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO =
-        ArtifactoryUsernamePasswordAuthDTO.builder().username(username).passwordRef(secretRefData).build();
+        ArtifactoryUsernamePasswordAuthDTO.builder()
+            .username(username)
+            .passwordRef(SecretRefHelper.createSecretRef(passwordSecretRef, Scope.ACCOUNT, null))
+            .build();
     ArtifactoryAuthenticationDTO artifactoryAuthenticationDTO = ArtifactoryAuthenticationDTO.builder()
                                                                     .authType(ArtifactoryAuthType.USER_PASSWORD)
                                                                     .credentials(artifactoryUsernamePasswordAuthDTO)

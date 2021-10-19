@@ -47,7 +47,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
-import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.ArtifactConnectorMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -108,14 +108,14 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
     AzureWebAppSlotSetupParameters slotSetupParameters =
         buildSlotSetupParams(context, azureAppServiceStateData, activity);
-    ArtifactStreamMapper artifactStreamMapper =
+    ArtifactConnectorMapper artifactConnectorMapper =
         azureVMSSStateHelper.getConnectorMapper(context, azureAppServiceStateData.getArtifact());
-    populateContainerArtifactDetails(context, slotSetupParameters, artifactStreamMapper);
+    populateContainerArtifactDetails(context, slotSetupParameters, artifactConnectorMapper);
     return AzureTaskExecutionRequest.builder()
         .azureConfigDTO(azureVMSSStateHelper.createAzureConfigDTO(azureAppServiceStateData.getAzureConfig()))
         .azureConfigEncryptionDetails(azureAppServiceStateData.getAzureEncryptedDataDetails())
         .azureTaskParameters(slotSetupParameters)
-        .artifactStreamAttributes(getArtifactStreamAttributes(context, artifactStreamMapper))
+        .artifactStreamAttributes(getArtifactStreamAttributes(context, artifactConnectorMapper))
         .build();
   }
 
@@ -339,14 +339,14 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   }
 
   private void populateContainerArtifactDetails(ExecutionContext context,
-      AzureWebAppSlotSetupParameters slotSetupParameters, ArtifactStreamMapper artifactStreamMapper) {
-    if (!artifactStreamMapper.isDockerArtifactType()) {
+      AzureWebAppSlotSetupParameters slotSetupParameters, ArtifactConnectorMapper artifactConnectorMapper) {
+    if (!artifactConnectorMapper.isDockerArtifactType()) {
       return;
     }
-    AzureRegistryType azureRegistryType = artifactStreamMapper.getAzureRegistryType();
-    ConnectorConfigDTO connectorConfigDTO = artifactStreamMapper.getConnectorDTO();
+    AzureRegistryType azureRegistryType = artifactConnectorMapper.getAzureRegistryType();
+    ConnectorConfigDTO connectorConfigDTO = artifactConnectorMapper.getConnectorDTO();
     List<EncryptedDataDetail> encryptedDataDetails =
-        artifactStreamMapper.getEncryptableSetting()
+        artifactConnectorMapper.getEncryptableSetting()
             .map(setting -> azureVMSSStateHelper.getEncryptedDataDetails(context, setting))
             .orElse(Collections.emptyList());
 
@@ -355,18 +355,18 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     slotSetupParameters.setConnectorConfigDTO(connectorConfigDTO);
     slotSetupParameters.setEncryptedDataDetails(encryptedDataDetails);
     slotSetupParameters.setAzureRegistryType(azureRegistryType);
-    slotSetupParameters.setImageName(artifactStreamMapper.getFullImageName());
-    slotSetupParameters.setImageTag(artifactStreamMapper.getImageTag());
+    slotSetupParameters.setImageName(artifactConnectorMapper.getFullImageName());
+    slotSetupParameters.setImageTag(artifactConnectorMapper.getImageTag());
   }
 
   private ArtifactStreamAttributes getArtifactStreamAttributes(
-      ExecutionContext context, ArtifactStreamMapper artifactStreamMapper) {
-    if (artifactStreamMapper.isDockerArtifactType()) {
+      ExecutionContext context, ArtifactConnectorMapper artifactConnectorMapper) {
+    if (artifactConnectorMapper.isDockerArtifactType()) {
       return null;
     }
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStreamMapper.artifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes = artifactConnectorMapper.artifactStreamAttributes();
     List<EncryptedDataDetail> encryptedDataDetails =
-        artifactStreamMapper.getEncryptableSetting()
+        artifactConnectorMapper.getEncryptableSetting()
             .map(setting -> azureVMSSStateHelper.getEncryptedDataDetails(context, setting))
             .orElse(Collections.emptyList());
     artifactStreamAttributes.setArtifactServerEncryptedDataDetails(encryptedDataDetails);

@@ -12,12 +12,12 @@ import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistry
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.ArtifactConnectorMapper;
 
 import java.util.Optional;
 
-public final class ACRArtifactStreamMapper extends ArtifactStreamMapper {
-  public ACRArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+public final class ACRArtifactConnectorMapper extends ArtifactConnectorMapper {
+  public ACRArtifactConnectorMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     super(artifact, artifactStreamAttributes);
   }
 

@@ -18,7 +18,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import java.util.List;
 import java.util.Optional;
 
-public class ArtifactStreamAttributesMapper extends ArtifactStreamMapper {
+public class ArtifactStreamAttributesMapper extends ArtifactConnectorMapper {
   protected ArtifactStreamAttributesMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     super(artifact, artifactStreamAttributes);
     populateArtifactStreamAttributes();

@@ -77,7 +77,7 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecut
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
 import software.wings.sm.states.azure.appservices.manifest.AzureAppServiceManifestUtils;
-import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.ArtifactConnectorMapper;
 import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.ImmutableMap;
@@ -321,9 +321,9 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     artifactStreamAttributes.setMetadata(metadata);
     artifactStreamAttributes.setJobName("artifact-job-name");
 
-    ArtifactStreamMapper artifactStreamMapper =
-        ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
-    doReturn(artifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(context, artifact);
+    ArtifactConnectorMapper artifactConnectorMapper =
+        ArtifactConnectorMapper.getArtifactConnectorMapper(artifact, artifactStreamAttributes);
+    doReturn(artifactConnectorMapper).when(azureVMSSStateHelper).getConnectorMapper(context, artifact);
 
     doReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
         .when(azureVMSSStateHelper)
@@ -354,35 +354,35 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   }
 
   private void mockArtifactStreamMapper() {
-    ArtifactStreamMapper mockArtifactStreamMapper = mockGetArtifactStreamMapper();
-    mockGetAzureRegistryType(mockArtifactStreamMapper);
-    ConnectorConfigDTO mockConnectorConfigDTO = mockGetConnectorConfigDTO(mockArtifactStreamMapper);
-    mockGetConnectorDTOAuthCredentials(mockArtifactStreamMapper, mockConnectorConfigDTO);
+    ArtifactConnectorMapper mockArtifactConnectorMapper = mockGetArtifactStreamMapper();
+    mockGetAzureRegistryType(mockArtifactConnectorMapper);
+    ConnectorConfigDTO mockConnectorConfigDTO = mockGetConnectorConfigDTO(mockArtifactConnectorMapper);
+    mockGetConnectorDTOAuthCredentials(mockArtifactConnectorMapper, mockConnectorConfigDTO);
     mockGetConnectorAuthEncryptedDataDetails();
   }
 
-  private ArtifactStreamMapper mockGetArtifactStreamMapper() {
-    ArtifactStreamMapper mockArtifactStreamMapper = mock(ArtifactStreamMapper.class);
-    doReturn(mockArtifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(any(), any());
-    return mockArtifactStreamMapper;
+  private ArtifactConnectorMapper mockGetArtifactStreamMapper() {
+    ArtifactConnectorMapper mockArtifactConnectorMapper = mock(ArtifactConnectorMapper.class);
+    doReturn(mockArtifactConnectorMapper).when(azureVMSSStateHelper).getConnectorMapper(any(), any());
+    return mockArtifactConnectorMapper;
   }
 
-  private void mockGetAzureRegistryType(ArtifactStreamMapper mockArtifactStreamMapper) {
+  private void mockGetAzureRegistryType(ArtifactConnectorMapper mockArtifactConnectorMapper) {
     AzureRegistryType azureRegistryType = AzureRegistryType.DOCKER_HUB_PUBLIC;
-    doReturn(azureRegistryType).when(mockArtifactStreamMapper).getAzureRegistryType();
+    doReturn(azureRegistryType).when(mockArtifactConnectorMapper).getAzureRegistryType();
   }
 
-  private ConnectorConfigDTO mockGetConnectorConfigDTO(ArtifactStreamMapper mockArtifactStreamMapper) {
+  private ConnectorConfigDTO mockGetConnectorConfigDTO(ArtifactConnectorMapper mockArtifactConnectorMapper) {
     ConnectorConfigDTO mockConnectorConfigDTO = mock(ConnectorConfigDTO.class);
-    doReturn(mockConnectorConfigDTO).when(mockArtifactStreamMapper).getConnectorDTO();
+    doReturn(mockConnectorConfigDTO).when(mockArtifactConnectorMapper).getConnectorDTO();
     return mockConnectorConfigDTO;
   }
 
   private void mockGetConnectorDTOAuthCredentials(
-      ArtifactStreamMapper mockArtifactStreamMapper, ConnectorConfigDTO mockConnectorConfigDTO) {
+      ArtifactConnectorMapper mockArtifactConnectorMapper, ConnectorConfigDTO mockConnectorConfigDTO) {
     DecryptableEntity mockDecryptableEntity = mock(DecryptableEntity.class);
     doReturn(Optional.of(mockDecryptableEntity))
-        .when(mockArtifactStreamMapper)
+        .when(mockArtifactConnectorMapper)
         .getConnectorDTOAuthCredentials(mockConnectorConfigDTO);
   }
 

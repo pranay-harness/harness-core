@@ -89,8 +89,8 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
-import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
-import software.wings.sm.states.azure.artifact.container.DockerArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.ArtifactConnectorMapper;
+import software.wings.sm.states.azure.artifact.container.DockerArtifactConnectorMapper;
 import software.wings.utils.ArtifactType;
 
 import com.google.inject.Inject;
@@ -1168,8 +1168,9 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
     doReturn(ArtifactStreamType.DOCKER.name()).when(artifactStreamAttributes).getArtifactStreamType();
     doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes(any());
 
-    ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(executionContext, artifact);
-    assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);
+    ArtifactConnectorMapper artifactConnectorMapper =
+        azureVMSSStateHelper.getConnectorMapper(executionContext, artifact);
+    assertThat(artifactConnectorMapper).isInstanceOf(DockerArtifactConnectorMapper.class);
   }
 
   @Test
