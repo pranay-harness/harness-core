@@ -15,7 +15,9 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.exception.ExceptionUtils;
+import io.harness.expression.ExpressionReflectionUtils;
 
 import software.wings.api.EmailStateExecutionData;
 import software.wings.beans.User;
@@ -24,10 +26,12 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.EmailData.EmailDataBuilder;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.EmailNotificationService;
+import software.wings.sm.EmailParams;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 
 import com.github.reinert.jjschema.Attributes;
@@ -110,15 +114,29 @@ public class EmailState extends State {
       }
 
       if (StringUtils.isNotBlank(toAddress) || StringUtils.isNotBlank(ccAddress)) {
-        emailStateExecutionData.setSubject(expressionEvaluator.substitute(subject, Collections.emptyMap()));
-        emailStateExecutionData.setBody(expressionEvaluator.substitute(body, Collections.emptyMap()));
+
         String evaluatedSubject = context.renderExpression(subject);
         String evaluatedBody = context.renderExpression(body);
+
+        EmailParams emailParams = EmailParams.builder().body(body).subject(subject).build();
+
+        context.resetPreparedCache();
+
+        ExpressionReflectionUtils.applyExpression(emailParams,
+                (secretMode, value) -> context.renderExpression(value, StateExecutionContext.builder()
+                        .stateExecutionData(emailStateExecutionData)
+                        .adoptDelegateDecryption(true)
+                        .expressionFunctorToken(HashGenerator.generateIntegerHash())
+                        .build()));
+
+        emailStateExecutionData.setSubject(expressionEvaluator.substitute(emailParams.getSubject(), Collections.emptyMap()));
+        emailStateExecutionData.setBody(expressionEvaluator.substitute(emailParams.getBody(), Collections.emptyMap()));
+
         log.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
 
         if (StringUtils.isNotBlank(toAddress)) {
-          emailStateExecutionData.setToAddress(expressionEvaluator.substitute(toAddress, Collections.emptyMap()));
-          emailStateExecutionData.setCcAddress(expressionEvaluator.substitute(ccAddress, Collections.emptyMap()));
+          emailStateExecutionData.setToAddress(expressionEvaluator.substitute(emailParams.getToAddress(), Collections.emptyMap()));
+          emailStateExecutionData.setCcAddress(expressionEvaluator.substitute(emailParams.getCcAddress(), Collections.emptyMap()));
 
           emailNotificationService.send(getEmailData(
               toAddress, ccAddress, evaluatedSubject, evaluatedBody, accountId, context.getWorkflowExecutionId()));
