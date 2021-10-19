@@ -47,8 +47,6 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
     List<ServiceDependency> serviceDependencies =
         serviceDependencyService.getServiceDependencies(projectParams, new ArrayList<>(identifiers));
 
-    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(projectParams, serviceIdentifier, environmentIdentifier);
-
     // Get nodes for dependent services
     serviceDependencies.forEach(
         serviceDependency -> identifiers.add(serviceDependency.getFromMonitoredServiceIdentifier()));
@@ -58,6 +56,9 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
         monitoredServices.stream().map(MonitoredService::getServiceIdentifier).collect(Collectors.toSet());
     Set<String> environmentIdentifiers =
         monitoredServices.stream().map(MonitoredService::getEnvironmentIdentifier).collect(Collectors.toSet());
+
+    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(
+        projectParams, new ArrayList<>(serviceIdentifiers), new ArrayList<>(environmentIdentifiers));
 
     return constructGraph(monitoredServices, serviceDependencies, heatMaps,
         nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),

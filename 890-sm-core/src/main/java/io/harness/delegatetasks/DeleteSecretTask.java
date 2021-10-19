@@ -1,5 +1,7 @@
 package io.harness.delegatetasks;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -14,7 +16,9 @@ import io.harness.security.encryption.EncryptionConfig;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(HarnessTeam.PL)
 public class DeleteSecretTask extends AbstractDelegateRunnableTask {
   @Inject VaultEncryptorsRegistry vaultEncryptorsRegistry;
 
@@ -25,15 +29,12 @@ public class DeleteSecretTask extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(Object[] parameters) {
-    return run((DeleteSecretTaskParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    return run((DeleteSecretTaskParameters) parameters);
-  }
-
-  private DeleteSecretTaskResponse run(DeleteSecretTaskParameters deleteSecretTaskParameters) {
+    DeleteSecretTaskParameters deleteSecretTaskParameters = (DeleteSecretTaskParameters) parameters;
     EncryptionConfig encryptionConfig = deleteSecretTaskParameters.getEncryptionConfig();
     EncryptedRecord encryptedRecord = deleteSecretTaskParameters.getExistingRecord();
     VaultEncryptor vaultEncryptor = vaultEncryptorsRegistry.getVaultEncryptor(encryptionConfig.getEncryptionType());

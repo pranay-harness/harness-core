@@ -353,6 +353,9 @@ replace_key_value accountConfig.deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
 replace_key_value gitGrpcClientConfigs.pms.target "$PMS_GITSYNC_TARGET"
 replace_key_value gitGrpcClientConfigs.pms.authority "$PMS_GITSYNC_AUTHORITY"
 
+replace_key_value gitGrpcClientConfigs.templateservice.target "$TEMPLATE_GITSYNC_TARGET"
+replace_key_value gitGrpcClientConfigs.templateservice.authority "$TEMPLATE_GITSYNC_AUTHORITY"
+
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
 replace_key_value cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
@@ -365,3 +368,5 @@ replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
 replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"
 replace_key_value pipelineServiceClientConfig.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
 replace_key_value scopeAccessCheckEnabled "${SCOPE_ACCESS_CHECK:-true}"
+
+replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"

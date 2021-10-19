@@ -3,16 +3,16 @@ package io.harness.gitsync.gitsyncerror.service;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.git.model.GitFileChange;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @OwnedBy(PL)
 public interface GitSyncErrorService {
@@ -28,11 +28,14 @@ public interface GitSyncErrorService {
 
   GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO);
 
-  void upsertGitSyncErrors(
-      GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig);
+  List<GitSyncErrorDTO> saveAll(List<GitSyncErrorDTO> gitSyncErrorDTOList);
 
-  List<GitSyncError> getActiveGitToHarnessSyncErrors(String accountId, String gitConnectorId, String repoName,
-      String branchName, String rootFolder, long fromTimestamp);
+  void markOverriddenErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths);
+
+  void markResolvedErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths, String commitId);
+
+  Optional<GitSyncErrorDTO> getGitToHarnessError(
+      String accountId, String commitId, String repoUrl, String branchName, String filePath);
 
   boolean deleteGitSyncErrors(List<String> errorIds, String accountId);
 
@@ -41,4 +44,7 @@ public interface GitSyncErrorService {
 
   PageResponse<GitSyncErrorDTO> listConnectivityErrors(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String repoIdentifier, String branch, PageRequest pageRequest);
+
+  GitSyncErrorCountDTO getErrorCount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String searchTerm, String repoId, String branch);
 }

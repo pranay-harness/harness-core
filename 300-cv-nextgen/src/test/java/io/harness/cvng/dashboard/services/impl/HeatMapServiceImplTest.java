@@ -1157,15 +1157,16 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime.minus(20, ChronoUnit.MINUTES), 0.11, 0.37);
     hPersistence.save(heatMap);
 
-    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(
-        builderFactory.getContext().getProjectParams(), serviceIdentifier, envIdentifier);
+    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(),
+        Collections.singletonList(serviceIdentifier), Collections.singletonList(envIdentifier));
     assertThat(heatMaps.size()).isEqualTo(2);
 
-    heatMaps =
-        heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(), serviceIdentifier, null);
+    heatMaps = heatMapService.getLatestHeatMaps(
+        builderFactory.getContext().getProjectParams(), Collections.singletonList(serviceIdentifier), null);
     assertThat(heatMaps.size()).isEqualTo(2);
 
-    heatMaps = heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(), null, envIdentifier);
+    heatMaps = heatMapService.getLatestHeatMaps(
+        builderFactory.getContext().getProjectParams(), null, Collections.singletonList(envIdentifier));
     assertThat(heatMaps.size()).isEqualTo(2);
 
     heatMaps = heatMapService.getLatestHeatMaps(builderFactory.getContext().getProjectParams(), null, null);

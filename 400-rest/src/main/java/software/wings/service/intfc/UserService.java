@@ -623,8 +623,6 @@ public interface UserService extends OwnedByAccount {
 
   void addUserToAccount(String userId, String accountId);
 
-  boolean safeDeleteUser(String userId, String accountId);
-
   void setUserEmailVerified(String userId);
 
   boolean isUserPasswordPresent(String accountId, String emailId);

@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.AccessControlClientConfiguration;
 import io.harness.Microservice;
+import io.harness.NgIteratorsConfig;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
@@ -84,6 +85,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
+  @JsonProperty(value = "ngIteratorsConfig") private NgIteratorsConfig ngIteratorsConfig;
   @JsonProperty("ceAwsSetupConfig") private CEAwsSetupConfig ceAwsSetupConfig;
   @JsonProperty("ceAzureSetupConfig") private CEAzureSetupConfig ceAzureSetupConfig;
   @JsonProperty("ceGcpSetupConfig") private CEGcpSetupConfig ceGcpSetupConfig;

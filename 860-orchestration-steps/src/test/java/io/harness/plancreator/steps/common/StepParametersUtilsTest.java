@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.StepParameterCommonUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.when.beans.StageWhenCondition;
@@ -34,7 +35,7 @@ public class StepParametersUtilsTest extends CategoryTest {
             .skipCondition(ParameterField.createValueField("SKIPCONDITION"))
             .when(StepWhenCondition.builder().stageStatus(WhenConditionStatus.SUCCESS).build())
             .build();
-    StepElementParameters stepElementParameters = StepParametersUtils.getStepParameters(stepElementConfig).build();
+    StepElementParameters stepElementParameters = StepParameterCommonUtils.getStepParameters(stepElementConfig).build();
     assertThat(stepElementParameters.getIdentifier()).isEqualTo(stepElementConfig.getIdentifier());
     assertThat(stepElementParameters.getName()).isEqualTo(stepElementConfig.getName());
     assertThat(stepElementParameters.getDescription()).isEqualTo(stepElementConfig.getDescription());

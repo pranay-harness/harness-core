@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.user.UserInfo;
@@ -76,10 +77,18 @@ public class GovernanceServiceImpl implements GovernanceService {
 
   private GovernanceMetadata mapResponseToMetadata(OpaEvaluationResponseHolder response) {
     return GovernanceMetadata.newBuilder()
-        .setId(response.getId())
-        .setDeny(response.getSummary().isDeny())
+        .setId(HarnessStringUtils.emptyIfNull(response.getId()))
+        .setDeny(OpaConstants.OPA_STATUS_ERROR.equals(HarnessStringUtils.emptyIfNull(response.getStatus())))
         .setTimestamp(System.currentTimeMillis())
-        .addAllDetails(mapPolicySetMetadata(response.getSummary().getDetails()))
+        .addAllDetails(mapPolicySetMetadata(response.getDetails()))
+        .setStatus(HarnessStringUtils.emptyIfNull(response.getStatus()))
+        .setAccountId(HarnessStringUtils.emptyIfNull(response.getAccount_id()))
+        .setOrgId(HarnessStringUtils.emptyIfNull(response.getOrg_id()))
+        .setProjectId(HarnessStringUtils.emptyIfNull(response.getProject_id()))
+        .setEntity(HarnessStringUtils.emptyIfNull(response.getEntity()))
+        .setType(HarnessStringUtils.emptyIfNull(response.getType()))
+        .setAction(HarnessStringUtils.emptyIfNull(response.getAction()))
+        .setCreated(response.getCreated())
         .build();
   }
 
@@ -89,12 +98,16 @@ public class GovernanceServiceImpl implements GovernanceService {
     }
     List<PolicySetMetadata> policySetMetadataList = new ArrayList<>();
     for (OpaPolicySetEvaluationResponse setEvaluationResponse : policySetResponse) {
-      policySetMetadataList.add(PolicySetMetadata.newBuilder()
-                                    .setDeny(setEvaluationResponse.isDeny())
-                                    .setPolicySetId(setEvaluationResponse.getPolicyset_id())
-                                    .setPolicySetName(setEvaluationResponse.getPolicyset_name())
-                                    .addAllPolicyMetadata(mapPolicyMetadata(setEvaluationResponse.getPolicy_details()))
-                                    .build());
+      policySetMetadataList.add(
+          PolicySetMetadata.newBuilder()
+              .setDeny(OpaConstants.OPA_STATUS_ERROR.equals(
+                  HarnessStringUtils.emptyIfNull(setEvaluationResponse.getStatus())))
+              .setStatus(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getStatus()))
+              .setPolicySetName(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getName()))
+              .addAllPolicyMetadata(mapPolicyMetadata(setEvaluationResponse.getDetails()))
+              .setIdentifier(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getIdentifier()))
+              .setCreated(setEvaluationResponse.getCreated())
+              .build());
     }
     return policySetMetadataList;
   }
@@ -105,12 +118,20 @@ public class GovernanceServiceImpl implements GovernanceService {
     }
     List<PolicyMetadata> policyMetadataList = new ArrayList<>();
     for (OpaPolicyEvaluationResponse policyEvaluationResponse : policyEvaluationResponses) {
-      policyMetadataList.add(PolicyMetadata.newBuilder()
-                                 .setPolicyId(policyEvaluationResponse.getPolicy().getId())
-                                 .setPolicyName(policyEvaluationResponse.getPolicy().getName())
-                                 .setSeverity(policyEvaluationResponse.getPolicy().getSeverity())
-                                 .addAllDenyMessages(policyEvaluationResponse.getDeny_messages())
-                                 .build());
+      policyMetadataList.add(
+          PolicyMetadata.newBuilder()
+              .setPolicyName(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getName()))
+              .setIdentifier(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getIdentifier()))
+              .setAccountId(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getAccount_id()))
+              .setOrgId(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getOrg_id()))
+              .setProjectId(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getProject_id()))
+              .setCreated(policyEvaluationResponse.getPolicy().getCreated())
+              .setUpdated(policyEvaluationResponse.getPolicy().getUpdated())
+              .setStatus(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getStatus()))
+              .setError(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getError()))
+              .setSeverity(policyEvaluationResponse.getStatus())
+              .addAllDenyMessages(policyEvaluationResponse.getDeny_messages())
+              .build());
     }
     return policyMetadataList;
   }

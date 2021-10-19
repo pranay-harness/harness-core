@@ -435,8 +435,8 @@ public class HeatMapServiceImpl implements HeatMapService {
   }
 
   @Override
-  public List<HeatMap> getLatestHeatMaps(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
+  public List<HeatMap> getLatestHeatMaps(@NonNull ProjectParams projectParams,
+      @Nullable List<String> serviceIdentifiers, @Nullable List<String> envIdentifiers) {
     HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
     Instant bucketEndTime = roundDownTo5MinBoundary(clock.instant()).minus(RISK_TIME_BUFFER_MINS, ChronoUnit.MINUTES);
     Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
@@ -446,11 +446,11 @@ public class HeatMapServiceImpl implements HeatMapService {
                                       .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
                                       .field(HeatMapKeys.heatMapBucketEndTime)
                                       .greaterThanOrEq(bucketEndTime);
-    if (envIdentifier != null) {
-      heatMapQuery.filter(HeatMapKeys.envIdentifier, envIdentifier);
+    if (envIdentifiers != null) {
+      heatMapQuery.field(HeatMapKeys.envIdentifier).in(envIdentifiers);
     }
-    if (serviceIdentifier != null) {
-      heatMapQuery.filter(HeatMapKeys.serviceIdentifier, serviceIdentifier);
+    if (serviceIdentifiers != null) {
+      heatMapQuery.field(HeatMapKeys.serviceIdentifier).in(serviceIdentifiers);
     }
     List<HeatMap> heatMapList = heatMapQuery.asList();
     Map<HeatMapKey, HeatMap> heatMapMap = new HashMap<>();

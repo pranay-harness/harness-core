@@ -84,7 +84,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
   @Category(UnitTests.class)
   public void shouldHandleSuccessfulTaskResult() {
     PodStatus podStatus = PodStatus.builder().build();
-    CiK8sTaskResponse taskResponse = CiK8sTaskResponse.builder().podName("test").podStatus(podStatus).build();
+    CiK8sTaskResponse taskResponse =
+        CiK8sTaskResponse.builder().podName("test").podNamespace("test").podStatus(podStatus).build();
     K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
                                                      .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                                      .k8sTaskResponse(taskResponse)
@@ -102,7 +103,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
   @Category(UnitTests.class)
   public void shouldHandleFailedTaskResult() {
     PodStatus podStatus = PodStatus.builder().build();
-    CiK8sTaskResponse taskResponse = CiK8sTaskResponse.builder().podName("test").podStatus(podStatus).build();
+    CiK8sTaskResponse taskResponse =
+        CiK8sTaskResponse.builder().podName("test").podNamespace("test").podStatus(podStatus).build();
 
     K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
                                                      .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -132,7 +134,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                               .image(image)
                                               .build();
     PodStatus podStatus = PodStatus.builder().ciContainerStatusList(Arrays.asList(ciContainerStatus)).build();
-    CiK8sTaskResponse taskResponse = CiK8sTaskResponse.builder().podName("test").podStatus(podStatus).build();
+    CiK8sTaskResponse taskResponse =
+        CiK8sTaskResponse.builder().podName("test").podNamespace("test").podStatus(podStatus).build();
 
     ContainerDefinitionInfo serviceContainer =
         ContainerDefinitionInfo.builder().stepIdentifier(stepId).stepName(stepName).name(containerName).build();
@@ -156,7 +159,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     String stepId = "cache";
     String stepName = "cache";
     PodStatus podStatus = PodStatus.builder().build();
-    CiK8sTaskResponse taskResponse = CiK8sTaskResponse.builder().podName("test").podStatus(podStatus).build();
+    CiK8sTaskResponse taskResponse =
+        CiK8sTaskResponse.builder().podNamespace("test").podName("test").podStatus(podStatus).build();
 
     ContainerDefinitionInfo serviceContainer =
         ContainerDefinitionInfo.builder()

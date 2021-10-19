@@ -1,8 +1,14 @@
 package io.harness.delegate.exceptionhandler.handler;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
+import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExplanationException;
+import io.harness.exception.GitOperationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NestedExceptionUtils;
@@ -12,12 +18,18 @@ import io.harness.exception.runtime.JGitRuntimeException;
 
 import com.google.common.collect.ImmutableSet;
 import com.jcraft.jsch.JSchException;
+import java.io.FileNotFoundException;
 import java.net.UnknownHostException;
+import java.nio.file.NoSuchFileException;
 import java.util.Set;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.eclipse.jgit.errors.TransportException;
 
+@OwnedBy(DX)
 public class JGitExceptionHandler implements ExceptionHandler {
   public static Set<Class<? extends Exception>> exceptions() {
     return ImmutableSet.<Class<? extends Exception>>builder().add(JGitRuntimeException.class).build();
@@ -26,6 +38,9 @@ public class JGitExceptionHandler implements ExceptionHandler {
   public WingsException handleException(Exception exception) {
     JGitRuntimeException jGitRuntimeException = (JGitRuntimeException) exception;
     Throwable e = jGitRuntimeException.getCause();
+    if (e instanceof JGitInternalException && e.getCause() != null) {
+      e = e.getCause();
+    }
 
     if (e instanceof InvalidRemoteException || e.getCause() instanceof NoRemoteRepositoryException) {
       return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_INVALID_GIT_REPO,
@@ -62,6 +77,29 @@ public class JGitExceptionHandler implements ExceptionHandler {
             ExplanationException.INVALID_GIT_AUTHENTICATION, new InvalidRequestException(e.getMessage(), USER));
       }
     }
+
+    if (e instanceof RefNotFoundException || e instanceof MissingObjectException) {
+      if (isNotEmpty(jGitRuntimeException.getBranch())) {
+        return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_MISSING_BRANCH,
+            format(ExplanationException.EXPLANATION_MISSING_BRANCH, jGitRuntimeException.getBranch()),
+            new GitOperationException(e.getMessage()));
+      } else {
+        return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_MISSING_REFERENCE,
+            format(ExplanationException.EXPLANATION_MISSING_REFERENCE, jGitRuntimeException.getCommitId()),
+            new GitOperationException(e.getMessage()));
+      }
+    }
+
+    if (e instanceof FileNotFoundException || e instanceof NoSuchFileException) {
+      jGitRuntimeException.setCause(null);
+      return NestedExceptionUtils.hintWithExplanationException(
+          format(HintException.HINT_GIT_FILE_NOT_FOUND,
+              isNotEmpty(jGitRuntimeException.getBranch()) ? "branch: " + jGitRuntimeException.getBranch()
+                                                           : "reference: " + jGitRuntimeException.getCommitId()),
+          ExplanationException.EXPLANATION_GIT_FILE_NOT_FOUND,
+          new GitOperationException(jGitRuntimeException.getMessage()));
+    }
+
     return new InvalidRequestException(e.getMessage(), USER);
   }
 }
