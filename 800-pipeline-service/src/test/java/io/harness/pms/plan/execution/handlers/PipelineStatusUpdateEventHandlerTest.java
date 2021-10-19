@@ -15,6 +15,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.repositories.executions.AccountExecutionMetadataRepository;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.rule.Owner;
 
@@ -30,13 +31,13 @@ import org.springframework.data.mongodb.core.query.Update;
 public class PipelineStatusUpdateEventHandlerTest extends PipelineServiceTestBase {
   @Mock private PlanExecutionService planExecutionService;
   @Mock private PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
-
+  @Mock private AccountExecutionMetadataRepository accountExecutionMetadataRepository;
   private PipelineStatusUpdateEventHandler pipelineStatusUpdateEventHandler;
 
   @Before
   public void setUp() throws Exception {
-    pipelineStatusUpdateEventHandler =
-        new PipelineStatusUpdateEventHandler(planExecutionService, pmsExecutionSummaryRepository);
+    pipelineStatusUpdateEventHandler = new PipelineStatusUpdateEventHandler(
+        planExecutionService, pmsExecutionSummaryRepository, accountExecutionMetadataRepository);
   }
 
   @Test

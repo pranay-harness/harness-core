@@ -28,7 +28,6 @@ import io.harness.pms.notification.NotificationInstrumentationHelper;
 import io.harness.pms.pipeline.observer.OrchestrationObserverUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
-import io.harness.pms.security.PmsSecurityContextEventGuard;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.TelemetryReporter;
 
@@ -59,34 +58,30 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     List<NotificationRules> notificationRulesList =
-        notificationInstrumentationHelper.getNotificationMethods(planExecutionId);
+        notificationInstrumentationHelper.getNotificationRules(planExecutionId);
 
     Set<String> executedModules =
         OrchestrationObserverUtils.getExecutedModulesInPipeline(pipelineExecutionSummaryEntity);
 
-    try (PmsSecurityContextEventGuard securityContextEventGuard = new PmsSecurityContextEventGuard(ambiance)) {
-      HashMap<String, Object> propertiesMap = new HashMap<>();
-      propertiesMap.put(STAGE_TYPES, executedModules);
-      propertiesMap.put(TRIGGER_TYPE, pipelineExecutionSummaryEntity.getExecutionTriggerInfo().getTriggerType());
-      propertiesMap.put(STATUS, pipelineExecutionSummaryEntity.getStatus());
-      propertiesMap.put(LEVEL, StepCategory.PIPELINE);
-      propertiesMap.put(IS_RERUN, pipelineExecutionSummaryEntity.getExecutionTriggerInfo().getIsRerun());
-      propertiesMap.put(STAGE_COUNT, pipelineExecutionSummaryEntity.getLayoutNodeMap().size());
-      propertiesMap.put(EXECUTION_TIME, getExecutionTimeInSeconds(pipelineExecutionSummaryEntity));
-      propertiesMap.put(NOTIFICATION_RULES_COUNT, notificationRulesList.size());
-      propertiesMap.put(FAILURE_TYPES,
-          PipelineInstrumentationUtils.getFailureTypesFromPipelineExecutionSummary(pipelineExecutionSummaryEntity));
-      propertiesMap.put(ERROR_MESSAGES,
-          PipelineInstrumentationUtils.getErrorMessagesFromPipelineExecutionSummary(pipelineExecutionSummaryEntity));
-      propertiesMap.put(
-          NOTIFICATION_METHODS, notificationInstrumentationHelper.getNotificationMethodTypes(notificationRulesList));
-      String identity = ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getExtraInfoMap().get("email");
-      telemetryReporter.sendTrackEvent(PIPELINE_EXECUTION, identity, accountId, propertiesMap,
-          Collections.singletonMap(AMPLITUDE, true), Category.GLOBAL);
+    HashMap<String, Object> propertiesMap = new HashMap<>();
+    propertiesMap.put(STAGE_TYPES, executedModules);
+    propertiesMap.put(TRIGGER_TYPE, pipelineExecutionSummaryEntity.getExecutionTriggerInfo().getTriggerType());
+    propertiesMap.put(STATUS, pipelineExecutionSummaryEntity.getStatus());
+    propertiesMap.put(LEVEL, StepCategory.PIPELINE);
+    propertiesMap.put(IS_RERUN, pipelineExecutionSummaryEntity.getExecutionTriggerInfo().getIsRerun());
+    propertiesMap.put(STAGE_COUNT, pipelineExecutionSummaryEntity.getLayoutNodeMap().size());
+    propertiesMap.put(EXECUTION_TIME, getExecutionTimeInSeconds(pipelineExecutionSummaryEntity));
+    propertiesMap.put(NOTIFICATION_RULES_COUNT, notificationRulesList.size());
+    propertiesMap.put(FAILURE_TYPES,
+        PipelineInstrumentationUtils.getFailureTypesFromPipelineExecutionSummary(pipelineExecutionSummaryEntity));
+    propertiesMap.put(ERROR_MESSAGES,
+        PipelineInstrumentationUtils.getErrorMessagesFromPipelineExecutionSummary(pipelineExecutionSummaryEntity));
+    propertiesMap.put(
+        NOTIFICATION_METHODS, notificationInstrumentationHelper.getNotificationMethodTypes(notificationRulesList));
+    String identity = ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getExtraInfoMap().get("email");
+    telemetryReporter.sendTrackEvent(PIPELINE_EXECUTION, identity, accountId, propertiesMap,
+        Collections.singletonMap(AMPLITUDE, true), Category.GLOBAL);
 
-    } catch (Exception exception) {
-      log.error("Could not add principal in security context", exception);
-    }
     sendNotificationEvents(notificationRulesList, ambiance, accountId);
   }
 

@@ -207,7 +207,7 @@ public class Service extends Base
 
   @JsonIgnore
   @Override
-  public NGMigrationEntityType getType() {
+  public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.SERVICE;
   }
 

@@ -28,7 +28,9 @@ import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -81,6 +83,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
@@ -99,6 +102,7 @@ import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.eraro.Level;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
@@ -125,6 +129,7 @@ import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.rbac.PipelineRbacHelper;
@@ -138,6 +143,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.ExpressionUtils;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -163,6 +169,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -198,6 +205,7 @@ public class K8sStepHelper {
   @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
   @Inject private K8sEntityHelper k8sEntityHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private AccountClient accountClient;
 
   String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -821,7 +829,14 @@ public class K8sStepHelper {
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
 
     if (!manifestsOutcome.isFound()) {
-      throw new InvalidRequestException("No manifests found.");
+      String stageName = AmbianceUtils.getStageLevelFromAmbiance(ambiance)
+                             .map(level -> level.getIdentifier())
+                             .orElse("Deployment stage");
+      String stepType =
+          Optional.ofNullable(AmbianceUtils.getCurrentStepType(ambiance)).map(StepType::getType).orElse("Kubernetes");
+      throw new GeneralException(format(
+          "No manifests found in stage %s. %s step requires at least one manifest defined in stage service definition",
+          stageName, stepType));
     }
 
     return (ManifestsOutcome) manifestsOutcome.getOutcome();
@@ -1223,7 +1238,13 @@ public class K8sStepHelper {
   }
 
   public StepResponse handleTaskException(
-      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData, Exception e) {
+      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData, Exception e) throws Exception {
+    // Trying to figure out if exception is coming from k8s task or it is an exception from delegate service.
+    // In the second case we need to close log stream and provide unit progress data as part of response
+    if (ExceptionUtils.cause(TaskNGDataException.class, e) != null) {
+      throw e;
+    }
+
     UnitProgressData unitProgressData =
         completeUnitProgressData(executionPassThroughData.getLastActiveUnitProgressData(), ambiance, e);
     FailureData failureData = FailureData.newBuilder()
@@ -1281,5 +1302,10 @@ public class K8sStepHelper {
       sdkGraphVisualizationDataService.publishStepDetailInformation(
           ambiance, K8sReleaseDetailsInfo.builder().releaseName(releaseName).build(), RELEASE_NAME);
     }
+  }
+
+  public boolean isUseLatestKustomizeVersion(String accountId) {
+    return RestClientUtils.getResponse(
+        accountClient.isFeatureFlagEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE.name(), accountId));
   }
 }

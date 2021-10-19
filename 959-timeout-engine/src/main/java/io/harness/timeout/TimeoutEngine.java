@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -102,11 +103,18 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
   }
 
   public void registerIterators() {
-    PersistenceIteratorFactory.PumpExecutorOptions options = PersistenceIteratorFactory.PumpExecutorOptions.builder()
-                                                                 .interval(Duration.ofSeconds(10))
-                                                                 .poolSize(5)
-                                                                 .name("TimeoutEngineHandler-%d")
-                                                                 .build();
+    IteratorConfig iteratorConfig =
+        IteratorConfig.builder().enabled(true).targetIntervalInSeconds(10).threadPoolCount(5).build();
+    registerIterators(iteratorConfig);
+  }
+
+  public void registerIterators(IteratorConfig iteratorConfig) {
+    PersistenceIteratorFactory.PumpExecutorOptions options =
+        PersistenceIteratorFactory.PumpExecutorOptions.builder()
+            .interval(Duration.ofSeconds(iteratorConfig.getTargetIntervalInSeconds()))
+            .poolSize(iteratorConfig.getThreadPoolCount())
+            .name("TimeoutEngineHandler-%d")
+            .build();
     iterator = persistenceIteratorFactory.createLoopIteratorWithDedicatedThreadPool(options, TimeoutInstance.class,
         MongoPersistenceIterator.<TimeoutInstance, SpringFilterExpander>builder()
             .clazz(TimeoutInstance.class)

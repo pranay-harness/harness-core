@@ -18,6 +18,7 @@ import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
+import io.harness.execution.StagesExecutionMetadata;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -68,11 +69,13 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
     String planId = generateUuid();
     String planExecutionId = generateUuid();
     Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(planExecutionId).setPlanId(planId).build();
-    PlanExecutionMetadata planExecutionMetadata = PlanExecutionMetadata.builder()
-                                                      .planExecutionId(ambiance.getPlanExecutionId())
-                                                      .inputSetYaml("some-yaml")
-                                                      .yaml("pipeline :\n  identifier: pipelineId")
-                                                      .build();
+    PlanExecutionMetadata planExecutionMetadata =
+        PlanExecutionMetadata.builder()
+            .planExecutionId(ambiance.getPlanExecutionId())
+            .inputSetYaml("some-yaml")
+            .yaml("pipeline :\n  identifier: pipelineId")
+            .stagesExecutionMetadata(StagesExecutionMetadata.builder().isStagesExecution(true).build())
+            .build();
     PlanExecution planExecution =
         PlanExecution.builder()
             .metadata(ExecutionMetadata.newBuilder().setRunSequence(1).setPipelineIdentifier("pipelineId").build())
@@ -138,6 +141,7 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
     assertThat(capturedEntity.getModules()).containsExactly("pms");
     assertThat(capturedEntity.getLayoutNodeMap()).isNotEmpty();
     assertThat(capturedEntity.getLayoutNodeMap()).containsKeys("startId");
+    assertThat(capturedEntity.getStagesExecutionMetadata().isStagesExecution()).isTrue();
   }
 
   private String getFormattedDate() {

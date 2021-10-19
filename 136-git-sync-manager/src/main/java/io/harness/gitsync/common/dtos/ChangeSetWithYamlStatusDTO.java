@@ -17,7 +17,6 @@ public class ChangeSetWithYamlStatusDTO {
 
   public enum YamlInputErrorType {
     NIL,
-    WRONG_ENTITY_TYPE,
     PROJECT_ORG_IDENTIFIER_MISSING,
     INVALID_ENTITY_TYPE,
     YAML_FROM_NOT_GIT_SYNCED_PROJECT

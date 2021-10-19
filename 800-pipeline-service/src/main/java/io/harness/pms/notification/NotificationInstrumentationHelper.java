@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationInstrumentationHelper {
   @Inject NotificationHelper notificationHelper;
 
-  public List<NotificationRules> getNotificationMethods(String planExecutionId) {
+  public List<NotificationRules> getNotificationRules(String planExecutionId) {
     String yaml = notificationHelper.obtainYaml(planExecutionId);
     List<NotificationRules> notificationRules = new ArrayList<>();
     if (EmptyPredicate.isEmpty(yaml)) {

@@ -124,6 +124,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(HarnessTeam.CDP)
 @TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 @BreakDependencyOn("software.wings.dl.WingsPersistence")
+@BreakDependencyOn("software.wings.sm.StateType")
 public class ContainerInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private ContainerSync containerSync;
   @Inject private transient K8sStateHelper k8sStateHelper;
@@ -555,12 +556,33 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         Instance instanceToBeUpdated = dbPodMap.get(podName);
         K8sPod k8sPod = currentPodsMap.get(podName);
         String deploymentWorkflowName = Optional.ofNullable(deploymentSummary.getWorkflowExecutionName()).orElse("");
-        if (deploymentWorkflowName.equals(instanceToBeUpdated.getLastWorkflowExecutionName())
-            && updateHelmChartInfoForExistingK8sPod(instanceToBeUpdated, k8sPod, deploymentSummary)) {
-          instanceService.saveOrUpdate(instanceToBeUpdated);
+        if (deploymentWorkflowName.equals(instanceToBeUpdated.getLastWorkflowExecutionName())) {
+          boolean updated = updateHelmChartInfoForExistingK8sPod(instanceToBeUpdated, k8sPod, deploymentSummary);
+
+          if (!deploymentSummary.getWorkflowExecutionId().equals(instanceToBeUpdated.getLastWorkflowExecutionId())) {
+            updateInstanceBasedOnDeploymentSummary(instanceToBeUpdated, deploymentSummary);
+            updated = true;
+          }
+
+          if (updated) {
+            instanceService.saveOrUpdate(instanceToBeUpdated);
+          }
         }
       }
     }
+  }
+
+  private void updateInstanceBasedOnDeploymentSummary(
+      Instance instanceToBeUpdated, DeploymentSummary deploymentSummary) {
+    // all the fields marked 'last' are updated except for artifact details
+    instanceToBeUpdated.setLastDeployedById(deploymentSummary.getDeployedById());
+    instanceToBeUpdated.setLastDeployedByName(deploymentSummary.getDeployedByName());
+    instanceToBeUpdated.setLastDeployedAt(deploymentSummary.getDeployedAt());
+
+    instanceToBeUpdated.setLastWorkflowExecutionId(deploymentSummary.getWorkflowExecutionId());
+    instanceToBeUpdated.setLastWorkflowExecutionName(deploymentSummary.getWorkflowExecutionName());
+    instanceToBeUpdated.setLastPipelineExecutionId(deploymentSummary.getPipelineExecutionId());
+    instanceToBeUpdated.setLastPipelineExecutionName(deploymentSummary.getPipelineExecutionName());
   }
 
   private HelmChartInfo getK8sPodHelmChartInfo(

@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
@@ -31,6 +32,10 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   @Override
   public void updateDependencies(ProjectParams projectParams, String toMonitoredServiceIdentifier,
       Set<ServiceDependencyDTO> fromMonitoredServiceIdentifiers) {
+    if (isEmpty(fromMonitoredServiceIdentifiers)) {
+      deleteToDependency(projectParams, toMonitoredServiceIdentifier);
+      return;
+    }
     List<ServiceDependency> dependencies = new ArrayList<>();
     fromMonitoredServiceIdentifiers.forEach(fromServiceIdentifier -> {
       dependencies.add(ServiceDependency.builder()
@@ -52,6 +57,16 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
     executeDBOperations(dependencies, oldDependencies);
   }
 
+  private void deleteToDependency(ProjectParams projectParams, String monitoredServiceIdentifier) {
+    Query<ServiceDependency> toServiceQuery =
+        hPersistence.createQuery(ServiceDependency.class)
+            .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceDependencyKeys.toMonitoredServiceIdentifier, monitoredServiceIdentifier);
+    hPersistence.delete(toServiceQuery);
+  }
+
   private void executeDBOperations(List<ServiceDependency> newDependencies, List<ServiceDependency> oldDependencies) {
     Map<Key, ServiceDependency> newDependencyMap =
         newDependencies.stream().collect(Collectors.toMap(ServiceDependency::getKey, x -> x));
@@ -70,13 +85,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
 
   @Override
   public void deleteDependenciesForService(ProjectParams projectParams, String monitoredServiceIdentifier) {
-    Query<ServiceDependency> toServiceQuery =
-        hPersistence.createQuery(ServiceDependency.class)
-            .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
-            .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
-            .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier())
-            .filter(ServiceDependencyKeys.toMonitoredServiceIdentifier, monitoredServiceIdentifier);
-    hPersistence.delete(toServiceQuery);
+    deleteToDependency(projectParams, monitoredServiceIdentifier);
 
     Query<ServiceDependency> fromServiceQuery =
         hPersistence.createQuery(ServiceDependency.class)

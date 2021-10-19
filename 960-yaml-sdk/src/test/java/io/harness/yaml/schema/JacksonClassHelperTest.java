@@ -1,6 +1,7 @@
 package io.harness.yaml.schema;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,10 +12,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
 import io.harness.yaml.schema.beans.OneOfMapping;
+import io.harness.yaml.schema.beans.OneOfSetMapping;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 
 import io.dropwizard.jackson.Jackson;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -59,5 +62,19 @@ public class JacksonClassHelperTest extends CategoryTest {
     final OneOfMapping oneOfMapping_1_1 =
         OneOfMapping.builder().oneOfFieldNames(new HashSet<>(Arrays.asList("x", "y"))).nullable(false).build();
     assertThat(oneOfMappingsForClass_1).containsExactlyInAnyOrder(oneOfMapping_1_1);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetOneOfSetMappingsForClass() {
+    final OneOfSetMapping oneOfSetMappingsForClass =
+        jacksonSubtypeHelper.getOneOfSetMappingsForClass(io.harness.yaml.TestClass.ClassWithOneOfSetAnnotation.class);
+    assertThat(oneOfSetMappingsForClass).isNotNull();
+    assertThat(oneOfSetMappingsForClass.getOneOfSets()).hasSize(3);
+    assertThat(oneOfSetMappingsForClass.getOneOfSets())
+        .containsExactlyInAnyOrder(new HashSet<>(Arrays.asList("a", "jsontypeinfo")),
+            new HashSet<>(Arrays.asList("b", "apimodelproperty")),
+            new HashSet<>(Collections.singletonList("testString")));
   }
 }

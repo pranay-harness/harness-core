@@ -116,6 +116,11 @@ public class Plan implements PersistentEntity, Node {
   }
 
   @Override
+  public String getStageFqn() {
+    return null;
+  }
+
+  @Override
   public String getName() {
     return getIdentifier();
   }

@@ -41,8 +41,8 @@ public interface HeatMapService {
   RiskSummaryPopoverDTO getRiskSummaryPopover(String accountId, String orgIdentifier, String projectIdentifier,
       Instant endTime, String serviceIdentifier, CVMonitoringCategory category);
 
-  List<HeatMap> getLatestHeatMaps(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier);
+  List<HeatMap> getLatestHeatMaps(@NonNull ProjectParams projectParams, @Nullable List<String> serviceIdentifiers,
+      @Nullable List<String> envIdentifiers);
 
   List<HistoricalTrend> getHistoricalTrend(String accountId, String orgIdentifier, String projectIdentifier,
       List<Pair<String, String>> serviceEnvIdentifiers, int hours);

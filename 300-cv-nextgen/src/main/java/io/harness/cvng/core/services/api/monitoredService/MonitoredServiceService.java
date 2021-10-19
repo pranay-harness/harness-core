@@ -54,6 +54,9 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   HistoricalTrend getOverAllHealthScore(
       ProjectParams projectParams, String identifier, DurationDTO duration, Instant endTime);
 
+  HistoricalTrend getOverAllHealthScore(
+      ServiceEnvironmentParams serviceEnvironmentParams, DurationDTO duration, Instant endTime);
+
   HealthScoreDTO getCurrentScore(ServiceEnvironmentParams serviceEnvironmentParams);
 
   String getYamlTemplate(ProjectParams projectParams, MonitoredServiceType type);

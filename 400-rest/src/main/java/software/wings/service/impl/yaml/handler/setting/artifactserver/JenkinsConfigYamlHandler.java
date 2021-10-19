@@ -36,6 +36,8 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
                             : null)
                     .authMechanism(jenkinsConfig.getAuthMechanism())
                     .build();
+    yaml.setUseConnectorUrlForJobExecution(jenkinsConfig.isUseConnectorUrlForJobExecution());
+
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
@@ -57,6 +59,7 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
                                .encryptedToken(yaml.getToken())
                                .authMechanism(yaml.getAuthMechanism())
                                .username(yaml.getUsername())
+                               .useConnectorUrlForJobExecution(yaml.isUseConnectorUrlForJobExecution())
                                .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }

@@ -12,4 +12,6 @@ import lombok.Value;
 public class StepPalleteModuleInfo {
   String module;
   String category;
+  boolean shouldShowCommonSteps;
+  String commonStepCategory;
 }

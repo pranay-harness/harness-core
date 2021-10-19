@@ -28,6 +28,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -61,6 +62,7 @@ public class K8sTrafficSplitStateTest extends CategoryTest {
 
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ActivityService activityService;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks K8sTrafficSplitState k8sTrafficSplitState = spy(new K8sTrafficSplitState(K8S_TRAFFIC_SPLIT.name()));
 
   @Mock private ExecutionContextImpl context;

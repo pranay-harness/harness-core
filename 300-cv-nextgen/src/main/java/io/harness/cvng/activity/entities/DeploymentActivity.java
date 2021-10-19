@@ -6,6 +6,7 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
+import io.harness.mongo.index.FdSparseIndex;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -37,7 +38,7 @@ public class DeploymentActivity extends Activity {
   Integer newHostsTrafficSplitPercentage;
   String deploymentTag;
   @Getter(AccessLevel.NONE) @NotNull Long verificationStartTime;
-  String planExecutionId;
+  @FdSparseIndex String planExecutionId;
   String pipelineId;
   String stageStepId;
   String stageId;

@@ -132,8 +132,14 @@ pipelineServiceClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+templateServiceClientConfig:
+  baseUrl: http://localhost:15001/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+templateServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
 jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
 
@@ -163,9 +169,34 @@ opaServerConfig:
   baseUrl: http://localhost:3000
 
 iteratorsConfig:
-  approvalInstanceIteratorConfig:
+  webhook:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 5
+  scheduledTrigger:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 15
+  timeoutEngine:
+    threadPoolCount: 5
+    enabled: true
+    targetIntervalInSeconds: 10
+  barrier:
+    threadPoolCount: 2
     enabled: true
     targetIntervalInSeconds: 60
+  approvalInstance:
+    threadPoolCount: 2
+    enabled: true
+    targetIntervalInSeconds: 60
+  resourceRestraint:
+    threadPoolCount: 5
+    enabled: true
+    targetIntervalInSeconds: 60
+  interruptMonitor:
+    threadPoolCount: 1
+    enabled: true
+    targetIntervalInSeconds: 180
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
@@ -186,6 +217,23 @@ gitSdkConfiguration:
     authority: localhost
   scmConnectionConfig:
     url: localhost:8091
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+  userName: ""
+  password: ""
+
+distributedLockImplementation: MONGO
 
 enableDashboardTimescale: false
 
@@ -214,6 +262,34 @@ hostname: ${HOSTNAME:-localhost}
 
 basePathPrefix: ${BASE_PATH_PREFIX:-}
 
+pipelineEventConsumersConfig:
+  interrupt:
+    threads: 1
+  orchestrationEvent:
+    threads: 1
+  facilitatorEvent:
+    threads: 1
+  nodeStart:
+    threads: 2
+  progress:
+    threads: 1
+  advise:
+    threads: 2
+  resume:
+    threads: 2
+  sdkResponse:
+    threads: 3
+  graphUpdate:
+    threads: 3
+  partialPlanResponse:
+    threads: 1
+  createPlan:
+    threads: 1
+  planNotify:
+    threads: 1
+  pmsNotify:
+    threads: 1
+
 delegatePollingConfig:
   syncDelay: 2000
   asyncDelay: 2000
@@ -226,3 +302,5 @@ segmentConfiguration:
 
 enforcementClientConfiguration:
   enforcementCheckEnabled: false
+
+

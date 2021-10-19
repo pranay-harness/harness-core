@@ -107,6 +107,7 @@ public class UserGroupController {
     if (!ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
       userGroupService.maskCePermissions(userGroup);
     }
+    userGroupService.maskAccountDefaultsPermissions(userGroup);
     QLGroupPermissions permissions = userGroupPermissionsController.populateUserGroupPermissions(userGroup);
     QLNotificationSettings notificationSettings = populateNotificationSettings(userGroup);
     return builder.name(userGroup.getName())

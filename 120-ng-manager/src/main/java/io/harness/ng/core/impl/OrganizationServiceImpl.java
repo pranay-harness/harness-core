@@ -1,7 +1,6 @@
 package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
-import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.enforcement.constants.FeatureRestrictionName.MULTIPLE_ORGANIZATIONS;
@@ -44,10 +43,7 @@ import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.core.spring.OrganizationRepository;
-import io.harness.resourcegroupclient.ResourceGroupResponse;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 import io.harness.utils.ScopeUtils;
@@ -82,20 +78,17 @@ public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
   private final OutboxService outboxService;
   private final TransactionTemplate transactionTemplate;
-  private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
   private final AccessControlClient accessControlClient;
   private final ScopeAccessHelper scopeAccessHelper;
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
-      @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient, NgUserService ngUserService,
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, NgUserService ngUserService,
       AccessControlClient accessControlClient, ScopeAccessHelper scopeAccessHelper) {
     this.organizationRepository = organizationRepository;
     this.outboxService = outboxService;
     this.transactionTemplate = transactionTemplate;
-    this.resourceGroupClient = resourceGroupClient;
     this.ngUserService = ngUserService;
     this.accessControlClient = accessControlClient;
     this.scopeAccessHelper = scopeAccessHelper;
@@ -143,7 +136,6 @@ public class OrganizationServiceImpl implements OrganizationService {
       throw new InvalidRequestException("User not found in security context");
     }
     try {
-      createDefaultResourceGroup(scope);
       assignOrgAdmin(scope, principalId, principalType);
       busyPollUntilOrgSetupCompletes(scope, principalId);
     } catch (Exception e) {
@@ -203,21 +195,6 @@ public class OrganizationServiceImpl implements OrganizationService {
       default: {
         throw new InvalidRequestException("Invalid  principal type" + principalType);
       }
-    }
-  }
-
-  private void createDefaultResourceGroup(Scope scope) {
-    try {
-      ResourceGroupResponse resourceGroupResponse =
-          NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(DEFAULT_RESOURCE_GROUP_IDENTIFIER,
-              scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-      if (resourceGroupResponse != null) {
-        return;
-      }
-      NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
-          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-    } catch (Exception e) {
-      log.error("Couldn't create default resource group for [{}]", ScopeUtils.toString(scope));
     }
   }
 

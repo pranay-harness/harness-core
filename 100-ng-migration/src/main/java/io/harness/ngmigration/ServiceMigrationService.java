@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
@@ -31,7 +30,6 @@ import java.util.stream.Collectors;
 public class ServiceMigrationService implements NgMigration {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private NgMigrationFactory ngMigrationFactory;
 
   @Override
   public DiscoveryNode discover(NGMigrationEntity entity) {
@@ -77,12 +75,6 @@ public class ServiceMigrationService implements NgMigration {
   @Override
   public List<NGYamlFile> getYamls(
       Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {
-    List<NGYamlFile> files = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(graph.get(entityId))) {
-      graph.get(entityId).forEach(entityId1 -> {
-        files.addAll(ngMigrationFactory.getMethod(entityId1.getType()).getYamls(entities, graph, entityId1));
-      });
-    }
-    return files;
+    return new ArrayList<>();
   }
 }
