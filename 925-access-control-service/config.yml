@@ -67,7 +67,7 @@ eventsConfig:
       - "redis://redis3:26379"
     envNamespace: ${EVENTS_CONFIG_ENV_NAMESPACE:-""}
     readMode: MASTER
-    nettyThreads: 16
+    nettyThreads: ${EVENTS_CONFIG_NETTY_THREADS:-16}
     useScriptCache: true
     userName: ${EVENTS_CONFIG_REDIS_USERNAME:-""}
     password: ${EVENTS_CONFIG_REDIS_PASSWORD:-""}
