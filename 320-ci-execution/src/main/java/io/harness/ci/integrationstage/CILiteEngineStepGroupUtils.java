@@ -57,7 +57,7 @@ public class CILiteEngineStepGroupUtils {
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public List<ExecutionWrapperConfig> createExecutionWrapperWithLiteEngineSteps(StageElementConfig stageElementConfig,
-      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String podName, Infrastructure infrastructure) {
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
     List<ExecutionWrapperConfig> mainEngineExecutionSections = new ArrayList<>();
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
@@ -68,11 +68,9 @@ public class CILiteEngineStepGroupUtils {
 
     List<ExecutionWrapperConfig> executionSections = integrationStageConfig.getExecution().getSteps();
 
-    boolean usePVC = containsManagerStep(executionSections);
-
     log.info(
-        "Creating CI execution wrapper step info with lite engine step for integration stage {} and build number {} with pvc {}",
-        stageElementConfig.getIdentifier(), ciExecutionArgs.getBuildNumberDetails().getBuildNumber(), usePVC);
+        "Creating CI execution wrapper step info with lite engine step for integration stage {} and build number {}",
+        stageElementConfig.getIdentifier(), ciExecutionArgs.getBuildNumberDetails().getBuildNumber());
 
     List<ExecutionWrapperConfig> liteEngineExecutionSections = new ArrayList<>();
     boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getCloneCodebase());
@@ -80,59 +78,38 @@ public class CILiteEngineStepGroupUtils {
     if (gitClone) {
       liteEngineExecutionSections.add(getGitCloneStep(ciExecutionArgs, ciCodebase));
     }
-    int liteEngineCounter = 0;
     for (ExecutionWrapperConfig executionWrapper : executionSections) {
-      if (isLiteEngineStep(executionWrapper)) {
-        liteEngineExecutionSections.add(executionWrapper);
-      } else if (isCIManagerStep(executionWrapper)) {
-        if (isNotEmpty(liteEngineExecutionSections)) {
-          liteEngineCounter++;
-          ExecutionWrapperConfig liteEngineStepExecutionWrapper =
-              fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, stageElementConfig,
-                  ciExecutionArgs, ciCodebase, podName, usePVC, infrastructure);
-
-          mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
-          // Also execute each lite engine step individually on main engine
-          mainEngineExecutionSections.addAll(liteEngineExecutionSections);
-
-          liteEngineExecutionSections = new ArrayList<>();
-        }
-
-        mainEngineExecutionSections.add(executionWrapper);
-      }
+      liteEngineExecutionSections.add(executionWrapper);
     }
 
     if (isNotEmpty(liteEngineExecutionSections)) {
-      liteEngineCounter++;
-      ExecutionWrapperConfig liteEngineStepExecutionWrapper =
-          fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, stageElementConfig,
-              ciExecutionArgs, ciCodebase, podName, usePVC, infrastructure);
+      ExecutionWrapperConfig liteEngineStepExecutionWrapper = fetchLiteEngineStepExecutionWrapper(
+          liteEngineExecutionSections, stageElementConfig, ciExecutionArgs, ciCodebase, infrastructure);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
       // Also execute each lite engine step individually on main engine
       mainEngineExecutionSections.addAll(liteEngineExecutionSections);
     }
 
-    log.info("Creation execution section for BuildId {} with {} number of lite engine steps",
-        ciExecutionArgs.getBuildNumberDetails().getBuildNumber(), liteEngineCounter);
+    log.info("Creation execution section for BuildId {} with lite engine step",
+        ciExecutionArgs.getBuildNumberDetails().getBuildNumber());
 
     return mainEngineExecutionSections;
   }
 
   private ExecutionWrapperConfig fetchLiteEngineStepExecutionWrapper(
-      List<ExecutionWrapperConfig> liteEngineExecutionSections, Integer liteEngineCounter,
-      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String podName,
-      boolean usePVC, Infrastructure infrastructure) {
+      List<ExecutionWrapperConfig> liteEngineExecutionSections, StageElementConfig integrationStage,
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
     // TODO Do not generate new id
     LiteEngineTaskStepInfo liteEngineTaskStepInfo = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(
         ExecutionElementConfig.builder().uuid(generateUuid()).steps(liteEngineExecutionSections).build(), ciCodebase,
-        integrationStage, ciExecutionArgs, podName, liteEngineCounter, usePVC, infrastructure);
+        integrationStage, ciExecutionArgs, infrastructure);
 
     try {
       String uuid = generateUuid();
       String jsonString = JsonPipelineUtils.writeJsonString(StepElementConfig.builder()
-                                                                .identifier(LITE_ENGINE_TASK + liteEngineCounter)
-                                                                .name(LITE_ENGINE_TASK + liteEngineCounter)
+                                                                .identifier(LITE_ENGINE_TASK)
+                                                                .name(LITE_ENGINE_TASK)
                                                                 .uuid(generateUuid())
                                                                 .type("liteEngineTask")
                                                                 .timeout(getTimeout(infrastructure))

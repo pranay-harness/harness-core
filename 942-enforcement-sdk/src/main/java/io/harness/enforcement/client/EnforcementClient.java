@@ -18,12 +18,12 @@ import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.GTM)
 public interface EnforcementClient {
-  @GET("/enforcement/{featureRestrictionName}/metadata")
+  @GET("enforcement/{featureRestrictionName}/metadata")
   Call<ResponseDTO<FeatureRestrictionMetadataDTO>> getFeatureRestrictionMetadata(
       @Path("featureRestrictionName") FeatureRestrictionName featureRestrictionName,
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);
 
-  @POST("/enforcement/metadata")
+  @POST("enforcement/metadata")
   Call<ResponseDTO<RestrictionMetadataMapResponseDTO>> getFeatureRestrictionMetadataMap(
       @Body RestrictionMetadataMapRequestDTO restrictionMetadataMapRequestDTO,
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);

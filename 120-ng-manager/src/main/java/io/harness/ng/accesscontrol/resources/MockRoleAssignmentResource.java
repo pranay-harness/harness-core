@@ -1,4 +1,4 @@
-package io.harness.ng.accesscontrol.mockserver;
+package io.harness.ng.accesscontrol.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

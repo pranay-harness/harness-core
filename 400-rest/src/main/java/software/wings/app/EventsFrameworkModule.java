@@ -22,11 +22,13 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import lombok.AllArgsConstructor;
+import org.redisson.api.RedissonClient;
 
 @OwnedBy(PL)
 @AllArgsConstructor
@@ -50,21 +52,23 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(SAML_AUTHORIZATION_ASSERTION))
           .toInstance(NoOpProducer.of(DUMMY_TOPIC_NAME));
     } else {
+      RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
       bind(Producer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(RedisProducer.of(ENTITY_CRUD, redisConfig, ENTITY_CRUD_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(ENTITY_CRUD, redissonClient, ENTITY_CRUD_MAX_TOPIC_SIZE, MANAGER.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(RedisConsumer.of(ENTITY_CRUD, MANAGER.getServiceId(), redisConfig,
-              ENTITY_CRUD_MAX_PROCESSING_TIME, ENTITY_CRUD_READ_BATCH_SIZE));
+          .toInstance(RedisConsumer.of(ENTITY_CRUD, MANAGER.getServiceId(), redissonClient,
+              ENTITY_CRUD_MAX_PROCESSING_TIME, ENTITY_CRUD_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(ENTITY_ACTIVITY))
-          .toInstance(
-              RedisProducer.of(ENTITY_ACTIVITY, redisConfig, ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(ENTITY_ACTIVITY, redissonClient, ENTITY_ACTIVITY_MAX_TOPIC_SIZE,
+              MANAGER.getServiceId(), redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(SAML_AUTHORIZATION_ASSERTION))
-          .toInstance(
-              RedisProducer.of(SAML_AUTHORIZATION_ASSERTION, redisConfig, DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
+          .toInstance(RedisProducer.of(SAML_AUTHORIZATION_ASSERTION, redissonClient, DEFAULT_TOPIC_SIZE,
+              MANAGER.getServiceId(), redisConfig.getEnvNamespace()));
     }
   }
 }

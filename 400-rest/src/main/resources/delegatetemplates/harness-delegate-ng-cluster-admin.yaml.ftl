@@ -154,6 +154,8 @@ spec:
             secretKeyRef:
               name: ${delegateName}-proxy
               key: PROXY_PASSWORD
+        - name: INIT_SCRIPT
+          value: ""
         - name: POLL_FOR_TASKS
           value: "false"
         - name: HELM_DESIRED_VERSION

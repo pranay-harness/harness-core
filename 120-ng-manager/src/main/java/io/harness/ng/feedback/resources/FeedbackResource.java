@@ -1,4 +1,4 @@
-package io.harness.ng.feedback;
+package io.harness.ng.feedback.resources;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

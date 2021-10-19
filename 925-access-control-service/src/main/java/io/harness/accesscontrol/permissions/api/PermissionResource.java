@@ -23,6 +23,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +49,19 @@ import javax.ws.rs.QueryParam;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Tag(name = "permissions", description = "This contains the APIs related to permissions")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 public class PermissionResource {
   private final PermissionService permissionService;
 
@@ -55,8 +72,11 @@ public class PermissionResource {
 
   @GET
   @ApiOperation(value = "Get All Permissions in a Scope", nickname = "getPermissionList")
-  public ResponseDTO<List<PermissionResponseDTO>> get(
-      @BeanParam HarnessScopeParams scopeParams, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
+  @Operation(operationId = "getPermissionList",
+      summary = "Get all permissions in a scope or all permissions in the system.",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "List of all permissions") })
+  public ResponseDTO<List<PermissionResponseDTO>>
+  get(@BeanParam HarnessScopeParams scopeParams, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
     List<Permission> permissions = getPermissions(scopeParams, scopeFilterDisabled);
     return ResponseDTO.newResponse(
         permissions.stream()
@@ -70,6 +90,9 @@ public class PermissionResource {
   @Path("/resourcetypes")
   @ApiOperation(
       value = "Get All Resource Types for Permissions in a Scope", nickname = "getPermissionResourceTypesList")
+  @Operation(operationId = "getPermissionResourceTypesList",
+      summary = "Get all resource types for permissions in a scope or in the system.",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "List of resource types") })
   public ResponseDTO<Set<String>>
   getResourceTypes(
       @BeanParam HarnessScopeParams scopeParams, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
