@@ -18,6 +18,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -25,6 +27,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.manifests.request.ManifestCollectionParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -64,6 +67,7 @@ public class ManifestCollectionUtilsTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private SettingsService settingsService;
+  @Mock private PerpetualTaskService perpetualTaskService;
 
   @Test
   @Owner(developers = PRABU)
@@ -110,13 +114,15 @@ public class ManifestCollectionUtilsTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> manifestCollectionUtils.prepareCollectTaskParams(MANIFEST_ID, APP_ID))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Collection not configured for app manifest");
+        .hasMessage("Collection not configured for app manifest with id " + MANIFEST_ID);
 
     doReturn(applicationManifest).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
 
     assertThatThrownBy(() -> manifestCollectionUtils.prepareCollectTaskParams(MANIFEST_ID, APP_ID))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Collection not configured for app manifest");
+        .hasMessage("Collection not configured for app manifest with id " + MANIFEST_ID);
+
+    verify(applicationManifestService, times(2)).deletePerpetualTaskByAppManifest(null, MANIFEST_ID);
   }
 
   @Test
