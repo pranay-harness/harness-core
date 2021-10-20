@@ -54,7 +54,8 @@ public class TerraformTaskNG extends AbstractDelegateRunnableTask {
 
     TerraformAbstractTaskHandler taskHandler = tfTaskTypeToHandlerMap.get(taskParameters.getTaskType());
     try {
-      TerraformTaskNGResponse terraformTaskNGResponse = taskHandler.executeTask(taskParameters, getDelegateId(), getTaskId(), logCallback);
+      TerraformTaskNGResponse terraformTaskNGResponse =
+          taskHandler.executeTask(taskParameters, getDelegateId(), getTaskId(), logCallback);
       terraformTaskNGResponse.setUnitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
       return terraformTaskNGResponse;
     } catch (Exception e) {

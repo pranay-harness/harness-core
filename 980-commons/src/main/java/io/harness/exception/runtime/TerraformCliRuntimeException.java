@@ -1,10 +1,11 @@
 package io.harness.exception.runtime;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.OwnedBy;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 @Value
 @OwnedBy(CDP)

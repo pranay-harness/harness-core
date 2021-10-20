@@ -1624,6 +1624,6 @@ public class DelegateModule extends AbstractModule {
     KubernetesApiExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(KubernetesApiExceptionHandler.class));
     TerraformRuntimeExceptionHandler.exceptions().forEach(
-            exception -> exceptionHandlerMapBinder.addBinding(exception).to(TerraformRuntimeExceptionHandler.class));
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(TerraformRuntimeExceptionHandler.class));
   }
 }
