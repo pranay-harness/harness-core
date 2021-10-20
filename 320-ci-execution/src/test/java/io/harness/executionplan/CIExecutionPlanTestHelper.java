@@ -228,10 +228,9 @@ public class CIExecutionPlanTestHelper {
 
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPod() {
     return LiteEngineTaskStepInfo.builder()
-        .identifier("liteEngineTask1")
-        .name("liteEngineTask1")
+        .identifier("liteEngineTask")
+        .name("liteEngineTask")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
-        .usePVC(true)
         .executionElementConfig(getExecutionElementConfig())
         .ciCodebase(getCICodebase())
         .infrastructure(getInfrastructure())
@@ -242,10 +241,9 @@ public class CIExecutionPlanTestHelper {
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId() {
     List<ExecutionWrapperConfig> steps = new ArrayList<>();
     return LiteEngineTaskStepInfo.builder()
-        .identifier("liteEngineTask1")
-        .name("liteEngineTask1")
+        .identifier("liteEngineTask")
+        .name("liteEngineTask")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
-        .usePVC(true)
         .accountId("accountId")
         .ciCodebase(getCICodebase())
         .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
@@ -255,10 +253,9 @@ public class CIExecutionPlanTestHelper {
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet() {
     List<ExecutionWrapperConfig> steps = new ArrayList<>();
     return LiteEngineTaskStepInfo.builder()
-        .identifier("liteEngineTask1")
-        .name("liteEngineTask1")
+        .identifier("liteEngineTask")
+        .name("liteEngineTask")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
-        .usePVC(true)
         .accountId("accountId")
         .ciCodebase(getCICodebaseWithRepoName())
         .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
@@ -267,10 +264,9 @@ public class CIExecutionPlanTestHelper {
 
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnOtherPods() {
     return LiteEngineTaskStepInfo.builder()
-        .identifier("liteEngineTask2")
-        .name("liteEngineTask2")
+        .identifier("liteEngineTask")
+        .name("liteEngineTask")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnOtherPods())
-        .usePVC(true)
         .executionElementConfig(getExecutionElementConfig())
         .infrastructure(getInfrastructure())
         .timeout(600000)
@@ -368,21 +364,21 @@ public class CIExecutionPlanTestHelper {
                  .pvcParamsList(Arrays.asList(PVCParams.builder()
                                                   .volumeName("shared-0")
                                                   .claimName("pod-2-shared-0")
-                                                  .isPresent(true)
+                                                  .isPresent(false)
                                                   .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                                   .build(),
                      PVCParams.builder()
                          .volumeName("addon")
                          .claimName("pod-2-addon")
-                         .isPresent(true)
+                         .isPresent(false)
                          .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                          .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                          .build(),
                      PVCParams.builder()
                          .volumeName("harness")
                          .claimName("pod-2-harness")
-                         .isPresent(true)
+                         .isPresent(false)
                          .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                          .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                          .build()))

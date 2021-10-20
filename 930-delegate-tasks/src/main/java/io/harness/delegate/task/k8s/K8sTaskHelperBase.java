@@ -55,6 +55,7 @@ import io.harness.beans.FileData;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.CEFeatures;
@@ -77,6 +78,7 @@ import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
+import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
@@ -215,6 +217,7 @@ public class K8sTaskHelperBase {
   @Inject private OpenShiftDelegateService openShiftDelegateService;
   @Inject private HelmTaskHelperBase helmTaskHelperBase;
   @Inject private IstioNetworkingApiFactory istioNetworkingApiFactory;
+  @Inject private ScmFetchFilesHelperNG scmFetchFilesHelper;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
@@ -2081,13 +2084,20 @@ public class K8sTaskHelperBase {
     try {
       printGitConfigInExecutionLogs(gitStoreDelegateConfig, executionLogCallback);
 
-      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-      gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
-      SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
-          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
-
-      ngGitService.downloadFiles(
-          gitStoreDelegateConfig, manifestFilesDirectory, accountId, sshSessionConfig, gitConfigDTO);
+      if (gitStoreDelegateConfig.isOptimizedFilesFetch()) {
+        executionLogCallback.saveExecutionLog("Using optimized file fetch");
+        secretDecryptionService.decrypt(
+            GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(gitStoreDelegateConfig.getGitConfigDTO()),
+            gitStoreDelegateConfig.getApiAuthEncryptedDataDetails());
+        scmFetchFilesHelper.downloadFilesUsingScm(manifestFilesDirectory, gitStoreDelegateConfig, executionLogCallback);
+      } else {
+        GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+        gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+        SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+            gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+        ngGitService.downloadFiles(
+            gitStoreDelegateConfig, manifestFilesDirectory, accountId, sshSessionConfig, gitConfigDTO);
+      }
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesDirectory));

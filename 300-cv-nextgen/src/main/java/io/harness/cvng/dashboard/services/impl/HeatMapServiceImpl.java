@@ -19,6 +19,7 @@ import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO.CategoryRisk;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
@@ -434,9 +435,8 @@ public class HeatMapServiceImpl implements HeatMapService {
         .build();
   }
 
-  @Override
-  public List<HeatMap> getLatestHeatMaps(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
+  private List<HeatMap> getLatestHeatMaps(
+      ProjectParams projectParams, List<String> serviceIdentifiers, List<String> envIdentifiers) {
     HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
     Instant bucketEndTime = roundDownTo5MinBoundary(clock.instant()).minus(RISK_TIME_BUFFER_MINS, ChronoUnit.MINUTES);
     Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
@@ -446,11 +446,11 @@ public class HeatMapServiceImpl implements HeatMapService {
                                       .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
                                       .field(HeatMapKeys.heatMapBucketEndTime)
                                       .greaterThanOrEq(bucketEndTime);
-    if (envIdentifier != null) {
-      heatMapQuery.filter(HeatMapKeys.envIdentifier, envIdentifier);
+    if (envIdentifiers != null) {
+      heatMapQuery.field(HeatMapKeys.envIdentifier).in(envIdentifiers);
     }
-    if (serviceIdentifier != null) {
-      heatMapQuery.filter(HeatMapKeys.serviceIdentifier, serviceIdentifier);
+    if (serviceIdentifiers != null) {
+      heatMapQuery.field(HeatMapKeys.serviceIdentifier).in(serviceIdentifiers);
     }
     List<HeatMap> heatMapList = heatMapQuery.asList();
     Map<HeatMapKey, HeatMap> heatMapMap = new HashMap<>();
@@ -466,7 +466,8 @@ public class HeatMapServiceImpl implements HeatMapService {
     });
     List<HeatMap> uniqueHeatMaps = new ArrayList<>();
     heatMapMap.forEach((key, value) -> {
-      SortedSet<HeatMapRisk> risks = new TreeSet<>(value.getHeatMapRisks());
+      SortedSet<HeatMapRisk> risks = new TreeSet<>(
+          value.getHeatMapRisks().stream().filter(x -> x.getRiskScore() != -1).collect(Collectors.toList()));
       HeatMapRisk last = risks.last();
       if (last.getEndTime().isAfter(bucketEndTime)) {
         value.setHeatMapRisks(Lists.newArrayList(last));
@@ -474,6 +475,28 @@ public class HeatMapServiceImpl implements HeatMapService {
       }
     });
     return uniqueHeatMaps;
+  }
+
+  @Override
+  public Map<ServiceEnvKey, RiskData> getLatestHealthScore(@NonNull ProjectParams projectParams,
+      @NonNull List<String> serviceIdentifiers, @NonNull List<String> envIdentifiers) {
+    Map<ServiceEnvKey, RiskData> latestHealthScoresMap = new HashMap<>();
+    List<HeatMap> latestHeatMaps = getLatestHeatMaps(projectParams, serviceIdentifiers, envIdentifiers);
+    Map<ServiceEnvKey, List<HeatMap>> heatMapMap = latestHeatMaps.stream().collect(Collectors.groupingBy(x
+        -> ServiceEnvKey.builder()
+               .serviceIdentifier(x.getServiceIdentifier())
+               .envIdentifier(x.getEnvIdentifier())
+               .build()));
+    heatMapMap.forEach((serviceEnvKey, heatMaps) -> {
+      double riskScore =
+          heatMaps.stream().mapToDouble(x -> x.getHeatMapRisks().iterator().next().getRiskScore()).max().orElse(-1.0);
+      latestHealthScoresMap.put(serviceEnvKey,
+          RiskData.builder()
+              .healthScore(Risk.getHealthScoreFromRiskScore(riskScore))
+              .riskStatus(Risk.getRiskFromRiskScore(riskScore))
+              .build());
+    });
+    return latestHealthScoresMap;
   }
 
   @Value
@@ -537,11 +560,12 @@ public class HeatMapServiceImpl implements HeatMapService {
           int indexPosition =
               serviceEnvironmentIndex.get(Pair.of(heatMap.getServiceIdentifier(), heatMap.getEnvIdentifier()));
           RiskData riskData = historicalTrendList.get(indexPosition).getHealthScores().get(index);
-          if (heatMapRisk.getHealthScore() != null
-              && (riskData.getHealthScore() == null
-                  || riskData.getHealthScore().compareTo(heatMapRisk.getHealthScore()) == 1)) {
-            riskData.setHealthScore(heatMapRisk.getHealthScore());
-            riskData.setRiskStatus(heatMapRisk.getRiskStatus());
+          Integer healthScore = Risk.getHealthScoreFromRiskScore(heatMapRisk.getRiskScore());
+          Risk risk = Risk.getRiskFromRiskScore(heatMapRisk.getRiskScore());
+          if (healthScore != null
+              && (riskData.getHealthScore() == null || riskData.getHealthScore().compareTo(healthScore) == 1)) {
+            riskData.setHealthScore(healthScore);
+            riskData.setRiskStatus(risk);
           }
         }
       });
@@ -565,54 +589,30 @@ public class HeatMapServiceImpl implements HeatMapService {
     }
     List<RiskData> latestRiskScoreList = new ArrayList<>();
     Map<Pair<String, String>, Integer> serviceEnvironmentIndex = new HashMap<>();
+    List<String> serviceIdentifiers = new ArrayList<>();
+    List<String> envIdentifiers = new ArrayList<>();
 
     for (int i = 0; i < size; i++) {
       latestRiskScoreList.add(RiskData.builder().riskStatus(Risk.NO_DATA).healthScore(null).build());
       serviceEnvironmentIndex.put(serviceEnvIdentifiers.get(i), i);
+      envIdentifiers.add(serviceEnvIdentifiers.get(i).getRight());
+      serviceIdentifiers.add(serviceEnvIdentifiers.get(i).getLeft());
     }
+    // todo: pass this project params from calling method.
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    Map<ServiceEnvKey, RiskData> latestHealthScores =
+        getLatestHealthScore(projectParams, serviceIdentifiers, envIdentifiers);
 
-    Instant endTime = roundDownTo5MinBoundary(clock.instant().minus(bufferTime));
-    Instant startTime = endTime.minus(5, ChronoUnit.MINUTES);
-
-    HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
-
-    Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
-                                      .filter(HeatMapKeys.accountId, accountId)
-                                      .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
-                                      .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
-                                      .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
-                                      .field(HeatMapKeys.heatMapBucketEndTime)
-                                      .greaterThan(startTime)
-                                      .field(HeatMapKeys.heatMapBucketEndTime)
-                                      .lessThanOrEq(startTime.plus(heatMapResolution.getBucketSize()));
-
-    Criteria criterias[] = new Criteria[size];
-
-    for (int i = 0; i < size; i++) {
-      criterias[i] = heatMapQuery.and(
-          heatMapQuery.criteria(HeatMapKeys.serviceIdentifier).equal(serviceEnvIdentifiers.get(i).getLeft()),
-          heatMapQuery.criteria(HeatMapKeys.envIdentifier).equal(serviceEnvIdentifiers.get(i).getRight()));
-    }
-    heatMapQuery.or(criterias);
-    List<HeatMap> heatMaps = heatMapQuery.asList();
-
-    heatMaps.forEach(heatMap -> {
-      List<HeatMapRisk> heatMapRisks = heatMap.getHeatMapRisks()
-                                           .stream()
-                                           .filter(heatMapRisk -> startTime.compareTo(heatMapRisk.getStartTime()) == 0)
-                                           .collect(Collectors.toList());
-      if (!heatMapRisks.isEmpty()) {
-        int index = serviceEnvironmentIndex.get(Pair.of(heatMap.getServiceIdentifier(), heatMap.getEnvIdentifier()));
-        if (heatMapRisks.get(0).getHealthScore() != null
-            && (latestRiskScoreList.get(index).getHealthScore() == null
-                || latestRiskScoreList.get(index).getHealthScore().compareTo(heatMapRisks.get(0).getHealthScore())
-                    == 1)) {
-          latestRiskScoreList.get(index).setHealthScore(heatMapRisks.get(0).getHealthScore());
-          latestRiskScoreList.get(index).setRiskStatus(heatMapRisks.get(0).getRiskStatus());
-        }
+    latestHealthScores.forEach((key, value) -> {
+      if (serviceEnvironmentIndex.containsKey(Pair.of(key.getServiceIdentifier(), key.getEnvIdentifier()))) {
+        int index = serviceEnvironmentIndex.get(Pair.of(key.getServiceIdentifier(), key.getEnvIdentifier()));
+        latestRiskScoreList.set(index, value);
       }
     });
-
     return latestRiskScoreList;
   }
 
@@ -666,11 +666,12 @@ public class HeatMapServiceImpl implements HeatMapService {
         int index = getIndex(totalSize, heatMapRisk.getEndTime(), trendEndTime, heatMapResolution);
         if (index >= 0 && index < totalSize) {
           RiskData riskData = historicalTrend.getHealthScores().get(index);
-          if (heatMapRisk.getHealthScore() != null
-              && (riskData.getHealthScore() == null
-                  || riskData.getHealthScore().compareTo(heatMapRisk.getHealthScore()) == 1)) {
-            riskData.setHealthScore(heatMapRisk.getHealthScore());
-            riskData.setRiskStatus(heatMapRisk.getRiskStatus());
+          Integer healthScore = Risk.getHealthScoreFromRiskScore(heatMapRisk.getRiskScore());
+          Risk risk = Risk.getRiskFromRiskScore(heatMapRisk.getRiskScore());
+          if (healthScore != null
+              && (riskData.getHealthScore() == null || riskData.getHealthScore().compareTo(healthScore) == 1)) {
+            riskData.setHealthScore(healthScore);
+            riskData.setRiskStatus(risk);
           }
         }
       });

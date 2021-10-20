@@ -43,6 +43,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
@@ -146,13 +147,6 @@ public abstract class Activity
     return verificationJobs;
   }
 
-  public Instant getEventTime() {
-    if (eventTime == null) {
-      eventTime = this.activityStartTime;
-    }
-    return eventTime;
-  }
-
   public abstract void fromDTO(ActivityDTO activityDTO);
 
   public abstract void fillInVerificationJobInstanceDetails(
@@ -224,17 +218,22 @@ public abstract class Activity
           .set(ActivityKeys.projectIdentifier, activity.getProjectIdentifier())
           .set(ActivityKeys.serviceIdentifier, activity.getServiceIdentifier())
           .set(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier())
-          .set(ActivityKeys.eventTime, activity.getEventTime())
           .set(ActivityKeys.activityStartTime, activity.getActivityStartTime())
           .set(ActivityKeys.type, activity.getType());
+      if (activity.getEventTime() != null) {
+        updateOperations.set(ActivityKeys.eventTime, activity.getEventTime());
+      }
       if (activity.getActivityEndTime() != null) {
         updateOperations.set(ActivityKeys.activityEndTime, activity.getActivityEndTime());
       }
       if (activity.getChangeSourceIdentifier() != null) {
         updateOperations.set(ActivityKeys.changeSourceIdentifier, activity.getChangeSourceIdentifier());
       }
-      if (activity.getVerificationJobInstanceIds() != null) {
-        updateOperations.set(ActivityKeys.verificationJobInstanceIds, activity.getVerificationJobInstanceIds());
+      if (CollectionUtils.isNotEmpty(activity.getVerificationJobInstanceIds())) {
+        updateOperations.addToSet(ActivityKeys.verificationJobInstanceIds, activity.getVerificationJobInstanceIds());
+      }
+      if (activity.getActivityName() != null) {
+        updateOperations.set(ActivityKeys.activityName, activity.getActivityName());
       }
     }
   }

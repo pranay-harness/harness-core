@@ -3,6 +3,8 @@ package io.harness.batch.processing.config;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.events.deployment.writer.DeploymentEventWriter;
 import io.harness.batch.processing.reader.DeploymentEventReader;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
+import io.harness.metrics.service.api.MetricService;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DeploymentEventConfiguration {
   private static final int DEPLOYMENT_BATCH_SIZE = 10;
+  @Autowired private MetricService metricService;
 
   @Bean
   public ItemWriter<List<String>> deploymentEventWriter() {
@@ -42,6 +45,7 @@ public class DeploymentEventConfiguration {
   public Job deploymentEventJob(JobBuilderFactory jobBuilderFactory, Step deploymentEventStep) {
     return jobBuilderFactory.get(BatchJobType.DEPLOYMENT_EVENT.name())
         .incrementer(new RunIdIncrementer())
+        .listener(new BatchJobExecutionListener(metricService))
         .start(deploymentEventStep)
         .build();
   }

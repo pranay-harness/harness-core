@@ -131,4 +131,21 @@ public class PlanExecutionResourceTest extends CategoryTest {
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "planExecutionId");
     verify(retryExecutionHelper, times(1)).getRetryHistory("rootExecutionId");
   }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetLatestExecutionId() {
+    when(pmsExecutionService.getPipelineExecutionSummaryEntity(
+             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "planExecutionId", false))
+        .thenReturn(
+            PipelineExecutionSummaryEntity.builder()
+                .uuid("uuid")
+                .planExecutionId("planExecutionId")
+                .retryExecutionMetadata(RetryExecutionMetadata.builder().rootExecutionId("rootExecutionId").build())
+                .build());
+    planExecutionResource.getRetryLatestExecutionId(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "planExecutionId");
+    verify(retryExecutionHelper, times(1)).getRetryLatestExecutionId("rootExecutionId");
+  }
 }

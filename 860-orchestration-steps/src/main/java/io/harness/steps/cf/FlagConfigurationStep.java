@@ -256,7 +256,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
   private PatchInstruction addRule(AddRuleYamlSpec rule, String accountID, String orgID, String projectID,
       String featureID, String environmentID, String ruleID) {
-    Integer priority = 0;
+    Integer priority = 1;
     if (ParameterField.isNull(rule.getPriority()) != true) {
       priority = rule.getPriority().getValue();
     }

@@ -57,10 +57,10 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
   @Inject private CapabilityService capabilityService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
                                       .interval(Duration.ofMinutes(CAPABILITIES_CHECK_INTERVAL_IN_MINUTES))
-                                      .poolSize(5)
+                                      .poolSize(threadPoolSize)
                                       .name("DelegateCapabilitiesRecordHandler")
                                       .build();
 
