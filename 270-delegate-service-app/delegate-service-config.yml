@@ -177,7 +177,7 @@ mongo:
     mongoTrustStorePassword:
 
 events-mongo:
-  uri: mongodb://localhost:27017/events
+  uri: mongodb://admin:admin@mongo-replicaset.phandler.svc.cluster.local:27017/dms
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
