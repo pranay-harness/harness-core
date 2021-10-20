@@ -3,7 +3,7 @@ package io.harness.integrationstage;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ci.integrationstage.CILiteEngineStepGroupUtils;
+import io.harness.ci.integrationstage.CIStepGroupUtils;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.rule.Owner;
 
@@ -11,9 +11,9 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CILiteEngineStepGroupUtilsTest extends CIExecutionTestBase {
+public class CIStepGroupUtilsTest extends CIExecutionTestBase {
   //@Inject CILiteEngineStepGroupUtils ciLiteEngineStepGroupUtils;
-  @Inject CILiteEngineStepGroupUtils ciExecutionPlanTestHelper;
+  @Inject CIStepGroupUtils ciExecutionPlanTestHelper;
 
   @Test
   @Owner(developers = ALEKSANDAR)

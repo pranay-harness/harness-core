@@ -41,18 +41,18 @@ import org.springframework.data.annotation.TypeAlias;
 @YamlSchemaIgnoreSubtype
 @TypeAlias("liteEngineTaskStepInfo")
 @OwnedBy(CI)
-@RecasterAlias("io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo")
-public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
+@RecasterAlias("io.harness.beans.steps.stepinfo.InitializeStepInfo")
+public class InitializeStepInfo implements CIStepInfo, WithConnectorRef {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 600 * 1000;
   public static final String CALLBACK_IDS = "callbackIds";
   public static final String LOG_KEYS = "logKeys";
 
   @JsonIgnore
-  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.LITE_ENGINE_TASK).build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.INITIALIZE_TASK).build();
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder()
-                                               .setType(CIStepInfoType.LITE_ENGINE_TASK.getDisplayName())
+                                               .setType(CIStepInfoType.INITIALIZE_TASK.getDisplayName())
                                                .setStepCategory(StepCategory.STEP)
                                                .build();
 
@@ -71,7 +71,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   @Builder
   @ConstructorProperties({"accountId", "timeout", "identifier", "name", "retry", "buildJobEnvInfo",
       "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone", "infrastructure", "runAsUser"})
-  public LiteEngineTaskStepInfo(String accountId, int timeout, String identifier, String name, Integer retry,
+  public InitializeStepInfo(String accountId, int timeout, String identifier, String name, Integer retry,
       BuildJobEnvInfo buildJobEnvInfo, ExecutionElementConfig executionElementConfig, boolean usePVC,
       CodeBase ciCodebase, boolean skipGitClone, Infrastructure infrastructure) {
     this.accountId = accountId;

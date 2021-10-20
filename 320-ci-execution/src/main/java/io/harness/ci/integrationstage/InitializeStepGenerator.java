@@ -8,7 +8,7 @@ import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -23,11 +23,11 @@ import com.google.inject.Singleton;
 
 @Singleton
 @OwnedBy(HarnessTeam.CI)
-public class LiteEngineTaskStepGenerator {
-  private static final String LITE_ENGINE_TASK = "liteEngineTask";
+public class InitializeStepGenerator {
+  private static final String INITIALIZE_TASK = InitializeStepInfo.STEP_TYPE.getType();
   @Inject private BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
 
-  LiteEngineTaskStepInfo createLiteEngineTaskStepInfo(ExecutionElementConfig executionElement, CodeBase ciCodebase,
+  InitializeStepInfo createLiteEngineTaskStepInfo(ExecutionElementConfig executionElement, CodeBase ciCodebase,
       StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, Infrastructure infrastructure) {
     BuildJobEnvInfo buildJobEnvInfo =
         buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, ciExecutionArgs, executionElement.getSteps());
@@ -36,9 +36,9 @@ public class LiteEngineTaskStepGenerator {
 
     boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getCloneCodebase());
 
-    return LiteEngineTaskStepInfo.builder()
-        .identifier(LITE_ENGINE_TASK)
-        .name(LITE_ENGINE_TASK)
+    return InitializeStepInfo.builder()
+        .identifier(INITIALIZE_TASK)
+        .name(INITIALIZE_TASK)
         .infrastructure(infrastructure)
         .ciCodebase(ciCodebase)
         .skipGitClone(!gitClone)
@@ -55,7 +55,7 @@ public class LiteEngineTaskStepGenerator {
 
     ParameterField<String> timeout = ((K8sDirectInfraYaml) infrastructure).getSpec().getInitTimeout();
 
-    int timeoutInMillis = LiteEngineTaskStepInfo.DEFAULT_TIMEOUT;
+    int timeoutInMillis = InitializeStepInfo.DEFAULT_TIMEOUT;
     if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
       timeoutInMillis = (int) Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis();
     }
