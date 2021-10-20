@@ -2,6 +2,9 @@ package io.harness.ngmigration;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ngmigration.beans.MigrationInputDTO;
+import io.harness.ngmigration.beans.NgEntityDetail;
+import io.harness.ngmigration.service.NgMigration;
 
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.ngmigration.CgEntityId;
@@ -11,7 +14,6 @@ import software.wings.ngmigration.NGMigrationEntity;
 import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.ngmigration.NGMigrationStatus;
 import software.wings.ngmigration.NGYamlFile;
-import software.wings.ngmigration.NgMigration;
 import software.wings.service.intfc.ArtifactStreamService;
 
 import com.google.inject.Inject;
@@ -58,8 +60,8 @@ public class ArtifactStreamMigrationService implements NgMigration {
       Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {}
 
   @Override
-  public List<NGYamlFile> getYamls(
-      Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {
+  public List<NGYamlFile> getYamls(MigrationInputDTO inputDTO, Map<CgEntityId, CgEntityNode> entities,
+      Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId, Map<CgEntityId, NgEntityDetail> migratedEntities) {
     return new ArrayList<>();
   }
 }

@@ -408,6 +408,12 @@ public class Workflow
     return NGMigrationEntityType.WORKFLOW;
   }
 
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
+  }
+
   public static final class WorkflowBuilder {
     private String name;
     private String description;
