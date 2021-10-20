@@ -18,21 +18,21 @@ import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Modifies saved integration stage execution plan by appending pre and post execution steps for setting up pod and
- * adding cleanup
+ * Modifies saved integration stage execution plan by prepending init step for setting up build stage infra e.g. pod or
+ * VM.
  */
 
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.CI)
-public class CILiteEngineIntegrationStageModifier implements StageExecutionModifier {
-  @Inject private CILiteEngineStepGroupUtils ciLiteEngineStepGroupUtils;
+public class CIIntegrationStageModifier implements StageExecutionModifier {
+  @Inject private CIStepGroupUtils ciStepGroupUtils;
 
   @Override
   public ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution,
-      StageElementConfig stageElementConfig, PlanCreationContext context, String podName, CodeBase ciCodeBase,
+      StageElementConfig stageElementConfig, PlanCreationContext context, CodeBase ciCodeBase,
       Infrastructure infrastructure, ExecutionSource executionSource) {
-    log.info("Modifying execution plan to add lite engine step for integration stage {}",
+    log.info("Modifying execution plan to prepend initialize step for integration stage {}",
         stageElementConfig.getIdentifier());
 
     PlanCreationContextValue planCreationContextValue = context.getGlobalContext().get("metadata");
@@ -46,17 +46,10 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
             .build();
 
     log.info("Build execution args for integration stage  {}", stageElementConfig.getIdentifier());
-    return getCILiteEngineTaskExecution(
-        stageElementConfig, ciExecutionArgs, ciCodeBase, podName, execution.getUuid(), infrastructure);
-  }
-
-  private ExecutionElementConfig getCILiteEngineTaskExecution(StageElementConfig integrationStage,
-      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String podName, String uuid,
-      Infrastructure infrastructure) {
     return ExecutionElementConfig.builder()
-        .uuid(uuid)
-        .steps(ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
-            integrationStage, ciExecutionArgs, ciCodebase, podName, infrastructure))
+        .uuid(execution.getUuid())
+        .steps(ciStepGroupUtils.createExecutionWrapperWithInitializeStep(
+            stageElementConfig, ciExecutionArgs, ciCodeBase, infrastructure))
         .build();
   }
 }

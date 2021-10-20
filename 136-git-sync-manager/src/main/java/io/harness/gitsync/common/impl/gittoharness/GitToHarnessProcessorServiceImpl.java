@@ -319,7 +319,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       List<ChangeSetWithYamlStatusDTO> invalidChangeSetWithYamlStatusDTO) {
     List<GitSyncErrorDTO> gitToHarnessErrors = new ArrayList<>();
     invalidChangeSetWithYamlStatusDTO.forEach(changeSetWithYamlStatusDTO -> {
-      String errorMessage = changeSetWithYamlStatusDTO.getYamlInputErrorType().toString();
+      String errorMessage = changeSetWithYamlStatusDTO.getYamlInputErrorType().getValue();
       gitToHarnessErrors.add(
           buildGitSyncErrorDTO(gitToHarnessProcessingInfo, errorMessage, changeSetWithYamlStatusDTO.getChangeSet()));
     });

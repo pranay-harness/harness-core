@@ -53,6 +53,8 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   static String pipelineYaml = "pipeline:\n"
       + "  identifier: p1\n"
       + "  name: pipeline1\n"
+      + "  projectIdentifier: projectId\n"
+      + "  orgIdentifier: orgId\n"
       + "  stages:\n"
       + "    - stage:\n"
       + "        identifier: managerDeployment\n"

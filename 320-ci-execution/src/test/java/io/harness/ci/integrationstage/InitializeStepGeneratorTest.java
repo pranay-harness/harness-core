@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -19,8 +19,8 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class LiteEngineTaskStepGeneratorTest extends CIExecutionTestBase {
-  @Inject LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
+public class InitializeStepGeneratorTest extends CIExecutionTestBase {
+  @Inject InitializeStepGenerator initializeStepGenerator;
   @Inject CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
 
   @Test
@@ -33,12 +33,10 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTestBase {
     Infrastructure infrastructure = ciExecutionPlanTestHelper.getInfrastructure();
     String podName = "pod";
     Integer liteEngineCounter = 1;
-    boolean usePVC = true;
 
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
-    LiteEngineTaskStepInfo actual = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElementConfig,
-        ciExecutionPlanTestHelper.getCICodebase(), stageElementConfig, ciExecutionArgs, podName, liteEngineCounter,
-        usePVC, infrastructure);
+    InitializeStepInfo actual = initializeStepGenerator.createLiteEngineTaskStepInfo(executionElementConfig,
+        ciExecutionPlanTestHelper.getCICodebase(), stageElementConfig, ciExecutionArgs, infrastructure);
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
@@ -46,9 +44,9 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTestBase {
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
-        .forEach(podSetupInfo -> podSetupInfo.getPvcParamsList().get(0).setClaimName(""));
+        .forEach(podSetupInfo -> podSetupInfo.getPvcParamsList().forEach(pvcParams -> pvcParams.setClaimName("")));
 
-    LiteEngineTaskStepInfo expected = ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod();
+    InitializeStepInfo expected = ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod();
     ((K8BuildJobEnvInfo) expected.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
@@ -56,7 +54,7 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTestBase {
     ((K8BuildJobEnvInfo) expected.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
-        .forEach(podSetupInfo -> podSetupInfo.getPvcParamsList().get(0).setClaimName(""));
+        .forEach(podSetupInfo -> podSetupInfo.getPvcParamsList().forEach(pvcParams -> pvcParams.setClaimName("")));
 
     assertThat(actual).isEqualTo(expected);
   }
@@ -70,23 +68,28 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTestBase {
     StageElementConfig stageElementConfig = ciExecutionPlanTestHelper.getIntegrationStageElementConfig();
     Infrastructure infrastructure = ciExecutionPlanTestHelper.getInfrastructure();
 
-    Integer liteEngineCounter = 2;
-    boolean usePVC = true;
-    String podName = "pod";
-
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
-    LiteEngineTaskStepInfo actual = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElementConfig,
-        null, stageElementConfig, ciExecutionArgs, podName, liteEngineCounter, usePVC, infrastructure);
+    InitializeStepInfo actual = initializeStepGenerator.createLiteEngineTaskStepInfo(
+        executionElementConfig, null, stageElementConfig, ciExecutionArgs, infrastructure);
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
         .forEach(podSetupInfo -> podSetupInfo.setName(""));
+    int index = 0;
+    ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
+        .getPodsSetupInfo()
+        .getPodSetupInfoList()
+        .forEach(podSetupInfo -> podSetupInfo.getPvcParamsList().forEach(pvcParams -> pvcParams.setClaimName("")));
 
-    LiteEngineTaskStepInfo expected = ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnOtherPods();
+    InitializeStepInfo expected = ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnOtherPods();
     ((K8BuildJobEnvInfo) expected.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
         .forEach(podSetupInfo -> podSetupInfo.setName(""));
+    ((K8BuildJobEnvInfo) expected.getBuildJobEnvInfo())
+        .getPodsSetupInfo()
+        .getPodSetupInfoList()
+        .forEach(podSetupInfo -> podSetupInfo.getPvcParamsList().forEach(pvcParams -> pvcParams.setClaimName("")));
 
     assertThat(actual).isEqualTo(expected);
   }
