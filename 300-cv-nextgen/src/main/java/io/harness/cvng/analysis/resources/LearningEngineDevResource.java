@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.resources;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.LE_DEV_RESOURCE;
 
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.LogAnalysisRecord;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
@@ -20,6 +21,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.time.Instant;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -128,5 +130,19 @@ public class LearningEngineDevResource {
       @QueryParam("analysisEndTime") String epochEndInstant) {
     return new RestResponse<>(learningEngineDevService.getClusteredLogsByTimeRange(
         verificationTaskId, Instant.parse(epochStartInstant), Instant.parse(epochEndInstant)));
+  }
+
+  @GET
+  @Path("/time-series-data")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @ApiOperation(value = "get test timeseries data for a verification job and risk analysis",
+      nickname = "getTimeSeriesRecordsForLE")
+  public RestResponse<List<TimeSeriesRecordDTO>>
+  getTimeSeriesRecordsForLE(@QueryParam("verificationTaskId") @NotNull String verificationTaskId,
+      @QueryParam("startTime") @NotNull Long startTime, @QueryParam("endTime") @NotNull Long endTime) {
+    return new RestResponse<>(learningEngineDevService.getTimeSeriesRecordDTOs(
+        verificationTaskId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 }

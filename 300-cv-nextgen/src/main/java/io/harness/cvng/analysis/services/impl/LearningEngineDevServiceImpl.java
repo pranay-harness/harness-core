@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.ClusteredLog.ClusteredLogKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisRecord;
@@ -16,6 +17,7 @@ import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TimeSeriesRiskSummaryKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.analysis.services.api.LearningEngineDevService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -24,6 +26,7 @@ import java.util.List;
 
 public class LearningEngineDevServiceImpl implements LearningEngineDevService {
   @Inject HPersistence hPersistence;
+  @Inject TimeSeriesRecordService timeSeriesRecordService;
 
   @Override
   public List<TimeSeriesRiskSummary> getRiskSummariesByTimeRange(
@@ -102,5 +105,11 @@ public class LearningEngineDevServiceImpl implements LearningEngineDevService {
         .field(ClusteredLogKeys.timestamp)
         .lessThanOrEq(endTime)
         .asList();
+  }
+
+  @Override
+  public List<TimeSeriesRecordDTO> getTimeSeriesRecordDTOs(
+      String verificationTaskId, Instant startTime, Instant endTime) {
+    return timeSeriesRecordService.getTimeSeriesRecordDTOs(verificationTaskId, startTime, endTime);
   }
 }

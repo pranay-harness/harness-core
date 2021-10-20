@@ -1,5 +1,6 @@
 package io.harness.cvng.analysis.services.api;
 
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.LogAnalysisRecord;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
@@ -26,4 +27,5 @@ public interface LearningEngineDevService {
   List<LogAnalysisResult> getLogAnalysisResultByTimeRange(
       String verificationTaskId, Instant startTime, Instant endTime);
   List<ClusteredLog> getClusteredLogsByTimeRange(String verificationTaskId, Instant startTime, Instant endTime);
+  List<TimeSeriesRecordDTO> getTimeSeriesRecordDTOs(String verificationTaskId, Instant startTime, Instant endTime);
 }
