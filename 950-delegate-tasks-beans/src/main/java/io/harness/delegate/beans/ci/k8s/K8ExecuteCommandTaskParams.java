@@ -1,5 +1,6 @@
-package io.harness.delegate.beans.ci;
+package io.harness.delegate.beans.ci.k8s;
 
+import io.harness.delegate.beans.ci.ExecuteCommandTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

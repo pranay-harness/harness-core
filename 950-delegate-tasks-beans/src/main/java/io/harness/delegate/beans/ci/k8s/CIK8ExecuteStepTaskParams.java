@@ -1,5 +1,6 @@
-package io.harness.delegate.beans.ci;
+package io.harness.delegate.beans.ci.k8s;
 
+import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.LiteEngineConnectionCapability;

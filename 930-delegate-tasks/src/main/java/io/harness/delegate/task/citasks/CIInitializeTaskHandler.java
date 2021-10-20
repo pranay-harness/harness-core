@@ -1,14 +1,14 @@
 package io.harness.delegate.task.citasks;
 
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 
-public interface CIBuildTaskHandler {
+public interface CIInitializeTaskHandler {
   enum Type { GCP_K8 }
 
-  CIBuildTaskHandler.Type getType();
+  CIInitializeTaskHandler.Type getType();
 
   K8sTaskExecutionResponse executeTaskInternal(
-      CIBuildSetupTaskParams ciBuildSetupTaskParams, ILogStreamingTaskClient logStreamingTaskClient);
+      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient);
 }

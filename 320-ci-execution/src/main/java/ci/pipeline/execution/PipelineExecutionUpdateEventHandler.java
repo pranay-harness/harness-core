@@ -10,7 +10,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.encryption.Scope;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;

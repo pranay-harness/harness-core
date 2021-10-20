@@ -1,7 +1,8 @@
-package io.harness.delegate.beans.ci;
+package io.harness.delegate.beans.ci.k8s;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
 import io.harness.delegate.beans.ci.pod.CIK8ServicePodParams;
@@ -24,8 +25,8 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CIK8BuildTaskParams
-    extends ConnectorTaskParams implements CIBuildSetupTaskParams, ExecutionCapabilityDemander {
+public class CIK8InitializeTaskParams
+    extends ConnectorTaskParams implements CIInitializeTaskParams, ExecutionCapabilityDemander {
   @NotNull private ConnectorDetails k8sConnector;
   @Expression(ALLOW_SECRETS) @NotNull private CIK8PodParams<CIK8ContainerParams> cik8PodParams;
   @Expression(ALLOW_SECRETS) @NotNull private List<CIK8ServicePodParams> servicePodParams;
