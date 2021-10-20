@@ -36,4 +36,9 @@ public class ConnectorRegistrar {
    * Db model to rest model mapper.
    */
   Class<? extends ConnectorEntityToDTOMapper<?, ?>> connectorEntityToDTOMapper;
+  /**
+   * The connector validation handler which will be executed during validation of connector to see if connector is able
+   * to connect or not.
+   */
+  Class<? extends ConnectorValidationHandler> connectorValidationHandler;
 }
