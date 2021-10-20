@@ -6,6 +6,7 @@ import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.reader.CloseableIteratorItemReader;
 import io.harness.batch.processing.reader.PublishedMessageBatchedReader;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
@@ -13,6 +14,7 @@ import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 
@@ -30,6 +32,7 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.support.PassThroughItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +43,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class K8sWorkloadRecommendationConfig {
   private static final int BATCH_SIZE = 1000;
 
+  @Autowired private MetricService metricService;
   private final PublishedMessageDao publishedMessageDao;
   private final StepBuilderFactory stepBuilderFactory;
 
@@ -155,6 +159,7 @@ public class K8sWorkloadRecommendationConfig {
       Step computeRecommendationStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_WORKLOAD_RECOMMENDATION.name())
         .incrementer(new RunIdIncrementer())
+        .listener(new BatchJobExecutionListener(metricService))
         // process WorkloadSpec messages and update current requests & limits.
         .start(workloadSpecStep)
         // process ContainerState messages and update histograms.
