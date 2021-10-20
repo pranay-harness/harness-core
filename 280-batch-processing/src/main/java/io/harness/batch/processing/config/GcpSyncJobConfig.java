@@ -1,7 +1,9 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.GcpSyncTasklet;
+import io.harness.metrics.service.api.MetricService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -18,6 +20,8 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class GcpSyncJobConfig {
+  @Autowired private MetricService metricService;
+
   @Bean
   public Tasklet gcpSyncTasklet() {
     return new GcpSyncTasklet();
@@ -29,6 +33,7 @@ public class GcpSyncJobConfig {
   public Job gcpSyncJob(JobBuilderFactory jobBuilderFactory, Step gcpSyncStep) {
     return jobBuilderFactory.get(BatchJobType.SYNC_BILLING_REPORT_GCP.name())
         .incrementer(new RunIdIncrementer())
+        .listener(new BatchJobExecutionListener(metricService))
         .start(gcpSyncStep)
         .build();
   }
