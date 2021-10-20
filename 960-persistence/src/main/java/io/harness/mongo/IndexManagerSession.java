@@ -158,6 +158,9 @@ public class IndexManagerSession {
 
   public static Set<String> processIndexes(
       AdvancedDatastore datastore, Morphia morphia, Store store, IndexesProcessor processor) {
+    if (store != null && store.getName().equals("dms")) {
+      return processIndexesDMS(datastore, morphia, store, false, processor);
+    }
     return processIndexesInternal(datastore, morphia, store, true, processor);
   }
 
