@@ -35,6 +35,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.exception.GeneralException;
 import io.harness.exception.K8sPodSyncException;
+import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
@@ -220,7 +221,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
             }
             // don't update ecs instances if delegate response is failure
             if (syncResponse != null && syncResponse.getCommandExecutionStatus() == FAILURE) {
-              continue;
+              throw new WingsException("Container instance sync: Delegate responded with failure status");
             }
           }
           // log.info("Found {} instances in DB for app {} and containerServiceName {}", instancesInDB.size(), appId,
@@ -390,6 +391,11 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
             instanceService.saveOrUpdate(instance);
           }
         }
+      }
+
+      // handle perpetual task deletion logic if all instances deleted for 7 days
+      if (instanceIdsToBeDeleted.size() == instancesInDBMap.size() && instancesToBeAdded.size() == 0) {
+        throw new WingsException("Container Instance Sync: All instances for perpetual task are deleted");
       }
     }
   }
