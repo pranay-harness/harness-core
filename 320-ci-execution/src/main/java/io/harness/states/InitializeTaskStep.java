@@ -2,7 +2,7 @@ package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
+import static io.harness.beans.steps.stepinfo.InitializeStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -18,7 +18,7 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
@@ -72,12 +72,12 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This state will setup the build environment, clone the git repository for running CI job.
+ * This state will setup the build infra e.g. pod or VM.
  */
 
 @Slf4j
 @OwnedBy(CI)
-public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementParameters, K8sTaskExecutionResponse> {
+public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementParameters, K8sTaskExecutionResponse> {
   public static final String TASK_TYPE_INITIALIZATION_PHASE = "INITIALIZATION_PHASE";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
@@ -87,7 +87,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   @Inject private PipelineRbacHelper pipelineRbacHelper;
 
   private static final String DEPENDENCY_OUTCOME = "dependencies";
-  public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.STEP_TYPE;
+  public static final StepType STEP_TYPE = InitializeStepInfo.STEP_TYPE;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -105,9 +105,9 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
       return;
     }
 
-    LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+    InitializeStepInfo initializeStepInfo = (InitializeStepInfo) stepElementParameters.getSpec();
     List<EntityDetail> connectorsEntityDetails =
-        getConnectorIdentifiers(liteEngineTaskStepInfo, accountIdentifier, projectIdentifier, orgIdentifier);
+        getConnectorIdentifiers(initializeStepInfo, accountIdentifier, projectIdentifier, orgIdentifier);
 
     if (isNotEmpty(connectorsEntityDetails)) {
       pipelineRbacHelper.checkRuntimePermissions(ambiance, connectorsEntityDetails, true);
@@ -117,7 +117,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   @Override
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
-    LiteEngineTaskStepInfo stepParameters = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+    InitializeStepInfo stepParameters = (InitializeStepInfo) stepElementParameters.getSpec();
 
     Map<String, String> taskIds = new HashMap<>();
     String logPrefix = getLogPrefix(ambiance);
@@ -143,7 +143,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
       throws Exception {
     K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
 
-    LiteEngineTaskStepInfo stepParameters = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+    InitializeStepInfo stepParameters = (InitializeStepInfo) stepElementParameters.getSpec();
 
     DependencyOutcome dependencyOutcome =
         getDependencyOutcome(ambiance, stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse());
@@ -191,7 +191,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   }
 
   private DependencyOutcome getDependencyOutcome(
-      Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, CiK8sTaskResponse ciK8sTaskResponse) {
+      Ambiance ambiance, InitializeStepInfo stepParameters, CiK8sTaskResponse ciK8sTaskResponse) {
     List<ContainerDefinitionInfo> serviceContainers = buildSetupUtils.getBuildServiceContainers(stepParameters);
     List<ServiceDependency> serviceDependencyList = new ArrayList<>();
     if (serviceContainers == null) {
@@ -247,9 +247,9 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   }
 
   private Map<String, String> getStepLogKeys(
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance, String logPrefix) {
+      InitializeStepInfo initializeStepInfo, Ambiance ambiance, String logPrefix) {
     Map<String, String> logKeyByStepId = new HashMap<>();
-    liteEngineTaskStepInfo.getExecutionElementConfig().getSteps().forEach(
+    initializeStepInfo.getExecutionElementConfig().getSteps().forEach(
         executionWrapper -> addLogKey(executionWrapper, logPrefix, logKeyByStepId));
 
     Map<String, List<String>> logKeys = new HashMap<>();
@@ -285,14 +285,14 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
     return LogStreamingHelper.generateLogBaseKey(logAbstractions);
   }
 
-  private List<EntityDetail> getConnectorIdentifiers(LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      String accountIdentifier, String projectIdentifier, String orgIdentifier) {
+  private List<EntityDetail> getConnectorIdentifiers(
+      InitializeStepInfo initializeStepInfo, String accountIdentifier, String projectIdentifier, String orgIdentifier) {
     K8BuildJobEnvInfo.PodsSetupInfo podSetupInfo =
-        ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();
+        ((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();
     if (isEmpty(podSetupInfo.getPodSetupInfoList())) {
       return new ArrayList<>();
     }
-    Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
+    Infrastructure infrastructure = initializeStepInfo.getInfrastructure();
     if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
@@ -305,12 +305,12 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
     entityDetails.add(createEntityDetails(infraConnectorRef, accountIdentifier, projectIdentifier, orgIdentifier));
 
     // Add git clone connector
-    if (!liteEngineTaskStepInfo.isSkipGitClone()) {
-      if (liteEngineTaskStepInfo.getCiCodebase() == null) {
+    if (!initializeStepInfo.isSkipGitClone()) {
+      if (initializeStepInfo.getCiCodebase() == null) {
         throw new CIStageExecutionException("Codebase is mandatory with enabled cloneCodebase flag");
       }
-      entityDetails.add(createEntityDetails(liteEngineTaskStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier,
-          projectIdentifier, orgIdentifier));
+      entityDetails.add(createEntityDetails(
+          initializeStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier, projectIdentifier, orgIdentifier));
     }
 
     Optional<PodSetupInfo> podSetupInfoOptional = podSetupInfo.getPodSetupInfoList().stream().findFirst();

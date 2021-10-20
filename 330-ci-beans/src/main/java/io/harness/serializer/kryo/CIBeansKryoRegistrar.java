@@ -35,7 +35,7 @@ import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheS3StepInfo;
@@ -78,7 +78,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(ContextElement.class, 100002);
     kryo.register(BuildEnvSetupStepInfo.class, 100003);
     kryo.register(CleanupStepInfo.class, 100005);
-    kryo.register(LiteEngineTaskStepInfo.class, 100008);
+    kryo.register(InitializeStepInfo.class, 100008);
     kryo.register(RunStepInfo.class, 100011);
     kryo.register(TestStepInfo.class, 100013);
     kryo.register(StepTaskDetails.class, 100014);
