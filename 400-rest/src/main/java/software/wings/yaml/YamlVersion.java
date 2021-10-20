@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "yamlVersion", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "YamlVersionKeys")
-public class YamlVersion extends Base implements YamlHistory {
+public final class YamlVersion extends Base implements YamlHistory {
   private String yamlVersionId;
   private int version;
   private Type type;

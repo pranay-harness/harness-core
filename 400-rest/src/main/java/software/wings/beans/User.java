@@ -57,7 +57,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "UserKeys")
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class User extends Base implements Principal {
+public final class User extends Base implements Principal {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder().name("accountsIdx").field(UserKeys.accounts).build(),

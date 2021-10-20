@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "kmsTransitionEvent2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class MigrateSecretTask extends Queuable {
+public final class MigrateSecretTask extends Queuable {
   @NotNull private String accountId;
   @NotNull private String secretId;
   @NotNull private SecretManagerConfig fromConfig;

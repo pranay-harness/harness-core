@@ -34,7 +34,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "delegateConnections", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class DelegateConnection implements PersistentEntity, UuidAware, AccountAccess {
+public final class DelegateConnection implements PersistentEntity, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

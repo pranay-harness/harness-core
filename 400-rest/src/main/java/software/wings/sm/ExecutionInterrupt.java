@@ -48,8 +48,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "executionInterrupts", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ExecutionInterruptKeys")
-public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                           UpdatedByAware, ApplicationAccess {
+public final class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                                 UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

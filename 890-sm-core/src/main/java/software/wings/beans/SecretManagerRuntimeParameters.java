@@ -29,7 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "secretManagerRuntimeParameters", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "SecretManagerRuntimeParametersKeys")
-public class SecretManagerRuntimeParameters implements AccountAccess, PersistentEntity, UuidAware {
+public final class SecretManagerRuntimeParameters implements AccountAccess, PersistentEntity, UuidAware {
   @Id private String uuid;
   private String secretManagerId;
   @FdIndex private String executionId;

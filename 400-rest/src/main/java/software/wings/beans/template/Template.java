@@ -40,7 +40,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "TemplateKeys")
 @Entity(value = "templates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class Template extends Base implements KeywordsAware, NameAccess {
+public final class Template extends Base implements KeywordsAware, NameAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

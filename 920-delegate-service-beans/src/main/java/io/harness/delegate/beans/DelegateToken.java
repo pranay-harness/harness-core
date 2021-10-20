@@ -33,7 +33,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "DelegateTokenKeys")
 @OwnedBy(HarnessTeam.DEL)
 @StoreIn(DbAliases.ALL)
-public class DelegateToken implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware {
+public final class DelegateToken implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware {
   public static final Duration TTL = ofDays(30);
 
   public static List<MongoIndex> mongoIndexes() {

@@ -23,7 +23,7 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesMLAnalysisRecord extends MetricAnalysisRecord {
+public final class TimeSeriesMLAnalysisRecord extends MetricAnalysisRecord {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

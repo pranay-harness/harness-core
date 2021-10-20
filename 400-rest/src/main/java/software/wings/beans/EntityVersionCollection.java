@@ -17,7 +17,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "entityVersions", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "EntityVersionCollectionKeys")
 @HarnessEntity(exportable = true)
-public class EntityVersionCollection extends EntityVersion {
+public final class EntityVersionCollection extends EntityVersion {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .addAll(EntityVersion.mongoIndexes())

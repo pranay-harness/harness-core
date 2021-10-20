@@ -69,7 +69,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
-public class LogMLAnalysisRecord extends Base implements AccountAccess {
+public final class LogMLAnalysisRecord extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

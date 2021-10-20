@@ -45,7 +45,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
-public class YamlGitConfig extends Base implements EncryptableSetting {
+public final class YamlGitConfig extends Base implements EncryptableSetting {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

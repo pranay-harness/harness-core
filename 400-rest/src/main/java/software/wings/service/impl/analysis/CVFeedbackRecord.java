@@ -45,7 +45,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 @IgnoreUnusedIndex
 @Entity(value = "cvFeedbackRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class CVFeedbackRecord implements GoogleDataStoreAware, AccountAccess {
+public final class CVFeedbackRecord implements GoogleDataStoreAware, AccountAccess {
   @Id private String uuid;
   @NotEmpty @FdIndex private String accountId;
 

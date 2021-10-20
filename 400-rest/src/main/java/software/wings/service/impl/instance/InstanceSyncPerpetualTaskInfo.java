@@ -29,8 +29,9 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "InstanceSyncPerpetualTaskInfoKeys")
 @Entity(value = "instanceSyncPerpetualTasksInfo", noClassnameStored = true)
-public class InstanceSyncPerpetualTaskInfo implements PersistentEntity, UuidAware, UuidAccess, AccountAccess,
-                                                      CreatedAtAccess, CreatedAtAware, UpdatedAtAware, UpdatedAtAccess {
+public final class InstanceSyncPerpetualTaskInfo
+    implements PersistentEntity, UuidAware, UuidAccess, AccountAccess, CreatedAtAccess, CreatedAtAware, UpdatedAtAware,
+               UpdatedAtAccess {
   @Id String uuid;
   @FdIndex String accountId;
   @FdIndex String infrastructureMappingId;

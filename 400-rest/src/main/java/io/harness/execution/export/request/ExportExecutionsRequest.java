@@ -31,7 +31,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "ExportExecutionsRequestKeys")
 @Entity(value = "exportExecutionsRequests", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ExportExecutionsRequest
+public final class ExportExecutionsRequest
     implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

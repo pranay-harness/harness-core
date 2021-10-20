@@ -33,7 +33,7 @@ import org.mongodb.morphia.annotations.Id;
 @AllArgsConstructor
 @Entity(value = "supervisedTrainingStatus", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class SupervisedTrainingStatus implements GoogleDataStoreAware, CreatedAtAware, UuidAware {
+public final class SupervisedTrainingStatus implements GoogleDataStoreAware, CreatedAtAware, UuidAware {
   private String serviceId;
   private boolean isEmbeddingReady;
   private boolean isSupervisedReady;

@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Entity;
 @TargetModule(HarnessModule._959_COMMON_ENTITIES)
 @HarnessEntity(exportable = false)
 @OwnedBy(DEL)
-public class EmailData extends Queuable {
+public final class EmailData extends Queuable {
   private String accountId;
   @Builder.Default private List<String> to = new ArrayList<>();
   @Builder.Default private List<String> cc = new ArrayList<>();

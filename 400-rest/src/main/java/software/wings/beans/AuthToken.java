@@ -24,7 +24,7 @@ import org.simpleframework.xml.Transient;
 @FieldNameConstants(innerTypeName = "AuthTokenKeys")
 @Entity(value = "authTokens", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class AuthToken extends Base implements AccountAccess {
+public final class AuthToken extends Base implements AccountAccess {
   @Transient private User user;
   private String accountId;
   private String userId;

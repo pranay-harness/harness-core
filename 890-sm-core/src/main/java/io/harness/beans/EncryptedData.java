@@ -75,9 +75,10 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
-public class EncryptedData implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-                                      UpdatedAtAware, UpdatedByAware, NameAccess, PersistentRegularIterable,
-                                      AccountAccess, ScopedEntity, NGAccess, NGMigrationEntity {
+public final class EncryptedData
+    implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+               UpdatedByAware, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity, NGAccess,
+               NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

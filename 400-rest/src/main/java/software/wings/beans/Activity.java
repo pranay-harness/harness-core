@@ -56,8 +56,8 @@ import org.mongodb.morphia.annotations.Version;
 @Entity(value = "activities", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class Activity implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
-                                 CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
+public final class Activity implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
+                                       CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

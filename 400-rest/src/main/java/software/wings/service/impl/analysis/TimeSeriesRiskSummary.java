@@ -45,7 +45,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "TimeSeriesRiskSummaryKeys")
 @Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesRiskSummary extends Base implements AccountAccess {
+public final class TimeSeriesRiskSummary extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

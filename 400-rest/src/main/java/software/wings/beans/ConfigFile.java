@@ -54,7 +54,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @OwnedBy(CDC)
 @TargetModule(_957_CG_BEANS)
-public class ConfigFile extends BaseFile implements EncryptableSetting {
+public final class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
 
   public static List<MongoIndex> mongoIndexes() {

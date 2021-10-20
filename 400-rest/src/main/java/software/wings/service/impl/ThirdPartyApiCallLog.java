@@ -70,7 +70,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "thirdPartyApiCallLog", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @TargetModule(HarnessModule._960_API_SERVICES)
-public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware, AccountAccess {
+public final class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

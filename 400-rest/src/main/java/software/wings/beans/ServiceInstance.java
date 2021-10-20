@@ -30,7 +30,7 @@ import org.mongodb.morphia.annotations.Property;
 @Entity(value = "serviceInstance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ServiceInstanceKeys")
-public class ServiceInstance extends Base {
+public final class ServiceInstance extends Base {
   private String envId;
 
   @Property("serviceTemplate") private String serviceTemplateId;

@@ -15,6 +15,6 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "genericEvent", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class GenericEvent extends Queuable {
+public final class GenericEvent extends Queuable {
   private Event event;
 }

@@ -68,8 +68,8 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = false)
 @OwnedBy(CDC)
 @TargetModule(_957_CG_BEANS)
-public class Log implements GoogleDataStoreAware, PersistentEntity, AccountDataRetentionEntity, UuidAware,
-                            CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
+public final class Log implements GoogleDataStoreAware, PersistentEntity, AccountDataRetentionEntity, UuidAware,
+                                  CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

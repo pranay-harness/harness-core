@@ -16,7 +16,7 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "systemCatalogs", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class SystemCatalog extends BaseFile {
+public final class SystemCatalog extends BaseFile {
   private CatalogType catalogType;
   private String stackRootDirectory;
   private FileType fileType;

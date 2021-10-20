@@ -33,7 +33,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "gitCommits", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
-public class GitCommit extends Base implements AccountAccess {
+public final class GitCommit extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

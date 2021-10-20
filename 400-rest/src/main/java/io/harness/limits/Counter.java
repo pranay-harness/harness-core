@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = true)
 @OwnedBy(PL)
 @TargetModule(HarnessModule._955_ACCOUNT_MGMT)
-public class Counter extends Base implements AccountAccess {
+public final class Counter extends Base implements AccountAccess {
   @FdUniqueIndex private final String key;
   private final Long value;
   @FdIndex private String accountId;

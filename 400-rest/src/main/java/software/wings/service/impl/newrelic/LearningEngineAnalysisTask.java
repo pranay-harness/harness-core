@@ -49,7 +49,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 @OwnedBy(CV)
 @TargetModule(HarnessModule._270_VERIFICATION)
-public class LearningEngineAnalysisTask extends Base implements AccountAccess {
+public final class LearningEngineAnalysisTask extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

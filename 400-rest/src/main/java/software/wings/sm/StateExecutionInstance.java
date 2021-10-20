@@ -58,8 +58,8 @@ import org.simpleframework.xml.Transient;
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class StateExecutionInstance implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
-                                               UpdatedAtAware, ApplicationAccess {
+public final class StateExecutionInstance implements PersistentEntity, AccountDataRetentionEntity, UuidAware,
+                                                     CreatedAtAware, UpdatedAtAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

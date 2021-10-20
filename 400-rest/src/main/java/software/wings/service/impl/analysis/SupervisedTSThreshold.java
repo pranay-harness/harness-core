@@ -40,7 +40,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "supervisedTSThreshold", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Slf4j
-public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAware, AccountAccess {
+public final class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAware, AccountAccess {
   public static final String connector = ":";
 
   @Id private String uuid;

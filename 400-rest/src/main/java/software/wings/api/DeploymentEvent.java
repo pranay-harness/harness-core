@@ -23,7 +23,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "deploymentEventQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class DeploymentEvent extends Queuable {
+public final class DeploymentEvent extends Queuable {
   private boolean isRollback;
   private List<DeploymentSummary> deploymentSummaries;
   private OnDemandRollbackInfo onDemandRollbackInfo;

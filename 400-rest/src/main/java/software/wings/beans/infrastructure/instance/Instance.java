@@ -42,7 +42,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class Instance extends Base implements AccountAccess, ApplicationAccess {
+public final class Instance extends Base implements AccountAccess, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

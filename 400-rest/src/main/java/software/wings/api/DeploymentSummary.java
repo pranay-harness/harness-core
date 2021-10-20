@@ -38,7 +38,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "DeploymentSummaryKeys")
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class DeploymentSummary extends Base {
+public final class DeploymentSummary extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "mlExperiments", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class MLExperiments extends Base {
+public final class MLExperiments extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

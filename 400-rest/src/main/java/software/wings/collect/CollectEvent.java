@@ -13,7 +13,7 @@ import org.mongodb.morphia.annotations.Reference;
 
 @Entity(value = "collectorQueue2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class CollectEvent extends Queuable {
+public final class CollectEvent extends Queuable {
   @Reference(idOnly = true) private Artifact artifact;
 
   public Artifact getArtifact() {

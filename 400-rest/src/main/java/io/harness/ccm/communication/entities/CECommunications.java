@@ -31,7 +31,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "ceCommunications", noClassnameStored = true)
 @OwnedBy(CE)
 @TargetModule(HarnessModule._490_CE_COMMONS)
-public class CECommunications implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class CECommunications
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

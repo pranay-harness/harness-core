@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.PostLoad;
 @FieldNameConstants(innerTypeName = "RoleKeys")
 @OwnedBy(HarnessTeam.PL)
 @TargetModule(HarnessModule._970_RBAC_CORE)
-public class Role extends Base implements AccountAccess {
+public final class Role extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

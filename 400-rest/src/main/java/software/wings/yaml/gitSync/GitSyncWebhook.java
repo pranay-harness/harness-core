@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "gitSyncWebhook", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitSyncWebhookKeys")
-public class GitSyncWebhook extends Base implements AccountAccess {
+public final class GitSyncWebhook extends Base implements AccountAccess {
   private String accountId;
   private String webhookToken;
   private String entityId;

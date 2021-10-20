@@ -31,7 +31,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "versionedTemplate", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "VersionedTemplateKeys")
-public class VersionedTemplate extends Base implements AccountAccess {
+public final class VersionedTemplate extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

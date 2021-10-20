@@ -12,7 +12,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "managerConfiguration", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ManagerConfiguration extends Base {
+public final class ManagerConfiguration extends Base {
   public static final String GLOBAL_CONFIG_ID = "__GLOBAL_CONFIG_ID__";
   public static final String MATCH_ALL_VERSION = "*";
   String primaryVersion;

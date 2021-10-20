@@ -35,7 +35,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceCommandKeys")
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
-public class ServiceCommand extends Base {
+public final class ServiceCommand extends Base {
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
 
   private String name;

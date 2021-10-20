@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "instanceEventQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class InstanceEvent extends Queuable {
+public final class InstanceEvent extends Queuable {
   private String accountId;
   private Set<String> deletions;
   private long deletionTimestamp;

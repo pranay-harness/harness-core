@@ -32,7 +32,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateSelectionLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateSelectionLogKeys")
-public class DelegateSelectionLog implements PersistentEntity, UuidAware, AccountAccess {
+public final class DelegateSelectionLog implements PersistentEntity, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

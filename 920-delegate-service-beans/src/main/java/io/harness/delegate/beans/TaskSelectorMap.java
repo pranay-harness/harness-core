@@ -33,8 +33,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "TaskSelectorMapKeys")
 @Entity(value = "taskSelectorMaps", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class TaskSelectorMap implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                        UpdatedByAware, AccountAccess {
+public final class TaskSelectorMap implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                              UpdatedAtAware, UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

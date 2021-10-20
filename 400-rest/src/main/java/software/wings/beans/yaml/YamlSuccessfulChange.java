@@ -30,8 +30,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "YamlSuccessfulChangeKeys")
 @Entity(value = "yamlSuccessfulChange", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class YamlSuccessfulChange implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-                                             UpdatedAtAware, UpdatedByAware, AccountAccess {
+public final class YamlSuccessfulChange implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                                   UpdatedAtAware, UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

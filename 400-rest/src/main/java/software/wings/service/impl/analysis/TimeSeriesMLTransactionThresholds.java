@@ -31,7 +31,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "TimeSeriesMLTransactionThresholdKeys")
 @Entity(value = "timeseriesTransactionThresholds", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesMLTransactionThresholds extends Base implements AccountAccess {
+public final class TimeSeriesMLTransactionThresholds extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

@@ -19,7 +19,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "harnessApiKeys", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "HarnessApiKeyKeys")
-public class HarnessApiKey implements PersistentEntity, UuidAware {
+public final class HarnessApiKey implements PersistentEntity, UuidAware {
   @Id private String uuid;
   @NotEmpty private byte[] encryptedKey;
   @FdIndex @NotEmpty private ClientType clientType;

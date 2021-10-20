@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Reference;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "notificationBatch", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class NotificationBatch extends Base {
+public final class NotificationBatch extends Base {
   private String batchId;
   private NotificationRule notificationRule;
   @Reference(idOnly = true, ignoreMissing = true) private List<Notification> notifications = new ArrayList<>();

@@ -42,7 +42,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "audits", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(HarnessModule._940_CG_AUDIT_SERVICE)
-public class AuditHeader extends Base implements AccountAccess {
+public final class AuditHeader extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

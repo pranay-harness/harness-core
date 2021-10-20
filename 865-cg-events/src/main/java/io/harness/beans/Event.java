@@ -32,8 +32,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "EventsKeys")
 @Entity(value = "events", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class Event implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, ApplicationAccess,
-                              AccountAccess, PersistentRegularIterable {
+public final class Event implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, ApplicationAccess,
+                                    AccountAccess, PersistentRegularIterable {
   public enum EventCreatorSource { CD, CDNG, CIE }
 
   @FdIndex @NotEmpty @NotNull private String accountId;

@@ -58,7 +58,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(_950_NG_AUTHENTICATION_SERVICE)
-public class UserGroup extends Base implements NotificationReceiverInfo, AccountAccess, NameAccess {
+public final class UserGroup extends Base implements NotificationReceiverInfo, AccountAccess, NameAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

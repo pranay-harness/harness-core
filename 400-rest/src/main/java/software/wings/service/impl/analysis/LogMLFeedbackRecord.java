@@ -38,7 +38,7 @@ import org.mongodb.morphia.annotations.Entity;
 @IgnoreUnusedIndex
 @Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
+public final class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

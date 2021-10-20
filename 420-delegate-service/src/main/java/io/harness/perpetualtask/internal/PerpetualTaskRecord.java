@@ -47,8 +47,9 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = false)
 @Slf4j
 @OwnedBy(DEL)
-public class PerpetualTaskRecord implements PersistentEntity, UuidAware, PersistentRegularIterable,
-                                            PersistentFibonacciIterable, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class PerpetualTaskRecord
+    implements PersistentEntity, UuidAware, PersistentRegularIterable, PersistentFibonacciIterable, CreatedAtAware,
+               UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

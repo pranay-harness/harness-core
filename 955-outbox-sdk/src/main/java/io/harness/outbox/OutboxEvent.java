@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "outboxEvents", noClassnameStored = true)
 @Document("outboxEvents")
 @TypeAlias("outboxEvents")
-public class OutboxEvent {
+public final class OutboxEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
 
   @NotNull ResourceScope resourceScope;

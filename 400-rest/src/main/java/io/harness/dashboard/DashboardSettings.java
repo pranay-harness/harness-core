@@ -30,8 +30,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "dashboardSettings", noClassnameStored = true)
 @JsonIgnoreProperties(value = {"lastUpdatedBy"}, allowSetters = true)
 @HarnessEntity(exportable = true)
-public class DashboardSettings implements NameAccess, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-                                          UpdatedAtAware, UpdatedByAware, AccountAccess {
+public final class DashboardSettings implements NameAccess, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                                UpdatedAtAware, UpdatedByAware, AccountAccess {
   private EmbeddedUser createdBy;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   private long createdAt;

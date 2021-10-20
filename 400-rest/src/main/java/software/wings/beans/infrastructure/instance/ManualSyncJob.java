@@ -20,7 +20,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "manualSyncJobStatus", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ManualSyncJob extends Base {
+public final class ManualSyncJob extends Base {
   private String accountId;
 
   @Builder

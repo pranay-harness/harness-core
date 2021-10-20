@@ -41,7 +41,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "gcsFileMetadata", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GcsFileMetadataKeys")
-public class GcsFileMetadata extends Base implements AccountAccess, GcsHarnessFileMetadata {
+public final class GcsFileMetadata extends Base implements AccountAccess, GcsHarnessFileMetadata {
   @NotEmpty @FdIndex private String accountId;
   @NotEmpty @FdIndex private String fileId; // Mongo GridFs fileId.
   @NotEmpty @FdIndex private String gcsFileId;

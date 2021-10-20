@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "executionQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ExecutionEvent extends Queuable {
+public final class ExecutionEvent extends Queuable {
   private String appId;
   private String workflowId;
   private List<String> infraMappingIds;

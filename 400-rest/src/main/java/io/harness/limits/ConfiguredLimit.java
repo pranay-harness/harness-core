@@ -27,7 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "ConfiguredLimitKeys")
 @HarnessEntity(exportable = true)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class ConfiguredLimit<T extends Limit> implements PersistentEntity, AccountAccess {
+public final class ConfiguredLimit<T extends Limit> implements PersistentEntity, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

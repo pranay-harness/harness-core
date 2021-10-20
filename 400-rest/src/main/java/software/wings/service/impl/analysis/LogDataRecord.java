@@ -59,7 +59,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 @OwnedBy(CV)
 @TargetModule(HarnessModule._270_VERIFICATION)
-public class LogDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
+public final class LogDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

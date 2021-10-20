@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("notifyQueue")
 @FieldNameConstants(innerTypeName = "NotifyEventKeys")
 @StoreIn(DbAliases.ALL)
-public class NotifyEvent extends Queuable {
+public final class NotifyEvent extends Queuable {
   @FdUniqueIndex private String waitInstanceId;
   @Override
   public String toString() {

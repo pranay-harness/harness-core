@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "templateVersions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class TemplateVersion extends Base implements AccountAccess {
+public final class TemplateVersion extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

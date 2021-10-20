@@ -34,7 +34,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "ContinuousVerificationExecutionMetaDataKeys")
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ContinuousVerificationExecutionMetaData extends Base implements AccountAccess {
+public final class ContinuousVerificationExecutionMetaData extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

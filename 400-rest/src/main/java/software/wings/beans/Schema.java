@@ -23,7 +23,7 @@ import org.mongodb.morphia.annotations.Id;
 @AllArgsConstructor
 @Entity(value = "schema", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class Schema implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class Schema implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String SCHEMA_ID = "schema";
   public static final String VERSION = "version";
   public static final String BACKGROUND_VERSION = "backgroundVersion";

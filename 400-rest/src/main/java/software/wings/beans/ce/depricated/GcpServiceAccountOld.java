@@ -27,7 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "GcpServiceAccountKeys")
 @Entity(value = "gcpServiceAccount", noClassnameStored = true)
 @OwnedBy(CE)
-public class GcpServiceAccountOld
+public final class GcpServiceAccountOld
     implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

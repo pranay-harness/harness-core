@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "delegateSequenceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
-public class DelegateSequenceConfig extends Base implements AccountAccess {
+public final class DelegateSequenceConfig extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

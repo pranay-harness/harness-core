@@ -14,7 +14,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "licenses", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class License extends Base {
+public final class License extends Base {
   private String name;
   private List<Entitlement> entitlements;
   private boolean isActive;

@@ -32,7 +32,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @OwnedBy(HarnessTeam.DEL)
-public class DelegateGroup implements PersistentEntity, UuidAware {
+public final class DelegateGroup implements PersistentEntity, UuidAware {
   @Id @NotNull private String uuid;
 
   @NotEmpty private String name;

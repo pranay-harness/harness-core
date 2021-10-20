@@ -22,7 +22,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "ServiceSecretKeyKeys")
 @Entity(value = "serviceSecrets", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ServiceSecretKey implements PersistentEntity, CreatedAtAware, UpdatedAtAware {
+public final class ServiceSecretKey implements PersistentEntity, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;

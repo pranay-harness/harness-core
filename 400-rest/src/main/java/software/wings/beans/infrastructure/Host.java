@@ -33,7 +33,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "HostKeys")
 @OwnedBy(CDP)
 @TargetModule(_957_CG_BEANS)
-public class Host extends Base {
+public final class Host extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

@@ -88,7 +88,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j
-public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware, ApplicationAccess {
+public final class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

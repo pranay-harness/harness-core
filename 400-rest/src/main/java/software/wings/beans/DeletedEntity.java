@@ -20,7 +20,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "deletedEntities", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DeletedEntityKeys")
-public class DeletedEntity implements PersistentEntity, PersistentRegularIterable {
+public final class DeletedEntity implements PersistentEntity, PersistentRegularIterable {
   @Id private String uuid;
   @FdUniqueIndex private String entityId;
   private DeletedEntityType entityType;

@@ -36,7 +36,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = true)
 @OwnedBy(PL)
 @TargetModule(_970_RBAC_CORE)
-public class HarnessUserGroup extends Base {
+public final class HarnessUserGroup extends Base {
   @NotEmpty private String name;
   private String description;
   @FdIndex private Set<String> memberIds;

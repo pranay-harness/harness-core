@@ -41,7 +41,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "delegates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @OwnedBy(HarnessTeam.DEL)
-public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess, PersistentRegularIterable {
+public final class Delegate
+    implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess, PersistentRegularIterable {
   public static final Duration TTL = ofDays(30);
 
   public static List<MongoIndex> mongoIndexes() {

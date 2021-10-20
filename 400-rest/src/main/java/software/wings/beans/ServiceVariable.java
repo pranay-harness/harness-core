@@ -56,7 +56,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "ServiceVariableKeys")
 @Entity(value = "serviceVariables", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class ServiceVariable extends Base implements EncryptableSetting {
+public final class ServiceVariable extends Base implements EncryptableSetting {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

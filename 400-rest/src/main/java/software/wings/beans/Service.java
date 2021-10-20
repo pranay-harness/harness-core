@@ -65,7 +65,7 @@ import org.mongodb.morphia.annotations.Version;
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(_957_CG_BEANS)
-public class Service extends Base
+public final class Service extends Base
     implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

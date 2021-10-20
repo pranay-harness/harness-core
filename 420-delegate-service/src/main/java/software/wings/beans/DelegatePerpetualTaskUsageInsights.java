@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "delegatePerpetualTaskUsageInsights", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class DelegatePerpetualTaskUsageInsights implements PersistentEntity, UuidAware {
+public final class DelegatePerpetualTaskUsageInsights implements PersistentEntity, UuidAware {
   @Id private String uuid;
   @FdIndex private long timestamp;
   private String accountId;

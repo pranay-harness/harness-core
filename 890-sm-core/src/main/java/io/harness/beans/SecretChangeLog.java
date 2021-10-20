@@ -41,8 +41,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SecretChangeLogKeys")
-public class SecretChangeLog implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                        UpdatedByAware, AccountAccess {
+public final class SecretChangeLog implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                              UpdatedAtAware, UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

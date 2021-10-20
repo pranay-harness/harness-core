@@ -30,7 +30,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "capabilityTaskSelectionDetails", noClassnameStored = true)
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._955_DELEGATE_BEANS)
-public class CapabilityTaskSelectionDetails implements PersistentEntity, PersistentFibonacciIterable {
+public final class CapabilityTaskSelectionDetails implements PersistentEntity, PersistentFibonacciIterable {
   @Id private String uuid;
   @FdIndex private String accountId;
   @FdIndex private String capabilityId;

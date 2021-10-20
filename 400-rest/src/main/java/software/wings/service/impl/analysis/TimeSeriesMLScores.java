@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "timeSeriesMLScores", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMLScoresKeys")
-public class TimeSeriesMLScores extends Base implements AccountAccess {
+public final class TimeSeriesMLScores extends Base implements AccountAccess {
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String workflowId;

@@ -23,7 +23,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "GcpOrganizationKeys")
 @Entity(value = "gcpOrganization", noClassnameStored = true)
 @OwnedBy(CE)
-public class GcpOrganization implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
+public final class GcpOrganization
+    implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   String accountId;
   String organizationId;

@@ -49,7 +49,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 @TargetModule(_957_CG_BEANS)
 @OwnedBy(CDP)
-public class InfrastructureDefinition
+public final class InfrastructureDefinition
     implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
                ApplicationAccess, CustomDeploymentTypeAware, AccountAccess, NGMigrationEntity {
   public static List<MongoIndex> mongoIndexes() {

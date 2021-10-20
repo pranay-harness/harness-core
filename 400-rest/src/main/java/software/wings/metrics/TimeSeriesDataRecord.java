@@ -78,7 +78,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricRecordKeys")
 @Entity(value = "timeSeriesMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesDataRecord
+public final class TimeSeriesDataRecord
     implements GoogleDataStoreAware, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   private static final String ANCESTRY_ACCOUNT_ID = "Fi9wSBlxQmmjZxnsPBbFOQ";
   private static final String BUILD_DOT_COM_ACCOUNT_ID = "JWNrP_OyRrSL6qe9pCSI0g";

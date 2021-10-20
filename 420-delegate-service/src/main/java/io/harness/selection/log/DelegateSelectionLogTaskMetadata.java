@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateSelectionLogTaskMetadata", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateSelectionLogTaskMetadataKeys")
-public class DelegateSelectionLogTaskMetadata implements PersistentEntity, UuidAware, AccountAccess {
+public final class DelegateSelectionLogTaskMetadata implements PersistentEntity, UuidAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @FdIndex @NotEmpty private String accountId;

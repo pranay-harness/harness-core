@@ -52,7 +52,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "governanceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @Slf4j
-public class GovernanceConfig
+public final class GovernanceConfig
     implements PersistentEntity, UuidAware, UpdatedByAware, AccountAccess, ApplicationAccess, PersistentCronIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -34,7 +34,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "AlertNotificationRulekeys")
 @Entity(value = "alertNotificationRules", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class AlertNotificationRule extends Base implements AccountAccess {
+public final class AlertNotificationRule extends Base implements AccountAccess {
   public static final String ALERT_CATEGORY = "alertCategory";
 
   @FdIndex @Setter String accountId;

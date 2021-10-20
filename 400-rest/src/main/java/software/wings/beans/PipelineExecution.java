@@ -31,7 +31,7 @@ import org.mongodb.morphia.annotations.Id;
 @Data
 @Entity(value = "pipelineExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class PipelineExecution
+public final class PipelineExecution
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, ApplicationAccess {
   public static final String PIPELINE_ID_KEY = "pipelineId";
 

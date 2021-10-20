@@ -79,8 +79,8 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @BreakDependencyOn("software.wings.service.impl.WorkflowExecutionServiceHelper")
-public class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
-                                          CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
+public final class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
+                                                CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

@@ -22,7 +22,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "delegateTaskUsageInsights", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class DelegateTaskUsageInsights implements PersistentEntity, UuidAware {
+public final class DelegateTaskUsageInsights implements PersistentEntity, UuidAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

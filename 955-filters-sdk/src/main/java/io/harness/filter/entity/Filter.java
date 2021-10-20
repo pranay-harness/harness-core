@@ -46,7 +46,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("filters")
 @TypeAlias("io.harness.entity.Filter")
 @OwnedBy(DX)
-public class Filter implements PersistentEntity {
+public final class Filter implements PersistentEntity {
   @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String id;
   @JsonIgnore String accountIdentifier;
   @NotNull String name;

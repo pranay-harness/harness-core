@@ -12,7 +12,7 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "externalServiceAuthTokens", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ExternalServiceAuthToken extends Base {
+public final class ExternalServiceAuthToken extends Base {
   private long expireAt;
 
   @Override

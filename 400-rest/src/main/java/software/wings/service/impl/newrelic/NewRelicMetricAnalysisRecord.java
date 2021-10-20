@@ -50,7 +50,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = false)
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
-public class NewRelicMetricAnalysisRecord
+public final class NewRelicMetricAnalysisRecord
     extends Base implements Comparable<NewRelicMetricAnalysisRecord>, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

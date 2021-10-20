@@ -61,7 +61,7 @@ import org.mongodb.morphia.annotations.Transient;
 @IgnoreUnusedIndex
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
+public final class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

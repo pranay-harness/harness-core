@@ -27,7 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "CommandVersionsKeys")
 @Entity(value = "clCommandVersions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class CommandVersionEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class CommandVersionEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @NotNull(groups = {Update.class}) String uuid;
   String commandName;
   String commandStoreName;

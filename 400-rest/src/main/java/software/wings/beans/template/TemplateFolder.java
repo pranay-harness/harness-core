@@ -42,7 +42,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "TemplateFolderKeys")
 @Entity(value = "templateFolders", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
+public final class TemplateFolder extends Base implements KeywordsAware, NameAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

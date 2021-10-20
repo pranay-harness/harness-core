@@ -37,7 +37,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "barrierInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class BarrierInstance implements PersistentEntity, UuidAware, PersistentRegularIterable, ApplicationAccess {
+public final class BarrierInstance
+    implements PersistentEntity, UuidAware, PersistentRegularIterable, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

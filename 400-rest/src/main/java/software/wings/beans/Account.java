@@ -60,7 +60,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @ChangeDataCapture(table = "accounts", fields = {}, handler = "Account")
-public class Account extends Base implements PersistentRegularIterable {
+public final class Account extends Base implements PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

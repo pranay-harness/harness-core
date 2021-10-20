@@ -20,7 +20,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "PerpetualTaskScheduleConfigKeys")
 @Entity(value = "perpetualTaskScheduleConfig", noClassnameStored = true)
 @OwnedBy(HarnessTeam.PL)
-public class PerpetualTaskScheduleConfig implements PersistentEntity {
+public final class PerpetualTaskScheduleConfig implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

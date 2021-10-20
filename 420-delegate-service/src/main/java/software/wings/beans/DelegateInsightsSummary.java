@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateInsightsSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @OwnedBy(DEL)
-public class DelegateInsightsSummary implements PersistentEntity, UuidAware {
+public final class DelegateInsightsSummary implements PersistentEntity, UuidAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

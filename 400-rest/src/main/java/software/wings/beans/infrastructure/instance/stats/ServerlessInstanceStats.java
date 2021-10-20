@@ -42,8 +42,8 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ServerlessInstanceStatsKeys")
 @OwnedBy(CDP)
-public class ServerlessInstanceStats implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-                                                UpdatedAtAware, UpdatedByAware, AccountAccess {
+public final class ServerlessInstanceStats implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                                      UpdatedAtAware, UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

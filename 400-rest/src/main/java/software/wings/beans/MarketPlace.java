@@ -33,8 +33,8 @@ import org.mongodb.morphia.annotations.Id;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "marketPlaces", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class MarketPlace implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                    UpdatedByAware, AccountAccess {
+public final class MarketPlace implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                          UpdatedByAware, AccountAccess {
   private MarketPlaceType type;
 
   @FdUniqueIndex private String customerIdentificationCode;

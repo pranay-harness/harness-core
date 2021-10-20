@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class Permit extends Base {
+public final class Permit extends Base {
   public static final String PERMIT_KEY_ID = "key";
   @FdUniqueIndex private String key;
   private String group;

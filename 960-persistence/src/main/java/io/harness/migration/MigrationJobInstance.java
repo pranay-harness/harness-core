@@ -19,7 +19,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = COLLECTION_NAME, noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "MigrationJobInstanceKeys")
-public class MigrationJobInstance implements PersistentEntity, UpdatedAtAware {
+public final class MigrationJobInstance implements PersistentEntity, UpdatedAtAware {
   public static final String COLLECTION_NAME = "migrationJobInstances";
 
   @Id private String id;

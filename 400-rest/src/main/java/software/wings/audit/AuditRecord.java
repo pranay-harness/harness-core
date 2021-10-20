@@ -30,7 +30,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "entityAuditRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "AuditRecordKeys")
-public class AuditRecord
+public final class AuditRecord
     implements PersistentEntity, CreatedAtAware, UuidAware, PersistentRegularIterable, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

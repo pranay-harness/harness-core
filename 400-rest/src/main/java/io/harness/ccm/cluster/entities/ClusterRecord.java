@@ -30,7 +30,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = false)
 @OwnedBy(CE)
 @TargetModule(HarnessModule._490_CE_COMMONS)
-public class ClusterRecord implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
+public final class ClusterRecord implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   @FdIndex String accountId;
   final Cluster cluster;

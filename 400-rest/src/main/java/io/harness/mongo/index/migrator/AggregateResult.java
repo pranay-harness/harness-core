@@ -8,7 +8,7 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Entity(noClassnameStored = true)
-public class AggregateResult implements PersistentEntity {
+public final class AggregateResult implements PersistentEntity {
   @Id private AccountAndName _id;
   private Integer count;
 }

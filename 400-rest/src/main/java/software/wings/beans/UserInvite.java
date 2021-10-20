@@ -40,7 +40,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "UserInviteKeys")
 @TargetModule(_950_NG_AUTHENTICATION_SERVICE)
-public class UserInvite extends Base implements AccountAccess {
+public final class UserInvite extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

@@ -43,8 +43,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "HarnessTagKeys")
 @Entity(value = "tags", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class HarnessTag implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware,
-                                   CreatedByAware, AccountAccess {
+public final class HarnessTag implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware,
+                                         CreatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

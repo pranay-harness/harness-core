@@ -36,7 +36,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "serviceTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceTemplateKeys")
-public class ServiceTemplate extends Base {
+public final class ServiceTemplate extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

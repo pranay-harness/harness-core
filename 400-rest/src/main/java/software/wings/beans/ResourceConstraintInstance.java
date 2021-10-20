@@ -37,7 +37,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @TargetModule(HarnessModule._957_CG_BEANS)
-public class ResourceConstraintInstance implements PersistentRegularIterable, UuidAware, AccountAccess {
+public final class ResourceConstraintInstance implements PersistentRegularIterable, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

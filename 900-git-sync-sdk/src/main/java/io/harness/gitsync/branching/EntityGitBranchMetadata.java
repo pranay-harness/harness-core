@@ -29,7 +29,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "EntityGitBranchMetadataKeys")
 @OwnedBy(DX)
 // todo(abhinav): add indexes
-public class EntityGitBranchMetadata {
+public final class EntityGitBranchMetadata {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull String uuidOfEntity;
   String entityType;

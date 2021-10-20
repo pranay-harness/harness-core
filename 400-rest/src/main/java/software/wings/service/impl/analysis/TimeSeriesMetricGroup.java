@@ -30,7 +30,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricGroupKeys")
-public class TimeSeriesMetricGroup extends Base implements AccountAccess {
+public final class TimeSeriesMetricGroup extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

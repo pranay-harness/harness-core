@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "appContainers", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "AppContainerKeys")
-public class AppContainer extends BaseFile {
+public final class AppContainer extends BaseFile {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder().name("unique_yaml").unique(true).field("accountId").field("name").build())

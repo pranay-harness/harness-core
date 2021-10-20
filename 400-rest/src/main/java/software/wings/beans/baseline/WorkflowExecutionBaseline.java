@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "WorkflowExecutionBaselineKeys")
 @Entity(value = "workflowExecutionBaselines", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class WorkflowExecutionBaseline extends Base implements AccountAccess {
+public final class WorkflowExecutionBaseline extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

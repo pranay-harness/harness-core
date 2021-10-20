@@ -22,7 +22,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "instanceChangeQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class InstanceChangeEvent extends Queuable {
+public final class InstanceChangeEvent extends Queuable {
   private List<Instance> instanceList;
   private List<String> autoScalingGroupList;
   private String appId;

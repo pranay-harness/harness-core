@@ -47,7 +47,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "CgEventConfigKeys")
 @Entity(value = "cgEventConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class CgEventConfig
+public final class CgEventConfig
     extends EventConfig implements PersistentEntity, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
                                    ApplicationAccess, NameAccess, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

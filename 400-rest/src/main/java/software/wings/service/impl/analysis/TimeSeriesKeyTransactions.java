@@ -22,8 +22,8 @@ import org.mongodb.morphia.annotations.Id;
 @AllArgsConstructor
 @org.mongodb.morphia.annotations.Entity(value = "timeSeriesKeyTransactions", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesKeyTransactionsKeys")
-public class TimeSeriesKeyTransactions implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-                                                  UpdatedAtAware, UpdatedByAware, AccountAccess {
+public final class TimeSeriesKeyTransactions implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                                        UpdatedAtAware, UpdatedByAware, AccountAccess {
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;

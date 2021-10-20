@@ -27,7 +27,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "ceSlackWebhooks", noClassnameStored = true)
 @OwnedBy(CE)
 @TargetModule(HarnessModule._490_CE_COMMONS)
-public class CESlackWebhook implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class CESlackWebhook
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   @NotBlank String accountId;
   String webhookUrl;

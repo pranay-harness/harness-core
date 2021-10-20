@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Id;
 @ToString
 @Entity(value = "deploymentReconciliation", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class DeploymentReconRecord implements PersistentEntity, UuidAware, AccountAccess {
+public final class DeploymentReconRecord implements PersistentEntity, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

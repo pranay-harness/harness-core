@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "WorkflowVerificationResultKeys")
 @Entity(value = "workflowVerificationResults", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class WorkflowVerificationResult
+public final class WorkflowVerificationResult
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
   @FdIndex private String accountId;

@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "gitProcessRequestSdk", noClassnameStored = true)
 @StoreIn(DbAliases.ALL)
 @OwnedBy(DX)
-public class GitProcessRequest {
+public final class GitProcessRequest {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

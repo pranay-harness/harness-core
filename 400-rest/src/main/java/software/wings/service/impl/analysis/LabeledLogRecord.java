@@ -39,7 +39,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 @AllArgsConstructor
 @Entity(value = "supervisedLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LabeledLogRecord implements GoogleDataStoreAware, AccountAccess {
+public final class LabeledLogRecord implements GoogleDataStoreAware, AccountAccess {
   private String label;
   private String accountId;
   private Set<String> feedbackIds;

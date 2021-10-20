@@ -32,7 +32,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "WhitelistKeys")
 @Entity(value = "whitelist", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class Whitelist extends Base implements AccountAccess {
+public final class Whitelist extends Base implements AccountAccess {
   @FdIndex @NotEmpty private String accountId;
   private String description;
   @NotEmpty private WhitelistStatus status = WhitelistStatus.ACTIVE;

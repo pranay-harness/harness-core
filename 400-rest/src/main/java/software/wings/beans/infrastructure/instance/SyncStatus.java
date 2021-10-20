@@ -25,7 +25,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "syncStatus", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SyncStatusKeys")
-public class SyncStatus extends Base {
+public final class SyncStatus extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

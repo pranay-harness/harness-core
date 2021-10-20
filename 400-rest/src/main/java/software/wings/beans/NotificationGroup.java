@@ -37,7 +37,7 @@ import org.mongodb.morphia.annotations.Reference;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "NotificationGroupKeys")
 @Deprecated
-public class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess, AccountAccess {
+public final class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

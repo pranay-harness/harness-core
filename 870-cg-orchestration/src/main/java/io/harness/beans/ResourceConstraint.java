@@ -45,8 +45,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("resourceConstraint")
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                           UpdatedByAware, AccountAccess {
+public final class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                                 UpdatedAtAware, UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

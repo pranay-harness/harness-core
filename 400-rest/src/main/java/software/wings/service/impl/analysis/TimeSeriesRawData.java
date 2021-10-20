@@ -47,7 +47,7 @@ import org.mongodb.morphia.annotations.Id;
 @org.mongodb.morphia.annotations.Entity(value = "timeSeriesRawData", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesRawDataKeys")
 @Slf4j
-public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware, AccountAccess {
+public final class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware, AccountAccess {
   public static final String connector = ":";
 
   @Inject private DataStoreService dataStoreService;

@@ -22,6 +22,6 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "deploymentTimeSeriesEventQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class DeploymentTimeSeriesEvent extends Queuable {
+public final class DeploymentTimeSeriesEvent extends Queuable {
   private TimeSeriesEventInfo timeSeriesEventInfo;
 }

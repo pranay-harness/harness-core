@@ -30,7 +30,7 @@ import org.mongodb.morphia.annotations.Entity;
 @IgnoreUnusedIndex
 @Entity(value = "experimentalTimeSeriesAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
+public final class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
