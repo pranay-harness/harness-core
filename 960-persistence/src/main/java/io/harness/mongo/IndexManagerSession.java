@@ -639,7 +639,7 @@ public class IndexManagerSession {
         if (processedCollections.contains(collection.getName())) {
           return;
         }
-        if (store != null && store.getName().equals("dms") && storeInSet.contains(DbAliases.DMS)) {
+        if (store != null && store.getName().equals("dms")  && (storeInSet.contains(DbAliases.DMS) || storeInSet.contains(DbAliases.ALL))) {
           log.info("DMS index " + collection.getName());
           processedCollections.add(collection.getName());
 
