@@ -8,11 +8,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.JobParameters;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Slf4j
+@Service
 public class BatchJobExecutionListener implements JobExecutionListener {
-  private MetricService metricService;
+  private final MetricService metricService;
 
+  @Autowired
   public BatchJobExecutionListener(MetricService metricService) {
     this.metricService = metricService;
   }

@@ -14,7 +14,6 @@ import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
-import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 
@@ -43,7 +42,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class K8sWorkloadRecommendationConfig {
   private static final int BATCH_SIZE = 1000;
 
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
   private final PublishedMessageDao publishedMessageDao;
   private final StepBuilderFactory stepBuilderFactory;
 
@@ -159,7 +158,7 @@ public class K8sWorkloadRecommendationConfig {
       Step computeRecommendationStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_WORKLOAD_RECOMMENDATION.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         // process WorkloadSpec messages and update current requests & limits.
         .start(workloadSpecStep)
         // process ContainerState messages and update histograms.

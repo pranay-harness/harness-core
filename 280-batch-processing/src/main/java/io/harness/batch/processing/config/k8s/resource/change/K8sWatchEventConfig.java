@@ -24,7 +24,6 @@ import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 import io.harness.govern.Switch;
-import io.harness.metrics.service.api.MetricService;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -58,7 +57,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class K8sWatchEventConfig {
   private static final int BATCH_SIZE = 100;
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
   private final PublishedMessageDao publishedMessageDao;
   private final StepBuilderFactory stepBuilderFactory;
 
@@ -226,7 +225,7 @@ public class K8sWatchEventConfig {
   public Job k8sWatchEventsJob(JobBuilderFactory jobBuilderFactory, Step k8sWatchEventsStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_WATCH_EVENT.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(k8sWatchEventsStep)
         .build();
   }
