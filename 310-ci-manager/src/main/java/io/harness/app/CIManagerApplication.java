@@ -27,8 +27,6 @@ import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
-import io.harness.enforcement.executions.BuildRestrictionUsageImpl;
-import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
 import io.harness.exception.GeneralException;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;

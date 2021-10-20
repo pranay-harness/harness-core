@@ -1,7 +1,6 @@
 package io.harness.app;
 
 import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
-import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CIExecutionServiceModule;
