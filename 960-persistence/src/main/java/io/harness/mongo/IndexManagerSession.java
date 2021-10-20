@@ -163,6 +163,9 @@ public class IndexManagerSession {
 
   public static Set<String> processIndexes(AdvancedDatastore datastore, Morphia morphia, Store store,
       boolean includeUnannotatedStoreIn, IndexesProcessor processor) {
+    if (store != null && store.getName().equals("dms")) {
+      return processIndexesDMS(datastore, morphia, store, includeUnannotatedStoreIn, processor);
+    }
     return processIndexesInternal(datastore, morphia, store, includeUnannotatedStoreIn, processor);
   }
 
@@ -605,5 +608,51 @@ public class IndexManagerSession {
     }
 
     return actionPerformed.get();
+  }
+
+  private static Set<String> processIndexesDMS(AdvancedDatastore datastore, Morphia morphia, Store store,
+      boolean includeUnannotatedStoreIn, IndexesProcessor processor) {
+    Set<String> processedCollections = new HashSet<>();
+    Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
+    mappedClasses.forEach(mc -> {
+      Entity entity = mc.getEntityAnnotation();
+      if (entity == null) {
+        return;
+      }
+
+      DBCollection collection = datastore.getCollection(mc.getClazz());
+
+      Set<String> storeInSet = new HashSet<>();
+      addStoreInInSet(mc, storeInSet);
+      if (isNotEmpty(storeInSet)) {
+        if (!storeInSet.contains(DbAliases.DMS) && (store == null || !storeInSet.contains(store.getName()))) {
+          return;
+        }
+      } else if (!includeUnannotatedStoreIn) {
+        return;
+      }
+
+      try (AutoLogContext ignore = new CollectionLogContext(collection.getName(), OVERRIDE_ERROR)) {
+        if (processedCollections.contains(collection.getName())) {
+          return;
+        }
+        if (store != null && store.getName().equals("dms") && storeInSet.contains(DbAliases.DMS)) {
+          log.info("DMS index " + collection.getName());
+          processedCollections.add(collection.getName());
+
+          if (entity.noClassnameStored() && !Modifier.isFinal(mc.getClazz().getModifiers())) {
+            log.error(
+                "No class store collection {} with not final class {}", collection.getName(), mc.getClazz().getName());
+          }
+          if (!entity.noClassnameStored() && Modifier.isFinal(mc.getClazz().getModifiers())) {
+            log.error("Class store collection {} with final class {}", collection.getName(), mc.getClazz().getName());
+          }
+
+          processor.process(mc, collection);
+        }
+      }
+    });
+
+    return processedCollections;
   }
 }
