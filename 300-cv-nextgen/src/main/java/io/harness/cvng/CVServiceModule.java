@@ -185,6 +185,10 @@ import io.harness.cvng.dashboard.services.impl.ServiceDependencyGraphServiceImpl
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.migration.impl.CVNGMigrationServiceImpl;
 import io.harness.cvng.migration.service.CVNGMigrationService;
+import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.services.UserJourneyService;
+import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelObjectiveServiceImpl;
+import io.harness.cvng.servicelevelobjective.services.impl.UserJourneyServiceImpl;
 import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
@@ -502,6 +506,9 @@ public class CVServiceModule extends AbstractModule {
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
+
+    bind(ServiceLevelObjectiveService.class).to(ServiceLevelObjectiveServiceImpl.class);
+    bind(UserJourneyService.class).to(UserJourneyServiceImpl.class);
 
     bind(LearningEngineDevService.class).to(LearningEngineDevServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMapBinder =
