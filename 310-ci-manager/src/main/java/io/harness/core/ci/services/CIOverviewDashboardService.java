@@ -7,6 +7,7 @@ import io.harness.app.beans.entities.CIUsageResult;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
+import io.harness.licensing.usage.beans.UsageDataDTO;
 
 import java.util.List;
 
@@ -25,6 +26,12 @@ public interface CIOverviewDashboardService {
 
   DashboardBuildRepositoryInfo getDashboardBuildRepository(String accountId, String orgId, String projectId,
       long startInterval, long endInterval, long previousStartInterval);
+
+  UsageDataDTO getActiveCommitter(String accountId, long timestamp);
+
+  UsageDataDTO getMonthlyBuild(String accountId, long timestamp);
+
+  UsageDataDTO getTotalBuild(String accountId, long timestamp);
 
   CIUsageResult getCIUsageResult(String accountId, long timestamp);
 }

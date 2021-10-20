@@ -170,7 +170,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return totalBuildSqlBuilder.toString();
   }
 
-  private CIUsageResult queryCalculatorForCIUsage(String accountId, long timestamp) {
+  @Override
+  public UsageDataDTO getActiveCommitter(String accountId, long timestamp) {
     long totalTries = 0;
     String query = "select distinct moduleinfo_author_id, projectidentifier , orgidentifier from " + tableName
         + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_author_id is not null and startts<=? and startts>=?;";
@@ -192,15 +193,10 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
                                        .build();
           usageReferences.add(reference);
         }
-        return CIUsageResult.builder()
-            .accountIdentifier(accountId)
-            .timestamp(timestamp)
-            .module("CI")
-            .activeCommitters(UsageDataDTO.builder()
-                                  .count(usageReferences.size())
-                                  .displayName("Last 60 Days")
-                                  .references(usageReferences)
-                                  .build())
+        return UsageDataDTO.builder()
+            .count(usageReferences.size())
+            .displayName("Last 60 Days")
+            .references(usageReferences)
             .build();
       } catch (SQLException ex) {
         totalTries++;
@@ -208,6 +204,16 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
+    return null;
+  }
+
+  @Override
+  public UsageDataDTO getMonthlyBuild(String accountId, long timestamp) {
+    return null;
+  }
+
+  @Override
+  public UsageDataDTO getTotalBuild(String accountId, long timestamp) {
     return null;
   }
 
@@ -615,7 +621,14 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   @Override
   public CIUsageResult getCIUsageResult(String accountId, long timestamp) {
-    return queryCalculatorForCIUsage(accountId, timestamp);
+    return CIUsageResult.builder()
+        .accountIdentifier(accountId)
+        .timestamp(timestamp)
+        .module("CI")
+        .activeCommitters(getActiveCommitter(accountId, timestamp))
+        .monthlyBuilds(getMonthlyBuild(accountId, timestamp))
+        .totalBuilds(getTotalBuild(accountId, timestamp))
+        .build();
   }
 
   private RepositoryInfo getRepositoryInfo(String repoName, long totalBuild, long success, long previousSuccess,

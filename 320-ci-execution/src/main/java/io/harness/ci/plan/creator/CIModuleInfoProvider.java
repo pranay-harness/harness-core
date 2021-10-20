@@ -55,11 +55,16 @@ import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -85,6 +90,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     String triggerRepoName = null;
     String url = null;
     CIBuildAuthor author = null;
+    Boolean isPrivateRepo = null;
     List<CIBuildCommit> triggerCommits = null;
     ExecutionTriggerInfo executionTriggerInfo = event.getAmbiance().getMetadata().getTriggerInfo();
     Ambiance ambiance = event.getAmbiance();
@@ -120,7 +126,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
           }
         }
       }
-
+      isPrivateRepo = isPrivateRepo(url);
       Build build = RunTimeInputHandler.resolveBuild(buildParameterField);
       if (build != null) {
         buildType = build.getType().toString();
@@ -177,6 +183,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
             .prNumber(prNumber)
             .repoName(repoName)
             .ciExecutionInfoDTO(ciWebhookInfoDTO)
+            .isPrivateRepo(isPrivateRepo)
             .build();
       }
     }
@@ -328,5 +335,19 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .build();
+  }
+
+  private boolean isPrivateRepo(String urlString) {
+    try {
+      URL url = new URL(urlString);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+      connection.connect();
+      int code = connection.getResponseCode();
+      return !Response.Status.Family.familyOf(code).equals(Response.Status.Family.SUCCESSFUL);
+    } catch (IOException e) {
+      log.warn("Failed to get repo info, assuming private");
+      return true;
+    }
   }
 }
