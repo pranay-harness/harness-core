@@ -4430,7 +4430,7 @@ plain_artifacts = [
     "com.nimbusds:oauth2-oidc-sdk:7.4",
     "com.ning:async-http-client:1.9.40",
     "com.novemberain:quartz-mongodb-harness-mongo-ssl:2.1.1-harness-mongo-ssl",
-    "com.offbytwo.jenkins:jenkins-client:0.3.8",
+    "com.offbytwo.jenkins:jenkins-client:0.3.9",
     "com.openpojo:openpojo:0.8.3",
     "com.palominolabs.metrics:metrics-guice:3.2.0",
     "com.papertrail:profiler:1.0.2",
