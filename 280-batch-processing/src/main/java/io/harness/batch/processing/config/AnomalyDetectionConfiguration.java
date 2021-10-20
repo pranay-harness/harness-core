@@ -17,7 +17,6 @@ import io.harness.batch.processing.anomalydetection.writer.AnomalyDetectionTimeS
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.ccm.anomaly.entities.Anomaly;
-import io.harness.metrics.service.api.MetricService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -37,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class AnomalyDetectionConfiguration {
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
 
   @Bean
   @Qualifier(value = "anomalyDetectionInClusterDailyJob")
@@ -45,7 +44,7 @@ public class AnomalyDetectionConfiguration {
       Step statisticalModelNamespaceStep, Step removeDuplicatesStep) {
     return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION_K8S.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(statisticalModelClusterStep)
         .next(statisticalModelNamespaceStep)
         .next(removeDuplicatesStep)
@@ -60,7 +59,7 @@ public class AnomalyDetectionConfiguration {
       Step statisticalModelAwsUsageTypeStep, Step slackNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION_CLOUD.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(statisticalModelGcpProjectStep)
         .next(statisticalModelGcpProductStep)
         .next(statisticalModelGcpSkuStep)
