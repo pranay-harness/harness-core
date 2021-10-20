@@ -3,9 +3,13 @@ package io.harness.ngmigration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ngmigration.beans.MigrationInputDTO;
+import io.harness.ngmigration.beans.NgEntityDetail;
+import io.harness.ngmigration.service.MigratorUtility;
+import io.harness.ngmigration.service.NgMigration;
+import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.plancreator.stages.StageElementWrapperConfig;
-import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -16,7 +20,6 @@ import software.wings.ngmigration.NGMigrationEntity;
 import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.ngmigration.NGMigrationStatus;
 import software.wings.ngmigration.NGYamlFile;
-import software.wings.ngmigration.NgMigration;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateType;
 
@@ -78,8 +81,8 @@ public class PipelineMigrationService implements NgMigration {
       Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {}
 
   @Override
-  public List<NGYamlFile> getYamls(
-      Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {
+  public List<NGYamlFile> getYamls(MigrationInputDTO inputDTO, Map<CgEntityId, CgEntityNode> entities,
+      Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId, Map<CgEntityId, NgEntityDetail> migratedEntities) {
     Pipeline pipeline = (Pipeline) entities.get(entityId).getEntity();
 
     List<StageElementWrapperConfig> ngStages = new ArrayList<>();
@@ -92,8 +95,9 @@ public class PipelineMigrationService implements NgMigration {
               String workflowId = (String) stageElement.getProperties().get("workflowId");
               if (EmptyPredicate.isNotEmpty(workflowId)) {
                 // Every CG pipeline stage to NG convert
-                ngStages.add(workflowMigrationService.getNgStage(
-                    entities, graph, CgEntityId.builder().type(NGMigrationEntityType.WORKFLOW).id(workflowId).build()));
+                ngStages.add(workflowMigrationService.getNgStage(inputDTO, entities, graph,
+                    CgEntityId.builder().type(NGMigrationEntityType.WORKFLOW).id(workflowId).build(),
+                    migratedEntities));
               }
             }
             // TODO: Handle Approval State
@@ -103,17 +107,20 @@ public class PipelineMigrationService implements NgMigration {
     List<NGYamlFile> allFiles = new ArrayList<>();
 
     // TODO: @puthraya Fix tags
-    PipelineInfoConfig pipelineInfoConfig = PipelineInfoConfig.builder()
-                                                .name(pipeline.getName())
-                                                .uuid(pipeline.getName())
-                                                .projectIdentifier("PROJECT_INPUT_REQUIRED")
-                                                .orgIdentifier("ORG_INPUT_REQUIRED")
-                                                .stages(ngStages)
-                                                .tags(new ArrayMap<>())
-                                                .build();
 
-    allFiles.add(
-        NGYamlFile.builder().filename(pipeline.getName() + ".yaml").yaml(JsonUtils.asTree(pipelineInfoConfig)).build());
+    PipelineConfig pipelineConfig =
+        PipelineConfig.builder()
+            .pipelineInfoConfig(PipelineInfoConfig.builder()
+                                    .name(pipeline.getName())
+                                    .identifier(MigratorUtility.generateIdentifier(pipeline.getName()))
+                                    .projectIdentifier(inputDTO.getProjectIdentifier())
+                                    .orgIdentifier(inputDTO.getOrgIdentifier())
+                                    .stages(ngStages)
+                                    .tags(new ArrayMap<>())
+                                    .build())
+            .build();
+
+    allFiles.add(NGYamlFile.builder().filename(pipeline.getName() + ".yaml").yaml(pipelineConfig).build());
 
     return allFiles;
   }

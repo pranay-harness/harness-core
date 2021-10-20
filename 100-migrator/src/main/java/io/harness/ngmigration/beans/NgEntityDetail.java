@@ -1,8 +1,7 @@
-package software.wings.ngmigration;
+package io.harness.ngmigration.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.beans.YamlDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +13,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NGYamlFile {
-  private String filename;
-  private YamlDTO yaml;
+public class NgEntityDetail {
+  private String identifier;
+  private String orgIdentifier;
+  private String projectIdentifier;
 }
