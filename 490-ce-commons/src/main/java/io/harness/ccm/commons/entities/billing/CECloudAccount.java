@@ -42,7 +42,7 @@ public final class CECloudAccount
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("no_dup_account")
+                 .name("unique_no_dup_account")
                  .unique(true)
                  .field(CECloudAccountKeys.accountId)
                  .field(CECloudAccountKeys.infraAccountId)

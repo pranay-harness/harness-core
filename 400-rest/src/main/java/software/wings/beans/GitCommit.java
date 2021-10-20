@@ -37,7 +37,7 @@ public final class GitCommit extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("gitCommitIdx")
+                 .name("unique_gitCommitIdx")
                  .unique(true)
                  .field(GitCommitKeys.accountId)
                  .field(GitCommitKeys.commitId)

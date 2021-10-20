@@ -34,7 +34,7 @@ public final class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("MetricAnalysisUniqueIdx")
+                 .name("unique_MetricAnalysisUniqueIdx")
                  .unique(true)
                  .field(MetricAnalysisRecordKeys.workflowExecutionId)
                  .field(MetricAnalysisRecordKeys.stateExecutionId)

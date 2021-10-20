@@ -49,7 +49,7 @@ public final class HarnessTagLink implements PersistentEntity, UuidAware, Update
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("entityTagIdx")
+                 .name("unique_entityTagIdx")
                  .unique(true)
                  .field(HarnessTagLinkKeys.accountId)
                  .field(HarnessTagLinkKeys.entityId)

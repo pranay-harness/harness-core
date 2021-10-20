@@ -26,7 +26,7 @@ public final class DelegateTaskUsageInsights implements PersistentEntity, UuidAw
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("byAcctTaskDelType")
+                 .name("unique_byAcctTaskDelType")
                  .unique(true)
                  .field(DelegateTaskUsageInsightsKeys.accountId)
                  .field(DelegateTaskUsageInsightsKeys.taskId)

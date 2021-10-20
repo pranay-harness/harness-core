@@ -41,7 +41,7 @@ public final class DelegateSelectionLog implements PersistentEntity, UuidAware, 
                  .field(DelegateSelectionLogKeys.message)
                  .field(DelegateSelectionLogKeys.groupId)
                  .unique(true)
-                 .name("selectionLogsGroup")
+                 .name("unique_selectionLogsGroup")
                  .build())
         .build();
   }

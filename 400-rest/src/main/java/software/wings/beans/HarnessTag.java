@@ -51,7 +51,7 @@ public final class HarnessTag implements PersistentEntity, UuidAware, UpdatedAtA
                  .field(HarnessTagKeys.accountId)
                  .field(HarnessTagKeys.key)
                  .unique(true)
-                 .name("tagIdx")
+                 .name("unique_tagIdx")
                  .build())
         .build();
   }

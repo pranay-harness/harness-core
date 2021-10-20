@@ -77,7 +77,7 @@ public final class ServiceVariable extends Base implements EncryptableSetting {
                  .descSortField(ServiceVariableKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("serviceVariableUniqueIdx")
+                 .name("unique_serviceVariableUniqueIdx")
                  .unique(true)
                  .field(ServiceVariableKeys.entityId)
                  .field(ServiceVariableKeys.templateId)

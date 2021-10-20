@@ -36,7 +36,7 @@ public final class CECommunications
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("account_email_type")
+                 .name("unique_account_email_type")
                  .unique(true)
                  .field(CECommunicationsKeys.accountId)
                  .field(CECommunicationsKeys.emailId)

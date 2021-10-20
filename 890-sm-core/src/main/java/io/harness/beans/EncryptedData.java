@@ -83,7 +83,7 @@ public final class EncryptedData
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .unique(true)
-                 .name("acctNameIdx")
+                 .name("unique_acctNameIdx")
                  .field(EncryptedDataKeys.accountId)
                  .field(EncryptedDataKeys.name)
                  .field(EncryptedDataKeys.accountIdentifier)

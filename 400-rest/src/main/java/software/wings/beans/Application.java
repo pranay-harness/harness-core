@@ -54,7 +54,7 @@ public final class Application extends Base implements KeywordsAware, NameAccess
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .unique(true)
-                 .name("yaml")
+                 .name("unique_yaml")
                  .field(ApplicationKeys.accountId)
                  .field(ApplicationKeys.name)
                  .build())

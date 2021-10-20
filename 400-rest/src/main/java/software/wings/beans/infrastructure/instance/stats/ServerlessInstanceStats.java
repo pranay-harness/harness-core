@@ -47,7 +47,7 @@ public final class ServerlessInstanceStats implements PersistentEntity, UuidAwar
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("accountId_timestamp_unique_idx")
+                 .name("unique_accountId_timestamp_unique_idx")
                  .unique(true)
                  .field(ServerlessInstanceStatsKeys.accountId)
                  .field(ServerlessInstanceStatsKeys.timestamp)

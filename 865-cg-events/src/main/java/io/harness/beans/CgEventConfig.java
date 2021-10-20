@@ -53,7 +53,7 @@ public final class CgEventConfig
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("yaml")
+                 .name("unique_yaml")
                  .unique(true)
                  .field(CgEventConfigKeys.appId)
                  .field(CgEventConfigKeys.name)

@@ -32,7 +32,7 @@ public final class TemplateVersion extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("yaml")
+                 .name("unique_yaml")
                  .unique(true)
                  .field(TemplateVersionKeys.templateUuid)
                  .field(TemplateVersionKeys.version)

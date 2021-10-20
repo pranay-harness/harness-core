@@ -50,7 +50,7 @@ public final class ImportedTemplate implements PersistentEntity, UuidAware, Crea
                  .field(ImportedTemplateKeys.commandName)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("template_idx")
+                 .name("unique_template_idx")
                  .unique(true)
                  .field(ImportedTemplateKeys.templateId)
                  .build())

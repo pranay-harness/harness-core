@@ -44,7 +44,7 @@ public final class Template extends Base implements KeywordsAware, NameAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("yaml")
+                 .name("unique_yaml")
                  .unique(true)
                  .field(TemplateKeys.accountId)
                  .field(TemplateKeys.name)

@@ -28,7 +28,7 @@ public final class CapabilitySubjectPermission implements PersistentEntity, Uuid
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("byDelegate")
+                 .name("unique_byDelegate")
                  .unique(true)
                  .field(CapabilitySubjectPermissionKeys.delegateId)
                  .field(CapabilitySubjectPermissionKeys.capabilityId)

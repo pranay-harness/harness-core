@@ -42,7 +42,7 @@ public final class BarrierInstance
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("search2")
+                 .name("unique_search2")
                  .unique(true)
                  .field(BarrierInstanceKeys.name)
                  .field(BarrierInstanceKeys.pipeline_executionId)
