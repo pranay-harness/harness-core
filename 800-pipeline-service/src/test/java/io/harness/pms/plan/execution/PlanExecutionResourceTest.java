@@ -2,20 +2,25 @@ package io.harness.pms.plan.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.executions.retry.RetryExecutionMetadata;
 import io.harness.execution.PlanExecution;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
+import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.stages.StageExecutionResponse;
 import io.harness.rule.Owner;
 
@@ -34,6 +39,8 @@ public class PlanExecutionResourceTest extends CategoryTest {
   @InjectMocks PlanExecutionResource planExecutionResource;
   @Mock PMSPipelineService pmsPipelineService;
   @Mock PipelineExecutor pipelineExecutor;
+  @Mock PMSExecutionService pmsExecutionService;
+  @Mock RetryExecutionHelper retryExecutionHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -106,5 +113,39 @@ public class PlanExecutionResourceTest extends CategoryTest {
     verify(pipelineExecutor, times(1))
         .runStagesWithRuntimeInputYaml(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "cd",
             RunStageRequestDTO.builder().build(), false);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetRetryHistory() {
+    when(pmsExecutionService.getPipelineExecutionSummaryEntity(
+             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "planExecutionId", false))
+        .thenReturn(
+            PipelineExecutionSummaryEntity.builder()
+                .uuid("uuid")
+                .planExecutionId("planExecutionId")
+                .retryExecutionMetadata(RetryExecutionMetadata.builder().rootExecutionId("rootExecutionId").build())
+                .build());
+    planExecutionResource.getRetryHistory(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "planExecutionId");
+    verify(retryExecutionHelper, times(1)).getRetryHistory("rootExecutionId");
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetLatestExecutionId() {
+    when(pmsExecutionService.getPipelineExecutionSummaryEntity(
+             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "planExecutionId", false))
+        .thenReturn(
+            PipelineExecutionSummaryEntity.builder()
+                .uuid("uuid")
+                .planExecutionId("planExecutionId")
+                .retryExecutionMetadata(RetryExecutionMetadata.builder().rootExecutionId("rootExecutionId").build())
+                .build());
+    planExecutionResource.getRetryLatestExecutionId(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "planExecutionId");
+    verify(retryExecutionHelper, times(1)).getRetryLatestExecutionId("rootExecutionId");
   }
 }

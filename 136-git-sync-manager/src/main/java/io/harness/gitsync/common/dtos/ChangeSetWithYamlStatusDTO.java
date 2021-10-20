@@ -16,9 +16,28 @@ public class ChangeSetWithYamlStatusDTO {
   YamlInputErrorType yamlInputErrorType;
 
   public enum YamlInputErrorType {
-    NIL,
-    PROJECT_ORG_IDENTIFIER_MISSING,
-    INVALID_ENTITY_TYPE,
-    YAML_FROM_NOT_GIT_SYNCED_PROJECT
+    NIL("NIL"),
+    PROJECT_ORG_IDENTIFIER_MISSING("Project or Org missing"),
+    INVALID_ENTITY_TYPE("Invalid Entity Type"),
+    YAML_FROM_NOT_GIT_SYNCED_PROJECT("YAML from not git synced project");
+
+    private String value;
+
+    YamlInputErrorType(String value) {
+      this.value = value;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public static YamlInputErrorType fromValue(String value) {
+      for (YamlInputErrorType errorType : YamlInputErrorType.values()) {
+        if (errorType.value.equals(value)) {
+          return errorType;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
   }
 }

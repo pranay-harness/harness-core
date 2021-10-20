@@ -446,7 +446,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     pageResponse.getContent().forEach(analyzedLogDataDTO -> {
       assertThat(Arrays.asList(LogAnalysisTag.UNKNOWN, LogAnalysisTag.UNEXPECTED)
                      .contains(analyzedLogDataDTO.getLogData().getTag()));
-      assertThat(analyzedLogDataDTO.getLogData().getRiskStatus()).isEqualTo(Risk.HIGH);
+      assertThat(analyzedLogDataDTO.getLogData().getRiskStatus()).isEqualTo(Risk.UNHEALTHY);
     });
 
     boolean containsKnown = false;
@@ -597,7 +597,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     boolean containsKnown = false;
     for (AnalyzedLogDataDTO analyzedLogDataDTO : pageResponse.getContent()) {
       if (analyzedLogDataDTO.getLogData().getTag().equals(LogAnalysisTag.KNOWN)) {
-        assertThat(analyzedLogDataDTO.getLogData().getRiskStatus()).isEqualTo(Risk.LOW);
+        assertThat(analyzedLogDataDTO.getLogData().getRiskStatus()).isEqualTo(Risk.HEALTHY);
         assertThat(analyzedLogDataDTO.getLogData().getRiskScore()).isEqualTo(0.1);
         containsKnown = true;
         break;
@@ -644,9 +644,9 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
       assertThat(liveMonitoringLogAnalysisClusterDTO.getY()).isNotNull();
       assertThat(liveMonitoringLogAnalysisClusterDTO.getTag()).isIn(LogAnalysisTag.UNKNOWN, LogAnalysisTag.KNOWN);
       if (liveMonitoringLogAnalysisClusterDTO.getTag().equals(LogAnalysisTag.UNKNOWN)) {
-        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.HIGH);
+        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.UNHEALTHY);
       } else {
-        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.LOW);
+        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.HEALTHY);
       }
     }
   }
@@ -685,7 +685,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
       assertThat(liveMonitoringLogAnalysisClusterDTO.getX()).isNotNull();
       assertThat(liveMonitoringLogAnalysisClusterDTO.getY()).isNotNull();
       assertThat(liveMonitoringLogAnalysisClusterDTO.getTag()).isEqualTo(LogAnalysisTag.KNOWN);
-      assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.LOW);
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.HEALTHY);
     }
   }
 
@@ -720,9 +720,9 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
       assertThat(liveMonitoringLogAnalysisClusterDTO.getY()).isNotNull();
       assertThat(liveMonitoringLogAnalysisClusterDTO.getTag()).isIn(LogAnalysisTag.UNKNOWN, LogAnalysisTag.KNOWN);
       if (liveMonitoringLogAnalysisClusterDTO.getTag().equals(LogAnalysisTag.UNKNOWN)) {
-        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.HIGH);
+        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.UNHEALTHY);
       } else {
-        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.LOW);
+        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.HEALTHY);
       }
     }
     liveMonitoringLogAnalysisFilter = LiveMonitoringLogAnalysisFilter.builder()

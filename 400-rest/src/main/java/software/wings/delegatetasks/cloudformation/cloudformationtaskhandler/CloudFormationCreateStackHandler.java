@@ -153,6 +153,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         case CLOUD_FORMATION_STACK_CREATE_URL: {
+          normalizeS3TemplatePath(updateRequest);
           executionLogCallback.saveExecutionLog(
               format("# Using Template Url: [%s] to Update Stack", updateRequest.getData()));
           updateStackRequest.withTemplateURL(updateRequest.getData());
@@ -191,6 +192,18 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       }
     }
     return builder.build();
+  }
+
+  /**
+   * Refer to https://forums.aws.amazon.com/thread.jspa?threadID=55746
+   */
+  @VisibleForTesting
+  void normalizeS3TemplatePath(CloudFormationCreateStackRequest createRequest) {
+    String templateUrl = createRequest.getData();
+    if (templateUrl.contains("+")) {
+      String normalizedS3TemplatePath = createRequest.getData().replaceAll("\\+", "%20");
+      createRequest.setData(normalizedS3TemplatePath);
+    }
   }
 
   private void setRequestDataFromGit(CloudFormationCreateStackRequest request) {
@@ -247,6 +260,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         case CLOUD_FORMATION_STACK_CREATE_URL: {
+          normalizeS3TemplatePath(createRequest);
           executionLogCallback.saveExecutionLog(
               format("# Using Template Url: [%s] to Create Stack", createRequest.getData()));
           createStackRequest.withTemplateURL(createRequest.getData());
@@ -565,6 +579,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
 
     builder.cloudFormationRoleArn(cloudFormationCreateStackRequest.getCloudFormationRoleArn());
     if (CLOUD_FORMATION_STACK_CREATE_URL.equals(cloudFormationCreateStackRequest.getCreateType())) {
+      normalizeS3TemplatePath(cloudFormationCreateStackRequest);
       builder.url(cloudFormationCreateStackRequest.getData());
     } else {
       // handles the case of both Git and body

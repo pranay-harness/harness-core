@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.analysis.beans.Risk;
+import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 
 import java.util.List;
 import lombok.AccessLevel;
@@ -29,8 +31,10 @@ public class ServiceDependencyGraphDTO {
     String serviceName;
     String environmentRef;
     String environmentName;
-    double riskScore;
-    Risk riskLevel;
+    @Deprecated double riskScore;
+    @Deprecated Risk riskLevel;
+    RiskData riskData;
+    MonitoredServiceType type;
   }
 
   @Data

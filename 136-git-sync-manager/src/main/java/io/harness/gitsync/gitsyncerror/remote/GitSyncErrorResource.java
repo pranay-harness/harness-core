@@ -69,7 +69,7 @@ public class GitSyncErrorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
-      @QueryParam("numberOfErrorsInSummary") @DefaultValue("0") @Max(5) Integer numberOfErrorsInSummary) {
+      @QueryParam("numberOfErrorsInSummary") @DefaultValue("5") @Max(5) Integer numberOfErrorsInSummary) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(GitSyncErrorKeys.createdAt, SortOrder.OrderType.DESC).build();

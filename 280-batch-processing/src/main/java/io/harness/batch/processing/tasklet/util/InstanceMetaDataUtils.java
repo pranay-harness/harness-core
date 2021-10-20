@@ -78,9 +78,9 @@ public class InstanceMetaDataUtils {
 
     switch (k8SCloudProvider) {
       case GCP:
-        if (checkIfKeyExistsAndIsTrue(K8sCCMConstants.PREEMPTIBLE_KEY, labelsMap)) {
-          instanceCategory = InstanceCategory.SPOT;
-        } else if (checkIfKeyExistsAndIsTrue(K8sCCMConstants.PREEMPTIBLE_NODE_KEY, labelsMap)) {
+        if (checkIfKeyExistsAndIsTrue(K8sCCMConstants.GKE_PREEMPTIBLE_KEY, labelsMap)
+            || checkIfKeyExistsAndIsTrue(K8sCCMConstants.PREEMPTIBLE_KEY, labelsMap)
+            || checkIfKeyExistsAndIsTrue(K8sCCMConstants.PREEMPTIBLE_NODE_KEY, labelsMap)) {
           instanceCategory = InstanceCategory.SPOT;
         }
         break;

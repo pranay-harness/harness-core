@@ -38,7 +38,7 @@ public class AccessRequestHandler implements Handler<AccessRequest> {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("AccessRequestHandler")
-            .poolSize(5)
+            .poolSize(2)
             .interval(ofSeconds(5))
             .build(),
         AccessRequest.class,

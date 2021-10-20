@@ -274,8 +274,12 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     for (StepPalleteModuleInfo request : stepPalleteFilterWrapper.getStepPalleteModuleInfos()) {
       String module = request.getModule();
       String category = request.getCategory();
-      List<StepInfo> stepInfoList = serviceInstanceNameToSupportedSteps.get(module).getStepTypes();
-      String displayModuleName = serviceInstanceNameToSupportedSteps.get(module).getModuleName();
+      StepPalleteInfo stepPalleteInfo = serviceInstanceNameToSupportedSteps.get(module);
+      if (stepPalleteInfo == null) {
+        continue;
+      }
+      List<StepInfo> stepInfoList = stepPalleteInfo.getStepTypes();
+      String displayModuleName = stepPalleteInfo.getModuleName();
       if (EmptyPredicate.isEmpty(stepInfoList)) {
         continue;
       }
@@ -337,7 +341,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     if (isNotEmpty(projectId)) {
       criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
     }
-    criteria.and(PipelineEntityKeys.deleted).is(deleted);
 
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");

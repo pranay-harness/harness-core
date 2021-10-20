@@ -93,8 +93,8 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
 
   @Override
   public PipelineConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
-    PipelineEntity pipelineEntity = pmsPipelineService.updatePipelineYaml(
-        PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml), changeType);
+    PipelineEntity entity = PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml);
+    PipelineEntity pipelineEntity = pmsPipelineService.updatePipelineYaml(entity, changeType);
     TemplateMergeResponseDTO templateMergeResponseDTO =
         pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
     if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {

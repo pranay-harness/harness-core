@@ -22,6 +22,7 @@ import static io.harness.beans.ExecutionStatus.activeStatuses;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static io.harness.beans.FeatureName.NEW_DEPLOYMENT_FREEZE;
+import static io.harness.beans.FeatureName.RESOLVE_DEPLOYMENT_TAGS_BEFORE_EXECUTION;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
@@ -327,6 +328,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.mongodb.ReadPreference;
 import com.sun.istack.internal.NotNull;
@@ -428,6 +430,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private HelmChartService helmChartService;
   @Inject private StateInspectionService stateInspectionService;
   @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private Injector injector;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1942,6 +1945,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
     if (workflowExecution.getWorkflowType() == PIPELINE) {
       savePipelineSweepingOutPut(workflowExecution, pipeline, savedWorkflowExecution);
+    }
+    if (featureFlagService.isEnabled(RESOLVE_DEPLOYMENT_TAGS_BEFORE_EXECUTION, app.getAccountId())) {
+      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
+      injector.injectMembers(workflowExecutionUpdate);
+      // workflowId or pipelineId
+      final String workflowId = context.getWorkflowId();
+      List<NameValuePair> tags = workflowExecutionUpdate.resolveDeploymentTags(context, workflowId);
+      workflowExecutionUpdate.addTagsToWorkflowExecution(tags);
     }
     stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
     updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING, false);

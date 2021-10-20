@@ -403,6 +403,12 @@ public class EncryptedData implements EncryptedRecord, PersistentEntity, UuidAwa
     return NGMigrationEntityType.SECRET;
   }
 
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
+  }
+
   @UtilityClass
   public static final class EncryptedDataKeys {
     // Temporary
