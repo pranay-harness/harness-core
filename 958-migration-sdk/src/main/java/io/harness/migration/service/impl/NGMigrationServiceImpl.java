@@ -177,8 +177,9 @@ public class NGMigrationServiceImpl implements NGMigrationService {
           log.error("[Migration] - {} : Error while running migration {}", serviceName, migration.getSimpleName(), ex);
           break;
         } else {
-          throw new MigrationException(
-              String.format("[Migration] - %s : Error while running migration %s", serviceName, migrationTypeName), ex);
+          //          throw new MigrationException(
+          //              String.format("[Migration] - %s : Error while running migration %s", serviceName,
+          //              migrationTypeName), ex);
         }
       }
       Update update = new Update().set(NGSchemaKeys.migrationDetails + "." + migrationTypeName, i);

@@ -20,6 +20,11 @@ import com.amazonaws.encryptionsdk.AwsCrypto;
 import com.amazonaws.encryptionsdk.CryptoResult;
 import com.amazonaws.encryptionsdk.kms.KmsMasterKey;
 import com.amazonaws.encryptionsdk.kms.KmsMasterKeyProvider;
+import com.amazonaws.services.kms.AWSKMS;
+import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import com.amazonaws.services.kms.model.DecryptRequest;
+import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
+import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
@@ -95,7 +100,11 @@ public class LocalEncryptor implements KmsEncryptor {
   // ------------------------------ PRIVATE METHODS -----------------------------
 
   private char[] getAwsEncryptedSecret(String accountId, String value) {
-    final KmsMasterKeyProvider prov = KmsMasterKeyProvider.builder().buildStrict(accountId);
+    AWSKMS awskms = AWSKMSClientBuilder.standard().build();
+    GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
+    GenerateDataKeyResult keyResult = awskms.generateDataKey(dataKeyRequest);
+
+    final KmsMasterKeyProvider prov = KmsMasterKeyProvider.builder().buildStrict(keyResult.getPlaintext().toString());
     final Map<String, String> context = Collections.singletonMap("accountId", accountId);
     final byte[] encryptedBytes = crypto.encryptData(prov, value.getBytes(), context).getResult();
     return new String(encryptedBytes).toCharArray();
@@ -103,7 +112,11 @@ public class LocalEncryptor implements KmsEncryptor {
 
   private String getAwsDecryptedSecret(String accountId, byte[] encryptedSecret) {
     final KmsMasterKeyProvider prov = KmsMasterKeyProvider.builder().buildStrict(accountId);
-    final CryptoResult<byte[], KmsMasterKey> decryptResult = crypto.decryptData(prov, encryptedSecret);
+
+    DecryptRequest decryptRequest = new DecryptRequest();
+    decryptRequest.set
+
+        final CryptoResult<byte[], KmsMasterKey> decryptResult = crypto.decryptData(prov, encryptedSecret);
     if (!decryptResult.getMasterKeyIds().get(0).equals(accountId)) {
       // throw exception
     }
