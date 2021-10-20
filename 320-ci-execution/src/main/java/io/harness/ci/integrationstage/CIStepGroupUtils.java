@@ -20,7 +20,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
@@ -51,12 +51,12 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
-public class CILiteEngineStepGroupUtils {
-  private static final String LITE_ENGINE_TASK = "liteEngineTask";
-  @Inject private LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
+public class CIStepGroupUtils {
+  private static final String INITIALIZE_TASK = InitializeStepInfo.STEP_TYPE.getType();
+  @Inject private InitializeStepGenerator initializeStepGenerator;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
-  public List<ExecutionWrapperConfig> createExecutionWrapperWithLiteEngineSteps(StageElementConfig stageElementConfig,
+  public List<ExecutionWrapperConfig> createExecutionWrapperWithInitializeStep(StageElementConfig stageElementConfig,
       CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
     List<ExecutionWrapperConfig> mainEngineExecutionSections = new ArrayList<>();
 
@@ -69,26 +69,26 @@ public class CILiteEngineStepGroupUtils {
     List<ExecutionWrapperConfig> executionSections = integrationStageConfig.getExecution().getSteps();
 
     log.info(
-        "Creating CI execution wrapper step info with lite engine step for integration stage {} and build number {}",
+        "Creating CI execution wrapper step info with initialize step for integration stage {} and build number {}",
         stageElementConfig.getIdentifier(), ciExecutionArgs.getBuildNumberDetails().getBuildNumber());
 
-    List<ExecutionWrapperConfig> liteEngineExecutionSections = new ArrayList<>();
+    List<ExecutionWrapperConfig> initializeExecutionSections = new ArrayList<>();
     boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getCloneCodebase());
 
     if (gitClone) {
-      liteEngineExecutionSections.add(getGitCloneStep(ciExecutionArgs, ciCodebase));
+      initializeExecutionSections.add(getGitCloneStep(ciExecutionArgs, ciCodebase));
     }
     for (ExecutionWrapperConfig executionWrapper : executionSections) {
-      liteEngineExecutionSections.add(executionWrapper);
+      initializeExecutionSections.add(executionWrapper);
     }
 
-    if (isNotEmpty(liteEngineExecutionSections)) {
-      ExecutionWrapperConfig liteEngineStepExecutionWrapper = fetchLiteEngineStepExecutionWrapper(
-          liteEngineExecutionSections, stageElementConfig, ciExecutionArgs, ciCodebase, infrastructure);
+    if (isNotEmpty(initializeExecutionSections)) {
+      ExecutionWrapperConfig liteEngineStepExecutionWrapper = fetchInitializeStepExecutionWrapper(
+          initializeExecutionSections, stageElementConfig, ciExecutionArgs, ciCodebase, infrastructure);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
-      // Also execute each lite engine step individually on main engine
-      mainEngineExecutionSections.addAll(liteEngineExecutionSections);
+      // Also execute each step individually on main engine
+      mainEngineExecutionSections.addAll(initializeExecutionSections);
     }
 
     log.info("Creation execution section for BuildId {} with lite engine step",
@@ -97,23 +97,23 @@ public class CILiteEngineStepGroupUtils {
     return mainEngineExecutionSections;
   }
 
-  private ExecutionWrapperConfig fetchLiteEngineStepExecutionWrapper(
+  private ExecutionWrapperConfig fetchInitializeStepExecutionWrapper(
       List<ExecutionWrapperConfig> liteEngineExecutionSections, StageElementConfig integrationStage,
       CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
     // TODO Do not generate new id
-    LiteEngineTaskStepInfo liteEngineTaskStepInfo = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(
+    InitializeStepInfo initializeStepInfo = initializeStepGenerator.createLiteEngineTaskStepInfo(
         ExecutionElementConfig.builder().uuid(generateUuid()).steps(liteEngineExecutionSections).build(), ciCodebase,
         integrationStage, ciExecutionArgs, infrastructure);
 
     try {
       String uuid = generateUuid();
       String jsonString = JsonPipelineUtils.writeJsonString(StepElementConfig.builder()
-                                                                .identifier(LITE_ENGINE_TASK)
-                                                                .name(LITE_ENGINE_TASK)
+                                                                .identifier(INITIALIZE_TASK)
+                                                                .name(INITIALIZE_TASK)
                                                                 .uuid(generateUuid())
-                                                                .type("liteEngineTask")
+                                                                .type(INITIALIZE_TASK)
                                                                 .timeout(getTimeout(infrastructure))
-                                                                .stepSpecType(liteEngineTaskStepInfo)
+                                                                .stepSpecType(initializeStepInfo)
                                                                 .build());
       JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
       return ExecutionWrapperConfig.builder().uuid(uuid).step(jsonNode).build();
