@@ -2125,7 +2125,7 @@
     <repositories>
         <repository>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
             <id>portal-maven</id>
             <name>portal-maven</name>
