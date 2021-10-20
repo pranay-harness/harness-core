@@ -15,7 +15,6 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.beans.artifact.ArtifactoryCollectionTaskParameters;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -27,6 +26,7 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 /**
  * Created by srinivas on 4/4/17.
@@ -46,22 +46,18 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
 
   @Override
   public ListNotifyResponseData run(TaskParameters parameters) {
-    try {
-      ArtifactoryCollectionTaskParameters artifactoryCollectionTaskParameters =
-          (ArtifactoryCollectionTaskParameters) parameters;
-
-      return run(artifactoryCollectionTaskParameters.getArtifactoryConfig(),
-          artifactoryCollectionTaskParameters.getEncryptedDataDetails(),
-          artifactoryCollectionTaskParameters.getJobName(), artifactoryCollectionTaskParameters.getMetadata());
-    } catch (Exception e) {
-      log.error("Exception occurred while collecting artifact", e);
-      return new ListNotifyResponseData();
-    }
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
-    return run((ArtifactoryCollectionTaskParameters) parameters[0]);
+    try {
+      return run((ArtifactoryConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
+          (Map<String, String>) parameters[3]);
+    } catch (Exception e) {
+      log.error("Exception occurred while collecting artifact", e);
+      return new ListNotifyResponseData();
+    }
   }
 
   public ListNotifyResponseData run(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptedDataDetails,
