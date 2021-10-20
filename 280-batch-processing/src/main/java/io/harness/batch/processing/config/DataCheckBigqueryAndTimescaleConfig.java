@@ -5,7 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.DataCheckBigqueryAndTimescaleTasklet;
-import io.harness.metrics.service.api.MetricService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -23,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class DataCheckBigqueryAndTimescaleConfig {
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
 
   @Bean
   public Tasklet dataCheckBigqueryAndTimescaleTasklet() {
@@ -43,7 +42,7 @@ public class DataCheckBigqueryAndTimescaleConfig {
       JobBuilderFactory jobBuilderFactory, Step dataCheckBigqueryAndTimescaleStep) {
     return jobBuilderFactory.get(BatchJobType.DATA_CHECK_BIGQUERY_TIMESCALE.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(dataCheckBigqueryAndTimescaleStep)
         .build();
   }

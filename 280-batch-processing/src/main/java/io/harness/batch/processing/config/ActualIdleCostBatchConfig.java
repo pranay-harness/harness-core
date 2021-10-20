@@ -5,7 +5,6 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.ActualIdleBillingDataReader;
 import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.writer.ActualIdleBillingDataWriter;
-import io.harness.metrics.service.api.MetricService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -24,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ActualIdleCostBatchConfig {
   private static final int BATCH_SIZE = 100;
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
 
   @Bean
   public ItemReader<ActualIdleCostBatchJobData> actualIdleCostReader() {
@@ -41,7 +40,7 @@ public class ActualIdleCostBatchConfig {
   public Job actualIdleCostJob(JobBuilderFactory jobBuilderFactory, Step actualIdleCostCalculationStep) {
     return jobBuilderFactory.get(BatchJobType.ACTUAL_IDLE_COST_BILLING.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(actualIdleCostCalculationStep)
         .build();
   }
@@ -51,7 +50,7 @@ public class ActualIdleCostBatchConfig {
   public Job actualIdleCostHourlyJob(JobBuilderFactory jobBuilderFactory, Step actualIdleCostCalculationStep) {
     return jobBuilderFactory.get(BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(actualIdleCostCalculationStep)
         .build();
   }

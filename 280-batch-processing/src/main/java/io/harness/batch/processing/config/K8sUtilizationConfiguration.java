@@ -12,7 +12,6 @@ import io.harness.batch.processing.writer.PVUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.PodUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
-import io.harness.metrics.service.api.MetricService;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +38,7 @@ public class K8sUtilizationConfiguration {
 
   @Autowired private StepBuilderFactory stepBuilderFactory;
   @Autowired private PublishedMessageDao publishedMessageDao;
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
   /*
    * ****************** PodUtilization ******************
    */
@@ -185,7 +184,7 @@ public class K8sUtilizationConfiguration {
       Step k8sPVUtilizationAggregationStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_UTILIZATION.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(k8sPodUtilizationEventStep)
         .next(k8sNodeUtilizationEventStep)
         .next(k8sUtilizationAggregationStep)

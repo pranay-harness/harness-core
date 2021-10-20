@@ -3,7 +3,6 @@ package io.harness.batch.processing.config;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.writer.NodePodCountDataTasklet;
-import io.harness.metrics.service.api.MetricService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -20,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class NodePodCountBatchConfig {
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
 
   @Bean
   public Tasklet nodePodCountDataTasklet() {
@@ -37,7 +36,7 @@ public class NodePodCountBatchConfig {
   public Job nodePodCountDataJob(JobBuilderFactory jobBuilderFactory, Step nodePodCountDataStep) {
     return jobBuilderFactory.get(BatchJobType.NODE_POD_COUNT.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(nodePodCountDataStep)
         .build();
   }
