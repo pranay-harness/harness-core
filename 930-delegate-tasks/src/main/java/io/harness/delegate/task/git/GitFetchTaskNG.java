@@ -10,6 +10,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -49,6 +50,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private GitFetchFilesTaskHelper gitFetchFilesTaskHelper;
   @Inject private GitDecryptionHelper gitDecryptionHelper;
+  @Inject private ScmFetchFilesHelperNG scmFetchFilesHelper;
 
   public static final int GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT = 10;
 
@@ -121,12 +123,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   private FetchFilesResult fetchFilesFromRepo(
       GitFetchFilesConfig gitFetchFilesConfig, LogCallback executionLogCallback, String accountId) {
     GitStoreDelegateConfig gitStoreDelegateConfig = gitFetchFilesConfig.getGitStoreDelegateConfig();
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-    gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
-    SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
-        gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
-
-    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getUrl());
     String fetchTypeInfo = gitStoreDelegateConfig.getFetchType() == FetchType.BRANCH
         ? "Branch: " + gitStoreDelegateConfig.getBranch()
         : "CommitId: " + gitStoreDelegateConfig.getCommitId();
@@ -140,8 +137,21 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
     }
 
-    FetchFilesResult gitFetchFilesResult =
-        ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig, gitConfigDTO);
+    FetchFilesResult gitFetchFilesResult;
+    if (gitStoreDelegateConfig.isOptimizedFilesFetch()) {
+      executionLogCallback.saveExecutionLog("Using optimized file fetch");
+      secretDecryptionService.decrypt(
+          GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(gitStoreDelegateConfig.getGitConfigDTO()),
+          gitStoreDelegateConfig.getApiAuthEncryptedDataDetails());
+      gitFetchFilesResult = scmFetchFilesHelper.fetchFilesFromRepoWithScm(gitStoreDelegateConfig, filePathsToFetch);
+    } else {
+      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+      gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+      SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+      gitFetchFilesResult =
+          ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig, gitConfigDTO);
+    }
 
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(executionLogCallback, gitFetchFilesResult.getFiles());
 

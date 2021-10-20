@@ -15,6 +15,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.Utils;
@@ -28,7 +29,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 
 import com.google.api.client.util.Charsets;
 import com.google.common.io.Resources;
-import com.google.inject.Inject;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,7 +63,8 @@ public class K8sTaskHelperSecondaryTest extends WingsBaseTest {
   @Mock private Process process;
   @Mock private StartedProcess startedProcess;
   @Mock private ExecutionLogCallback executionLogCallback;
-  @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
+  @Mock private ScmFetchFilesHelperNG scmFetchFilesHelper;
+  @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
 
   @Test
   @Owner(developers = YOGESH)
