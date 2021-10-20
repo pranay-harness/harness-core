@@ -4,8 +4,11 @@ import io.harness.ModuleType;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.exception.InvalidRequestException;
+import io.harness.licensing.beans.modules.types.CDLicenseType;
 import io.harness.licensing.usage.beans.LicenseUsageDTO;
 import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
+import io.harness.licensing.usage.params.CDUsageRequestParams;
+import io.harness.licensing.usage.params.UsageRequestParams;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -64,10 +67,18 @@ public class LicenseUsageResource {
   @NGAccessControlCheck(resourceType = "LICENSE", permission = "core_license_view")
   public ResponseDTO<LicenseUsageDTO>
   getLicenseUsage(@QueryParam("accountIdentifier") @AccountIdentifier String accountIdentifier,
-      @PathParam("module") String module, @QueryParam("timestamp") long timestamp) {
+      @PathParam("module") String module, @QueryParam("timestamp") long timestamp,
+      @QueryParam("CDLicenseType") String cdLicenseType) {
     try {
       ModuleType moduleType = ModuleType.fromString(module);
-      return ResponseDTO.newResponse(licenseUsageInterface.getLicenseUsage(accountIdentifier, moduleType, timestamp));
+      if (ModuleType.CD.equals(moduleType)) {
+        CDLicenseType type = CDLicenseType.valueOf(cdLicenseType);
+        return ResponseDTO.newResponse(licenseUsageInterface.getLicenseUsage(
+            accountIdentifier, moduleType, timestamp, CDUsageRequestParams.builder().cdLicenseType(type).build()));
+      }
+
+      return ResponseDTO.newResponse(licenseUsageInterface.getLicenseUsage(
+          accountIdentifier, moduleType, timestamp, UsageRequestParams.builder().build()));
     } catch (IllegalArgumentException e) {
       throw new InvalidRequestException("Module is invalid", e);
     }
