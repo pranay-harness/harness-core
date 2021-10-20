@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ManifestCollectionResponseHandler {
   private static final int MAX_MANIFEST_COLLECTION_FOR_WARN = 100;
   private static final int MAX_LOGS = 100;
@@ -64,7 +64,7 @@ public class ManifestCollectionResponseHandler {
       ApplicationManifest appManifest = applicationManifestService.getById(executionResponse.getAppId(), appManifestId);
       if (appManifest == null || !perpetualTaskId.equals(appManifest.getPerpetualTaskId())) {
         log.warn("Invalid perpetual task found for app manifest: {}", appManifestId);
-        appManifestPTaskHelper.deletePerpetualTask(accountId, appManifestId, perpetualTaskId);
+        appManifestPTaskHelper.deletePerpetualTask(perpetualTaskId, appManifestId, accountId);
         return;
       }
       try (AutoLogContext ignore3 = new ApplicationManifestLogContext(appManifestId, OVERRIDE_ERROR)) {
