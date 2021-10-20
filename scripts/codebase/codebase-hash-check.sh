@@ -39,7 +39,7 @@ do
       then
         echo "${bold}You have changed files which are being used for delegate task communication. Your change should be backward compatible."
         echo "If the change is backward compatible replace the new hash $HASH in file $MODULE/module-dependency.hash"
-        echo "Please start script from Portal project in your local environment for modules $@. e.g. ./scripts/codebase/codebase-hash-check.sh $@"
+        echo "If you want to generate hash locally run this script: ./scripts/codebase/codebase-hash-check.sh $@"
         echo "Please contact delegate team for backward compatibility check."
         echo -e "\nFailure.${normal}"
         exit 1
