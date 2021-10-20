@@ -31,7 +31,7 @@ public interface CIOverviewDashboardService {
 
   UsageDataDTO getMonthlyBuild(String accountId, long timestamp);
 
-  UsageDataDTO getTotalBuild(String accountId, long timestamp);
+  UsageDataDTO getTotalBuild(String accountId);
 
   CIUsageResult getCIUsageResult(String accountId, long timestamp);
 }

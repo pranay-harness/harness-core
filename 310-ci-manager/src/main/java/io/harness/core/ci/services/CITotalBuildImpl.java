@@ -10,6 +10,6 @@ public class CITotalBuildImpl implements RestrictionUsageInterface<RateLimitRest
 
   @Override
   public long getCurrentValue(String accountIdentifier, RateLimitRestrictionMetadataDTO restrictionMetadataDTO) {
-    return ciOverviewDashboardService.getTotalBuild(accountIdentifier, System.currentTimeMillis()).getCount();
+    return ciOverviewDashboardService.getTotalBuild(accountIdentifier).getCount();
   }
 }

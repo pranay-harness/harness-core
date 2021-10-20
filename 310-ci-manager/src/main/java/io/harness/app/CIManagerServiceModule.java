@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CIExecutionServiceModule;
@@ -17,6 +18,7 @@ import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.core.ci.services.CIOverviewDashboardService;
 import io.harness.core.ci.services.CIOverviewDashboardServiceImpl;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.ff.CIFeatureFlagService;
 import io.harness.ff.impl.CIFeatureFlagServiceImpl;
@@ -205,5 +207,8 @@ public class CIManagerServiceModule extends AbstractModule {
     install(new TIServiceClientModule(ciManagerConfiguration.getTiServiceConfig()));
     install(new AccountClientModule(ciManagerConfiguration.getManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.toString()));
+    install(EnforcementClientModule.getInstance(ciManagerConfiguration.getManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.getServiceId(),
+        ciManagerConfiguration.getEnforcementClientConfiguration()));
   }
 }

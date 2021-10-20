@@ -1,11 +1,11 @@
-moduleType: CD
+moduleType: CI
 clients:
-  - name: pipelineService
-    clientConfig: pipelineServiceClientConfig
-    secretConfig: nextGenConfig.pipelineServiceSecret
+  - name: cimanager
+    clientConfig: ciManagerClientConfig
+    secretConfig: nextGenConfig.ciManagerSecret
 features:
-  - name: BUILDS
-    description: The restriction on number of builds
+  - name: MAX_BUILDS_PER_MONTH
+    description: Max build per month
     restrictions:
       FREE:
         restrictionType: RATE_LIMIT
@@ -13,10 +13,35 @@ features:
         timeUnit:
           unit: MONTHS
           numberOfUnits: 1
-        clientName: pipelineService
+        clientName: cimanager
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: MAX_TOTAL_BUILDS
+    description: Max total builds
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 2500
+        clientName: cimanager
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: TEST_INTELLIGENCE
+    description: Test intelligence
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true

@@ -31,6 +31,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -182,7 +183,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
            PreparedStatement statement = connection.prepareStatement(query)) {
         statement.setString(1, accountId);
         statement.setLong(2, timestamp);
-        statement.setLong(3, timestamp - 60 * DAY_IN_MS);
+        statement.setLong(3, timestamp - 30 * DAY_IN_MS);
         resultSet = statement.executeQuery();
         List<ReferenceDTO> usageReferences = new ArrayList<>();
         while (resultSet != null && resultSet.next()) {
@@ -195,7 +196,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         }
         return UsageDataDTO.builder()
             .count(usageReferences.size())
-            .displayName("Last 60 Days")
+            .displayName("Last 30 Days")
             .references(usageReferences)
             .build();
       } catch (SQLException ex) {
@@ -209,11 +210,62 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   @Override
   public UsageDataDTO getMonthlyBuild(String accountId, long timestamp) {
+    long totalTries = 0;
+    String query = "select count(*) as total from " + tableName
+        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private IS 1 nd startts<=? and startts>=?;";
+
+    while (totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountId);
+        statement.setLong(2, timestamp);
+        statement.setLong(3, getStartofTheMonth(timestamp));
+        resultSet = statement.executeQuery();
+        if (resultSet != null && resultSet.next()) {
+          return UsageDataDTO.builder().count(resultSet.getInt("total")).displayName("Total Builds count").build();
+        }
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
     return null;
   }
 
+  private long getStartofTheMonth(long timestamp) {
+    Calendar cal = Calendar.getInstance();
+    cal.setTimeInMillis(timestamp);
+    cal.set(Calendar.HOUR_OF_DAY, 0);
+    cal.clear(Calendar.MINUTE);
+    cal.clear(Calendar.SECOND);
+    cal.clear(Calendar.MILLISECOND);
+
+    return cal.getTimeInMillis();
+  }
+
   @Override
-  public UsageDataDTO getTotalBuild(String accountId, long timestamp) {
+  public UsageDataDTO getTotalBuild(String accountId) {
+    long totalTries = 0;
+    String query = "select count(*) as total from " + tableName
+        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private IS 1;";
+
+    while (totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountId);
+        resultSet = statement.executeQuery();
+        if (resultSet != null && resultSet.next()) {
+          return UsageDataDTO.builder().count(resultSet.getInt("total")).displayName("Total Builds count").build();
+        }
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
     return null;
   }
 
@@ -627,7 +679,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .module("CI")
         .activeCommitters(getActiveCommitter(accountId, timestamp))
         .monthlyBuilds(getMonthlyBuild(accountId, timestamp))
-        .totalBuilds(getTotalBuild(accountId, timestamp))
+        .totalBuilds(getTotalBuild(accountId))
         .build();
   }
 
