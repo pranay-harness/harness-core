@@ -52,13 +52,16 @@ public class ServiceFilterHelperTest extends CategoryTest {
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(ServiceEntity.class);
     Set<String> excludedFields = new HashSet<>(Arrays.asList(ServiceEntityKeys.id, ServiceEntityKeys.createdAt,
-        ServiceEntityKeys.lastModifiedAt, ServiceEntityKeys.deletedAt, ServiceEntityKeys.version, "class"));
+        ServiceEntityKeys.deletedAt, ServiceEntityKeys.version, "class"));
 
     for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
       boolean shouldExist =
           stringSet.contains(propertyDescriptor.getName()) || excludedFields.contains(propertyDescriptor.getName());
       assertThat(shouldExist).isTrue();
     }
+    Set<String> setOnInsert = ((Document) updateOperations.getUpdateObject().get("$setOnInsert")).keySet();
+    assertThat(setOnInsert).hasSize(1);
+    assertThat(setOnInsert).contains(ServiceEntityKeys.createdAt);
   }
 
   @Test
