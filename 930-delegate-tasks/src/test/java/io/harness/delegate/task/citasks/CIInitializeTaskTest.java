@@ -11,7 +11,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.rule.Owner;
@@ -26,16 +26,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class CIBuildCommandTaskTest extends CategoryTest {
-  @Mock private CIBuildTaskHandler ciBuildTaskHandler;
+public class CIInitializeTaskTest extends CategoryTest {
+  @Mock private CIInitializeTaskHandler ciInitializeTaskHandler;
   @Mock private ILogStreamingTaskClient logStreamingTaskClient;
 
   @InjectMocks
-  private CIBuildCommandTask task =
-      new CIBuildCommandTask(DelegateTaskPackage.builder()
-                                 .delegateId("delegateid")
-                                 .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                 .build(),
+  private CIInitializeTask task =
+      new CIInitializeTask(DelegateTaskPackage.builder()
+                               .delegateId("delegateid")
+                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .build(),
           null, notifyResponseData -> {}, () -> true);
 
   @Before
@@ -47,9 +47,9 @@ public class CIBuildCommandTaskTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void runWithTaskParams() {
-    CIBuildSetupTaskParams params = mock(CIBuildSetupTaskParams.class);
+    CIInitializeTaskParams params = mock(CIInitializeTaskParams.class);
     K8sTaskExecutionResponse response = mock(K8sTaskExecutionResponse.class);
-    when(ciBuildTaskHandler.executeTaskInternal(params, logStreamingTaskClient)).thenReturn(response);
+    when(ciInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient)).thenReturn(response);
     assertEquals(task.run(params), response);
   }
 
@@ -57,7 +57,7 @@ public class CIBuildCommandTaskTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void runWithObjectParams() {
-    CIBuildSetupTaskParams taskParams = mock(CIBuildSetupTaskParams.class);
+    CIInitializeTaskParams taskParams = mock(CIInitializeTaskParams.class);
     List<Object> params = new ArrayList<>();
     params.add(taskParams);
 

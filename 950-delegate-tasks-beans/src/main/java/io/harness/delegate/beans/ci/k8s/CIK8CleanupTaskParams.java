@@ -1,7 +1,8 @@
-package io.harness.delegate.beans.ci;
+package io.harness.delegate.beans.ci.k8s;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;

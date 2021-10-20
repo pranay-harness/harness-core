@@ -8,7 +8,7 @@ package io.harness.delegate.task.citasks;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -20,10 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
-public class CIBuildCommandTask extends AbstractDelegateRunnableTask {
-  @Inject private CIBuildTaskHandler ciBuildTaskHandler;
+public class CIInitializeTask extends AbstractDelegateRunnableTask {
+  @Inject private CIInitializeTaskHandler ciInitializeTaskHandler;
 
-  public CIBuildCommandTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+  public CIInitializeTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
@@ -35,7 +35,7 @@ public class CIBuildCommandTask extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    CIBuildSetupTaskParams ciBuildSetupTaskParams = (CIBuildSetupTaskParams) parameters;
-    return ciBuildTaskHandler.executeTaskInternal(ciBuildSetupTaskParams, getLogStreamingTaskClient());
+    CIInitializeTaskParams ciInitializeTaskParams = (CIInitializeTaskParams) parameters;
+    return ciInitializeTaskHandler.executeTaskInternal(ciInitializeTaskParams, getLogStreamingTaskClient());
   }
 }
