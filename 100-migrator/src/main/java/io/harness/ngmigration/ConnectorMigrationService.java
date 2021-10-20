@@ -4,8 +4,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.ngmigration.beans.MigrationInputDTO;
+import io.harness.ngmigration.beans.NgEntityDetail;
 import io.harness.ngmigration.connector.ConnectorFactory;
-import io.harness.serializer.JsonUtils;
+import io.harness.ngmigration.service.MigratorUtility;
+import io.harness.ngmigration.service.NgMigration;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.ngmigration.CgEntityId;
@@ -15,7 +18,6 @@ import software.wings.ngmigration.NGMigrationEntity;
 import software.wings.ngmigration.NGMigrationEntityType;
 import software.wings.ngmigration.NGMigrationStatus;
 import software.wings.ngmigration.NGYamlFile;
-import software.wings.ngmigration.NgMigration;
 import software.wings.service.intfc.SettingsService;
 
 import com.google.inject.Inject;
@@ -65,26 +67,32 @@ public class ConnectorMigrationService implements NgMigration {
       Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {}
 
   @Override
-  public List<NGYamlFile> getYamls(
-      Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId) {
+  public List<NGYamlFile> getYamls(MigrationInputDTO inputDTO, Map<CgEntityId, CgEntityNode> entities,
+      Map<CgEntityId, Set<CgEntityId>> graph, CgEntityId entityId, Map<CgEntityId, NgEntityDetail> migratedEntities) {
     SettingAttribute settingAttribute = (SettingAttribute) entities.get(entityId).getEntity();
     List<NGYamlFile> files = new ArrayList<>();
+    String identifier = MigratorUtility.generateIdentifier(settingAttribute.getName());
     files.add(NGYamlFile.builder()
                   .filename("connector/" + settingAttribute.getName() + ".yaml")
-                  .yaml(JsonUtils.asTree(
-                      ConnectorDTO.builder()
-                          .connectorInfo(ConnectorInfoDTO.builder()
-                                             .name(settingAttribute.getName())
-                                             .identifier(settingAttribute.getName())
-                                             .description(null)
-                                             .tags(null)
-                                             .orgIdentifier("__ORG_INPUT_REQUIRED__")
-                                             .projectIdentifier("__PROJECT_INPUT_REQUIRED__")
-                                             .connectorType(ConnectorFactory.getConnectorType(settingAttribute))
-                                             .connectorConfig(ConnectorFactory.getConfigDTO(settingAttribute))
-                                             .build())
-                          .build()))
+                  .yaml(ConnectorDTO.builder()
+                            .connectorInfo(ConnectorInfoDTO.builder()
+                                               .name(settingAttribute.getName())
+                                               .identifier(identifier)
+                                               .description(null)
+                                               .tags(null)
+                                               .orgIdentifier(inputDTO.getOrgIdentifier())
+                                               .projectIdentifier(inputDTO.getProjectIdentifier())
+                                               .connectorType(ConnectorFactory.getConnectorType(settingAttribute))
+                                               .connectorConfig(ConnectorFactory.getConfigDTO(settingAttribute))
+                                               .build())
+                            .build())
                   .build());
+    migratedEntities.putIfAbsent(entityId,
+        NgEntityDetail.builder()
+            .identifier(identifier)
+            .orgIdentifier(inputDTO.getOrgIdentifier())
+            .projectIdentifier(inputDTO.getProjectIdentifier())
+            .build());
     return files;
   }
 }

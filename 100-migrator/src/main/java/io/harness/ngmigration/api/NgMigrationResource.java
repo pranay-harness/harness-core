@@ -5,7 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngmigration.DiscoveryService;
+import io.harness.ngmigration.beans.MigrationInputDTO;
+import io.harness.ngmigration.service.DiscoveryService;
 import io.harness.rest.RestResponse;
 
 import software.wings.ngmigration.DiscoveryResult;
@@ -21,8 +22,8 @@ import io.swagger.annotations.Api;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
@@ -38,21 +39,23 @@ public class NgMigrationResource {
   @Inject DiscoveryService discoveryService;
 
   @GET
-  @Path("{pipelineId}/discover")
+  @Path("/discover")
   @Timed
   @ExceptionMetered
-  public RestResponse<DiscoveryResult> discoverEntities(@PathParam("pipelineId") String pipelineId,
-      @QueryParam("appId") String appId, @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(discoveryService.discover(accountId, appId, pipelineId, NGMigrationEntityType.PIPELINE));
+  public RestResponse<DiscoveryResult> discoverEntities(@QueryParam("entityId") String entityId,
+      @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+      @QueryParam("entityType") NGMigrationEntityType entityType) {
+    return new RestResponse<>(discoveryService.discover(accountId, appId, entityId, entityType));
   }
 
-  @GET
-  @Path("{pipelineId}/files")
+  @POST
+  @Path("/files")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<NGYamlFile>> getMigratedFiles(@PathParam("pipelineId") String pipelineId,
-      @QueryParam("appId") String appId, @QueryParam("accountId") String accountId) {
-    DiscoveryResult result = discoveryService.discover(accountId, appId, pipelineId, NGMigrationEntityType.PIPELINE);
-    return new RestResponse<>(discoveryService.migratePipeline(result.getEntities(), result.getLinks(), pipelineId));
+  public RestResponse<List<NGYamlFile>> getMigratedFiles(@QueryParam("entityId") String entityId,
+      @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+      @QueryParam("entityType") NGMigrationEntityType entityType, MigrationInputDTO inputDTO) {
+    DiscoveryResult result = discoveryService.discover(accountId, appId, entityId, entityType);
+    return new RestResponse<>(discoveryService.migrateEntity(inputDTO, result));
   }
 }

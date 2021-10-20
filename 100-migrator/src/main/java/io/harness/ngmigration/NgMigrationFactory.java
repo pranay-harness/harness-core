@@ -1,7 +1,8 @@
 package io.harness.ngmigration;
 
+import io.harness.ngmigration.service.NgMigration;
+
 import software.wings.ngmigration.NGMigrationEntityType;
-import software.wings.ngmigration.NgMigration;
 
 import com.google.inject.Inject;
 
@@ -13,6 +14,8 @@ public class NgMigrationFactory {
   @Inject ArtifactStreamMigrationService artifactStreamMigrationService;
   @Inject SecretMigrationService secretMigrationService;
   @Inject SecretManagerMigrationService secretManagerMigrationService;
+  @Inject EnvironmentMigrationService environmentMigrationService;
+  @Inject InfraMigrationService infraMigrationService;
 
   public NgMigration getMethod(NGMigrationEntityType type) {
     switch (type) {
@@ -30,6 +33,10 @@ public class NgMigrationFactory {
         return secretMigrationService;
       case SECRET_MANAGER:
         return secretManagerMigrationService;
+      case ENVIRONMENT:
+        return environmentMigrationService;
+      case INFRA:
+        return infraMigrationService;
       default:
         throw new IllegalStateException();
     }
