@@ -25,7 +25,7 @@ git log -n 1 ${LAST_UNMERGED_SHA}
 
 UNMERGED_SINCE=`git show -s --format=%ct ${LAST_UNMERGED_SHA}`
 NOW=`date +'%s'`
-RECENCY_WINDOW = 3 * 24 * 60 * 60
+RECENCY_WINDOW=$((3*24*60*60))
 
 if [[ $UNMERGED_SINCE -lt $(($NOW - $RECENCY_WINDOW)) ]]
 then
