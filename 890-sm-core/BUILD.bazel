@@ -93,6 +93,7 @@ java_library(
         "@maven//:com_amazonaws_aws_java_sdk_core",
         "@maven//:com_amazonaws_aws_java_sdk_kms",
         "@maven//:com_amazonaws_aws_java_sdk_secretsmanager",
+        "@maven//:com_amazonaws_aws_encryption_sdk_java",
         "@maven//:com_amazonaws_aws_java_sdk_sts",
         "@maven//:com_google_api_grpc_proto_google_cloud_kms_v1",
         "@maven//:com_google_api_grpc_proto_google_cloud_secretmanager_v1",
