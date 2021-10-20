@@ -1,7 +1,5 @@
 package io.harness.pms.pipeline.gitsync;
 
-import static io.harness.ng.core.utils.NGUtils.validate;
-
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -85,7 +83,6 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   @Override
   public PipelineConfig save(String accountIdentifier, String yaml) {
     PipelineEntity entity = PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml);
-    validate(entity);
     TemplateMergeResponseDTO templateMergeResponseDTO = pipelineTemplateHelper.resolveTemplateRefsInPipeline(entity);
     if (EmptyPredicate.isNotEmpty(templateMergeResponseDTO.getTemplateReferenceSummaries())) {
       entity.setTemplateReference(true);
@@ -97,7 +94,6 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   @Override
   public PipelineConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
     PipelineEntity entity = PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml);
-    validate(entity);
     PipelineEntity pipelineEntity = pmsPipelineService.updatePipelineYaml(entity, changeType);
     TemplateMergeResponseDTO templateMergeResponseDTO =
         pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity);
