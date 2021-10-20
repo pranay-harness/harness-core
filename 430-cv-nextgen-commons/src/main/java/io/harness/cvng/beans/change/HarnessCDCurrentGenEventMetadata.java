@@ -20,10 +20,13 @@ public class HarnessCDCurrentGenEventMetadata extends ChangeEventMetadata {
   String serviceId;
   String environmentId;
   String workflowId;
+  String status;
   long workflowStartTime;
   long workflowEndTime;
   String workflowExecutionId;
   String name;
+  String artifactType;
+  String artifactName;
 
   @Override
   public ChangeSourceType getType() {

@@ -3,6 +3,8 @@ package io.harness.delegatetasks;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretText;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -20,7 +22,9 @@ import io.harness.security.encryption.EncryptionConfig;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(HarnessTeam.PL)
 public class UpsertSecretTask extends AbstractDelegateRunnableTask {
   @Inject VaultEncryptorsRegistry vaultEncryptorsRegistry;
 
@@ -31,16 +35,13 @@ public class UpsertSecretTask extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(Object[] parameters) {
-    return run((UpsertSecretTaskParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    return run((UpsertSecretTaskParameters) parameters);
-  }
-
-  private UpsertSecretTaskResponse run(UpsertSecretTaskParameters parameters) {
-    return run(parameters, vaultEncryptorsRegistry);
+    UpsertSecretTaskParameters upsertSecretTaskParameters = (UpsertSecretTaskParameters) parameters;
+    return run(upsertSecretTaskParameters, vaultEncryptorsRegistry);
   }
 
   protected static UpsertSecretTaskResponse run(

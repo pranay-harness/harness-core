@@ -274,22 +274,30 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     for (StepPalleteModuleInfo request : stepPalleteFilterWrapper.getStepPalleteModuleInfos()) {
       String module = request.getModule();
       String category = request.getCategory();
-      List<StepInfo> stepInfoList = serviceInstanceNameToSupportedSteps.get(module).getStepTypes();
+      StepPalleteInfo stepPalleteInfo = serviceInstanceNameToSupportedSteps.get(module);
+      if (stepPalleteInfo == null) {
+        continue;
+      }
+      List<StepInfo> stepInfoList = stepPalleteInfo.getStepTypes();
+      String displayModuleName = stepPalleteInfo.getModuleName();
       if (EmptyPredicate.isEmpty(stepInfoList)) {
         continue;
       }
+      StepCategory moduleCategory;
       if (EmptyPredicate.isNotEmpty(category)) {
-        stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategoryV2(
-            module, category, stepInfoList, accountId));
+        moduleCategory = pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategoryV2(
+            displayModuleName, category, stepInfoList, accountId);
       } else {
-        stepCategory.addStepCategory(
-            pmsPipelineServiceStepHelper.calculateStepsForCategory(module, stepInfoList, accountId));
+        moduleCategory =
+            pmsPipelineServiceStepHelper.calculateStepsForCategory(displayModuleName, stepInfoList, accountId);
+      }
+      stepCategory.addStepCategory(moduleCategory);
+      if (request.isShouldShowCommonSteps()) {
+        pmsPipelineServiceStepHelper.addStepsToStepCategory(
+            moduleCategory, commonStepInfo.getCommonSteps(request.getCommonStepCategory()), accountId);
       }
     }
-    if (stepPalleteFilterWrapper.isShouldShowCommonSteps()) {
-      stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForCategory(
-          "Common", commonStepInfo.getCommonSteps(stepPalleteFilterWrapper.getCommonStepCategory()), accountId));
-    }
+
     return stepCategory;
   }
 
@@ -333,7 +341,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     if (isNotEmpty(projectId)) {
       criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
     }
-    criteria.and(PipelineEntityKeys.deleted).is(deleted);
 
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");

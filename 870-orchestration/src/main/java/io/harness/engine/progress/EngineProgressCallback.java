@@ -1,11 +1,15 @@
 package io.harness.engine.progress;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.progress.publisher.ProgressEventPublisher;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ProgressData;
@@ -26,7 +30,8 @@ public class EngineProgressCallback implements ProgressCallback {
   @Inject @Transient KryoSerializer kryoSerializer;
   @Inject @Transient ProgressEventPublisher progressEventPublisher;
 
-  String nodeExecutionId;
+  @Deprecated String nodeExecutionId;
+  Ambiance ambiance;
 
   @Override
   public void notify(String correlationId, ProgressData progressData) {
@@ -35,18 +40,25 @@ public class EngineProgressCallback implements ProgressCallback {
     }
 
     // This is the new way of managing progress updates below code is only to maintain backward compatibility
-    progressEventPublisher.publishEvent(nodeExecutionId, (BinaryResponseData) progressData);
+    progressEventPublisher.publishEvent(getNodeExecutionId(), (BinaryResponseData) progressData);
 
     try {
       // This code is only to maintain backward compatibility
       ProgressData data = (ProgressData) kryoSerializer.asInflatedObject(((BinaryResponseData) progressData).getData());
       if (data instanceof UnitProgressData) {
-        nodeExecutionService.update(nodeExecutionId,
+        nodeExecutionService.update(getNodeExecutionId(),
             ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) data).getUnitProgresses()));
       }
       log.info("Node Execution updated for progress data");
     } catch (Exception ex) {
       log.error("Failed to deserialize progress data via kryo");
     }
+  }
+
+  private String getNodeExecutionId() {
+    if (isEmpty(nodeExecutionId)) {
+      return AmbianceUtils.obtainCurrentRuntimeId(ambiance);
+    }
+    return nodeExecutionId;
   }
 }

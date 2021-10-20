@@ -2,7 +2,7 @@ package io.harness.gitsync.gitsyncerror.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.core.rbac.ProjectPermissions.EDIT_PROJECT_PERMISSION;
+import static io.harness.ng.core.rbac.ProjectPermissions.VIEW_PROJECT_PERMISSION;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
@@ -12,6 +12,7 @@ import io.harness.beans.SortOrder;
 import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncErrorKeys;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
@@ -60,7 +61,7 @@ public class GitSyncErrorResource {
   @GET
   @Path("/aggregate")
   @ApiOperation(value = "Gets Error list grouped by commit", nickname = "listGitToHarnessErrorsCommits")
-  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = EDIT_PROJECT_PERMISSION)
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<PageResponse<GitSyncErrorAggregateByCommitDTO>> listGitToHarnessErrorsGroupedByCommits(
       @BeanParam PageRequest pageRequest,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
@@ -68,7 +69,7 @@ public class GitSyncErrorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
-      @QueryParam("numberOfErrorsInSummary") @DefaultValue("0") @Max(5) Integer numberOfErrorsInSummary) {
+      @QueryParam("numberOfErrorsInSummary") @DefaultValue("5") @Max(5) Integer numberOfErrorsInSummary) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(GitSyncErrorKeys.createdAt, SortOrder.OrderType.DESC).build();
@@ -82,7 +83,7 @@ public class GitSyncErrorResource {
   @GET
   @Path("/commits/{commitId}")
   @ApiOperation(value = "Gets Error list for a particular commit", nickname = "listGitToHarnessErrorsForCommit")
-  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = EDIT_PROJECT_PERMISSION)
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<PageResponse<GitSyncErrorDTO>> listGitSyncErrorsForACommit(@BeanParam PageRequest pageRequest,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
@@ -100,7 +101,7 @@ public class GitSyncErrorResource {
 
   @GET
   @ApiOperation(value = "Gets Error list", nickname = "listGitSyncErrors")
-  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = EDIT_PROJECT_PERMISSION)
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<PageResponse<GitSyncErrorDTO>> listGitSyncErrors(@BeanParam PageRequest pageRequest,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
@@ -122,5 +123,19 @@ public class GitSyncErrorResource {
       return ResponseDTO.newResponse(gitSyncErrorService.listConnectivityErrors(accountIdentifier, orgIdentifier,
           projectIdentifier, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch(), pageRequest));
     }
+  }
+
+  @GET
+  @Path("/count")
+  @ApiOperation(value = "Gets Error Count", nickname = "getGitSyncErrorsCount")
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = VIEW_PROJECT_PERMISSION)
+  public ResponseDTO<GitSyncErrorCountDTO> getErrorCount(
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    return ResponseDTO.newResponse(gitSyncErrorService.getErrorCount(accountIdentifier, orgIdentifier,
+        projectIdentifier, searchTerm, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch()));
   }
 }

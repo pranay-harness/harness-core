@@ -20,6 +20,8 @@ public class HarnessCDCurrentGenChangeEventTransformer
         .serviceIdentifier(changeEventDTO.getServiceIdentifier())
         .environmentIdentifier(changeEventDTO.getEnvIdentifier())
         .eventTime(Instant.ofEpochMilli(changeEventDTO.getEventTime()))
+        .activityStartTime(Instant.ofEpochMilli(metaData.getWorkflowStartTime()))
+        .workflowEndTime(Instant.ofEpochMilli(metaData.getWorkflowEndTime()))
         .changeSourceIdentifier(changeEventDTO.getChangeSourceIdentifier())
         .type(changeEventDTO.getType().getActivityType())
         .serviceId(metaData.getServiceId())
@@ -30,6 +32,9 @@ public class HarnessCDCurrentGenChangeEventTransformer
         .workflowStartTime(Instant.ofEpochMilli(metaData.getWorkflowStartTime()))
         .workflowEndTime(Instant.ofEpochMilli(metaData.getWorkflowEndTime()))
         .name(metaData.getName())
+        .artifactType(metaData.getArtifactType())
+        .artifactName(metaData.getArtifactName())
+        .status(metaData.getStatus())
         .build();
   }
 
@@ -45,6 +50,9 @@ public class HarnessCDCurrentGenChangeEventTransformer
         .workflowStartTime(activity.getWorkflowStartTime().toEpochMilli())
         .workflowEndTime(activity.getWorkflowEndTime().toEpochMilli())
         .name(activity.getName())
+        .artifactType(activity.getArtifactType())
+        .artifactName(activity.getArtifactName())
+        .status(activity.getStatus())
         .build();
   }
 }

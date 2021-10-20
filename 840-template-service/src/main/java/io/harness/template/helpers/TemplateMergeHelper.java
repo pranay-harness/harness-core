@@ -158,7 +158,7 @@ public class TemplateMergeHelper {
       throw new NGTemplateResolveException("Exception in resolving template refs in given yaml.", USER, errorResponse);
     }
     Map<String, Object> resMap = generateMergedYamlMap(accountId, orgId, projectId, pipelineJsonNode);
-    return TemplateMergeResponseDTO.builder().mergedPipelineYaml(convertToYaml(resMap)).valid(true).build();
+    return TemplateMergeResponseDTO.builder().mergedPipelineYaml(convertToYaml(resMap)).build();
   }
 
   /**
@@ -215,10 +215,6 @@ public class TemplateMergeHelper {
     } catch (IOException e) {
       log.error("Could not read template yaml", e);
       throw new NGTemplateException("Could not read template yaml: " + e.getMessage());
-    }
-
-    if (templateInputs == null) {
-      return templateSpec;
     }
 
     return mergeTemplateInputsToTemplateSpecInTemplateYaml(templateInputs, templateSpec);
@@ -496,7 +492,10 @@ public class TemplateMergeHelper {
 
   private TemplateEntity getLinkedTemplateEntity(String accountId, String orgId, String projectId, JsonNode yaml) {
     String identifier = yaml.get(TEMPLATE_REF).asText();
-    String versionLabel = yaml.get(TEMPLATE_VERSION_LABEL).asText();
+    String versionLabel = "";
+    if (yaml.get(TEMPLATE_VERSION_LABEL) != null) {
+      versionLabel = yaml.get(TEMPLATE_VERSION_LABEL).asText();
+    }
 
     IdentifierRef templateIdentifierRef = IdentifierRefHelper.getIdentifierRef(identifier, accountId, orgId, projectId);
     Optional<TemplateEntity> templateEntity =

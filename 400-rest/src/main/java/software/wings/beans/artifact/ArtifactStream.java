@@ -242,7 +242,7 @@ public abstract class ArtifactStream
 
   @JsonIgnore
   @Override
-  public NGMigrationEntityType getType() {
+  public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.ARTIFACT_STREAM;
   }
 

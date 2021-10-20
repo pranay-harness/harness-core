@@ -11,5 +11,5 @@ import java.util.List;
 @OwnedBy(CV)
 public interface CDChangeSourceIntegrationService {
   List<HarnessCDCurrentGenEventMetadata> getCurrentGenEventsBetween(
-      String accountId, String appId, String serviceId, String environmentId, Instant timestamp);
+      String accountId, String appId, String serviceId, String environmentId, Instant startTime, Instant endTime);
 }

@@ -14,7 +14,7 @@ import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.pipeline.executions.beans.CIBuildAuthor;
@@ -44,7 +44,7 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.states.LiteEngineTaskStep;
+import io.harness.states.InitializeTaskStep;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
@@ -97,26 +97,25 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
     try {
       StepElementParameters stepElementParameters = (StepElementParameters) event.getResolvedStepParameters();
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+      InitializeStepInfo initializeStepInfo = (InitializeStepInfo) stepElementParameters.getSpec();
 
-      if (liteEngineTaskStepInfo == null) {
+      if (initializeStepInfo == null) {
         return null;
       }
 
       ParameterField<Build> buildParameterField = null;
-      if (liteEngineTaskStepInfo.getCiCodebase() != null) {
-        buildParameterField = liteEngineTaskStepInfo.getCiCodebase().getBuild();
+      if (initializeStepInfo.getCiCodebase() != null) {
+        buildParameterField = initializeStepInfo.getCiCodebase().getBuild();
 
-        if (liteEngineTaskStepInfo.getCiCodebase().getRepoName() != null) {
-          repoName = liteEngineTaskStepInfo.getCiCodebase().getRepoName();
+        if (initializeStepInfo.getCiCodebase().getRepoName() != null) {
+          repoName = initializeStepInfo.getCiCodebase().getRepoName();
         }
-        if (liteEngineTaskStepInfo.getCiCodebase().getConnectorRef() != null) {
+        if (initializeStepInfo.getCiCodebase().getConnectorRef() != null) {
           try {
-            ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(
-                baseNGAccess, liteEngineTaskStepInfo.getCiCodebase().getConnectorRef());
+            ConnectorDetails connectorDetails =
+                connectorUtils.getConnectorDetails(baseNGAccess, initializeStepInfo.getCiCodebase().getConnectorRef());
             if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-              url = IntegrationStageUtils.getGitURLFromConnector(
-                  connectorDetails, liteEngineTaskStepInfo.getCiCodebase());
+              url = IntegrationStageUtils.getGitURLFromConnector(connectorDetails, initializeStepInfo.getCiCodebase());
             }
             if (repoName == null) {
               repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
@@ -322,7 +321,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
 
   // StepType
   private boolean isLiteEngineNode(StepType stepType) {
-    return Objects.equals(stepType.getType(), LiteEngineTaskStep.STEP_TYPE.getType());
+    return Objects.equals(stepType.getType(), InitializeTaskStep.STEP_TYPE.getType());
   }
 
   private BaseNGAccess retrieveBaseNGAccess(Ambiance ambiance) {

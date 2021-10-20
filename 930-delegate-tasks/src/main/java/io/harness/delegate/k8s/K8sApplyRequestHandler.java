@@ -10,8 +10,6 @@ import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.LogColor.Gray;
@@ -31,8 +29,12 @@ import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
-import io.harness.exception.ExceptionUtils;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -73,42 +75,28 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
         Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString());
     long timeoutInMillis = getTimeoutMillisFromMinutes(k8sDeployRequest.getTimeoutIntervalInMin());
 
-    boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
-        k8sApplyRequest.getManifestDelegateConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
+    k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(k8sApplyRequest.getManifestDelegateConfig(),
+        k8sApplyHandlerConfig.getManifestFilesDirectory(),
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
             k8sApplyRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         timeoutInMillis, k8sApplyRequest.getAccountId());
-    if (!success) {
-      return getGenericFailureResponse(null);
-    }
 
-    success = init(k8sApplyRequest, k8sDelegateTaskParams,
+    init(k8sApplyRequest, k8sDelegateTaskParams,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
-    if (!success) {
-      return getGenericFailureResponse(null);
-    }
 
-    success = k8sApplyBaseHandler.prepare(
+    k8sApplyBaseHandler.prepare(
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress),
-        k8sApplyRequest.isSkipSteadyStateCheck(), k8sApplyHandlerConfig);
-    if (!success) {
-      return getGenericFailureResponse(null);
-    }
+        k8sApplyRequest.isSkipSteadyStateCheck(), k8sApplyHandlerConfig, isErrorFrameworkSupported());
 
-    success = k8sTaskHelperBase.applyManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
+    k8sTaskHelperBase.applyManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
         k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
-    if (!success) {
-      return getGenericFailureResponse(null);
-    }
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true,
+        isErrorFrameworkSupported());
 
-    success = k8sApplyBaseHandler.steadyStateCheck(k8sApplyRequest.isSkipSteadyStateCheck(),
+    k8sApplyBaseHandler.steadyStateCheck(k8sApplyRequest.isSkipSteadyStateCheck(),
         k8sApplyRequest.getK8sInfraDelegateConfig().getNamespace(), k8sDelegateTaskParams, timeoutInMillis,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress),
-        k8sApplyHandlerConfig);
-    if (!success) {
-      return getGenericFailureResponse(null);
-    }
+        k8sApplyHandlerConfig, isErrorFrameworkSupported());
 
     k8sApplyBaseHandler.wrapUp(k8sDelegateTaskParams,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress),
@@ -117,7 +105,13 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
     return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }
 
-  private boolean init(K8sApplyRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback) {
+  @Override
+  public boolean isErrorFrameworkSupported() {
+    return true;
+  }
+
+  private void init(K8sApplyRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback)
+      throws Exception {
     logCallback.saveExecutionLog("Initializing..\n");
     logCallback.saveExecutionLog(color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
 
@@ -127,46 +121,39 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
     k8sApplyHandlerConfig.setClient(
         Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath()));
 
-    try {
-      List<String> applyFilePaths = request.getFilePaths()
-                                        .stream()
-                                        .map(String::trim)
-                                        .filter(StringUtils::isNotBlank)
-                                        .collect(Collectors.toList());
+    List<String> applyFilePaths =
+        request.getFilePaths().stream().map(String::trim).filter(StringUtils::isNotBlank).collect(Collectors.toList());
 
-      if (isEmpty(applyFilePaths)) {
-        logCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
-        logCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
-        return false;
-      }
+    if (isEmpty(applyFilePaths)) {
+      logCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
+      logCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.APPLY_NO_FILEPATH_SPECIFIED,
 
-      logCallback.saveExecutionLog(color("Found following files to be applied in the state", White, Bold));
-      StringBuilder sb = new StringBuilder(1024);
-      applyFilePaths.forEach(each -> sb.append(color(format("- %s", each), Gray)).append(System.lineSeparator()));
-      logCallback.saveExecutionLog(sb.toString());
-
-      k8sApplyHandlerConfig.setResources(k8sTaskHelperBase.getResourcesFromManifests(k8sDelegateTaskParams,
-          request.getManifestDelegateConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(), applyFilePaths,
-          request.getValuesYamlList(), k8sApplyHandlerConfig.getReleaseName(),
-          k8sApplyHandlerConfig.getKubernetesConfig().getNamespace(), logCallback, request.getTimeoutIntervalInMin()));
-
-      logCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
-      logCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(k8sApplyHandlerConfig.getResources()));
-
-      if (request.isSkipDryRun()) {
-        logCallback.saveExecutionLog(color("\nSkipping Dry Run", Yellow, Bold), INFO);
-        logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-        return true;
-      }
-
-      return k8sTaskHelperBase.dryRunManifests(
-          k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(), k8sDelegateTaskParams, logCallback);
-    } catch (Exception e) {
-      log.error("Exception:", e);
-      logCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
-      logCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
-      return false;
+          KubernetesExceptionExplanation.APPLY_NO_FILEPATH_SPECIFIED,
+          new KubernetesTaskException(KubernetesExceptionMessages.APPLY_NO_FILEPATH_SPECIFIED));
     }
+
+    logCallback.saveExecutionLog(color("Found following files to be applied in the state", White, Bold));
+    StringBuilder sb = new StringBuilder(1024);
+    applyFilePaths.forEach(each -> sb.append(color(format("- %s", each), Gray)).append(System.lineSeparator()));
+    logCallback.saveExecutionLog(sb.toString());
+
+    k8sApplyHandlerConfig.setResources(k8sTaskHelperBase.getResourcesFromManifests(k8sDelegateTaskParams,
+        request.getManifestDelegateConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(), applyFilePaths,
+        request.getValuesYamlList(), k8sApplyHandlerConfig.getReleaseName(),
+        k8sApplyHandlerConfig.getKubernetesConfig().getNamespace(), logCallback, request.getTimeoutIntervalInMin()));
+
+    logCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
+    logCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(k8sApplyHandlerConfig.getResources()));
+
+    if (request.isSkipDryRun()) {
+      logCallback.saveExecutionLog(color("\nSkipping Dry Run", Yellow, Bold), INFO);
+      logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return;
+    }
+
+    k8sTaskHelperBase.dryRunManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
+        k8sDelegateTaskParams, logCallback, isErrorFrameworkSupported());
   }
 
   @VisibleForTesting

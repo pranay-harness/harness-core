@@ -12,6 +12,8 @@ import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCA
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
@@ -26,6 +28,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.beans.GitCommandTaskParameters;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitRepositoryInfo;
 import software.wings.beans.HostConnectionAttributes;
@@ -55,6 +58,7 @@ import org.eclipse.jgit.transport.URIish;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@OwnedBy(HarnessTeam.DX)
 public class GitConfigHelperService {
   @Inject private DelegateService delegateService;
   @Inject private SettingsService settingsService;
@@ -120,17 +124,19 @@ public class GitConfigHelperService {
     convertToRepoGitConfig(gitConfig, gitConfig.getRepoName());
 
     try {
-      DelegateResponseData notifyResponseData = delegateService.executeTask(
-          DelegateTask.builder()
-              .accountId(gitConfig.getAccountId())
-              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
-              .data(TaskData.builder()
-                        .async(false)
-                        .taskType(TaskType.GIT_COMMAND.name())
-                        .parameters(new Object[] {GitCommandType.VALIDATE, gitConfig, encryptionDetails})
-                        .timeout(TimeUnit.SECONDS.toMillis(60))
-                        .build())
-              .build());
+      GitCommandTaskParameters gitCommandTaskParameters =
+          GitCommandTaskParameters.builder(GitCommandType.VALIDATE, gitConfig, encryptionDetails).build();
+      DelegateResponseData notifyResponseData =
+          delegateService.executeTask(DelegateTask.builder()
+                                          .accountId(gitConfig.getAccountId())
+                                          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
+                                          .data(TaskData.builder()
+                                                    .async(false)
+                                                    .taskType(TaskType.GIT_COMMAND.name())
+                                                    .parameters(new Object[] {gitCommandTaskParameters})
+                                                    .timeout(TimeUnit.SECONDS.toMillis(60))
+                                                    .build())
+                                          .build());
 
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());

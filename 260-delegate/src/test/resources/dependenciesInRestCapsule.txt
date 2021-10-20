@@ -221,7 +221,7 @@ com.nimbusds:nimbus-jose-jwt:jar:8.19
 com.nimbusds:oauth2-oidc-sdk:jar:7.4
 com.ning:async-http-client:jar:1.9.40
 com.novemberain:quartz-mongodb:jar:2.1.1
-com.offbytwo.jenkins:jenkins-client:jar:0.3.8
+com.offbytwo.jenkins:jenkins-client:jar:0.3.9
 com.palominolabs.metrics:metrics-guice:jar:3.2.0
 com.papertrail:profiler:jar:1.0.2
 com.rabbitmq:amqp-client:jar:4.8.0
@@ -528,8 +528,9 @@ org.eclipse.jetty:jetty-util-ajax:jar:9.4.41.v20210516
 org.eclipse.jetty:jetty-util:jar:9.4.41.v20210516
 org.eclipse.jetty:jetty-webapp:jar:9.4.41.v20210516
 org.eclipse.jetty:jetty-xml:jar:9.4.41.v20210516
-org.eclipse.jgit:org.eclipse.jgit.http.apache:jar:5.3.0.201903130848-r
-org.eclipse.jgit:org.eclipse.jgit:jar:5.3.0.201903130848-r
+org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:jar:5.13.0.202109080827-r
+org.eclipse.jgit:org.eclipse.jgit.http.apache:jar:5.13.0.202109080827-r
+org.eclipse.jgit:org.eclipse.jgit:jar:5.13.0.202109080827-r
 org.elasticsearch.client:elasticsearch-rest-client:jar:7.7.0
 org.elasticsearch.client:elasticsearch-rest-high-level-client:jar:7.7.0
 org.elasticsearch.plugin:aggs-matrix-stats-client:jar:7.7.0

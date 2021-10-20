@@ -1,5 +1,6 @@
 package io.harness.batch.processing.tasklet;
 
+import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getInstanceCategory;
 import static io.harness.ccm.commons.entities.k8s.K8sWorkload.encodeDotsInKey;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -22,7 +23,6 @@ import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
@@ -53,9 +53,6 @@ public class K8sNodeInfoTasklet implements Tasklet {
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
   @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
   @Autowired private FeatureFlagService featureFlagService;
-
-  private static final String AWS_SPOT_INSTANCE = "spot";
-  private static final String AZURE_SPOT_INSTANCE = "spot";
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -159,36 +156,6 @@ public class K8sNodeInfoTasklet implements Tasklet {
         .labels(encodeDotsInKey(labelsMap))
         .metaData(metaData)
         .build();
-  }
-
-  @VisibleForTesting
-  public InstanceCategory getInstanceCategory(CloudProvider k8SCloudProvider, Map<String, String> labelsMap) {
-    InstanceCategory instanceCategory = InstanceCategory.ON_DEMAND;
-    if (k8SCloudProvider == CloudProvider.GCP) {
-      boolean preemptible = labelsMap.keySet().stream().anyMatch(key -> key.contains(K8sCCMConstants.PREEMPTIBLE_KEY));
-      if (preemptible) {
-        return InstanceCategory.SPOT;
-      }
-    } else if (k8SCloudProvider == CloudProvider.AWS) {
-      List<String> lifecycleKeys = labelsMap.keySet()
-                                       .stream()
-                                       .filter(key
-                                           -> key.contains(K8sCCMConstants.AWS_LIFECYCLE_KEY)
-                                               || key.contains(K8sCCMConstants.AWS_CAPACITY_TYPE_KEY))
-                                       .collect(Collectors.toList());
-      for (String lifecycleKey : lifecycleKeys) {
-        String lifecycle = labelsMap.get(lifecycleKey);
-        if (lifecycle.toLowerCase().contains(AWS_SPOT_INSTANCE)) {
-          return InstanceCategory.SPOT;
-        }
-      }
-    } else if (k8SCloudProvider == CloudProvider.AZURE) {
-      String lifecycle = labelsMap.get(K8sCCMConstants.AZURE_LIFECYCLE_KEY);
-      if (null != lifecycle && lifecycle.toLowerCase().contains(AZURE_SPOT_INSTANCE)) {
-        return InstanceCategory.SPOT;
-      }
-    }
-    return instanceCategory;
   }
 
   @VisibleForTesting

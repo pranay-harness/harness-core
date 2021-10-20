@@ -23,10 +23,13 @@ public class HarnessCDCurrentGenActivity extends Activity {
   String serviceId;
   String environmentId;
   String workflowId;
+  String status;
   Instant workflowStartTime;
   Instant workflowEndTime;
   String workflowExecutionId;
   String name;
+  String artifactType;
+  String artifactName;
 
   @Override
   public ActivityType getType() {

@@ -1,7 +1,6 @@
 package io.harness.engine.pms.resume;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
@@ -18,22 +17,15 @@ import lombok.Getter;
 public class EngineResumeAllCallback implements OldNotifyCallback {
   @Inject OrchestrationEngine orchestrationEngine;
 
-  @Getter @Deprecated String nodeExecutionId;
   @Getter Ambiance ambiance;
 
   @Builder
-  public EngineResumeAllCallback(Ambiance ambiance, String nodeExecutionId) {
+  public EngineResumeAllCallback(Ambiance ambiance) {
     this.ambiance = ambiance;
-    this.nodeExecutionId = nodeExecutionId;
   }
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    // This is for backward compatibility will clear in next release
-    if (isNotEmpty(nodeExecutionId)) {
-      orchestrationEngine.startNodeExecution(nodeExecutionId);
-      return;
-    }
     orchestrationEngine.startNodeExecution(ambiance);
   }
 

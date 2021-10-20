@@ -38,9 +38,9 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
   @Inject private InstanceHelper instanceHelper;
   @Inject private MorphiaPersistenceProvider<InfrastructureMapping> persistenceProvider;
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder().name("InstanceSync").poolSize(10).interval(ofSeconds(30)).build(),
+        PumpExecutorOptions.builder().name("InstanceSync").poolSize(threadPoolSize).interval(ofSeconds(30)).build(),
         InstanceSyncHandler.class,
         MongoPersistenceIterator.<InfrastructureMapping, MorphiaFilterExpander<InfrastructureMapping>>builder()
             .clazz(InfrastructureMapping.class)

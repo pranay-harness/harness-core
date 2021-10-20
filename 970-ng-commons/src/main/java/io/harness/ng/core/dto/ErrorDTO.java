@@ -5,10 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.ngexception.ErrorMetadataDTO;
 import io.harness.ng.core.CorrelationContext;
 import io.harness.ng.core.Status;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -21,6 +23,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel(value = "Error")
+@Schema(name = "Error", description = "This is Error entity as defined in Harness")
 public class ErrorDTO {
   Status status = Status.ERROR; // we won't rely on http codes, clients will figure out error/success with this field
   ErrorCode code; // enum representing what kind of an error this is (e.g.- secret management error)
@@ -28,6 +31,7 @@ public class ErrorDTO {
   String correlationId; // for distributed tracing
   String detailedMessage; // used to send detailed message in case of an error from Harness end for debugging
   List<ResponseMessage> responseMessages; // for sending detailed list of response messages
+  ErrorMetadataDTO metadata;
 
   private ErrorDTO() {}
 
@@ -38,7 +42,8 @@ public class ErrorDTO {
     this.detailedMessage = detailedMessage;
   }
 
-  public static ErrorDTO newError(Status status, ErrorCode code, String message, String detailedMessage) {
+  public static ErrorDTO newError(
+      Status status, ErrorCode code, String message, String detailedMessage, ErrorMetadataDTO metadata) {
     ErrorDTO errorDto = new ErrorDTO();
     errorDto.setStatus(status);
     errorDto.setCode(code);
@@ -46,10 +51,11 @@ public class ErrorDTO {
     errorDto.setDetailedMessage(detailedMessage);
     errorDto.setCorrelationId(CorrelationContext.getCorrelationId());
     errorDto.setResponseMessages(new ArrayList<>());
+    errorDto.setMetadata(metadata);
     return errorDto;
   }
 
   public static ErrorDTO newError(Status status, ErrorCode code, String message) {
-    return newError(status, code, message, null);
+    return newError(status, code, message, null, null);
   }
 }

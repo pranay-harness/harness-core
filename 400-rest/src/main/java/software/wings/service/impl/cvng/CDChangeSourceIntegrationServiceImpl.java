@@ -26,7 +26,7 @@ public class CDChangeSourceIntegrationServiceImpl implements CDChangeSourceInteg
 
   @Override
   public List<HarnessCDCurrentGenEventMetadata> getCurrentGenEventsBetween(
-      String accountId, String appId, String serviceId, String environmentId, Instant timestamp) {
+      String accountId, String appId, String serviceId, String environmentId, Instant startTime, Instant endTime) {
     Query<WorkflowExecution> query = hPersistence.createQuery(WorkflowExecution.class)
                                          .filter(WorkflowExecutionKeys.accountId, accountId)
                                          .filter(WorkflowExecutionKeys.appId, appId)
@@ -35,7 +35,9 @@ public class CDChangeSourceIntegrationServiceImpl implements CDChangeSourceInteg
                                          .field(WorkflowExecutionKeys.envIds)
                                          .contains(environmentId)
                                          .field(WorkflowExecutionKeys.endTs)
-                                         .greaterThanOrEq(timestamp.toEpochMilli());
+                                         .greaterThanOrEq(startTime.toEpochMilli())
+                                         .field(WorkflowExecutionKeys.endTs)
+                                         .lessThanOrEq(endTime.toEpochMilli());
     FindOptions findOptions = new FindOptions().readPreference(ReadPreference.secondaryPreferred());
     List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutionsUsingQuery(query, findOptions, false);
@@ -54,6 +56,9 @@ public class CDChangeSourceIntegrationServiceImpl implements CDChangeSourceInteg
                                .workflowEndTime(execution.getEndTs())
                                .workflowExecutionId(execution.getUuid())
                                .name(execution.getName())
+                               .artifactType(execution.getArtifacts().get(index).getArtifactStreamType())
+                               .artifactName(execution.getArtifacts().get(index).getDisplayName())
+                               .status(execution.getStatus().name())
                                .build());
         }
       }

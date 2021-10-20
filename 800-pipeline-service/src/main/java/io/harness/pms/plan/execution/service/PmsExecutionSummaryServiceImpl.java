@@ -5,6 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.NodeType;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
@@ -26,6 +28,23 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
    * Updates all the fields in the stage graph from nodeExecutions.
    * @param planExecutionId
    */
+  public void updateStageUpdateOfIdentityType(String planExecutionId) {
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchStageExecutions(planExecutionId);
+    Update update = new Update();
+
+    // This is done inorder to reduce the load while updating stageInfo. Here we will update only the status.
+    for (NodeExecution nodeExecution : nodeExecutions) {
+      update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "."
+              + nodeExecution.getNode().getUuid() + ".status",
+          ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()));
+    }
+
+    Criteria criteria =
+        Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
+    Query query = new Query(criteria);
+    pmsExecutionSummaryRepository.update(query, update);
+  }
+
   @Override
   public void regenerateStageLayoutGraph(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchStageExecutions(planExecutionId);
@@ -89,6 +108,11 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
   private void updateStageLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
     if (OrchestrationUtils.isStageNode(nodeExecution)
         || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
+      // This condition is for retry execution graph generation.
+      if (!nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+        updateStageUpdateOfIdentityType(planExecutionId);
+      }
+
       Update update = new Update();
       ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
       Criteria criteria =

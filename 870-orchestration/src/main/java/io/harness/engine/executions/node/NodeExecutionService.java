@@ -38,6 +38,9 @@ public interface NodeExecutionService {
   NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<Update> ops,
       EnumSet<Status> overrideStatusSet);
 
+  NodeExecution updateStatusWithUpdate(
+      @NonNull String nodeExecutionId, @NonNull Status targetStatus, Update ops, EnumSet<Status> overrideStatusSet);
+
   NodeExecution save(NodeExecution nodeExecution);
 
   NodeExecution save(NodeExecutionProto nodeExecution);

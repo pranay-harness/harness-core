@@ -9,6 +9,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.user.AddUsersDTO;
 import io.harness.ng.core.user.AddUsersResponse;
+import io.harness.ng.core.user.NGRemoveUserFilter;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
@@ -66,9 +67,12 @@ public interface NgUserService {
 
   boolean isUserAtScope(String userId, Scope scope);
 
+  boolean isUserLastAdminAtScope(String userId, Scope scope);
+
   boolean updateUserMetadata(UserMetadataDTO user);
 
-  boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source);
+  boolean removeUserFromScope(
+      String userId, Scope scope, UserMembershipUpdateSource source, NGRemoveUserFilter removeUserFilter);
 
   boolean isUserPasswordSet(String accountIdentifier, String email);
 

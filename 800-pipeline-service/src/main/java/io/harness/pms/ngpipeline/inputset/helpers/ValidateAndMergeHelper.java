@@ -1,8 +1,11 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.merger.helpers.InputSetMergeHelper.mergeInputSetIntoPipelineForGivenStages;
 import static io.harness.pms.merger.helpers.InputSetMergeHelper.mergeInputSets;
+import static io.harness.pms.merger.helpers.InputSetMergeHelper.mergeInputSetsForGivenStages;
 import static io.harness.pms.merger.helpers.InputSetTemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.InputSetTemplateHelper.createTemplateFromPipelineForGivenStages;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -19,6 +22,7 @@ import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.stages.StagesExpressionExtractor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -115,29 +119,41 @@ public class ValidateAndMergeHelper {
     return inputSets;
   }
 
-  public String getPipelineTemplate(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+  public String getPipelineTemplate(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, List<String> stageIdentifiers) {
     Optional<PipelineEntity> optionalPipelineEntity =
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (optionalPipelineEntity.isPresent()) {
       String pipelineYaml = optionalPipelineEntity.get().getYaml();
-      return createTemplateFromPipeline(pipelineYaml);
+      if (EmptyPredicate.isEmpty(stageIdentifiers)) {
+        return createTemplateFromPipeline(pipelineYaml);
+      } else {
+        String replacedExpressionsPipeline =
+            StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
+                pipelineYaml, stageIdentifiers);
+        return createTemplateFromPipelineForGivenStages(replacedExpressionsPipeline, stageIdentifiers);
+      }
+
     } else {
       throw new InvalidRequestException("Could not find pipeline");
     }
   }
 
   public String getPipelineTemplate(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, String pipelineBranch, String pipelineRepoID) {
+      String pipelineIdentifier, String pipelineBranch, String pipelineRepoID, List<String> stageIdentifiers) {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
-    return createTemplateFromPipeline(pipelineYaml);
+    if (EmptyPredicate.isEmpty(stageIdentifiers)) {
+      return createTemplateFromPipeline(pipelineYaml);
+    }
+    return createTemplateFromPipelineForGivenStages(pipelineYaml, stageIdentifiers);
   }
 
   public String getMergeInputSetFromPipelineTemplate(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, List<String> inputSetReferences, String pipelineBranch, String pipelineRepoID) {
-    String pipelineTemplate = getPipelineTemplate(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
+      String pipelineIdentifier, List<String> inputSetReferences, String pipelineBranch, String pipelineRepoID,
+      List<String> stageIdentifiers) {
+    String pipelineTemplate = getPipelineTemplate(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier,
+        pipelineBranch, pipelineRepoID, stageIdentifiers);
     if (EmptyPredicate.isEmpty(pipelineTemplate)) {
       throw new InvalidRequestException(
           "Pipeline " + pipelineIdentifier + " does not have any runtime input. All existing input sets are invalid");
@@ -164,13 +180,20 @@ public class ValidateAndMergeHelper {
         });
       }
     });
-    return mergeInputSets(pipelineTemplate, inputSetYamlList, false);
+    if (EmptyPredicate.isEmpty(stageIdentifiers)) {
+      return mergeInputSets(pipelineTemplate, inputSetYamlList, false);
+    }
+    return mergeInputSetsForGivenStages(pipelineTemplate, inputSetYamlList, false, stageIdentifiers);
   }
 
   public String mergeInputSetIntoPipeline(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, String mergedRuntimeInputYaml, String pipelineBranch, String pipelineRepoID) {
+      String pipelineIdentifier, String mergedRuntimeInputYaml, String pipelineBranch, String pipelineRepoID,
+      List<String> stageIdentifiers) {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
-    return InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYaml, mergedRuntimeInputYaml, false);
+    if (EmptyPredicate.isEmpty(stageIdentifiers)) {
+      return InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYaml, mergedRuntimeInputYaml, false);
+    }
+    return mergeInputSetIntoPipelineForGivenStages(pipelineYaml, mergedRuntimeInputYaml, false, stageIdentifiers);
   }
 }

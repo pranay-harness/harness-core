@@ -2,6 +2,7 @@ package io.harness.ng.authenticationsettings;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ng.core.user.NGRemoveUserFilter.ACCOUNT_LAST_ADMIN_CHECK;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -11,6 +12,7 @@ import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.exception.InvalidUserRemoveRequestException;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 
@@ -73,7 +75,12 @@ public class NGSamlUserGroupSync {
         if (!checkUserIsOtherGroupMember(scope, user.getUuid())) {
           log.info("[NGSamlUserGroupSync] Removing user: {} from scope account: [{}], org:[{}], project:[{}]",
               user.getUuid(), scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
-          ngUserService.removeUserFromScope(user.getUuid(), scope, UserMembershipUpdateSource.SYSTEM);
+          try {
+            ngUserService.removeUserFromScope(
+                user.getUuid(), scope, UserMembershipUpdateSource.SYSTEM, ACCOUNT_LAST_ADMIN_CHECK);
+          } catch (InvalidUserRemoveRequestException e) {
+            log.error("[NGSamlUserGroupSync] Could not remove user when removed from SAML due to exception", e);
+          }
         }
       } else if (!userGroupService.checkMember(scope.getAccountIdentifier(), scope.getOrgIdentifier(),
                      scope.getProjectIdentifier(), userGroup.getIdentifier(), user.getUuid())

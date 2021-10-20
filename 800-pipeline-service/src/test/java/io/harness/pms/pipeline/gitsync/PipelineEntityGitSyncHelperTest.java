@@ -20,10 +20,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
@@ -39,6 +42,7 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   @Mock private PMSPipelineService pipelineService;
+  @Mock private PMSPipelineTemplateHelper pipelineTemplateHelper;
   @InjectMocks PipelineEntityGitSyncHelper pipelineEntityGitSyncHelper;
   static String accountId = "accountId";
   static String orgId = "orgId";
@@ -49,6 +53,8 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   static String pipelineYaml = "pipeline:\n"
       + "  identifier: p1\n"
       + "  name: pipeline1\n"
+      + "  projectIdentifier: projectId\n"
+      + "  orgIdentifier: orgId\n"
       + "  stages:\n"
       + "    - stage:\n"
       + "        identifier: managerDeployment\n"
@@ -138,6 +144,11 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSave() throws IOException {
     doReturn(PipelineEntity.builder().yaml(pipelineYaml).build()).when(pipelineService).create(any());
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(pipelineYaml).build();
+    doReturn(templateMergeResponseDTO)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(PMSPipelineDtoMapper.toPipelineEntity(accountId, pipelineYaml));
     PipelineConfig pipelineConfig = pipelineEntityGitSyncHelper.save(accountId, pipelineYaml);
     verify(pipelineService, times(1)).create(any());
     assertEquals(pipelineConfig, YamlUtils.read(pipelineYaml, PipelineConfig.class));
@@ -147,9 +158,11 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testUpdate() throws IOException {
-    doReturn(PipelineEntity.builder().yaml(pipelineYaml).build())
-        .when(pipelineService)
-        .updatePipelineYaml(any(), any());
+    PipelineEntity pipelineEntity = PipelineEntity.builder().yaml(pipelineYaml).build();
+    doReturn(pipelineEntity).when(pipelineService).updatePipelineYaml(any(), any());
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(pipelineYaml).build();
+    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
     PipelineConfig pipelineConfig = pipelineEntityGitSyncHelper.update(accountId, pipelineYaml, ChangeType.NONE);
     verify(pipelineService, times(1)).updatePipelineYaml(any(), any());
     assertEquals(pipelineConfig, YamlUtils.read(pipelineYaml, PipelineConfig.class));

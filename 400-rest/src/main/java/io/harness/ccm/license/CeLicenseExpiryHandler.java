@@ -35,7 +35,7 @@ public class CeLicenseExpiryHandler implements Handler<Account> {
     iterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("CeLicenceExpiryProcessor")
-            .poolSize(3)
+            .poolSize(2)
             .interval(ofDays(CE_LICENSE_EXPIRY_INTERVAL_DAY))
             .build(),
         CeLicenseExpiryHandler.class,
