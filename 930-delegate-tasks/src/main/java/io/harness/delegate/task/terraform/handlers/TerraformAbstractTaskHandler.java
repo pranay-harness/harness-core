@@ -25,21 +25,9 @@ public abstract class TerraformAbstractTaskHandler {
   @Inject TerraformBaseHelper terraformBaseHelper;
 
   public TerraformTaskNGResponse executeTask(
-      TerraformTaskNGParameters taskParameters, String delegateId, String taskId, LogCallback logCallback) {
+      TerraformTaskNGParameters taskParameters, String delegateId, String taskId, LogCallback logCallback) throws Exception {
     try {
       return executeTaskInternal(taskParameters, delegateId, taskId, logCallback);
-    } catch (WingsException ex) {
-      log.error("Failed to execute Terraform Task ", ex);
-      return TerraformTaskNGResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage("Failed to execute Terraform Task. Reason: " + ExceptionUtils.getMessage(ex))
-          .build();
-    } catch (Exception ex) {
-      log.error("Failed to execute Terraform Task ", ex);
-      return TerraformTaskNGResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage("Failed to execute Terraform Task. Reason: " + ExceptionUtils.getMessage(ex))
-          .build();
     } finally {
       terraformBaseHelper.performCleanupOfTfDirs(taskParameters, logCallback);
     }

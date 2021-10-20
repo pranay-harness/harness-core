@@ -73,6 +73,7 @@ import io.harness.delegate.exceptionhandler.handler.JGitExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SCMExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SecretExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SocketExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.TerraformRuntimeExceptionHandler;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.http.HttpTaskNG;
@@ -1622,5 +1623,7 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(HelmClientRuntimeExceptionHandler.class));
     KubernetesApiExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(KubernetesApiExceptionHandler.class));
+    TerraformRuntimeExceptionHandler.exceptions().forEach(
+            exception -> exceptionHandlerMapBinder.addBinding(exception).to(TerraformRuntimeExceptionHandler.class));
   }
 }
