@@ -50,6 +50,7 @@ import org.junit.experimental.categories.Category;
 @OwnedBy(HarnessTeam.CDC)
 public class ServicePMSPlanCreatorTest extends CDNGTestBase {
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private ServicePMSPlanCreator servicePMSPlanCreator;
 
   @Test
   @Owner(developers = GARVIT)
@@ -82,8 +83,8 @@ public class ServicePMSPlanCreatorTest extends CDNGTestBase {
     PipelineInfrastructure actualInfraConfig =
         InfrastructurePmsPlanCreator.getActualInfraConfig(infrastructure, infraField);
 
-    PlanCreationResponse response = ServicePMSPlanCreator.createPlanForServiceNode(field, serviceConfig, kryoSerializer,
-        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""));
+    PlanCreationResponse response = servicePMSPlanCreator.createPlanForServiceNode(field, serviceConfig, kryoSerializer,
+        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""), null);
     assertThat(response).isNotNull();
 
     String startingNodeId = response.getStartingNodeId();
