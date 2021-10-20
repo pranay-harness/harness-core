@@ -75,6 +75,11 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
       BuildJobEnvInfo buildJobEnvInfo, ExecutionElementConfig executionElementConfig, boolean usePVC,
       CodeBase ciCodebase, boolean skipGitClone, Infrastructure infrastructure) {
     this.accountId = accountId;
+    // Setting default value manually because after @JsonIgnore annotation, default value in not getting set while
+    // declaring timeout variable
+    if (timeout == 0) {
+      timeout = DEFAULT_TIMEOUT;
+    }
     this.timeout = timeout;
     this.identifier = identifier;
     this.name = name;
