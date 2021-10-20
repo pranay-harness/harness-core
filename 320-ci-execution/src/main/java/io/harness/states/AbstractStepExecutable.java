@@ -32,7 +32,7 @@ import io.harness.ci.serializer.RunStepProtobufSerializer;
 import io.harness.ci.serializer.RunTestsStepProtobufSerializer;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;

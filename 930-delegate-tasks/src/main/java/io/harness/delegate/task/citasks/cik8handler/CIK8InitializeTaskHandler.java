@@ -18,8 +18,8 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.encoding.EncodingUtils;
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
-import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8InitializeTaskParams;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
@@ -33,7 +33,7 @@ import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVarParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.task.citasks.CIBuildTaskHandler;
+import io.harness.delegate.task.citasks.CIInitializeTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.helper.DelegateServiceTokenHelper;
 import io.harness.delegate.task.citasks.cik8handler.helper.ProxyVariableHelper;
 import io.harness.delegate.task.citasks.cik8handler.k8java.CIK8JavaClientHandler;
@@ -69,7 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.CI)
-public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
+public class CIK8InitializeTaskHandler implements CIInitializeTaskHandler {
   @Inject private CIK8JavaClientHandler cik8JavaClientHandler;
   @Inject private PodSpecBuilder podSpecBuilder;
   @Inject private K8sConnectorHelper k8sConnectorHelper;
@@ -80,7 +80,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   @Inject private DelegateServiceTokenHelper delegateServiceTokenHelper;
   @Inject private ApiClientFactory apiClientFactory;
 
-  @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
+  @NotNull private Type type = CIInitializeTaskHandler.Type.GCP_K8;
 
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
   private static final String HARNESS_IMAGE_SECRET = "HARNESS_IMAGE_SECRET";
@@ -92,13 +92,13 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   }
 
   public K8sTaskExecutionResponse executeTaskInternal(
-      CIBuildSetupTaskParams ciBuildSetupTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
+      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
     Stopwatch timer = Stopwatch.createStarted();
-    CIK8BuildTaskParams cik8BuildTaskParams = (CIK8BuildTaskParams) ciBuildSetupTaskParams;
-    String cik8BuildTaskParamsStr = cik8BuildTaskParams.toString();
-    ConnectorDetails gitConnectorDetails = cik8BuildTaskParams.getCik8PodParams().getGitConnector();
+    CIK8InitializeTaskParams cik8InitializeTaskParams = (CIK8InitializeTaskParams) ciInitializeTaskParams;
+    String cik8BuildTaskParamsStr = cik8InitializeTaskParams.toString();
+    ConnectorDetails gitConnectorDetails = cik8InitializeTaskParams.getCik8PodParams().getGitConnector();
 
-    PodParams podParams = cik8BuildTaskParams.getCik8PodParams();
+    PodParams podParams = cik8InitializeTaskParams.getCik8PodParams();
     String namespace = podParams.getNamespace();
     String podName = podParams.getName();
 
@@ -107,7 +107,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
       try {
         KubernetesConfig kubernetesConfig =
-            k8sConnectorHelper.getKubernetesConfig(cik8BuildTaskParams.getK8sConnector());
+            k8sConnectorHelper.getKubernetesConfig(cik8InitializeTaskParams.getK8sConnector());
         ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
         CoreV1Api coreV1Api = new CoreV1Api(apiClient);
 
@@ -115,8 +115,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         createEnvVariablesSecrets(
             coreV1Api, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams, gitConnectorDetails);
 
-        if (cik8BuildTaskParams.getServicePodParams() != null) {
-          for (CIK8ServicePodParams servicePodParams : cik8BuildTaskParams.getServicePodParams()) {
+        if (cik8InitializeTaskParams.getServicePodParams() != null) {
+          for (CIK8ServicePodParams servicePodParams : cik8InitializeTaskParams.getServicePodParams()) {
             log.info("Creating service for container: {}", servicePodParams);
             createServicePod(coreV1Api, namespace, servicePodParams);
           }
@@ -129,7 +129,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         Watch<V1Event> watch =
             k8EventHandler.startAsyncPodEventWatch(kubernetesConfig, namespace, podName, logStreamingTaskClient);
         PodStatus podStatus = cik8JavaClientHandler.waitUntilPodIsReady(
-            coreV1Api, podName, namespace, cik8BuildTaskParams.getPodMaxWaitUntilReadySecs());
+            coreV1Api, podName, namespace, cik8InitializeTaskParams.getPodMaxWaitUntilReadySecs());
         if (watch != null) {
           k8EventHandler.stopEventWatch(watch);
         }
