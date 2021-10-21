@@ -7,6 +7,7 @@ import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
@@ -32,4 +33,7 @@ public interface TimeSeriesRecordService {
 
   List<TimeSeriesRecord> getTimeSeriesRecordsForConfigs(
       List<String> verificationTaskIds, Instant startTime, Instant endTime, boolean anomalousOnly);
+
+  void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
+      Instant startTime, Instant endTime) throws IOException;
 }

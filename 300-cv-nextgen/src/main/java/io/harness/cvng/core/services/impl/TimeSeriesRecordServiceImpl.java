@@ -34,12 +34,18 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
+import io.harness.cvng.core.services.api.demo.CVNGDemoDataIndexService;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.JsonUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -49,12 +55,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
+import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
 
 @OwnedBy(HarnessTeam.CV)
 @Slf4j
@@ -64,6 +73,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
   @Inject private MetricPackService metricPackService;
   @Inject private HostRecordService hostRecordService;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
+  @Inject private CVNGDemoDataIndexService cvngDemoDataIndexService;
 
   @Override
   public boolean save(List<TimeSeriesDataCollectionRecord> dataRecords) {
@@ -527,5 +537,67 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
                                   .greaterThan(0);
     }
     return timeSeriesRecordQuery.asList();
+  }
+
+  @Override
+  public void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
+      Instant startTime, Instant endTime) throws IOException {
+    Instant time = startTime;
+    CVConfig cvConfig = cvConfigService.get(verificationTaskId);
+    String demoTemplatePath = getDemoTemplate(cvConfig);
+    Map<String, ArrayList<Long>> metricToRiskScore = getDemoRiskScoreForAllTheMetrics(cvConfig);
+    // todo: check the metrics have the same size
+    int index = cvngDemoDataIndexService.readIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId);
+    List<TimeSeriesDataCollectionRecord> timeSeriesDataCollectionRecords = new ArrayList<>();
+    while (time.compareTo(endTime) < 0) {
+      TimeSeriesDataCollectionRecord timeSeriesDataCollectionRecord =
+          JsonUtils.asObject(demoTemplatePath, new TypeReference<TimeSeriesDataCollectionRecord>() {});
+      timeSeriesDataCollectionRecord.setAccountId(accountId);
+      timeSeriesDataCollectionRecord.setVerificationTaskId(verificationTaskId);
+      timeSeriesDataCollectionRecord.setTimeStamp(time.toEpochMilli());
+
+      for (TimeSeriesDataRecordMetricValue timeSeriesDataRecordMetricValue :
+          timeSeriesDataCollectionRecord.getMetricValues()) {
+        String metricName = timeSeriesDataRecordMetricValue.getMetricName();
+        for (TimeSeriesDataRecordGroupValue timeSeriesDataRecordGroupValue :
+            timeSeriesDataRecordMetricValue.getTimeSeriesValues()) {
+          String fileName =
+              metricName.replace(' ', '_') + "_" + timeSeriesDataRecordGroupValue.getGroupName().replace(' ', '_');
+          if (metricToRiskScore.containsKey(fileName)) {
+            if (index >= metricToRiskScore.get(fileName).size()) {
+              index = index % metricToRiskScore.get(fileName).size();
+            }
+            timeSeriesDataRecordGroupValue.setValue(metricToRiskScore.get(fileName).get(index));
+          }
+        }
+      }
+      timeSeriesDataCollectionRecords.add(timeSeriesDataCollectionRecord);
+      index++;
+      time = time.plus(1, ChronoUnit.MINUTES);
+    }
+    cvngDemoDataIndexService.saveIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId, index);
+    save(timeSeriesDataCollectionRecords);
+  }
+
+  private String getDemoTemplate(CVConfig cvConfig) throws IOException {
+    String path =
+        "/io/harness/cvng/analysis/liveMonitoring/timeSeries/$provider/$category/$provider_time_series_live_monitoring_demo_default_template.json";
+    path = path.replace("$provider", cvConfig.getType().getDemoTemplatePrefix());
+    path = path.replace("$category", cvConfig.getCategory().getDisplayName().toLowerCase());
+    return Resources.toString(this.getClass().getResource(path), Charsets.UTF_8);
+  }
+
+  public Map<String, ArrayList<Long>> getDemoRiskScoreForAllTheMetrics(CVConfig cvConfig) throws IOException {
+    Map<String, ArrayList<Long>> metricToRiskScore = new HashMap<>();
+    String folder = "io.harness.cvng.analysis.liveMonitoring.timeSeries." + cvConfig.getType().getDemoTemplatePrefix()
+        + "." + cvConfig.getCategory().getDisplayName().toLowerCase() + ".riskScore";
+    Reflections reflections = new Reflections(folder, new ResourcesScanner());
+    Set<String> riskFileNames = reflections.getResources(Pattern.compile(".*\\.json"));
+    for (String file : riskFileNames) {
+      String riskTemplate = Resources.toString(this.getClass().getClassLoader().getResource(file), Charsets.UTF_8);
+      metricToRiskScore.put(file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.')),
+          JsonUtils.asObject(riskTemplate, new TypeReference<ArrayList<Long>>() {}));
+    }
+    return metricToRiskScore;
   }
 }

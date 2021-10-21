@@ -17,6 +17,7 @@ import io.harness.cvng.core.entities.HostRecord;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.demo.CVNGDemoDataIndex;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -42,12 +43,12 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
   static final Collection<? extends Class<? extends PersistentEntity>> ENTITIES_DELETE_BLACKLIST_BY_VERIFICATION_ID =
       Arrays.asList();
   @VisibleForTesting
-  static final List<Class<? extends PersistentEntity>> ENTITIES_TO_DELETE_BY_VERIFICATION_ID =
-      Arrays.asList(ClusteredLog.class, TimeSeriesShortTermHistory.class, TimeSeriesRecord.class,
-          AnalysisOrchestrator.class, AnalysisStateMachine.class, LearningEngineTask.class, LogRecord.class,
-          HostRecord.class, LogAnalysisRecord.class, LogAnalysisResult.class, LogAnalysisCluster.class,
-          DeploymentTimeSeriesAnalysis.class, DeploymentLogAnalysis.class, TimeSeriesRiskSummary.class,
-          TimeSeriesAnomalousPatterns.class, DataCollectionTask.class, TimeSeriesCumulativeSums.class);
+  static final List<Class<? extends PersistentEntity>> ENTITIES_TO_DELETE_BY_VERIFICATION_ID = Arrays.asList(
+      ClusteredLog.class, TimeSeriesShortTermHistory.class, TimeSeriesRecord.class, AnalysisOrchestrator.class,
+      AnalysisStateMachine.class, LearningEngineTask.class, LogRecord.class, HostRecord.class, LogAnalysisRecord.class,
+      LogAnalysisResult.class, LogAnalysisCluster.class, DeploymentTimeSeriesAnalysis.class,
+      DeploymentLogAnalysis.class, TimeSeriesRiskSummary.class, TimeSeriesAnomalousPatterns.class,
+      DataCollectionTask.class, TimeSeriesCumulativeSums.class, CVNGDemoDataIndex.class);
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;

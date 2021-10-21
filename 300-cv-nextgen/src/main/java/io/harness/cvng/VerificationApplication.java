@@ -45,7 +45,10 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSou
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
 import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
+import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask;
+import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask.CVNGDemoPerpetualTaskKeys;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
+import io.harness.cvng.core.jobs.CVNGDemoPerpetualTaskHandler;
 import io.harness.cvng.core.jobs.DataCollectionTaskCreateNextTaskHandler;
 import io.harness.cvng.core.jobs.DeploymentChangeEventConsumer;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
@@ -380,6 +383,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
     registerCreateNextDataCollectionTaskIterator(injector);
+    registerCVNGDemoPerpetualTaskIterator(injector);
     injector.getInstance(CVNGStepTaskHandler.class).registerIterator();
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     registerExceptionMappers(environment.jersey());
@@ -648,6 +652,33 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.injectMembers(dataCollectionTaskRecoverHandlerIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(
         () -> dataCollectionTaskRecoverHandlerIterator.process(), 0, 1, TimeUnit.MINUTES);
+  }
+
+  private void registerCVNGDemoPerpetualTaskIterator(Injector injector) {
+    ScheduledThreadPoolExecutor cvngDemoPerpetualTaskExecutor = new ScheduledThreadPoolExecutor(
+        3, new ThreadFactoryBuilder().setNameFormat("create-cvng-perpetual-task-iterator").build());
+
+    CVNGDemoPerpetualTaskHandler cvngDemoPerpetualTaskHandler =
+        injector.getInstance(CVNGDemoPerpetualTaskHandler.class);
+
+    PersistenceIterator cvngDemoPerpetualTaskIterator =
+        MongoPersistenceIterator.<CVNGDemoPerpetualTask, MorphiaFilterExpander<CVNGDemoPerpetualTask>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(CVNGDemoPerpetualTask.class)
+            .fieldName(CVNGDemoPerpetualTaskKeys.createNextTaskIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(cvngDemoPerpetualTaskExecutor)
+            .semaphore(new Semaphore(3))
+            .handler(cvngDemoPerpetualTaskHandler)
+            .schedulingType(REGULAR)
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+
+    injector.injectMembers(cvngDemoPerpetualTaskIterator);
+    cvngDemoPerpetualTaskExecutor.scheduleWithFixedDelay(
+        () -> cvngDemoPerpetualTaskIterator.process(), 0, 1, TimeUnit.MINUTES);
   }
 
   private void registerVerificationJobInstanceDataCollectionTaskIterator(Injector injector) {

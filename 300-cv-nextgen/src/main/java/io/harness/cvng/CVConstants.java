@@ -25,6 +25,7 @@ public interface CVConstants {
   int STATE_MACHINE_IGNORE_LIMIT = 100;
 
   int STATE_MACHINE_IGNORE_MINUTES = 30;
+  int STATE_MACHINE_IGNORE_MINUTES_FOR_DEMO = 150;
 
   String DATA_SOURCE_TYPE = "type";
   String SLO_TARGET_TYPE = "type";
