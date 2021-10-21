@@ -81,7 +81,6 @@ public class ShellScriptApprovalService {
   }
 
   private void appendDelegateTaskDetails(String stateExecutionInstanceId, DelegateTask delegateTask) {
-    log.info("Is printing task id " + delegateTask.getUuid());
     if (isBlank(delegateTask.getUuid())) {
       delegateTask.setUuid(generateUuid());
     }

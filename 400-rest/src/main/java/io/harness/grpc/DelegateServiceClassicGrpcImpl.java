@@ -28,9 +28,9 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
     try {
       DelegateTask task = (DelegateTask) kryoSerializer.asInflatedObject(request.getDelegateTaskKryo().toByteArray());
 
-      delegateTaskServiceClassic.queueTask(task);
+      String taskId = delegateTaskServiceClassic.queueTask(task);
 
-      responseObserver.onNext(QueueTaskResponse.newBuilder().setUuid(task.getUuid()).build());
+      responseObserver.onNext(QueueTaskResponse.newBuilder().setUuid(taskId).build());
       responseObserver.onCompleted();
 
     } catch (Exception ex) {
