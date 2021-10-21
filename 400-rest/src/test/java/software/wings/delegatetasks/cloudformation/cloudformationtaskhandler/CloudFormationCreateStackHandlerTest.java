@@ -18,6 +18,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
+import software.wings.service.impl.aws.delegate.AwsCFHelperServiceDelegateImpl;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 
 import com.amazonaws.services.cloudformation.model.Tag;
@@ -94,7 +95,8 @@ public class CloudFormationCreateStackHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
-  public void testS3TemplatePath() throws MalformedURLException {
+  public void testS3TemplatePath() {
+    AwsCFHelperServiceDelegate awsCFHelperServiceDelegate = new AwsCFHelperServiceDelegateImpl();
     String s3Path = "https://anil-harness-test.s3.amazonaws.com/anilTest/basicCf.yaml";
     String s3PathWithPlus = "https://anil-harness-test.s3.amazonaws.com/anil%2Btest/basicCf.yaml";
     String s3PathWithSpace = "https://anil-harness-test.s3.amazonaws.com/anil+test/basicCf.yaml";
@@ -105,35 +107,35 @@ public class CloudFormationCreateStackHandlerTest extends WingsBaseTest {
         "https://anil-harness-test.s3.amazonaws.com/anil+test/folder/folder%2Btest/basic+test.yaml";
 
     CloudFormationCreateStackRequest request = CloudFormationCreateStackRequest.builder().data(s3Path).build();
-    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
-    assertThat(request.getData()).isEqualTo(s3Path);
+    String normalizedPath = awsCFHelperServiceDelegate.normalizeS3TemplatePath(request.getData());
+    assertThat(normalizedPath).isEqualTo(s3Path);
 
     request.setData(s3PathWithPlus);
-    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
-    assertThat(request.getData()).isEqualTo(s3PathWithPlus);
+    normalizedPath = awsCFHelperServiceDelegate.normalizeS3TemplatePath(request.getData());
+    assertThat(normalizedPath).isEqualTo(s3PathWithPlus);
 
     request.setData(s3PathWithSpace);
-    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
-    assertThat(request.getData()).isEqualTo("https://anil-harness-test.s3.amazonaws.com/anil%20test/basicCf.yaml");
+    normalizedPath = awsCFHelperServiceDelegate.normalizeS3TemplatePath(request.getData());
+    assertThat(normalizedPath).isEqualTo("https://anil-harness-test.s3.amazonaws.com/anil%20test/basicCf.yaml");
 
     request.setData(s3PathWithMultipleSpace);
-    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
-    assertThat(request.getData())
+    normalizedPath = awsCFHelperServiceDelegate.normalizeS3TemplatePath(request.getData());
+    assertThat(normalizedPath)
         .isEqualTo("https://anil-harness-test.s3.amazonaws.com/anil%20multiple%20space%20test/basicCf.yaml");
 
     request.setData(s3SpaceInFileName);
-    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
-    assertThat(request.getData())
+    normalizedPath = awsCFHelperServiceDelegate.normalizeS3TemplatePath(request.getData());
+    assertThat(normalizedPath)
         .isEqualTo("https://anil-harness-test.s3.amazonaws.com/anilSpaceInFileName/basic%20test.yaml");
 
     request.setData(s3PlusInFileName);
-    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
-    assertThat(request.getData())
+    normalizedPath = awsCFHelperServiceDelegate.normalizeS3TemplatePath(request.getData());
+    assertThat(normalizedPath)
         .isEqualTo("https://anil-harness-test.s3.amazonaws.com/anilPlusInFileName/basic%2Btest.yaml");
 
     request.setData(s3SpaceInFolderAndFileName);
-    cloudFormationCreateStackHandler.normalizeS3TemplatePath(request);
-    assertThat(request.getData())
+    normalizedPath = awsCFHelperServiceDelegate.normalizeS3TemplatePath(request.getData());
+    assertThat(normalizedPath)
         .isEqualTo("https://anil-harness-test.s3.amazonaws.com/anil%20test/folder/folder%2Btest/basic%20test.yaml");
   }
 }
