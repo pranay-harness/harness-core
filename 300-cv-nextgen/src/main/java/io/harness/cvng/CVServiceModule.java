@@ -110,6 +110,8 @@ import io.harness.cvng.core.services.api.SumoLogicService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
+import io.harness.cvng.core.services.api.demo.CVNGDemoDataIndexService;
+import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
@@ -149,6 +151,8 @@ import io.harness.cvng.core.services.impl.SumoLogicServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesRecordServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
+import io.harness.cvng.core.services.impl.demo.CVNGDemoDataIndexServiceImpl;
+import io.harness.cvng.core.services.impl.demo.CVNGDemoPerpetualTaskServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.ChangeSourceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.HealthSourceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServiceImpl;
@@ -451,6 +455,8 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGStepService.class).to(CVNGStepServiceImpl.class);
     bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
     bind(WebhookService.class).to(WebhookServiceImpl.class);
+    bind(CVNGDemoPerpetualTaskService.class).to(CVNGDemoPerpetualTaskServiceImpl.class);
+    bind(CVNGDemoDataIndexService.class).to(CVNGDemoDataIndexServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeTypeSourceMapBinder =
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSource.UpdatableChangeSourceEntity.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD)

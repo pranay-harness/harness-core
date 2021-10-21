@@ -68,7 +68,7 @@ public class DSConfigServiceImpl implements DSConfigService {
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
     cvConfigService.save(cvConfigUpdateResult.getAdded());
     monitoringSourcePerpetualTaskService.createTask(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
-        dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
+        dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier(), false);
   }
 
   @Override

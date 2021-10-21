@@ -5,6 +5,7 @@ import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateRe
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
@@ -24,6 +25,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
   @Inject private CVConfigService cvConfigService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private MetricPackService metricPackService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void create(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
@@ -33,13 +35,23 @@ public class HealthSourceServiceImpl implements HealthSourceService {
           orgIdentifier, projectIdentifier, environmentRef, serviceRef,
           HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()),
           healthSource.getName(), Collections.emptyList(), metricPackService);
-      cvConfigUpdateResult.getAdded().forEach(cvConfig -> cvConfig.setEnabled(enabled));
+      boolean isDemoEnabledForAnyCVConfig = false;
+      for (CVConfig cvConfig : cvConfigUpdateResult.getAdded()) {
+        cvConfig.setEnabled(enabled);
+        if (cvConfig.isEligibleForDemo()
+            && featureFlagService.isFeatureFlagEnabled(accountId, "CVNG_MONITORED_SERVICE_DEMO")) {
+          isDemoEnabledForAnyCVConfig = true;
+          cvConfig.setDemo(true);
+        }
+      }
+
       cvConfigService.save(cvConfigUpdateResult.getAdded());
       // Creating MonitoringSourcePerpetualTasks for now irrespective of enable/disable status.
       // We need to rethink how these tasks are created, batched and managed together.
       monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
           healthSource.getSpec().getConnectorRef(),
-          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
+          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()),
+          isDemoEnabledForAnyCVConfig);
     });
   }
 
