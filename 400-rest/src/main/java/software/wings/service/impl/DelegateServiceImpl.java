@@ -3653,8 +3653,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public <T extends DelegateResponseData> T executeTask(DelegateTask task) throws InterruptedException {
     if (mainConfiguration.isDisableDelegateMgmtInManager()) {
-      delegateSyncService.waitForTask(
-              task.getUuid(), task.calcDescription(), Duration.ofMillis(task.getData().getTimeout()));
       return delegateServiceClassicGrpcClient.executeTask(task);
     }
     return delegateTaskServiceClassic.executeTask(task);
