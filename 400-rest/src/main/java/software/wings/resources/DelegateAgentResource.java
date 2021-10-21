@@ -16,7 +16,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -401,14 +400,9 @@ public class DelegateAgentResource {
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("syncOnly") boolean syncOnly) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      boolean processDelegateTaskEventsAsyncEnabled =
-          featureFlagService.isEnabled(FeatureName.PROCESS_DELEGATE_TASK_EVENTS_ASYNC, accountId);
       List<DelegateTaskEvent> delegateTaskEvents =
           delegateTaskServiceClassic.getDelegateTaskEvents(accountId, delegateId, syncOnly);
-      return DelegateTaskEventsResponse.builder()
-          .delegateTaskEvents(delegateTaskEvents)
-          .processTaskEventsAsync(processDelegateTaskEventsAsyncEnabled)
-          .build();
+      return DelegateTaskEventsResponse.builder().delegateTaskEvents(delegateTaskEvents).build();
     }
   }
 

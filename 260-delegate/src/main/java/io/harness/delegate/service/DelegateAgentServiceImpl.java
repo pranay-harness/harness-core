@@ -331,7 +331,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject @Named("systemExecutor") private ExecutorService systemExecutor;
   @Inject @Named("taskPollExecutor") private ExecutorService taskPollExecutor;
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutor;
-  @Inject @Named("asyncTaskDispatchExecutor") private ExecutorService asyncTaskDispatchExecutor;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
   @Inject @Named("grpcServiceExecutor") private ExecutorService grpcServiceExecutor;
@@ -1352,15 +1351,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
                 () -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)));
         if (shouldProcessDelegateTaskEvents(taskEventsResponse)) {
-          boolean processTaskEventsAsync = taskEventsResponse.isProcessTaskEventsAsync();
           List<DelegateTaskEvent> taskEvents = taskEventsResponse.getDelegateTaskEvents();
-          if (processTaskEventsAsync) {
-            log.info("Processing DelegateTaskEvents async {}", taskEvents);
-            processDelegateTaskEventsAsync(taskEvents);
-          } else {
-            log.info("Processing DelegateTaskEvents {}", taskEvents);
-            processDelegateTaskEventsInBlockingLoop(taskEvents);
-          }
+          log.info("Processing DelegateTaskEvents {}", taskEvents);
+          processDelegateTaskEventsInBlockingLoop(taskEvents);
         }
       } catch (UncheckedTimeoutException tex) {
         log.warn("Timed out fetching delegate task events", tex);
@@ -1376,16 +1369,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return taskEventsResponse != null && isNotEmpty(taskEventsResponse.getDelegateTaskEvents());
   }
 
-  private void processDelegateTaskEventsAsync(List<DelegateTaskEvent> taskEvents) {
-    taskEvents.forEach(this::submitTaskEventForExecution);
-  }
-
   private void processDelegateTaskEventsInBlockingLoop(List<DelegateTaskEvent> taskEvents) {
     taskEvents.forEach(this::processDelegateTaskEvent);
-  }
-
-  private void submitTaskEventForExecution(DelegateTaskEvent taskEvent) {
-    asyncTaskDispatchExecutor.submit(() -> processDelegateTaskEvent(taskEvent));
   }
 
   private void processDelegateTaskEvent(DelegateTaskEvent taskEvent) {
