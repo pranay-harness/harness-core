@@ -274,7 +274,7 @@ public final class AnalysisContext extends Base implements PersistentRegularIter
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
-  public final void setControlNodes(Map<String, String> controlNodes) {
+  public void setControlNodes(Map<String, String> controlNodes) {
     this.controlNodes = updateNodesReplaceDots(controlNodes);
   }
 
@@ -285,7 +285,7 @@ public final class AnalysisContext extends Base implements PersistentRegularIter
     return updateNodesReplaceUniCode(controlNodes);
   }
 
-  public final void setTestNodes(Map<String, String> testNodes) {
+  public void setTestNodes(Map<String, String> testNodes) {
     this.testNodes = updateNodesReplaceDots(testNodes);
   }
 
