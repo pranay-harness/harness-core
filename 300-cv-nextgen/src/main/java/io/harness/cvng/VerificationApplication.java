@@ -54,6 +54,7 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.maintenance.PersistentLockCleanup;
 import io.harness.cvng.metrics.services.impl.CVNGMetricsPublisher;
 import io.harness.cvng.migration.CVNGSchemaHandler;
 import io.harness.cvng.migration.beans.CVNGSchema;
@@ -75,6 +76,8 @@ import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
@@ -155,6 +158,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -183,6 +187,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 @OwnedBy(HarnessTeam.CV)
 public class VerificationApplication extends Application<VerificationConfiguration> {
   private static String APPLICATION_NAME = "Verification NextGen Application";
+  private static final SecureRandom random = new SecureRandom();
 
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
@@ -227,6 +232,15 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void createConsumerThreadsToListenToEvents(Injector injector) {
     new Thread(injector.getInstance(EntityCRUDStreamConsumer.class)).start();
     new Thread(injector.getInstance(DeploymentChangeEventConsumer.class)).start();
+  }
+
+  private void scheduleMaintenanceActivities(Injector injector, VerificationConfiguration configuration) {
+    ScheduledThreadPoolExecutor maintenanceActivitiesExecutor =
+        new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("maintenance-activities").build());
+    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
+      maintenanceActivitiesExecutor.scheduleWithFixedDelay(
+          injector.getInstance(PersistentLockCleanup.class), random.nextInt(15), 15L, TimeUnit.MINUTES);
+    }
   }
 
   @Override
@@ -326,6 +340,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
     modules.add(MorphiaModule.getInstance());
     modules.add(new CVServiceModule(configuration));
+    modules.add(new PersistentLockModule());
     modules.add(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerClientConfig().getBaseUrl()));
@@ -377,6 +392,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerPipelineSDK(configuration, injector);
     registerWaitEnginePublishers(injector);
     registerPmsSdkEvents(injector);
+    scheduleMaintenanceActivities(injector, configuration);
 
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);

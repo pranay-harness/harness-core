@@ -15,7 +15,7 @@ import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
-import io.harness.ci.integrationstage.CILiteEngineIntegrationStageModifier;
+import io.harness.ci.integrationstage.CIIntegrationStageModifier;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.plan.creator.codebase.CodebasePlanCreator;
 import io.harness.exception.InvalidRequestException;
@@ -62,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
-  @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
+  @Inject private CIIntegrationStageModifier ciIntegrationStageModifier;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private ConnectorUtils connectorUtils;
 
@@ -156,7 +156,7 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid yaml", e);
     }
-    return ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(executionElementConfig, stageElementConfig, ctx,
+    return ciIntegrationStageModifier.modifyExecutionPlan(executionElementConfig, stageElementConfig, ctx,
         getCICodebase(ctx), IntegrationStageStepParametersPMS.getInfrastructure(stageElementConfig, ctx),
         executionSource);
   }
