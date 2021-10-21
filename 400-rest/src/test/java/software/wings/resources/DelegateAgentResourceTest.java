@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static io.harness.beans.FeatureName.PROCESS_DELEGATE_TASK_EVENTS_ASYNC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
@@ -621,7 +620,6 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldGetDelegateTaskEventsContainerWithFF() {
-    when(featureFlagService.isEnabled(PROCESS_DELEGATE_TASK_EVENTS_ASYNC, ACCOUNT_ID)).thenReturn(true);
     when(delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, true))
         .thenReturn(singletonList(aDelegateTaskEvent().withDelegateTaskId("123").build()));
     DelegateTaskEventsResponse delegateTaskEventsResponse =
@@ -630,7 +628,6 @@ public class DelegateAgentResourceTest extends CategoryTest {
                 String.format("/agent/delegates/%s/task-events?accountId=%s&syncOnly=true", DELEGATE_ID, ACCOUNT_ID))
             .request()
             .get(new GenericType<DelegateTaskEventsResponse>() {});
-    assertThat(delegateTaskEventsResponse.isProcessTaskEventsAsync()).isTrue();
     assertThat(delegateTaskEventsResponse.getDelegateTaskEvents().get(0).getDelegateTaskId()).isEqualTo("123");
   }
 }
