@@ -541,7 +541,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .adoptDelegateDecryption(true)
             .expressionFunctorToken(expressionFunctorToken)
             .build());
-
+    delegateTask.setUuid(delegateTaskId);
     appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
