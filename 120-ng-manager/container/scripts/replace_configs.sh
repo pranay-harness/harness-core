@@ -352,6 +352,9 @@ replace_key_value accountConfig.deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
 replace_key_value gitGrpcClientConfigs.pms.target "$PMS_GITSYNC_TARGET"
 replace_key_value gitGrpcClientConfigs.pms.authority "$PMS_GITSYNC_AUTHORITY"
 
+replace_key_value gitGrpcClientConfigs.cf.target "$CF_GITSYNC_TARGET"
+replace_key_value gitGrpcClientConfigs.cf.authority "$CF_GITSYNC_AUTHORITY"
+
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
 replace_key_value cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
