@@ -61,10 +61,6 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
   @NotEmpty @FdIndex private String accountId;
 
-  // Will be used for NG to uniquely identify the delegate during the installation process, together with the accountId.
-  // It will be populated by the backend and will be available as a property in the delegate installation files.
-  @FdIndex private String sessionIdentifier;
-
   // Will be used for NG to hold delegate size details
   private DelegateSizeDetails sizeDetails;
   // Will be used for NG to hold information about delegate if it is owned at Org / Project
