@@ -18,7 +18,7 @@ public interface NGSecretDecryptionClient {
   @POST(SECRETS_API + "/decrypt-encryption-details")
   @KryoRequest
   @KryoResponse
-  Call<ResponseDTO<DecryptableEntity>> decryptUsingManager(
+  Call<ResponseDTO<DecryptableEntity>> decryptEncryptedDetails(
       @Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);
 }
