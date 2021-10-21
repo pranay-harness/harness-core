@@ -16,7 +16,7 @@ public class ProjectDashBoardInfo {
   String accountId;
 
   long deploymentsCount;
-  double deploymentsCountChangeRate;
+  @Builder.Default double deploymentsCountChangeRate = DashboardHelper.MAX_VALUE;
   long successDeploymentsCount;
   long failedDeploymentsCount;
 }
