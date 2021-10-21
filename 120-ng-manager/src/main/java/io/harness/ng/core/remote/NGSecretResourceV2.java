@@ -359,7 +359,7 @@ public class NGSecretResourceV2 {
   @Path("decrypt-encryption-details")
   @Consumes("application/x-kryo")
   @Produces("application/x-kryo")
-  @ApiOperation(hidden = true, value = "Get Encryption", nickname = "postDecryptionDetails")
+  @ApiOperation(hidden = true, value = "Decrypt Encrypted Details", nickname = "postDecryptEncryptedDetails")
   @InternalApi
   public ResponseDTO<DecryptableEntity> decryptEncryptedDetails(
       @Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
