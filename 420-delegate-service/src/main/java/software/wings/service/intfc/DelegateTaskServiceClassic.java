@@ -29,7 +29,7 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
 
   void scheduleSyncTask(DelegateTask task);
 
-  <T extends DelegateResponseData> T executeTask(DelegateTask task);
+  <T extends DelegateResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
