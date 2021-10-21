@@ -3640,7 +3640,9 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public String queueTask(DelegateTask task) {
     if (mainConfiguration.isDisableDelegateMgmtInManager()) {
-      return delegateServiceClassicGrpcClient.queueTask(task);
+      final String taskId = delegateServiceClassicGrpcClient.queueTask(task);
+      task.setUuid(taskId);
+      return taskId;
     }
     return delegateTaskServiceClassic.queueTask(task);
   }
