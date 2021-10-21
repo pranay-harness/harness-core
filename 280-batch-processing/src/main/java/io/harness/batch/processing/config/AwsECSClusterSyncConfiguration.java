@@ -3,7 +3,6 @@ package io.harness.batch.processing.config;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.AwsECSClusterSyncTasklet;
 import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
-import io.harness.metrics.service.api.MetricService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -20,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class AwsECSClusterSyncConfiguration {
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
 
   @Bean
   public Tasklet awsECSClusterSyncTasklet() {
@@ -33,7 +32,7 @@ public class AwsECSClusterSyncConfiguration {
   public Job awsECSClusterSyncJob(JobBuilderFactory jobBuilderFactory, Step awsECSClusterSyncStep) {
     return jobBuilderFactory.get(BatchJobType.AWS_ECS_CLUSTER_SYNC.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(awsECSClusterSyncStep)
         .build();
   }

@@ -4,7 +4,6 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.SettingAttributeReader;
 import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.writer.AzureStorageSyncEventWriter;
-import io.harness.metrics.service.api.MetricService;
 
 import software.wings.beans.SettingAttribute;
 
@@ -27,14 +26,14 @@ public class AzureStorageSyncJobConfig {
 
   @Autowired private JobBuilderFactory jobBuilderFactory;
   @Autowired private StepBuilderFactory stepBuilderFactory;
-  @Autowired private MetricService metricService;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
 
   @Bean
   @Qualifier(value = "storageSyncJob")
   public Job storageSyncJob(JobBuilderFactory jobBuilderFactory, Step storageSyncStep) {
     return jobBuilderFactory.get(BatchJobType.SYNC_BILLING_REPORT_AZURE.name())
         .incrementer(new RunIdIncrementer())
-        .listener(new BatchJobExecutionListener(metricService))
+        .listener(batchJobExecutionListener)
         .start(storageSyncStep)
         .build();
   }

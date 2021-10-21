@@ -17,7 +17,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.usage.beans.CDLicenseUsageDTO;
 import io.harness.dtos.InstanceDTO;
+import io.harness.licensing.beans.modules.types.CDLicenseType;
 import io.harness.licensing.usage.beans.ReferenceDTO;
+import io.harness.licensing.usage.params.CDUsageRequestParams;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.rule.Owner;
@@ -66,7 +68,8 @@ public class CDLicenseUsageImplTest extends CategoryTest {
         .thenReturn(testServiceEntityData.get(0))
         .thenReturn(testServiceEntityData.get(1));
 
-    CDLicenseUsageDTO cdLicenseUsageDTO = cdLicenseUsage.getLicenseUsage(accountIdentifier, ModuleType.CD, timestamp);
+    CDLicenseUsageDTO cdLicenseUsageDTO = cdLicenseUsage.getLicenseUsage(accountIdentifier, ModuleType.CD, timestamp,
+        CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
         .getInstancesDeployedAfter(
@@ -97,7 +100,8 @@ public class CDLicenseUsageImplTest extends CategoryTest {
   public void testGetLicenseUsageEmptyActiveInstanceList() {
     when(instanceService.getInstancesDeployedAfter(anyString(), anyLong())).thenReturn(emptyList());
 
-    CDLicenseUsageDTO cdLicenseUsageDTO = cdLicenseUsage.getLicenseUsage(accountIdentifier, ModuleType.CD, timestamp);
+    CDLicenseUsageDTO cdLicenseUsageDTO = cdLicenseUsage.getLicenseUsage(accountIdentifier, ModuleType.CD, timestamp,
+        CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
         .getInstancesDeployedAfter(

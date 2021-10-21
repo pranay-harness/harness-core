@@ -26,6 +26,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
@@ -86,6 +88,7 @@ public abstract class CVConfig
   private String productName;
   @NotNull private String identifier;
   @NotNull private String monitoringSourceName;
+  private boolean isDemo;
 
   @FdIndex private Long createNextTaskIteration;
 
@@ -127,6 +130,14 @@ public abstract class CVConfig
 
   public abstract TimeRange getFirstTimeDataCollectionTimeRange();
 
+  public Instant getFirstTimeDataCollectionStartTime() {
+    Instant startTime = Instant.ofEpochMilli(getCreatedAt());
+    if (isDemo()) {
+      startTime = startTime.minus(2, ChronoUnit.HOURS);
+    }
+    return startTime;
+  }
+
   @JsonIgnore public abstract String getDataCollectionDsl();
   public abstract boolean queueAnalysisForPreDeploymentTask();
 
@@ -139,5 +150,9 @@ public abstract class CVConfig
           .set(CVConfigKeys.monitoringSourceName, cvConfig.getMonitoringSourceName())
           .set(CVConfigKeys.category, cvConfig.getCategory());
     }
+  }
+
+  public boolean isEligibleForDemo() {
+    return this.identifier.endsWith("_dev");
   }
 }

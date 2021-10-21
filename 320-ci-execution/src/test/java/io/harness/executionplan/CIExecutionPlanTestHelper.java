@@ -47,7 +47,7 @@ import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.stages.IntegrationStageConfig;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
@@ -226,8 +226,8 @@ public class CIExecutionPlanTestHelper {
         .build();
   }
 
-  public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPod() {
-    return LiteEngineTaskStepInfo.builder()
+  public InitializeStepInfo getExpectedLiteEngineTaskInfoOnFirstPod() {
+    return InitializeStepInfo.builder()
         .identifier("liteEngineTask")
         .name("liteEngineTask")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
@@ -238,9 +238,9 @@ public class CIExecutionPlanTestHelper {
         .build();
   }
 
-  public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId() {
+  public InitializeStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId() {
     List<ExecutionWrapperConfig> steps = new ArrayList<>();
-    return LiteEngineTaskStepInfo.builder()
+    return InitializeStepInfo.builder()
         .identifier("liteEngineTask")
         .name("liteEngineTask")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
@@ -250,9 +250,9 @@ public class CIExecutionPlanTestHelper {
         .build();
   }
 
-  public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet() {
+  public InitializeStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet() {
     List<ExecutionWrapperConfig> steps = new ArrayList<>();
-    return LiteEngineTaskStepInfo.builder()
+    return InitializeStepInfo.builder()
         .identifier("liteEngineTask")
         .name("liteEngineTask")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
@@ -262,8 +262,8 @@ public class CIExecutionPlanTestHelper {
         .build();
   }
 
-  public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnOtherPods() {
-    return LiteEngineTaskStepInfo.builder()
+  public InitializeStepInfo getExpectedLiteEngineTaskInfoOnOtherPods() {
+    return InitializeStepInfo.builder()
         .identifier("liteEngineTask")
         .name("liteEngineTask")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnOtherPods())
