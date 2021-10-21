@@ -240,6 +240,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     assertThat(form.getCriteriaObject().get("projectIdentifier").toString().contentEquals(PROJ_IDENTIFIER))
         .isEqualTo(true);
     assertThat(form.getCriteriaObject().containsKey("status")).isEqualTo(false);
+    assertThat(form.getCriteriaObject().get("deleted")).isEqualTo(false);
   }
 
   @Test
