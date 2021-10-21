@@ -95,7 +95,7 @@ public final class Environment
   @Transient private List<InfrastructureDefinition> infrastructureDefinitions;
   @Transient private int infraDefinitionsCount;
   @SchemaIgnore private Set<String> keywords;
-  @FdIndex private String accountId;
+  private String accountId;
   private boolean sample;
 
   private transient List<HarnessTagLink> tagLinks;

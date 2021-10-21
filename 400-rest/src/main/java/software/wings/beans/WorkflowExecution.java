@@ -179,12 +179,6 @@ public final class WorkflowExecution implements PersistentRegularIterable, Accou
                  .field(WorkflowExecutionKeys.keywords)
                  .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_cdPageCandidate_appId")
-                 .field(WorkflowExecutionKeys.accountId)
-                 .field(WorkflowExecutionKeys.cdPageCandidate)
-                 .field(WorkflowExecutionKeys.appId)
-                 .build())
         .add(SortCompoundMongoIndex.builder()
                  .name("accountId_endTs")
                  .field(WorkflowExecutionKeys.accountId)
@@ -239,11 +233,11 @@ public final class WorkflowExecution implements PersistentRegularIterable, Accou
   public static final Duration EXPIRY = Duration.ofDays(7);
 
   @Id @NotNull(groups = {Update.class}) private String uuid;
-  @FdIndex @NotNull protected String appId;
+  @NotNull protected String appId;
   private EmbeddedUser createdBy;
   private CreatedByType createdByType;
   @FdIndex private long createdAt;
-  @FdIndex private String accountId;
+  private String accountId;
 
   private String workflowId;
 
@@ -260,7 +254,7 @@ public final class WorkflowExecution implements PersistentRegularIterable, Accou
   private String envName;
   private EnvironmentType envType;
   private WorkflowType workflowType;
-  @FdIndex private ExecutionStatus status;
+  private ExecutionStatus status;
   @Transient private Graph graph;
 
   @Transient private GraphNode executionNode; // used for workflow details.

@@ -123,7 +123,7 @@ public final class Service extends Base
   private boolean isPcfV2;
   private HelmVersion helmVersion;
   private CfCliVersion cfCliVersion;
-  @FdIndex private String accountId;
+  private String accountId;
   @FdIndex private List<String> artifactStreamIds;
   @Transient private List<ArtifactStreamBinding> artifactStreamBindings;
   private boolean sample;

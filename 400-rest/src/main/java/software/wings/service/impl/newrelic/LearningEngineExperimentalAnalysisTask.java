@@ -82,7 +82,7 @@ public final class LearningEngineExperimentalAnalysisTask extends Base {
 
   private String workflow_id;
   private String workflow_execution_id;
-  @FdIndex private String state_execution_id;
+  private String state_execution_id;
   private String service_id;
   private String auth_token;
   private int analysis_start_min;
@@ -119,7 +119,7 @@ public final class LearningEngineExperimentalAnalysisTask extends Base {
   private boolean is24x7Task;
   private String tag;
   private AnalysisComparisonStrategy analysis_comparison_strategy;
-  @FdIndex private ExecutionStatus executionStatus;
+  private ExecutionStatus executionStatus;
   private Double alertThreshold;
   @JsonProperty("log_ml_result_url") private String logMLResultUrl;
   @JsonProperty("use_supervised_model") private boolean shouldUseSupervisedModel;

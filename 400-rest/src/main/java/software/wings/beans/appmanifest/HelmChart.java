@@ -59,7 +59,7 @@ public final class HelmChart implements AccountAccess, NameAccess, PersistentEnt
   @FdIndex private String applicationManifestId;
   private String name;
   private String displayName;
-  @FdIndex private String accountId;
+  private String accountId;
   private String appId;
   private String serviceId;
   private long createdAt;

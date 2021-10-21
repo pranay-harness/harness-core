@@ -132,7 +132,7 @@ public final class Artifact extends Base {
   private ContentStatus contentStatus;
   private Map<String, String> source;
   private String settingId;
-  @FdIndex private String accountId;
+  private String accountId;
   private String artifactStreamType;
   private String uiDisplayName;
   private String buildIdentity;

@@ -108,7 +108,7 @@ public final class Pipeline
   private transient List<String> infraMappingIds = new ArrayList<>();
   private transient List<String> infraDefinitionIds = new ArrayList<>();
   @SchemaIgnore private Set<String> keywords;
-  @FdIndex private String accountId;
+  private String accountId;
   private boolean sample;
   private transient List<HarnessTagLink> tagLinks;
 

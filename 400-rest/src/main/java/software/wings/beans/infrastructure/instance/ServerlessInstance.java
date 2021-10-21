@@ -97,7 +97,7 @@ public final class ServerlessInstance implements PersistentEntity, UuidAware, Cr
   private String envId;
   private String envName;
   private EnvironmentType envType;
-  @FdIndex private String accountId;
+  private String accountId;
   private String appName;
   private String serviceId;
   private String serviceName;

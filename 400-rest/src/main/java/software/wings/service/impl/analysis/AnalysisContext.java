@@ -83,7 +83,7 @@ public final class AnalysisContext extends Base implements PersistentRegularIter
   @FdIndex private String accountId;
   private String workflowId;
   private String workflowExecutionId;
-  @FdIndex private String stateExecutionId;
+  private String stateExecutionId;
   private String serviceId;
   private String predictiveCvConfigId;
   private int predictiveHistoryMinutes;

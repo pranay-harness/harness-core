@@ -95,7 +95,7 @@ public final class NewRelicMetricDataRecord extends Base implements GoogleDataSt
 
   private String serviceId;
 
-  @FdIndex private String cvConfigId;
+  private String cvConfigId;
 
   private String stateExecutionId;
 

@@ -134,7 +134,7 @@ public final class StateExecutionInstance implements PersistentEntity, AccountDa
 
   private WorkflowType executionType;
 
-  @FdIndex private String executionUuid;
+  private String executionUuid;
 
   @FdIndex private String parentInstanceId;
 

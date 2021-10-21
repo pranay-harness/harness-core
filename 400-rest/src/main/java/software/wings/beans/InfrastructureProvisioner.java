@@ -73,7 +73,7 @@ public abstract class InfrastructureProvisioner
   @NotEmpty private String infrastructureProvisionerType;
   private List<NameValuePair> variables;
   @Valid List<InfrastructureMappingBlueprint> mappingBlueprints;
-  @FdIndex private String accountId;
+  private String accountId;
   private transient List<HarnessTagLink> tagLinks;
 
   public InfrastructureProvisioner(String name, String description, String infrastructureProvisionerType,

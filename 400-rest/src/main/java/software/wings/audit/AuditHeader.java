@@ -114,7 +114,7 @@ public final class AuditHeader extends Base implements AccountAccess {
   @Getter @Setter private HashMap<String, Object> details;
 
   // For Audit Headers created by Git user actions
-  @Getter @Setter @FdIndex private String accountId;
+  @Getter @Setter private String accountId;
   @Getter @Setter private GitAuditDetails gitAuditDetails;
   @Getter @Setter private List<EntityAuditRecord> entityAuditRecords;
   @Getter @Setter private ApiKeyAuditDetails apiKeyAuditDetails;

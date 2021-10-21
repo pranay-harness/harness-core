@@ -60,11 +60,6 @@ public final class ServiceVariable extends Base implements EncryptableSetting {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("app_entityId")
-                 .field(ServiceVariableKeys.appId)
-                 .field(ServiceVariableKeys.entityId)
-                 .build())
-        .add(CompoundMongoIndex.builder()
                  .name("app_env_templateId")
                  .field(ServiceVariableKeys.appId)
                  .field(ServiceVariableKeys.envId)

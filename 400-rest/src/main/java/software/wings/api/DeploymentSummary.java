@@ -101,7 +101,7 @@ public final class DeploymentSummary extends Base {
   }
 
   private String accountId;
-  @FdIndex private String infraMappingId;
+  private String infraMappingId;
   private String workflowId;
   private String workflowExecutionId;
   private String workflowExecutionName;

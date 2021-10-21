@@ -128,7 +128,7 @@ public final class Workflow
   @FdIndex private List<String> linkedArtifactStreamIds = new ArrayList<>();
 
   @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
-  @FdIndex private String accountId;
+  private String accountId;
   private boolean sample;
 
   @Override

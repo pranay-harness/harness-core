@@ -118,7 +118,7 @@ public final class UserGroup extends Base implements NotificationReceiverInfo, A
 
   private boolean importedByScim;
 
-  @FdIndex private String accountId;
+  private String accountId;
   private List<String> memberIds;
 
   @Transient private List<User> members;

@@ -92,11 +92,6 @@ public final class LogMLAnalysisRecord extends Base implements AccountAccess {
                 .field(LogMLAnalysisRecordKeys.analysisStatus)
                 .descSortField(LAST_UPDATED_AT_KEY)
                 .build(),
-            CompoundMongoIndex.builder()
-                .name("stateExecStatusIdx")
-                .field(LogMLAnalysisRecordKeys.stateExecutionId)
-                .field(LogMLAnalysisRecordKeys.analysisStatus)
-                .build(),
             SortCompoundMongoIndex.builder()
                 .name("stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1")
                 .field(LogMLAnalysisRecordKeys.stateExecutionId)

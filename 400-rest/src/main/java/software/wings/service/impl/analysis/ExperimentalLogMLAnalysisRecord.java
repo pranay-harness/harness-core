@@ -46,7 +46,7 @@ public final class ExperimentalLogMLAnalysisRecord extends Base {
                  .build())
         .build();
   }
-  @NotEmpty @FdIndex private String stateExecutionId;
+  @NotEmpty private String stateExecutionId;
 
   @NotEmpty private StateType stateType;
   @NotEmpty private String experiment_name;
