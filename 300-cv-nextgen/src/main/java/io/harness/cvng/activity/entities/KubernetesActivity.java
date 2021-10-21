@@ -64,6 +64,11 @@ public class KubernetesActivity extends Activity {
     }
 
     @Override
+    public String getEntityKeyLongString(KubernetesActivity activity) {
+      throw new UnsupportedOperationException("KubernetesActivity events have no unique key");
+    }
+
+    @Override
     public Query<KubernetesActivity> populateKeyQuery(Query<KubernetesActivity> query, KubernetesActivity changeEvent) {
       throw new UnsupportedOperationException("KubernetesActivity events have no unique key");
     }
