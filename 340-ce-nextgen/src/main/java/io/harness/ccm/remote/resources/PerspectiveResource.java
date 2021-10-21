@@ -52,7 +52,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Slf4j
 @Service
 @OwnedBy(CE)
-@Tag(name = "perspective", description = "This contains APIs related to microservice health")
+@Tag(name = "perspective", description = "This contains APIs related to Cloud Cost Perspectives")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FailureDTO.class)) })
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
