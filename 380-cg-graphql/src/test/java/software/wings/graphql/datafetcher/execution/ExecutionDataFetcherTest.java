@@ -7,11 +7,13 @@ import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -24,6 +26,7 @@ import software.wings.graphql.schema.query.QLExecutionQueryParameters;
 import software.wings.graphql.schema.type.QLExecution;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.utils.JsonUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -42,6 +45,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock WingsPersistence wingsPersistence;
   @Mock Query<WorkflowExecution> query;
   @Mock FieldEnd fieldEnd;
+  @Mock WorkflowExecutionService workflowExecutionService;
   @Inject @InjectMocks ExecutionQueryHelper executionQueryHelper;
   @Inject @InjectMocks ExecutionDataFetcher executionDataFetcher;
 
@@ -174,5 +178,21 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
     assertThatThrownBy(() -> { executionQueryHelper.setQuery(filters, query, ACCOUNT1_ID); })
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("Values cannot be empty");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testExecutionDataFetcherPipelineByTrigger() {
+    WorkflowExecution workflowExecution =
+        JsonUtils.readResourceFile("execution/build_workflow_execution.json", WorkflowExecution.class);
+    assertThat(workflowExecution).isNotNull();
+    workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
+    workflowExecution.setCreatedByType(CreatedByType.TRIGGER);
+    when(wingsPersistence.createAuthorizedQuery(WorkflowExecution.class)).thenReturn(query);
+    when(query.filter("_id", EXECUTION_ID_1)).thenReturn(query);
+    when(query.get()).thenReturn(workflowExecution);
+    executionDataFetcher.fetch(new QLExecutionQueryParameters(EXECUTION_ID_1), ACCOUNT1_ID);
+    verify(workflowExecutionService).refreshPipelineExecution(workflowExecution);
   }
 }
