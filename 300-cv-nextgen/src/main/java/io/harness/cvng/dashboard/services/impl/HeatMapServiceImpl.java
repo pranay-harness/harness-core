@@ -579,10 +579,8 @@ public class HeatMapServiceImpl implements HeatMapService {
   }
 
   @Override
-  public List<RiskData> getLatestRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
-      List<Pair<String, String>> serviceEnvIdentifiers, Duration bufferTime) {
-    Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 10,
-        "Based on page size, the health score calculation should be done for less than 10 services");
+  public List<RiskData> getLatestRiskScoreForAllServices(String accountId, String orgIdentifier,
+      String projectIdentifier, List<Pair<String, String>> serviceEnvIdentifiers) {
     int size = serviceEnvIdentifiers.size();
     if (size == 0) {
       return Collections.emptyList();
@@ -614,6 +612,14 @@ public class HeatMapServiceImpl implements HeatMapService {
       }
     });
     return latestRiskScoreList;
+  }
+
+  @Override
+  public List<RiskData> getLatestRiskScoreForLimitedServices(String accountId, String orgIdentifier,
+      String projectIdentifier, List<Pair<String, String>> serviceEnvIdentifiers) {
+    Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 10,
+        "Based on page size, the health score calculation should be done for less than 10 services");
+    return getLatestRiskScoreForAllServices(accountId, orgIdentifier, projectIdentifier, serviceEnvIdentifiers);
   }
 
   @Override

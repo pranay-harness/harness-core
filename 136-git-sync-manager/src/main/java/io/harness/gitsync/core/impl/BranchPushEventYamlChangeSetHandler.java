@@ -32,7 +32,6 @@ import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetHandler;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.utils.FilePathUtils;
 
@@ -168,11 +167,6 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       log.info(gitFileChangeDTOListAsString.toString());
     } catch (Exception ex) {
       log.error("Error occurred while perform step : {}", GitToHarnessProcessingStepType.GET_FILES);
-      yamlGitConfigDTOList.forEach(yamlGitConfigDTO
-          -> gitSyncErrorService.recordConnectivityError(yamlGitConfigDTO.getAccountIdentifier(),
-              yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
-              GitSyncErrorType.CONNECTIVITY_ISSUE, yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch(),
-              "Unable to connect to Git provider due to error: " + ex.getLocalizedMessage()));
       // Mark step status error
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
