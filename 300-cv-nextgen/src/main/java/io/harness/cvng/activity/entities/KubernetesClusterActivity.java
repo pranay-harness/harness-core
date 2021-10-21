@@ -74,6 +74,15 @@ public class KubernetesClusterActivity extends Activity {
     }
 
     @Override
+    public String getEntityKeyLongString(KubernetesClusterActivity activity) {
+      return getKeyBuilder(activity)
+          .add(activity.getEventTime().toString())
+          .add(activity.getResourceType().name())
+          .add(activity.getAction().name())
+          .toString();
+    }
+
+    @Override
     public void setUpdateOperations(
         UpdateOperations<KubernetesClusterActivity> updateOperations, KubernetesClusterActivity activity) {
       setCommonUpdateOperations(updateOperations, activity);
