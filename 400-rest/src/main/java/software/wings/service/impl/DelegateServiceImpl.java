@@ -3639,10 +3639,11 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String queueTask(DelegateTask task) {
+    if (task.getUuid() == null) {
+      task.setUuid(generateUuid());
+    }
     if (mainConfiguration.isDisableDelegateMgmtInManager()) {
-      final String taskId = delegateServiceClassicGrpcClient.queueTask(task);
-      task.setUuid(taskId);
-      return taskId;
+      return delegateServiceClassicGrpcClient.queueTask(task);
     }
     return delegateTaskServiceClassic.queueTask(task);
   }
@@ -3654,6 +3655,9 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends DelegateResponseData> T executeTask(DelegateTask task) throws InterruptedException {
+    if (task.getUuid() == null) {
+      task.setUuid(generateUuid());
+    }
     if (mainConfiguration.isDisableDelegateMgmtInManager()) {
       return delegateServiceClassicGrpcClient.executeTask(task);
     }
