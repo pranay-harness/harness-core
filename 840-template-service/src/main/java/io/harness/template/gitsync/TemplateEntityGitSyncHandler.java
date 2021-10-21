@@ -1,5 +1,7 @@
 package io.harness.template.gitsync;
 
+import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
+
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -15,6 +17,9 @@ import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.beans.yaml.NGTemplateInfoConfig;
@@ -28,9 +33,11 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
+@Slf4j
 public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<TemplateEntity, NGTemplateConfig>
     implements GitSdkEntityHandlerInterface<TemplateEntity, NGTemplateConfig> {
   private final NGTemplateService templateService;
@@ -77,8 +84,20 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
         .build();
   }
 
+  private GitEntityInfo getGitEntityInfo() {
+    final GitSyncBranchContext gitSyncBranchContext =
+        GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
+    if (gitSyncBranchContext == null) {
+      log.warn("Git branch context set as null even git sync is enabled");
+      // Setting to default branch in case it is not set.
+      return GitEntityInfo.builder().yamlGitConfigId(DEFAULT).branch(DEFAULT).build();
+    }
+    return gitSyncBranchContext.getGitBranchInfo();
+  }
+
   @Override
   public NGTemplateConfig save(String accountIdentifier, String yaml) {
+    log.info("Inside save, git info: {}", getGitEntityInfo());
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
     TemplateEntity createdTemplate = templateService.create(templateEntity, false, "");
     return NGTemplateDtoMapper.toDTO(createdTemplate);
@@ -86,6 +105,7 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
 
   @Override
   public NGTemplateConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
+    log.info("Inside update, git info: {}", getGitEntityInfo());
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
     return NGTemplateDtoMapper.toDTO(templateService.updateTemplateEntity(templateEntity, changeType, false, ""));
   }

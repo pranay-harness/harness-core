@@ -138,9 +138,11 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
                                           .changeSetId(changeSet.getChangeSetId())
                                           .changeType(changeSet.getChangeType().name())
                                           .build(OVERRIDE_ERROR);) {
-          GlobalContextManager.upsertGlobalContextRecord(
-              createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet,
-                  gitToHarnessRequest.getCommitId().getValue()));
+          GitSyncBranchContext gitSyncBranchContext = createGitEntityInfo(
+              gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet, gitToHarnessRequest.getCommitId().getValue());
+          log.info("Setting git sync branch context in global context: {}", gitSyncBranchContext);
+
+          GlobalContextManager.upsertGlobalContextRecord(gitSyncBranchContext);
           changeSetHelperService.process(changeSet);
           updateFileProcessingResponse(
               FileProcessingStatus.SUCCESS, null, processingResponseMap, changeSet.getFilePath(), commitId, accountId);

@@ -1,5 +1,7 @@
 package io.harness.gitsync.entityInfo;
 
+import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -18,9 +20,21 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.DX)
 public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y extends YamlDTO>
     implements GitSdkEntityHandlerInterface<B, Y> {
+  private GitEntityInfo getGitEntityInfo() {
+    final GitSyncBranchContext gitSyncBranchContext =
+        GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
+    if (gitSyncBranchContext == null) {
+      log.warn("Git branch context set as null even git sync is enabled");
+      // Setting to default branch in case it is not set.
+      return GitEntityInfo.builder().yamlGitConfigId(DEFAULT).branch(DEFAULT).build();
+    }
+    return gitSyncBranchContext.getGitBranchInfo();
+  }
+
   @Override
   public Y upsert(String accountIdentifier, String yaml) {
     final String lastObjectId = getLastObjectIdIfExists(accountIdentifier, yaml);
+    log.info("Inside upsert method, git info: {}", getGitEntityInfo());
     if (lastObjectId != null) {
       final String objectIdOfNewYaml = EntityObjectIdUtils.getObjectIdOfYaml(yaml);
       if (lastObjectId.equals(objectIdOfNewYaml)) {

@@ -96,6 +96,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   private <B extends GitSyncableEntity, Y extends YamlDTO> B saveWithGitSyncEnabled(
       B objectToSave, String yamlString, ChangeType changeType, EntityDetail entityDetail) {
     final GitEntityInfo gitBranchInfo = getGitEntityInfo();
+    log.info("inside saveWithGitSyncEnabled method, git info {}", getGitEntityInfo());
     final ScmPushResponse scmPushResponse =
         scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
 

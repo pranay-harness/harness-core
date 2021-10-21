@@ -2,6 +2,7 @@ package io.harness.template.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
 
 import static java.lang.String.format;
 
@@ -14,7 +15,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.manage.GlobalContextManager;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.springdata.TransactionHelper;
 import io.harness.template.beans.TemplateFilterPropertiesDTO;
@@ -53,6 +56,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
 
   @Override
   public TemplateEntity create(TemplateEntity templateEntity, boolean setDefaultTemplate, String comments) {
+    log.info("Inside create method, git info: {}", getGitEntityInfo());
     try {
       NGTemplateServiceHelper.validatePresenceOfRequiredFields(
           templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
@@ -115,9 +119,21 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     });
   }
 
+  private GitEntityInfo getGitEntityInfo() {
+    final GitSyncBranchContext gitSyncBranchContext =
+        GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
+    if (gitSyncBranchContext == null) {
+      log.warn("Git branch context set as null even git sync is enabled");
+      // Setting to default branch in case it is not set.
+      return GitEntityInfo.builder().yamlGitConfigId(DEFAULT).branch(DEFAULT).build();
+    }
+    return gitSyncBranchContext.getGitBranchInfo();
+  }
+
   private TemplateEntity updateTemplateHelper(String oldOrgIdentifier, String oldProjectIdentifier,
       TemplateEntity templateEntity, ChangeType changeType, boolean setDefaultTemplate,
       boolean updateLastUpdatedTemplateFlag, String comments) {
+    log.info("Inside updateTemplateHelper, git info: {}", getGitEntityInfo());
     try {
       NGTemplateServiceHelper.validatePresenceOfRequiredFields(
           templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
@@ -369,6 +385,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
 
   private TemplateEntity makeTemplateUpdateCall(TemplateEntity templateToUpdate, TemplateEntity oldTemplateEntity,
       ChangeType changeType, String comments, TemplateUpdateEventType templateUpdateEventType) {
+    log.info("Inside makeTemplateUpdateCall, git info: {}", getGitEntityInfo());
     try {
       TemplateEntity updatedTemplate = templateRepository.updateTemplateYaml(templateToUpdate, oldTemplateEntity,
           NGTemplateDtoMapper.toDTO(templateToUpdate), changeType, comments, templateUpdateEventType);
@@ -435,6 +452,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
 
   private void makePreviousStableTemplateFalse(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, String updatedStableTemplateVersion) {
+    log.info("Inside makePreviousStableTemplateFalse, git info: {}", getGitEntityInfo());
     NGTemplateServiceHelper.validatePresenceOfRequiredFields(accountIdentifier, templateIdentifier);
     Optional<TemplateEntity> optionalTemplateEntity =
         templateRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsStableAndDeletedNot(
@@ -462,6 +480,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
 
   private void makePreviousLastUpdatedTemplateFalse(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String templateIdentifier) {
+    log.info("Inside makePreviousLastUpdatedTemplateFalse, git info: {}", getGitEntityInfo());
     NGTemplateServiceHelper.validatePresenceOfRequiredFields(accountIdentifier, templateIdentifier);
     Optional<TemplateEntity> optionalTemplateEntity =
         templateRepository
