@@ -9,6 +9,8 @@ public class DatadogUtils {
   private static final String DD_API_KEY = "DD-API-KEY";
   private static final String DD_APPLICATION_KEY = "DD-APPLICATION-KEY";
 
+  private DatadogUtils() {}
+
   public static Map<String, String> collectionHeaders(DatadogConnectorDTO datadogConnectorDTO) {
     String apiKey = new String(datadogConnectorDTO.getApiKeyRef().getDecryptedValue());
     String appKey = new String(datadogConnectorDTO.getApplicationKeyRef().getDecryptedValue());
@@ -17,5 +19,10 @@ public class DatadogUtils {
     headers.put(DD_APPLICATION_KEY, appKey);
     headers.put("Accept", "application/json");
     return headers;
+  }
+
+  public static Map<String, Object> getCommonEnvVariables(DatadogConnectorDTO datadogConnectorDTO) {
+    Map<String, Object> envMap = new HashMap<>();
+    return envMap;
   }
 }

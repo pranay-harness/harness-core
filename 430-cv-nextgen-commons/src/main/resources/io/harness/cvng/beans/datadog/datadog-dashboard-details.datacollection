@@ -1,0 +1,17 @@
+Var dashboardUrl = concat(Env:baseUrl, "v1/dashboard/", Env:dashboardId)
+Var dashboardDetailsResponse = sync-call(url=Var:dashboardUrl, header=Env:commonHeaders)
+
+Var responseList = []
+
+Var widgets = extract(Var:dashboardDetailsResponse, $.widgets)
+
+foreach widget in Var:widgets {
+  Var widgetName = extract(Var:widget, $.definition.title)
+  Var dataset = extract(Var:widget, $.definition.requests)
+  Var dashMap = {}
+  Var:dashMap.put("widgetName", Var:widgetName)
+  Var:dashMap.put("dataSets", Var:dataset)
+  Var:responseList.append(Var:dashMap)
+}
+
+return Var:responseList

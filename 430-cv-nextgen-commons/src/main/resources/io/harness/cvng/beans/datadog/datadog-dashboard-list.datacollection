@@ -1,0 +1,5 @@
+Var dashboardUrl = concat(Env:baseUrl, "v1/dashboard")
+Var dashboardResponse = sync-call(url=Var:dashboardUrl, header=Env:commonHeaders)
+Var dashboardList = extract(Var:dashboardResponse, $.dashboards)
+
+return Var:dashboardList

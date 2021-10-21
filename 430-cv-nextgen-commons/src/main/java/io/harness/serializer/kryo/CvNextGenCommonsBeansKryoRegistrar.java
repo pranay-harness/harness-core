@@ -40,6 +40,7 @@ import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
+import io.harness.cvng.beans.datadog.*;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.beans.pagerduty.PagerDutyRegisterWebhookRequest;
@@ -130,5 +131,11 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PagerDutyServicesRequest.class, 9062);
     kryo.register(PagerDutyRegisterWebhookRequest.class, 9063);
     kryo.register(PagerdutyDeleteWebhookRequest.class, 9064);
+    kryo.register(DatadogDashboardListRequest.class, 9065);
+    kryo.register(DatadogDashboardDetailsRequest.class, 9066);
+    kryo.register(DatadogActiveMetricsRequest.class, 9067);
+    kryo.register(DatadogMetricTagsRequest.class, 9068);
+    kryo.register(DatadogTimeSeriesPointsRequest.class, 9069);
+
   }
 }

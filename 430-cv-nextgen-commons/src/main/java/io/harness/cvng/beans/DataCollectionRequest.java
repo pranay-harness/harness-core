@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsCapabilityHelper;
+import io.harness.delegate.beans.connector.datadogconnector.DatadogCapabilityHelper;
 import io.harness.delegate.beans.connector.gcp.GcpCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.connector.newrelicconnector.NewRelicCapabilityHelper;
@@ -96,6 +97,10 @@ public abstract class DataCollectionRequest<T extends ConnectorConfigDTO> implem
       case PAGER_DUTY:
         return PagerDutyCapabilityHelper.fetchRequiredExecutionCapabilities(
             maskingEvaluator, connectorInfoDTO.getConnectorConfig());
+      case DATADOG:
+        return DatadogCapabilityHelper.fetchRequiredExecutionCapabilities(
+                maskingEvaluator,
+                connectorInfoDTO.getConnectorConfig());
       default:
         throw new InvalidRequestException("Connector capability not found");
     }

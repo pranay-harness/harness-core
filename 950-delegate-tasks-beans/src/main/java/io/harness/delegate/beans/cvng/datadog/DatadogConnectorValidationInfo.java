@@ -30,7 +30,7 @@ public class DatadogConnectorValidationInfo extends ConnectorValidationInfo<Data
   }
 
   private static String getMetricURLWithQueryParam(String url) {
-    url += "metrics?from=" + Instant.now().getEpochSecond();
+    url += "v1/metrics?from=" + Instant.now().getEpochSecond();
     return url;
   }
 }
