@@ -19,10 +19,10 @@ cacheEntities {"name": "validUntil_1", "background": true, "expireAfterSeconds":
 capabilityRequirement {"name": "accountId_1", "background": true} {"accountId": 1}
 capabilityRequirement {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 capabilitySubjectPermission {"name": "accountId_1", "background": true} {"accountId": 1}
-capabilitySubjectPermission {"name": "byDelegate", "unique": true} {"delegateId": 1, "capabilityId": 1}
 capabilitySubjectPermission {"name": "capabilityId_1", "background": true} {"capabilityId": 1}
 capabilitySubjectPermission {"name": "maxValidUntil_1", "background": true} {"maxValidUntil": 1}
 capabilitySubjectPermission {"name": "revalidateAfter_1", "background": true} {"revalidateAfter": 1}
+capabilitySubjectPermission {"name": "unique_byDelegate", "unique": true} {"delegateId": 1, "capabilityId": 1}
 capabilitySubjectPermission {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 capabilityTaskSelectionDetails {"name": "accountId_1", "background": true} {"accountId": 1}
 capabilityTaskSelectionDetails {"name": "blocked_1", "background": true} {"blocked": 1}
@@ -37,11 +37,10 @@ delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name":
 delegateProfiles {"name": "unique_identification", "unique": true} {"accountId": 1, "owner": 1, "identifier": 1}
 delegateScopes {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateScopes {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
-delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
 delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
+delegateTokens {"name": "unique_byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
 delegateTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 encryptedRecords {"name": "acctKmsIdx", "background": true} {"accountId": 1, "kmsId": 1}
-encryptedRecords {"name": "acctNameIdx", "unique": true} {"accountId": 1, "name": 1, "ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
 encryptedRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 encryptedRecords {"name": "encryptionKey_1", "background": true} {"encryptionKey": 1}
 encryptedRecords {"name": "keywords_1", "background": true} {"keywords": 1}
@@ -54,6 +53,7 @@ encryptedRecords {"name": "ngSecretManagerIdx", "background": true} {"ngMetadata
 encryptedRecords {"name": "ngSecretManagerTypeIdx", "background": true} {"accountId": 1, "type": 1, "createdAt": 1}
 encryptedRecords {"name": "parents_1", "background": true} {"parents": 1}
 encryptedRecords {"name": "path_1", "background": true} {"path": 1}
+encryptedRecords {"name": "unique_acctNameIdx", "unique": true} {"accountId": 1, "name": 1, "ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
 entitySetupUsage {"name": "EntitySetupUsage_unique_index", "unique": true} {"referredByEntityType": 1, "referredByEntityFQN": 1, "referredByEntityRepoIdentifier": 1, "referredByEntityBranch": 1, "referredEntityType": 1, "referredEntityFQN": 1, "referredEntityRepoIdentifier": 1, "referredEntityBranch": 1, "accountIdentifier": 1}
 entitySetupUsage {"name": "ReferredByEntityIndex", "background": true} {"accountIdentifier": 1, "referredByEntityType": 1, "referredByEntityFQN": 1}
 entitySetupUsage {"name": "ReferredEntityIndex", "background": true} {"accountIdentifier": 1, "referredEntityType": 1, "referredEntityFQN": 1}
