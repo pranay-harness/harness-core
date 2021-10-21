@@ -21,9 +21,7 @@ import io.harness.threading.Poller;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateStatus.DelegateInner;
-import software.wings.service.intfc.DelegateService;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import java.io.File;
@@ -46,8 +44,6 @@ public class DelegateExecutor {
   private static boolean failedAlready;
   private static AtomicBoolean startedAlready = new AtomicBoolean();
   private static Duration waiting = ofMinutes(5);
-
-  @Inject private DelegateService delegateService;
 
   public void ensureDelegate(Account account, String bearerToken, Class clazz)
       throws IOException, InterruptedException {

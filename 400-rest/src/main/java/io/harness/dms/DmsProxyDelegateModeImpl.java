@@ -43,6 +43,9 @@ public class DmsProxyDelegateModeImpl implements DmsProxy {
   }
 
   @Override
+  public void deleteByAccountId(String accountId) {}
+
+  @Override
   public boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId,
       String envId, String infraMappingId, TaskGroup taskGroup, List<ExecutionCapability> executionCapabilities,
       Map<String, String> taskSetupAbstractions) {
@@ -52,5 +55,10 @@ public class DmsProxyDelegateModeImpl implements DmsProxy {
   @Override
   public Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String accountId, String taskId) {
     return Optional.empty();
+  }
+
+  @Override
+  public Delegate get(String accountId, String delegateId, boolean forceRefresh) {
+    return null;
   }
 }

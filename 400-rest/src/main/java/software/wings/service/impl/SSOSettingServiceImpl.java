@@ -20,6 +20,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.dms.DmsProxy;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistentCronIterable;
@@ -56,7 +57,6 @@ import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SSOSettingService;
@@ -93,7 +93,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private AlertService alertService;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private NotificationService notificationService;
-  @Inject private DelegateService delegateService;
+  @Inject private DmsProxy dmsProxy;
   @Inject private AccountService accountService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private OauthOptions oauthOptions;
@@ -384,7 +384,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public void sendSSONotReachableNotification(String accountId, SSOSettings settings) {
-    List<Delegate> delegates = delegateService.list(
+    List<Delegate> delegates = dmsProxy.list(
         PageRequestBuilder.aPageRequest().addFilter(DelegateKeys.accountId, Operator.EQ, accountId).build());
     String hostNamesForDelegates = "\n" + delegates.stream().map(Delegate::getHostName).collect(joining("\n"));
 

@@ -53,7 +53,6 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.resources.AccountResource;
-import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;
@@ -140,7 +139,6 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject protected SettingsService settingsService;
   @Inject protected WorkflowExecutionService workflowExecutionService;
-  @Inject protected DelegateServiceImpl delegateService;
   @Inject protected SecretManager secretManager;
   @Inject private AccountResource accountResource;
   @Inject private HarnessMetricRegistry metricRegistry;

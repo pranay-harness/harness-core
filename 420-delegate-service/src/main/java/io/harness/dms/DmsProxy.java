@@ -20,6 +20,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(HarnessTeam.DEL)
 public interface DmsProxy {
+  // Delegate svc
   boolean sampleDelegateExists(String accountId);
 
   List<Delegate> getNonDeletedDelegatesForAccount(String accountId);
@@ -32,9 +33,16 @@ public interface DmsProxy {
 
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
+  void deleteByAccountId(String accountId);
+
+  // AssignDelegateService
   boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId, String envId,
       String infraMappingId, TaskGroup taskGroup, List<ExecutionCapability> executionCapabilities,
       Map<String, String> taskSetupAbstractions);
 
+  // delegateSelectionLogsService
   Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String accountId, String taskId);
+
+  // delegateCache
+  Delegate get(String accountId, String delegateId, boolean forceRefresh);
 }

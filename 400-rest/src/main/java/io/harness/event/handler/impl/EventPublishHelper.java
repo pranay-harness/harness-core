@@ -48,7 +48,6 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
-import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
@@ -115,7 +114,6 @@ public class EventPublishHelper {
   @Inject private AccountService accountService;
   @Inject private UserService userService;
   @Inject private SSOSettingService ssoSettingService;
-  @Inject private DelegateCache delegateCache;
   @Inject private DmsProxy dmsProxy;
   @Inject private WhitelistService whitelistService;
   @Inject private UserGroupService userGroupService;
@@ -464,7 +462,7 @@ public class EventPublishHelper {
   }
 
   private boolean isFirstDelegateInAccount(String delegateId, String accountId) {
-    Delegate delegate = delegateCache.get(accountId, delegateId, false);
+    Delegate delegate = dmsProxy.get(accountId, delegateId, false);
     if (delegate != null && delegate.isSampleDelegate()) {
       return false;
     }

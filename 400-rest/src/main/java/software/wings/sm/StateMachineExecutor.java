@@ -113,7 +113,6 @@ import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
@@ -192,7 +191,6 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private AlertService alertService;
   @Inject private AppService appService;
   @Inject private DelayEventHelper delayEventHelper;
-  @Inject private DelegateService delegateService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject @Named("stateMachineExecutor-handler") private ExecutorService stateMachineExecutor;

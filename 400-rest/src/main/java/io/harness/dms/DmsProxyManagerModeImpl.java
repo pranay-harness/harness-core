@@ -10,6 +10,7 @@ import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.selection.log.BatchDelegateSelectionLog;
+import io.harness.service.intfc.DelegateCache;
 
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
@@ -30,6 +31,7 @@ public class DmsProxyManagerModeImpl implements DmsProxy {
   DelegateService delegateService;
   AssignDelegateService assignDelegateService;
   DelegateSelectionLogsService delegateSelectionLogsService;
+  DelegateCache delegateCache;
 
   @Override
   public boolean sampleDelegateExists(String accountId) {
@@ -57,6 +59,11 @@ public class DmsProxyManagerModeImpl implements DmsProxy {
   }
 
   @Override
+  public void deleteByAccountId(String accountId) {
+    delegateService.deleteByAccountId(accountId);
+  }
+
+  @Override
   public boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId,
       String envId, String infraMappingId, TaskGroup taskGroup, List<ExecutionCapability> executionCapabilities,
       Map<String, String> taskSetupAbstractions) {
@@ -67,5 +74,10 @@ public class DmsProxyManagerModeImpl implements DmsProxy {
   @Override
   public Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String accountId, String taskId) {
     return delegateSelectionLogsService.fetchSelectedDelegateForTask(accountId, taskId);
+  }
+
+  @Override
+  public Delegate get(String accountId, String delegateId, boolean forceRefresh) {
+    return delegateCache.get(accountId, delegateId, forceRefresh);
   }
 }
