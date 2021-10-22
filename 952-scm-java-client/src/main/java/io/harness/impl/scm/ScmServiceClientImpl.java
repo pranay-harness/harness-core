@@ -41,6 +41,8 @@ import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileChange;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FileModifyRequest;
+import io.harness.product.ci.scm.proto.FindCommitRequest;
+import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInBranchRequest;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitRequest;
@@ -527,6 +529,19 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     final FindPRResponse prResponse = scmBlockingStub.findPR(findPRRequest);
     ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(prResponse.getStatus(), prResponse.getError());
     return prResponse;
+  }
+
+  @Override
+  public FindCommitResponse findCommit(
+      ScmConnector scmConnector, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    FindCommitRequest findCommitRequest =
+        FindCommitRequest.newBuilder().setSlug(slug).setRef(commitId).setProvider(gitProvider).build();
+    final FindCommitResponse commitResponse = scmBlockingStub.findCommit(findCommitRequest);
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+        commitResponse.getStatus(), commitResponse.getError());
+    return commitResponse;
   }
 
   @Override
