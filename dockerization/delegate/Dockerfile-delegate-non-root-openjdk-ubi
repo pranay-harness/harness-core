@@ -10,6 +10,8 @@ RUN microdnf update \
     unzip \
     procps \
     shadow-utils \
+    hostname \
+    lsof \
  && rm -rf /var/cache/yum \
  && groupadd -r harness -g 1000560000 \
  && adduser --no-log-init -m -r -u 1000560000 -g harness harness \
