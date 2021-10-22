@@ -246,6 +246,12 @@ public abstract class ArtifactStream
     return NGMigrationEntityType.ARTIFACT_STREAM;
   }
 
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

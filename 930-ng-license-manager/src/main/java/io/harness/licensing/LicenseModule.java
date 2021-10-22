@@ -3,6 +3,12 @@ package io.harness.licensing;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.licensing.checks.LicenseComplianceResolver;
+import io.harness.licensing.checks.LicenseEditionChecker;
+import io.harness.licensing.checks.impl.DefaultLicenseComplianceResolver;
+import io.harness.licensing.checks.impl.EnterpriseChecker;
+import io.harness.licensing.checks.impl.FreeChecker;
+import io.harness.licensing.checks.impl.TeamChecker;
 import io.harness.licensing.interfaces.ModuleLicenseImpl;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
@@ -39,8 +45,15 @@ public class LicenseModule extends AbstractModule {
       interfaceMapBinder.addBinding(moduleType).to(ModuleLicenseRegistrarFactory.getModuleLicenseClient(moduleType));
     }
 
+    MapBinder<Edition, LicenseEditionChecker> editionCheckerMapBinder =
+        MapBinder.newMapBinder(binder(), Edition.class, LicenseEditionChecker.class);
+    editionCheckerMapBinder.addBinding(Edition.FREE).to(FreeChecker.class);
+    editionCheckerMapBinder.addBinding(Edition.TEAM).to(TeamChecker.class);
+    editionCheckerMapBinder.addBinding(Edition.ENTERPRISE).to(EnterpriseChecker.class);
+
     bind(LicenseObjectConverter.class);
     bind(ModuleLicenseInterface.class).to(ModuleLicenseImpl.class);
     bind(LicenseService.class).to(DefaultLicenseServiceImpl.class);
+    bind(LicenseComplianceResolver.class).to(DefaultLicenseComplianceResolver.class);
   }
 }

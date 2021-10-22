@@ -3,6 +3,8 @@ package io.harness.delegate.service;
 import static io.harness.network.SafeHttpCall.execute;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
@@ -24,6 +26,7 @@ import okhttp3.RequestBody;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegatePropertyServiceImpl implements DelegatePropertyService {
   // TODO: add variable expiration time according to key
   private final LoadingCache<GetDelegatePropertiesRequest, GetDelegatePropertiesResponse> delegatePropertyCache =

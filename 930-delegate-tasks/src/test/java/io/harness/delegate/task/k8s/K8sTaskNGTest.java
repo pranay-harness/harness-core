@@ -123,7 +123,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunInstanceSyncTask() {
+  public void testRunInstanceSyncTask() throws Exception {
     final K8sDeployResponse syncResponse = K8sDeployResponse.builder().build();
 
     doReturn(K8sTaskType.INSTANCE_SYNC).when(k8sDeployRequest).getTaskType();
@@ -141,7 +141,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunInstanceSyncFailed() {
+  public void testRunInstanceSyncFailed() throws Exception {
     InvalidRequestException thrownException = new InvalidRequestException("failed to sync");
     doReturn(K8sTaskType.INSTANCE_SYNC).when(k8sDeployRequest).getTaskType();
     doThrow(thrownException)
@@ -159,7 +159,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testLogK8sVersion() {
+  public void testLogK8sVersion() throws Exception {
     final K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
     doReturn(rollingRequestHandler).when(k8sTaskTypeToRequestHandler).get(K8sTaskType.VERSION.name());
 
@@ -172,7 +172,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testLogK8sVersionFailed() {
+  public void testLogK8sVersionFailed() throws Exception {
     final K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
     doReturn(rollingRequestHandler).when(k8sTaskTypeToRequestHandler).get(K8sTaskType.VERSION.name());
     doThrow(new InvalidRequestException("failed"))
@@ -197,14 +197,14 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRun() {
+  public void testRun() throws Exception {
     testRunWithManifest(null, null);
   }
 
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunFailed() {
+  public void testRunFailed() throws Exception {
     InvalidRequestException thrownException = new InvalidRequestException("failed to sync");
     doReturn(K8sTaskType.DEPLOYMENT_ROLLING).when(k8sDeployRequest).getTaskType();
     doReturn(k8sInfraDelegateConfig).when(k8sDeployRequest).getK8sInfraDelegateConfig();
@@ -225,7 +225,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunK8sManifestDelegateConfigGit() {
+  public void testRunK8sManifestDelegateConfigGit() throws Exception {
     final GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
     final List<EncryptedDataDetail> encryptedDataDetails = singletonList(EncryptedDataDetail.builder().build());
     testRunWithManifest(K8sManifestDelegateConfig.builder()
@@ -242,7 +242,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunHelmChartManifestDelegateConfigHttpV2() {
+  public void testRunHelmChartManifestDelegateConfigHttpV2() throws Exception {
     HttpHelmUsernamePasswordDTO usernamePasswordDTO = HttpHelmUsernamePasswordDTO.builder().build();
     final List<EncryptedDataDetail> encryptedDataDetails = singletonList(EncryptedDataDetail.builder().build());
     final HelmChartManifestDelegateConfig manifestConfig =
@@ -267,7 +267,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunHelmChartManifestDelegateConfigS3V3() {
+  public void testRunHelmChartManifestDelegateConfigS3V3() throws Exception {
     final AwsManualConfigSpecDTO manualConfigSpecDTO = AwsManualConfigSpecDTO.builder().build();
     final List<EncryptedDataDetail> encryptedDataDetails = singletonList(EncryptedDataDetail.builder().build());
     final HelmChartManifestDelegateConfig manifestConfig =
@@ -293,7 +293,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunHelmChartManifestDelegateConfigS3InheritFromDelegate() {
+  public void testRunHelmChartManifestDelegateConfigS3InheritFromDelegate() throws Exception {
     final List<EncryptedDataDetail> encryptedDataDetails = emptyList();
     final HelmChartManifestDelegateConfig manifestConfig =
         HelmChartManifestDelegateConfig.builder()
@@ -317,7 +317,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunHelmChartManifestDelegateConfigGcsV2() {
+  public void testRunHelmChartManifestDelegateConfigGcsV2() throws Exception {
     final GcpManualDetailsDTO manualDetailsDTO = GcpManualDetailsDTO.builder().build();
     final List<EncryptedDataDetail> encryptedDataDetails = singletonList(EncryptedDataDetail.builder().build());
     final HelmChartManifestDelegateConfig manifestConfig =
@@ -343,7 +343,7 @@ public class K8sTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunHelmChartManifestDelegateConfigGcsInheritFromDelegate() {
+  public void testRunHelmChartManifestDelegateConfigGcsInheritFromDelegate() throws Exception {
     final List<EncryptedDataDetail> encryptedDataDetails = emptyList();
     final HelmChartManifestDelegateConfig manifestConfig =
         HelmChartManifestDelegateConfig.builder()
@@ -364,7 +364,7 @@ public class K8sTaskNGTest extends CategoryTest {
     verify(decryptionService, never()).decrypt(any(DecryptableEntity.class), eq(encryptedDataDetails));
   }
 
-  private void testRunWithManifest(ManifestDelegateConfig manifest, HelmVersion usedHelmVersion) {
+  private void testRunWithManifest(ManifestDelegateConfig manifest, HelmVersion usedHelmVersion) throws Exception {
     final K8sDeployResponse taskResponse = K8sDeployResponse.builder().build();
     final ArgumentCaptor<K8sDelegateTaskParams> delegateTaskParamsCaptor =
         ArgumentCaptor.forClass(K8sDelegateTaskParams.class);

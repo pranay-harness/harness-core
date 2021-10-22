@@ -8,6 +8,7 @@ import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.beans.usage.CELicenseUsageDTO;
 import io.harness.licensing.usage.beans.UsageDataDTO;
 import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
+import io.harness.licensing.usage.params.UsageRequestParams;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -27,7 +28,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicenseUsageDTO> {
+public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicenseUsageDTO, UsageRequestParams> {
   @Inject BigQueryService bigQueryService;
   @Inject CENextGenConfiguration configuration;
 
@@ -54,7 +55,8 @@ public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicens
   }
 
   @Override
-  public CELicenseUsageDTO getLicenseUsage(String accountIdentifier, ModuleType module, long timestamp) {
+  public CELicenseUsageDTO getLicenseUsage(
+      String accountIdentifier, ModuleType module, long timestamp, UsageRequestParams usageRequest) {
     CacheKey cacheKey = new CacheKey(accountIdentifier, timestamp);
     CELicenseUsageDTO cachedCELicenseUsageDTO = licenseUsageCache.getIfPresent(cacheKey);
     if (null != cachedCELicenseUsageDTO) {

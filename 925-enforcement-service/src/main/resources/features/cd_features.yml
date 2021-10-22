@@ -11,11 +11,7 @@ features:
     description: The restriction on number of deployments
     restrictions:
       FREE:
-        restrictionType: RATE_LIMIT
-        limit: 10
-        timeUnit:
-          unit: DAYS
-          numberOfUnits: 1
+        restrictionType: CUSTOM
         clientName: pipelineService
       TEAM:
         restrictionType: AVAILABILITY

@@ -12,6 +12,7 @@ import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepWithRollbackInfo;
 import io.harness.steps.common.steps.stepgroup.StepGroupStep;
 import io.harness.steps.fork.NGForkStep;
+import io.harness.steps.identity.IdentityStep;
 import io.harness.steps.section.chain.SectionChainStep;
 
 import java.util.HashMap;
@@ -33,6 +34,9 @@ public class OrchestrationStepsModuleSdkStepRegistrar {
     engineSteps.put(NGExecutionStep.STEP_TYPE, NGExecutionStep.class);
     engineSteps.put(NGSpecStep.STEP_TYPE, NGSpecStep.class);
     engineSteps.put(StagesStep.STEP_TYPE, StagesStep.class);
+
+    // IdentityStep
+    engineSteps.put(IdentityStep.STEP_TYPE, IdentityStep.class);
 
     return engineSteps;
   }

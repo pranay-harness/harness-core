@@ -94,7 +94,7 @@ public class RollbackOptionalChildChainStep implements ChildChainExecutable<Roll
         ambiance, RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.DEPLOYMENT_ROLLED_BACK));
     if (!optionalSweepingOutput.isFound()) {
       executionSweepingOutputService.consume(ambiance, YAMLFieldNameConstants.DEPLOYMENT_ROLLED_BACK,
-          RollbackTriggeredOutput.builder().rollbackTriggered(true).build(), StepOutcomeGroup.STAGE.name());
+          RollbackTriggeredOutput.builder().rollbackTriggered(true).build(), StepOutcomeGroup.PIPELINE.name());
     }
     // If status is suspended, then we should mark the execution as success
     if (notifyData.getStatus() == Status.SUSPENDED) {

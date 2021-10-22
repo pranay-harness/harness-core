@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.execution.PlanExecution;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -44,12 +45,12 @@ public class ScheduledTriggerHandler implements Handler<NGTriggerEntity> {
   @Inject private TriggerEventHistoryRepository triggerEventHistoryRepository;
   @Inject private NGTriggerElementMapper ngTriggerElementMapper;
 
-  public void registerIterators() {
+  public void registerIterators(IteratorConfig iteratorConfig) {
     persistenceIteratorFactory.createLoopIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("ScheduledTriggerProcessor")
-            .poolSize(2)
-            .interval(ofSeconds(15))
+            .poolSize(iteratorConfig.getThreadPoolCount())
+            .interval(ofSeconds(iteratorConfig.getTargetIntervalInSeconds()))
             .build(),
         ScheduledTriggerHandler.class,
         MongoPersistenceIterator.<NGTriggerEntity, SpringFilterExpander>builder()

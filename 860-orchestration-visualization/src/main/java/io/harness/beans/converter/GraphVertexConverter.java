@@ -7,6 +7,8 @@ import io.harness.beans.GraphVertex;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.IdentityPlanNode;
+import io.harness.plan.NodeType;
 import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.data.stepdetails.PmsStepDetails;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -26,6 +28,13 @@ public class GraphVertexConverter {
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
             nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
 
+    String stepType = nodeExecution.getNode().getStepType().getType();
+
+    // This will help UI to identify the type of node and according to it will display the icon to the user.
+    if (nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+      stepType = ((IdentityPlanNode) nodeExecution.getNode()).getOriginalStepType().getType();
+    }
+
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
@@ -36,7 +45,7 @@ public class GraphVertexConverter {
         .endTs(nodeExecution.getEndTs())
         .initialWaitDuration(nodeExecution.getInitialWaitDuration())
         .lastUpdatedAt(nodeExecution.getLastUpdatedAt())
-        .stepType(nodeExecution.getNode().getStepType().getType())
+        .stepType(stepType)
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
@@ -58,6 +67,14 @@ public class GraphVertexConverter {
     List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
             nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
+
+    String stepType = nodeExecution.getNode().getStepType().getType();
+
+    // This will help UI to identify the type of node and according to it will display the icon to the user.
+    if (nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+      stepType = ((IdentityPlanNode) nodeExecution.getNode()).getOriginalStepType().getType();
+    }
+
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
@@ -68,7 +85,7 @@ public class GraphVertexConverter {
         .endTs(nodeExecution.getEndTs())
         .initialWaitDuration(nodeExecution.getInitialWaitDuration())
         .lastUpdatedAt(nodeExecution.getLastUpdatedAt())
-        .stepType(nodeExecution.getNode().getStepType().getType())
+        .stepType(stepType)
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
         .stepParameters(nodeExecution.getPmsStepParameters())

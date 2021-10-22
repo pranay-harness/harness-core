@@ -10,7 +10,6 @@ import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityUpdatableEntity;
-import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.HarnessCDCurrentGenActivity.HarnessCDCurrentGenActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.InfrastructureActivity.InfrastructureActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityUpdatableEntity;
@@ -18,6 +17,7 @@ import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityUpda
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
+import io.harness.cvng.activity.services.impl.DeploymentActivityUpdateHandler;
 import io.harness.cvng.activity.services.impl.KubernetesClusterActivityUpdateHandler;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.source.services.impl.KubernetesActivitySourceServiceImpl;
@@ -84,11 +84,15 @@ import io.harness.cvng.core.jobs.OrganizationChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ProjectChangeEventMessageProcessor;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.*;
+import io.harness.cvng.core.services.api.demo.CVNGDemoDataIndexService;
+import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.cvng.core.services.impl.*;
+import io.harness.cvng.core.services.impl.demo.CVNGDemoDataIndexServiceImpl;
+import io.harness.cvng.core.services.impl.demo.CVNGDemoPerpetualTaskServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.*;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventMetaDataTransformer;
@@ -115,6 +119,10 @@ import io.harness.cvng.dashboard.services.impl.ServiceDependencyGraphServiceImpl
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.migration.impl.CVNGMigrationServiceImpl;
 import io.harness.cvng.migration.service.CVNGMigrationService;
+import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.services.UserJourneyService;
+import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelObjectiveServiceImpl;
+import io.harness.cvng.servicelevelobjective.services.impl.UserJourneyServiceImpl;
 import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
@@ -129,6 +137,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoPersistence;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
@@ -391,6 +400,8 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGStepService.class).to(CVNGStepServiceImpl.class);
     bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
     bind(WebhookService.class).to(WebhookServiceImpl.class);
+    bind(CVNGDemoPerpetualTaskService.class).to(CVNGDemoPerpetualTaskServiceImpl.class);
+    bind(CVNGDemoDataIndexService.class).to(CVNGDemoDataIndexServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeTypeSourceMapBinder =
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSource.UpdatableChangeSourceEntity.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
@@ -419,8 +430,6 @@ public class CVServiceModule extends AbstractModule {
 
     MapBinder<ActivityType, ActivityUpdatableEntity> activityTypeActivityUpdatableEntityMapBinder =
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);
-    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.HARNESS_CD)
-        .to(HarnessCDActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.PAGER_DUTY)
         .to(PagerDutyActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.DEPLOYMENT)
@@ -442,9 +451,13 @@ public class CVServiceModule extends AbstractModule {
     MapBinder<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMapBinder =
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdateHandler.class);
     activityUpdateHandlerMapBinder.addBinding(ActivityType.KUBERNETES).to(KubernetesClusterActivityUpdateHandler.class);
+    activityUpdateHandlerMapBinder.addBinding(ActivityType.DEPLOYMENT).to(DeploymentActivityUpdateHandler.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
+
+    bind(ServiceLevelObjectiveService.class).to(ServiceLevelObjectiveServiceImpl.class);
+    bind(UserJourneyService.class).to(UserJourneyServiceImpl.class);
 
     bind(LearningEngineDevService.class).to(LearningEngineDevServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMapBinder =
@@ -482,6 +495,12 @@ public class CVServiceModule extends AbstractModule {
   @Singleton
   public AsyncWaitEngine asyncWaitEngine(WaitNotifyEngine waitNotifyEngine) {
     return new AsyncWaitEngineImpl(waitNotifyEngine, CVNG_ORCHESTRATION);
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return verificationConfiguration.getDistributedLockImplementation();
   }
 
   @Provides

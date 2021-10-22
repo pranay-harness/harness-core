@@ -2,9 +2,11 @@ package io.harness.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.pms.steps.identity.IdentityStepParameters;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -14,6 +16,7 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
+import io.harness.plan.IdentityPlanNode;
 import io.harness.plan.Node;
 import io.harness.plan.NodeType;
 import io.harness.plan.PlanNode;
@@ -164,6 +167,11 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
         + "."
         + "stepCategory";
 
+    public static final String IdentityNodeStepCategory = NodeExecutionKeys.planNode + "."
+        + "originalStepType"
+        + "."
+        + "stepCategory";
+
     public static final String nodeIdentifier = NodeExecutionKeys.node + "."
         + "identifier";
     public static final String stageFqn = NodeExecutionKeys.planNode + "."
@@ -264,8 +272,16 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   }
 
   public ByteString getResolvedStepParametersBytes() {
+    if (this.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+      IdentityStepParameters build =
+          IdentityStepParameters.builder()
+              .originalNodeExecutionId(((IdentityPlanNode) this.getNode()).getOriginalNodeExecutionId())
+              .build();
+      return ByteString.copyFromUtf8(emptyIfNull(RecastOrchestrationUtils.toJson(build)));
+    }
+
     String resolvedStepParams = RecastOrchestrationUtils.toJson(this.getResolvedStepParameters());
-    return ByteString.copyFromUtf8(resolvedStepParams);
+    return ByteString.copyFromUtf8(emptyIfNull(resolvedStepParams));
   }
 
   public PmsStepParameters getPmsStepParameters() {

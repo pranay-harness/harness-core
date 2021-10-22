@@ -45,7 +45,7 @@ public class YamlChangeSetLifeCycleManagerServiceImpl implements YamlChangeSetLi
         final YamlChangeSetStatus status = changeSetHandler.process(yamlChangeSet);
         handleChangeSetStatus(yamlChangeSet, status);
       } catch (Exception e) {
-        log.error("Exception occurred while handling changeset: [{}]", yamlChangeSet.getChangesetId(), e);
+        log.error("Exception occurred while handling change set: [{}]", yamlChangeSet.getChangesetId(), e);
         handleFailure(yamlChangeSet);
       } finally {
         SecurityContextBuilder.unsetCompleteContext();

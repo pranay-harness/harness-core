@@ -3,7 +3,9 @@ package io.harness.ccm.remote.resources;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.utils.LogAccountIdentifier;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -35,7 +37,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(CE)
 public class MetricsResource {
   private static final Set<String> internalAccountIds =
-      ImmutableSet.of("kmpySmUISimoRrJL6NL73w", "wFHXHD0RRQWoO8tIZT5YVw");
+      ImmutableSet.of("kmpySmUISimoRrJL6NL73w", "wFHXHD0RRQWoO8tIZT5YVw", "vpCkHKsDSxK9_KYfjCTMKA");
 
   @Inject private QueryStatsPrinter queryStatsPrinter;
 
@@ -44,8 +46,9 @@ public class MetricsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "timescale", nickname = "timescale sql queries stats")
+  @LogAccountIdentifier
   public ResponseDTO<Map<String, QueryStatsPrinter.QueryStat>> timescale(
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) throws Exception {
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId) throws Exception {
     if (!internalAccountIds.contains(accountId)) {
       throw new InvalidRequestException("Not Allowed");
     }

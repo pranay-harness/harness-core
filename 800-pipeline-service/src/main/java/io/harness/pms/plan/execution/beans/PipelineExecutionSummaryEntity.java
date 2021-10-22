@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.dto.FailureInfoDTO;
+import io.harness.engine.executions.retry.RetryExecutionMetadata;
 import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -107,6 +108,26 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   Long startTs;
   Long endTs;
 
+  // TODO: removing these getters after 6 months (13/10/21)
+  public Boolean isLatestExecution() {
+    if (isLatestExecution == null) {
+      return true;
+    }
+    return isLatestExecution;
+  }
+
+  public RetryExecutionMetadata getRetryExecutionMetadata() {
+    if (retryExecutionMetadata == null) {
+      return RetryExecutionMetadata.builder()
+          .parentExecutionId(planExecutionId)
+          .rootExecutionId(planExecutionId)
+          .build();
+    }
+    return retryExecutionMetadata;
+  }
+
+  RetryExecutionMetadata retryExecutionMetadata;
+  Boolean isLatestExecution;
   @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
   @Setter @NonFinal @Version Long version;
@@ -158,6 +179,14 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .field(PlanExecutionSummaryKeys.executedModules)
                  .field(PlanExecutionSummaryKeys.startTs)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_createdAt_modules_idx")
+                 .field(PlanExecutionSummaryKeys.modules)
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.createdAt)
+                 .build())
         .build();
   }
 
@@ -167,5 +196,9 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
         + "triggerType";
     public String triggeredBy = PlanExecutionSummaryKeys.executionTriggerInfo + "."
         + "triggeredBy";
+    public String rootExecutionId = PlanExecutionSummaryKeys.retryExecutionMetadata + "."
+        + "rootExecutionId";
+    public String parentExecutionId = PlanExecutionSummaryKeys.retryExecutionMetadata + "."
+        + "parentExecutionId";
   }
 }

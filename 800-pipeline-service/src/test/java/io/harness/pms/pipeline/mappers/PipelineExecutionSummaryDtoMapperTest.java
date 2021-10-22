@@ -2,12 +2,14 @@ package io.harness.pms.pipeline.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.executions.retry.RetryExecutionMetadata;
 import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -128,5 +130,57 @@ public class PipelineExecutionSummaryDtoMapperTest extends CategoryTest {
     assertThat(executionSummaryDTOWithStages.isStagesExecution()).isTrue();
     assertThat(executionSummaryDTOWithStages.getStagesExecuted()).hasSize(1);
     assertThat(executionSummaryDTOWithStages.getStagesExecuted().contains("s1")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testToDtoForRetryHistory() {
+    PipelineExecutionSummaryEntity executionSummaryEntity = PipelineExecutionSummaryEntity.builder()
+                                                                .accountId(accountId)
+                                                                .orgIdentifier(orgId)
+                                                                .projectIdentifier(projId)
+                                                                .pipelineIdentifier(pipelineId)
+                                                                .runSequence(1)
+                                                                .planExecutionId(planId)
+                                                                .build();
+
+    // when isLatest is notSet (default value is true)
+    PipelineExecutionSummaryDTO executionSummaryDTO =
+        PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, null);
+    assertThat(executionSummaryDTO.isCanRetry()).isEqualTo(true);
+    assertThat(executionSummaryDTO.isShowRetryHistory()).isEqualTo(false);
+
+    // added rootParentId and setting isLatest false
+    PipelineExecutionSummaryEntity executionSummaryEntityWithRootParentId =
+        PipelineExecutionSummaryEntity.builder()
+            .accountId(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projId)
+            .pipelineIdentifier(pipelineId)
+            .runSequence(1)
+            .retryExecutionMetadata(RetryExecutionMetadata.builder().rootExecutionId("rootParentId").build())
+            .isLatestExecution(false)
+            .planExecutionId(planId)
+            .build();
+    executionSummaryDTO = PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithRootParentId, null);
+    assertThat(executionSummaryDTO.isCanRetry()).isEqualTo(false);
+    assertThat(executionSummaryDTO.isShowRetryHistory()).isEqualTo(true);
+
+    // isLatestTrue
+    PipelineExecutionSummaryEntity executionSummaryEntityWithIsLatest =
+        PipelineExecutionSummaryEntity.builder()
+            .accountId(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projId)
+            .pipelineIdentifier(pipelineId)
+            .runSequence(1)
+            .isLatestExecution(true)
+            .retryExecutionMetadata(RetryExecutionMetadata.builder().rootExecutionId("rootParentId").build())
+            .planExecutionId(planId)
+            .build();
+    executionSummaryDTO = PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntityWithIsLatest, null);
+    assertThat(executionSummaryDTO.isCanRetry()).isEqualTo(true);
+    assertThat(executionSummaryDTO.isShowRetryHistory()).isEqualTo(true);
   }
 }

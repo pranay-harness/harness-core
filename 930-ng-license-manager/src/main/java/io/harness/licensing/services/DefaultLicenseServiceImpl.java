@@ -13,14 +13,18 @@ import io.harness.ccm.license.remote.CeLicenseClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
+import io.harness.licensing.EditionAction;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
+import io.harness.licensing.beans.EditionActionDTO;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
 import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
+import io.harness.licensing.checks.LicenseComplianceResolver;
 import io.harness.licensing.entities.modules.ModuleLicense;
+import io.harness.licensing.helpers.ModuleLicenseHelper;
 import io.harness.licensing.helpers.ModuleLicenseSummaryHelper;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
 import io.harness.licensing.mappers.LicenseObjectConverter;
@@ -36,13 +40,13 @@ import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
@@ -58,6 +62,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   private final AccountService accountService;
   private final TelemetryReporter telemetryReporter;
   private final CeLicenseClient ceLicenseClient;
+  private final LicenseComplianceResolver licenseComplianceResolver;
 
   static final String FAILED_OPERATION = "START_TRIAL_ATTEMPT_FAILED";
   static final String SUCCEED_START_FREE_OPERATION = "FREE_PLAN";
@@ -117,9 +122,11 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   @Override
   public ModuleLicenseDTO createModuleLicense(ModuleLicenseDTO moduleLicense) {
     ModuleLicense license = licenseObjectConverter.toEntity(moduleLicense);
+
     // Validate entity
     ModuleLicense savedEntity;
     try {
+      license.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
       savedEntity = moduleLicenseRepository.save(license);
       // Send telemetry
     } catch (DuplicateKeyException ex) {
@@ -141,10 +148,10 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     }
 
     ModuleLicense existedLicense = existingEntityOptional.get();
-    license.setId(existedLicense.getId());
-    license.setAccountIdentifier(existedLicense.getAccountIdentifier());
-    license.setModuleType(existedLicense.getModuleType());
-    ModuleLicense updatedLicense = moduleLicenseRepository.save(license);
+    ModuleLicense updateLicense = ModuleLicenseHelper.compareAndUpdate(existedLicense, license);
+
+    updateLicense.setLastUpdatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+    ModuleLicense updatedLicense = moduleLicenseRepository.save(updateLicense);
 
     log.info("Updated license for module [{}] in account [{}]", updatedLicense.getModuleType(),
         updatedLicense.getAccountIdentifier());
@@ -160,16 +167,10 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
     }
 
-    List<ModuleLicense> existing =
-        moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
-    if (!existing.isEmpty()) {
-      String cause = format("Account [%s] already have licenses for moduleType [%s]", accountIdentifier, moduleType);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, null, Edition.FREE, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.START_FREE);
     ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
     sendSucceedTelemetryEvents(SUCCEED_START_FREE_OPERATION, savedEntity, accountIdentifier);
 
@@ -208,7 +209,6 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   @Override
   public ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO) {
     Edition edition = startTrialRequestDTO.getEdition();
-    LicenseType licenseType = LicenseType.TRIAL;
     ModuleLicenseDTO trialLicenseDTO =
         licenseInterface.generateTrialLicense(edition, accountIdentifier, startTrialRequestDTO.getModuleType());
 
@@ -217,17 +217,10 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
     }
 
-    List<ModuleLicense> existing = moduleLicenseRepository.findByAccountIdentifierAndModuleType(
-        accountIdentifier, startTrialRequestDTO.getModuleType());
-    if (!existing.isEmpty()) {
-      String cause = format("Account [%s] already have licenses for moduleType [%s]", accountIdentifier,
-          startTrialRequestDTO.getModuleType());
-      sendFailedTelemetryEvents(accountIdentifier, startTrialRequestDTO.getModuleType(), licenseType, edition, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.START_TRIAL);
     ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
     sendSucceedTelemetryEvents(SUCCEED_START_TRIAL_OPERATION, savedEntity, accountIdentifier);
 
@@ -241,31 +234,19 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
   @Override
   public ModuleLicenseDTO extendTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO) {
-    LicenseType licenseType = LicenseType.TRIAL;
     ModuleType moduleType = startTrialRequestDTO.getModuleType();
 
     List<ModuleLicense> existing =
         moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
 
-    if (existing.isEmpty()) {
-      String cause =
-          format("Trial license for moduleType [%s] hasn't started in account [%s]", moduleType, accountIdentifier);
-      log.error(cause);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, licenseType, null, cause);
-      throw new InvalidRequestException(cause);
-    }
-
-    if (isNotEligibleToExtend(existing)) {
-      String cause = format("Can not extend trial for account [%s]. Please contact sales.", accountIdentifier);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, licenseType, null, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense existingModuleLicense = existing.get(0);
 
-    ModuleLicenseDTO trialLicense =
+    ModuleLicenseDTO trialLicenseDTO =
         licenseInterface.generateTrialLicense(existingModuleLicense.getEdition(), accountIdentifier, moduleType);
-    ModuleLicense savedEntity = moduleLicenseRepository.save(licenseObjectConverter.toEntity(trialLicense));
+
+    ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.EXTEND_TRIAL);
+    ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
 
     sendSucceedTelemetryEvents(SUCCEED_EXTEND_TRIAL_OPERATION, savedEntity, accountIdentifier);
     syncLicenseChangeToCGForCE(savedEntity);
@@ -347,6 +328,24 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       return Edition.FREE;
     }
     return highestEditionLicense.get().getEdition();
+  }
+
+  @Override
+  public Map<Edition, Set<EditionActionDTO>> getEditionActions(String accountIdentifier, ModuleType moduleType) {
+    Map<Edition, Set<EditionAction>> editionStates =
+        licenseComplianceResolver.getEditionStates(moduleType, accountIdentifier);
+
+    Map<Edition, Set<EditionActionDTO>> result = new HashMap<>();
+    for (Map.Entry<Edition, Set<EditionAction>> entry : editionStates.entrySet()) {
+      Set<EditionActionDTO> dtos =
+          entry.getValue().stream().map(e -> toEditionActionDTO(e)).collect(Collectors.toSet());
+      result.put(entry.getKey(), dtos);
+    }
+    return result;
+  }
+
+  private EditionActionDTO toEditionActionDTO(EditionAction editionAction) {
+    return EditionActionDTO.builder().action(editionAction).reason(editionAction.getReason()).build();
   }
 
   private void sendSucceedTelemetryEvents(String eventName, ModuleLicense moduleLicense, String accountIdentifier) {
@@ -438,8 +437,9 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     }
 
     ModuleLicense moduleLicense = moduleLicenses.get(0);
-    Duration duration = Duration.ofMillis(Instant.now().toEpochMilli() - moduleLicense.getExpiryTime());
-    return duration.toMillis() <= 0 || duration.toDays() > 14 || LicenseType.PAID.equals(moduleLicense.getLicenseType())
+    boolean trialLicenseUnderExtendPeriod =
+        ModuleLicenseHelper.isTrialLicenseUnderExtendPeriod(moduleLicense.getExpiryTime());
+    return !trialLicenseUnderExtendPeriod || LicenseType.PAID.equals(moduleLicense.getLicenseType())
         || Edition.FREE.equals(moduleLicense.getEdition());
   }
 

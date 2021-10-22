@@ -104,6 +104,11 @@ public class GcpSyncTasklet implements Tasklet {
       log.info("Processing batch size of {} in GCP Sync Job for CG Connectors", gcpBillingAccounts.size());
       for (GcpBillingAccount gcpBillingAccount : gcpBillingAccounts) {
         GcpServiceAccount gcpServiceAccount = cloudToHarnessMappingService.getGcpServiceAccount(accountId);
+        log.info("gcpServiceAccount.getEmail(): {}, gcpBillingAccount.getBqDatasetId(): {}, "
+                + "gcpBillingAccount.getBqProjectId(): {}, "
+                + "gcpBillingAccount.getUuid(): {}",
+            gcpServiceAccount.getEmail(), gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(),
+            gcpBillingAccount.getUuid());
         try {
           processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(),
               gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), accountId,

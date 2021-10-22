@@ -134,8 +134,6 @@ public interface DelegateService extends OwnedByAccount {
 
   String obtainDelegateName(String accountId, String delegateId, boolean forceRefresh);
 
-  List<String> obtainDelegateIds(String accountId, String sessionIdentifier);
-
   List<String> obtainDelegateIdsUsingName(String accountId, String delegateName);
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);

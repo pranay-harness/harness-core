@@ -134,7 +134,6 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock AzureArtifactsBuildService azureArtifactsBuildService;
   @Mock ServiceResourceService serviceResourceService;
   @Mock DelegateServiceImpl delegateService;
-  @Mock DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @Inject @InjectMocks private BuildSourceServiceImpl buildSourceService;
   @Mock DelegateProxyFactory delegateProxyFactory;
   @Mock ExpressionEvaluator evaluator;
@@ -1181,7 +1180,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  public void shouldReturnListOfTriggerNames() {
+  public void shouldReturnListOfTriggerNames() throws InterruptedException {
     GcbState.GcbDelegateResponse delegateResponse =
         new GcbState.GcbDelegateResponse(ExecutionStatus.NEW, null, GcbTaskParams.builder().build(), null, false);
     delegateResponse.setTriggers(Collections.singletonList(TRIGGER_NAME));
@@ -1194,7 +1193,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
-    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
+    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
 
     List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID);
     assertThat(actualTriggerNames).hasSize(1);
@@ -1204,7 +1203,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Test(expected = IllegalArgumentException.class)
   @Owner(developers = ABHINAV_MITTAL)
   @Category(UnitTests.class)
-  public void shouldReturnExceptionWhenDelegateResponseIsNull() {
+  public void shouldReturnExceptionWhenDelegateResponseIsNull() throws InterruptedException {
     GcbTrigger gcbTrigger = new GcbTrigger();
     gcbTrigger.setId(TRIGGER_ID);
     gcbTrigger.setName(TRIGGER_NAME);
@@ -1214,7 +1213,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
-    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(null);
+    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(null);
 
     buildSourceService.getGcbTriggers(SETTING_ID);
   }
@@ -1222,7 +1221,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = ABHINAV_MITTAL)
   @Category(UnitTests.class)
-  public void shouldReturnExceptionWhenDelegateResponseGivesError() {
+  public void shouldReturnExceptionWhenDelegateResponseGivesError() throws InterruptedException {
     GcbState.GcbDelegateResponse delegateResponse = new GcbState.GcbDelegateResponse(
         ExecutionStatus.FAILED, null, GcbTaskParams.builder().build(), "erorMessage", false);
     delegateResponse.setTriggers(Collections.singletonList(TRIGGER_NAME));
@@ -1235,7 +1234,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
-    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
+    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
 
     buildSourceService.getGcbTriggers(SETTING_ID);
   }
