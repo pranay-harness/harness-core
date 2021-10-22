@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.helm;
+package io.harness.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -9,8 +9,6 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 
-import static software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper.lockObjects;
-
 import static com.google.common.base.Charsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -18,23 +16,16 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.helm.HelmCliCommandType;
-import io.harness.helm.HelmCommandFlagsUtils;
-import io.harness.helm.HelmCommandTemplateFactory;
-import io.harness.helm.HelmConstants;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
-import software.wings.beans.container.HelmChartSpecification;
-import software.wings.helpers.ext.helm.request.HelmCommandRequest;
-import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
-import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
-
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
@@ -42,6 +33,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -67,189 +59,190 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 public class HelmClientImpl implements HelmClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   private static final String OVERRIDE_FILE_PATH = "./repository/helm/overrides/${CONTENT_HASH}.yaml";
+  public static final LoadingCache<String, Object> lockObjects =
+      CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
 
   @Override
-  public HelmInstallCommandResponse install(HelmInstallCommandRequest commandRequest)
+  public HelmCliResponse install(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
-    String keyValueOverrides = constructValueOverrideFile(commandRequest.getVariableOverridesYamlFiles());
-    String chartReference = getChartReference(commandRequest);
-
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String keyValueOverrides = constructValueOverrideFile(helmCommandData.getYamlFiles());
+    String chartReference = getChartReference(helmCommandData.isRepoConfigNull(), helmCommandData.getChartName(),
+        helmCommandData.getChartVersion(), helmCommandData.getChartUrl(), helmCommandData.getWorkingDir());
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.INSTALL;
-    String installCommand = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion())
+
+    String installCommand = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
                                 .replace("${OVERRIDE_VALUES}", keyValueOverrides)
-                                .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
-                                .replace("${NAMESPACE}", getNamespaceFlag(commandRequest.getNamespace()))
+                                .replace("${RELEASE_NAME}", helmCommandData.getReleaseName())
+                                .replace("${NAMESPACE}", getNamespaceFlag(helmCommandData.getNamespace()))
                                 .replace("${CHART_REFERENCE}", chartReference);
 
-    installCommand = applyCommandFlags(installCommand, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, installCommand);
+    installCommand = applyCommandFlags(installCommand, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(installCommand, helmCommandData.getLogCallback());
     installCommand = applyKubeConfigToCommand(installCommand, kubeConfigLocation);
 
-    HelmCliResponse cliResponse = executeHelmCLICommand(installCommand);
-    return HelmInstallCommandResponse.builder()
-        .commandExecutionStatus(cliResponse.getCommandExecutionStatus())
-        .output(cliResponse.output)
-        .build();
+    return executeHelmCLICommand(installCommand);
   }
 
   @Override
-  public HelmInstallCommandResponse upgrade(HelmInstallCommandRequest commandRequest)
+  public HelmCliResponse upgrade(HelmCommandData helmCommandData)
       throws IOException, ExecutionException, TimeoutException, InterruptedException {
-    String keyValueOverrides = constructValueOverrideFile(commandRequest.getVariableOverridesYamlFiles());
-    String chartReference = getChartReference(commandRequest);
+    String keyValueOverrides = constructValueOverrideFile(helmCommandData.getYamlFiles());
+    String chartReference = getChartReference(helmCommandData.isRepoConfigNull(), helmCommandData.getChartName(),
+        helmCommandData.getChartVersion(), helmCommandData.getChartUrl(), helmCommandData.getWorkingDir());
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
 
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     HelmCliCommandType commandType = HelmCliCommandType.UPGRADE;
-    String upgradeCommand = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion())
-                                .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
+    String upgradeCommand = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
+                                .replace("${RELEASE_NAME}", helmCommandData.getReleaseName())
                                 .replace("${CHART_REFERENCE}", chartReference)
                                 .replace("${OVERRIDE_VALUES}", keyValueOverrides);
 
-    upgradeCommand = applyCommandFlags(upgradeCommand, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, upgradeCommand);
+    upgradeCommand = applyCommandFlags(upgradeCommand, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(upgradeCommand, helmCommandData.getLogCallback());
     upgradeCommand = applyKubeConfigToCommand(upgradeCommand, kubeConfigLocation);
 
-    HelmCliResponse cliResponse = executeHelmCLICommand(upgradeCommand);
-    return HelmInstallCommandResponse.builder()
-        .commandExecutionStatus(cliResponse.getCommandExecutionStatus())
-        .output(cliResponse.output)
-        .build();
+    return executeHelmCLICommand(upgradeCommand);
   }
 
   @Override
-  public HelmInstallCommandResponse rollback(HelmRollbackCommandRequest commandRequest)
+  public HelmCliResponse rollback(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = Optional.ofNullable(helmCommandData.getKubeConfigLocation()).orElse("");
     HelmCliCommandType commandType = HelmCliCommandType.ROLLBACK;
-    String command = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion())
-                         .replace("${RELEASE}", commandRequest.getReleaseName())
-                         .replace("${REVISION}", commandRequest.getPrevReleaseVersion().toString());
 
-    command = applyCommandFlags(command, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, command);
+    String command = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
+                         .replace("${RELEASE}", helmCommandData.getReleaseName())
+                         .replace("${REVISION}", helmCommandData.getPrevReleaseVersion().toString());
+
+    command = applyCommandFlags(command, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
-    HelmCliResponse cliResponse = executeHelmCLICommand(command);
-    return HelmInstallCommandResponse.builder()
-        .commandExecutionStatus(cliResponse.getCommandExecutionStatus())
-        .output(cliResponse.output)
-        .build();
+    return executeHelmCLICommand(command);
   }
 
   @Override
-  public HelmCliResponse releaseHistory(HelmCommandRequest helmCommandRequest)
+  public HelmCliResponse releaseHistory(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = helmCommandRequest.getKubeConfigLocation();
-    String releaseName = helmCommandRequest.getReleaseName();
-
-    if (kubeConfigLocation == null) {
-      kubeConfigLocation = "";
-    }
-
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
+    String releaseName = helmCommandData.getReleaseName();
     HelmCliCommandType commandType = HelmCliCommandType.RELEASE_HISTORY;
-    String releaseHistory = getHelmCommandTemplateWithHelmPath(commandType, helmCommandRequest.getHelmVersion())
+
+    String releaseHistory = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
                                 .replace("${FLAGS}", "--max 5")
                                 .replace("${RELEASE_NAME}", releaseName);
 
-    releaseHistory = applyCommandFlags(releaseHistory, helmCommandRequest, commandType);
-    logHelmCommandInExecutionLogs(helmCommandRequest, releaseHistory);
+    releaseHistory = applyCommandFlags(releaseHistory, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(releaseHistory, helmCommandData.getLogCallback());
     releaseHistory = applyKubeConfigToCommand(releaseHistory, kubeConfigLocation);
 
     return executeHelmCLICommand(releaseHistory);
   }
 
   @Override
-  public HelmCliResponse listReleases(HelmInstallCommandRequest commandRequest)
+  public HelmCliResponse listReleases(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.LIST_RELEASE;
-    String listRelease = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion())
-                             .replace("${RELEASE_NAME}", commandRequest.getReleaseName());
 
-    listRelease = applyCommandFlags(listRelease, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, listRelease);
+    String listRelease = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
+                             .replace("${RELEASE_NAME}", helmCommandData.getReleaseName());
+
+    listRelease = applyCommandFlags(listRelease, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(listRelease, helmCommandData.getLogCallback());
     listRelease = applyKubeConfigToCommand(listRelease, kubeConfigLocation);
 
-    try (LogOutputStream errorStream = commandRequest.getExecutionLogCallback() != null
-            ? new ErrorActivityOutputStream(commandRequest.getExecutionLogCallback())
+    try (LogOutputStream errorStream = helmCommandData.getLogCallback() != null
+            ? new ErrorActivityOutputStream(helmCommandData.getLogCallback())
             : new LogErrorStream()) {
       return executeHelmCLICommand(listRelease, errorStream);
     }
   }
 
   @Override
-  public HelmCliResponse getClientAndServerVersion(HelmCommandRequest commandRequest)
+  public HelmCliResponse getClientAndServerVersion(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.VERSION;
     String command = getHelmCommandTemplateWithHelmPath(commandType, null);
 
-    command = applyCommandFlags(command, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyCommandFlags(command, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
     return executeHelmCLICommand(command, DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS);
   }
 
   @Override
-  public HelmCliResponse addPublicRepo(HelmCommandRequest commandRequest)
+  public HelmCliResponse addPublicRepo(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.REPO_ADD;
-    String command = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion())
-                         .replace("${REPO_URL}", commandRequest.getChartSpecification().getChartUrl())
-                         .replace("${REPO_NAME}", commandRequest.getRepoName());
 
-    command = applyCommandFlags(command, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, command);
+    String command = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
+                         .replace("${REPO_URL}", helmCommandData.getChartUrl())
+                         .replace("${REPO_NAME}", helmCommandData.getRepoName());
+
+    command = applyCommandFlags(command, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
     return executeHelmCLICommand(command);
   }
 
   @Override
-  public HelmCliResponse repoUpdate(HelmCommandRequest commandRequest)
+  public HelmCliResponse repoUpdate(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.REPO_UPDATE;
-    String command = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion());
+    String command = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion());
 
-    command = applyCommandFlags(command, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyCommandFlags(command, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
     return executeHelmCLICommand(command);
   }
 
   @Override
-  public HelmCliResponse getHelmRepoList(HelmCommandRequest commandRequest)
+  public HelmCliResponse getHelmRepoList(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.REPO_LIST;
-    String command = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion());
+    String command = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion());
 
-    command = applyCommandFlags(command, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyCommandFlags(command, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
     return executeHelmCLICommand(command);
   }
 
   @Override
-  public HelmCliResponse deleteHelmRelease(HelmCommandRequest commandRequest)
+  public HelmCliResponse deleteHelmRelease(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     /*
     In Helm3, release ledger is purged by default unlike helm2
      */
     HelmCliCommandType commandType = HelmCliCommandType.DELETE_RELEASE;
-    String command = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion())
-                         .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
+    String command = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
+                         .replace("${RELEASE_NAME}", helmCommandData.getReleaseName())
                          .replace("${FLAGS}", "--purge");
 
-    command = applyCommandFlags(command, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyCommandFlags(command, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
     return executeHelmCLICommand(command);
@@ -273,24 +266,25 @@ public class HelmClientImpl implements HelmClient {
   }
 
   @Override
-  public HelmCliResponse renderChart(HelmCommandRequest commandRequest, String chartLocation, String namespace,
+  public HelmCliResponse renderChart(HelmCommandData helmCommandData, String chartLocation, String namespace,
       List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = Optional.ofNullable(helmCommandData.getKubeConfigLocation()).orElse("");
     String keyValueOverrides = constructValueOverrideFile(valuesOverrides);
 
     HelmCliCommandType commandType = HelmCliCommandType.RENDER_CHART;
-    String command = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion())
+    String command = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
                          .replace("${CHART_LOCATION}", chartLocation)
-                         .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
+                         .replace("${RELEASE_NAME}", helmCommandData.getReleaseName())
                          .replace("${NAMESPACE}", namespace)
                          .replace("${OVERRIDE_VALUES}", keyValueOverrides);
 
-    command = applyCommandFlags(command, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyCommandFlags(command, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
-    try (LogOutputStream errorStream = commandRequest.getExecutionLogCallback() != null
-            ? new ErrorActivityOutputStream(commandRequest.getExecutionLogCallback())
+    try (LogOutputStream errorStream = helmCommandData.getLogCallback() != null
+            ? new ErrorActivityOutputStream(helmCommandData.getLogCallback())
             : new LogErrorStream()) {
       return executeHelmCLICommand(command, errorStream);
     }
@@ -307,15 +301,16 @@ public class HelmClientImpl implements HelmClient {
   }
 
   @Override
-  public HelmCliResponse searchChart(HelmInstallCommandRequest commandRequest, String chartInfo)
+  public HelmCliResponse searchChart(HelmCommandData helmCommandData, String chartInfo)
       throws InterruptedException, TimeoutException, IOException {
-    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.SEARCH_REPO;
-    String searchChartCommand = getHelmCommandTemplateWithHelmPath(commandType, commandRequest.getHelmVersion())
+    String searchChartCommand = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
                                     .replace("${CHART_INFO}", chartInfo);
 
-    searchChartCommand = applyCommandFlags(searchChartCommand, commandRequest, commandType);
-    logHelmCommandInExecutionLogs(commandRequest, searchChartCommand);
+    searchChartCommand = applyCommandFlags(searchChartCommand, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    logHelmCommandInExecutionLogs(searchChartCommand, helmCommandData.getLogCallback());
     searchChartCommand = applyKubeConfigToCommand(searchChartCommand, kubeConfigLocation);
 
     return executeHelmCLICommand(searchChartCommand);
@@ -365,18 +360,16 @@ public class HelmClientImpl implements HelmClient {
     return "--namespace " + namespace;
   }
 
-  private String getChartReference(HelmChartSpecification chartSpecification) {
-    String chartReference = chartSpecification.getChartName();
-
-    if (isNotEmpty(chartSpecification.getChartUrl())) {
-      chartReference = chartReference + " --repo " + chartSpecification.getChartUrl();
+  private String getChartReference(String chartName, String chartVersion, String chartUrl) {
+    if (isNotEmpty(chartUrl)) {
+      chartName = chartName + " --repo " + chartUrl;
     }
 
-    if (isNotEmpty(chartSpecification.getChartVersion())) {
-      chartReference = chartReference + " --version " + chartSpecification.getChartVersion();
+    if (isNotEmpty(chartVersion)) {
+      chartName = chartName + " --version " + chartVersion;
     }
 
-    return chartReference;
+    return chartName;
   }
 
   private String constructValueOverrideFile(List<String> valuesYamlFiles) throws IOException, ExecutionException {
@@ -399,13 +392,11 @@ public class HelmClientImpl implements HelmClient {
     return fileOverrides.toString();
   }
 
-  private void logHelmCommandInExecutionLogs(HelmCommandRequest helmCommandRequest, String helmCommand) {
-    LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
-
-    if (executionLogCallback != null) {
+  private void logHelmCommandInExecutionLogs(String helmCommand, LogCallback logCallback) {
+    if (logCallback != null) {
       String msg = "Executing command - " + helmCommand + "\n";
       log.info(msg);
-      executionLogCallback.saveExecutionLog(msg, LogLevel.INFO);
+      logCallback.saveExecutionLog(msg, LogLevel.INFO);
     }
   }
 
@@ -417,21 +408,22 @@ public class HelmClientImpl implements HelmClient {
     }
   }
 
-  private String applyCommandFlags(String command, HelmCommandRequest commandRequest, HelmCliCommandType commandType) {
-    String flags = isBlank(commandRequest.getCommandFlags()) ? "" : commandRequest.getCommandFlags();
-    if (null != commandRequest.getHelmCommandFlag() && isNotEmpty(commandRequest.getHelmCommandFlag().getValueMap())) {
-      return HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(),
-          commandRequest.getHelmCommandFlag().getValueMap(), commandRequest.getHelmVersion());
+  private String applyCommandFlags(String command, HelmCliCommandType commandType, String commandFlags,
+      boolean isHelmCmdFlagsNull, Map<HelmSubCommandType, String> valueMap, HelmVersion helmVersion) {
+    String flags = isBlank(commandFlags) ? "" : commandFlags;
+    if (!isHelmCmdFlagsNull && isNotEmpty(valueMap)) {
+      return HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(), valueMap, helmVersion);
     }
     return command.replace(HELM_COMMAND_FLAG_PLACEHOLDER, flags);
   }
 
-  private String getChartReference(HelmInstallCommandRequest commandRequest) {
+  private String getChartReference(
+      boolean isRepoConfigNull, String chartName, String chartVersion, String chartUrl, String workingDir) {
     String chartReference;
-    if (commandRequest.getRepoConfig() == null) {
-      chartReference = getChartReference(commandRequest.getChartSpecification());
+    if (isRepoConfigNull) {
+      chartReference = getChartReference(chartName, chartVersion, chartUrl);
     } else {
-      chartReference = Paths.get(commandRequest.getWorkingDir()).toString();
+      chartReference = Paths.get(workingDir).toString();
     }
     return chartReference;
   }

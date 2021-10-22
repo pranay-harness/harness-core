@@ -1,17 +1,12 @@
-package software.wings.helpers.ext.helm;
+package io.harness.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.helm.HelmClientImpl.HelmCliResponse;
 import io.harness.k8s.model.HelmVersion;
-
-import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
-import software.wings.helpers.ext.helm.request.HelmCommandRequest;
-import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
-import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,90 +22,89 @@ public interface HelmClient {
   /**
    * Install helm command response.
    *
-   * @param commandRequest the command request
+   * @param helmCommandData the command request
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmInstallCommandResponse install(HelmInstallCommandRequest commandRequest)
+  HelmCliResponse install(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException, ExecutionException;
 
   /**
    * Upgrade helm command response.
    *
-   * @param commandRequest the command request
+   * @param helmCommandData the command request
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmInstallCommandResponse upgrade(HelmInstallCommandRequest commandRequest)
+  HelmCliResponse upgrade(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException, ExecutionException;
 
   /**
    * Rollback helm command response.
    *
-   * @param commandRequest the command request
+   * @param helmCommandData the command request
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmInstallCommandResponse rollback(HelmRollbackCommandRequest commandRequest)
-      throws InterruptedException, TimeoutException, IOException;
+  HelmCliResponse rollback(HelmCommandData helmCommandData) throws InterruptedException, TimeoutException, IOException;
 
-  HelmCliResponse releaseHistory(HelmCommandRequest helmCommandRequest)
+  HelmCliResponse releaseHistory(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
   /**
    * List releases helm cli response.
    *
-   * @param commandRequest the command request
+   * @param helmCommandData the command request
    * @return the helm cli response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse listReleases(HelmInstallCommandRequest commandRequest)
+  HelmCliResponse listReleases(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
   /**
    * Gets client and server version.
    *
-   * @param helmCommandRequest the helm command request
+   * @param helmCommandData the helm command request
    * @return the client and server version
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse getClientAndServerVersion(HelmCommandRequest helmCommandRequest)
+  HelmCliResponse getClientAndServerVersion(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
-  HelmCliResponse addPublicRepo(HelmCommandRequest helmCommandRequest)
+  HelmCliResponse addPublicRepo(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
-  HelmCliResponse getHelmRepoList(HelmCommandRequest commandRequest)
+  HelmCliResponse getHelmRepoList(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
-  HelmCliResponse deleteHelmRelease(HelmCommandRequest commandRequest)
+  HelmCliResponse deleteHelmRelease(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
-  HelmCliResponse repoUpdate(HelmCommandRequest commandRequest)
+  HelmCliResponse repoUpdate(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
   HelmCliResponse templateForK8sV2(String releaseName, String namespace, String chartLocation,
       List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
 
-  HelmCliResponse searchChart(HelmInstallCommandRequest commandRequest, String chartInfo)
+  HelmCliResponse searchChart(HelmCommandData helmCommandData, String chartInfo)
       throws InterruptedException, TimeoutException, IOException;
 
   /**
    * Render chart templates and return the output.
    *
-   * @param commandRequest the command request
+   * @param helmCommandData the command request
    * @param chartLocation
    * @param namespace
    * @param valuesOverrides
@@ -120,7 +114,7 @@ public interface HelmClient {
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCliResponse renderChart(HelmCommandRequest commandRequest, String chartLocation, String namespace,
+  HelmCliResponse renderChart(HelmCommandData helmCommandData, String chartLocation, String namespace,
       List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
 
   String getHelmPath(HelmVersion helmVersion);
