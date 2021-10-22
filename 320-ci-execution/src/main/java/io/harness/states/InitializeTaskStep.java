@@ -26,6 +26,7 @@ import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
+import io.harness.delegate.beans.ci.CITaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
@@ -77,7 +78,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CI)
-public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementParameters, K8sTaskExecutionResponse> {
+public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementParameters, CITaskExecutionResponse> {
   public static final String TASK_TYPE_INITIALIZATION_PHASE = "INITIALIZATION_PHASE";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
@@ -139,10 +140,15 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
 
   @Override
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
-      StepElementParameters stepElementParameters, ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier)
+      StepElementParameters stepElementParameters, ThrowingSupplier<CITaskExecutionResponse> responseSupplier)
       throws Exception {
-    K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
+    CITaskExecutionResponse ciTaskExecutionResponse = responseSupplier.get();
+    if (ciTaskExecutionResponse.getType() != CITaskExecutionResponse.Type.K8) {
+      throw new CIStageExecutionException(
+          format("Invalid infra type for task response: %s", ciTaskExecutionResponse.getType()));
+    }
 
+    K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) ciTaskExecutionResponse;
     InitializeStepInfo stepParameters = (InitializeStepInfo) stepElementParameters.getSpec();
 
     DependencyOutcome dependencyOutcome =
