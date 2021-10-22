@@ -81,7 +81,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
     newRelicDataCollector = spy(new NewRelicDataCollector());
     FieldUtils.writeField(newRelicDataCollector, "dataCollectionService", dataCollectionService, true);
     when(dataCollectionExecutionContext.getActivityLogger()).thenReturn(mock(Logger.class));
-    ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
+    ThirdPartyApiCallLog thirdPartyApiCallLog = ThirdPartyApiCallLog.builder().build();
     when(dataCollectionExecutionContext.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
     when(dataCollectionExecutionContext.executeRequest(any(), any())).then(invocation -> {
       String title = invocation.getArgumentAt(0, String.class);

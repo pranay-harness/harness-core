@@ -98,7 +98,6 @@ public class EnvStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ExecutionContextImpl context;
   @Mock private WorkflowService workflowService;
-  private Workflow workflow;
   @Mock private CanaryOrchestrationWorkflow canaryOrchestrationWorkflow;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private ArtifactService artifactService;
@@ -106,6 +105,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
   @Mock private DeploymentFreezeUtils deploymentFreezeUtils;
+  private final Workflow workflow = Workflow.WorkflowBuilder.aWorkflow().build();
 
   private static final WorkflowElement workflowElement =
       WorkflowElement.builder()
@@ -246,20 +246,20 @@ public class EnvStateTest extends WingsBaseTest {
   public void shouldSaveArtifactVariablesForBuildWorkflow() {
     Artifact artifact1 = anArtifact().withUuid("a1").withDisplayName("a1dn").build();
     Artifact artifact2 = anArtifact().withUuid("a2").withDisplayName("a2dn").build();
-    StateExecutionInstance instance1 = mock(StateExecutionInstance.class);
-    StateExecutionInstance instance2 = mock(StateExecutionInstance.class);
-    when(instance1.fetchStateExecutionData())
-        .thenReturn(ArtifactCollectionExecutionData.builder()
-                        .artifactId("a1")
-                        .serviceId("s1")
-                        .artifactVariableName("v1")
-                        .build());
-    when(instance2.fetchStateExecutionData())
-        .thenReturn(ArtifactCollectionExecutionData.builder()
-                        .artifactId("a2")
-                        .serviceId("s2")
-                        .artifactVariableName("v2")
-                        .build());
+    StateExecutionInstance instance1 = StateExecutionInstance.Builder.aStateExecutionInstance()
+                                           .addStateExecutionData(ArtifactCollectionExecutionData.builder()
+                                                                      .artifactId("a1")
+                                                                      .serviceId("s1")
+                                                                      .artifactVariableName("v1")
+                                                                      .build())
+                                           .build();
+    StateExecutionInstance instance2 = StateExecutionInstance.Builder.aStateExecutionInstance()
+                                           .addStateExecutionData(ArtifactCollectionExecutionData.builder()
+                                                                      .artifactId("a2")
+                                                                      .serviceId("s2")
+                                                                      .artifactVariableName("v2")
+                                                                      .build())
+                                           .build();
     when(context.getStateExecutionData())
         .thenReturn(anEnvStateExecutionData()
                         .withOrchestrationWorkflowType(OrchestrationWorkflowType.BUILD)
