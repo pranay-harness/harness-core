@@ -1,9 +1,9 @@
 package io.harness.cvng.beans;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 public class LogRecordDTO {
   String accountId;
