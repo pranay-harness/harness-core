@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.persistence.HQuery.QueryChecks.COUNT;
+
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
@@ -27,7 +29,7 @@ import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTrans
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.HQuery;
+import io.harness.persistence.HQuery.QueryChecks;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -35,6 +37,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -243,7 +246,8 @@ public class ChangeEventServiceImpl implements ChangeEventService {
 
   private Query<Activity> createQuery(ProjectParams projectParams, Instant startTime, Instant endTime,
       List<String> services, List<String> environments) {
-    Query<Activity> query = hPersistence.createQuery(Activity.class, HQuery.excludeValidate);
+    // authority and validation fails because of top level OR
+    Query<Activity> query = hPersistence.createQuery(Activity.class, EnumSet.<QueryChecks>of(COUNT));
     query.or(query.and(getCriteriasForAppEvents(query, projectParams, startTime, endTime, services, environments)),
         query.and(getCriteriasForInfraEvents(query, projectParams, startTime, endTime, services, environments)));
     return query;
