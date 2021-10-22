@@ -58,6 +58,7 @@ import io.harness.steps.StepUtils;
 import io.harness.steps.executable.TaskExecutableWithRbac;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -88,6 +89,7 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
 
   private static final String DEPENDENCY_OUTCOME = "dependencies";
   public static final StepType STEP_TYPE = InitializeStepInfo.STEP_TYPE;
+  public static final Long TASK_BUFFER_TIMEOUT_MILLIS = 2 * 60 * 1000L;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -127,12 +129,15 @@ public class InitializeTaskStep implements TaskExecutableWithRbac<StepElementPar
         buildSetupUtils.getBuildSetupTaskParams(stepParameters, ambiance, taskIds, logPrefix, stepLogKeys);
     log.info("Created params for build task: {}", buildSetupTaskParams);
 
-    final TaskData taskData = TaskData.builder()
-                                  .async(true)
-                                  .timeout(stepParameters.getTimeout())
-                                  .taskType(TASK_TYPE_INITIALIZATION_PHASE)
-                                  .parameters(new Object[] {buildSetupTaskParams})
-                                  .build();
+    final TaskData taskData =
+        TaskData.builder()
+            .async(true)
+            .timeout(
+                Timeout.fromString((String) stepElementParameters.getTimeout().fetchFinalValue()).getTimeoutInMillis()
+                + TASK_BUFFER_TIMEOUT_MILLIS)
+            .taskType(TASK_TYPE_INITIALIZATION_PHASE)
+            .parameters(new Object[] {buildSetupTaskParams})
+            .build();
 
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
