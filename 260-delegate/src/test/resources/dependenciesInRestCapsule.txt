@@ -435,7 +435,7 @@ org.apache.commons:commons-jexl3:jar:3.0
 org.apache.commons:commons-lang3:jar:3.7
 org.apache.commons:commons-math3:jar:3.6.1
 org.apache.commons:commons-text:jar:1.2
-org.apache.cxf:cxf-core:jar:3.3.5
+org.apache.cxf:cxf-core:jar:3.3.10
 org.apache.cxf:cxf-rt-bindings-soap:jar:3.3.5
 org.apache.cxf:cxf-rt-bindings-xml:jar:3.3.5
 org.apache.cxf:cxf-rt-databinding-jaxb:jar:3.3.5
