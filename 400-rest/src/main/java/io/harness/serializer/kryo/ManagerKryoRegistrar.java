@@ -9,6 +9,7 @@ import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.cvng.state.CVNGVerificationTask;
+import io.harness.delegate.beans.PerpetualTaskCapabilityCheckTaskParameters;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
@@ -1562,6 +1563,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContinuePipelineResponseData.class, 8073);
 
     kryo.register(DynaTraceApplication.class, 8074);
+    kryo.register(PerpetualTaskCapabilityCheckTaskParameters.class,8075);
 
     kryo.register(PodStatus.class, 8090);
     kryo.register(PodStatus.Status.class, 8091);
