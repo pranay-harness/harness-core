@@ -89,7 +89,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   @Override
   public GitToHarnessProgressStatus processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> fileContentsList, String branchName, String repoUrl, String commitId,
-      String gitToHarnessProgressRecordId, String changeSetId) {
+      String gitToHarnessProgressRecordId, String changeSetId, String commitMessage) {
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(repoUrl);
 
     GitToHarnessProcessingInfo gitToHarnessProcessingInfo =
@@ -99,6 +99,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
             .branchName(branchName)
             .commitId(commitId)
             .gitToHarnessProgressRecordId(gitToHarnessProgressRecordId)
+            .commitMessage(commitMessage)
             .build();
     List<ChangeSetWithYamlStatusDTO> changeSetsWithYamlStatus =
         gitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs, changeSetId, branchName);
@@ -468,7 +469,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         .additionalErrorDetails(GitToHarnessErrorDetailsDTO.builder()
                                     .gitCommitId(gitToHarnessProcessingInfo.getCommitId())
                                     .yamlContent(changeSet.getYaml())
-                                    .commitMessage("This is dummy message")
+                                    .commitMessage(gitToHarnessProcessingInfo.getCommitMessage())
                                     .build())
         .build();
   }

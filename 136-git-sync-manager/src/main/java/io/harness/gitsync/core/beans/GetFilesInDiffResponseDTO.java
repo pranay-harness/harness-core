@@ -16,4 +16,5 @@ public class GetFilesInDiffResponseDTO {
   List<GitFileChangeDTO> gitFileChangeDTOList;
   List<GitDiffResultFileDTO> prFilesTobeProcessed;
   String processingCommitId;
+  String commitMessage;
 }
