@@ -33,6 +33,7 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
         taskParameters, connectorConfig, getTaskType(), accountIdentifier, orgIdentifier, projectIdentifier);
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+
     if (responseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
       log.info("Error in validation task for connector : [{}] with failure types [{}]",

@@ -1,4 +1,4 @@
-package io.harness.delegate.git;
+package io.harness.connector.service.git;
 
 import static io.harness.git.model.GitRepositoryType.YAML;
 import static io.harness.shell.SshSessionFactory.getSSHSession;
@@ -9,19 +9,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
 import io.harness.git.UsernamePasswordAuthRequest;
-import io.harness.git.model.AuthRequest;
-import io.harness.git.model.CommitAndPushRequest;
-import io.harness.git.model.CommitAndPushResult;
-import io.harness.git.model.DownloadFilesRequest;
-import io.harness.git.model.FetchFilesByPathRequest;
-import io.harness.git.model.FetchFilesResult;
-import io.harness.git.model.GitBaseRequest;
-import io.harness.git.model.GitRepositoryType;
-import io.harness.git.model.JgitSshAuthRequest;
+import io.harness.git.model.*;
 import io.harness.shell.SshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -42,7 +33,6 @@ import org.eclipse.jgit.util.FS;
 @OwnedBy(HarnessTeam.DX)
 public class NGGitServiceImpl implements NGGitService {
   @Inject private GitClientV2 gitClientV2;
-  @Inject private SshSessionConfigMapper sshSessionConfigMapper;
 
   @Override
   public void validate(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {

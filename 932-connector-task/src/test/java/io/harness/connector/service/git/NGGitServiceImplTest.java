@@ -1,4 +1,4 @@
-package io.harness.delegate.git;
+package io.harness.connector.service.git;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 
@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.service.git.NGGitServiceImpl;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
