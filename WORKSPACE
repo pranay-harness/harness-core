@@ -4722,7 +4722,6 @@ plain_artifacts = [
     "org.apache.neethi:neethi:3.1.1",
     "org.apache.santuario:xmlsec:2.1.4",
     "org.apache.sshd:sshd-core:1.7.0",
-    "org.apache.velocity:velocity:1.7",
     "org.apache.ws.xmlschema:xmlschema-core:2.2.5",
     "org.atmosphere:atmosphere-hazelcast:2.4.3",
     "org.atmosphere:atmosphere-runtime:2.4.32",
