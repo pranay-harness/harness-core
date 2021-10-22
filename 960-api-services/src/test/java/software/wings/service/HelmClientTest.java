@@ -6,12 +6,10 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.helm.HelmCommandResponse;
+import io.harness.helm.HelmClient;
+import io.harness.helm.HelmClientImpl;
+import io.harness.helm.HelmCommandData;
 import io.harness.rule.Owner;
-
-import software.wings.helpers.ext.helm.HelmClient;
-import software.wings.helpers.ext.helm.HelmClientImpl;
-import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -71,9 +69,9 @@ public class HelmClientTest extends CategoryTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRollback() throws InterruptedException, IOException, TimeoutException {
-    HelmCommandResponse helmCommandResponse =
-        helmClient.rollback(HelmRollbackCommandRequest.builder().releaseName("rel1").prevReleaseVersion(1).build());
+    HelmClientImpl.HelmCliResponse helmCliResponse =
+        helmClient.rollback(HelmCommandData.builder().releaseName("rel1").prevReleaseVersion(1).build());
 
-    log.info(helmCommandResponse.getOutput());
+    log.info(helmCliResponse.getOutput());
   }
 }
