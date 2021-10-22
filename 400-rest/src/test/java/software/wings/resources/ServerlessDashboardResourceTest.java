@@ -107,7 +107,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getInstanceDetails() {
-    doReturn(mock(ServerlessInstance.class)).when(serverlessDashboardService).getInstanceDetails(anyString());
+    doReturn(ServerlessInstance.builder().build()).when(serverlessDashboardService).getInstanceDetails(anyString());
     serverlessDashboardResource.getInstanceDetails(ACCOUNTID, "instanceid");
     verify(serverlessDashboardService, times(1)).getInstanceDetails("instanceid");
   }

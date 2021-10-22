@@ -95,7 +95,6 @@ public class PipelineYamlHandlerTest extends YamlHandlerTestBase {
   @Mock InfrastructureMappingService infrastructureMappingService;
   @Mock InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock ServiceResourceService serviceResourceService;
-  @Mock private Account account;
   @Mock private AccountService accountService;
   @Mock private EnvironmentService environmentService;
   @Mock private LimitCheckerFactory limitCheckerFactory;
@@ -173,7 +172,7 @@ public class PipelineYamlHandlerTest extends YamlHandlerTestBase {
     Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactType(WAR).build();
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
-    when(accountService.get(anyString())).thenReturn(account);
+    when(accountService.get(anyString())).thenReturn(new Account());
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 

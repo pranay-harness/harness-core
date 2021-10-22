@@ -49,7 +49,7 @@ public class ApproveOrRejectApprovalsDataFetcherTest extends AbstractDataFetcher
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private GraphQLContext graphQLContext;
   @Mock private DataFetchingEnvironment dataFetchingEnvironment;
-  @Mock private ApiKeyEntry apiKeyEntry;
+  private ApiKeyEntry apiKeyEntry = ApiKeyEntry.builder().build();
   @Mock protected WingsPersistence persistence;
   @Mock private Query<WorkflowExecution> workflowExecutionQuery;
   @InjectMocks @Spy ApproveOrRejectApprovalsDataFetcher approveOrRejectApprovalsDataFetcher;

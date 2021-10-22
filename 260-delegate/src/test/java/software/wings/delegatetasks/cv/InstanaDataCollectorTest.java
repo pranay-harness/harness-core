@@ -67,7 +67,7 @@ public class InstanaDataCollectorTest extends WingsBaseTest {
     FieldUtils.writeField(instanaDataCollector, "instanaDelegateService", instanaDelegateService, true);
     when(dataCollectionExecutionContext.getActivityLogger())
         .thenReturn(mock(DelegateCVActivityLogService.Logger.class));
-    ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
+    ThirdPartyApiCallLog thirdPartyApiCallLog = new ThirdPartyApiCallLog();
     when(dataCollectionExecutionContext.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
     when(dataCollectionExecutionContext.executeRequest(any(), any())).then(invocation -> {
       String title = invocation.getArgumentAt(0, String.class);

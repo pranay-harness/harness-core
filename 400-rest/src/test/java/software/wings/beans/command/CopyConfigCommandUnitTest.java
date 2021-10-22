@@ -16,10 +16,8 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
-import software.wings.beans.Service;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.ssh.executors.FileBasedWinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutor;

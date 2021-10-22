@@ -150,7 +150,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class EnvironmentServiceTest extends WingsBaseTest {
   private static final String FILE_CONTENT = "fileContent";
 
-  @Mock private Application application;
+  private Application application;
   @Mock private ActivityService activityService;
   @Mock private AppService appService;
   @Mock private ConfigService configService;
@@ -192,13 +192,14 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
+    application = Application.Builder.anApplication().accountId(ACCOUNT_ID).build();
     when(wingsPersistence.createQuery(Environment.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(Environment.class)).thenReturn(updateOperations);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(updateOperations.unset(any())).thenReturn(updateOperations);
-    when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+    when(appService.get(TARGET_APP_ID)).thenReturn(application);
+    when(appService.get(APP_ID)).thenReturn(application);
 
     doNothing().when(auditServiceHelper).reportForAuditingUsingAccountId(anyString(), any(), any(), any());
     doNothing().when(auditServiceHelper).reportDeleteForAuditingUsingAccountId(anyString(), any());
