@@ -6,8 +6,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
+import io.harness.engine.executions.retry.ExecutionInfo;
 import io.harness.engine.executions.retry.RetryGroup;
+import io.harness.engine.executions.retry.RetryHistoryResponseDto;
 import io.harness.engine.executions.retry.RetryInfo;
+import io.harness.engine.executions.retry.RetryLatestExecutionResponseDto;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plan.IdentityPlanNode;
@@ -17,6 +20,8 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.steps.identity.IdentityStep;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -45,6 +50,7 @@ public class RetryExecutionHelper {
   private static final String LAST_STAGE_IDENTIFIER = "last_stage_identifier";
   private final NodeExecutionService nodeExecutionService;
   private final PlanExecutionMetadataService planExecutionMetadataService;
+  private final PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
 
   public List<String> fetchOnlyFailedStages(List<RetryStageInfo> info, List<String> retryStagesIdentifier) {
     List<String> onlyFailedStage = new ArrayList<>();
@@ -282,5 +288,49 @@ public class RetryExecutionHelper {
         .valid(plan.isValid())
         .errorResponse(plan.getErrorResponse())
         .build();
+  }
+
+  public RetryHistoryResponseDto getRetryHistory(String rootParentId) {
+    List<PipelineExecutionSummaryEntity> entities =
+        pmsExecutionSummaryRespository.fetchPipelineSummaryEntityFromRootParentId(rootParentId);
+
+    if (entities.size() <= 1) {
+      return RetryHistoryResponseDto.builder().errorMessage("Nothing to show in retry history").build();
+    }
+    List<ExecutionInfo> executionInfos = fetchExecutionInfoFromPipelineEntities(entities);
+
+    String latestRetryExecutionId = executionInfos.get(executionInfos.size() - 1).getUuid();
+
+    return RetryHistoryResponseDto.builder()
+        .executionInfos(executionInfos)
+        .latestExecutionId(latestRetryExecutionId)
+        .build();
+  }
+
+  public RetryLatestExecutionResponseDto getRetryLatestExecutionId(String rootParentId) {
+    List<PipelineExecutionSummaryEntity> entities =
+        pmsExecutionSummaryRespository.fetchPipelineSummaryEntityFromRootParentId(rootParentId);
+
+    if (entities.size() <= 1) {
+      return RetryLatestExecutionResponseDto.builder().errorMessage("This is not a part of retry execution").build();
+    }
+
+    String latestRetryExecutionId = entities.get(entities.size() - 1).getPlanExecutionId();
+
+    return RetryLatestExecutionResponseDto.builder().latestExecutionId(latestRetryExecutionId).build();
+  }
+
+  private List<ExecutionInfo> fetchExecutionInfoFromPipelineEntities(
+      List<PipelineExecutionSummaryEntity> summaryEntityList) {
+    return summaryEntityList.stream()
+        .map(entity -> {
+          return ExecutionInfo.builder()
+              .uuid(entity.getPlanExecutionId())
+              .startTs(entity.getStartTs())
+              .status(entity.getStatus())
+              .endTs(entity.getEndTs())
+              .build();
+        })
+        .collect(Collectors.toList());
   }
 }

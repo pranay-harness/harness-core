@@ -14,6 +14,7 @@ import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.ExceptionLogger;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -33,11 +34,11 @@ public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRest
   @Inject private ResourceRestraintInstanceService resourceRestraintInstanceService;
   @Inject MongoTemplate mongoTemplate;
 
-  public void registerIterators() {
+  public void registerIterators(IteratorConfig config) {
     PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()
                                               .name("ResourceRestraintInstance-Monitor")
-                                              .poolSize(5)
-                                              .interval(ofSeconds(60))
+                                              .poolSize(config.getThreadPoolCount())
+                                              .interval(ofSeconds(config.getTargetIntervalInSeconds()))
                                               .build();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(executorOptions,
         ResourceRestraintPersistenceMonitor.class,

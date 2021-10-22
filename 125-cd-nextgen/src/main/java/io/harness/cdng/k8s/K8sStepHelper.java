@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
@@ -30,8 +31,10 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
+import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
@@ -64,6 +67,7 @@ import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.helper.EncryptionHelper;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.TaskData;
@@ -75,14 +79,27 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
@@ -98,9 +115,11 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.encryption.SecretRefData;
 import io.harness.eraro.Level;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
@@ -127,6 +146,7 @@ import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.rbac.PipelineRbacHelper;
@@ -166,6 +186,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -202,6 +223,7 @@ public class K8sStepHelper {
   @Inject private K8sEntityHelper k8sEntityHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AccountClient accountClient;
+  @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
 
   String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -348,15 +370,8 @@ public class K8sStepHelper {
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStoreConfig.getConnectorRef()), ambiance);
       validateManifest(storeConfig.getKind(), connectorDTO, validationErrorMessage);
 
-      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-      NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
-      SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
-      List<EncryptedDataDetail> encryptedDataDetails =
-          gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-
       List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
-      return getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO,
-          manifestOutcome, gitFilePaths);
+      return getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, manifestOutcome, gitFilePaths, ambiance);
     }
 
     if (ManifestStoreType.HTTP.equals(storeConfig.getKind())) {
@@ -417,14 +432,33 @@ public class K8sStepHelper {
   }
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStoreConfig gitstoreConfig,
-      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList,
-      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, ManifestOutcome manifestOutcome,
-      List<String> paths) {
-    convertToRepoGitConfig(gitstoreConfig, gitConfigDTO);
+      @Nonnull ConnectorInfoDTO connectorDTO, ManifestOutcome manifestOutcome, List<String> paths, Ambiance ambiance) {
+    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
+    ScmConnector scmConnector;
+    List<EncryptedDataDetail> apiAuthEncryptedDataDetails = null;
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
+    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
+    boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceHelper.getAccountId(ambiance));
+
+    if (optimizedFilesFetch) {
+      scmConnector = (ScmConnector) connectorDTO.getConnectorConfig();
+      addApiAuthIfRequired(scmConnector);
+      final DecryptableEntity apiAccessDecryptableEntity =
+          GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
+      apiAuthEncryptedDataDetails =
+          secretManagerClientService.getEncryptionDetails(basicNGAccessObject, apiAccessDecryptableEntity);
+    } else {
+      scmConnector = gitConfigDTO;
+    }
+
+    convertToRepoGitConfig(gitstoreConfig, scmConnector);
     return GitStoreDelegateConfig.builder()
-        .gitConfigDTO(gitConfigDTO)
+        .gitConfigDTO(scmConnector)
         .sshKeySpecDTO(sshKeySpecDTO)
-        .encryptedDataDetails(encryptedDataDetailList)
+        .encryptedDataDetails(encryptedDataDetails)
+        .apiAuthEncryptedDataDetails(apiAuthEncryptedDataDetails)
         .fetchType(gitstoreConfig.getGitFetchType())
         .branch(trim(getParameterFieldValue(gitstoreConfig.getBranch())))
         .commitId(trim(getParameterFieldValue(gitstoreConfig.getCommitId())))
@@ -432,22 +466,74 @@ public class K8sStepHelper {
         .connectorName(connectorDTO.getName())
         .manifestType(manifestOutcome.getType())
         .manifestId(manifestOutcome.getIdentifier())
+        .optimizedFilesFetch(optimizedFilesFetch)
         .build();
   }
 
-  private void convertToRepoGitConfig(GitStoreConfig gitstoreConfig, GitConfigDTO gitConfigDTO) {
-    String repoName = gitstoreConfig.getRepoName() != null ? gitstoreConfig.getRepoName().getValue() : null;
-    if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT) {
-      String repoUrl = getGitRepoUrl(gitConfigDTO, repoName);
-      gitConfigDTO.setUrl(repoUrl);
-      gitConfigDTO.setGitConnectionType(GitConnectionType.REPO);
+  private void addApiAuthIfRequired(ScmConnector scmConnector) {
+    if (scmConnector instanceof GithubConnectorDTO && ((GithubConnectorDTO) scmConnector).getApiAccess() == null
+        && isGithubUsernameTokenAuth((GithubConnectorDTO) scmConnector)) {
+      GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) scmConnector;
+      SecretRefData tokenRef =
+          ((GithubUsernameTokenDTO) ((GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials())
+                  .getHttpCredentialsSpec())
+              .getTokenRef();
+      GithubApiAccessDTO apiAccessDTO = GithubApiAccessDTO.builder()
+                                            .type(GithubApiAccessType.TOKEN)
+                                            .spec(GithubTokenSpecDTO.builder().tokenRef(tokenRef).build())
+                                            .build();
+      githubConnectorDTO.setApiAccess(apiAccessDTO);
+    } else if (scmConnector instanceof GitlabConnectorDTO && ((GitlabConnectorDTO) scmConnector).getApiAccess() == null
+        && isGitlabUsernameTokenAuth((GitlabConnectorDTO) scmConnector)) {
+      GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) scmConnector;
+      SecretRefData tokenRef =
+          ((GitlabUsernameTokenDTO) ((GitlabHttpCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials())
+                  .getHttpCredentialsSpec())
+              .getTokenRef();
+      GitlabApiAccessDTO apiAccessDTO = GitlabApiAccessDTO.builder()
+                                            .type(GitlabApiAccessType.TOKEN)
+                                            .spec(GitlabTokenSpecDTO.builder().tokenRef(tokenRef).build())
+                                            .build();
+      gitlabConnectorDTO.setApiAccess(apiAccessDTO);
     }
   }
 
-  private String getGitRepoUrl(GitConfigDTO gitConfigDTO, String repoName) {
+  private boolean isOptimizedFilesFetch(@Nonnull ConnectorInfoDTO connectorDTO, String accountId) {
+    return cdFeatureFlagHelper.isEnabled(accountId, OPTIMIZED_GIT_FETCH_FILES)
+        && (isGithubTokenAuth((ScmConnector) connectorDTO.getConnectorConfig())
+            || isGitlabTokenAuth((ScmConnector) connectorDTO.getConnectorConfig()));
+  }
+
+  private void convertToRepoGitConfig(GitStoreConfig gitstoreConfig, ScmConnector scmConnector) {
+    String repoName = gitstoreConfig.getRepoName() != null ? gitstoreConfig.getRepoName().getValue() : null;
+    if (scmConnector instanceof GitConfigDTO) {
+      GitConfigDTO gitConfigDTO = (GitConfigDTO) scmConnector;
+      if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(gitConfigDTO, repoName);
+        gitConfigDTO.setUrl(repoUrl);
+        gitConfigDTO.setGitConnectionType(GitConnectionType.REPO);
+      }
+    } else if (scmConnector instanceof GithubConnectorDTO) {
+      GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) scmConnector;
+      if (githubConnectorDTO.getConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(githubConnectorDTO, repoName);
+        githubConnectorDTO.setUrl(repoUrl);
+        githubConnectorDTO.setConnectionType(GitConnectionType.REPO);
+      }
+    } else if (scmConnector instanceof GitlabConnectorDTO) {
+      GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) scmConnector;
+      if (gitlabConnectorDTO.getConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(gitlabConnectorDTO, repoName);
+        gitlabConnectorDTO.setUrl(repoUrl);
+        gitlabConnectorDTO.setConnectionType(GitConnectionType.REPO);
+      }
+    }
+  }
+
+  private String getGitRepoUrl(ScmConnector scmConnector, String repoName) {
     repoName = trimToEmpty(repoName);
     notEmptyCheck("Repo name cannot be empty for Account level git connector", repoName);
-    String purgedRepoUrl = gitConfigDTO.getUrl().replaceAll("/*$", "");
+    String purgedRepoUrl = scmConnector.getUrl().replaceAll("/*$", "");
     String purgedRepoName = repoName.replaceAll("^/*", "");
     return purgedRepoUrl + "/" + purgedRepoName;
   }
@@ -752,15 +838,9 @@ public class K8sStepHelper {
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
     validateManifest(store.getKind(), connectorDTO, validationMessage);
 
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
-    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
-    List<EncryptedDataDetail> encryptedDataDetails =
-        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-
     List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
-    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestOutcome, gitFilePaths);
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, manifestOutcome, gitFilePaths, ambiance);
 
     return GitFetchFilesConfig.builder()
         .identifier(manifestOutcome.getIdentifier())
@@ -777,15 +857,9 @@ public class K8sStepHelper {
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
     validateManifest(store.getKind(), connectorDTO, validationMessage);
 
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
-    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
-    List<EncryptedDataDetail> encryptedDataDetails =
-        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-
     List<String> gitFilePaths = getValuesPathsBasedOnManifest(gitStoreConfig, k8sManifestOutcome.getType());
-    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(gitStoreConfig, connectorDTO,
-        encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, k8sManifestOutcome, gitFilePaths);
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, k8sManifestOutcome, gitFilePaths, ambiance);
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
@@ -825,7 +899,14 @@ public class K8sStepHelper {
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
 
     if (!manifestsOutcome.isFound()) {
-      throw new InvalidRequestException("No manifests found.");
+      String stageName = AmbianceUtils.getStageLevelFromAmbiance(ambiance)
+                             .map(level -> level.getIdentifier())
+                             .orElse("Deployment stage");
+      String stepType =
+          Optional.ofNullable(AmbianceUtils.getCurrentStepType(ambiance)).map(StepType::getType).orElse("Kubernetes");
+      throw new GeneralException(format(
+          "No manifests found in stage %s. %s step requires at least one manifest defined in stage service definition",
+          stageName, stepType));
     }
 
     return (ManifestsOutcome) manifestsOutcome.getOutcome();
@@ -1227,7 +1308,13 @@ public class K8sStepHelper {
   }
 
   public StepResponse handleTaskException(
-      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData, Exception e) {
+      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData, Exception e) throws Exception {
+    // Trying to figure out if exception is coming from k8s task or it is an exception from delegate service.
+    // In the second case we need to close log stream and provide unit progress data as part of response
+    if (ExceptionUtils.cause(TaskNGDataException.class, e) != null) {
+      throw e;
+    }
+
     UnitProgressData unitProgressData =
         completeUnitProgressData(executionPassThroughData.getLastActiveUnitProgressData(), ambiance, e);
     FailureData failureData = FailureData.newBuilder()
@@ -1285,6 +1372,32 @@ public class K8sStepHelper {
       sdkGraphVisualizationDataService.publishStepDetailInformation(
           ambiance, K8sReleaseDetailsInfo.builder().releaseName(releaseName).build(), RELEASE_NAME);
     }
+  }
+
+  private boolean isGitlabTokenAuth(ScmConnector scmConnector) {
+    return scmConnector instanceof GitlabConnectorDTO
+        && (((GitlabConnectorDTO) scmConnector).getApiAccess() != null
+            || isGitlabUsernameTokenAuth((GitlabConnectorDTO) scmConnector));
+  }
+
+  private boolean isGitlabUsernameTokenAuth(GitlabConnectorDTO gitlabConnectorDTO) {
+    return gitlabConnectorDTO.getAuthentication().getCredentials() instanceof GitlabHttpCredentialsDTO
+        && ((GitlabHttpCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials())
+               .getType()
+               .equals(GitlabHttpAuthenticationType.USERNAME_AND_TOKEN);
+  }
+
+  private boolean isGithubTokenAuth(ScmConnector scmConnector) {
+    return scmConnector instanceof GithubConnectorDTO
+        && (((GithubConnectorDTO) scmConnector).getApiAccess() != null
+            || isGithubUsernameTokenAuth((GithubConnectorDTO) scmConnector));
+  }
+
+  private boolean isGithubUsernameTokenAuth(GithubConnectorDTO githubConnectorDTO) {
+    return githubConnectorDTO.getAuthentication().getCredentials() instanceof GithubHttpCredentialsDTO
+        && ((GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials())
+               .getType()
+               .equals(GithubHttpAuthenticationType.USERNAME_AND_TOKEN);
   }
 
   public boolean isUseLatestKustomizeVersion(String accountId) {

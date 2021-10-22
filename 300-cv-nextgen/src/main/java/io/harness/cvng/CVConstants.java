@@ -1,7 +1,11 @@
 package io.harness.cvng;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.time.Duration;
 
+@OwnedBy(HarnessTeam.CV)
 public interface CVConstants {
   String SERVICE_BASE_URL = "/cv/api";
   Duration VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION = Duration.ofDays(30);
@@ -25,9 +29,10 @@ public interface CVConstants {
   int STATE_MACHINE_IGNORE_LIMIT = 100;
 
   int STATE_MACHINE_IGNORE_MINUTES = 30;
+  int STATE_MACHINE_IGNORE_MINUTES_FOR_DEMO = 150;
 
   String DATA_SOURCE_TYPE = "type";
-
+  String SLO_TARGET_TYPE = "type";
   String LIVE_MONITORING = "live_monitoring";
   String DEPLOYMENT = "deployment";
 

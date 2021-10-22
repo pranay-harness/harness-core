@@ -93,4 +93,11 @@ public class CEViewDao {
         .filter(CEViewKeys.viewType, viewType)
         .asList();
   }
+
+  public Long findCountByAccountIdAndType(String accountId, ViewType viewType) {
+    return hPersistence.createQuery(CEView.class)
+        .filter(CEViewKeys.accountId, accountId)
+        .filter(CEViewKeys.viewType, viewType)
+        .count();
+  }
 }

@@ -4,6 +4,7 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.reader.K8sGranularUtilizationMetricsReader;
 import io.harness.batch.processing.reader.PublishedMessageBatchedReader;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.writer.K8sPVUtilizationAggregationTasklet;
 import io.harness.batch.processing.writer.K8sUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.NodeUtilizationMetricsWriter;
@@ -37,7 +38,7 @@ public class K8sUtilizationConfiguration {
 
   @Autowired private StepBuilderFactory stepBuilderFactory;
   @Autowired private PublishedMessageDao publishedMessageDao;
-
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
   /*
    * ****************** PodUtilization ******************
    */
@@ -183,6 +184,7 @@ public class K8sUtilizationConfiguration {
       Step k8sPVUtilizationAggregationStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_UTILIZATION.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(k8sPodUtilizationEventStep)
         .next(k8sNodeUtilizationEventStep)
         .next(k8sUtilizationAggregationStep)

@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -17,4 +18,6 @@ public interface PmsExecutionSummaryRepositoryCustom {
   PipelineExecutionSummaryEntity update(Query query, Update update);
   UpdateResult deleteAllExecutionsWhenPipelineDeleted(Query query, Update update);
   Page<PipelineExecutionSummaryEntity> findAll(Criteria criteria, Pageable pageable);
+  String fetchRootRetryExecutionId(String planExecutionId);
+  List<PipelineExecutionSummaryEntity> fetchPipelineSummaryEntityFromRootParentId(String rootParentId);
 }

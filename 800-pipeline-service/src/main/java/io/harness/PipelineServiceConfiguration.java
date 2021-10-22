@@ -90,6 +90,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
   @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("pipelineEventConsumersConfig") PipelineServiceConsumersConfig pipelineServiceConsumersConfig;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
 
   private String managerServiceSecret;
@@ -171,5 +172,9 @@ public class PipelineServiceConfiguration extends Configuration {
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  }
+
+  public static Set<String> getUniquePackagesContainingResources() {
+    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 }

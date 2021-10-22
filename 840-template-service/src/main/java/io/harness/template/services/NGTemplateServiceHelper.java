@@ -55,27 +55,17 @@ public class NGTemplateServiceHelper {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
   }
 
-  public TemplateGitSyncBranchContextGuard getTemplateGitContext(
+  public TemplateGitSyncBranchContextGuard getTemplateGitContextForGivenTemplate(
       TemplateEntity template, GitEntityInfo gitEntityInfo, String commitMsg) {
-    boolean defaultFromOtherRepo = false;
-    String branch = "";
-    String yamlGitConfigId = "";
+    GitEntityInfo gitEntityInfoForGivenTemplate = null;
     if (gitEntityInfo != null) {
-      defaultFromOtherRepo = gitEntityInfo.isFindDefaultFromOtherRepos();
-      branch = gitEntityInfo.getBranch();
-      yamlGitConfigId = gitEntityInfo.getYamlGitConfigId();
+      gitEntityInfoForGivenTemplate = gitEntityInfo.withCommitMsg(commitMsg)
+                                          .withFilePath(template.getFilePath())
+                                          .withFolderPath(template.getRootFolder())
+                                          .withLastObjectId(template.getObjectIdOfYaml());
     }
-    GitSyncBranchContext branchContext = GitSyncBranchContext.builder()
-                                             .gitBranchInfo(GitEntityInfo.builder()
-                                                                .branch(branch)
-                                                                .yamlGitConfigId(yamlGitConfigId)
-                                                                .findDefaultFromOtherRepos(defaultFromOtherRepo)
-                                                                .filePath(template.getFilePath())
-                                                                .folderPath(template.getRootFolder())
-                                                                .lastObjectId(template.getObjectIdOfYaml())
-                                                                .commitMsg(commitMsg)
-                                                                .build())
-                                             .build();
+    GitSyncBranchContext branchContext =
+        GitSyncBranchContext.builder().gitBranchInfo(gitEntityInfoForGivenTemplate).build();
     return new TemplateGitSyncBranchContextGuard(branchContext, false);
   }
 

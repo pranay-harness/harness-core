@@ -30,6 +30,9 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
 
   Y update(String accountIdentifier, String yaml, ChangeType changeType);
 
+  boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean invalid, String erroneousYaml);
+
   boolean delete(EntityReference entityReference);
 
   String getObjectIdOfYamlKey();

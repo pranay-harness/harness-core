@@ -41,11 +41,11 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<SecretManagerConfig> persistenceProvider;
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("VaultSecretManagerRenewalHandler")
-            .poolSize(5)
+            .poolSize(threadPoolSize)
             .interval(ofSeconds(5))
             .build(),
         SecretManagerConfig.class,

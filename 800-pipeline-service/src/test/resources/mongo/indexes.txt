@@ -123,6 +123,7 @@ planExecutionsMetadata {"name": "planExecutionId_idx", "unique": true} {"planExe
 planExecutionsMetadata {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 planExecutionsSummary {"name": "accountId_executed_modules_startTs_idx", "background": true} {"accountId": 1, "executedModules": 1, "startTs": 1}
 planExecutionsSummary {"name": "accountId_organizationId_projectId_createdAt_idx", "background": true} {"projectIdentifier": 1, "orgIdentifier": 1, "accountId": 1, "createdAt": 1}
+planExecutionsSummary {"name": "accountId_organizationId_projectId_createdAt_modules_idx", "background": true} {"modules": 1, "projectIdentifier": 1, "orgIdentifier": 1, "accountId": 1, "createdAt": 1}
 planExecutionsSummary {"name": "accountId_organizationId_projectId_pipelineId", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "pipelineIdentifier": 1}
 planExecutionsSummary {"name": "accountId_organizationId_projectId_pipelineId_createdAt_idx", "background": true} {"pipelineIdentifier": 1, "projectIdentifier": 1, "orgIdentifier": 1, "accountId": 1, "createdAt": 1}
 planExecutionsSummary {"name": "createdAt_1", "background": true} {"createdAt": 1}

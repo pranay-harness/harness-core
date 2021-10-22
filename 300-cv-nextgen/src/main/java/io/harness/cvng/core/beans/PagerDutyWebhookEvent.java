@@ -37,7 +37,7 @@ public class PagerDutyWebhookEvent {
     String urgency;
     @JsonProperty("html_url") String htmlUrl;
     PagerDutyObject priority;
-    List<PagerDutyObject> assignments;
+    List<PagerDutyObject> assignees;
     @JsonProperty("escalation_policy") PagerDutyObject escalationPolicy;
   }
 

@@ -23,6 +23,7 @@ public class HarnessCDCurrentGenActivity extends Activity {
   String serviceId;
   String environmentId;
   String workflowId;
+  String status;
   Instant workflowStartTime;
   Instant workflowEndTime;
   String workflowExecutionId;
@@ -58,6 +59,11 @@ public class HarnessCDCurrentGenActivity extends Activity {
     @Override
     public Class getEntityClass() {
       return HarnessCDCurrentGenActivity.class;
+    }
+
+    @Override
+    public String getEntityKeyLongString(HarnessCDCurrentGenActivity activity) {
+      return super.getKeyBuilder(activity).add(activity.getWorkflowExecutionId()).toString();
     }
 
     public Query<HarnessCDCurrentGenActivity> populateKeyQuery(

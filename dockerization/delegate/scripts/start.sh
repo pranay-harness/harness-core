@@ -95,6 +95,23 @@ fi
 
 echo $PROXY_SYS_PROPS
 
+if [ ! -z "$INIT_SCRIPT" ]; then
+  echo "#!/bin/bash -e" > init.sh
+  echo "$INIT_SCRIPT" >> init.sh
+fi
+
+if [ -e init.sh ]; then
+    echo "Starting initialization script for delegate"
+    source ./init.sh
+    if [ $? -eq 0 ];
+    then
+      echo "Completed executing initialization script"
+    else
+      echo "Error while executing initialization script. Delegate wont be started."
+      exit 1
+    fi
+fi
+
 if [[ "$OSTYPE" == linux* ]]; then
   touch /tmp/exec-test.sh && chmod +x /tmp/exec-test.sh
   /tmp/exec-test.sh

@@ -41,6 +41,9 @@ logging:
       target: STDOUT
       stackdriverLogEnabled: false
 
+
+distributedLockImplementation: NOOP
+
 mongo:
   uri: mongodb://localhost:27017/cvng
   connectTimeout: 30000

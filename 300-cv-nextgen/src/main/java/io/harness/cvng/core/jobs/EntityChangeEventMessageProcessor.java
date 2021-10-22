@@ -21,6 +21,8 @@ import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.cvng.dashboard.entities.HeatMap;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
+import io.harness.cvng.servicelevelobjective.entities.UserJourney;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.persistence.PersistentEntity;
 
@@ -35,16 +37,20 @@ public abstract class EntityChangeEventMessageProcessor implements ConsumerMessa
   static final Map<Class<? extends PersistentEntity>, Class<? extends DeleteEntityByHandler>> ENTITIES_MAP;
 
   static {
+    // Add the service for project level default deletion
+    final List<Class<? extends PersistentEntity>> deleteEntitiesWithDefaultHandler =
+        Arrays.asList(VerificationJob.class, Activity.class, ActivitySource.class, AlertRule.class, MetricPack.class,
+            HeatMap.class, TimeSeriesThreshold.class, AlertRuleAnomaly.class, CVNGStepTask.class,
+            ServiceLevelObjective.class, UserJourney.class);
     ENTITIES_MAP = new HashMap<>();
+    deleteEntitiesWithDefaultHandler.forEach(entity -> ENTITIES_MAP.put(entity, DeleteEntityByHandler.class));
+
+    // Add the service for project level custom deletion
     ENTITIES_MAP.put(CVConfig.class, CVConfigService.class);
     ENTITIES_MAP.put(MonitoringSourcePerpetualTask.class, MonitoringSourcePerpetualTaskService.class);
     ENTITIES_MAP.put(MonitoredService.class, MonitoredServiceService.class);
     ENTITIES_MAP.put(ChangeSource.class, ChangeSourceService.class);
     ENTITIES_MAP.put(ServiceDependency.class, ServiceDependencyService.class);
     ENTITIES_MAP.put(Webhook.class, WebhookService.class);
-    final List<Class<? extends PersistentEntity>> deleteEntitiesWithDefaultHandler =
-        Arrays.asList(VerificationJob.class, Activity.class, ActivitySource.class, AlertRule.class, MetricPack.class,
-            HeatMap.class, TimeSeriesThreshold.class, AlertRuleAnomaly.class, CVNGStepTask.class);
-    deleteEntitiesWithDefaultHandler.forEach(entity -> ENTITIES_MAP.put(entity, DeleteEntityByHandler.class));
   }
 }

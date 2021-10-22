@@ -142,7 +142,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     doReturn(previousEligibleRelease).when(releaseHistory).getPreviousRollbackEligibleRelease(releaseNumber);
 
     boolean rollback = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
+        rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet(), false);
     assertThat(rollback).isTrue();
   }
 
@@ -157,12 +157,11 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     rollbackHandlerConfig.setKubernetesConfig(kubernetesConfig);
     doReturn("").when(k8sTaskHelperBase).getReleaseHistoryData(kubernetesConfig, releaseName);
 
-    boolean result = k8sRollingRollbackBaseHandler.init(rollbackHandlerConfig, releaseName, logCallback);
+    k8sRollingRollbackBaseHandler.init(rollbackHandlerConfig, releaseName, logCallback);
     assertThat(rollbackHandlerConfig.isNoopRollBack()).isTrue();
-    assertThat(result).isTrue();
 
-    result = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, k8sDelegateTaskParams, null, logCallback, emptySet());
+    boolean result = k8sRollingRollbackBaseHandler.rollback(
+        rollbackHandlerConfig, k8sDelegateTaskParams, null, logCallback, emptySet(), false);
     assertThat(result).isTrue();
     verify(logCallback).saveExecutionLog("No previous release found. Skipping rollback.");
 
@@ -186,14 +185,13 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
 
     when(releaseHistory.getLatestRelease()).thenReturn(rollbackHandlerConfig.getRelease());
     when(k8sTaskHelperBase.doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(),
-             any(K8sDelegateTaskParams.class), any(LogCallback.class), anyBoolean(), anyLong()))
+             any(K8sDelegateTaskParams.class), any(LogCallback.class), anyBoolean(), anyLong(), eq(false)))
         .thenReturn(true);
 
-    boolean result = k8sRollingRollbackBaseHandler.init(rollbackHandlerConfig, "releaseName", logCallback);
-    assertThat(result).isTrue();
+    k8sRollingRollbackBaseHandler.init(rollbackHandlerConfig, "releaseName", logCallback);
 
-    result = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, k8sDelegateTaskParams, 2, logCallback, emptySet());
+    boolean result = k8sRollingRollbackBaseHandler.rollback(
+        rollbackHandlerConfig, k8sDelegateTaskParams, 2, logCallback, emptySet(), false);
     assertThat(result).isTrue();
 
     k8sRollingRollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, 10, logCallback);
@@ -223,7 +221,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
         prepareRollbackCustomWorkloads(previousCustomResource, currentCustomResource);
 
     boolean rollback = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, k8sDelegateTaskParams, 2, logCallback, emptySet());
+        rollbackHandlerConfig, k8sDelegateTaskParams, 2, logCallback, emptySet(), false);
     assertThat(rollback).isTrue();
 
     ArgumentCaptor<List> previousCustomWorkloadsCaptor = ArgumentCaptor.forClass(List.class);
@@ -235,7 +233,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
 
     verify(k8sTaskHelperBase, times(1))
         .applyManifests(any(Kubectl.class), previousCustomWorkloadsCaptor.capture(), any(K8sDelegateTaskParams.class),
-            any(LogCallback.class), anyBoolean());
+            any(LogCallback.class), anyBoolean(), eq(false));
 
     List<KubernetesResource> previousCustomWorkloads = previousCustomWorkloadsCaptor.getValue();
     assertThat(previousCustomWorkloads).isNotEmpty();
@@ -256,7 +254,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
         prepareRollbackCustomWorkloads(previousCustomResource, currentCustomResource);
 
     boolean rollback = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, k8sDelegateTaskParams, 2, logCallback, emptySet());
+        rollbackHandlerConfig, k8sDelegateTaskParams, 2, logCallback, emptySet(), false);
     assertThat(rollback).isTrue();
 
     ArgumentCaptor<List> previousCustomWorkloadsCaptor = ArgumentCaptor.forClass(List.class);
@@ -266,7 +264,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
 
     verify(k8sTaskHelperBase, times(1))
         .applyManifests(any(Kubectl.class), previousCustomWorkloadsCaptor.capture(), any(K8sDelegateTaskParams.class),
-            any(LogCallback.class), anyBoolean());
+            any(LogCallback.class), anyBoolean(), eq(false));
 
     List<KubernetesResource> previousCustomWorkloads = previousCustomWorkloadsCaptor.getValue();
     assertThat(previousCustomWorkloads).isNotEmpty();
@@ -293,8 +291,8 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     rollbackHandlerConfig.setReleaseHistory(releaseHistory);
     rollbackHandlerConfig.setRelease(release);
     rollbackHandlerConfig.setClient(Kubectl.client("kubectl", "config-path"));
-    when(k8sTaskHelperBase.applyManifests(
-             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(LogCallback.class), anyBoolean()))
+    when(k8sTaskHelperBase.applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+             any(LogCallback.class), anyBoolean(), eq(false)))
         .thenReturn(true);
 
     return rollbackHandlerConfig;
@@ -310,8 +308,8 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
   }
 
   private void testRollBackReleaseIsNull() throws Exception {
-    final boolean success = k8sRollingRollbackBaseHandler.rollback(
-        new K8sRollingRollbackHandlerConfig(), K8sDelegateTaskParams.builder().build(), null, logCallback, emptySet());
+    final boolean success = k8sRollingRollbackBaseHandler.rollback(new K8sRollingRollbackHandlerConfig(),
+        K8sDelegateTaskParams.builder().build(), null, logCallback, emptySet(), false);
 
     assertThat(success).isTrue();
   }
@@ -320,7 +318,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     K8sRollingRollbackHandlerConfig rollbackHandlerConfig = new K8sRollingRollbackHandlerConfig();
     rollbackHandlerConfig.setRelease(new Release());
     final boolean success = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, K8sDelegateTaskParams.builder().build(), 2, logCallback, emptySet());
+        rollbackHandlerConfig, K8sDelegateTaskParams.builder().build(), 2, logCallback, emptySet(), false);
     assertThat(success).isTrue();
   }
 
@@ -343,7 +341,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     rollbackHandlerConfig.setReleaseHistory(releaseHistory);
 
     final boolean success = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, K8sDelegateTaskParams.builder().build(), 2, logCallback, emptySet());
+        rollbackHandlerConfig, K8sDelegateTaskParams.builder().build(), 2, logCallback, emptySet(), false);
 
     ArgumentCaptor<RolloutUndoCommand> captor = ArgumentCaptor.forClass(RolloutUndoCommand.class);
     verify(k8sRollingRollbackBaseHandler, times(1)).runK8sExecutable(any(), any(), captor.capture());
@@ -369,7 +367,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     rollbackHandlerConfig.setReleaseHistory(releaseHistory);
 
     final boolean success = k8sRollingRollbackBaseHandler.rollback(rollbackHandlerConfig,
-        K8sDelegateTaskParams.builder().kubeconfigPath("kubeconfig").build(), 2, logCallback, emptySet());
+        K8sDelegateTaskParams.builder().kubeconfigPath("kubeconfig").build(), 2, logCallback, emptySet(), false);
 
     ArgumentCaptor<RolloutUndoCommand> captor = ArgumentCaptor.forClass(RolloutUndoCommand.class);
     ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
@@ -402,7 +400,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     rollbackHandlerConfig.setRelease(release);
 
     boolean rollback = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, k8sDelegateTaskParams, 0, logCallback, emptySet());
+        rollbackHandlerConfig, k8sDelegateTaskParams, 0, logCallback, emptySet(), false);
     assertThat(rollback).isTrue();
     ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
     verify(logCallback, times(1)).saveExecutionLog(logCaptor.capture());
@@ -426,7 +424,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     when(releaseHistory.getPreviousRollbackEligibleRelease(anyInt())).thenReturn(null);
 
     boolean rollback = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, k8sDelegateTaskParams, 1, logCallback, emptySet());
+        rollbackHandlerConfig, k8sDelegateTaskParams, 1, logCallback, emptySet(), false);
     assertThat(rollback).isTrue();
     ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
     verify(logCallback).saveExecutionLog(logCaptor.capture());
@@ -455,7 +453,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     when(releaseHistory.getPreviousRollbackEligibleRelease(anyInt())).thenReturn(previousEligibleRelease);
 
     boolean rollback = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, k8sDelegateTaskParams, 1, logCallback, emptySet());
+        rollbackHandlerConfig, k8sDelegateTaskParams, 1, logCallback, emptySet(), false);
     assertThat(rollback).isTrue();
     ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
     verify(logCallback, times(2)).saveExecutionLog(logCaptor.capture());
@@ -480,7 +478,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
     rollbackHandlerConfig.setReleaseHistory(releaseHistory);
 
     final boolean success = k8sRollingRollbackBaseHandler.rollback(
-        rollbackHandlerConfig, K8sDelegateTaskParams.builder().build(), 2, logCallback, emptySet());
+        rollbackHandlerConfig, K8sDelegateTaskParams.builder().build(), 2, logCallback, emptySet(), false);
     assertThat(success).isFalse();
 
     ArgumentCaptor<RolloutUndoCommand> captor = ArgumentCaptor.forClass(RolloutUndoCommand.class);

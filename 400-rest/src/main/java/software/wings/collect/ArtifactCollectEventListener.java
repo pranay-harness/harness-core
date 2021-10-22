@@ -38,6 +38,7 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.ArtifactoryCollectionTaskParameters;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
@@ -187,6 +188,13 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         SettingAttribute settingAttribute = settingsService.get(artifactoryArtifactStream.getSettingId());
         ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
 
+        final ArtifactoryCollectionTaskParameters artifactoryCollectionTaskParameters =
+            ArtifactoryCollectionTaskParameters.builder()
+                .artifactoryConfig(artifactoryConfig)
+                .encryptedDataDetails(secretManager.getEncryptionDetails(artifactoryConfig, null, null))
+                .jobName(artifactoryArtifactStream.getJobname())
+                .metadata(artifact.getMetadata())
+                .build();
         return DelegateTask.builder()
             .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -194,9 +202,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
-                      .parameters(new Object[] {artifactoryConfig,
-                          secretManager.getEncryptionDetails(artifactoryConfig, null, null),
-                          artifactoryArtifactStream.getJobname(), artifact.getMetadata()})
+                      .parameters(new Object[] {artifactoryCollectionTaskParameters})
                       .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                       .build())
             .build();

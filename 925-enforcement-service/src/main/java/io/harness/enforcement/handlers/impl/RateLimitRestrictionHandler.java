@@ -29,7 +29,8 @@ public class RateLimitRestrictionHandler implements RestrictionHandler {
   public void checkWithUsage(FeatureRestrictionName featureRestrictionName, Restriction restriction,
       String accountIdentifier, long currentCount, ModuleType moduleType, Edition edition) {
     RateLimitRestriction rateLimitRestriction = (RateLimitRestriction) restriction;
-    if (!RestrictionUtils.isAvailable(currentCount, rateLimitRestriction.getLimit())) {
+    if (!RestrictionUtils.isAvailable(
+            currentCount, rateLimitRestriction.getLimit(), rateLimitRestriction.isAllowedIfEqual())) {
       throw new LimitExceededException(
           String.format("Exceeded rate limitation. Current Limit: %s", rateLimitRestriction.getLimit()));
     }
@@ -48,7 +49,8 @@ public class RateLimitRestrictionHandler implements RestrictionHandler {
                                          .count(currentCount)
                                          .timeUnit(rateLimitRestriction.getTimeUnit())
                                          .build());
-    featureDetailsDTO.setAllowed(RestrictionUtils.isAvailable(currentCount, limit));
+    featureDetailsDTO.setAllowed(
+        RestrictionUtils.isAvailable(currentCount, limit, rateLimitRestriction.isAllowedIfEqual()));
   }
 
   @Override
@@ -58,6 +60,7 @@ public class RateLimitRestrictionHandler implements RestrictionHandler {
         .restrictionType(rateLimitRestriction.getRestrictionType())
         .limit(rateLimitRestriction.getLimit())
         .timeUnit(rateLimitRestriction.getTimeUnit())
+        .allowedIfEqual(rateLimitRestriction.isAllowedIfEqual())
         .build();
   }
 
