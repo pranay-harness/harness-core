@@ -260,7 +260,7 @@ cacheConfig:
 
 hostname: ${HOSTNAME:-localhost}
 
-basePathPrefix: ${BASE_PATH_PREFIX:-}
+basePathPrefix: ${BASE_PATH_PREFIX:-""}
 
 pipelineEventConsumersConfig:
   interrupt:
