@@ -29,7 +29,6 @@ import io.harness.account.services.AccountService;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.license.remote.CeLicenseClient;
-import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
 import io.harness.licensing.EditionAction;
 import io.harness.licensing.LicenseStatus;
@@ -305,21 +304,6 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
         .sendTrackEvent(eq(SUCCEED_EXTEND_TRIAL_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
     verifyZeroInteractions(ceLicenseClient);
     assertThat(result).isEqualTo(DEFAULT_CI_MODULE_LICENSE_DTO);
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = ZHUO)
-  @Category(UnitTests.class)
-  public void testExtendTrialFailed() {
-    CIModuleLicense expiredTrial = CIModuleLicense.builder().numberOfCommitters(10).build();
-    expiredTrial.setLicenseType(LicenseType.TRIAL);
-    expiredTrial.setEdition(Edition.ENTERPRISE);
-    expiredTrial.setExpiryTime(Instant.now().minus(30, ChronoUnit.DAYS).toEpochMilli());
-    expiredTrial.setStatus(LicenseStatus.EXPIRED);
-    when(moduleLicenseRepository.findByAccountIdentifierAndModuleType(eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
-        .thenReturn(Lists.newArrayList(expiredTrial));
-
-    licenseService.extendTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
   }
 
   @Test
