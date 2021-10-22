@@ -25,7 +25,9 @@ import org.hibernate.validator.constraints.NotEmpty;
       @JsonSubTypes.Type(value = StackdriverLogHealthSourceSpec.class, name = "StackdriverLog"),
       @JsonSubTypes.Type(value = SplunkHealthSourceSpec.class, name = "Splunk"),
       @JsonSubTypes.Type(value = PrometheusHealthSourceSpec.class, name = "Prometheus"),
-      @JsonSubTypes.Type(value = StackdriverMetricHealthSourceSpec.class, name = "Stackdriver")
+      @JsonSubTypes.Type(value = StackdriverMetricHealthSourceSpec.class, name = "Stackdriver"),
+        @JsonSubTypes.Type(value = DatadogMetricHealthSourceSpec.class, name = "DatadogMetric"),
+        @JsonSubTypes.Type(value = DatadogLogHealthSourceSpec.class, name = "DatadogLog")
 })
 public abstract class HealthSourceSpec {
   @NotEmpty @EntityIdentifier(allowScoped = true) String connectorRef;

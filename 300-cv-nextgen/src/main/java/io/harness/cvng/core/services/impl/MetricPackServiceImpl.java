@@ -54,6 +54,10 @@ public class MetricPackServiceImpl implements MetricPackService {
       Lists.newArrayList("/prometheus/metric-packs/default-performance-pack.yaml",
           "/prometheus/metric-packs/default-error-pack.yaml", "/prometheus/metric-packs/default-infra-pack.yaml");
 
+  static final List<String> DATADOG_METRICPACK_FILES =
+          Lists.newArrayList("/datadog/metric-packs/default-performance-pack.yaml",
+                  "/datadog/metric-packs/default-error-pack.yaml", "/datadog/metric-packs/default-infra-pack.yaml");
+
   private static final URL APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/performance-pack.datacollection");
   public static final String APPDYNAMICS_PERFORMANCE_PACK_DSL;
@@ -72,6 +76,10 @@ public class MetricPackServiceImpl implements MetricPackService {
       MetricPackServiceImpl.class.getResource("/prometheus/dsl/metric-collection.datacollection");
   public static final String PROMETHEUS_DSL;
 
+  private static final URL DATADOG_DSL_PATH =
+          MetricPackServiceImpl.class.getResource("/datadog/dsl/metric-collection.datacollection");
+  public static final String DATADOG_DSL;
+
   private static final URL NEW_RELIC_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/newrelic/dsl/performance-pack.datacollection");
   public static final String NEW_RELIC_DSL;
@@ -82,6 +90,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     String stackDriverDsl = null;
     String newrelicDsl = null;
     String prometheusDsl = null;
+    String datadogDsl = null;
     try {
       appDPeformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
       appDqualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
@@ -89,6 +98,7 @@ public class MetricPackServiceImpl implements MetricPackService {
       stackDriverDsl = Resources.toString(STACKDRIVER_DSL_PATH, Charsets.UTF_8);
       newrelicDsl = Resources.toString(NEW_RELIC_DSL_PATH, Charsets.UTF_8);
       prometheusDsl = Resources.toString(PROMETHEUS_DSL_PATH, Charsets.UTF_8);
+      datadogDsl = Resources.toString(DATADOG_DSL_PATH, Charsets.UTF_8);
     } catch (Exception e) {
       // TODO: this should throw an exception but we risk delegate not starting up. We can remove this log term and
       // throw and exception once things stabilize
@@ -100,6 +110,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     STACKDRIVER_DSL = stackDriverDsl;
     NEW_RELIC_DSL = newrelicDsl;
     PROMETHEUS_DSL = prometheusDsl;
+    DATADOG_DSL = datadogDsl;
   }
 
   @Inject private HPersistence hPersistence;
@@ -188,6 +199,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case PROMETHEUS:
         yamlFileNames.addAll(PROMETHEUS_METRICPACK_FILES);
+        break;
+      case DATADOG_METRICS:
+        yamlFileNames.addAll(DATADOG_METRICPACK_FILES);
         break;
       case NEW_RELIC:
         yamlFileNames.addAll(NEWRELIC_METRICPACK_FILES);
@@ -364,6 +378,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case PROMETHEUS:
         metricPack.setDataCollectionDsl(PROMETHEUS_DSL);
+        break;
+      case DATADOG_METRICS:
+        metricPack.setDataCollectionDsl(DATADOG_DSL);
         break;
       case NEW_RELIC:
         metricPack.setDataCollectionDsl(NEW_RELIC_DSL);

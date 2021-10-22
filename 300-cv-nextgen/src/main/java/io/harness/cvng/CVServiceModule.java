@@ -65,6 +65,8 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig;
+import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusUpdatableEntity;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
@@ -87,10 +89,7 @@ import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.cvng.core.services.impl.*;
-import io.harness.cvng.core.services.impl.monitoredService.ChangeSourceServiceImpl;
-import io.harness.cvng.core.services.impl.monitoredService.HealthSourceServiceImpl;
-import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServiceImpl;
-import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServiceImpl;
+import io.harness.cvng.core.services.impl.monitoredService.*;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventMetaDataTransformer;
 import io.harness.cvng.core.transformer.changeEvent.HarnessCDChangeEventTransformer;
@@ -265,10 +264,15 @@ public class CVServiceModule extends AbstractModule {
     bind(CVConfigToHealthSourceTransformer.class)
         .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
         .to(PrometheusHealthSourceSpecTransformer.class);
-
     bind(CVConfigToHealthSourceTransformer.class)
         .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
         .to(StackdriverMetricHealthSourceSpecTransformer.class);
+    bind(CVConfigToHealthSourceTransformer.class)
+            .annotatedWith(Names.named(DataSourceType.DATADOG_METRICS.name()))
+            .to(DatadogMetricHealthSourceSpecTransformer.class);
+    bind(CVConfigToHealthSourceTransformer.class)
+            .annotatedWith(Names.named(DataSourceType.DATADOG_LOG.name()))
+            .to(DatadogLogHealthSourceSpecTransformer.class);
 
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
@@ -291,6 +295,12 @@ public class CVServiceModule extends AbstractModule {
     bind(DataCollectionInfoMapper.class)
         .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
         .to(PrometheusDataCollectionInfoMapper.class);
+    bind(DataCollectionInfoMapper.class)
+            .annotatedWith(Names.named(DataSourceType.DATADOG_METRICS.name()))
+            .to(DatadogMetricDataCollectionInfoMapper.class);
+    bind(DataCollectionInfoMapper.class)
+            .annotatedWith(Names.named(DataSourceType.DATADOG_LOG.name()))
+            .to(DatadogLogDataCollectionInfoMapper.class);
 
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
@@ -362,6 +372,8 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
         .to(StackdriverLogCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_METRICS).to(DatadogMetricCVConfigUpdatableEntity.class);
+
     // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
     // if something goes wrong in feature flags stream
     // We are dependent on source of truth (Manager) for this.
