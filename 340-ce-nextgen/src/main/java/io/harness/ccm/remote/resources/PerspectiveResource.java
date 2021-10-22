@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -43,7 +44,6 @@ import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Api("perspective")
 @Path("perspective")
@@ -74,6 +74,51 @@ public class PerspectiveResource {
     this.bigQueryHelper = bigQueryHelper;
   }
 
+  @GET
+  @Path("lastMonthCost")
+  @Timed
+  @LogAccountIdentifier
+  @ExceptionMetered
+  @ApiOperation(value = "Get last month cost for perspective", nickname = "getLastMonthCost")
+  @Operation(operationId = "getLastMonthCost", description = "Get last month cost for a Perspective",
+      summary = "Get the last month cost for a Perspective",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns a number having the cost of last month", content = {
+          @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
+        })
+      })
+  public ResponseDTO<Double>
+  getLastMonthCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+      @NotNull @Valid @QueryParam("perspectiveId") @Parameter(required = true,
+          description = "The Perspective identifier for which we want the last month cost") String perspectiveId) {
+    return ResponseDTO.newResponse(ceViewService.getLastMonthCostForPerspective(accountId, perspectiveId));
+  }
+
+  @GET
+  @Path("forecastCost")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Get forecast cost for perspective", nickname = "getForecastCost")
+  @Operation(operationId = "getForecastCost",
+      description = "TODO(Current Month or next 30 days ?) Get the forecasted cost of a Perspective for current month",
+      summary = "TODO(Current Month or next 30 days ?) Get the forecasted cost of a Perspective for current month",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            description = "Returns a number having the forecast cost of a Perspective for next month", content = {
+              @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
+            })
+      })
+  public ResponseDTO<Double>
+  getForecastCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+      @Valid @NotNull @Parameter(
+          required = true, description = "The Perspective identifier for which we want the forecast cost")
+      @QueryParam("perspectiveId") String perspectiveId) {
+    return ResponseDTO.newResponse(ceViewService.getForecastCostForPerspective(accountId, perspectiveId));
+  }
+
   @POST
   @Timed
   @ExceptionMetered
@@ -81,24 +126,24 @@ public class PerspectiveResource {
   @ApiOperation(value = "Create perspective", nickname = "createPerspective")
   //  @FeatureRestrictionCheck(FeatureRestrictionName.PERSPECTIVES)
   @LogAccountIdentifier
-  @Operation(operationId = "createPerspective", description = "create a Perspective",
+  @Operation(operationId = "createPerspective", description = "Create a Perspective",
       summary =
-          "create a Perspective, accepts a url param 'clone' which decides whether the perspective being created should be a clone of existing perspective, and a Request Body with the PerspectiveDefinition",
+          "Create a Perspective, accepts a url param 'clone' which decides whether the Perspective being created should be a clone of existing Perspective, and a Request Body with the PerspectiveDefinition",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
-            description = "returns a created CEView object with all the rules and filters", content = {
-              @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
-            })
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns a created CEView object with all the rules and filters", content = {
+          @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
+        })
       })
   public ResponseDTO<CEView>
   create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("clone") @Parameter(required = true,
           description =
-              "whether the Perspective being created should be a clone of existing Perspective, if true we will ignore the uuid field in the request body and create a completely new Perspective")
+              "Whether the Perspective being created should be a clone of existing Perspective, if true we will ignore the uuid field in the request body and create a completely new Perspective")
       boolean clone,
-      @Parameter(required = true,
-          description = "request body containing CEView object to create") @Valid @RequestBody CEView ceView) {
+      @RequestBody(required = true,
+          description = "Request body containing Perspective's CEView object to create") @Valid CEView ceView) {
     ceView.setAccountId(accountId);
     if (clone) {
       // reset these fields which gets set downstream appropriately
@@ -121,13 +166,13 @@ public class PerspectiveResource {
   @ApiOperation(value = "Get perspective", nickname = "getPerspective")
   @LogAccountIdentifier
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(operationId = "getPerspective", description = "get a Perspective by identifier",
-      summary = "get complete CEView object by Perspective identifier passed as a url param",
+  @Operation(operationId = "getPerspective", description = "Get a Perspective by identifier",
+      summary = "Get complete CEView object by Perspective identifier passed as a url param",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
             description =
-                "returns a CEView object with all the rules and filters, returns null if no Perspective exists for that particular identifier",
+                "Returns a CEView object with all the rules and filters, returns null if no Perspective exists for that particular identifier",
             content = {
               @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
             })
@@ -135,7 +180,7 @@ public class PerspectiveResource {
   public ResponseDTO<CEView>
   get(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("perspectiveId") @Parameter(required = true,
-          description = "the identifier of the Perspective to fetch") @NotBlank @Valid String perspectiveId) {
+          description = "The identifier of the Perspective to fetch") @NotBlank @Valid String perspectiveId) {
     return ResponseDTO.newResponse(ceViewService.get(perspectiveId));
   }
 
@@ -145,20 +190,20 @@ public class PerspectiveResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update perspective", nickname = "updatePerspective")
   @LogAccountIdentifier
-  @Operation(operationId = "updatePerspective", description = "update an existing Perspective",
+  @Operation(operationId = "updatePerspective", description = "Update an existing Perspective",
       summary =
-          "update an existing Perspective, it accepts a CEView and upserts it using the uuid mentioned in the definition",
+          "Update an existing Perspective, it accepts a CEView and upserts it using the uuid mentioned in the definition",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "default", description = "upserted CEView object with all the rules and filters", content = {
-              @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
-            })
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Upserted CEView object with all the rules and filters", content = {
+          @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
+        })
       })
   public ResponseDTO<CEView>
   update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
-      @Parameter(required = true,
-          description = "request body containing CEView object to upsert") @Valid @RequestBody CEView ceView) {
+      @Valid @RequestBody(required = true,
+          description = "Request body containing Perspective's CEView object to update") CEView ceView) {
     ceView.setAccountId(accountId);
     log.info(ceView.toString());
 
@@ -170,20 +215,20 @@ public class PerspectiveResource {
   @ExceptionMetered
   @ApiOperation(value = "Delete perspective", nickname = "deletePerspective")
   @LogAccountIdentifier
-  @Operation(operationId = "deletePerspective", description = "delete a Perspective by identifier",
+  @Operation(operationId = "deletePerspective", description = "Delete a Perspective by identifier",
       summary =
-          "deletes a perspective by identifier, it accepts a mandatory CEView's identifier as url param and returns a test response on successful deletion",
+          "Deletes a perspective by identifier, it accepts a mandatory CEView's identifier as url param and returns a test response on successful deletion",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
-            description = "a string text message whether the delete was successful or not", content = {
-              @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
-            })
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "A string text message whether the delete was successful or not", content = {
+          @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
+        })
       })
   public ResponseDTO<String>
   delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("perspectiveId") @Parameter(required = true,
-          description = "the identifier of the CEView object to delete") @NotNull @Valid String perspectiveId) {
+          description = "The identifier of the CEView object to delete") @NotNull @Valid String perspectiveId) {
     ceViewService.delete(perspectiveId, accountId);
 
     ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
