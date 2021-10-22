@@ -26,10 +26,10 @@ RUN mkdir -p client-tools/harness-pywinrm/
 RUN curl -s -L -o client-tools/harness-pywinrm/harness-pywinrm https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/v0.4-dev/bin/darwin/amd64/harness-pywinrm
 
 RUN mkdir -p client-tools/helm/
-RUN curl -s -L -o client-tools/helm/ https://app.harness.io/storage/harness-download/harness-helm/release/v2.13.1/bin/darwin/amd64/helm
+RUN curl -s -L -o client-tools/helm/helm https://app.harness.io/storage/harness-download/harness-helm/release/v2.13.1/bin/darwin/amd64/helm
 
 RUN mkdir -p client-tools/chartmuseum/
-RUN curl -s -L -o client-tools/chartmuseum-dir/chartmuseum https://app.harness.io/storage/harness-download/harness-chartmuseum/release/v0.13.0/bin/darwin/amd64/chartmuseum
+RUN curl -s -L -o client-tools/chartmuseum/chartmuseum https://app.harness.io/storage/harness-download/harness-chartmuseum/release/v0.13.0/bin/darwin/amd64/chartmuseum
 
 RUN mkdir -p client-tools/tf-config/
 RUN curl -s -L -o client-tools/tf-config/terraform-config-inspect https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.1/darwin/amd64/terraform-config-inspect
