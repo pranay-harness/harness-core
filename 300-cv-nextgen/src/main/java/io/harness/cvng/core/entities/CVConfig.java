@@ -25,6 +25,7 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -131,6 +132,7 @@ public abstract class CVConfig
   public abstract TimeRange getFirstTimeDataCollectionTimeRange();
 
   public Instant getFirstTimeDataCollectionStartTime() {
+    Preconditions.checkState(getCreatedAt() != 0, "CreatedAt needs to be set to get the baseline");
     Instant startTime = Instant.ofEpochMilli(getCreatedAt());
     if (isDemo()) {
       startTime = startTime.minus(2, ChronoUnit.HOURS);

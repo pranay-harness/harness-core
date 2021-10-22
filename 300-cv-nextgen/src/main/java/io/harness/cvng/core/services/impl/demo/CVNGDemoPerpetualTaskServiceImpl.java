@@ -6,12 +6,12 @@ import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult.Data
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.Clock;
@@ -22,6 +22,7 @@ public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskSe
   @Inject Clock clock;
   @Inject DataCollectionTaskService dataCollectionTaskService;
   @Inject TimeSeriesRecordService timeSeriesRecordService;
+  @Inject LogRecordService logRecordService;
 
   @Override
   public String createCVNGDemoPerpetualTask(String accountId, String dataCollectionWorkerId) {
@@ -60,7 +61,9 @@ public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskSe
           dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getDataCollectionWorkerId(),
           dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
     } else {
-      Preconditions.checkState(0 == 1, "Demo data is not supported for log analysis yet");
+      logRecordService.createDemoAnalysisData(dataCollectionTask.getAccountId(),
+          dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getDataCollectionWorkerId(),
+          dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
     }
   }
 }
