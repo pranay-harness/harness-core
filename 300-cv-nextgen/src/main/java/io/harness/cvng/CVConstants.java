@@ -1,7 +1,11 @@
 package io.harness.cvng;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.time.Duration;
 
+@OwnedBy(HarnessTeam.CV)
 public interface CVConstants {
   String SERVICE_BASE_URL = "/cv/api";
   Duration VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION = Duration.ofDays(30);
