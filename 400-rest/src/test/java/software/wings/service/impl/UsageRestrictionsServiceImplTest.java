@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static io.harness.rule.OwnerRule.VOJIN;
 
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
@@ -122,7 +123,6 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private AppService appService;
   @Mock private AuthHandler authHandler;
-  private Application application;
   @Mock private UserGroupService userGroupService;
   @Mock private UserService userService;
   @Mock private EnvironmentService envService;
@@ -130,6 +130,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private SecretManager secretManager;
   @Mock private Query<SettingAttribute> query;
+  private final Application application = anApplication().build();
 
   private static Set<Action> readAction = newHashSet(Action.READ);
   private static Set<Action> updateAndReadAction = newHashSet(Action.UPDATE, Action.READ);
@@ -168,8 +169,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
             (Answer<SettingAttribute>) invocationOnMock -> (SettingAttribute) invocationOnMock.getArguments()[1]);
     when(appService.get(anyString())).thenReturn(application);
     application.setAccountId("ACCOUNT_ID");
-    when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+    when(appService.get(TARGET_APP_ID)).thenReturn(anApplication().accountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().accountId(ACCOUNT_ID).build());
   }
 
   private List<UserGroup> setUserGroupMocks(AppPermission appPermission, List<String> appIds) {

@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.alert.AlertType.DEPLOYMENT_FREEZE_EVENT;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -29,7 +30,6 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -105,7 +105,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
   @Mock private DeploymentFreezeUtils deploymentFreezeUtils;
-  private final Workflow workflow = Workflow.WorkflowBuilder.aWorkflow().build();
+  private final Workflow workflow = aWorkflow().build();
 
   private static final WorkflowElement workflowElement =
       WorkflowElement.builder()
