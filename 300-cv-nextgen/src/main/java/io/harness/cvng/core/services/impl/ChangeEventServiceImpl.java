@@ -31,6 +31,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery.QueryChecks;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
@@ -160,7 +161,8 @@ public class ChangeEventServiceImpl implements ChangeEventService {
     return changeTimelineBuilder.build();
   }
 
-  private Iterator<TimelineObject> getTimelineObject(ProjectParams projectParams, List<String> serviceIdentifiers,
+  @VisibleForTesting
+  Iterator<TimelineObject> getTimelineObject(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifier, Instant startTime, Instant endTime, Integer pointCount) {
     Duration timeRangeDuration = Duration.between(startTime, endTime).dividedBy(pointCount);
     return hPersistence.getDatastore(Activity.class)
@@ -253,12 +255,14 @@ public class ChangeEventServiceImpl implements ChangeEventService {
     return query;
   }
 
-  private static class TimelineObject {
+  @VisibleForTesting
+  static class TimelineObject {
     @Id TimelineKey id;
     Integer count;
   }
 
-  private static class TimelineKey {
+  @VisibleForTesting
+  static class TimelineKey {
     ActivityType type;
     Integer index;
   }
