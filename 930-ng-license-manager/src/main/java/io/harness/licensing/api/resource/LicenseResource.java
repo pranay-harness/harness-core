@@ -235,8 +235,15 @@ public class LicenseResource {
   @GET
   @Path("actions")
   @ApiOperation(value = "Get Allowed Actions Under Each Edition", nickname = "getEditionActions")
+  @Operation(operationId = "getEditionActions", summary = "Get Allowed Actions Under Each Edition",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns all actions under each edition")
+      })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<Map<Edition, Set<EditionActionDTO>>> getEditionActions(
+  public ResponseDTO<Map<Edition, Set<EditionActionDTO>>>
+  getEditionActions(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
     return ResponseDTO.newResponse(licenseService.getEditionActions(accountIdentifier, moduleType));
