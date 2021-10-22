@@ -63,7 +63,6 @@ public class WhitelistServiceTest extends WingsBaseTest {
 
   @Mock private AccountService accountService;
   @Mock private FeatureFlagService featureFlagService;
-  @Mock private Account account;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private MainConfiguration mainConfig;
 
@@ -87,7 +86,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
-    when(accountService.get(anyString())).thenReturn(account);
+    when(accountService.get(anyString())).thenReturn(new Account());
     when(mainConfig.getGlobalWhitelistConfig()).thenReturn(getHarnessDefaults());
     when(ipWhitelistingFeature.isAvailableForAccount(accountId)).thenReturn(true);
 

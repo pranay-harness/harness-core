@@ -105,20 +105,19 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void getAuthenticationMechanism() {
-    User mockUser = mock(User.class);
-    Account account1 = mock(Account.class);
-    Account account2 = mock(Account.class);
+    User mockUser = new User();
+    Account account1 = new Account();
+    Account account2 = new Account();
 
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
+    mockUser.setAccounts(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser("testUser", WingsException.USER)).thenReturn(mockUser);
     assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(USER_PASSWORD);
 
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(account1.getAuthenticationMechanism()).thenReturn(USER_PASSWORD);
+    mockUser.setAccounts(Arrays.asList(account1));
+    account1.setAuthenticationMechanism(USER_PASSWORD);
     assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(USER_PASSWORD);
 
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(account1.getAuthenticationMechanism()).thenReturn(io.harness.ng.core.account.AuthenticationMechanism.SAML);
+    account1.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
         .isEqualTo(io.harness.ng.core.account.AuthenticationMechanism.SAML);
   }
@@ -180,14 +179,13 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void getLoginTypeResponse() {
-    User mockUser = mock(User.class);
-    Account account1 = mock(Account.class);
-    Account account2 = mock(Account.class);
+    User mockUser = new User();
+    Account account1 = new Account();
+    Account account2 = new Account();
 
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    when(mockUser.isEmailVerified()).thenReturn(true);
+    mockUser.setAccounts(Arrays.asList(account1, account2));
+    mockUser.setEmailVerified(true);
 
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
     when(USER_SERVICE.getAccountByIdIfExistsElseGetDefaultAccount(any(User.class), Optional.of(anyString())))
         .thenReturn(account1);
@@ -195,7 +193,6 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(loginTypeResponse.getSSORequest()).isNull();
 
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser("testUser", WingsException.USER)).thenReturn(mockUser);
     assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(USER_PASSWORD);
 
@@ -203,8 +200,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(loginTypeResponse.getSSORequest()).isNull();
 
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(account1.getAuthenticationMechanism()).thenReturn(io.harness.ng.core.account.AuthenticationMechanism.SAML);
+    mockUser.setAccounts(Arrays.asList(account1));
+    account1.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     SSORequest SSORequest = new SSORequest();
     SSORequest.setIdpRedirectUrl("TestURL");
     when(SAML_CLIENT_SERVICE.generateSamlRequestFromAccount(account1, false)).thenReturn(SSORequest);
@@ -219,12 +216,12 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testGetLoginType_emailUnverified_shouldFail() throws MaxLoginAttemptExceededException {
-    User mockUser = mock(User.class);
-    Account account1 = mock(Account.class);
+    User mockUser = new User();
+    Account account1 = new Account();
 
     doNothing().when(failedLoginAttemptCountChecker).check(Mockito.any(User.class));
 
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
+    mockUser.setAccounts(Arrays.asList(account1));
     when(USER_SERVICE.getAccountByIdIfExistsElseGetDefaultAccount(any(User.class), Optional.of(anyString())))
         .thenReturn(account1);
     when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
@@ -240,10 +237,10 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = LAZAR)
   @Category(UnitTests.class)
   public void testGetLoginType_emailUnverified() throws MaxLoginAttemptExceededException {
-    User mockUser = mock(User.class);
+    User mockUser = new User();
 
     doNothing().when(failedLoginAttemptCountChecker).check(Mockito.any(User.class));
-    when(mockUser.getAccounts()).thenReturn(Collections.emptyList());
+    mockUser.setAccounts(Collections.emptyList());
     when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
 
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
@@ -255,20 +252,20 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void authenticate() {
-    User mockUser = spy(new User());
+    User mockUser = new User();
     AuthenticationResponse authenticationResponse = spy(new AuthenticationResponse(mockUser));
     mockUser.setUuid("TestUUID");
     PortalConfig portalConfig = mock(PortalConfig.class);
     when(portalConfig.getAuthTokenExpiryInMillis()).thenReturn(System.currentTimeMillis());
     when(MAIN_CONFIGURATION.getPortal()).thenReturn(portalConfig);
-    Account account1 = mock(Account.class);
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
+    Account account1 = new Account();
+    mockUser.setAccounts(Arrays.asList(account1));
     when(AUTHENTICATION_UTL.getUser("testUser@test.com", WingsException.USER)).thenReturn(mockUser);
 
     when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString()))
         .thenReturn(authenticationResponse);
-    User authenticatedUser = mock(User.class);
-    when(authenticatedUser.getToken()).thenReturn("TestToken");
+    User authenticatedUser = new User();
+    authenticatedUser.setToken("TestToken");
     when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
     User user = authenticationManager.defaultLogin(Base64.encodeBase64String("testUser@test.com:password".getBytes()));
     assertThat(user.getToken()).isEqualTo("TestToken");
@@ -280,20 +277,20 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testCredentialDecoding() {
-    User mockUser = spy(new User());
+    User mockUser = new User();
     AuthenticationResponse authenticationResponse = spy(new AuthenticationResponse(mockUser));
     mockUser.setUuid(UUID);
     PortalConfig portalConfig = mock(PortalConfig.class);
     when(portalConfig.getAuthTokenExpiryInMillis()).thenReturn(System.currentTimeMillis());
     when(MAIN_CONFIGURATION.getPortal()).thenReturn(portalConfig);
-    Account account1 = mock(Account.class);
-    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
+    Account account1 = new Account();
+    mockUser.setAccounts(Arrays.asList(account1));
     when(AUTHENTICATION_UTL.getUser(USER_NAME, WingsException.USER)).thenReturn(mockUser);
 
     when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString()))
         .thenReturn(authenticationResponse);
-    User authenticatedUser = mock(User.class);
-    when(authenticatedUser.getToken()).thenReturn(TEST_TOKEN);
+    User authenticatedUser = new User();
+    authenticatedUser.setToken(TEST_TOKEN);
     when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
 
     // trying with testUser@test.com:prefix:suffix:abc

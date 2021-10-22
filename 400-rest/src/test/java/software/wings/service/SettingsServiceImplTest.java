@@ -191,7 +191,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private AppService appService;
   @Mock private AuthHandler authHandler;
-  @Mock private Application application;
+  private Application application = new Application();
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private ArtifactStreamService artifactStreamService;
@@ -236,7 +236,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       }
     });
     when(appService.get(anyString())).thenReturn(application);
-    when(application.getAccountId()).thenReturn("ACCOUNT_ID");
+    application.setAccountId("ACCOUNT_ID");
     when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
     when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
   }

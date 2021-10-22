@@ -1454,8 +1454,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldRegisterHeartbeatWithPreviousDisconnection() throws IllegalAccessException {
     featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
-    DelegateConnection previousDelegateConnection = mock(DelegateConnection.class);
-    when(previousDelegateConnection.isDisconnected()).thenReturn(true);
+    DelegateConnection previousDelegateConnection = DelegateConnection.builder().disconnected(true).build();
     DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
     when(mockConnectionDao.upsertCurrentConnection(any(), any(), any(), any(), any()))
         .thenReturn(previousDelegateConnection);

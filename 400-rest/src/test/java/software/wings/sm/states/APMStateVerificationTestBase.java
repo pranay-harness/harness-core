@@ -65,6 +65,10 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
   protected String workflowExecutionId;
   protected String serviceId;
   protected User user;
+  protected Application application;
+  protected Artifact artifact;
+  protected Environment environment;
+  protected StateExecutionInstance stateExecutionInstance;
 
   @Mock protected ExecutionContextImpl executionContext;
   @Mock protected AuthService mockAuthService;
@@ -87,10 +91,6 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
   @Inject protected WorkflowVerificationResultService workflowVerificationResultService;
 
   @Mock protected PhaseElement phaseElement;
-  @Mock protected Environment environment;
-  @Mock protected Application application;
-  @Mock protected Artifact artifact;
-  @Mock protected StateExecutionInstance stateExecutionInstance;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Inject protected VersionInfoManager versionInfoManager;
   @Mock protected CVActivityLogService cvActivityLogService;
@@ -104,6 +104,10 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     workflowExecutionId = UUID.randomUUID().toString();
     serviceId = UUID.randomUUID().toString();
     user = new User();
+    application = new Application();
+    artifact = new Artifact();
+    environment = new Environment();
+    stateExecutionInstance = new StateExecutionInstance();
 
     wingsPersistence.save(Application.Builder.anApplication().uuid(appId).accountId(accountId).build());
     wingsPersistence.save(WorkflowExecution.builder()
@@ -118,6 +122,10 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
   }
 
   protected void setupCommonMocks() throws IllegalAccessException {
+    application.setName("dummuy app");
+    artifact.setDisplayName("dummy artifact");
+    environment.setName("dummy env");
+    stateExecutionInstance.setStartTs(1519200000000L);
     when(executionContext.getAppId()).thenReturn(appId);
     when(executionContext.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
     when(executionContext.getStateExecutionInstanceId()).thenReturn(stateExecutionId);
@@ -127,13 +135,9 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     when(phaseElement.getServiceElement()).thenReturn(ServiceElement.builder().name("dummy").uuid("1").build());
     when(executionContext.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM))
         .thenReturn(phaseElement);
-    when(environment.getName()).thenReturn("dummy env");
     when(executionContext.getEnv()).thenReturn(environment);
-    when(application.getName()).thenReturn("dummuy app");
     when(executionContext.getApp()).thenReturn(application);
-    when(artifact.getDisplayName()).thenReturn("dummy artifact");
     when(executionContext.getArtifactForService(anyString())).thenReturn(artifact);
-    when(stateExecutionInstance.getStartTs()).thenReturn(1519200000000L);
     when(executionContext.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
 
     Broadcaster broadcaster = mock(Broadcaster.class);

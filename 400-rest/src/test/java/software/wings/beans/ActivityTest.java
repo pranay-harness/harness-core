@@ -33,8 +33,8 @@ import org.junit.experimental.categories.Category;
 
 public class ActivityTest extends CategoryTest {
   private static final ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
-  private static final Application application = mock(Application.class);
-  private static final Environment environment = mock(Environment.class);
+  private static final Application application = new Application();
+  private static final Environment environment = new Environment();
   private static final WorkflowStandardParams workflowStandardParams = mock(WorkflowStandardParams.class);
   private static final InstanceElement instanceElement = mock(InstanceElement.class);
   private static final EmbeddedUser embeddedUser = mock(EmbeddedUser.class);
@@ -53,17 +53,17 @@ public class ActivityTest extends CategoryTest {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(executionContext.getEnv()).thenReturn(environment);
 
-    when(application.getAppId()).thenReturn("appId");
-    when(application.getName()).thenReturn("appName");
+    application.setAppId("appId");
+    application.setName("appName");
 
     when(workflowStandardParams.getCurrentUser()).thenReturn(embeddedUser);
 
     when(embeddedUser.getName()).thenReturn("currentUser.name");
     when(embeddedUser.getEmail()).thenReturn("currentUser.email");
 
-    when(environment.getName()).thenReturn("environment.name");
-    when(environment.getUuid()).thenReturn("environment.uuid");
-    when(environment.getEnvironmentType()).thenReturn(NON_PROD);
+    environment.setName("environment.name");
+    environment.setUuid("environment.uuid");
+    environment.setEnvironmentType(NON_PROD);
 
     when(instanceElement.getUuid()).thenReturn("instanceElement.uuid");
     when(instanceElement.getHost()).thenReturn(mock(HostElement.class));

@@ -131,7 +131,6 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Inject private TestUtils eventTestHelper;
   @Mock private ArtifactService artifactService;
   @Mock private ServiceInstanceService serviceInstanceService;
-  @Mock private User user;
   @Mock private DeploymentAuthHandler deploymentAuthHandler;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
@@ -345,7 +344,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldGetApprovalAuthorization() {
-    user = eventTestHelper.createUser(null);
+    User user = eventTestHelper.createUser(null);
     UserThreadLocal.set(user);
     String workflowId = generateUuid();
     Workflow workflow = new Workflow();
@@ -359,7 +358,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldGetApprovalAuthorizationWorkflow() {
-    user = eventTestHelper.createUser(null);
+    User user = eventTestHelper.createUser(null);
     UserThreadLocal.set(user);
 
     Workflow workflow = aWorkflow()
@@ -380,7 +379,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldGetApprovalAuthorizationPipeline() {
-    user = eventTestHelper.createUser(null);
+    User user = eventTestHelper.createUser(null);
     UserThreadLocal.set(user);
 
     Pipeline pipeline = Pipeline.builder()

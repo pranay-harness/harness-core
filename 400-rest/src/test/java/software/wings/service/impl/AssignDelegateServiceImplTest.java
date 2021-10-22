@@ -1930,7 +1930,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
 
     // Test matching mustExecuteOnDelegateId
-    Delegate delegate = Mockito.mock(Delegate.class);
+    Delegate delegate = Delegate.builder().build();
     when(delegateCache.get(accountId, delegateId1, false)).thenReturn(delegate);
 
     assertThat(assignDelegateService.canAssign(batch, delegateId1,

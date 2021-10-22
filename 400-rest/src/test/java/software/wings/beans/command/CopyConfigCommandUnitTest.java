@@ -41,8 +41,6 @@ public class CopyConfigCommandUnitTest extends WingsBaseTest {
   @Mock FileBasedWinRmExecutor fileBasedWinRmExecutor;
   @Mock private DelegateConfigService delegateConfigService;
   @Mock private DelegateFileManager delegateFileManager;
-  @Mock private Service service;
-  @Mock private Application app;
 
   private Host host = Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build();
   @InjectMocks
@@ -99,13 +97,11 @@ public class CopyConfigCommandUnitTest extends WingsBaseTest {
 
   private ConfigFile getConfigFile(String relativeFilePath) {
     ConfigFile configFile = ConfigFile.builder()
-                                .entityId(service.getUuid())
                                 .entityType(EntityType.SERVICE)
                                 .envId(GLOBAL_ENV_ID)
                                 .relativeFilePath(relativeFilePath)
                                 .build();
 
-    configFile.setAccountId(app.getAccountId());
     return configFile;
   }
 }

@@ -152,9 +152,9 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
-    when(activityService.save(any())).thenReturn(mock(Activity.class));
-    when(executionContext.getApp()).thenReturn(mock(Application.class));
-    when(executionContext.getEnv()).thenReturn(mock(Environment.class));
+    when(activityService.save(any())).thenReturn(new Activity());
+    when(executionContext.getApp()).thenReturn(new Application());
+    when(executionContext.getEnv()).thenReturn(new Environment());
     when(infrastructureProvisionerService.getShellScriptProvisioner(anyString(), anyString()))
         .thenReturn(mock(ShellScriptInfrastructureProvisioner.class));
     when(executionContext.getWorkflowExecutionId()).thenReturn("workflow-execution-id");
@@ -288,9 +288,9 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
-    when(activityService.save(any())).thenReturn(mock(Activity.class));
-    when(executionContext.getApp()).thenReturn(mock(Application.class));
-    when(executionContext.getEnv()).thenReturn(mock(Environment.class));
+    when(activityService.save(any())).thenReturn(new Activity());
+    when(executionContext.getApp()).thenReturn(new Application());
+    when(executionContext.getEnv()).thenReturn(new Environment());
     when(infrastructureProvisionerService.getShellScriptProvisioner(anyString(), anyString()))
         .thenReturn(mock(ShellScriptInfrastructureProvisioner.class));
     when(executionContext.renderExpression(anyString())).thenReturn(runTimeValueAbc);

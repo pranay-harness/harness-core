@@ -69,6 +69,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.PipelineSummary;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.ApprovalResumeState.ApprovalResumeStateKeys;
 import software.wings.sm.states.EnvLoopResumeState.EnvLoopResumeStateKeys;
@@ -152,15 +153,10 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     String instanceId1 = generateUuid();
     String instanceId2 = generateUuid();
     String instanceId3 = generateUuid();
-    StateExecutionInstance instance1 = mock(StateExecutionInstance.class);
-    when(instance1.fetchStateExecutionData()).thenReturn(ApprovalStateExecutionData.builder().build());
-    when(instance1.getUuid()).thenReturn(instanceId1);
-    StateExecutionInstance instance2 = mock(StateExecutionInstance.class);
-    when(instance2.fetchStateExecutionData()).thenReturn(anEnvStateExecutionData().build());
-    when(instance2.getUuid()).thenReturn(instanceId2);
-    StateExecutionInstance instance3 = mock(StateExecutionInstance.class);
-    when(instance3.fetchStateExecutionData()).thenReturn(anEnvStateExecutionData().build());
-    when(instance3.getUuid()).thenReturn(instanceId3);
+    StateExecutionInstance instance1 =
+        prepareStateExecutionInstance(instanceId1, ApprovalStateExecutionData.builder().build());
+    StateExecutionInstance instance2 = prepareStateExecutionInstance(instanceId2, anEnvStateExecutionData().build());
+    StateExecutionInstance instance3 = prepareStateExecutionInstance(instanceId3, anEnvStateExecutionData().build());
 
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         ImmutableMap.<String, StateExecutionInstance>builder()
@@ -246,12 +242,9 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
 
     String instanceId1 = generateUuid();
     String instanceId2 = generateUuid();
-    StateExecutionInstance instance1 = mock(StateExecutionInstance.class);
-    when(instance1.fetchStateExecutionData()).thenReturn(ApprovalStateExecutionData.builder().build());
-    when(instance1.getUuid()).thenReturn(instanceId1);
-    StateExecutionInstance instance2 = mock(StateExecutionInstance.class);
-    when(instance2.fetchStateExecutionData()).thenReturn(anEnvStateExecutionData().build());
-    when(instance2.getUuid()).thenReturn(instanceId2);
+    StateExecutionInstance instance1 =
+        prepareStateExecutionInstance(instanceId1, ApprovalStateExecutionData.builder().build());
+    StateExecutionInstance instance2 = prepareStateExecutionInstance(instanceId2, anEnvStateExecutionData().build());
 
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         ImmutableMap.<String, StateExecutionInstance>builder().put("pse1", instance1).put("pse2", instance2).build();
@@ -273,9 +266,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     Pipeline pipeline = Pipeline.builder().pipelineStages(Collections.emptyList()).build();
 
     String instanceId1 = generateUuid();
-    StateExecutionInstance instance1 = mock(StateExecutionInstance.class);
-    when(instance1.fetchStateExecutionData()).thenReturn(anEnvStateExecutionData().build());
-    when(instance1.getUuid()).thenReturn(instanceId1);
+    StateExecutionInstance instance1 = prepareStateExecutionInstance(instanceId1, anEnvStateExecutionData().build());
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         ImmutableMap.<String, StateExecutionInstance>builder().put("pse1", instance1).build();
 
@@ -340,23 +331,14 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     String wfExecutionId3 = generateUuid();
     String wfExecutionId4 = generateUuid();
 
-    StateExecutionInstance instance1 = mock(StateExecutionInstance.class);
-    when(instance1.fetchStateExecutionData()).thenReturn(ApprovalStateExecutionData.builder().build());
-    when(instance1.getUuid()).thenReturn(instanceId1);
-    StateExecutionInstance instance2 = mock(StateExecutionInstance.class);
-    when(instance2.fetchStateExecutionData()).thenReturn(forkStateExecutionData);
-    when(instance2.getUuid()).thenReturn(instanceId2);
-    StateExecutionInstance instance3 = mock(StateExecutionInstance.class);
-    when(instance3.fetchStateExecutionData())
-        .thenReturn(anEnvStateExecutionData().withWorkflowExecutionId(wfExecutionId2).build());
-    when(instance3.getUuid()).thenReturn(instanceId3);
-    StateExecutionInstance instance4 = mock(StateExecutionInstance.class);
-    when(instance4.fetchStateExecutionData())
-        .thenReturn(anEnvStateExecutionData().withWorkflowExecutionId(wfExecutionId3).build());
-    when(instance4.getUuid()).thenReturn(instanceId4);
-    StateExecutionInstance instance5 = mock(StateExecutionInstance.class);
-    when(instance5.fetchStateExecutionData()).thenReturn(anEnvStateExecutionData().build());
-    when(instance5.getUuid()).thenReturn(instanceId5);
+    StateExecutionInstance instance1 =
+        prepareStateExecutionInstance(instanceId1, ApprovalStateExecutionData.builder().build());
+    StateExecutionInstance instance2 = prepareStateExecutionInstance(instanceId2, forkStateExecutionData);
+    StateExecutionInstance instance3 = prepareStateExecutionInstance(
+        instanceId3, anEnvStateExecutionData().withWorkflowExecutionId(wfExecutionId2).build());
+    StateExecutionInstance instance4 = prepareStateExecutionInstance(
+        instanceId4, anEnvStateExecutionData().withWorkflowExecutionId(wfExecutionId3).build());
+    StateExecutionInstance instance5 = prepareStateExecutionInstance(instanceId5, anEnvStateExecutionData().build());
 
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         ImmutableMap.<String, StateExecutionInstance>builder()
@@ -438,9 +420,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
             .build();
 
     String instanceId1 = generateUuid();
-    StateExecutionInstance instance1 = mock(StateExecutionInstance.class);
-    when(instance1.fetchStateExecutionData()).thenReturn(anEnvStateExecutionData().build());
-    when(instance1.getUuid()).thenReturn(instanceId1);
+    StateExecutionInstance instance1 = prepareStateExecutionInstance(instanceId1, anEnvStateExecutionData().build());
 
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         ImmutableMap.<String, StateExecutionInstance>builder().put("pse1", instance1).build();
@@ -1123,6 +1103,14 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     assertThat(searchFilter2.getFieldName()).isEqualTo(WorkflowExecutionKeys.latestPipelineResume);
     assertThat(searchFilter2.getOp()).isEqualTo(Operator.EQ);
     assertThat(searchFilter2.getFieldValues()).containsExactly(Boolean.TRUE);
+  }
+
+  private StateExecutionInstance prepareStateExecutionInstance(String uuid, StateExecutionData data) {
+    return StateExecutionInstance.Builder.aStateExecutionInstance()
+        .displayName(uuid)
+        .addStateExecutionData(data)
+        .uuid(uuid)
+        .build();
   }
 
   private WorkflowExecution prepareFailedPipelineExecution(WorkflowType workflowType) {

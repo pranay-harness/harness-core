@@ -49,10 +49,7 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Environment;
-import software.wings.beans.GitConfig;
-import software.wings.beans.NameValuePair;
-import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.*;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.dl.WingsPersistence;
@@ -95,7 +92,7 @@ import org.mongodb.morphia.query.Sort;
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock TerraformConfig configParameter;
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS) ExecutionContextImpl executionContext;
+  @Mock private ExecutionContextImpl executionContext;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) MainConfiguration configuration;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private SweepingOutputService sweepingOutputService;
@@ -145,7 +142,9 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(configParameter.getAccountId()).thenReturn(ACCOUNT_ID);
     when(configParameter.getAppId()).thenReturn(APP_ID);
-    when(executionContext.getEnv().getUuid()).thenReturn(ENV_ID);
+    Environment environment = new Environment();
+    environment.setUuid(ENV_ID);
+    when(executionContext.getEnv()).thenReturn(environment);
     when(configParameter.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
 
     final String expectedUrl = PORTAL_URL + "/#/account/" + ACCOUNT_ID + "/app/" + APP_ID + "/env/" + ENV_ID
@@ -199,6 +198,9 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteInternal() {
     setUp("sourceRepoBranch", true, WORKFLOW_EXECUTION_ID);
+    Application application = new Application();
+    application.setAccountId("acc");
+    when(executionContext.getApp()).thenReturn(application);
     ExecutionResponse executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
     verifyResponse(executionResponse, "sourceRepoBranch", true, 1, TerraformCommand.DESTROY);
     verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());

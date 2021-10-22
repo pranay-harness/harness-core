@@ -92,13 +92,13 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   public void shouldTwoFactorAuthenticationUsingTOTP() {
     try {
       TwoFactorAuthHandler handler = twoFactorAuthenticationManager.getTwoFactorAuthHandler(TOTP);
-      User user = spy(new User());
-      when(user.getDefaultAccountId()).thenReturn("kmpySmUISimoRrJL6NL73w");
-      when(user.getUuid()).thenReturn("kmpySmUISimoRrJL6NL73w");
+      User user = new User();
+      user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+      user.setUuid("kmpySmUISimoRrJL6NL73w");
       when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
       String totpSecretKey = TimeBasedOneTimePasswordUtil.generateBase32Secret();
       user.setTotpSecretKey(totpSecretKey);
-      doReturn(TOTP).when(user).getTwoFactorAuthenticationMechanism();
+      user.setTwoFactorAuthenticationMechanism(TOTP);
       String encryptedCode = null;
 
       for (int t = 1; t < 60; t++) {
@@ -110,7 +110,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
           log.info("Running test with time lag: [{}],currentTime=[{}],timeWithLag=[{}]", i, new Date(currentTime),
               new Date(timeWithLag));
           String code = TimeBasedOneTimePasswordUtil.generateNumberString(totpSecretKey, timeWithLag, 30);
-          User authenticatedUser = spy(new User());
+          User authenticatedUser = new User();
           authenticatedUser.setToken("ValidToken");
 
           when(authService.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
@@ -180,10 +180,10 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void shouldCreateTwoFactorAuthenticationSettingsTotp() {
-    User user = spy(new User());
+    User user = new User();
     Account account = getAccount(AccountType.PAID, false);
     accountService.save(account, false);
-    when(user.getDefaultAccountId()).thenReturn(account.getUuid());
+    user.setDefaultAccountId(account.getUuid());
 
     TwoFactorAuthenticationSettings settings =
         twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(user, TOTP);
@@ -362,7 +362,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   }
 
   private User getUser(boolean twoFactorEnabled) {
-    User user = spy(new User());
+    User user = new User();
     user.setTwoFactorAuthenticationEnabled(twoFactorEnabled);
     user.setTwoFactorAuthenticationMechanism(TOTP);
     return user;

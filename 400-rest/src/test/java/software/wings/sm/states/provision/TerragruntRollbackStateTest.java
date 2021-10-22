@@ -46,10 +46,7 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.terragrunt.TerragruntApplyMarkerParam;
 import software.wings.api.terragrunt.TerragruntExecutionData;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Environment;
-import software.wings.beans.GitConfig;
-import software.wings.beans.NameValuePair;
-import software.wings.beans.TerragruntInfrastructureProvisioner;
+import software.wings.beans.*;
 import software.wings.beans.delegation.TerragruntProvisionParameters;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.instance.TerragruntConfig;
@@ -90,7 +87,7 @@ import org.mongodb.morphia.query.Query;
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class TerragruntRollbackStateTest extends WingsBaseTest {
   @Mock TerragruntConfig configParameter;
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS) ExecutionContextImpl executionContext;
+  @Mock private ExecutionContextImpl executionContext;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) MainConfiguration configuration;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private SweepingOutputService sweepingOutputService;
@@ -163,6 +160,9 @@ public class TerragruntRollbackStateTest extends WingsBaseTest {
   public void testExecuteInternal() {
     when(terragruntStateHelper.getGitConfigAndPopulate(any(TerragruntConfig.class), anyString()))
         .thenReturn(GitConfig.builder().branch("sourceRepoBranch").build());
+    Application application = new Application();
+    application.setAccountId("acc");
+    when(executionContext.getApp()).thenReturn(application);
     setUp("sourceRepoBranch", true, WORKFLOW_EXECUTION_ID);
     ExecutionResponse executionResponse = terragruntRollbackState.executeInternal(executionContext, ACTIVITY_ID);
     verifyResponse(executionResponse, "sourceRepoBranch", true, 1, DESTROY);

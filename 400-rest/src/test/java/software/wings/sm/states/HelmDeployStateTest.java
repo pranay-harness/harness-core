@@ -1428,7 +1428,7 @@ public class HelmDeployStateTest extends CategoryTest {
   public void testUpdateHelmExecutionSummaryNegative() {
     HelmExecutionSummary executionSummary = spy(HelmExecutionSummary.builder().build());
     WorkflowExecution workflowExecution =
-        spy(WorkflowExecution.builder().appId(APP_ID).helmExecutionSummary(executionSummary).build());
+        WorkflowExecution.builder().appId(APP_ID).helmExecutionSummary(executionSummary).build();
     doReturn(workflowExecution)
         .when(workflowExecutionService)
         .getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
@@ -1477,7 +1477,7 @@ public class HelmDeployStateTest extends CategoryTest {
   public void testUpdateHelmExecutionSummary() {
     HelmExecutionSummary executionSummary = spy(HelmExecutionSummary.builder().build());
     WorkflowExecution workflowExecution =
-        spy(WorkflowExecution.builder().appId(APP_ID).helmExecutionSummary(executionSummary).build());
+        WorkflowExecution.builder().appId(APP_ID).helmExecutionSummary(executionSummary).build();
     doReturn(workflowExecution)
         .when(workflowExecutionService)
         .getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());

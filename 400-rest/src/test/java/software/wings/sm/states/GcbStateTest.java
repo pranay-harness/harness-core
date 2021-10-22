@@ -151,10 +151,9 @@ public class GcbStateTest extends CategoryTest {
     gcbOption.setSpecSource(GcbOptions.GcbSpecSource.INLINE);
     gcbOption.setGcpConfigId(GCP_CONFIG_ID);
     state.setGcbOptions(gcbOption);
-    Application application = mock(Application.class);
+    Application application = Application.Builder.anApplication().appId("appId").build();
     doReturn(application).when(context).fetchRequiredApp();
     when(templateUtils.processTemplateVariables(context, state.getTemplateVariables())).thenReturn(EMPTY_MAP);
-    when(application.getAppId()).thenReturn("appId");
     GcpConfig gcpConfig = mock(GcpConfig.class);
     doReturn(gcpConfig).when(context).getGlobalSettingValue(any(), any());
     doReturn("workflowExecutionId").when(context).getWorkflowExecutionId();
@@ -196,10 +195,9 @@ public class GcbStateTest extends CategoryTest {
   @Owner(developers = VGLIJIN)
   @Category(UnitTests.class)
   public void shouldSaveCreatedActivityTask() {
-    Activity mockActivity = mock(Activity.class);
     String mockUuid = "mockUuid";
+    Activity mockActivity = Activity.builder().uuid(mockUuid).build();
     when(activityService.save(any(Activity.class))).thenReturn(mockActivity);
-    when(mockActivity.getUuid()).thenReturn(mockUuid);
     String activityUuid = state.createActivity(context);
     verify(activityService).save(any(Activity.class));
     assertThat(activityUuid).isEqualTo(mockUuid);

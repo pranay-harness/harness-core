@@ -195,14 +195,14 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
     try {
       doNothing().when(failedLoginAttemptCountChecker).check(Mockito.any(User.class));
 
-      User mockUser = mock(User.class);
-      when(mockUser.isEmailVerified()).thenReturn(true);
-      when(mockUser.getUserLockoutInfo()).thenReturn(new UserLockoutInfo());
-      when(mockUser.getDefaultAccountId()).thenReturn("kmpySmUISimoRrJL6NL73w");
-      when(mockUser.getUuid()).thenReturn("kmpySmUISimoRrJL6NL73w");
+      User mockUser = new User();
+      mockUser.setEmailVerified(true);
+      mockUser.setUserLockoutInfo(new UserLockoutInfo());
+      mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+      mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
       doNothing().when(loginSettingsService).updateUserLockoutInfo(any(User.class), any(Account.class), anyInt());
       doReturn(mockUser).when(authHandler).getUser(anyString());
-      when(mockUser.getPasswordHash()).thenReturn("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
+      mockUser.setPasswordHash("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
       when(domainWhitelistCheckerService.isDomainWhitelisted(mockUser)).thenReturn(true);
       authHandler.authenticate("admin@harness.io", "admintest");
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -220,14 +220,14 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
           .when(failedLoginAttemptCountChecker)
           .check(Mockito.any(User.class));
 
-      User mockUser = mock(User.class);
-      when(mockUser.getDefaultAccountId()).thenReturn("kmpySmUISimoRrJL6NL73w");
-      when(mockUser.getUuid()).thenReturn("kmpySmUISimoRrJL6NL73w");
-      when(mockUser.isEmailVerified()).thenReturn(true);
-      when(mockUser.getUserLockoutInfo()).thenReturn(new UserLockoutInfo());
+      User mockUser = new User();
+      mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+      mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
+      mockUser.setEmailVerified(true);
+      mockUser.setUserLockoutInfo(new UserLockoutInfo());
       doNothing().when(loginSettingsService).updateUserLockoutInfo(any(User.class), any(Account.class), anyInt());
       doReturn(mockUser).when(authHandler).getUser(anyString());
-      when(mockUser.getPasswordHash()).thenReturn("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
+      mockUser.setPasswordHash("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
       when(domainWhitelistCheckerService.isDomainWhitelisted(mockUser)).thenReturn(true);
       authHandler.authenticate("admin@harness.io", "admintest");
       failBecauseExceptionWasNotThrown(WingsException.class);

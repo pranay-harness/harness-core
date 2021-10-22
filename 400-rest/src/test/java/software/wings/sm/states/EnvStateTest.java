@@ -98,7 +98,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ExecutionContextImpl context;
   @Mock private WorkflowService workflowService;
-  @Mock private Workflow workflow;
+  private Workflow workflow;
   @Mock private CanaryOrchestrationWorkflow canaryOrchestrationWorkflow;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private ArtifactService artifactService;
@@ -138,7 +138,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecute() {
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    workflow.setOrchestrationWorkflow(canaryOrchestrationWorkflow);
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService)
         .triggerOrchestrationExecution(
@@ -164,7 +164,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteOnError() {
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    workflow.setOrchestrationWorkflow(canaryOrchestrationWorkflow);
     when(workflowExecutionService.triggerOrchestrationExecution(eq(APP_ID), eq(null), eq(WORKFLOW_ID),
              eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(ExecutionArgs.class), any()))
         .thenThrow(new InvalidRequestException("Workflow variable [test] is mandatory for execution"));
@@ -355,7 +355,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnRejectedResponseAndSendNotificationOnDeploymentFreeze() {
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    workflow.setOrchestrationWorkflow(canaryOrchestrationWorkflow);
     List<String> deploymentFreezeIds = Collections.singletonList(FREEZE_WINDOW_ID);
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
@@ -386,7 +386,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnRejectedResponseForMasterDeploymentFreeze() {
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    workflow.setOrchestrationWorkflow(canaryOrchestrationWorkflow);
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
         .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
