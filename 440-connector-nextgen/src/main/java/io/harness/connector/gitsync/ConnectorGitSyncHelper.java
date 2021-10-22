@@ -96,6 +96,13 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   }
 
   @Override
+  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean invalid, String erroneousYaml) {
+    return connectorService.markEntity(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalid, erroneousYaml);
+  }
+
+  @Override
   public ConnectorDTO getYamlDTO(String yaml) {
     try {
       return objectMapper.readValue(yaml, ConnectorDTO.class);
