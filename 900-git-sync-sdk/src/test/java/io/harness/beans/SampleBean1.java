@@ -35,4 +35,16 @@ public class SampleBean1 implements PersistentEntity, YamlDTO, GitSyncableEntity
   String yamlGitConfigRef;
   String filePath;
   String rootFolder;
+  Boolean isEntityInvalid;
+  String invalidYamlString;
+
+  @Override
+  public boolean isEntityInvalid() {
+    return Boolean.TRUE.equals(isEntityInvalid);
+  }
+
+  @Override
+  public void setEntityInvalid(boolean isEntityInvalid) {
+    this.isEntityInvalid = isEntityInvalid;
+  }
 }

@@ -122,6 +122,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
                 .gitDiffResultFileDTOList(gitToHarnessGetFilesStepResponse.getGitDiffResultFileDTOList())
                 .progressRecord(gitToHarnessGetFilesStepResponse.getProgressRecord())
                 .processingCommitId(gitToHarnessGetFilesStepResponse.getProcessingCommitId())
+                .commitMessage(gitToHarnessGetFilesStepResponse.getCommitMessage())
                 .build());
       }
 
@@ -184,6 +185,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .gitDiffResultFileDTOList(prFilesTobeProcessed)
         .progressRecord(gitToHarnessProgressRecord)
         .processingCommitId(filesFromDiffResponse.getProcessingCommitId())
+        .commitMessage(filesFromDiffResponse.getCommitMessage())
         .build();
   }
 
@@ -226,10 +228,12 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
             getAllFileContent(yamlChangeSetDTO, yamlGitConfigDTO, prFilesTobeProcessed, finalCommitId);
         log.info("Completed get files using the yaml git config with the identifier {} in project {}",
             yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier());
+        String commitMessage = getCommitMessage(yamlGitConfigDTO, finalCommitId);
         return GetFilesInDiffResponseDTO.builder()
             .gitFileChangeDTOList(gitFileChangeDTOList)
             .prFilesTobeProcessed(prFilesTobeProcessed)
             .processingCommitId(finalCommitId)
+            .commitMessage(commitMessage)
             .build();
       } catch (Exception ex) {
         log.error("Error doing get files using the yaml git config with the identifier {} in project {}",
@@ -250,7 +254,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     GitToHarnessProgressStatus gitToHarnessProgressStatus = gitToHarnessProcessorService.processFiles(
         request.getYamlChangeSetDTO().getAccountId(), fileProcessingRequests, request.getYamlChangeSetDTO().getBranch(),
         request.getYamlGitConfigDTO().getRepo(), request.getProcessingCommitId(), request.getProgressRecord().getUuid(),
-        request.getYamlChangeSetDTO().getChangesetId());
+        request.getYamlChangeSetDTO().getChangesetId(), request.getCommitMessage());
     return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
   }
 
@@ -329,5 +333,14 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         -> scmClient.getLatestCommit(yamlGitConfigDTO, branch).getSha(),
         yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
         yamlGitConfigDTO.getAccountIdentifier());
+  }
+
+  private String getCommitMessage(YamlGitConfigDTO yamlGitConfig, String commitId) {
+    return scmOrchestratorService
+        .processScmRequest(scmClientFacilitatorService
+            -> scmClientFacilitatorService.findCommitById(yamlGitConfig, commitId),
+            yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier(),
+            yamlGitConfig.getAccountIdentifier())
+        .getMessage();
   }
 }

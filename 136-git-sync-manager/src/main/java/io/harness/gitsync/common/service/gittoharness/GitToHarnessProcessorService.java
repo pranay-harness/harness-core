@@ -10,5 +10,6 @@ import java.util.List;
 @OwnedBy(HarnessTeam.DX)
 public interface GitToHarnessProcessorService {
   GitToHarnessProgressStatus processFiles(String accountId, List<GitToHarnessFileProcessingRequest> filesToBeProcessed,
-      String branch, String repoUrl, String commitId, String gitToHarnessProgressRecordId, String changeSetId);
+      String branch, String repoUrl, String commitId, String gitToHarnessProgressRecordId, String changeSetId,
+      String commitMessage);
 }

@@ -13,6 +13,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.FindPRResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
@@ -114,6 +115,17 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
             .repoUrl(scmGitRefTaskParams.getScmConnector().getUrl())
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .getLatestCommitResponse(latestCommitResponse.toByteArray())
+            .build();
+      }
+      case FIND_COMMIT: {
+        final FindCommitResponse commitResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.findCommit(
+                scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getRef(), SCMGrpc.newBlockingStub(c)));
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+            commitResponse.getStatus(), commitResponse.getError());
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .findCommitResponse(commitResponse.toByteArray())
             .build();
       }
       default:

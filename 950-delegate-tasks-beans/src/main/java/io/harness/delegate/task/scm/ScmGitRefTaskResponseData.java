@@ -26,4 +26,5 @@ public class ScmGitRefTaskResponseData implements DelegateResponseData {
   byte[] compareCommitsResponse;
   byte[] findPRResponse;
   byte[] getLatestCommitResponse;
+  byte[] findCommitResponse;
 }
