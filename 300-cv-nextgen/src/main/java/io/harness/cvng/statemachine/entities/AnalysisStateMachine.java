@@ -1,5 +1,7 @@
 package io.harness.cvng.statemachine.entities;
 
+import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.cvng.statemachine.beans.AnalysisState;
@@ -69,6 +71,15 @@ public final class AnalysisStateMachine
   @FdIndex private AnalysisStatus status;
 
   private long nextAttemptTime;
+
+  private Integer stateMachineIgnoreMinutes;
+
+  public Integer getStateMachineIgnoreMinutes() {
+    if (stateMachineIgnoreMinutes == null) {
+      stateMachineIgnoreMinutes = STATE_MACHINE_IGNORE_MINUTES;
+    }
+    return stateMachineIgnoreMinutes;
+  }
 
   @FdTtlIndex @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
 }

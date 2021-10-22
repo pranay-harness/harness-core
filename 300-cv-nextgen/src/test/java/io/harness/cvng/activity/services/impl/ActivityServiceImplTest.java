@@ -4,6 +4,8 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDE
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.JOB_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
+import static io.harness.exception.WingsException.SRE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -19,6 +21,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -73,6 +76,9 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.exception.PersistentLockException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -92,6 +98,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,6 +118,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Mock private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Mock private NextGenService nextGenService;
   @Mock private AlertRuleService alertRuleService;
+  @Mock private PersistentLocker mockedPersistentLocker;
 
   private String projectIdentifier;
   private String orgIdentifier;
@@ -567,6 +575,29 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     verify(healthVerificationHeatMapService, times(2))
         .getAggregatedRisk(anyString(), eq(HealthVerificationPeriod.POST_ACTIVITY));
     verify(verificationJobInstanceService, times(2)).getActivityVerificationSummary(anyList());
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpsert_whenEntityLocked() {
+    useMockedPersistentLocker();
+    when(mockedPersistentLocker.waitToAcquireLock(any(), any(), any(), any()))
+        .thenThrow(new PersistentLockException("Lock not acquired", FAILED_TO_ACQUIRE_PERSISTENT_LOCK, SRE));
+    Activity activity = builderFactory.getDeploymentActivityBuilder().build();
+    assertThatThrownBy(() -> activityService.upsert(activity)).isInstanceOf(PersistentLockException.class);
+    assertThat(activity.getUuid()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpsert_lockClose() {
+    useMockedPersistentLocker();
+    AcquiredLock acquiredLock = mock(AcquiredLock.class);
+    when(mockedPersistentLocker.waitToAcquireLock(any(), any(), any(), any())).thenReturn(acquiredLock);
+    activityService.upsert(builderFactory.getDeploymentActivityBuilder().build());
+    verify(acquiredLock).close();
   }
 
   @Test
@@ -1067,7 +1098,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     return ActivityVerificationSummary.builder()
         .total(1)
         .startTime(startTime.toEpochMilli())
-        .risk(Risk.MEDIUM)
+        .risk(Risk.OBSERVE)
         .progress(1)
         .notStarted(0)
         .durationMs(Duration.ofMinutes(15).toMillis())
@@ -1140,12 +1171,17 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     return DeploymentTimeSeriesAnalysis.builder()
         .accountId(accountId)
         .score(.7)
-        .risk(Risk.MEDIUM)
+        .risk(Risk.OBSERVE)
         .verificationTaskId(verificationTaskId)
         .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
         .hostSummaries(Arrays.asList(hostInfo1, hostInfo2, hostInfo3))
         .startTime(Instant.now())
         .endTime(Instant.now().plus(1, ChronoUnit.MINUTES))
         .build();
+  }
+
+  @SneakyThrows
+  private void useMockedPersistentLocker() {
+    FieldUtils.writeField(activityService, "persistentLocker", mockedPersistentLocker, true);
   }
 }

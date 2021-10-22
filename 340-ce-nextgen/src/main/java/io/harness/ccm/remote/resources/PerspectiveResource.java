@@ -11,6 +11,8 @@ import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -60,6 +62,7 @@ public class PerspectiveResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create perspective", nickname = "createPerspective")
+  @FeatureRestrictionCheck(FeatureRestrictionName.PERSPECTIVES)
   public RestResponse<CEView> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam("clone") boolean clone, @Valid @RequestBody CEView ceView) {
     ceView.setAccountId(accountId);

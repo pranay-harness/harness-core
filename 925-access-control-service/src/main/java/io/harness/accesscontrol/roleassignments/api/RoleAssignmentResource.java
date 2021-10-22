@@ -77,6 +77,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -114,6 +119,25 @@ import retrofit2.http.Body;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
           @ApiResponse(code = 403, response = AccessDeniedErrorDTO.class, message = "Unauthorized")
+    })
+@Tag(name = "roleAssignments", description = "This contains APIs for CRUD on role assignments")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Unauthorized",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = AccessDeniedErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = AccessDeniedErrorDTO.class))
     })
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 @Slf4j
@@ -171,8 +195,14 @@ public class RoleAssignmentResource {
 
   @GET
   @ApiOperation(value = "Get Role Assignments", nickname = "getRoleAssignmentList")
-  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> get(
-      @BeanParam PageRequest pageRequest, @BeanParam HarnessScopeParams harnessScopeParams) {
+  @Operation(operationId = "getRoleAssignmentList", summary = "List role assignments in the given scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Paginated list of role assignments in the given scope")
+      })
+  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>
+  get(@BeanParam PageRequest pageRequest, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = ScopeMapper.fromParams(harnessScopeParams).toString();
     RoleAssignmentFilterBuilder roleAssignmentFilterBuilder =
         RoleAssignmentFilter.builder().scopeFilter(scopeIdentifier);
@@ -203,8 +233,17 @@ public class RoleAssignmentResource {
   @POST
   @Path("filter")
   @ApiOperation(value = "Get Filtered Role Assignments", nickname = "getFilteredRoleAssignmentList")
-  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> get(@BeanParam PageRequest pageRequest,
-      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentFilterDTO roleAssignmentFilter) {
+  @Operation(operationId = "getFilteredRoleAssignmentList",
+      summary = "List role assignments in the scope according to the given filter",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Paginated list of role assignments in the scope according to the given filter")
+      })
+  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>
+  get(@BeanParam PageRequest pageRequest, @BeanParam HarnessScopeParams harnessScopeParams,
+      @Parameter(description = "Filter role assignments based on multiple parameters.",
+          required = true) @Body RoleAssignmentFilterDTO roleAssignmentFilter) {
     Optional<RoleAssignmentFilter> filter =
         buildRoleAssignmentFilterWithPermissionFilter(harnessScopeParams, roleAssignmentFilter);
     if (!filter.isPresent()) {
@@ -218,8 +257,18 @@ public class RoleAssignmentResource {
   @POST
   @Path("aggregate")
   @ApiOperation(value = "Get Role Assignments Aggregate", nickname = "getRoleAssignmentsAggregate")
-  public ResponseDTO<RoleAssignmentAggregateResponseDTO> getAggregated(
-      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentFilterDTO roleAssignmentFilter) {
+  @Operation(operationId = "getRoleAssignmentAggregateList",
+      summary = "List role assignments in the scope according to the given filter with added metadata",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            description =
+                "Paginated list of role assignments in the scope according to the given filter with added metadata.")
+      })
+  public ResponseDTO<RoleAssignmentAggregateResponseDTO>
+  getAggregated(@BeanParam HarnessScopeParams harnessScopeParams,
+      @Parameter(description = "Filter role assignments based on multiple parameters.",
+          required = true) @Body RoleAssignmentFilterDTO roleAssignmentFilter) {
     Scope scope = ScopeMapper.fromParams(harnessScopeParams);
     Optional<RoleAssignmentFilter> filter =
         buildRoleAssignmentFilterWithPermissionFilter(harnessScopeParams, roleAssignmentFilter);
@@ -254,9 +303,11 @@ public class RoleAssignmentResource {
   }
 
   @POST
-  @ApiOperation(value = "Create Role Assignment", nickname = "createRoleAssignment")
-  public ResponseDTO<RoleAssignmentResponseDTO> create(
-      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
+  @ApiOperation(value = "Create Role Assignment", nickname = "postRoleAssignment")
+  @Operation(operationId = "postRoleAssignment", summary = "Create role assignment in the given scope",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Created role assignment") })
+  public ResponseDTO<RoleAssignmentResponseDTO>
+  create(@BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
     Scope scope = ScopeMapper.fromParams(harnessScopeParams);
     RoleAssignment roleAssignment = fromDTO(scope, roleAssignmentDTO);
     syncDependencies(roleAssignment, scope);
@@ -272,9 +323,14 @@ public class RoleAssignmentResource {
 
   @PUT
   @Path("{identifier}")
-  @ApiOperation(value = "Update Role Assignment", nickname = "updateRoleAssignment")
-  public ResponseDTO<RoleAssignmentResponseDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
-      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
+  @ApiOperation(value = "Update Role Assignment", nickname = "putRoleAssignment")
+  @Operation(operationId = "putRoleAssignment",
+      summary =
+          "Update existing role assignment by identifier and scope. Only changing the disabled/enabled state is allowed.",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Updated role assignment") })
+  public ResponseDTO<RoleAssignmentResponseDTO>
+  update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams,
+      @Body RoleAssignmentDTO roleAssignmentDTO) {
     Scope scope = ScopeMapper.fromParams(harnessScopeParams);
     if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
       throw new InvalidRequestException("Role Assignment identifier in the request body and the url do not match.");
@@ -290,6 +346,80 @@ public class RoleAssignmentResource {
               roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getOriginalRoleAssignment())
                   .getRoleAssignment(),
               response.getScope()));
+      return ResponseDTO.newResponse(response);
+    }));
+  }
+
+  @POST
+  @Path("/multi")
+  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "postRoleAssignments")
+  @Operation(operationId = "postRoleAssignments",
+      summary =
+          "Create multiple role assignments in a scope. Returns all successfully created role assignments. Ignores failures and duplicates.",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Successfully created role assignments") })
+  public ResponseDTO<List<RoleAssignmentResponseDTO>>
+  create(@BeanParam HarnessScopeParams harnessScopeParams,
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
+    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
+  }
+
+  @POST
+  @Path("/multi/internal")
+  @InternalApi
+  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignmentsInternal", hidden = true)
+  @Operation(operationId = "createRoleAssignmentsInternal",
+      summary =
+          "Create multiple role assignments in a scope. Returns all successfully created role assignments. Ignores failures and duplicates.",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Successfully created role assignments") },
+      hidden = true)
+  public ResponseDTO<List<RoleAssignmentResponseDTO>>
+  create(@BeanParam HarnessScopeParams harnessScopeParams,
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO,
+      @QueryParam("managed") @DefaultValue("false") Boolean managed) {
+    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed));
+  }
+
+  @POST
+  @Path("/validate")
+  @ApiOperation(value = "Validate Role Assignment", nickname = "validateRoleAssignment")
+  @Operation(operationId = "validateRoleAssignment", summary = "Check whether a proposed role assignment is valid.",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Role Assignment validation result") })
+  public ResponseDTO<RoleAssignmentValidationResponseDTO>
+  validate(
+      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentValidationRequestDTO validationRequest) {
+    Scope scope = ScopeMapper.fromParams(harnessScopeParams);
+    harnessResourceGroupService.sync(validationRequest.getRoleAssignment().getResourceGroupIdentifier(), scope);
+    return ResponseDTO.newResponse(toDTO(roleAssignmentService.validate(fromDTO(scope, validationRequest))));
+  }
+
+  @DELETE
+  @Path("{identifier}")
+  @ApiOperation(value = "Delete Role Assignment", nickname = "deleteRoleAssignment")
+  @Operation(operationId = "deleteRoleAssignment", summary = "Delete an existing role assignment by identifier",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Deleted role assignment") })
+  public ResponseDTO<RoleAssignmentResponseDTO>
+  delete(@BeanParam HarnessScopeParams harnessScopeParams, @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier) {
+    String scopeIdentifier = ScopeMapper.fromParams(harnessScopeParams).toString();
+    RoleAssignment roleAssignment =
+        roleAssignmentService.get(identifier, scopeIdentifier).<InvalidRequestException>orElseThrow(() -> {
+          throw new InvalidRequestException("Invalid Role Assignment");
+        });
+    checkUpdatePermission(harnessScopeParams, roleAssignment);
+    ValidationResult validationResult = actionValidator.canDelete(roleAssignment);
+    if (!validationResult.isValid()) {
+      throw new InvalidRequestException(validationResult.getErrorMessage());
+    }
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignment deletedRoleAssignment =
+          roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
+            throw new NotFoundException("Role Assignment is already deleted");
+          });
+      RoleAssignmentResponseDTO response = roleAssignmentDTOMapper.toResponseDTO(deletedRoleAssignment);
+      outboxService.save(new RoleAssignmentDeleteEvent(
+          response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
       return ResponseDTO.newResponse(response);
     }));
   }
@@ -321,64 +451,6 @@ public class RoleAssignmentResource {
       }
     }
     return createdRoleAssignments;
-  }
-  /**
-   * idempotent call, calling it multiple times won't create any side effect,
-   * returns all role assignments which were created ignoring duplicates or failures, if any.
-   */
-  @POST
-  @Path("/multi")
-  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
-  public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
-      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
-    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
-  }
-
-  @POST
-  @Path("/multi/internal")
-  @InternalApi
-  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignmentsInternal")
-  public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
-      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO,
-      @QueryParam("managed") @DefaultValue("false") Boolean managed) {
-    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed));
-  }
-
-  @POST
-  @Path("/validate")
-  @ApiOperation(value = "Validate Role Assignment", nickname = "validateRoleAssignment")
-  public ResponseDTO<RoleAssignmentValidationResponseDTO> validate(
-      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentValidationRequestDTO validationRequest) {
-    Scope scope = ScopeMapper.fromParams(harnessScopeParams);
-    harnessResourceGroupService.sync(validationRequest.getRoleAssignment().getResourceGroupIdentifier(), scope);
-    return ResponseDTO.newResponse(toDTO(roleAssignmentService.validate(fromDTO(scope, validationRequest))));
-  }
-
-  @DELETE
-  @Path("{identifier}")
-  @ApiOperation(value = "Delete Role Assignment", nickname = "deleteRoleAssignment")
-  public ResponseDTO<RoleAssignmentResponseDTO> delete(
-      @BeanParam HarnessScopeParams harnessScopeParams, @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier) {
-    String scopeIdentifier = ScopeMapper.fromParams(harnessScopeParams).toString();
-    RoleAssignment roleAssignment =
-        roleAssignmentService.get(identifier, scopeIdentifier).<InvalidRequestException>orElseThrow(() -> {
-          throw new InvalidRequestException("Invalid Role Assignment");
-        });
-    checkUpdatePermission(harnessScopeParams, roleAssignment);
-    ValidationResult validationResult = actionValidator.canDelete(roleAssignment);
-    if (!validationResult.isValid()) {
-      throw new InvalidRequestException(validationResult.getErrorMessage());
-    }
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-      RoleAssignment deletedRoleAssignment =
-          roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
-            throw new NotFoundException("Role Assignment is already deleted");
-          });
-      RoleAssignmentResponseDTO response = roleAssignmentDTOMapper.toResponseDTO(deletedRoleAssignment);
-      outboxService.save(new RoleAssignmentDeleteEvent(
-          response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
-      return ResponseDTO.newResponse(response);
-    }));
   }
 
   private void checkUpdatePermission(HarnessScopeParams harnessScopeParams, RoleAssignment roleAssignment) {

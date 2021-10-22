@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanService;
+import io.harness.engine.executions.retry.RetryExecutionMetadata;
 import io.harness.engine.observers.OrchestrationStartObserver;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
@@ -22,6 +23,7 @@ import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.creation.NodeTypeLookupService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
@@ -36,6 +38,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.bson.Document;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -74,6 +79,21 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
     if (!pipelineEntity.isPresent()) {
       return;
     }
+
+    // RetryInfo
+    String rootExecutionId = planExecutionId;
+    String parentExecutionId = planExecutionId;
+    if (metadata.getRetryInfo().getIsRetry()) {
+      rootExecutionId = metadata.getRetryInfo().getRootExecutionId();
+      parentExecutionId = metadata.getRetryInfo().getParentRetryId();
+
+      // updating isLatest and canRetry
+      Update update = new Update();
+      update.set(PlanExecutionSummaryKeys.isLatestExecution, false);
+      Query query = new Query(Criteria.where(PlanExecutionSummaryKeys.planExecutionId).is(parentExecutionId));
+      pmsExecutionSummaryRespository.update(query, update);
+    }
+
     updateExecutionInfoInPipelineEntity(
         accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo(), planExecutionId);
     Plan plan = planService.fetchPlan(ambiance.getPlanId());
@@ -116,6 +136,11 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
             .entityGitDetails(pmsGitSyncHelper.getEntityGitDetailsFromBytes(metadata.getGitSyncBranchContext()))
             .tags(pipelineEntity.get().getTags())
             .modules(new ArrayList<>(modules))
+            .isLatestExecution(true)
+            .retryExecutionMetadata(RetryExecutionMetadata.builder()
+                                        .parentExecutionId(parentExecutionId)
+                                        .rootExecutionId(rootExecutionId)
+                                        .build())
             .governanceMetadata(planExecution.getGovernanceMetadata())
             .stagesExecutionMetadata(orchestrationStartInfo.getPlanExecutionMetadata().getStagesExecutionMetadata())
             .build();

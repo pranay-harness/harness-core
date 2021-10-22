@@ -151,6 +151,12 @@ public abstract class SecretManagerConfig
     return NGMigrationEntityType.SECRET_MANAGER;
   }
 
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
+  }
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (SecretManagerConfigKeys.nextTokenRenewIteration.equals(fieldName)) {

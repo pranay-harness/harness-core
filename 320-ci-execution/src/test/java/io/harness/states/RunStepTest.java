@@ -2,8 +2,8 @@ package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
+import static io.harness.beans.steps.stepinfo.InitializeStepInfo.CALLBACK_IDS;
+import static io.harness.beans.steps.stepinfo.InitializeStepInfo.LOG_KEYS;
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;

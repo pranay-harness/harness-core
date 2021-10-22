@@ -371,7 +371,6 @@ public class DelegateSetupResourceTest extends CategoryTest {
     }
 
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
-                                            .sessionIdentifier("sessionId")
                                             .name("name")
                                             .description("desc")
                                             .size(DelegateSize.LARGE)

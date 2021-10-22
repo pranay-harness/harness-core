@@ -23,6 +23,5 @@ public interface StageExecutionModifier {
    * @return modified execution
    */
   ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution, StageElementConfig stageConfig,
-      PlanCreationContext context, String podName, CodeBase ciCodeBase, Infrastructure infrastructure,
-      ExecutionSource executionSource);
+      PlanCreationContext context, CodeBase ciCodeBase, Infrastructure infrastructure, ExecutionSource executionSource);
 }

@@ -2,9 +2,14 @@ package io.harness.repositories.executions;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import static org.springframework.data.domain.Sort.by;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
@@ -65,6 +70,48 @@ public class PmsExecutionSummaryRepositoryCustomImpl implements PmsExecutionSumm
       log.error(ex.getMessage(), ex);
       throw new InvalidRequestException("Execution Status not found", ex);
     }
+  }
+
+  private void queryFieldsForPipelineExecutionSummaryEntity(Query query) {
+    query.fields().include(PlanExecutionSummaryKeys.uuid);
+    query.fields().include(PlanExecutionSummaryKeys.runSequence);
+    query.fields().include(PlanExecutionSummaryKeys.accountId);
+    query.fields().include(PlanExecutionSummaryKeys.projectIdentifier);
+    query.fields().include(PlanExecutionSummaryKeys.orgIdentifier);
+    query.fields().include(PlanExecutionSummaryKeys.pipelineIdentifier);
+    query.fields().include(PlanExecutionSummaryKeys.name);
+    query.fields().include(PlanExecutionSummaryKeys.retryExecutionMetadata);
+    query.fields().include(PlanExecutionSummaryKeys.planExecutionId);
+    query.fields().include(PlanExecutionSummaryKeys.createdAt);
+    query.fields().include(PlanExecutionSummaryKeys.lastUpdatedAt);
+    query.fields().include(PlanExecutionSummaryKeys.version);
+  }
+
+  @Override
+  public String fetchRootRetryExecutionId(String planExecutionId) {
+    Query query =
+        query(where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId));
+
+    queryFieldsForPipelineExecutionSummaryEntity(query);
+
+    return mongoTemplate.findOne(query, PipelineExecutionSummaryEntity.class)
+        .getRetryExecutionMetadata()
+        .getRootExecutionId();
+  }
+
+  @Override
+  public List<PipelineExecutionSummaryEntity> fetchPipelineSummaryEntityFromRootParentId(String rootParentId) {
+    Query query = query(where(PlanExecutionSummaryKeys.rootExecutionId).is(rootParentId));
+
+    queryFieldsForPipelineExecutionSummaryEntity(query);
+
+    // RequiredFields
+    query.fields().include(PlanExecutionSummaryKeys.startTs);
+    query.fields().include(PlanExecutionSummaryKeys.endTs);
+    query.fields().include(PlanExecutionSummaryKeys.status);
+
+    query.with(by(PlanExecutionSummaryKeys.createdAt));
+    return mongoTemplate.find(query, PipelineExecutionSummaryEntity.class);
   }
 
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {

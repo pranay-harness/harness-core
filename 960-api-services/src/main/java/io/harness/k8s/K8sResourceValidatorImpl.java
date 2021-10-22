@@ -231,19 +231,19 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
     status.ifPresent(statusList::add);
 
     status = getReasonOnApiException(
-        () -> coreV1Api.readNamespacedService("ascontroller", "harness-autostopping", null, null, null));
+        () -> coreV1Api.readNamespacedService("autostopping-router", "harness-autostopping", null, null, null));
     status.ifPresent(statusList::add);
 
     status = getReasonOnApiException(
-        () -> appsV1Api.readNamespacedDeployment("ascontroller", "harness-autostopping", null, null, null));
+        () -> appsV1Api.readNamespacedDeployment("autostopping-router", "harness-autostopping", null, null, null));
     status.ifPresent(statusList::add);
 
     status = getReasonOnApiException(
-        () -> coreV1Api.readNamespacedService("harness-operator", "harness-autostopping", null, null, null));
+        () -> coreV1Api.readNamespacedService("autostopping-controller", "harness-autostopping", null, null, null));
     status.ifPresent(statusList::add);
 
     status = getReasonOnApiException(
-        () -> appsV1Api.readNamespacedDeployment("harness-operator", "harness-autostopping", null, null, null));
+        () -> appsV1Api.readNamespacedDeployment("autostopping-controller", "harness-autostopping", null, null, null));
     status.ifPresent(statusList::add);
 
     return statusList;

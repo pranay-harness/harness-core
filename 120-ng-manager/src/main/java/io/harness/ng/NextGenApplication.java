@@ -18,6 +18,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.ModuleType;
+import io.harness.NgIteratorsConfig;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
@@ -87,6 +88,7 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.handler.NGVaultSecretManagerRenewalHandler;
 import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
+import io.harness.ng.core.remote.licenserestriction.CloudCostK8sConnectorRestrictionsUsageImpl;
 import io.harness.ng.core.remote.licenserestriction.OrgRestrictionsUsageImpl;
 import io.harness.ng.core.remote.licenserestriction.ProjectRestrictionsUsageImpl;
 import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
@@ -344,7 +346,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
-    registerIterators(injector);
+    registerIterators(appConfig.getNgIteratorsConfig(), injector);
     registerJobs(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
@@ -452,11 +454,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
   }
 
-  public void registerIterators(Injector injector) {
-    injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
-    injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+  public void registerIterators(NgIteratorsConfig ngIteratorsConfig, Injector injector) {
+    injector.getInstance(NGVaultSecretManagerRenewalHandler.class)
+        .registerIterators(ngIteratorsConfig.getNgVaultSecretManagerRenewalIteratorConfig().getThreadPoolSize());
+    injector.getInstance(WebhookEventProcessingService.class)
+        .registerIterators(ngIteratorsConfig.getWebhookEventProcessingServiceIteratorConfig().getThreadPoolSize());
     injector.getInstance(InstanceStatsIteratorHandler.class).registerIterators();
-    injector.getInstance(GitFullSyncEntityIterator.class).registerIterators();
+    injector.getInstance(GitFullSyncEntityIterator.class)
+        .registerIterators(ngIteratorsConfig.getGitFullSyncEntityIteratorConfig().getThreadPoolSize());
   }
 
   public void registerJobs(Injector injector) {
@@ -760,6 +765,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                     .put(FeatureRestrictionName.MULTIPLE_PROJECTS, ProjectRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)
+                    .put(FeatureRestrictionName.CCM_K8S_CLUSTERS, CloudCostK8sConnectorRestrictionsUsageImpl.class)
                     .build())
             .build();
     CustomRestrictionRegisterConfiguration customConfig =

@@ -30,9 +30,9 @@ public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo>
   private final MongoTemplate mongoTemplate;
   private final GitFullSyncProcessorService gitFullSyncProcessorService;
 
-  public void registerIterators() {
+  public void registerIterators(int threadPoolSize) {
     SpringFilterExpander filterExpander = getFilterQuery();
-    registerIteratorWithFactory(filterExpander);
+    registerIteratorWithFactory(threadPoolSize, filterExpander);
   }
 
   @Override
@@ -40,11 +40,11 @@ public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo>
     gitFullSyncProcessorService.processFile(entity);
   }
 
-  private void registerIteratorWithFactory(@NotNull SpringFilterExpander filterExpander) {
+  private void registerIteratorWithFactory(int threadPoolSize, @NotNull SpringFilterExpander filterExpander) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name(this.getClass().getName())
-            .poolSize(5)
+            .poolSize(threadPoolSize)
             .interval(ofSeconds(5))
             .build(),
         GitFullSyncEntityInfo.class,

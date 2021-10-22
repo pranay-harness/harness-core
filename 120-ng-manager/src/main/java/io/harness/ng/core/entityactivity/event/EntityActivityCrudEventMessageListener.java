@@ -1,6 +1,8 @@
 package io.harness.ng.core.entityactivity.event;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.ng.core.activityhistory.NGActivityStatus.SUCCESS;
+import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
 
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.NgEventLogContext;
@@ -36,6 +38,9 @@ public class EntityActivityCrudEventMessageListener implements MessageListener {
   }
 
   private void processCreateAction(NGActivityDTO ngActivityDTO) {
+    if (ngActivityDTO.getType() == CONNECTIVITY_CHECK && ngActivityDTO.getActivityStatus() == SUCCESS) {
+      return;
+    }
     ngActivityService.save(ngActivityDTO);
   }
 

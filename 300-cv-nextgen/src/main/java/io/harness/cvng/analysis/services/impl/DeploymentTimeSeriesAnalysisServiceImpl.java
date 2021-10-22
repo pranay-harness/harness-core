@@ -113,7 +113,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
           verificationJobInstanceId, DeploymentTimeSeriesAnalysisFilter.builder().build());
       int numAnomMetrics = 0, totalMetrics = 0;
       for (TransactionMetricInfo transactionMetricInfo : transactionMetricInfoList) {
-        if (transactionMetricInfo.getTransactionMetric().getRisk().isGreaterThan(Risk.LOW)) {
+        if (transactionMetricInfo.getTransactionMetric().getRisk().isGreaterThan(Risk.HEALTHY)) {
           numAnomMetrics++;
         }
         totalMetrics++;

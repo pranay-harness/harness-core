@@ -23,6 +23,10 @@ public class HelmExceptionConstants {
     public static final String DEFAULT_HINT_REPO_ADD =
         "Make sure that the repo can be added using the helm cli \"repo add\" command";
 
+    public static final String HINT_NO_CHART_FOUND = "Provide an existing helm chart";
+    public static final String HINT_NO_CHART_VERSION_FOUND = "Provide existing helm chart version";
+    public static final String HINT_CHART_VERSION_IMPROPER_CONSTRAINT = "Provide existing and valid helm chart version";
+
     public Hints() {
       throw new UnsupportedOperationException("not supported");
     }
@@ -37,6 +41,12 @@ public class HelmExceptionConstants {
         "Protocol is not http/https. Could not find protocol handler.";
     public static final String DEFAULT_EXPLAIN_REPO_ADD = "Unable to add helm repo using the \"helm repo add command\"";
 
+    public static final String EXPLAIN_NO_CHART_FOUND = "Provided chart name doesn't exist in in the chart repository";
+    public static final String EXPLAIN_NO_CHART_VERSION_FOUND =
+        "Provided chart version doesn't exist in in the chart repository";
+    public static final String EXPLAIN_CHART_VERSION_IMPROPER_CONSTRAINT =
+        "Provided chart version doesn't match helm expected version format (e.x. https://semver.org/)";
+
     public Explanations() {
       throw new UnsupportedOperationException("not supported");
     }
@@ -48,6 +58,9 @@ public class HelmExceptionConstants {
     public static final String FORBIDDEN_403 = "403 forbidden";
     public static final String NO_SUCH_HOST = "no such host";
     public static final String PROTOCOL_HANDLER_MISSING = "could not find protocol handler";
+    public static final String NO_CHART_FOUND = "no chart name found";
+    public static final String NO_CHART_VERSION_FOUND = "no chart version found";
+    public static final String CHART_VERSION_IMPROPER_CONSTRAINT = "improper constraint";
 
     public HelmCliErrorMessages() {
       throw new UnsupportedOperationException("not supported");

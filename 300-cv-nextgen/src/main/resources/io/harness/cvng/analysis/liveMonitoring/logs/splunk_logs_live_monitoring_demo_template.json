@@ -1,0 +1,69 @@
+[
+  [
+    {
+      "accountId" : "$accountId",
+      "verificationTaskId" : "$verificationTaskId",
+      "host" : "verification-svc-58589fd55f-lnsgp",
+      "log" : "log type one"
+    },
+
+    {
+      "accountId" : "$accountId",
+      "verificationTaskId" : "$verificationTaskId",
+      "host" : "verification-svc-58589fd55f-lnsgp",
+      "log" : "pulled analysis task null"
+    }
+  ],
+
+  [
+    {
+      "accountId" : "$accountId",
+      "verificationTaskId" : "$verificationTaskId",
+      "host" : "verification-svc-58589fd55f-lnsgp",
+      "log" : "log type one"
+    },
+
+    {
+      "accountId" : "$accountId",
+      "verificationTaskId" : "$verificationTaskId",
+      "host" : "verification-svc-58589fd55f-lnsgp",
+      "log" : "pulled analysis task null"
+    }
+
+  ],
+
+  [
+    {
+      "accountId" : "$accountId",
+      "verificationTaskId" : "$verificationTaskId",
+      "host" : "verification-svc-58589fd55f-lnsgp",
+      "log" : "log type one"
+    },
+
+    {
+      "accountId" : "$accountId",
+      "verificationTaskId" : "$verificationTaskId",
+      "host" : "verification-svc-58589fd55f-lnsgp",
+      "log" : "pulled analysis task null"
+    }
+
+  ],
+
+  [
+    {
+      "accountId" : "$accountId",
+      "verificationTaskId" : "$verificationTaskId",
+      "host" : "verification-svc-58589fd55f-lnsgp",
+      "log" : "log type one"
+    },
+
+    {
+      "accountId" : "$accountId",
+      "verificationTaskId" : "$verificationTaskId",
+      "host" : "verification-svc-58589fd55f-lnsgp",
+      "log" : "pulled analysis task null"
+    }
+
+  ]
+
+]

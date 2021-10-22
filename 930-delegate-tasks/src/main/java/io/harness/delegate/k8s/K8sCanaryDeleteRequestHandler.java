@@ -8,9 +8,7 @@ import static io.harness.k8s.K8sCommandUnitConstants.Delete;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.k8s.model.Release.Status.InProgress;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
@@ -29,7 +27,6 @@ import io.harness.delegate.task.k8s.K8sCanaryDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.K8sConstants;
 import io.harness.k8s.kubectl.Kubectl;
@@ -70,15 +67,7 @@ public class K8sCanaryDeleteRequestHandler extends K8sRequestHandler {
     K8sCanaryDeleteRequest canaryDeleteRequest = (K8sCanaryDeleteRequest) k8sDeployRequest;
     LogCallback initLogCallBack =
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress);
-    try {
-      init(canaryDeleteRequest, k8SDelegateTaskParams, initLogCallBack);
-    } catch (Exception e) {
-      String errorMessage = ExceptionUtils.getMessage(e);
-      log.error("Canary delete init failed with: {}", errorMessage, e);
-      initLogCallBack.saveExecutionLog(errorMessage, ERROR);
-      initLogCallBack.saveExecutionLog("\nFailed.", INFO, FAILURE);
-      return K8sDeployResponse.builder().commandExecutionStatus(FAILURE).errorMessage(errorMessage).build();
-    }
+    init(canaryDeleteRequest, k8SDelegateTaskParams, initLogCallBack);
 
     LogCallback deleteLogCallback =
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Delete, true, commandUnitsProgress);
@@ -113,6 +102,11 @@ public class K8sCanaryDeleteRequestHandler extends K8sRequestHandler {
     }
 
     logCallback.saveExecutionLog("\n\nDone.", INFO, SUCCESS);
+  }
+
+  @Override
+  public boolean isErrorFrameworkSupported() {
+    return true;
   }
 
   private List<KubernetesResourceId> getCanaryResourceIdsFromReleaseHistory(String releaseName, LogCallback logCallback)

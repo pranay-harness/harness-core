@@ -45,6 +45,11 @@ public class InfrastructureActivity extends Activity {
     }
 
     @Override
+    public String getEntityKeyLongString(InfrastructureActivity activity) {
+      throw new UnsupportedOperationException("InfrastructureActivity have no unique key");
+    }
+
+    @Override
     public Query<InfrastructureActivity> populateKeyQuery(
         Query<InfrastructureActivity> query, InfrastructureActivity changeEvent) {
       throw new UnsupportedOperationException("InfrastructureActivity have no unique key");

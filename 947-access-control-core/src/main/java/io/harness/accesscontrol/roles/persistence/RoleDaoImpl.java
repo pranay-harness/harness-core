@@ -26,6 +26,7 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -151,7 +152,8 @@ public class RoleDaoImpl implements RoleDao {
     return roleRepository.deleteMulti(criteria);
   }
 
-  private Criteria createCriteriaFromFilter(RoleFilter roleFilter) {
+  @VisibleForTesting
+  protected Criteria createCriteriaFromFilter(RoleFilter roleFilter) {
     Criteria criteria = new Criteria();
 
     if (isNotBlank(roleFilter.getSearchTerm())) {

@@ -247,6 +247,12 @@ public class SettingAttribute
     return NGMigrationEntityType.CONNECTOR;
   }
 
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
+  }
+
   public enum SettingCategory {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST)),
 

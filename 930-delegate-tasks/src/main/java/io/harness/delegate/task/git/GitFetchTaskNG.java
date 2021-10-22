@@ -10,6 +10,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -21,11 +22,10 @@ import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
@@ -50,6 +50,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private GitFetchFilesTaskHelper gitFetchFilesTaskHelper;
   @Inject private GitDecryptionHelper gitDecryptionHelper;
+  @Inject private ScmFetchFilesHelperNG scmFetchFilesHelper;
 
   public static final int GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT = 10;
 
@@ -102,11 +103,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
           String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
           log.error(msg, ex);
           executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
-          return GitFetchResponse.builder()
-              .errorMessage(exceptionMsg)
-              .taskStatus(TaskStatus.FAILURE)
-              .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
-              .build();
+          throw ex;
         }
 
         filesFromMultipleRepo.put(gitFetchFilesConfig.getIdentifier(), gitFetchFilesResult);
@@ -117,32 +114,16 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
           .filesFromMultipleRepo(filesFromMultipleRepo)
           .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
           .build();
-    } catch (WingsException exception) {
-      log.error("Exception in Git Fetch Files Task", exception);
-      return GitFetchResponse.builder()
-          .errorMessage(ExceptionUtils.getMessage(exception))
-          .taskStatus(TaskStatus.FAILURE)
-          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
-          .build();
     } catch (Exception exception) {
       log.error("Exception in Git Fetch Files Task", exception);
-      return GitFetchResponse.builder()
-          .errorMessage("Some Error occurred in Git Fetch Files Task")
-          .taskStatus(TaskStatus.FAILURE)
-          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
-          .build();
+      throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), exception);
     }
   }
 
   private FetchFilesResult fetchFilesFromRepo(
       GitFetchFilesConfig gitFetchFilesConfig, LogCallback executionLogCallback, String accountId) {
     GitStoreDelegateConfig gitStoreDelegateConfig = gitFetchFilesConfig.getGitStoreDelegateConfig();
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-    gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
-    SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
-        gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
-
-    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getUrl());
     String fetchTypeInfo = gitStoreDelegateConfig.getFetchType() == FetchType.BRANCH
         ? "Branch: " + gitStoreDelegateConfig.getBranch()
         : "CommitId: " + gitStoreDelegateConfig.getCommitId();
@@ -156,8 +137,21 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
     }
 
-    FetchFilesResult gitFetchFilesResult =
-        ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig, gitConfigDTO);
+    FetchFilesResult gitFetchFilesResult;
+    if (gitStoreDelegateConfig.isOptimizedFilesFetch()) {
+      executionLogCallback.saveExecutionLog("Using optimized file fetch");
+      secretDecryptionService.decrypt(
+          GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(gitStoreDelegateConfig.getGitConfigDTO()),
+          gitStoreDelegateConfig.getApiAuthEncryptedDataDetails());
+      gitFetchFilesResult = scmFetchFilesHelper.fetchFilesFromRepoWithScm(gitStoreDelegateConfig, filePathsToFetch);
+    } else {
+      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+      gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+      SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+      gitFetchFilesResult =
+          ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig, gitConfigDTO);
+    }
 
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(executionLogCallback, gitFetchFilesResult.getFiles());
 
@@ -167,5 +161,10 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   @Override
   public GitFetchResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 }

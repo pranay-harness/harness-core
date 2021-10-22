@@ -9,6 +9,7 @@ import io.harness.ccm.commons.beans.config.AwsConfig;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.cf.CfClientConfig;
 import io.harness.configuration.DeployMode;
+import io.harness.enforcement.client.EnforcementClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -69,6 +70,7 @@ public class CENextGenConfiguration extends Configuration {
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
   @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
+  @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
 
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty(value = "featureFlagsEnabled", defaultValue = "") private String featureFlagsEnabled;

@@ -13,11 +13,11 @@ import lombok.Data;
 @Builder
 public class DeploymentStatsSummary {
   long totalCount;
-  double totalCountChangeRate;
-  double failureRate;
-  double failureRateChangeRate;
-  double deploymentRate;
-  double deploymentRateChangeRate;
+  @Builder.Default double totalCountChangeRate = DashboardHelper.MAX_VALUE;
+  @Builder.Default double failureRate = DashboardHelper.MAX_VALUE;
+  @Builder.Default double failureRateChangeRate = DashboardHelper.MAX_VALUE;
+  @Builder.Default double deploymentRate = DashboardHelper.MAX_VALUE;
+  @Builder.Default double deploymentRateChangeRate = DashboardHelper.MAX_VALUE;
 
   List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList;
 }

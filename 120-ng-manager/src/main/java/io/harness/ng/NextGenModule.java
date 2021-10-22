@@ -28,6 +28,7 @@ import static java.lang.Boolean.TRUE;
 import io.harness.AccessControlClientModule;
 import io.harness.GitopsModule;
 import io.harness.Microservice;
+import io.harness.NgIteratorsConfig;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -309,6 +310,12 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   RedisConfig redisLockConfig() {
     return appConfig.getRedisLockConfig();
+  }
+
+  @Provides
+  @Singleton
+  NgIteratorsConfig ngIteratorsConfig() {
+    return appConfig.getNgIteratorsConfig();
   }
 
   private DelegateCallbackToken getDelegateCallbackToken(

@@ -22,4 +22,6 @@ public interface AwsCFHelperServiceDelegate {
       String region, String data, String type, GitFileConfig gitFileConfig, GitConfig gitConfig,
       List<EncryptedDataDetail> sourceRepoEncryptedDetail);
   List<String> getCapabilities(AwsConfig awsConfig, String region, String data, String type);
+
+  String normalizeS3TemplatePath(String s3Path);
 }

@@ -154,6 +154,12 @@ public class Pipeline
     return NGMigrationEntityType.PIPELINE;
   }
 
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

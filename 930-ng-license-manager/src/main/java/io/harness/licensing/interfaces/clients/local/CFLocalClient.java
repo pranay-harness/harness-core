@@ -8,7 +8,6 @@ import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO.CFModuleLicenseDTOBuilder;
-import io.harness.licensing.beans.stats.CFRuntimUsageDTO;
 import io.harness.licensing.interfaces.clients.CFModuleLicenseClient;
 
 import java.time.Instant;
@@ -51,10 +50,5 @@ public class CFLocalClient implements CFModuleLicenseClient {
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }
-  }
-
-  @Override
-  public CFRuntimUsageDTO getRuntimeUsage(String accountId) {
-    return null;
   }
 }

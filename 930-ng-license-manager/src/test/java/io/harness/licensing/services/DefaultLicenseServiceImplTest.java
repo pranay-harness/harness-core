@@ -29,10 +29,11 @@ import io.harness.account.services.AccountService;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.license.remote.CeLicenseClient;
-import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
+import io.harness.licensing.EditionAction;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
+import io.harness.licensing.beans.EditionActionDTO;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
@@ -40,6 +41,7 @@ import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
+import io.harness.licensing.checks.LicenseComplianceResolver;
 import io.harness.licensing.entities.modules.CDModuleLicense;
 import io.harness.licensing.entities.modules.CEModuleLicense;
 import io.harness.licensing.entities.modules.CIModuleLicense;
@@ -53,13 +55,17 @@ import io.harness.rule.Owner;
 import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -73,6 +79,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
   @Mock AccountService accountService;
   @Mock TelemetryReporter telemetryReporter;
   @Mock CeLicenseClient ceLicenseClient;
+  @Mock LicenseComplianceResolver licenseComplianceResolver;
   @InjectMocks DefaultLicenseServiceImpl licenseService;
 
   private StartTrialDTO startTrialRequestDTO;
@@ -299,21 +306,6 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     assertThat(result).isEqualTo(DEFAULT_CI_MODULE_LICENSE_DTO);
   }
 
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = ZHUO)
-  @Category(UnitTests.class)
-  public void testExtendTrialFailed() {
-    CIModuleLicense expiredTrial = CIModuleLicense.builder().numberOfCommitters(10).build();
-    expiredTrial.setLicenseType(LicenseType.TRIAL);
-    expiredTrial.setEdition(Edition.ENTERPRISE);
-    expiredTrial.setExpiryTime(Instant.now().minus(30, ChronoUnit.DAYS).toEpochMilli());
-    expiredTrial.setStatus(LicenseStatus.EXPIRED);
-    when(moduleLicenseRepository.findByAccountIdentifierAndModuleType(eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
-        .thenReturn(Lists.newArrayList(expiredTrial));
-
-    licenseService.extendTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
-  }
-
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
@@ -408,5 +400,26 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     assertThat(checkExpiryResultDTO.isShouldDelete()).isFalse();
     assertThat(checkExpiryResultDTO.getExpiryTime()).isEqualTo(0);
     verify(moduleLicenseRepository, times(1)).save(any());
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testGetEditionActions() {
+    when(licenseComplianceResolver.getEditionStates(any(), eq(ACCOUNT_IDENTIFIER)))
+        .thenReturn(ImmutableMap.<Edition, Set<EditionAction>>builder()
+                        .put(Edition.FREE, Sets.newHashSet(EditionAction.START_FREE))
+                        .put(Edition.TEAM, Sets.newHashSet(EditionAction.DISABLED_BY_ENTERPRISE))
+                        .put(Edition.ENTERPRISE, Sets.newHashSet(EditionAction.CONTACT_SALES))
+                        .build());
+    Map<Edition, Set<EditionActionDTO>> editionActions = licenseService.getEditionActions(ACCOUNT_IDENTIFIER, CD);
+
+    assertThat(editionActions.get(Edition.FREE).size()).isEqualTo(1);
+    assertThat(editionActions.get(Edition.TEAM))
+        .isEqualTo(Sets.newHashSet(EditionActionDTO.builder()
+                                       .action(EditionAction.DISABLED_BY_ENTERPRISE)
+                                       .reason(EditionAction.DISABLED_BY_ENTERPRISE.getReason())
+                                       .build()));
+    assertThat(editionActions.get(Edition.ENTERPRISE).size()).isEqualTo(1);
   }
 }

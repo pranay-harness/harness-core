@@ -27,7 +27,8 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
   public void checkWithUsage(FeatureRestrictionName featureRestrictionName, Restriction restriction,
       String accountIdentifier, long currentCount, ModuleType moduleType, Edition edition) {
     StaticLimitRestriction staticLimitRestriction = (StaticLimitRestriction) restriction;
-    if (!RestrictionUtils.isAvailable(currentCount, staticLimitRestriction.getLimit())) {
+    if (!RestrictionUtils.isAvailable(
+            currentCount, staticLimitRestriction.getLimit(), staticLimitRestriction.isAllowedIfEqual())) {
       throw new LimitExceededException(
           String.format("Exceeded static limitation. Current Limit: %s", staticLimitRestriction.getLimit()));
     }
@@ -42,7 +43,8 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
 
     featureDetailsDTO.setRestrictionType(staticLimitRestriction.getRestrictionType());
     featureDetailsDTO.setRestriction(StaticLimitRestrictionDTO.builder().limit(limit).count(currentCount).build());
-    featureDetailsDTO.setAllowed(RestrictionUtils.isAvailable(currentCount, limit));
+    featureDetailsDTO.setAllowed(
+        RestrictionUtils.isAvailable(currentCount, limit, staticLimitRestriction.isAllowedIfEqual()));
   }
 
   @Override
@@ -51,6 +53,7 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
     return StaticLimitRestrictionMetadataDTO.builder()
         .restrictionType(staticLimitRestriction.getRestrictionType())
         .limit(staticLimitRestriction.getLimit())
+        .allowedIfEqual(staticLimitRestriction.isAllowedIfEqual())
         .build();
   }
 
