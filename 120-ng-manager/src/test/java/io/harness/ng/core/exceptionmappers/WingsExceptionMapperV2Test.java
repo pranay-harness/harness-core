@@ -7,12 +7,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.exception.ngexception.SampleErrorMetadataDTO;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import java.util.EnumSet;
 import java.util.Set;
@@ -42,5 +45,23 @@ public class WingsExceptionMapperV2Test extends CategoryTest {
     ErrorDTO errorDTO = (ErrorDTO) response.getEntity();
     assertThat(errorDTO.getStatus()).isEqualTo(Status.ERROR);
     assertThat(errorDTO.getCode()).isEqualTo(ErrorCode.INVALID_TOKEN);
+    assertThat(errorDTO.getMetadata()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testInvalidRequestExceptionWithExtraMetadata() {
+    InvalidRequestException invalidRequestException = new InvalidRequestException(
+        "Invalid request", SampleErrorMetadataDTO.builder().sampleMap(ImmutableMap.of("a", "b")).build());
+    Response response = wingsExceptionMapperV2.toResponse(invalidRequestException);
+    assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+    assertThat(response.getEntity()).isInstanceOf(ErrorDTO.class);
+    ErrorDTO errorDTO = (ErrorDTO) response.getEntity();
+    assertThat(errorDTO.getStatus()).isEqualTo(Status.ERROR);
+    assertThat(errorDTO.getMetadata()).isInstanceOf(SampleErrorMetadataDTO.class);
+    assertThat(errorDTO.getMetadata().getType()).isEqualTo("Sample");
+    SampleErrorMetadataDTO sampleErrorMetadataDTO = (SampleErrorMetadataDTO) errorDTO.getMetadata();
+    assertThat(sampleErrorMetadataDTO.getSampleMap()).hasSize(1);
   }
 }

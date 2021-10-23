@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.contracts.ambiance.Ambiance;

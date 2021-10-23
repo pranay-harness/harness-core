@@ -71,6 +71,14 @@ import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
+import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
+import io.harness.cvng.servicelevelobjective.beans.SLIType;
+import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
+import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
+import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
+import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -93,6 +101,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -110,6 +119,7 @@ public class BuilderFactory {
   public static final String CONNECTOR_IDENTIFIER = "connectorIdentifier";
   @Getter @Setter(AccessLevel.PRIVATE) private Clock clock;
   @Getter @Setter(AccessLevel.PRIVATE) private Context context;
+
   public static class BuilderFactoryBuilder {
     public BuilderFactory build() {
       BuilderFactory builder = unsafeBuild();
@@ -420,7 +430,9 @@ public class BuilderFactory {
         .planExecutionId("executionId")
         .artifactType("artifactType")
         .artifactTag("artifactTag")
-        .deploymentStatus("status")
+        .activityName(generateUuid())
+        .deploymentStatus(generateUuid())
+        .verificationJobInstanceIds(Arrays.asList(generateUuid()))
         .activityEndTime(clock.instant())
         .activityStartTime(clock.instant());
   }
@@ -559,6 +571,54 @@ public class BuilderFactory {
         .name(generateUuid())
         .enabled(true)
         .type(changeSourceType);
+  }
+
+  public ServiceLevelObjectiveDTO getServiceLevelObjectiveDTOBuilder() {
+    return ServiceLevelObjectiveDTO.builder()
+        .orgIdentifier(getContext().getOrgIdentifier())
+        .projectIdentifier(getContext().getProjectIdentifier())
+        .identifier("sloIdentifier")
+        .name("sloName")
+        .tags(new HashMap<String, String>() {
+          {
+            put("tag1", "value1");
+            put("tag2", "");
+          }
+        })
+        .description("slo description")
+        .target(SLOTarget.builder()
+                    .type(SLOTargetType.ROLLING)
+                    .sloTargetPercentage(80.0)
+                    .spec(RollingSLOTargetSpec.builder().periodLength("30D").build())
+                    .build())
+        .serviceLevelIndicators(
+            Collections.singletonList(ServiceLevelIndicator.builder()
+                                          .identifier("sliIndicator")
+                                          .name("sliName")
+                                          .type(SLIType.LATENCY)
+                                          .spec(ServiceLevelIndicator.SLISpec.builder()
+                                                    .type(SLIMetricType.THRESHOLD)
+                                                    .spec(ServiceLevelIndicator.SLISpec.SLIMetricSpec.builder()
+                                                              .eventType("eventName")
+                                                              .metric1("metric1")
+                                                              .metric2("metric2")
+                                                              .build())
+                                                    .build())
+                                          .build()))
+        .healthSourceRef("healthSourceIdentifier")
+        .monitoredServiceRef(context.serviceIdentifier + "_" + context.getEnvIdentifier())
+        .userJourneyRef("userJourney")
+        .build();
+  }
+
+  public UserJourneyDTO getUserJourneyDTOBuilder() {
+    return UserJourneyDTO.builder()
+        .orgIdentifier(getContext().getAccountId())
+        .orgIdentifier(getContext().getOrgIdentifier())
+        .projectIdentifier(getContext().getProjectIdentifier())
+        .identifier("userJourney")
+        .name("userJourney")
+        .build();
   }
 
   private VerificationJob getVerificationJob() {

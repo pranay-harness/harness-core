@@ -52,17 +52,18 @@ import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSetting
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.ccm.K8sClusterInfo;
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIClusterType;
-import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
-import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
-import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
+import io.harness.delegate.beans.ci.CITaskExecutionResponse;
 import io.harness.delegate.beans.ci.ExecuteCommandTaskParams;
-import io.harness.delegate.beans.ci.K8ExecCommandParams;
-import io.harness.delegate.beans.ci.K8ExecuteCommandTaskParams;
 import io.harness.delegate.beans.ci.ShellScriptType;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
+import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8ExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8InitializeTaskParams;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
+import io.harness.delegate.beans.ci.k8s.K8ExecCommandParams;
+import io.harness.delegate.beans.ci.k8s.K8ExecuteCommandTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
@@ -626,10 +627,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureAppServiceTaskType.class, 19390);
     kryo.register(AzureAppServiceType.class, 19391);
     kryo.register(AzureTaskExecutionResponse.class, 19393);
-    kryo.register(CIBuildSetupTaskParams.class, 19394);
-    kryo.register(CIK8BuildTaskParams.class, 19395);
+    kryo.register(CIInitializeTaskParams.class, 19394);
+    kryo.register(CIK8InitializeTaskParams.class, 19395);
     kryo.register(CIK8PodParams.class, 19396);
-    kryo.register(CIBuildSetupTaskParams.Type.class, 19397);
+    kryo.register(CIInitializeTaskParams.Type.class, 19397);
     kryo.register(CIContainerType.class, 19398);
     kryo.register(CIK8ContainerParams.class, 19399);
     kryo.register(ContainerParams.class, 19400);
@@ -937,5 +938,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ReleaseInfo.class, 543439);
     kryo.register(TaskNGDataException.class, 543440);
     kryo.register(K8sCanaryDataException.class, 543441);
+    kryo.register(CITaskExecutionResponse.class, 543442);
   }
 }

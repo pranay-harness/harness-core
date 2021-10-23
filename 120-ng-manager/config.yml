@@ -118,6 +118,11 @@ auditClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+ceNextGenClientConfig:
+  baseUrl: http://localhost:7340/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 enableAuth: true
 
 grpcClient:
@@ -272,6 +277,9 @@ accessControlAdminClient:
   mockAccessControlService: true
 
 gitGrpcClientConfigs:
+  cf:
+    target: localhost:11001
+    authority: localhost
   pms:
     target: localhost:14001
     authority: localhost

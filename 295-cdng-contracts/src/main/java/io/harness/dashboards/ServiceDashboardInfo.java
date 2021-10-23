@@ -20,8 +20,8 @@ public class ServiceDashboardInfo {
   long totalDeploymentsCount;
   long successDeploymentsCount;
   long failureDeploymentsCount;
-  double totalDeploymentsChangeRate;
+  @Builder.Default double totalDeploymentsChangeRate = DashboardHelper.MAX_VALUE;
 
   long instancesCount;
-  double instancesCountChangeRate;
+  @Builder.Default double instancesCountChangeRate = DashboardHelper.MAX_VALUE;
 }

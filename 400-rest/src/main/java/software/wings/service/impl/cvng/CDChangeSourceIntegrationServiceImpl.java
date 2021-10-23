@@ -58,6 +58,7 @@ public class CDChangeSourceIntegrationServiceImpl implements CDChangeSourceInteg
                                .name(execution.getName())
                                .artifactType(execution.getArtifacts().get(index).getArtifactStreamType())
                                .artifactName(execution.getArtifacts().get(index).getDisplayName())
+                               .status(execution.getStatus().name())
                                .build());
         }
       }

@@ -1,5 +1,6 @@
 package software.wings.service.impl.applicationmanifest;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.validation.Validator.notNullCheck;
@@ -7,6 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
@@ -47,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(_870_CG_ORCHESTRATION)
 public class ManifestCollectionUtils {
   @Inject ApplicationManifestService applicationManifestService;
   @Inject AppService appService;
@@ -60,14 +63,16 @@ public class ManifestCollectionUtils {
   public ManifestCollectionParams prepareCollectTaskParams(String appManifestId, String appId) {
     ApplicationManifest appManifest = applicationManifestService.getById(appId, appManifestId);
     if (appManifest == null || !Boolean.TRUE.equals(appManifest.getPollForChanges())) {
-      throw new InvalidRequestException("Collection not configured for app manifest");
+      applicationManifestService.deletePerpetualTaskByAppManifest(appService.getAccountIdByAppId(appId), appManifestId);
+      throw new InvalidRequestException("Collection not configured for app manifest with id " + appManifestId);
     }
     String accountId =
         appManifest.getAccountId() != null ? appManifest.getAccountId() : appService.getAccountIdByAppId(appId);
 
     Service service = serviceResourceService.get(appId, appManifest.getServiceId());
     if (service == null) {
-      throw new InvalidRequestException("Service not found for the application manifest");
+      applicationManifestService.deletePerpetualTaskByAppManifest(accountId, appManifestId);
+      throw new InvalidRequestException("Service not found for the application manifest with id " + appManifestId);
     }
     HelmChartConfig helmChartConfig = appManifest.getHelmChartConfig();
 

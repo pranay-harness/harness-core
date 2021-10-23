@@ -862,7 +862,7 @@
             <dependency>
                 <groupId>com.offbytwo.jenkins</groupId>
                 <artifactId>jenkins-client</artifactId>
-                <version>0.3.8</version>
+                <version>0.3.9</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-lang</groupId>
@@ -2129,7 +2129,7 @@
     <repositories>
         <repository>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
             <id>portal-maven</id>
             <name>portal-maven</name>

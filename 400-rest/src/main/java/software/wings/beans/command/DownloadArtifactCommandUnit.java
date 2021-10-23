@@ -508,11 +508,11 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (this.getScriptType()) {
       case BASH:
         if (!artifactoryConfig.hasCredentials()) {
-          command = "curl --fail -X GET \""
+          command = "curl -L --fail -X GET \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.artifactPath)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
         } else {
-          command = "curl --fail -H \"Authorization: " + authHeader + "\" -X GET \""
+          command = "curl -L --fail -H \"Authorization: " + authHeader + "\" -X GET \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.artifactPath)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
         }

@@ -11,6 +11,10 @@ public enum FeatureRestrictionName {
   TEST4,
   TEST5,
 
+  // CCM Features
+  PERSPECTIVES,
+  CCM_K8S_CLUSTERS,
+
   // All Features
   MULTIPLE_ORGANIZATIONS,
   MULTIPLE_PROJECTS,

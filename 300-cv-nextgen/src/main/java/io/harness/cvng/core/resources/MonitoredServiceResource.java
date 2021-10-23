@@ -256,7 +256,8 @@ public class MonitoredServiceResource {
                                                             .serviceIdentifier(serviceIdentifier)
                                                             .environmentIdentifier(environmentIdentifier)
                                                             .build();
-    return ResponseDTO.newResponse(monitoredServiceService.getCurrentScore(serviceEnvironmentParams));
+    return ResponseDTO.newResponse(
+        monitoredServiceService.getCurrentAndDependentServicesScore(serviceEnvironmentParams));
   }
 
   @DELETE

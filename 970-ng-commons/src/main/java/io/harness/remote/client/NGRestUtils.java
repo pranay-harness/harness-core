@@ -75,13 +75,18 @@ public class NGRestUtils {
       } else {
         log.error("Error Response received: {}", response);
         String errorMessage = "";
+        InvalidRequestException invalidRequestException = null;
         try {
           ErrorDTO restResponse = JsonUtils.asObject(response.errorBody().string(), new TypeReference<ErrorDTO>() {});
           errorMessage = restResponse.getMessage();
+          invalidRequestException = new InvalidRequestException(
+              StringUtils.isEmpty(errorMessage) ? defaultErrorMessage : errorMessage, restResponse.getMetadata());
         } catch (Exception e) {
           log.error("Error while converting rest response to ErrorDTO", e);
+          invalidRequestException =
+              new InvalidRequestException(StringUtils.isEmpty(errorMessage) ? defaultErrorMessage : errorMessage);
         }
-        throw new InvalidRequestException(StringUtils.isEmpty(errorMessage) ? defaultErrorMessage : errorMessage);
+        throw invalidRequestException;
       }
     } catch (IOException ex) {
       String url = Optional.ofNullable(request.request()).map(x -> x.url().encodedPath()).orElse(null);

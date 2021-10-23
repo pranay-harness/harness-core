@@ -29,7 +29,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class JsonPipelineUtils {
-  private final ObjectMapper mapper;
+  private static final ObjectMapper mapper;
 
   static {
     mapper = new ObjectMapper();
@@ -91,5 +91,9 @@ public class JsonPipelineUtils {
     String jsonString = JsonPipelineUtils.writeJsonString(value);
     JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
     return YamlPipelineUtils.writeString(jsonNode);
+  }
+
+  public static JsonNode asTree(Object obj) {
+    return mapper.valueToTree(obj);
   }
 }

@@ -71,7 +71,7 @@ import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.CodeBaseConnectorRefSweepingOutput;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
@@ -82,7 +82,7 @@ import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
-import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8InitializeTaskParams;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
@@ -171,13 +171,13 @@ public class K8BuildSetupUtils {
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
 
-  public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance,
+  public CIK8InitializeTaskParams getCIk8BuildTaskParams(InitializeStepInfo initializeStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
 
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
-    Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
+    Infrastructure infrastructure = initializeStepInfo.getInfrastructure();
 
     if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
@@ -198,17 +198,16 @@ public class K8BuildSetupUtils {
     if (resolveStringParameter != null && !resolveStringParameter.equals(UNRESOLVED_PARAMETER)) {
       serviceAccountName = resolveStringParameter;
     }
-    PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
+    PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo());
 
     ConnectorDetails k8sConnector = connectorUtils.getConnectorDetails(ngAccess, clusterName);
-    String workDir = ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getWorkDir();
-    CIK8PodParams<CIK8ContainerParams> podParams =
-        getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo, liteEngineTaskStepInfo.isUsePVC(),
-            liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone(), logPrefix, ambiance,
-            annotations, labels, stageRunAsUser, serviceAccountName);
+    String workDir = ((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo()).getWorkDir();
+    CIK8PodParams<CIK8ContainerParams> podParams = getPodParams(ngAccess, k8PodDetails, initializeStepInfo, false,
+        initializeStepInfo.getCiCodebase(), initializeStepInfo.isSkipGitClone(), logPrefix, ambiance, annotations,
+        labels, stageRunAsUser, serviceAccountName);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
-    return CIK8BuildTaskParams.builder()
+    return CIK8InitializeTaskParams.builder()
         .k8sConnector(k8sConnector)
         .cik8PodParams(podParams)
         .podMaxWaitUntilReadySecs(getPodWaitUntilReadTimeout(k8sDirectInfraYaml))
@@ -226,8 +225,8 @@ public class K8BuildSetupUtils {
     return podWaitUntilReadyTimeout;
   }
 
-  public List<ContainerDefinitionInfo> getCIk8BuildServiceContainers(LiteEngineTaskStepInfo liteEngineTaskStepInfo) {
-    PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
+  public List<ContainerDefinitionInfo> getCIk8BuildServiceContainers(InitializeStepInfo initializeStepInfo) {
+    PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo());
     return podSetupInfo.getPodSetupParams()
         .getContainerDefinitionInfos()
         .stream()
@@ -236,10 +235,10 @@ public class K8BuildSetupUtils {
   }
 
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, K8PodDetails k8PodDetails,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
+      InitializeStepInfo initializeStepInfo, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
       String logPrefix, Ambiance ambiance, Map<String, String> annotations, Map<String, String> labels,
       Integer stageRunAsUser, String serviceAccountName) {
-    PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
+    PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageConnector = null;
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
       harnessInternalImageConnector = getDefaultInternalConnector(ngAccess);
@@ -250,7 +249,7 @@ public class K8BuildSetupUtils {
     Map<String, String> runtimeCodebaseVars = getRuntimeCodebaseVars(ambiance);
 
     List<CIK8ContainerParams> containerParamsList = getContainerParamsList(k8PodDetails, podSetupInfo, ngAccess,
-        harnessInternalImageConnector, gitEnvVars, runtimeCodebaseVars, liteEngineTaskStepInfo, logPrefix, ambiance);
+        harnessInternalImageConnector, gitEnvVars, runtimeCodebaseVars, initializeStepInfo, logPrefix, ambiance);
 
     CIK8ContainerParams setupAddOnContainerParams = internalContainerParamsProvider.getSetupAddonContainerParams(
         harnessInternalImageConnector, podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath());
@@ -269,7 +268,7 @@ public class K8BuildSetupUtils {
       pvcParamsList = podSetupInfo.getPvcParamsList();
     }
 
-    Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
+    Infrastructure infrastructure = initializeStepInfo.getInfrastructure();
 
     if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
@@ -373,7 +372,7 @@ public class K8BuildSetupUtils {
 
   public List<CIK8ContainerParams> getContainerParamsList(K8PodDetails k8PodDetails, PodSetupInfo podSetupInfo,
       NGAccess ngAccess, ConnectorDetails harnessInternalImageConnector, Map<String, String> gitEnvVars,
-      Map<String, String> runtimeCodebaseVars, LiteEngineTaskStepInfo liteEngineTaskStepInfo, String logPrefix,
+      Map<String, String> runtimeCodebaseVars, InitializeStepInfo initializeStepInfo, String logPrefix,
       Ambiance ambiance) {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails, accountId);
@@ -381,17 +380,17 @@ public class K8BuildSetupUtils {
     Map<String, String> commonEnvVars = getCommonStepEnvVariables(
         k8PodDetails, gitEnvVars, runtimeCodebaseVars, podSetupInfo.getWorkDirPath(), logPrefix, ambiance);
     Map<String, ConnectorConversionInfo> stepConnectors =
-        ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
+        ((K8BuildJobEnvInfo) initializeStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
 
     LiteEngineSecretEvaluator liteEngineSecretEvaluator =
         LiteEngineSecretEvaluator.builder().secretUtils(secretUtils).build();
     List<SecretVariableDetails> secretVariableDetails =
-        liteEngineSecretEvaluator.resolve(liteEngineTaskStepInfo, ngAccess, ambiance.getExpressionFunctorToken());
+        liteEngineSecretEvaluator.resolve(initializeStepInfo, ngAccess, ambiance.getExpressionFunctorToken());
     checkSecretAccess(ambiance, secretVariableDetails, accountId, AmbianceUtils.getProjectIdentifier(ambiance),
         AmbianceUtils.getOrgIdentifier(ambiance));
 
     Map<String, ConnectorDetails> githubApiTokenFunctorConnectors =
-        resolveGitAppFunctor(ngAccess, liteEngineTaskStepInfo, ambiance);
+        resolveGitAppFunctor(ngAccess, initializeStepInfo, ambiance);
 
     CIK8ContainerParams liteEngineContainerParams = createLiteEngineContainerParams(harnessInternalImageConnector,
         k8PodDetails, podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(), logEnvVars, tiEnvVars,
@@ -412,10 +411,10 @@ public class K8BuildSetupUtils {
   }
 
   private Map<String, ConnectorDetails> resolveGitAppFunctor(
-      NGAccess ngAccess, LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
+      NGAccess ngAccess, InitializeStepInfo initializeStepInfo, Ambiance ambiance) {
     String codeBaseConnectorRef = null;
-    if (liteEngineTaskStepInfo.getCiCodebase() != null) {
-      codeBaseConnectorRef = liteEngineTaskStepInfo.getCiCodebase().getConnectorRef();
+    if (initializeStepInfo.getCiCodebase() != null) {
+      codeBaseConnectorRef = initializeStepInfo.getCiCodebase().getConnectorRef();
       if (isNotEmpty(codeBaseConnectorRef)) {
         executionSweepingOutputResolver.consume(ambiance, CODE_BASE_CONNECTOR_REF,
             CodeBaseConnectorRefSweepingOutput.builder().codeBaseConnectorRef(codeBaseConnectorRef).build(),
@@ -431,7 +430,7 @@ public class K8BuildSetupUtils {
             .connectorUtils(connectorUtils)
             .build();
 
-    return githubApiTokenEvaluator.resolve(liteEngineTaskStepInfo, ngAccess, ambiance.getExpressionFunctorToken());
+    return githubApiTokenEvaluator.resolve(initializeStepInfo, ngAccess, ambiance.getExpressionFunctorToken());
   }
 
   private void checkSecretAccess(Ambiance ambiance, List<SecretVariableDetails> secretVariableDetails,

@@ -345,7 +345,7 @@ spec:
     targetPort: 8093
     name: progress
   selector:
-    app: harness-operator
+    app: autostopping-controller
 
 ---
 apiVersion: v1
