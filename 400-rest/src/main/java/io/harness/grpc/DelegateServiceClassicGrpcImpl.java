@@ -3,10 +3,7 @@ package io.harness.grpc;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.DelegateClassicTaskRequest;
-import io.harness.delegate.DelegateTaskGrpc;
-import io.harness.delegate.ExecuteTaskResponse;
-import io.harness.delegate.QueueTaskResponse;
+import io.harness.delegate.*;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.serializer.KryoSerializer;
 
@@ -20,8 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTaskImplBase {
-  @Inject private KryoSerializer kryoSerializer;
-  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject
+  private KryoSerializer kryoSerializer;
+  @Inject
+  private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Override
   public void queueTask(DelegateClassicTaskRequest request, StreamObserver<QueueTaskResponse> responseObserver) {
@@ -45,13 +44,49 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
       DelegateTask task = (DelegateTask) kryoSerializer.asInflatedObject(request.getDelegateTaskKryo().toByteArray());
       DelegateResponseData delegateResponseData = delegateTaskServiceClassic.executeTask(task);
       responseObserver.onNext(
-          ExecuteTaskResponse.newBuilder()
-              .setDelegateTaskResponseKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateResponseData)))
-              .build());
+              ExecuteTaskResponse.newBuilder()
+                      .setDelegateTaskResponseKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateResponseData)))
+                      .build());
       responseObserver.onCompleted();
+
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing execute task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
+
+  @Override
+  public void abortTask(AbortExpireTaskRequest request, StreamObserver<AbortTaskResponse> responseObserver) {
+    try {
+      String accountId = request.getAccountId();
+      String delegateTaskId = request.getDelegateTaskId();
+
+      DelegateTask delegateTask = delegateTaskServiceClassic.abortTask(accountId, delegateTaskId);
+      responseObserver.onNext(
+              AbortTaskResponse.newBuilder().setDelegateTaskKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateTask))).build());
+      responseObserver.onCompleted();
+
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing abort task request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void expireTask(AbortExpireTaskRequest request, StreamObserver<ExpireTaskResponse> responseObserver) {
+    try {
+      String accountId = request.getAccountId();
+      String delegateTaskId = request.getDelegateTaskId();
+
+      String message = delegateTaskServiceClassic.expireTask(accountId, delegateTaskId);
+      responseObserver.onNext(
+              ExpireTaskResponse.newBuilder().setMessage(message).build());
+      responseObserver.onCompleted();
+
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing expire task request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
 }

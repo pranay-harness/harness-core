@@ -3,10 +3,7 @@ package io.harness.grpc;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.DelegateClassicTaskRequest;
-import io.harness.delegate.DelegateTaskGrpc;
-import io.harness.delegate.ExecuteTaskResponse;
-import io.harness.delegate.QueueTaskResponse;
+import io.harness.delegate.*;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.serializer.KryoSerializer;
 
@@ -51,5 +48,15 @@ public class DelegateServiceClassicGrpcClient {
     return (T) mapper.convertValue(
         kryoSerializer.asInflatedObject(executeTaskResponse.getDelegateTaskResponseKryo().toByteArray()),
         DelegateResponseData.class);
+  }
+
+  public DelegateTask abortTask(String accountId, String delegateTaskId) {
+    final AbortTaskResponse abortTaskResponse = delegateTaskBlockingStub.abortTask(AbortExpireTaskRequest.newBuilder().setAccountId(accountId).setDelegateTaskId(delegateTaskId).build());
+    return (DelegateTask) kryoSerializer.asInflatedObject(abortTaskResponse.getDelegateTaskKryo().toByteArray());
+  }
+
+  public String expireTask(String accountId, String delegateTaskId) {
+    final ExpireTaskResponse expireTaskResponse = delegateTaskBlockingStub.expireTask(AbortExpireTaskRequest.newBuilder().setAccountId(accountId).setDelegateTaskId(delegateTaskId).build());
+    return (String) kryoSerializer.asInflatedObject(expireTaskResponse.getMessageBytes().toByteArray());
   }
 }

@@ -3689,4 +3689,23 @@ public class DelegateServiceImpl implements DelegateService {
     String accountVersion = accountService.getAccountPrimaryDelegateVersion(accountId);
     return isNotEmpty(accountVersion) ? accountVersion : versionInfoManager.getVersionInfo().getVersion();
   }
+
+  @Override
+  public DelegateTask abortTask(String accountId, String delegateTaskId){
+    if (mainConfiguration.isDisableDelegateMgmtInManager()) {
+      return delegateServiceClassicGrpcClient.abortTask(accountId, delegateTaskId);
+    }
+    return delegateTaskServiceClassic.abortTask(accountId, delegateTaskId);
+  }
+
+
+  @Override
+  public String expireTask(String accountId, String delegateTaskId){
+    if (mainConfiguration.isDisableDelegateMgmtInManager()) {
+      return delegateServiceClassicGrpcClient.expireTask(accountId, delegateTaskId);
+    }
+    return delegateTaskServiceClassic.expireTask(accountId, delegateTaskId);
+
+  }
+
 }
