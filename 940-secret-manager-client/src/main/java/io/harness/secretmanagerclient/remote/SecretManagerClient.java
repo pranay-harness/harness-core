@@ -5,7 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -13,6 +16,7 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 import io.harness.serializer.kryo.KryoRequest;
+import io.harness.serializer.kryo.KryoResponse;
 
 import java.util.List;
 import retrofit2.Call;
@@ -27,6 +31,7 @@ import retrofit2.http.Query;
 @OwnedBy(PL)
 public interface SecretManagerClient {
   String SECRETS_API = "ng/secrets";
+  String SECRETS_API_2 = "v2/secrets";
   String SECRET_MANAGERS_API = "ng/secret-managers";
 
   /*
@@ -100,4 +105,11 @@ public interface SecretManagerClient {
   Call<RestResponse<SecretManagerMetadataDTO>> getSecretManagerMetadata(
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Body SecretManagerMetadataRequestDTO requestDTO);
+
+  @POST(SECRETS_API_2 + "/decrypt-encryption-details")
+  @KryoRequest
+  @KryoResponse
+  Call<ResponseDTO<DecryptableEntity>> decryptEncryptedDetails(
+      @Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);
 }

@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.TaskType.NG_GIT_COMMAND;
 
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.ManagerExecutable;
 import io.harness.connector.validator.AbstractConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
@@ -117,8 +118,16 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
       String orgIdentifier, String projectIdentifier, String identifier) {
     final GitConfigDTO gitConfig = getGitConfigFromConnectorConfig(connectorConfigDTO);
     validateFieldsPresent(gitConfig);
-    GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
-        connectorConfigDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    return buildConnectorValidationResult(gitCommandExecutionResponse);
+    Boolean executeOnManager = Boolean.FALSE;
+    if (connectorConfigDTO instanceof ManagerExecutable) {
+      executeOnManager = ((ManagerExecutable) connectorConfigDTO).getExecuteOnManager();
+    }
+    if (executeOnManager == Boolean.TRUE) {
+      return super.validateConnectorViaManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    } else {
+      GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
+          connectorConfigDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+      return buildConnectorValidationResult(gitCommandExecutionResponse);
+    }
   }
 }

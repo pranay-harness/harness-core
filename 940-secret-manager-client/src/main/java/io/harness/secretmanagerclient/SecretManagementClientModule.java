@@ -35,5 +35,6 @@ public class SecretManagementClientModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(SecretManagerClient.class).toProvider(SecretManagerHttpClientFactory.class).in(Scopes.SINGLETON);
+    //    bind(NGSecretDecryptionClient.class).toProvider(NGSecretDecryptionCLientFactory.class).in(Scopes.SINGLETON);
   }
 }

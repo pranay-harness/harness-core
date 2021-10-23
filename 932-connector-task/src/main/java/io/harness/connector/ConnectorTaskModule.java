@@ -1,5 +1,8 @@
 package io.harness.connector;
 
+import io.harness.connector.service.git.NGGitService;
+import io.harness.connector.service.git.NGGitServiceImpl;
+
 import com.google.inject.AbstractModule;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -12,7 +15,7 @@ public class ConnectorTaskModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // add bindings
+    bind(NGGitService.class).to(NGGitServiceImpl.class);
   }
 
   public static ConnectorTaskModule getInstance() {

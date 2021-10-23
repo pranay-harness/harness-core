@@ -14,6 +14,9 @@ import io.harness.connector.impl.NGConnectorSecretManagerServiceImpl;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.filter.ConnectorFilterPropertiesMapper;
+import io.harness.connector.service.git.NGGitService;
+import io.harness.connector.service.git.NGGitServiceImpl;
+import io.harness.connector.service.scm.ScmDelegateClient;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.connector.services.ConnectorFilterService;
 import io.harness.connector.services.ConnectorHeartbeatService;
@@ -22,9 +25,12 @@ import io.harness.connector.services.NGConnectorSecretManagerService;
 import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.task.scm.ScmDelegateClientImpl;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
+import io.harness.git.GitClientV2;
+import io.harness.git.GitClientV2Impl;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.AbstractModule;
@@ -81,6 +87,9 @@ public class ConnectorModule extends AbstractModule {
     bind(ConnectorFilterService.class).to(ConnectorFilterServiceImpl.class);
     bind(ConnectorHeartbeatService.class).to(ConnectorHeartbeatServiceImpl.class);
     bind(AwsClient.class).to(AwsClientImpl.class);
+    bind(NGGitService.class).to(NGGitServiceImpl.class);
+    bind(GitClientV2.class).to(GitClientV2Impl.class);
+    bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
     bind(NGConnectorSecretManagerService.class).to(NGConnectorSecretManagerServiceImpl.class);
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);

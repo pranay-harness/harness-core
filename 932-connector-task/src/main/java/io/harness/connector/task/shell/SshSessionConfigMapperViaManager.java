@@ -9,8 +9,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.dto.secrets.*;
-import io.harness.ng.core.remote.NGSecretDecryptionClient;
 import io.harness.remote.client.NGRestClientExecutor;
+import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.AccessType;
 import io.harness.shell.KerberosConfig;
@@ -23,7 +23,7 @@ import java.util.List;
 @OwnedBy(CDP)
 @Singleton
 public class SshSessionConfigMapperViaManager {
-  @Inject NGSecretDecryptionClient ngSecretDecryptionClient;
+  @Inject SecretNGManagerClient ngSecretDecryptionClient;
   @Inject NGRestClientExecutor restClientExecutor;
 
   public SshSessionConfig getSSHSessionConfig(

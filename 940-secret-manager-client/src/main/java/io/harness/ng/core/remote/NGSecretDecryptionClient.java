@@ -15,7 +15,6 @@ import retrofit2.http.Query;
 public interface NGSecretDecryptionClient {
   String SECRETS_API = "v2/secrets";
 
-
   @POST(SECRETS_API + "/decrypt-encryption-details")
   @KryoRequest
   @KryoResponse

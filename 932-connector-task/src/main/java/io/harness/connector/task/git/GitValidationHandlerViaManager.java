@@ -12,8 +12,8 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
-import io.harness.ng.core.remote.NGSecretDecryptionClient;
 import io.harness.remote.client.NGRestClientExecutor;
+import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.SshSessionConfig;
 
@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import java.util.List;
 
 public class GitValidationHandlerViaManager extends AbstractGitValidationHandler {
-  @Inject NGSecretDecryptionClient ngSecretDecryptionClient;
+  @Inject SecretNGManagerClient ngSecretDecryptionClient;
   @Inject NGRestClientExecutor restClientExecutor;
   @Inject SshSessionConfigMapperViaManager sshSessionConfigMapperViaManager;
 
@@ -55,6 +55,9 @@ public class GitValidationHandlerViaManager extends AbstractGitValidationHandler
   @Override
   public SshSessionConfig getSSHSessionConfig(
       SSHKeySpecDTO sshKeySpecDTO, List<EncryptedDataDetail> encryptionDetails) {
+    if (sshKeySpecDTO == null) {
+      return null;
+    }
     return sshSessionConfigMapperViaManager.getSSHSessionConfig(sshKeySpecDTO, encryptionDetails);
   }
 
