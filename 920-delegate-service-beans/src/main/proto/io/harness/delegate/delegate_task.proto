@@ -30,9 +30,9 @@ message ExecuteTaskResponse {
 }
 
 message AbortTaskResponse {
- bytes delegate_task_kryo = 1;
+  bytes delegate_task_kryo = 1;
 }
 
 message ExpireTaskResponse {
- string message = 1;
+  string message = 1;
 }
