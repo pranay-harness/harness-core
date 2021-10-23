@@ -68,8 +68,14 @@ public class StatusUtils {
   private final EnumSet<Status> RETRYABLE_STATUSES =
       EnumSet.of(INTERVENTION_WAITING, FAILED, ERRORED, EXPIRED, APPROVAL_REJECTED);
 
+  private final EnumSet<Status> RETRYABLE_FAILED_STATUSES = EnumSet.of(FAILED, EXPIRED, APPROVAL_REJECTED, ABORTED);
+
   public EnumSet<Status> finalizableStatuses() {
     return FINALIZABLE_STATUSES;
+  }
+
+  public EnumSet<Status> getRetryableFailedStatuses() {
+    return RETRYABLE_FAILED_STATUSES;
   }
 
   public EnumSet<Status> positiveStatuses() {
