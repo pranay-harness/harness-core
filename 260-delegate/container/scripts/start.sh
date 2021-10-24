@@ -2,21 +2,17 @@
 
 function jar_app_version() {
   JAR=$1
-  if unzip -l $JAR | grep -q io/harness/versionInfo.yaml
-  then
+  if unzip -l $JAR | grep -q io/harness/versionInfo.yaml; then
     VERSION=$(unzip -c $JAR io/harness/versionInfo.yaml | grep "^version " | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   fi
 
-  if [ -z "$VERSION" ]
-  then
-    if unzip -l $JAR | grep -q main/resources-filtered/versionInfo.yaml
-    then
+  if [ -z "$VERSION" ]; then
+    if unzip -l $JAR | grep -q main/resources-filtered/versionInfo.yaml; then
       VERSION=$(unzip -c $JAR main/resources-filtered/versionInfo.yaml | grep "^version " | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
     fi
   fi
 
-  if [ -z "$VERSION" ]
-  then
+  if [ -z "$VERSION" ]; then
     VERSION=$(unzip -c $JAR META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   fi
   echo $VERSION
@@ -40,20 +36,20 @@ JRE_BINARY=$JRE_DIR/bin/java
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
   SOURCE="$(readlink "$SOURCE")"
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 
 if [ ! -e proxy.config ]; then
-  echo "PROXY_HOST=$PROXY_HOST" > proxy.config
-  echo "PROXY_PORT=$PROXY_PORT" >> proxy.config
-  echo "PROXY_SCHEME=$PROXY_SCHEME" >> proxy.config
-  echo "PROXY_USER=$PROXY_USER" >> proxy.config
-  echo "PROXY_PASSWORD=$PROXY_PASSWORD" >> proxy.config
-  echo "NO_PROXY=$NO_PROXY" >> proxy.config
-  echo "PROXY_MANAGER=${PROXY_MANAGER:-true}" >> proxy.config
+  echo "PROXY_HOST=$PROXY_HOST" >proxy.config
+  echo "PROXY_PORT=$PROXY_PORT" >>proxy.config
+  echo "PROXY_SCHEME=$PROXY_SCHEME" >>proxy.config
+  echo "PROXY_USER=$PROXY_USER" >>proxy.config
+  echo "PROXY_PASSWORD=$PROXY_PASSWORD" >>proxy.config
+  echo "NO_PROXY=$NO_PROXY" >>proxy.config
+  echo "PROXY_MANAGER=${PROXY_MANAGER:-true}" >>proxy.config
 fi
 
 source proxy.config
@@ -89,7 +85,7 @@ fi
 if [[ $NO_PROXY != "" ]]; then
   echo "No proxy for domain suffixes $NO_PROXY"
   export no_proxy=$NO_PROXY
-  SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
+  SYSTEM_PROPERTY_NO_PROXY=$(echo $NO_PROXY | sed "s/\,/|*/g")
   PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
 fi
 
@@ -128,7 +124,7 @@ if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   rm -f $JVM_TAR_FILENAME
 fi
 
-if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
+if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   echo "No JRE available. Exiting."
   exit 1
 fi
@@ -186,110 +182,128 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
 fi
 
 if [ ! -e config-watcher.yml ]; then
-  echo "accountId: $ACCOUNT_ID" > config-watcher.yml
+  echo "accountId: $ACCOUNT_ID" >config-watcher.yml
 fi
-test "$(tail -c 1 config-watcher.yml)" && `echo "" >> config-watcher.yml`
-if ! `grep accountSecret config-watcher.yml > /dev/null`; then
-  echo "accountSecret: $ACCOUNT_SECRET" >> config-watcher.yml
+test "$(tail -c 1 config-watcher.yml)" && $(echo "" >>config-watcher.yml)
+if ! $(grep accountSecret config-watcher.yml >/dev/null); then
+  echo "accountSecret: $ACCOUNT_SECRET" >>config-watcher.yml
 fi
-if ! `grep managerUrl config-watcher.yml > /dev/null`; then
-  echo "managerUrl: $MANAGER_HOST_AND_PORT/api/" >> config-watcher.yml
+if ! $(grep managerUrl config-watcher.yml >/dev/null); then
+  echo "managerUrl: $MANAGER_HOST_AND_PORT/api/" >>config-watcher.yml
 fi
-if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
-  echo "doUpgrade: true" >> config-watcher.yml
+if ! $(grep doUpgrade config-watcher.yml >/dev/null); then
+  echo "doUpgrade: true" >>config-watcher.yml
 fi
-if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >> config-watcher.yml
+if ! $(grep upgradeCheckLocation config-watcher.yml >/dev/null); then
+  echo "upgradeCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >>config-watcher.yml
 else
   sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION|" config-watcher.yml
 fi
-if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckIntervalSeconds: 3600" >> config-watcher.yml
+if ! $(grep upgradeCheckIntervalSeconds config-watcher.yml >/dev/null); then
+  echo "upgradeCheckIntervalSeconds: 3600" >>config-watcher.yml
 fi
-if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
-  echo "delegateCheckLocation: $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION" >> config-watcher.yml
+if ! $(grep delegateCheckLocation config-watcher.yml >/dev/null); then
+  echo "delegateCheckLocation: $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION" >>config-watcher.yml
 else
   sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: $DELEGATE_STORAGE_URL/$DELEGATE_CHECK_LOCATION|" config-watcher.yml
 fi
 
 if [ ! -e config-delegate.yml ]; then
-  echo "accountId: $ACCOUNT_ID" > config-delegate.yml
-  echo "accountSecret: $ACCOUNT_SECRET" >> config-delegate.yml
+  echo "accountId: $ACCOUNT_ID" >config-delegate.yml
+  echo "accountSecret: $ACCOUNT_SECRET" >>config-delegate.yml
 fi
-test "$(tail -c 1 config-delegate.yml)" && `echo "" >> config-delegate.yml`
-if ! `grep managerUrl config-delegate.yml > /dev/null`; then
-  echo "managerUrl: $MANAGER_HOST_AND_PORT/api/" >> config-delegate.yml
+test "$(tail -c 1 config-delegate.yml)" && $(echo "" >>config-delegate.yml)
+if ! $(grep managerUrl config-delegate.yml >/dev/null); then
+  echo "managerUrl: $MANAGER_HOST_AND_PORT/api/" >>config-delegate.yml
 fi
-if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
-  echo "verificationServiceUrl: $MANAGER_HOST_AND_PORT/verification/" >> config-delegate.yml
+if ! $(grep verificationServiceUrl config-delegate.yml >/dev/null); then
+  echo "verificationServiceUrl: $MANAGER_HOST_AND_PORT/verification/" >>config-delegate.yml
 fi
-if ! `grep cvNextGenUrl config-delegate.yml > /dev/null`; then
-  echo "cvNextGenUrl: $MANAGER_HOST_AND_PORT/cv/api/" >> config-delegate.yml
+if ! $(grep cvNextGenUrl config-delegate.yml >/dev/null); then
+  echo "cvNextGenUrl: $MANAGER_HOST_AND_PORT/cv/api/" >>config-delegate.yml
 fi
-if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
-  echo "watcherCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >> config-delegate.yml
+if ! $(grep watcherCheckLocation config-delegate.yml >/dev/null); then
+  echo "watcherCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION" >>config-delegate.yml
 else
   sed -i.bak "s|^watcherCheckLocation:.*$|watcherCheckLocation: $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION|" config-delegate.yml
 fi
-if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
-  echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
+if ! $(grep heartbeatIntervalMs config-delegate.yml >/dev/null); then
+  echo "heartbeatIntervalMs: 60000" >>config-delegate.yml
 fi
-if ! `grep doUpgrade config-delegate.yml > /dev/null`; then
-  echo "doUpgrade: true" >> config-delegate.yml
+if ! $(grep doUpgrade config-delegate.yml >/dev/null); then
+  echo "doUpgrade: true" >>config-delegate.yml
 fi
-if ! `grep localDiskPath config-delegate.yml > /dev/null`; then
-  echo "localDiskPath: /tmp" >> config-delegate.yml
+if ! $(grep localDiskPath config-delegate.yml >/dev/null); then
+  echo "localDiskPath: /tmp" >>config-delegate.yml
 fi
-if ! `grep maxCachedArtifacts config-delegate.yml > /dev/null`; then
-  echo "maxCachedArtifacts: 2" >> config-delegate.yml
+if ! $(grep maxCachedArtifacts config-delegate.yml >/dev/null); then
+  echo "maxCachedArtifacts: 2" >>config-delegate.yml
 fi
-if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
+if ! $(grep pollForTasks config-delegate.yml >/dev/null); then
   if [ "$DEPLOY_MODE" == "ONPREM" ]; then
-      echo "pollForTasks: true" >> config-delegate.yml
+    echo "pollForTasks: true" >>config-delegate.yml
   else
-      echo "pollForTasks: ${POLL_FOR_TASKS:-false}" >> config-delegate.yml
+    echo "pollForTasks: ${POLL_FOR_TASKS:-false}" >>config-delegate.yml
   fi
 fi
 
-if ! `grep useCdn config-delegate.yml > /dev/null`; then
-  echo "useCdn: $USE_CDN" >> config-delegate.yml
+if ! $(grep useCdn config-delegate.yml >/dev/null); then
+  echo "useCdn: $USE_CDN" >>config-delegate.yml
 else
   sed -i.bak "s|^useCdn:.*$|useCdn: $USE_CDN|" config-delegate.yml
 fi
 
-if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
-  echo "cdnUrl: $CDN_URL" >> config-delegate.yml
+if ! $(grep cdnUrl config-delegate.yml >/dev/null); then
+  echo "cdnUrl: $CDN_URL" >>config-delegate.yml
 else
   sed -i.bak "s|^cdnUrl:.*$|cdnUrl: $CDN_URL|" config-delegate.yml
 fi
 
-if [ ! -z "$HELM3_PATH" ] && ! `grep helm3Path config-delegate.yml > /dev/null` ; then
-  echo "helm3Path: $HELM3_PATH" >> config-delegate.yml
+if [ ! -z "$HELM3_PATH" ] && ! $(grep helm3Path config-delegate.yml >/dev/null); then
+  echo "helm3Path: $HELM3_PATH" >>config-delegate.yml
 fi
 
-if [ ! -z "$HELM_PATH" ] && ! `grep helmPath config-delegate.yml > /dev/null` ; then
-  echo "helmPath: $HELM_PATH" >> config-delegate.yml
+if [ ! -z "$HELM_PATH" ] && ! $(grep helmPath config-delegate.yml >/dev/null); then
+  echo "helmPath: $HELM_PATH" >>config-delegate.yml
 fi
 
-if [ ! -z "$CF_CLI6_PATH" ] && ! `grep cfCli6Path config-delegate.yml > /dev/null` ; then
-  echo "cfCli6Path: $CF_CLI6_PATH" >> config-delegate.yml
+if [ ! -z "$CF_CLI6_PATH" ] && ! $(grep cfCli6Path config-delegate.yml >/dev/null); then
+  echo "cfCli6Path: $CF_CLI6_PATH" >>config-delegate.yml
 fi
 
-if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/null` ; then
-  echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
+if [ ! -z "$CF_CLI7_PATH" ] && ! $(grep cfCli7Path config-delegate.yml >/dev/null); then
+  echo "cfCli7Path: $CF_CLI7_PATH" >>config-delegate.yml
 fi
 
-if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
-  echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
+if [ ! -z "$KUSTOMIZE_PATH" ] && ! $(grep kustomizePath config-delegate.yml >/dev/null); then
+  echo "kustomizePath: $KUSTOMIZE_PATH" >>config-delegate.yml
 fi
 
-if [ ! -z "$GRPC_SERVICE_ENABLED" ] && ! `grep grpcServiceEnabled config-delegate.yml > /dev/null` ; then
-  echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
+if [ ! -z "$GRPC_SERVICE_ENABLED" ] && ! $(grep grpcServiceEnabled config-delegate.yml >/dev/null); then
+  echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >>config-delegate.yml
 fi
 
-if [ ! -z "$GRPC_SERVICE_CONNECTOR_PORT" ] && ! `grep grpcServiceConnectorPort config-delegate.yml > /dev/null` ; then
-  echo "grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT" >> config-delegate.yml
+if [ ! -z "$GRPC_SERVICE_CONNECTOR_PORT" ] && ! $(grep grpcServiceConnectorPort config-delegate.yml >/dev/null); then
+  echo "grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT" >>config-delegate.yml
 fi
+
+USAGE=$(
+  cat <<-END
+ logging:
+  level: INFO
+  loggers:
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+  appenders:
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+END
+)
+
+echo $USAGE >>config-delegate.yml
 
 rm -f -- *.bak
 
@@ -303,7 +317,7 @@ if [[ $1 == "upgrade" ]]; then
   cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
   $JRE_BINARY $JAVA_OPTS $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Dwatchersourcedir="$DIR" -Xmx512m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -jar watcher.jar config-watcher.yml upgrade $2
 else
-  if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
+  if $(pgrep -f "\-Dwatchersourcedir=$DIR" >/dev/null); then
     echo "Watcher already running"
   else
     nohup $JRE_BINARY $JAVA_OPTS $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Dwatchersourcedir="$DIR" -Xmx512m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
@@ -314,7 +328,7 @@ else
       exit 1
     else
       sleep 3
-      if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
+      if $(pgrep -f "\-Dwatchersourcedir=$DIR" >/dev/null); then
         echo "Watcher started"
       else
         echo "Failed to start Watcher."
@@ -324,4 +338,3 @@ else
     fi
   fi
 fi
-
