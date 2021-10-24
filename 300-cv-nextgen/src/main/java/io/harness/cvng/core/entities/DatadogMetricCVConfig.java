@@ -6,7 +6,6 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.DatadogMetricHealthDefinition;
-import io.harness.serializer.JsonUtils;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -50,9 +49,8 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
                     .metricName(definition.getMetricName())
                     .query(definition.getQuery())
                     .metricType(metricType)
-                    .tags(definition.getMetricTags())
                     .isManualQuery(definition.isManualQuery())
-                    .serviceInstanceField(definition.getServiceInstanceField())
+                    .serviceInstanceField(definition.getServiceInstanceTag())
                     .build());
 
             // add this metric to the pack and the corresponding thresholds
@@ -74,7 +72,6 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
     public static class MetricInfo {
         private String metricName;
         private String query;
-        private List<String> tags;
         private TimeSeriesMetricType metricType;
         boolean isManualQuery;
         private String serviceInstanceField;

@@ -21,10 +21,9 @@ public class DatadogMetricHealthSourceSpecTransformer implements CVConfigToHealt
         cvConfigs.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
             DatadogMetricHealthDefinition metricDefinition =
                     DatadogMetricHealthDefinition.builder()
-                            .metricTags(metricInfo.getTags())
                             .dashboardName(cvConfig.getDashboardName())
                             .metricName(metricInfo.getMetricName())
-                            .serviceInstanceField(metricInfo.getServiceInstanceField())
+                            .serviceInstanceTag(metricInfo.getServiceInstanceField())
                             .query(metricInfo.getQuery())
                             .isManualQuery(metricInfo.isManualQuery())
 

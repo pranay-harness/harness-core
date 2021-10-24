@@ -7,10 +7,10 @@ Var widgets = extract(Var:dashboardDetailsResponse, $.widgets)
 
 foreach widget in Var:widgets {
   Var widgetName = extract(Var:widget, $.definition.title)
-  Var dataset = extract(Var:widget, $.definition.requests)
+  Var datasets = extract(Var:widget, $.definition.requests)
   Var dashMap = {}
   Var:dashMap.put("widgetName", Var:widgetName)
-  Var:dashMap.put("dataSets", Var:dataset)
+  Var:dashMap.put("dataSets", Var:datasets)
   Var:responseList.append(Var:dashMap)
 }
 

@@ -1,12 +1,11 @@
 Var timeSeriesUrl = concat(Env:baseUrl, "v1/query")
 
-Var queries = Env:queries
 Var requests = []
-
-foreach query in Var:queries {
 Var params = {}
-Var:params.put("from", Env:startTime)
-Var:params.put("to", Env:endTime)
+Var:params.put("from", Env:startTimeSeconds)
+Var:params.put("to", Env:endTimeSeconds)
+
+foreach query in Env:queries {
 Var:params.put("query", Var:query)
 Request metricRequest = new Request(url=Var:timeSeriesUrl, header=Env:commonHeaders, options=Var:params)
 Var:requests.append(Var:metricRequest)
@@ -15,8 +14,7 @@ Var metricResponses = execute-parallel(Var:requests)
 Var returnList = []
 
 foreach metricResponse in Var:metricResponses {
-Var timeSeriesPointsResponse = sync-call(url=Var:timeSeriesUrl, header=Env:commonHeaders, options=Var:params)
-Var timeSeriesPointsList = extract(Var:timeSeriesPointsResponse, $.series)
+Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
   foreach timeSeriesPoints in Var:timeSeriesPointsList {
      Var metricName = extract(Var:timeSeriesPoints, $.metric)
      Var txnName = extract(Var:timeSeriesPoints, $.display_name)

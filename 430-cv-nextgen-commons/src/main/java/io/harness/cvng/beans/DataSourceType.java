@@ -39,7 +39,7 @@ public enum DataSourceType {
   }
 
   public static List<DataSourceType> getTimeSeriesTypes() {
-    return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER, NEW_RELIC, PROMETHEUS));
+    return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER, NEW_RELIC, PROMETHEUS, DATADOG_METRICS));
   }
 
   public String getDemoTemplatePrefix() {
