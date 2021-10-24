@@ -162,7 +162,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.alert.AlertReconciliationHandler;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
@@ -1140,7 +1139,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         new ScheduledThreadPoolExecutor(iteratorsConfig.getEventDeliveryIteratorConfig().getThreadPoolSize(),
             new ThreadFactoryBuilder().setNameFormat("Iterator-Event-Delivery").build());
 
-    injector.getInstance(AlertReconciliationHandler.class).registerIterators();
+    //    injector.getInstance(AlertReconciliationHandler.class).registerIterators();
     injector.getInstance(ArtifactCollectionHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(ArtifactCleanupHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(EventDeliveryHandler.class).registerIterators(eventDeliveryExecutor);
