@@ -75,7 +75,7 @@ public class K8sConnectorValidationTaskClient {
         .build();
   }
 
-  public TaskParameters createCEKubernetesConnectionTaskParams(KubernetesClusterConfigDTO kubernetesClusterConfig,
+  private TaskParameters createCEKubernetesConnectionTaskParams(KubernetesClusterConfigDTO kubernetesClusterConfig,
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     List<EncryptedDataDetail> encryptedDataDetailList = connectorHelper.getEncryptionDetail(
         kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier);

@@ -162,7 +162,7 @@ public class CEYamlResource {
           .type("text/plain; charset=UTF-8")
           .build();
     } catch (DelegateServiceDriverException ex) {
-      log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
+      log.error("cloudCostK8sClusterSetupV2 DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
 
       throw new HintException(String.format(HintException.DELEGATE_NOT_AVAILABLE,
                                   "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
@@ -191,7 +191,7 @@ public class CEYamlResource {
           body.getConnectorIdentifier(), accountIdentifier, body.getOrgIdentifier(), body.getProjectIdentifier());
       return ResponseDTO.newResponse(response);
     } catch (DelegateServiceDriverException ex) {
-      log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
+      log.error("cloudCostCapabilityCheck DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
 
       throw new HintException(String.format(HintException.DELEGATE_NOT_AVAILABLE,
                                   "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
