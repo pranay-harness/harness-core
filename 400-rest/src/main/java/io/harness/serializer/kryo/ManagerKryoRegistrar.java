@@ -1563,7 +1563,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContinuePipelineResponseData.class, 8073);
 
     kryo.register(DynaTraceApplication.class, 8074);
-    kryo.register(PerpetualTaskCapabilityCheckTaskParameters.class,8075);
+    kryo.register(PerpetualTaskCapabilityCheckTaskParameters.class, 8075);
 
     kryo.register(PodStatus.class, 8090);
     kryo.register(PodStatus.Status.class, 8091);
