@@ -75,10 +75,10 @@ public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExec
         }
         LocalDate startDate = Instant.ofEpochMilli(startTS).atZone(ZoneId.systemDefault()).toLocalDate();
         Long countOfMonth = accountExecutionInfo.getCountPerMonth().getOrDefault(
-            YearMonth.of(startDate.getYear(), startDate.getMonth()), 0L);
+            YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), 0L);
         countOfMonth = countOfMonth + 1;
         accountExecutionInfo.getCountPerMonth().put(
-            YearMonth.of(startDate.getYear(), startDate.getMonth()), countOfMonth);
+            YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), countOfMonth);
         accountExecutionMetadata.getModuleToExecutionInfoMap().put(module, accountExecutionInfo);
       }
       mongoTemplate.save(accountExecutionMetadata);
