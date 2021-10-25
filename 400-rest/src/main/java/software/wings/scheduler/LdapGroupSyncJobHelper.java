@@ -9,6 +9,8 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -22,6 +24,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
@@ -205,6 +208,7 @@ public class LdapGroupSyncJobHelper {
                                     .withEmail(ldapUserResponse.getEmail())
                                     .withName(ldapUserResponse.getName())
                                     .withUserGroups(Lists.newArrayList(userGroups))
+                                    .withUserId(ldapUserResponse.getUserId())
                                     .build();
         userService.inviteUser(userInvite, false, true);
       }
@@ -258,6 +262,17 @@ public class LdapGroupSyncJobHelper {
     return true;
   }
 
+  private void updateUserIdsGroupMembers(Collection<LdapUserResponse> users) {
+    for (LdapUserResponse user : users) {
+      if (isNotBlank(user.getUserId())) {
+        UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+        setUnset(updateOperations, UserKeys.externalUserId, user.getUserId());
+        Query<User> query = wingsPersistence.createQuery(User.class).filter(UserKeys.email, user.getEmail());
+        wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
+      }
+    }
+  }
+
   @VisibleForTesting
   void syncUserGroups(String accountId, LdapSettings ldapSettings, List<UserGroup> userGroups, String ssoId) {
     Map<UserGroup, Set<User>> removedGroupMembers = new HashMap<>();
@@ -278,7 +293,9 @@ public class LdapGroupSyncJobHelper {
         log.info("LDAPIterator: Fetched  LdapGroupResponse {} of group {} accountId {}", groupResponse.toString(),
             userGroup.getUuid(), accountId);
         syncUserGroupMetadata(userGroup, groupResponse);
-
+        if (featureFlagService.isEnabled(FeatureName.LDAP_USER_ID_SYNC, accountId)) {
+          updateUserIdsGroupMembers(groupResponse.getUsers());
+        }
         updateRemovedGroupMembers(userGroup, groupResponse.getUsers(), removedGroupMembers);
         updateAddedGroupMembers(userGroup, groupResponse.getUsers(), addedGroupMembers);
         log.info("LDAPIterator: Updated members of group {} accountId {}", userGroup.getUuid(), accountId);

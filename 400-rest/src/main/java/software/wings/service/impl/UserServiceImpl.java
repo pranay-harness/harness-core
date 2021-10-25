@@ -726,6 +726,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setPasswordExpired(user.isPasswordExpired());
     userSummary.setImported(user.isImported());
     userSummary.setDisabled(user.isDisabled());
+    userSummary.setExternalUserId(user.getExternalUserId());
     return userSummary;
   }
 
@@ -917,6 +918,23 @@ public class UserServiceImpl implements UserService {
     User user = null;
     if (isNotEmpty(email)) {
       user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase()).get();
+      loadSupportAccounts(user);
+      if (user != null && isEmpty(user.getAccounts())) {
+        user.setAccounts(newArrayList());
+      }
+      if (user != null && isEmpty(user.getPendingAccounts())) {
+        user.setPendingAccounts(newArrayList());
+      }
+    }
+
+    return user;
+  }
+
+  @Override
+  public User getUserByUserId(String userId) {
+    User user = null;
+    if (isNotEmpty(userId)) {
+      user = wingsPersistence.createQuery(User.class).filter(UserKeys.externalUserId, userId).get();
       loadSupportAccounts(user);
       if (user != null && isEmpty(user.getAccounts())) {
         user.setAccounts(newArrayList());
@@ -1234,6 +1252,10 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(accountId);
 
     User user = getUserByEmail(userInvite.getEmail());
+    if (user == null) {
+      user = getUserByUserId(userInvite.getExternalUserId());
+    }
+
     boolean createNewUser = user == null;
     if (createNewUser) {
       user = anUser().build();
@@ -1269,6 +1291,7 @@ public class UserServiceImpl implements UserService {
     }
     user.setAppId(GLOBAL_APP_ID);
     user.setImported(userInvite.getImportedByScim());
+    user.setExternalUserId(userInvite.getExternalUserId());
 
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
