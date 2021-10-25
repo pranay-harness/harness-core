@@ -2889,10 +2889,11 @@ public class DelegateServiceImpl implements DelegateService {
             .setOnInsert(DelegateGroupKeys.identifier, delegateGroupIdentifier)
             .set(DelegateGroupKeys.name, name)
             .set(DelegateGroupKeys.accountId, accountId)
-            .set(DelegateGroupKeys.ng, isNg);
+            .set(DelegateGroupKeys.ng, isNg)
+            .set(DelegateGroupKeys.delegateType, KUBERNETES); // TODO: Add support for other delegates also,once UI
+                                                              // passes the delegateType in DelegateSetupDetails
 
     if (k8sConfigDetails != null) {
-      updateOperations.set(DelegateGroupKeys.delegateType, KUBERNETES);
       setUnset(updateOperations, DelegateGroupKeys.k8sConfigDetails, k8sConfigDetails);
     }
 
@@ -2913,6 +2914,9 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateGroupId(delegateGroup.getUuid())
             .delegateSetupDetails(delegateSetupDetails)
             .build());
+    if (delegateSetupDetails != null) {
+      delegateCache.invalidateDelegateGroupCache(accountId, delegateGroup.getUuid());
+    }
     return delegateGroup;
   }
 

@@ -24,7 +24,6 @@ public class DelegateSetupDetails implements YamlDTO {
   private String description;
   @NotNull private DelegateSize size;
   private String delegateConfigurationId;
-
   // This can be blank also, since we can create a group from delegate yaml itself.
   @EntityIdentifier(allowBlank = true) private String identifier;
 
