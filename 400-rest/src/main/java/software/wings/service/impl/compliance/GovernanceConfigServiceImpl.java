@@ -27,11 +27,13 @@ import io.harness.governance.CustomEnvFilter;
 import io.harness.governance.DeploymentFreezeInfo;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 import io.harness.governance.GovernanceFreezeConfig;
+import io.harness.governance.ServiceFilter.ServiceFilterType;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.beans.Event.Type;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.governance.GovernanceConfig.GovernanceConfigKeys;
@@ -46,6 +48,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -95,6 +98,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private DeploymentFreezeDeactivationHandler freezeDeactivationHandler;
   @Inject private YamlPushService yamlPushService;
   @Inject private UserGroupService userGroupService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Override
   public GovernanceConfig get(String accountId) {
@@ -208,9 +212,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         for (TimeRangeBasedFreezeConfig freezeConfig : governanceConfig.getTimeRangeBasedFreezeConfigs()) {
           if (isNotEmpty(freezeConfig.getAppSelections()) && freezeConfig.checkIfActive()) {
             freezeConfig.getAppSelections().forEach(appSelection -> {
-              if (appSelection.getFilterType() == BlackoutWindowFilterType.ALL
-                  || (appSelection.getFilterType() == BlackoutWindowFilterType.CUSTOM
-                      && ((CustomAppFilter) appSelection).getApps().contains(appId))) {
+              if ((appSelection.getFilterType() == BlackoutWindowFilterType.ALL
+                      || (appSelection.getFilterType() == BlackoutWindowFilterType.CUSTOM
+                          && ((CustomAppFilter) appSelection).getApps().contains(appId)))
+                  && areAllServicesFrozen(appSelection)) {
                 envIdsByWindow.merge(freezeConfig.getUuid(),
                     new HashSet<>(getEnvIdsFromAppSelection(appId, appSelection)), (prevEnvSet, newEnvSet) -> {
                       prevEnvSet.addAll(newEnvSet);
@@ -226,6 +231,11 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     return Collections.emptyMap();
   }
 
+  private boolean areAllServicesFrozen(ApplicationFilter appSelection) {
+    return appSelection.getServiceSelection() == null
+        || appSelection.getServiceSelection().getFilterType() == ServiceFilterType.ALL;
+  }
+
   @Override
   public List<GovernanceFreezeConfig> getGovernanceFreezeConfigs(String accountId, List<String> deploymentFreezeIds) {
     GovernanceConfig governanceConfig = get(accountId);
@@ -238,7 +248,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     return new ArrayList<>();
   }
 
-  private List<String> getEnvIdsFromAppSelection(String appId, ApplicationFilter appSelection) {
+  @Override
+  public List<String> getEnvIdsFromAppSelection(String appId, ApplicationFilter appSelection) {
     switch (appSelection.getEnvSelection().getFilterType()) {
       case ALL:
         return environmentService.getEnvIdsByApp(appId);
@@ -255,23 +266,48 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   }
 
   @Override
+  public List<String> getServiceIdsFromAppSelection(String appId, ApplicationFilter appSelection) {
+    switch (appSelection.getServiceSelection().getFilterType()) {
+      case ALL:
+        return serviceResourceService.findServicesByAppInternal(appId)
+            .stream()
+            .map(Service::getUuid)
+            .collect(Collectors.toList());
+      case CUSTOM:
+        if (isEmpty(appSelection.getServiceSelection().getServices())) {
+          return Collections.emptyList();
+        } else {
+          return appSelection.getServiceSelection().getServices();
+        }
+      default:
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
   public DeploymentFreezeInfo getDeploymentFreezeInfo(String accountId) {
     GovernanceConfig governanceConfig = get(accountId);
     if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
       Set<String> allEnvFrozenApps = new HashSet<>();
       Map<String, Set<String>> appEnvs = new HashMap<>();
+      // What services are frozen for a environment
+      Map<String, Set<String>> envServices = new HashMap<>();
+
       if (isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
         for (TimeRangeBasedFreezeConfig freezeConfig : governanceConfig.getTimeRangeBasedFreezeConfigs()) {
           if (isNotEmpty(freezeConfig.getAppSelections()) && isActive(freezeConfig)) {
             freezeConfig.getAppSelections().forEach(appSelection -> {
-              Map<String, Set<String>> appEnvMap = getAppEnvMapForAppSelection(accountId, appSelection);
-              if (isNotEmpty(appEnvMap)) {
-                appEnvMap.forEach((app, envSet) -> appEnvs.merge(app, envSet, (prevEnvSet, newEnvSet) -> {
-                  prevEnvSet.addAll(newEnvSet);
-                  return prevEnvSet;
-                }));
+              if (appSelection.getServiceSelection() == null
+                  || appSelection.getServiceSelection().getFilterType() == ServiceFilterType.ALL) {
+                Map<String, Set<String>> appEnvMap = getAppEnvMapForAppSelection(accountId, appSelection);
+                if (isNotEmpty(appEnvMap)) {
+                  appEnvMap.forEach((app, envSet) -> appEnvs.merge(app, envSet, (prevEnvSet, newEnvSet) -> {
+                    prevEnvSet.addAll(newEnvSet);
+                    return prevEnvSet;
+                  }));
+                }
+                checkIfAllEnvAllServiceFrozenAndAdd(appSelection, allEnvFrozenApps, accountId);
               }
-              checkIfAllEnvFrozenAndAdd(appSelection, allEnvFrozenApps, accountId);
             });
           }
         }
@@ -289,9 +325,13 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         .build();
   }
 
-  private void checkIfAllEnvFrozenAndAdd(
+  private void checkIfAllEnvAllServiceFrozenAndAdd(
       ApplicationFilter appSelection, Set<String> allEnvFrozenApps, String accountId) {
-    if (appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.ALL) {
+    // Whole app is frozen when both Env Filters and Service filters are ALL frozen.
+    // This also applies to previously created windows which did not have option to add service selection
+    if (appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.ALL
+        && (appSelection.getServiceSelection() == null
+            || appSelection.getServiceSelection().getFilterType() == ServiceFilterType.ALL)) {
       if (appSelection.getFilterType() == BlackoutWindowFilterType.CUSTOM) {
         allEnvFrozenApps.addAll(((CustomAppFilter) appSelection).getApps());
       } else {

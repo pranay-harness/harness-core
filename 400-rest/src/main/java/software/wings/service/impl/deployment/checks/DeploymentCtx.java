@@ -13,4 +13,7 @@ public class DeploymentCtx {
 
   // a pipeline deployment can be associated with multiple envIds
   private List<String> envIds;
+
+  // a deployment can be associated with multiple serviceIds
+  private List<String> serviceIds;
 }

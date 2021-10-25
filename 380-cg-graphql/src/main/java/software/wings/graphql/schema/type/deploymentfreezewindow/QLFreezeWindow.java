@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.governance.BlackoutWindowFilterType;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
+import io.harness.governance.ServiceFilter.ServiceFilterType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
@@ -18,6 +19,7 @@ public class QLFreezeWindow {
   List<String> appIds;
   BlackoutWindowFilterType appFilter;
   EnvironmentFilterType envFilterType;
+  ServiceFilterType servFilterType;
   List<String> envIds;
   List<String> servIds;
 }
