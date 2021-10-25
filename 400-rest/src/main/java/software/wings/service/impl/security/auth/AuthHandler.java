@@ -59,6 +59,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -429,6 +430,7 @@ public class AuthHandler {
         case WORKFLOW: {
           if (entityFilter instanceof GenericEntityFilter) {
             // Workflow Permissions given per workflow basis
+            long startTime = System.nanoTime();
             Set<String> workflowIdSet = null;
             if (actions.contains(Action.CREATE)) {
               appPermissionSummary.setCanCreateWorkflow(true);
@@ -461,6 +463,9 @@ public class AuthHandler {
             Map<Action, Set<String>> actionEntityIdMap =
                 buildActionEntityMap(finalAppPermissionSummary.getWorkflowPermissions(), entityIds, entityActions);
             finalAppPermissionSummary.setWorkflowPermissions(actionEntityIdMap);
+            long endTime = System.nanoTime();
+            log.info("{}: Elapsed time(ns) for attaching workflow permission: {}",
+                FeatureName.WORKFLOW_PIPELINE_PERMISSION_BY_ENTITY.name(), endTime - startTime);
             break;
           } else {
             // Workflow Permissions given via Environment
@@ -630,6 +635,7 @@ public class AuthHandler {
       switch (permissionType) {
         case PIPELINE:
           if (entityFilter instanceof GenericEntityFilter) {
+            long startTime = System.nanoTime();
             Set<String> pipelineIdSet = null;
             if (actions.contains(Action.CREATE)) {
               appPermissionSummary.setCanCreatePipeline(true);
@@ -658,6 +664,9 @@ public class AuthHandler {
             Map<Action, Set<String>> actionEntityIdMap =
                 buildActionPipelineMap(finalAppPermissionSummary.getPipelinePermissions(), pipelineIdActionMap);
             finalAppPermissionSummary.setPipelinePermissions(actionEntityIdMap);
+            long endTime = System.nanoTime();
+            log.info("{}: Elapsed time(ns) for attaching pipeline permission: {}",
+                FeatureName.WORKFLOW_PIPELINE_PERMISSION_BY_ENTITY.name(), endTime - startTime);
             break;
           } else {
             Set<String> envIdSet = null;

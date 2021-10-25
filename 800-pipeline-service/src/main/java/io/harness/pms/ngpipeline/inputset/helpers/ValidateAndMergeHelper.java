@@ -19,6 +19,7 @@ import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -117,6 +118,34 @@ public class ValidateAndMergeHelper {
         -> inputSets.add(pmsInputSetService.get(
             accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
     return inputSets;
+  }
+
+  public InputSetTemplateResponseDTOPMS getInputSetTemplateResponseDTO(String accountId, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, List<String> stageIdentifiers) {
+    Optional<PipelineEntity> optionalPipelineEntity =
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (optionalPipelineEntity.isPresent()) {
+      String template;
+      List<String> replacedExpressions = null;
+
+      String pipelineYaml = optionalPipelineEntity.get().getYaml();
+      if (EmptyPredicate.isEmpty(stageIdentifiers)) {
+        template = createTemplateFromPipeline(pipelineYaml);
+      } else {
+        String replacedExpressionsPipeline =
+            StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
+                pipelineYaml, stageIdentifiers);
+        replacedExpressions =
+            new ArrayList<>(StagesExpressionExtractor.getNonLocalExpressions(pipelineYaml, stageIdentifiers));
+        template = createTemplateFromPipelineForGivenStages(replacedExpressionsPipeline, stageIdentifiers);
+      }
+      return InputSetTemplateResponseDTOPMS.builder()
+          .inputSetTemplateYaml(template)
+          .replacedExpressions(replacedExpressions)
+          .build();
+    } else {
+      throw new InvalidRequestException("Could not find pipeline");
+    }
   }
 
   public String getPipelineTemplate(String accountId, String orgIdentifier, String projectIdentifier,

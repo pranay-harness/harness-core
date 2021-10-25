@@ -682,12 +682,9 @@ public class DelegateServiceImpl implements DelegateService {
     Query<DelegateGroup> query = persistence.createQuery(DelegateGroup.class)
                                      .filter(DelegateGroupKeys.accountId, accountId)
                                      .filter(DelegateGroupKeys.ng, true)
-                                     .filter(DelegateGroupKeys.owner,
-                                         DelegateEntityOwnerHelper.buildOwner(delegateSetupDetails.getOrgIdentifier(),
-                                             delegateSetupDetails.getProjectIdentifier()))
                                      .filter(DelegateGroupKeys.name, delegateSetupDetails.getName());
     if (query.get() != null) {
-      throw new InvalidRequestException("Delegate Name must be unique across levels.", USER);
+      throw new InvalidRequestException("Delegate Name must be unique across account.", USER);
     }
     if (delegateSetupDetails.getSize() == null) {
       throw new InvalidRequestException("Delegate Size must be provided.", USER);

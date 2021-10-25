@@ -482,10 +482,9 @@ public class InputSetResourcePMS {
         projectIdentifier, orgIdentifier, accountId));
     List<String> stageIdentifiers =
         inputSetTemplateRequestDTO == null ? Collections.emptyList() : inputSetTemplateRequestDTO.getStageIdentifiers();
-    String pipelineTemplateYaml = validateAndMergeHelper.getPipelineTemplate(
+    InputSetTemplateResponseDTOPMS response = validateAndMergeHelper.getInputSetTemplateResponseDTO(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, stageIdentifiers);
-    return ResponseDTO.newResponse(
-        InputSetTemplateResponseDTOPMS.builder().inputSetTemplateYaml(pipelineTemplateYaml).build());
+    return ResponseDTO.newResponse(response);
   }
 
   @POST

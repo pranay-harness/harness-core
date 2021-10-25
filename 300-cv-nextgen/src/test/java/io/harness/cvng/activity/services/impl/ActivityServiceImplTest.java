@@ -580,6 +580,54 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
+  public void testUpsert_createEntityIsEqual() {
+    useMockedPersistentLocker();
+    Activity activity = builderFactory.getDeploymentActivityBuilder().build();
+    String activityUuid = activityService.upsert(activity);
+    Activity activityFromDb = activityService.get(activityUuid);
+    assertThat(activityFromDb).isEqualTo(activity);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpsert_updateEntity() {
+    useMockedPersistentLocker();
+    Activity existingActivity = builderFactory.getDeploymentActivityBuilder().build();
+    Activity updatingActivity = builderFactory.getDeploymentActivityBuilder().build();
+    List<String> verificationJobInstanceIds = new ArrayList<>();
+    verificationJobInstanceIds.addAll(existingActivity.getVerificationJobInstanceIds());
+    verificationJobInstanceIds.addAll(updatingActivity.getVerificationJobInstanceIds());
+    ActivityVerificationSummary summary = createActivitySummary(Instant.now());
+    summary.setTotal(2);
+    summary.setPassed(2);
+    summary.setProgress(0);
+
+    List<VerificationJobInstance> jobInstances = Arrays.asList(builderFactory.verificationJobInstanceBuilder()
+                                                                   .deploymentStartTime(Instant.now())
+                                                                   .startTime(Instant.now())
+                                                                   .uuid(verificationJobInstanceIds.get(0))
+                                                                   .build(),
+        builderFactory.verificationJobInstanceBuilder()
+            .deploymentStartTime(Instant.now())
+            .startTime(Instant.now())
+            .uuid(verificationJobInstanceIds.get(1))
+            .build());
+    when(verificationJobInstanceService.get(existingActivity.getVerificationJobInstanceIds())).thenReturn(jobInstances);
+    when(verificationJobInstanceService.getActivityVerificationSummary(eq(jobInstances))).thenReturn(summary);
+
+    activityService.upsert(existingActivity);
+    String uuid = activityService.upsert(updatingActivity);
+
+    Activity activityFromDb = activityService.get(uuid);
+    assertThat(activityFromDb.getVerificationJobInstanceIds()).isEqualTo(verificationJobInstanceIds);
+    assertThat(activityFromDb.getVerificationSummary()).isEqualTo(summary);
+    assertThat(activityFromDb.getActivityName()).isEqualTo(updatingActivity.getActivityName());
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
   public void testUpsert_whenEntityLocked() {
     useMockedPersistentLocker();
     when(mockedPersistentLocker.waitToAcquireLock(any(), any(), any(), any()))
