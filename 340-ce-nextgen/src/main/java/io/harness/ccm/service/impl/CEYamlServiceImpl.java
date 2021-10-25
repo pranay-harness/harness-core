@@ -30,6 +30,8 @@ import org.jetbrains.annotations.NotNull;
 public class CEYamlServiceImpl implements CEYamlService {
   private static final Configuration templateConfiguration = new Configuration(VERSION_2_3_23);
   private static final String YAML_FTL = ".yaml.ftl";
+  private static final String DEFAULT_SERVICE_ACCOUNT_USERNAME =
+      "system:serviceaccount:<PLACEHOLDER_REPLACE_WITH_NAMESPACE_IN_WHICH_THE_DELEGATE_IS_INSTALLED>:<PLACEHOLDER_REPLACE_WITH_SERVICEACCOUNT_NAME_USED_BY_DELEGATE>";
 
   @Inject private K8sServiceAccountDelegateTaskClient k8sTaskClient;
 
@@ -94,7 +96,7 @@ public class CEYamlServiceImpl implements CEYamlService {
       throws IOException {
     if (!includeOptimization && !includeVisibility) {
       throw new InvalidArgumentsException(
-          "Nothing to generate when includeOptimization=false and includeVisibility=false");
+          "Nothing to generate when includeOptimization=false and includeVisibility=false, no need to call this API");
     }
 
     String yamlFileContent = "";
@@ -119,10 +121,7 @@ public class CEYamlServiceImpl implements CEYamlService {
   private K8sServiceAccountInfoResponse getServiceAccount(
       @NonNull String accountId, @NonNull K8sClusterSetupRequest request) {
     K8sServiceAccountInfoResponse serviceAccount =
-        K8sServiceAccountInfoResponse.builder()
-            .username(
-                "system:serviceaccount:<REPLACE_WITH_NAMESPACE_IN_WHICH_THE_DELEGATE_IS_INSTALLED>:<REPLACE_WITH_SERVICEACCOUNT_NAME_USED_BY_DELEGATE>")
-            .build();
+        K8sServiceAccountInfoResponse.builder().username(DEFAULT_SERVICE_ACCOUNT_USERNAME).build();
 
     try {
       serviceAccount = k8sTaskClient.fetchServiceAccount(
@@ -165,9 +164,9 @@ public class CEYamlServiceImpl implements CEYamlService {
   }
 
   private String getClusterroleYaml() throws IOException {
-    final String visibilityYamlFileName = "ce-clusterrole";
+    final String ceClusterRoleFileName = "ce-clusterrole";
 
-    return getProcessedYaml(visibilityYamlFileName, ImmutableMap.of());
+    return getProcessedYaml(ceClusterRoleFileName, ImmutableMap.of());
   }
 
   private String getProcessedYaml(@NonNull String yamlFileName, @NonNull ImmutableMap<String, String> params)

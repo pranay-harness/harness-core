@@ -46,6 +46,22 @@
       - update
 
 ---
+apiVersion: v1
+data:
+  token: <PLACEHOLDER_PASTE_API_TOKEN_HERE>
+kind: Secret
+metadata:
+  name: harness-api-key
+  namespace: harness-autostopping
+type: Opaque
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: harness-autostopping
+
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

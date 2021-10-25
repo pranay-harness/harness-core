@@ -15,6 +15,7 @@ import io.harness.ccm.commons.beans.config.CEFeatures;
 import io.harness.ccm.remote.beans.K8sClusterSetupRequest;
 import io.harness.ccm.service.impl.K8sConnectorValidationTaskClient;
 import io.harness.ccm.service.intf.CEYamlService;
+import io.harness.ccm.utils.LogAccountIdentifier;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.exception.DelegateNotAvailableException;
 import io.harness.exception.DelegateServiceDriverException;
@@ -139,39 +140,37 @@ public class CEYamlResource {
   @Path(CLOUD_COST_K8S_CLUSTER_SETUP_V2)
   @Timed
   @ExceptionMetered
+  @LogAccountIdentifier
   @ApiOperation(value = "get k8s cluster setup yaml based on requirement", nickname = CLOUD_COST_K8S_CLUSTER_SETUP_V2)
   public Response cloudCostK8sClusterSetupV2(@Context HttpServletRequest request,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam("includeVisibility") Boolean includeVisibility,
       @QueryParam("includeOptimization") Boolean includeOptimization,
       @Valid @NotNull @RequestBody K8sClusterSetupRequest body) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      includeVisibility = firstNonNull(includeVisibility, Boolean.FALSE);
-      includeOptimization = firstNonNull(includeOptimization, Boolean.FALSE);
+    includeVisibility = firstNonNull(includeVisibility, Boolean.FALSE);
+    includeOptimization = firstNonNull(includeOptimization, Boolean.FALSE);
 
-      final String serverName = request.getServerName();
-      final String harnessHost = request.getScheme() + "://" + serverName;
+    final String serverName = request.getServerName();
+    final String harnessHost = request.getScheme() + "://" + serverName;
 
-      try {
-        final String yamlFileContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
-            accountId, harnessHost, serverName, body, includeVisibility, includeOptimization);
+    try {
+      final String yamlFileContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
+          accountId, harnessHost, serverName, body, includeVisibility, includeOptimization);
 
-        return Response.ok(yamlFileContent)
-            .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + CLOUD_COST_K8S_CLUSTER_SETUP + DOT_YAML)
-            .type("text/plain; charset=UTF-8")
-            .build();
-      } catch (DelegateServiceDriverException ex) {
-        log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
+      return Response.ok(yamlFileContent)
+          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + CLOUD_COST_K8S_CLUSTER_SETUP + DOT_YAML)
+          .type("text/plain; charset=UTF-8")
+          .build();
+    } catch (DelegateServiceDriverException ex) {
+      log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
 
-        throw new HintException(
-            String.format(HintException.DELEGATE_NOT_AVAILABLE,
-                "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
-            new DelegateNotAvailableException(ex.getMessage(), WingsException.USER));
-      } catch (IOException ex) {
-        log.error("Some error occurred while processing the YAML template", ex);
-        throw new UnexpectedException(
-            "Some error occurred while processing the YAML template. Please contact the Harness support team.");
-      }
+      throw new HintException(String.format(HintException.DELEGATE_NOT_AVAILABLE,
+                                  "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
+          new DelegateNotAvailableException(ex.getMessage(), WingsException.USER));
+    } catch (IOException ex) {
+      log.error("Some error occurred while processing the YAML template", ex);
+      throw new UnexpectedException(
+          "Some error occurred while processing the YAML template. Please contact the Harness support team.");
     }
   }
 
@@ -179,6 +178,7 @@ public class CEYamlResource {
   @Path("/cloudCostCapabilityCheck")
   @Timed
   @ExceptionMetered
+  @LogAccountIdentifier
   @ApiOperation(
       value = "check if the existing k8s cloud provider have necessary permissions to enable Cloud Cost Visibility",
       nickname = "cloudCostCapabilityCheck")
@@ -186,19 +186,16 @@ public class CEYamlResource {
   cloudCostCapabilityCheck(
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Valid @NotNull @RequestBody K8sClusterSetupRequest body) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountIdentifier, OVERRIDE_ERROR)) {
-      try {
-        final ConnectorValidationResult response = validationTaskClient.validateConnectorForCePermissions(
-            body.getConnectorIdentifier(), accountIdentifier, body.getOrgIdentifier(), body.getProjectIdentifier());
-        return ResponseDTO.newResponse(response);
-      } catch (DelegateServiceDriverException ex) {
-        log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
+    try {
+      final ConnectorValidationResult response = validationTaskClient.validateConnectorForCePermissions(
+          body.getConnectorIdentifier(), accountIdentifier, body.getOrgIdentifier(), body.getProjectIdentifier());
+      return ResponseDTO.newResponse(response);
+    } catch (DelegateServiceDriverException ex) {
+      log.error("DelegateServiceDriverException, msg:[{}]", ex.getMessage(), ex);
 
-        throw new HintException(
-            String.format(HintException.DELEGATE_NOT_AVAILABLE,
-                "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
-            new DelegateNotAvailableException(ex.getMessage(), WingsException.USER));
-      }
+      throw new HintException(String.format(HintException.DELEGATE_NOT_AVAILABLE,
+                                  "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
+          new DelegateNotAvailableException(ex.getMessage(), WingsException.USER));
     }
   }
 }

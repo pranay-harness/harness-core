@@ -16,7 +16,6 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import java.nio.charset.StandardCharsets;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-@Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class CEYamlServiceImplTest extends CategoryTest {
   private static final String CONNECTOR_IDENTIFIER = "cId";
@@ -104,6 +102,47 @@ public class CEYamlServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
+  public void testOptimizationYamlFileStructure() throws Exception {
+    final K8sClusterSetupRequest request =
+        K8sClusterSetupRequest.builder().ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER).build();
+
+    final String actualYamlContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
+        ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request, false, true);
+
+    final String expectedYamlContent =
+        IOUtils.toString(this.getClass().getResourceAsStream("/yaml/autostopping-only.yaml"), StandardCharsets.UTF_8);
+
+    verify(k8sServiceAccountDelegateTaskClient, times(0)).fetchServiceAccount(any(), any(), any(), any());
+
+    assertThat(actualYamlContent).isNotBlank();
+    assertThat(actualYamlContent).isEqualTo(expectedYamlContent);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.UTSAV)
+  @Category(UnitTests.class)
+  public void testVisibilityYamlFileStructure() throws Exception {
+    final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
+                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
+                                               .orgIdentifier(ORG_IDENTIFIER)
+                                               .projectIdentifier(PROJECT_IDENTIFIER)
+                                               .build();
+
+    final String actualYamlContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
+        ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request, true, false);
+
+    final String expectedYamlContent =
+        IOUtils.toString(this.getClass().getResourceAsStream("/yaml/visibility-only.yaml"), StandardCharsets.UTF_8);
+
+    verify(k8sServiceAccountDelegateTaskClient, times(1)).fetchServiceAccount(any(), any(), any(), any());
+
+    assertThat(actualYamlContent).isNotBlank();
+    assertThat(actualYamlContent).isEqualTo(expectedYamlContent);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.UTSAV)
+  @Category(UnitTests.class)
   public void testUnifiedCloudCostK8sClusterYaml_Visibility() throws Exception {
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
                                                .connectorIdentifier(CONNECTOR_IDENTIFIER)
@@ -171,8 +210,9 @@ public class CEYamlServiceImplTest extends CategoryTest {
     assertThat(yamlContent).isNotBlank();
 
     // assert default values for ServiceAccount
-    assertThat(yamlContent).contains("\n    name: <REPLACE_WITH_SERVICEACCOUNT_NAME_USED_BY_DELEGATE>");
-    assertThat(yamlContent).contains("\n    namespace: <REPLACE_WITH_NAMESPACE_IN_WHICH_THE_DELEGATE_IS_INSTALLED>");
+    assertThat(yamlContent).contains("\n    name: <PLACEHOLDER_REPLACE_WITH_SERVICEACCOUNT_NAME_USED_BY_DELEGATE>");
+    assertThat(yamlContent)
+        .contains("\n    namespace: <PLACEHOLDER_REPLACE_WITH_NAMESPACE_IN_WHICH_THE_DELEGATE_IS_INSTALLED>");
 
     // since optimization is not asked
     assertThat(yamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
