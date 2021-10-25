@@ -25,6 +25,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -42,6 +47,19 @@ import lombok.extern.slf4j.Slf4j;
 @NextGenManagerAuth
 @Produces({"application/json"})
 @Consumes({"application/json"})
+@Tag(name = "Builds Overview", description = "Contains APIs related to builds overview.")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -60,8 +78,15 @@ public class CIDashboardOverviewResource {
   @Path("/buildHealth")
   @ApiOperation(value = "Get build health", nickname = "getBuildHealth")
   @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
-  public ResponseDTO<DashboardBuildsHealthInfo> getBuildHealth(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+  @Operation(operationId = "getBuildHealth",
+      summary = "Gets the Build Health by accountIdentifier, orgIdentifier and projectIdentifier for an interval.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns build health with success and failure rate.")
+      })
+  public ResponseDTO<DashboardBuildsHealthInfo>
+  getBuildHealth(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
@@ -75,9 +100,18 @@ public class CIDashboardOverviewResource {
 
   @GET
   @Path("/buildExecution")
+  @Operation(operationId = "getBuildExecution",
+      summary =
+          "Gets the list of Build Execution count by accountIdentifier, orgIdentifier and projectIdentifier for an interval.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the list of build Execution count per day.")
+      })
   @ApiOperation(value = "Get build execution", nickname = "getBuildExecution")
   @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
-  public ResponseDTO<DashboardBuildExecutionInfo> getBuildExecution(
+  public ResponseDTO<DashboardBuildExecutionInfo>
+  getBuildExecution(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
@@ -90,9 +124,18 @@ public class CIDashboardOverviewResource {
 
   @GET
   @Path("/repositoryBuild")
+  @Operation(operationId = "getRepositoryBuild",
+      summary =
+          "Gets the list of Build Execution health of each repository by accountIdentifier, orgIdentifier and projectIdentifier for an interval.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the list of build Execution count and health of each repository for an interval.")
+      })
   @ApiOperation(value = "Get build getRepositoryBuild", nickname = "getRepositoryBuild")
   @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
-  public ResponseDTO<DashboardBuildRepositoryInfo> getRepositoryBuild(
+  public ResponseDTO<DashboardBuildRepositoryInfo>
+  getRepositoryBuild(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
@@ -106,12 +149,22 @@ public class CIDashboardOverviewResource {
 
   @GET
   @Path("/getBuilds")
+  @Operation(operationId = "getActiveAndFailedBuild",
+      summary =
+          "Gets the list of Active and Failed Builds in specified days by accountIdentifier, orgIdentifier and projectIdentifier.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the list of build Execution count and health of each repository for an interval.")
+      })
   @ApiOperation(value = "Get builds", nickname = "getBuilds")
   @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
-  public ResponseDTO<DashboardBuildsActiveAndFailedInfo> getActiveAndFailedBuild(
+  public ResponseDTO<DashboardBuildsActiveAndFailedInfo>
+  getActiveAndFailedBuild(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
+      @Parameter(description = "Retrieves build status for the specified number of days. The default value is 20 days.")
       @QueryParam("top") @DefaultValue("20") long days) {
     log.info("Getting builds details failed and active");
     List<BuildFailureInfo> failureInfos = ciOverviewDashboardService.getDashboardBuildFailureInfo(
