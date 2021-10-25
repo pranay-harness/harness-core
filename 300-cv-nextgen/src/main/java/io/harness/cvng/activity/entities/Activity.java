@@ -5,6 +5,8 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -26,6 +28,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.api.client.util.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
@@ -34,6 +37,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.StringJoiner;
+import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -41,6 +46,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
@@ -81,13 +87,25 @@ public abstract class Activity
                 .field(ActivityKeys.activityStartTime)
                 .build(),
             CompoundMongoIndex.builder()
-                .name("change_event_query_index")
+                .name("change_event_app_service_query_index")
                 .field(ActivityKeys.accountId)
                 .field(ActivityKeys.orgIdentifier)
                 .field(ActivityKeys.projectIdentifier)
-                .field(ActivityKeys.eventTime)
-                .field(ActivityKeys.environmentIdentifier)
                 .field(ActivityKeys.serviceIdentifier)
+                .field(ActivityKeys.environmentIdentifier)
+                .field(ActivityKeys.eventTime)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("change_event_infra_service_query_index")
+                .field(ActivityKeys.accountId)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(
+                    KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
+                .field(KubernetesClusterActivityKeys.relatedAppServices + "."
+                    + ServiceEnvironmentKeys.environmentIdentifier)
+                .field(ActivityKeys.eventTime)
+                .sparse(true)
                 .build())
         .build();
   }
@@ -130,13 +148,6 @@ public abstract class Activity
       verificationJobs = Collections.EMPTY_LIST;
     }
     return verificationJobs;
-  }
-
-  public Instant getEventTime() {
-    if (eventTime == null) {
-      eventTime = this.activityStartTime;
-    }
-    return eventTime;
   }
 
   public abstract void fromDTO(ActivityDTO activityDTO);
@@ -196,6 +207,12 @@ public abstract class Activity
       implements UpdatableEntity<T, D> {
     public abstract Class getEntityClass();
 
+    public abstract String getEntityKeyLongString(D activity);
+
+    public String getEntityKeyString(D activity) {
+      return UUID.nameUUIDFromBytes(getEntityKeyLongString(activity).getBytes(Charsets.UTF_8)).toString();
+    }
+
     public Query<T> populateKeyQuery(Query<T> query, D activity) {
       return query.filter(ActivityKeys.accountId, activity.getAccountId())
           .filter(ActivityKeys.orgIdentifier, activity.getOrgIdentifier())
@@ -204,23 +221,38 @@ public abstract class Activity
           .filter(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier());
     }
 
+    protected StringJoiner getKeyBuilder(Activity activity) {
+      return new StringJoiner("+")
+          .add(activity.getAccountId())
+          .add(activity.getOrgIdentifier())
+          .add(activity.getProjectIdentifier())
+          .add(activity.getServiceIdentifier())
+          .add(activity.getEnvironmentIdentifier())
+          .add(activity.getType().name());
+    }
+
     protected void setCommonUpdateOperations(UpdateOperations<T> updateOperations, D activity) {
       updateOperations.set(ActivityKeys.accountId, activity.getAccountId())
           .set(ActivityKeys.orgIdentifier, activity.getOrgIdentifier())
           .set(ActivityKeys.projectIdentifier, activity.getProjectIdentifier())
           .set(ActivityKeys.serviceIdentifier, activity.getServiceIdentifier())
           .set(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier())
-          .set(ActivityKeys.eventTime, activity.getEventTime())
           .set(ActivityKeys.activityStartTime, activity.getActivityStartTime())
           .set(ActivityKeys.type, activity.getType());
+      if (activity.getEventTime() != null) {
+        updateOperations.set(ActivityKeys.eventTime, activity.getEventTime());
+      }
       if (activity.getActivityEndTime() != null) {
         updateOperations.set(ActivityKeys.activityEndTime, activity.getActivityEndTime());
       }
       if (activity.getChangeSourceIdentifier() != null) {
         updateOperations.set(ActivityKeys.changeSourceIdentifier, activity.getChangeSourceIdentifier());
       }
-      if (activity.getVerificationJobInstanceIds() != null) {
-        updateOperations.set(ActivityKeys.verificationJobInstanceIds, activity.getVerificationJobInstanceIds());
+      if (CollectionUtils.isNotEmpty(activity.getVerificationJobInstanceIds())) {
+        updateOperations.addToSet(ActivityKeys.verificationJobInstanceIds, activity.getVerificationJobInstanceIds());
+      }
+      if (activity.getActivityName() != null) {
+        updateOperations.set(ActivityKeys.activityName, activity.getActivityName());
       }
     }
   }

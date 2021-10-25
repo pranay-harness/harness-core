@@ -6,7 +6,7 @@ import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.states.LiteEngineTaskStep.LE_STATUS_TASK_TYPE;
+import static io.harness.states.InitializeTaskStep.LE_STATUS_TASK_TYPE;
 import static io.harness.steps.StepUtils.buildAbstractions;
 
 import static java.lang.String.format;
@@ -32,7 +32,7 @@ import io.harness.ci.serializer.RunStepProtobufSerializer;
 import io.harness.ci.serializer.RunTestsStepProtobufSerializer;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
@@ -273,7 +273,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
       case BUILD:
       case SETUP_ENV:
       case GIT_CLONE:
-      case LITE_ENGINE_TASK:
+      case INITIALIZE_TASK:
       default:
         log.info("serialisation is not implemented");
         return null;

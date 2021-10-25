@@ -37,26 +37,19 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    harness.io/app: harness-delegate
-    harness.io/account: accoun
     harness.io/name: harness-delegate
-  # Name must contain the six letter account identifier: accoun
-  name: harness-delegate-accoun
+  name: harness-delegate
   namespace: harness-delegate-ng
 spec:
   replicas: 8
   podManagementPolicy: Parallel
   selector:
     matchLabels:
-      harness.io/app: harness-delegate
-      harness.io/account: accoun
       harness.io/name: harness-delegate
   serviceName: ""
   template:
     metadata:
       labels:
-        harness.io/app: harness-delegate
-        harness.io/account: accoun
         harness.io/name: harness-delegate
     spec:
       containers:
@@ -112,16 +105,12 @@ spec:
           value: harness-delegate
         - name: NEXT_GEN
           value: "true"
-        - name: DELEGATE_GROUP_ID
-          value: delegateGroupId1
         - name: DELEGATE_DESCRIPTION
           value: "desc"
         - name: DELEGATE_PROFILE
           value: "delConfigId"
         - name: DELEGATE_TYPE
           value: "KUBERNETES"
-        - name: DELEGATE_SESSION_IDENTIFIER
-          value: "9S5HMP0xROugl3_QgO62rQ"
         - name: DELEGATE_TAGS
           value: ""
         - name: DELEGATE_TASK_LIMIT
@@ -150,6 +139,8 @@ spec:
             secretKeyRef:
               name: harness-delegate-proxy
               key: PROXY_PASSWORD
+        - name: INIT_SCRIPT
+          value: ""
         - name: POLL_FOR_TASKS
           value: "false"
         - name: HELM_DESIRED_VERSION

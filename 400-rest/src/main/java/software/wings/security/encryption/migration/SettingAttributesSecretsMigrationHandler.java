@@ -65,7 +65,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("SettingAttributesSecretsMigrationHandler")
-            .poolSize(3)
+            .poolSize(2)
             .interval(ofSeconds(30))
             .build(),
         SettingAttribute.class,

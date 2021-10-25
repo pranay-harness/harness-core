@@ -39,4 +39,5 @@ public class EntityYamlRootNames {
   public static String MONITORED_SERVICE = "monitoredService";
   public static String TEMPLATE = "template";
   public static String GIT_REPOSITORY = "gitRepository";
+  public static String FEATURE_FLAGS = "featureFlags";
 }

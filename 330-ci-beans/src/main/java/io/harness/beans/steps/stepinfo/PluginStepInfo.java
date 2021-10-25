@@ -12,6 +12,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.ImagePullPolicy;
+import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
@@ -70,6 +71,7 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
   private boolean harnessManagedImage;
+  private UnitTestReport reports;
 
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
@@ -77,11 +79,11 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
   private ParameterField<ImagePullPolicy> imagePullPolicy;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connectorRef", "resources", "entrypoint",
-      "envVariables", "harnessInternalImage", "privileged", "runAsUser", "imagePullPolicy"})
+  @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connectorRef", "resources", "reports",
+      "entrypoint", "envVariables", "harnessInternalImage", "privileged", "runAsUser", "imagePullPolicy"})
   public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, JsonNode>> settings,
       ParameterField<String> image, ParameterField<String> connectorRef, ContainerResource resources,
-      List<String> entrypoint, Map<String, String> envVariables, boolean harnessManagedImage,
+      UnitTestReport reports, List<String> entrypoint, Map<String, String> envVariables, boolean harnessManagedImage,
       ParameterField<Boolean> privileged, ParameterField<Integer> runAsUser,
       ParameterField<ImagePullPolicy> imagePullPolicy) {
     this.identifier = identifier;
@@ -98,6 +100,7 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
     this.runAsUser = runAsUser;
     this.harnessManagedImage = harnessManagedImage;
     this.imagePullPolicy = imagePullPolicy;
+    this.reports = reports;
   }
 
   @Override

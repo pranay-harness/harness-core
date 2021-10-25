@@ -2,10 +2,14 @@ package io.harness.engine;
 
 import static io.harness.security.dto.PrincipalType.USER;
 
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.WRAPPER_OBJECT;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.user.UserInfo;
@@ -21,31 +25,59 @@ import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.governance.PolicyMetadata;
 import io.harness.pms.contracts.governance.PolicySetMetadata;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.user.remote.UserClient;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class GovernanceServiceImpl implements GovernanceService {
+  private static final ObjectMapper objectMapper = new ObjectMapper();
   private final PmsFeatureFlagService pmsFeatureFlagService;
   private final OpaServiceClient opaServiceClient;
   private final UserClient userClient;
 
+  @Data
+  @Builder
+  @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
+  @FieldDefaults(level = AccessLevel.PRIVATE)
+  @JsonTypeName("pipeline")
+  static class BasicPipelineData {
+    String name;
+    String identifier;
+    String orgIdentifier;
+    String projectIdentifier;
+  }
+
   @Override
-  public GovernanceMetadata evaluateGovernancePolicies(String yaml, String accountId, String action) {
+  public GovernanceMetadata evaluateGovernancePolicies(
+      String yaml, String accountId, String action, String planExecutionId) {
     if (!pmsFeatureFlagService.isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE)) {
       return GovernanceMetadata.newBuilder()
           .setDeny(false)
@@ -53,8 +85,10 @@ public class GovernanceServiceImpl implements GovernanceService {
               String.format("FF: [%s] is disabled for account: [%s]", FeatureName.OPA_PIPELINE_GOVERNANCE, accountId))
           .build();
     }
+    BasicPipelineData basicPipeline;
     PipelineOpaEvaluationContext context;
     try {
+      basicPipeline = YamlUtils.read(yaml, BasicPipelineData.class);
       context = createEvaluationContext(yaml, action);
     } catch (IOException ex) {
       log.error("Could not create OPA evaluation context", ex);
@@ -66,7 +100,9 @@ public class GovernanceServiceImpl implements GovernanceService {
     OpaEvaluationResponseHolder response;
     try {
       response = SafeHttpCall.executeWithExceptions(opaServiceClient.evaluateWithCredentials(
-          OpaConstants.OPA_EVALUATION_TYPE_PIPELINE, "", "", "", action, context));
+          OpaConstants.OPA_EVALUATION_TYPE_PIPELINE, accountId, basicPipeline.getOrgIdentifier(),
+          basicPipeline.getProjectIdentifier(), action, getEntityString(accountId, basicPipeline),
+          getEntityMetadataString(accountId, basicPipeline, planExecutionId), context));
     } catch (Exception ex) {
       log.error("Exception while evluating OPA rules", ex);
       throw new InvalidRequestException(ex.getMessage());
@@ -74,12 +110,41 @@ public class GovernanceServiceImpl implements GovernanceService {
     return mapResponseToMetadata(response);
   }
 
+  private String getEntityString(String accountId, BasicPipelineData basicPipeline)
+      throws UnsupportedEncodingException {
+    String entityStringRaw =
+        String.format("accountIdentifier:%s/orgIdentifier:%s/projectIdentifier:%s/pipelineIdentifier:%s", accountId,
+            basicPipeline.getOrgIdentifier(), basicPipeline.getProjectIdentifier(), basicPipeline.getIdentifier());
+    return URLEncoder.encode(entityStringRaw, StandardCharsets.UTF_8.toString());
+  }
+
+  private String getEntityMetadataString(String accountId, BasicPipelineData basicPipeline, String planExecutionId)
+      throws JsonProcessingException, UnsupportedEncodingException {
+    Map<String, String> metadataMap = ImmutableMap.<String, String>builder()
+                                          .put("accountIdentifier", accountId)
+                                          .put("orgIdentifier", basicPipeline.getOrgIdentifier())
+                                          .put("projectIdentifier", basicPipeline.getProjectIdentifier())
+                                          .put("pipelineIdentifier", basicPipeline.getIdentifier())
+                                          .put("pipelineName", basicPipeline.getName())
+                                          .put("executionIdentifier", planExecutionId)
+                                          .build();
+    return URLEncoder.encode(objectMapper.writeValueAsString(metadataMap), StandardCharsets.UTF_8.toString());
+  }
+
   private GovernanceMetadata mapResponseToMetadata(OpaEvaluationResponseHolder response) {
     return GovernanceMetadata.newBuilder()
-        .setId(response.getId())
-        .setDeny(response.getSummary().isDeny())
+        .setId(HarnessStringUtils.emptyIfNull(response.getId()))
+        .setDeny(OpaConstants.OPA_STATUS_ERROR.equals(HarnessStringUtils.emptyIfNull(response.getStatus())))
         .setTimestamp(System.currentTimeMillis())
-        .addAllDetails(mapPolicySetMetadata(response.getSummary().getDetails()))
+        .addAllDetails(mapPolicySetMetadata(response.getDetails()))
+        .setStatus(HarnessStringUtils.emptyIfNull(response.getStatus()))
+        .setAccountId(HarnessStringUtils.emptyIfNull(response.getAccount_id()))
+        .setOrgId(HarnessStringUtils.emptyIfNull(response.getOrg_id()))
+        .setProjectId(HarnessStringUtils.emptyIfNull(response.getProject_id()))
+        .setEntity(HarnessStringUtils.emptyIfNull(response.getEntity()))
+        .setType(HarnessStringUtils.emptyIfNull(response.getType()))
+        .setAction(HarnessStringUtils.emptyIfNull(response.getAction()))
+        .setCreated(response.getCreated())
         .build();
   }
 
@@ -89,12 +154,16 @@ public class GovernanceServiceImpl implements GovernanceService {
     }
     List<PolicySetMetadata> policySetMetadataList = new ArrayList<>();
     for (OpaPolicySetEvaluationResponse setEvaluationResponse : policySetResponse) {
-      policySetMetadataList.add(PolicySetMetadata.newBuilder()
-                                    .setDeny(setEvaluationResponse.isDeny())
-                                    .setPolicySetId(setEvaluationResponse.getPolicyset_id())
-                                    .setPolicySetName(setEvaluationResponse.getPolicyset_name())
-                                    .addAllPolicyMetadata(mapPolicyMetadata(setEvaluationResponse.getPolicy_details()))
-                                    .build());
+      policySetMetadataList.add(
+          PolicySetMetadata.newBuilder()
+              .setDeny(OpaConstants.OPA_STATUS_ERROR.equals(
+                  HarnessStringUtils.emptyIfNull(setEvaluationResponse.getStatus())))
+              .setStatus(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getStatus()))
+              .setPolicySetName(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getName()))
+              .addAllPolicyMetadata(mapPolicyMetadata(setEvaluationResponse.getDetails()))
+              .setIdentifier(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getIdentifier()))
+              .setCreated(setEvaluationResponse.getCreated())
+              .build());
     }
     return policySetMetadataList;
   }
@@ -105,12 +174,20 @@ public class GovernanceServiceImpl implements GovernanceService {
     }
     List<PolicyMetadata> policyMetadataList = new ArrayList<>();
     for (OpaPolicyEvaluationResponse policyEvaluationResponse : policyEvaluationResponses) {
-      policyMetadataList.add(PolicyMetadata.newBuilder()
-                                 .setPolicyId(policyEvaluationResponse.getPolicy().getId())
-                                 .setPolicyName(policyEvaluationResponse.getPolicy().getName())
-                                 .setSeverity(policyEvaluationResponse.getPolicy().getSeverity())
-                                 .addAllDenyMessages(policyEvaluationResponse.getDeny_messages())
-                                 .build());
+      policyMetadataList.add(
+          PolicyMetadata.newBuilder()
+              .setPolicyName(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getName()))
+              .setIdentifier(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getIdentifier()))
+              .setAccountId(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getAccount_id()))
+              .setOrgId(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getOrg_id()))
+              .setProjectId(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getPolicy().getProject_id()))
+              .setCreated(policyEvaluationResponse.getPolicy().getCreated())
+              .setUpdated(policyEvaluationResponse.getPolicy().getUpdated())
+              .setStatus(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getStatus()))
+              .setError(HarnessStringUtils.emptyIfNull(policyEvaluationResponse.getError()))
+              .setSeverity(policyEvaluationResponse.getStatus())
+              .addAllDenyMessages(policyEvaluationResponse.getDeny_messages())
+              .build());
     }
     return policyMetadataList;
   }

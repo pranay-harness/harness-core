@@ -1,6 +1,7 @@
 package io.harness.connector.gitsync;
 
 import static io.harness.connector.entities.Connector.ConnectorKeys;
+import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import io.harness.EntityType;
@@ -79,6 +80,7 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   @Override
   public ConnectorDTO save(String accountIdentifier, String yaml) {
     ConnectorDTO connectorDTO = getYamlDTO(yaml);
+    validate(connectorDTO);
     ConnectorResponseDTO connectorResponseDTO = connectorService.create(connectorDTO, accountIdentifier);
     ConnectorInfoDTO connectorInfo = connectorResponseDTO.getConnector();
     return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
@@ -87,9 +89,17 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   @Override
   public ConnectorDTO update(String accountIdentifier, String yaml, ChangeType changeType) {
     ConnectorDTO connectorDTO = getYamlDTO(yaml);
+    validate(connectorDTO);
     ConnectorResponseDTO connectorResponseDTO = connectorService.update(connectorDTO, accountIdentifier, changeType);
     ConnectorInfoDTO connectorInfo = connectorResponseDTO.getConnector();
     return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
+  }
+
+  @Override
+  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean invalid, String erroneousYaml) {
+    return connectorService.markEntity(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalid, erroneousYaml);
   }
 
   @Override

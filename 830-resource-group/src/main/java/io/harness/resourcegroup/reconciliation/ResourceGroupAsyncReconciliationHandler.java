@@ -47,7 +47,7 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("ResourceGroupReconciliationIterator")
-            .poolSize(3)
+            .poolSize(2)
             .interval(ofMinutes(1))
             .build(),
         ResourceGroup.class,

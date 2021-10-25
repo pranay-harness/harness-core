@@ -18,7 +18,6 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateSetupDetails implements YamlDTO {
-  private String sessionIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
   @NotNull private String name;
@@ -26,7 +25,8 @@ public class DelegateSetupDetails implements YamlDTO {
   @NotNull private DelegateSize size;
   private String delegateConfigurationId;
 
-  @EntityIdentifier(allowBlank = true) private String identifier; // TODO make mandatory when UI does the change
+  // This can be blank also, since we can create a group from delegate yaml itself.
+  @EntityIdentifier(allowBlank = true) private String identifier;
 
   private K8sConfigDetails k8sConfigDetails;
 

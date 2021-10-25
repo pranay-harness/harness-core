@@ -9,7 +9,9 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateHeartbeatDetails;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.rest.RestResponse;
@@ -38,6 +40,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 // This NG specific, switching to NG access control
 @Slf4j
 @OwnedBy(DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateVerificationNgResource {
   private final DelegateService delegateService;
   private final AccessControlClient accessControlClient;
@@ -46,28 +49,6 @@ public class DelegateVerificationNgResource {
   public DelegateVerificationNgResource(DelegateService delegateService, AccessControlClient accessControlClient) {
     this.delegateService = delegateService;
     this.accessControlClient = accessControlClient;
-  }
-
-  @GET
-  @Path("/heartbeat")
-  public RestResponse<DelegateHeartbeatDetails> getDelegatesHeartbeatDetails(
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId, @QueryParam("sessionId") @NotEmpty String sessionIdentifier) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
-        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
-
-    List<String> registeredDelegateIds = delegateService.obtainDelegateIds(accountId, sessionIdentifier);
-
-    if (CollectionUtils.isNotEmpty(registeredDelegateIds)) {
-      List<String> connectedDelegates = delegateService.getConnectedDelegates(accountId, registeredDelegateIds);
-
-      return new RestResponse<>(DelegateHeartbeatDetails.builder()
-                                    .numberOfRegisteredDelegates(registeredDelegateIds.size())
-                                    .numberOfConnectedDelegates(connectedDelegates.size())
-                                    .build());
-    }
-
-    return new RestResponse<>(DelegateHeartbeatDetails.builder().build());
   }
 
   @GET
@@ -90,23 +71,6 @@ public class DelegateVerificationNgResource {
     }
 
     return new RestResponse<>(DelegateHeartbeatDetails.builder().build());
-  }
-
-  @GET
-  @Path("/initialized")
-  public RestResponse<List<DelegateInitializationDetails>> getDelegatesInitializationDetails(
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId, @QueryParam("sessionId") @NotEmpty String sessionIdentifier) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
-        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
-
-    List<String> registeredDelegateIds = delegateService.obtainDelegateIds(accountId, sessionIdentifier);
-
-    if (CollectionUtils.isNotEmpty(registeredDelegateIds)) {
-      return new RestResponse<>(delegateService.obtainDelegateInitializationDetails(accountId, registeredDelegateIds));
-    }
-
-    return new RestResponse<>(Collections.emptyList());
   }
 
   @GET

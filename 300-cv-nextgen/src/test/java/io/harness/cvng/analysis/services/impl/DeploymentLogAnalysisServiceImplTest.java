@@ -550,7 +550,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysis.setResultSummary(createResultSummary(0, .7654, clusterSummaries, null));
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
     assertThat(deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
-        .isEqualTo(Risk.LOW);
+        .isEqualTo(Risk.HEALTHY);
   }
 
   @Test

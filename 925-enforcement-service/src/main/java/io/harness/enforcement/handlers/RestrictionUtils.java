@@ -25,7 +25,11 @@ public class RestrictionUtils {
     }
   }
 
-  public boolean isAvailable(long currentCount, long limit) {
-    return currentCount < limit;
+  public boolean isAvailable(long currentCount, long limit, boolean allowedIfEqual) {
+    if (currentCount == limit) {
+      return allowedIfEqual;
+    } else {
+      return currentCount < limit;
+    }
   }
 }

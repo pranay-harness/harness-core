@@ -27,6 +27,7 @@ public class ResourceGroupBackgroundMigrationDetails implements MigrationDetails
   public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
         .add(Pair.of(1, ResourceGroupAllowedScopeLevelsMigration.class))
+        .add(Pair.of(2, MultipleManagedResourceGroupDeletionMigration.class))
         .build();
   }
 }

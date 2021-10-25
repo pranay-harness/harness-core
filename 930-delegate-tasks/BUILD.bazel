@@ -17,6 +17,7 @@ java_library(
     deps = [
         "//:lombok",
         "//930-delegate-tasks/src/main/proto/io/harness:930_delegate_tasks_java_proto",
+        "//932-connector-task:module",
         "//940-feature-flag:module",
         "//950-delegate-tasks-beans:module",
         "//952-scm-java-client:module",
@@ -92,6 +93,7 @@ java_library(
         "@maven//:org_apache_httpcomponents_httpmime",
         "@maven//:org_cloudfoundry_cloudfoundry_operations",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit_ssh_jsch",
         "@maven//:org_hibernate_hibernate_validator",
         "@maven//:org_jetbrains_annotations",
         "@maven//:org_json_json_20160810",

@@ -540,7 +540,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       case SUCCESS:
         Optional<Risk> risk = getLatestRisk(verificationJobInstance);
         if (risk.isPresent()) {
-          if (risk.get().isLessThanEq(Risk.MEDIUM)) {
+          if (risk.get().isLessThanEq(Risk.OBSERVE)) {
             return ActivityVerificationStatus.VERIFICATION_PASSED;
           } else {
             return ActivityVerificationStatus.VERIFICATION_FAILED;
@@ -616,7 +616,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
           if (risk.isPresent()) {
             latestRiskScores.add(risk.get());
-            if (risk.get().isLessThanEq(Risk.MEDIUM)) {
+            if (risk.get().isLessThanEq(Risk.OBSERVE)) {
               passed++;
             } else {
               failed++;

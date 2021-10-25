@@ -85,7 +85,7 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
     assertThat(stepCategory).isNotNull();
     assertThat(stepCategory.toString())
         .isEqualTo(
-            "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false), StepData(name=testStepCV1, type=testStepCV1, disabled=false)], stepCategories=[])])])");
+            "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false, featureRestrictionName=null), StepData(name=testStepCV1, type=testStepCV1, disabled=false, featureRestrictionName=null)], stepCategories=[])])])");
   }
 
   @Test
@@ -110,7 +110,7 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
     assertThat(stepCategory).isNotNull();
     assertThat(stepCategory.toString())
         .isEqualTo(
-            "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])");
+            "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false, featureRestrictionName=null)], stepCategories=[])])])");
   }
 
   @Test
@@ -126,6 +126,6 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
     pmsPipelineServiceStepHelper.addToTopLevel(stepCategory, stepInfo, new HashMap<>());
     assertThat(stepCategory.toString())
         .isEqualTo(
-            "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])");
+            "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false, featureRestrictionName=null)], stepCategories=[])])])");
   }
 }

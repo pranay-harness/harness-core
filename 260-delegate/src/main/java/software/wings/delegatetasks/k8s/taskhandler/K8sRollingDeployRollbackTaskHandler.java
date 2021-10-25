@@ -65,17 +65,12 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
     K8sRollingDeployRollbackTaskParameters request = (K8sRollingDeployRollbackTaskParameters) k8sTaskParameters;
 
-    boolean success;
     ExecutionLogCallback initLogCallback = k8sTaskHelper.getExecutionLogCallback(request, Init);
     try {
-      success = init(request, k8sDelegateTaskParams, initLogCallback);
+      init(request, k8sDelegateTaskParams, initLogCallback);
     } catch (Exception e) {
       initLogCallback.saveExecutionLog(getMessage(e), ERROR, FAILURE);
       throw e;
-    }
-
-    if (!success) {
-      return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
     ResourceRecreationStatus resourceRecreationStatus = ResourceRecreationStatus.NO_RESOURCE_CREATED;
@@ -100,9 +95,9 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
           rollbackHandlerConfig, request.getReleaseNumber(), deleteLogCallback, k8sDelegateTaskParams);
     }
 
-    success = k8sRollingRollbackBaseHandler.rollback(rollbackHandlerConfig, k8sDelegateTaskParams,
+    boolean success = k8sRollingRollbackBaseHandler.rollback(rollbackHandlerConfig, k8sDelegateTaskParams,
         request.getReleaseNumber(), k8sTaskHelper.getExecutionLogCallback(request, Rollback),
-        getResourcesRecreated(request, resourceRecreationStatus));
+        getResourcesRecreated(request, resourceRecreationStatus), false);
     if (!success) {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
@@ -138,7 +133,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
         : Collections.emptySet();
   }
 
-  private boolean init(K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters,
+  private void init(K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
@@ -147,7 +142,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     rollbackHandlerConfig.setClient(
         Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath()));
 
-    return k8sRollingRollbackBaseHandler.init(
+    k8sRollingRollbackBaseHandler.init(
         rollbackHandlerConfig, k8sRollingDeployRollbackTaskParameters.getReleaseName(), executionLogCallback);
   }
 

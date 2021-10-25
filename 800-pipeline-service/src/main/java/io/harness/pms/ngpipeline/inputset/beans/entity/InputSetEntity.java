@@ -97,6 +97,8 @@ public class InputSetEntity
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
+  @NonFinal Boolean isEntityInvalid;
+  @Setter @NonFinal String invalidYamlString;
 
   @Wither @Builder.Default Boolean isInvalid = Boolean.FALSE;
 
@@ -111,5 +113,15 @@ public class InputSetEntity
       return Boolean.FALSE;
     }
     return isInvalid;
+  }
+
+  @Override
+  public boolean isEntityInvalid() {
+    return Boolean.TRUE.equals(isEntityInvalid);
+  }
+
+  @Override
+  public void setEntityInvalid(boolean isEntityInvalid) {
+    this.isEntityInvalid = isEntityInvalid;
   }
 }

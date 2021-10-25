@@ -5,6 +5,7 @@ import io.harness.cvng.beans.change.ChangeCategory;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Singular;
 import lombok.Value;
 
@@ -13,11 +14,15 @@ import lombok.Value;
 public class ChangeTimeline {
   @Singular("categoryTimeline") Map<ChangeCategory, List<TimeRangeDetail>> categoryTimeline;
 
-  @Value
+  @Data
   @Builder
   public static class TimeRangeDetail {
     Long count;
     Long startTime;
     Long endTime;
+
+    public Long incrementCount(int count) {
+      return this.count = this.count + count;
+    }
   }
 }

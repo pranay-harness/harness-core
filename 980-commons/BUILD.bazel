@@ -74,6 +74,7 @@ java_library(
         "@maven//:org_apache_commons_commons_text",
         "@maven//:org_apache_httpcomponents_httpcore",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit_ssh_jsch",
         "@maven//:org_hibernate_hibernate_validator",
         "@maven//:org_modelmapper_modelmapper",
         "@maven//:org_mongodb_morphia_morphia",

@@ -63,7 +63,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
              new CloseableAmazonWebServiceClient(getAmazonCloudFormationClient(Regions.fromName(region), awsConfig))) {
       GetTemplateSummaryRequest request = new GetTemplateSummaryRequest();
       if ("s3".equalsIgnoreCase(type)) {
-        request.withTemplateURL(data);
+        request.withTemplateURL(normalizeS3TemplatePath(data));
       } else if (CloudFormationSourceType.GIT.name().equalsIgnoreCase(type)) {
         GitOperationContext gitOperationContext =
             gitUtilsDelegate.cloneRepo(gitConfig, gitFileConfig, sourceRepoEncryptedDetail);
@@ -123,7 +123,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
              new CloseableAmazonWebServiceClient(getAmazonCloudFormationClient(Regions.fromName(region), awsConfig))) {
       GetTemplateSummaryRequest request = new GetTemplateSummaryRequest();
       if ("s3".equalsIgnoreCase(type)) {
-        request.withTemplateURL(data);
+        request.withTemplateURL(normalizeS3TemplatePath(data));
       } else {
         request.withTemplateBody(data);
       }
@@ -139,5 +139,17 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
+  }
+
+  /**
+   * Refer to https://forums.aws.amazon.com/thread.jspa?threadID=55746
+   */
+  @Override
+  public String normalizeS3TemplatePath(String s3Path) {
+    String normalizedS3TemplatePath = s3Path;
+    if (isNotEmpty(normalizedS3TemplatePath) && normalizedS3TemplatePath.contains("+")) {
+      normalizedS3TemplatePath = s3Path.replaceAll("\\+", "%20");
+    }
+    return normalizedS3TemplatePath;
   }
 }

@@ -1,6 +1,8 @@
 package io.harness.engine.interrupts.helpers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.engine.interrupts.helpers.ExpiryHelper.EXPIRE_ERROR_MESSAGE;
+import static io.harness.eraro.ErrorCode.TIMEOUT_ENGINE_EXCEPTION;
 import static io.harness.logging.UnitStatus.EXPIRED;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
@@ -16,6 +18,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.eraro.Level;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionBuilder;
 import io.harness.interrupts.Interrupt;
@@ -27,6 +30,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
+import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
@@ -105,8 +109,14 @@ public class ExpiryHelperTest extends OrchestrationTestBase {
         StepResponseProto.newBuilder()
             .setStatus(Status.EXPIRED)
             .setFailureInfo(FailureInfo.newBuilder()
-                                .setErrorMessage("Step timed out before completion")
+                                .setErrorMessage(EXPIRE_ERROR_MESSAGE)
                                 .addFailureTypes(FailureType.TIMEOUT_FAILURE)
+                                .addFailureData(FailureData.newBuilder()
+                                                    .addFailureTypes(FailureType.TIMEOUT_FAILURE)
+                                                    .setLevel(Level.ERROR.name())
+                                                    .setCode(TIMEOUT_ENGINE_EXCEPTION.name())
+                                                    .setMessage(EXPIRE_ERROR_MESSAGE)
+                                                    .build())
                                 .build())
             .build());
   }
