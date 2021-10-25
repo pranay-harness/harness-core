@@ -305,7 +305,7 @@ fi
 
 USAGE=$(
   cat <<-END
- logging:
+logging:
   level: INFO
   loggers:
     org.glassfish.jersey: WARN
@@ -319,7 +319,7 @@ USAGE=$(
 END
 )
 
-echo $USAGE >>config-delegate.yml
+echo "$USAGE" >>config-delegate.yml
 
 rm -f -- *.bak
 
