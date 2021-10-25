@@ -315,7 +315,7 @@ logging:
     - type: gke-console
       threshold: TRACE
       target: STDOUT
-      stackdriverLogEnabled: false
+      stackdriverLogEnabled: true
 END
 )
 
