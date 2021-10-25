@@ -127,7 +127,7 @@ public class CIDashboardOverviewResource {
   @GET
   @Path("/usage/ci")
   @ApiOperation(value = "Get usage", nickname = "getUsage")
-  @NGAccessControlCheck(resourceType = PROJECT_RESOURCE_TYPE, permission = VIEW_PROJECT_PERMISSION)
+  @NGAccessControlCheck(resourceType = "ACCOUNT", permission = "core_account_view")
   public ResponseDTO<CIUsageResult> getCIUsageData(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.TIMESTAMP) long timestamp) {
