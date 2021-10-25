@@ -45,8 +45,7 @@ public class StageExecutionSelectorHelper {
     return addStagesRequired(stageYamlList);
   }
 
-  @VisibleForTesting
-  List<BasicStageInfo> getStageInfoList(String pipelineYaml) {
+  public List<BasicStageInfo> getStageInfoList(String pipelineYaml) {
     List<BasicStageInfo> stageInfoList = new ArrayList<>();
     try {
       YamlField pipelineYamlField = YamlUtils.readTree(pipelineYaml);
