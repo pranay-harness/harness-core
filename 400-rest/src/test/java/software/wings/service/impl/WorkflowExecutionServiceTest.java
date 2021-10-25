@@ -250,8 +250,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock WriteResult writeResult;
   @Mock Query<StateExecutionInstance> statequery;
   @Mock PageResponse<StateExecutionInstance> pageResponseQuery;
-  @Mock StateExecutionInstance stateExecutionInstance;
-  @Mock PipelineExecution pipeleineExecution;
 
   /**
    * test setup.
@@ -953,11 +951,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     approvalStateExecutionData.setStatus(ExecutionStatus.PAUSED);
     WorkflowExecution workflowExecution = createNewWorkflowExecution();
 
+    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
+                                                        .addStateExecutionData(approvalStateExecutionData)
+                                                        .build();
+
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(statequery.get()).thenReturn(stateExecutionInstance);
     when(statequery.filter(any(), any())).thenReturn(statequery);
     when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(statequery);
-    when(stateExecutionInstance.fetchStateExecutionData()).thenReturn(approvalStateExecutionData);
     when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
 
@@ -978,12 +979,12 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     approvalDetails.setAction(Action.APPROVE);
 
     WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance().build();
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(statequery.get()).thenReturn(stateExecutionInstance);
     when(statequery.filter(any(), any())).thenReturn(statequery);
     when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(statequery);
-    when(stateExecutionInstance.fetchStateExecutionData()).thenReturn(null);
     when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
 
@@ -1087,6 +1088,10 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     approvalStateExecutionData.setStatus(ExecutionStatus.PAUSED);
     WorkflowExecution workflowExecution = createNewWorkflowExecution();
 
+    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
+                                                        .addStateExecutionData(approvalStateExecutionData)
+                                                        .build();
+
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(statequery.get()).thenReturn(stateExecutionInstance);
     when(statequery.filter(any(), any())).thenReturn(statequery);
@@ -1101,7 +1106,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.query(StateExecutionInstance.class, req)).thenReturn(pageResponseQuery);
     when(pageResponseQuery.getResponse()).thenReturn(asList(stateExecutionInstance));
-    when(stateExecutionInstance.fetchStateExecutionData()).thenReturn(approvalStateExecutionData);
     when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
 

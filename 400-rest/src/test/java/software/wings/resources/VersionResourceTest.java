@@ -2,7 +2,7 @@ package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.UNKNOWN;
 
-import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersionCollection;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import static java.util.Arrays.asList;
@@ -46,8 +46,8 @@ public class VersionResourceTest extends CategoryTest {
   @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListVersions() throws Exception {
-    PageResponse<EntityVersion> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(anEntityVersion().build()));
+    PageResponse<EntityVersionCollection> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(anEntityVersionCollection().build()));
     pageResponse.setTotal(1l);
     when(ENTITY_VERSION_SERVICE.listEntityVersions(any(PageRequest.class))).thenReturn(pageResponse);
     RestResponse<PageResponse<EntityVersion>> restResponse =

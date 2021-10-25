@@ -1083,7 +1083,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldFetchHelmChartsFromWorkflowStandardParamsIfNoManifestVariable() {
-    StateExecutionInstance stateExecutionInstance = mock(StateExecutionInstance.class);
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
     on(workflowStandardParams).set("app", anApplication().uuid(APP_ID).build());
 
@@ -1091,7 +1091,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     contextElements.push(workflowStandardParams);
     List<String> helmChartId = Collections.singletonList(HELM_CHART_ID);
 
-    when(stateExecutionInstance.getContextElements()).thenReturn(contextElements);
+    stateExecutionInstance.setContextElements(contextElements);
     workflowStandardParams.setHelmChartIds(helmChartId);
     on(workflowStandardParams).set("helmCharts", asList(HelmChart.builder().uuid(HELM_CHART_ID).name("chart").build()));
     ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());

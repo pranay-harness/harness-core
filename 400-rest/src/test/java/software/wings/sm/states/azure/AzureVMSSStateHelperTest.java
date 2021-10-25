@@ -143,7 +143,7 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   public void testGetArtifact() {
     String serviceId = "serviceId";
     DeploymentExecutionContext context = Mockito.mock(DeploymentExecutionContext.class);
-    Artifact artifact = Mockito.mock(Artifact.class);
+    Artifact artifact = Artifact.Builder.anArtifact().build();
 
     when(context.getDefaultArtifactForService(serviceId)).thenReturn(artifact);
 
@@ -656,7 +656,7 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
     ExecutionContextImpl context = Mockito.mock(ExecutionContextImpl.class);
     WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
     PhaseElement phaseElement = Mockito.mock(PhaseElement.class);
-    Artifact artifact = Mockito.mock(Artifact.class);
+    Artifact artifact = Artifact.Builder.anArtifact().build();
     SettingAttribute settingAttribute = mock(SettingAttribute.class);
 
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);

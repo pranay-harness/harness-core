@@ -170,7 +170,7 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testTriggerAnalysisDataCollection_resolveRegionAndConnectorIdWithActualValueOfRegion() {
-    AnalysisContext analysisContext = mock(AnalysisContext.class);
+    AnalysisContext analysisContext = AnalysisContext.builder().build();
     VerificationStateAnalysisExecutionData executionData = mock(VerificationStateAnalysisExecutionData.class);
     Map<String, String> hosts = new HashMap<>();
     cloudWatchState.setRegion("${serviceVariable.cloudwatchRegion}");
@@ -211,7 +211,7 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testTriggerAnalysisDataCollection_resolveRegionAndConnectorIdWithMappedValueOfRegion() {
-    AnalysisContext analysisContext = mock(AnalysisContext.class);
+    AnalysisContext analysisContext = AnalysisContext.builder().build();
     VerificationStateAnalysisExecutionData executionData = mock(VerificationStateAnalysisExecutionData.class);
     Map<String, String> hosts = new HashMap<>();
     cloudWatchState.setRegion("${serviceVariable.cloudwatchRegion}");
@@ -254,7 +254,7 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void testTriggerAnalysisDataCollection_nullSettingAttribute() {
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
-    AnalysisContext analysisContext = mock(AnalysisContext.class);
+    AnalysisContext analysisContext = AnalysisContext.builder().build();
     VerificationStateAnalysisExecutionData executionData = mock(VerificationStateAnalysisExecutionData.class);
     Map<String, String> hosts = new HashMap<>();
     hosts.put("aws.host", "default");

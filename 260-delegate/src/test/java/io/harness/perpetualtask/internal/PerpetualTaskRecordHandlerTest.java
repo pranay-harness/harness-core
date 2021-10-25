@@ -58,7 +58,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   private String delegateId = "DELEGATE_ID";
   private PerpetualTaskRecord record;
 
-  @Mock private DelegateTask delegateTask;
+  private DelegateTask delegateTask = DelegateTask.builder().build();
   @Mock K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Mock PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock DelegateService delegateService;

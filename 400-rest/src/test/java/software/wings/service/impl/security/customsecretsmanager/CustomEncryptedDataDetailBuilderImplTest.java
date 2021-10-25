@@ -8,7 +8,6 @@ import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRI
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,7 +52,7 @@ public class CustomEncryptedDataDetailBuilderImplTest extends CategoryTest {
   public void test_buildEncryptedDataDetail() {
     CustomSecretsManagerConfig config = obtainConfig(HOST_CONNECTION_ATTRIBUTES);
     config.setConnectorTemplatized(true);
-    EncryptedData encryptedData = mock(EncryptedData.class);
+    EncryptedData encryptedData = EncryptedData.builder().build();
     String shellScript = config.getCustomSecretsManagerShellScript().getScriptString();
     when(expressionEvaluator.substitute(eq(shellScript), any())).thenReturn(shellScript);
     EncryptedDataDetail encryptedDataDetail =

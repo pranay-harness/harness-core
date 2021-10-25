@@ -121,8 +121,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
   @Inject private WorkflowService workflowService;
 
-  @Mock private Workflow workflow;
-  @Mock private Pipeline pipeline;
+  private Pipeline pipeline = Pipeline.builder().build();
   @Mock private ExecutionContextImpl context;
   @Mock private WorkflowService mockWorkflowService;
   @Mock private PipelineService pipelineService;
@@ -133,7 +132,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
   @Mock private ExecutionEventAdvice executionEventAdvice;
-  @Mock private StateExecutionInstance stateExecutionInstance;
+  private StateExecutionInstance stateExecutionInstance =
+      StateExecutionInstance.Builder.aStateExecutionInstance().build();
   @Mock private AlertService alertService;
   @InjectMocks private StateMachineExecutor injectStateMachineExecutor;
   @InjectMocks private StateMachineExecutor spyExecutor = spy(new StateMachineExecutor());
@@ -934,11 +934,11 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+    Workflow workflow = Workflow.WorkflowBuilder.aWorkflow().orchestrationWorkflow(canaryOrchestrationWorkflow).build();
 
     when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(mockWorkflowService.readWorkflow(any(), any())).thenReturn(workflow);
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(
              eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
@@ -979,21 +979,9 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void testSendRuntimeinputsNeededNotification() {
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withNotificationGroups(Arrays.asList(aNotificationGroup()
-                                                                                      .withName(USER_NAME)
-                                                                                      .withUuid(NOTIFICATION_GROUP_ID)
-                                                                                      .withAccountId(ACCOUNT_ID)
-                                                                                      .build()))
-                                            .build();
-
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
-
     when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(
              eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
@@ -1028,21 +1016,9 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void testSendRuntimeinputsProvidedNotification() {
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withNotificationGroups(Arrays.asList(aNotificationGroup()
-                                                                                      .withName(USER_NAME)
-                                                                                      .withUuid(NOTIFICATION_GROUP_ID)
-                                                                                      .withAccountId(ACCOUNT_ID)
-                                                                                      .build()))
-                                            .build();
-
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
-
     when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(
              eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
@@ -1077,21 +1053,9 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void testSendPipelineNotification() {
-    NotificationRule notificationRule = aNotificationRule()
-                                            .withNotificationGroups(Arrays.asList(aNotificationGroup()
-                                                                                      .withName(USER_NAME)
-                                                                                      .withUuid(NOTIFICATION_GROUP_ID)
-                                                                                      .withAccountId(ACCOUNT_ID)
-                                                                                      .build()))
-                                            .build();
-
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
-
     when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(
              eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
@@ -1191,11 +1155,12 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void testUpdateExecutionInstanceWhenWaitingForIntervention() {
+    Workflow workflow =
+        Workflow.WorkflowBuilder.aWorkflow().orchestrationWorkflow(new CanaryOrchestrationWorkflow()).build();
     when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(alertService.openAlert(any(), any(), any(), any())).thenReturn(null);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
-    when(workflow.getOrchestrationWorkflow()).thenReturn(new CanaryOrchestrationWorkflow());
     when(workflowExecutionService.getExecutionDetails(
              eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()

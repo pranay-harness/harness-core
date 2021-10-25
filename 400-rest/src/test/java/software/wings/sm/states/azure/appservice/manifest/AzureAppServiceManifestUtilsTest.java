@@ -82,7 +82,7 @@ public class AzureAppServiceManifestUtilsTest extends WingsBaseTest {
 
   @NotNull
   private ApplicationManifest mockGetManifestFilesByAppManifestId(ExecutionContext mockExecutionContext) {
-    Service mockService = mock(Service.class);
+    Service mockService = Service.builder().build();
     doReturn(mockService).when(applicationManifestUtils).fetchServiceFromContext(mockExecutionContext);
 
     ApplicationManifest serviceAppManifest = ApplicationManifest.builder().storeType(StoreType.Local).build();

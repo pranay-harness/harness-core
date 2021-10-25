@@ -146,12 +146,12 @@ public class AwsLambdaStateTest extends CategoryTest {
     doReturn(app).when(mockParams).fetchRequiredApp();
     doReturn(env).when(mockParams).getEnv();
     doReturn(env).when(mockParams).getEnv();
-    doReturn(mock(Service.class)).when(serviceResourceService).getWithDetails(anyString(), anyString());
-    final ServiceCommand serviceCommandMock = mock(ServiceCommand.class);
+    doReturn(Service.builder().build()).when(serviceResourceService).getWithDetails(anyString(), anyString());
+    final ServiceCommand serviceCommandMock =
+        ServiceCommand.Builder.aServiceCommand().withCommand(mock(Command.class)).build();
     doReturn(serviceCommandMock)
         .when(serviceResourceService)
         .getCommandByName(anyString(), anyString(), anyString(), anyString());
-    doReturn(mock(Command.class)).when(serviceCommandMock).getCommand();
     doReturn(null).when(infrastructureMappingService).get(anyString(), anyString());
 
     awsLambdaState.execute(mockContext);

@@ -126,7 +126,7 @@ public class BaseSecretValidatorTest extends CategoryTest {
     String name = UUIDGenerator.generateUuid();
     HarnessSecret secret = HarnessSecret.builder().name(name).kmsId(kmsId).build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
-    EncryptedData encryptedData = mock(EncryptedData.class);
+    EncryptedData encryptedData = EncryptedData.builder().build();
     when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.of(encryptedData));
     try {
       baseSecretValidator.validateSecret(accountId, secret, secretManagerConfig);
