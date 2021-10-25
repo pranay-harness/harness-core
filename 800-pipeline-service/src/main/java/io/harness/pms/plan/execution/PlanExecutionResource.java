@@ -23,6 +23,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineResourceConstants;
@@ -488,6 +489,19 @@ public class PlanExecutionResource {
       @QueryParam(NGCommonEntityConstants.RUN_ALL_STAGES) @DefaultValue("true") boolean runAllStages,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    if (retryStagesIdentifier.size() == 0) {
+      throw new InvalidRequestException("You need to select the stage to retry!!");
+    }
+    PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
+        pmsExecutionService.getPipelineExecutionSummaryEntity(
+            accountId, orgIdentifier, projectIdentifier, previousExecutionId, false);
+
+    if (!StatusUtils.getRetryableFailedStatuses().contains(
+            pipelineExecutionSummaryEntity.getStatus().getEngineStatus())) {
+      throw new InvalidRequestException(
+          "Retrying is applicable only for failed pipeline. You can only retry when executed pipeline is either of these statuses - Failed, Aborted, Expired, Rejected");
+    }
+
     PlanExecutionResponseDto planExecutionResponseDto = pipelineExecutor.retryPipelineWithInputSetPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml,
         previousExecutionId, retryStagesIdentifier, runAllStages, false);
