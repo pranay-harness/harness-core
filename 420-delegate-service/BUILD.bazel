@@ -67,6 +67,7 @@ java_library(
         "@maven//:io_dropwizard_metrics_metrics_annotation",
         "@maven//:io_grpc_grpc_api",
         "@maven//:io_grpc_grpc_stub",
+        "@maven//:io_swagger_core_v3_swagger_annotations",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:io_swagger_swagger_core",
         "@maven//:io_swagger_swagger_jaxrs",
