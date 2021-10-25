@@ -3,7 +3,13 @@ package io.harness.grpc;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.*;
+import io.harness.delegate.AbortExpireTaskRequest;
+import io.harness.delegate.AbortTaskResponse;
+import io.harness.delegate.DelegateClassicTaskRequest;
+import io.harness.delegate.DelegateTaskGrpc;
+import io.harness.delegate.ExecuteTaskResponse;
+import io.harness.delegate.ExpireTaskResponse;
+import io.harness.delegate.QueueTaskResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.serializer.KryoSerializer;
 
@@ -17,10 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTaskImplBase {
-  @Inject
-  private KryoSerializer kryoSerializer;
-  @Inject
-  private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private KryoSerializer kryoSerializer;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Override
   public void queueTask(DelegateClassicTaskRequest request, StreamObserver<QueueTaskResponse> responseObserver) {
@@ -44,9 +48,9 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
       DelegateTask task = (DelegateTask) kryoSerializer.asInflatedObject(request.getDelegateTaskKryo().toByteArray());
       DelegateResponseData delegateResponseData = delegateTaskServiceClassic.executeTask(task);
       responseObserver.onNext(
-              ExecuteTaskResponse.newBuilder()
-                      .setDelegateTaskResponseKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateResponseData)))
-                      .build());
+          ExecuteTaskResponse.newBuilder()
+              .setDelegateTaskResponseKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateResponseData)))
+              .build());
       responseObserver.onCompleted();
 
     } catch (Exception ex) {
@@ -63,7 +67,9 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
 
       DelegateTask delegateTask = delegateTaskServiceClassic.abortTask(accountId, delegateTaskId);
       responseObserver.onNext(
-              AbortTaskResponse.newBuilder().setDelegateTaskKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateTask))).build());
+          AbortTaskResponse.newBuilder()
+              .setDelegateTaskKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateTask)))
+              .build());
       responseObserver.onCompleted();
 
     } catch (Exception ex) {
@@ -79,8 +85,7 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
       String delegateTaskId = request.getDelegateTaskId();
 
       String message = delegateTaskServiceClassic.expireTask(accountId, delegateTaskId);
-      responseObserver.onNext(
-              ExpireTaskResponse.newBuilder().setMessage(message).build());
+      responseObserver.onNext(ExpireTaskResponse.newBuilder().setMessage(message).build());
       responseObserver.onCompleted();
 
     } catch (Exception ex) {
@@ -88,5 +93,4 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
-
 }

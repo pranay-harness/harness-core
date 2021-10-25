@@ -180,6 +180,4 @@ public interface DelegateService extends OwnedByAccount {
   DelegateTask abortTask(String accountId, String delegateTaskId);
 
   String expireTask(String accountId, String delegateTaskId);
-
-
 }
