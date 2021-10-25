@@ -190,6 +190,10 @@ public class AuthHandler {
   @Inject private TemplateGalleryService templateGalleryService;
 
   public UserPermissionInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
+    double accountPermissionsTime, getAppIdsTime, collectAppIdsTime, fetchRequiredEntitiesTime,
+        populateAppPermissionsTime, dashboardAccessPermissionsTime;
+    long startTime = System.currentTimeMillis();
+
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
 
     Set<PermissionType> accountPermissionSet = new HashSet<>();
@@ -197,16 +201,25 @@ public class AuthHandler {
         AccountPermissionSummary.builder().permissions(accountPermissionSet);
 
     populateRequiredAccountPermissions(userGroups, accountPermissionSet);
+    accountPermissionsTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
 
     // Get all app ids
     HashSet<String> allAppIds = new HashSet<>(appService.getAppIdsByAccountId(accountId));
+    getAppIdsTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
 
     // Cache all the entities by app id first
     Map<PermissionType, Set<String>> permissionTypeAppIdSetMap = collectRequiredAppIds(userGroups, allAppIds);
+    collectAppIdsTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
 
     // Fetch all entities by appIds
     Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap =
         fetchRequiredEntities(accountId, permissionTypeAppIdSetMap);
+
+    fetchRequiredEntitiesTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
 
     // Filter and assign permissions
     Map<String, AppPermissionSummary> appPermissionMap =
@@ -220,10 +233,18 @@ public class AuthHandler {
     UserPermissionInfo userPermissionInfo = userPermissionInfoBuilder.build();
     setAppPermissionMap(userPermissionInfo);
 
+    populateAppPermissionsTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
+
     Map<String, Set<io.harness.dashboard.Action>> dashboardPermissions =
         dashboardAuthHandler.getDashboardAccessPermissions(user, accountId, userPermissionInfo, userGroups);
     userPermissionInfo.setDashboardPermissions(dashboardPermissions);
 
+    dashboardAccessPermissionsTime = System.currentTimeMillis() - startTime;
+    log.info(
+        "evaluateUserPermissionInfo benchmarking - accountPermissionsTime:{}, getAppIdsTime:{}, collectAppIdsTime:{}, fetchRequiredEntitiesTime:{}, populateAppPermissionsTime:{}, dashboardAccessPermissionsTime:{}",
+        accountPermissionsTime, getAppIdsTime, collectAppIdsTime, fetchRequiredEntitiesTime, populateAppPermissionsTime,
+        dashboardAccessPermissionsTime);
     return userPermissionInfo;
   }
 
