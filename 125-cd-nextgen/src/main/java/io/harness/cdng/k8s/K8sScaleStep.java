@@ -1,6 +1,10 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -14,6 +18,7 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -33,6 +38,7 @@ import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
 import java.util.Optional;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDP)
 public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployResponse> {
@@ -54,10 +60,12 @@ public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployRes
   @Override
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    K8sScaleStepParameter scaleStepParameter = (K8sScaleStepParameter) stepElementParameters.getSpec();
+    validateStepParameters(stepElementParameters, scaleStepParameter);
+
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
 
-    K8sScaleStepParameter scaleStepParameter = (K8sScaleStepParameter) stepElementParameters.getSpec();
     Integer instances = scaleStepParameter.getInstanceSelection().getSpec().getInstances();
 
     boolean skipSteadyCheck = K8sStepHelper.getParameterFieldBooleanValue(scaleStepParameter.getSkipSteadyStateCheck(),
@@ -109,5 +117,17 @@ public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployRes
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
     return StepElementParameters.class;
+  }
+
+  private void validateStepParameters(StepElementParameters parameters, K8sScaleStepParameter scaleStepParameter) {
+    if (isEmpty(scaleStepParameter.getWorkload().getValue())) {
+      boolean isUnresolvedExpression = scaleStepParameter.getWorkload().isExpression()
+          && isNotEmpty(scaleStepParameter.getWorkload().getExpressionValue());
+      throw new InvalidArgumentsException(Pair.of("workload",
+          format("cannot be null or empty for '%s' step with identifier '%s'%s", parameters.getType(),
+              parameters.getIdentifier(),
+              isUnresolvedExpression ? ". Check expression: " + scaleStepParameter.getWorkload().getExpressionValue()
+                                     : "")));
+    }
   }
 }
