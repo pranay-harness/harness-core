@@ -42,7 +42,7 @@ public class AddRuleYaml implements PatchInstruction {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class AddRuleYamlSpec {
-    @NotNull @ApiModelProperty(dataType = SwaggerConstants.INTEGER_CLASSPATH) private ParameterField<Integer> priority;
+    @ApiModelProperty(dataType = SwaggerConstants.INTEGER_CLASSPATH) private ParameterField<Integer> priority;
     private DistributionYamlSpec distribution;
 
     /**
@@ -114,7 +114,7 @@ public class AddRuleYaml implements PatchInstruction {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class ClauseYamlSpec {
-    @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> attribute;
+    @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> attribute;
     @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> op;
     @NotNull
     @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)

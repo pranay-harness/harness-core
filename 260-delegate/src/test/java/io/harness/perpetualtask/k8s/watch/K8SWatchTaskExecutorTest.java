@@ -52,6 +52,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
+import io.kubernetes.client.ProtoClient;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.models.V1NamespaceBuilder;
 import io.kubernetes.client.openapi.models.V1Node;
@@ -60,14 +61,8 @@ import io.kubernetes.client.openapi.models.V1NodeList;
 import io.kubernetes.client.openapi.models.V1NodeListBuilder;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
-import io.kubernetes.client.openapi.models.V1PersistentVolume;
-import io.kubernetes.client.openapi.models.V1PersistentVolumeBuilder;
-import io.kubernetes.client.openapi.models.V1PersistentVolumeList;
-import io.kubernetes.client.openapi.models.V1PersistentVolumeListBuilder;
-import io.kubernetes.client.openapi.models.V1Pod;
-import io.kubernetes.client.openapi.models.V1PodBuilder;
-import io.kubernetes.client.openapi.models.V1PodList;
-import io.kubernetes.client.openapi.models.V1PodListBuilder;
+import io.kubernetes.client.proto.Meta;
+import io.kubernetes.client.proto.V1;
 import io.kubernetes.client.util.ClientBuilder;
 import java.time.Instant;
 import java.util.Collections;
@@ -91,6 +86,7 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   private DefaultK8sMetricsClient k8sMetricClient;
   private K8SWatchTaskExecutor k8SWatchTaskExecutor;
 
+  @Mock private ProtoClient protoClient;
   @Mock private EventPublisher eventPublisher;
   @Mock private K8sWatchServiceDelegate k8sWatchServiceDelegate;
   @Mock private ApiClientFactoryImpl apiClientFactory;
@@ -153,10 +149,6 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
 
     stubFor(get(urlMatching("/api/v1/nodes.*"))
                 .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(getNodeList()))));
-    stubFor(get(urlPathEqualTo("/api/v1/pods"))
-                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(getPodList()))));
-    stubFor(get(urlMatching("^/api/v1/persistentvolumes.*"))
-                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(getPVList()))));
 
     stubFor(get(urlPathEqualTo("/apis/metrics.k8s.io/v1beta1/pods"))
                 .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
@@ -257,11 +249,17 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
     k8sMetricClient = new DefaultK8sMetricsClient(apiClient);
     K8sWatchTaskParams k8sWatchTaskParams = getK8sWatchTaskParams();
     Instant pollTime = Instant.now();
+    doReturn(getNodeListProto()).when(protoClient).list(any(V1.NodeList.Builder.class), eq("/api/v1/nodes"));
+    doReturn(getPodListProto()).when(protoClient).list(any(V1.PodList.Builder.class), eq("/api/v1/pods"));
+    doReturn(getPVListProto())
+        .when(protoClient)
+        .list(any(V1.PersistentVolumeList.Builder.class), eq("/api/v1/persistentvolumes"));
     doNothing()
         .when(eventPublisher)
         .publishMessage(
             messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(pollTime)), mapArgumentCaptor.capture());
-    K8SWatchTaskExecutor.publishClusterSyncEvent(k8sMetricClient, eventPublisher, k8sWatchTaskParams, pollTime);
+    K8SWatchTaskExecutor.publishClusterSyncEvent(
+        k8sMetricClient, protoClient, eventPublisher, k8sWatchTaskParams, pollTime);
     assertThat(messageArgumentCaptor.getAllValues())
         .hasSize(1)
         .contains(K8SClusterSyncEvent.newBuilder()
@@ -278,38 +276,50 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
+  private ProtoClient.ObjectOrStatus<V1.NodeList> getNodeListProto() {
+    V1.NodeList nodeList =
+        V1.NodeList.newBuilder().addItems(getNodeProto(NODE_ONE_UID)).addItems(getNodeProto(NODE_TWO_UID)).build();
+    return new ProtoClient.ObjectOrStatus<>(nodeList, null);
+  }
+
   private V1NodeList getNodeList() {
     return new V1NodeListBuilder().withItems(ImmutableList.of(getNode(NODE_ONE_UID), getNode(NODE_TWO_UID))).build();
   }
 
-  private V1PodList getPodList() {
-    return new V1PodListBuilder().withItems(ImmutableList.of(getPod(POD_ONE_UID), getPod(POD_TWO_UID))).build();
+  private ProtoClient.ObjectOrStatus<V1.PodList> getPodListProto() {
+    V1.PodList podList =
+        V1.PodList.newBuilder().addItems(getPodProto(POD_ONE_UID)).addItems(getPodProto(POD_TWO_UID)).build();
+    return new ProtoClient.ObjectOrStatus<>(podList, null);
   }
 
-  private V1PersistentVolumeList getPVList() {
-    return new V1PersistentVolumeListBuilder()
-        .withItems(ImmutableList.of(getPV(PV_ONE_UID), getPV(PV_TWO_UID)))
-        .build();
+  private ProtoClient.ObjectOrStatus<V1.PersistentVolumeList> getPVListProto() {
+    V1.PersistentVolumeList pvList =
+        V1.PersistentVolumeList.newBuilder().addItems(getPVProto(PV_ONE_UID)).addItems(getPVProto(PV_TWO_UID)).build();
+    return new ProtoClient.ObjectOrStatus<>(pvList, null);
   }
 
-  private V1PersistentVolume getPV(String pv_uid) {
-    return new V1PersistentVolumeBuilder().withMetadata(getObjectMeta(pv_uid)).build();
+  private V1.PersistentVolume getPVProto(String pvUid) {
+    return V1.PersistentVolume.newBuilder().setMetadata(getObjectMetaProto(pvUid)).build();
+  }
+
+  private V1.Node getNodeProto(String nodeUid) {
+    return V1.Node.newBuilder().setMetadata(getObjectMetaProto(nodeUid)).build();
   }
 
   private V1Node getNode(String nodeUid) {
     return new V1NodeBuilder().withMetadata(getObjectMeta(nodeUid)).build();
   }
 
+  private Meta.ObjectMeta getObjectMetaProto(String uid) {
+    return Meta.ObjectMeta.newBuilder().setUid(uid).setName(uid).build();
+  }
+
   private V1ObjectMeta getObjectMeta(String uid) {
     return new V1ObjectMetaBuilder().withUid(uid).withName(uid).build();
   }
 
-  private V1Pod getPod(String podUid) {
-    return new V1PodBuilder()
-        .withMetadata(getObjectMeta(podUid))
-        .withNewStatus()
-        .withPhase("Running")
-        .endStatus()
-        .build();
+  private V1.Pod getPodProto(String podUid) {
+    V1.PodStatus status = V1.PodStatus.newBuilder().setPhase("Running").build();
+    return V1.Pod.newBuilder().setMetadata(getObjectMetaProto(podUid)).setStatus(status).build();
   }
 }

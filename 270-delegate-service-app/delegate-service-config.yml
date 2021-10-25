@@ -193,7 +193,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 87448d72
+scmVersion: 72f01538
 
 portal:
   url: https://localhost:8000
@@ -365,3 +365,5 @@ ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15
   defaultCronExpression: "0 0/15 * 1/1 * ? *"
+
+fileStorageMode: MONGO

@@ -107,6 +107,7 @@ java_library(
         "//940-cg-audit-service:module",
         "//940-feature-flag:module",
         "//940-secret-manager-client:module",
+        "//945-account-mgmt:module",
         "//948-access-control-sdk:module",
         "//950-delegate-tasks-beans:module",
         "//950-wait-engine:module",

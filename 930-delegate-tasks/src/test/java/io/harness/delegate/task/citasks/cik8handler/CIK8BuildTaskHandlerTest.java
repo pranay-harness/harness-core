@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8InitializeTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.delegate.beans.ci.pod.CIK8ServicePodParams;
@@ -74,7 +74,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
   @Mock private ApiClientFactory apiClientFactory;
   @Mock private ApiClient apiClient;
 
-  @InjectMocks private CIK8BuildTaskHandler cik8BuildTaskHandler;
+  @InjectMocks private CIK8InitializeTaskHandler cik8BuildTaskHandler;
 
   private static final String namespace = "default";
   private static String storageClass = "test-storage";
@@ -99,9 +99,9 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
   public void executeTaskInternalWithImageSecretError() {
     KubernetesConfig kubernetesConfig = mock(KubernetesConfig.class);
 
-    CIK8BuildTaskParams cik8BuildTaskParams = buildImageSecretErrorTaskParams();
+    CIK8InitializeTaskParams cik8InitializeTaskParams = buildImageSecretErrorTaskParams();
     ImageDetailsWithConnector imageDetailsWithConnector =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
+        cik8InitializeTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(k8sConnectorHelper.getKubernetesConfig(any(ConnectorDetails.class))).thenReturn(kubernetesConfig);
     doThrow(ApiException.class)
@@ -109,7 +109,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
         .createRegistrySecret(eq(coreV1Api), eq(namespace), any(), eq(imageDetailsWithConnector));
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -120,21 +120,21 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     KubernetesConfig kubernetesConfig = mock(KubernetesConfig.class);
     V1PodBuilder podBuilder = new V1PodBuilder();
 
-    CIK8BuildTaskParams cik8BuildTaskParams = buildPodCreateErrorTaskParams();
+    CIK8InitializeTaskParams cik8InitializeTaskParams = buildPodCreateErrorTaskParams();
 
     ImageDetailsWithConnector imageDetailsWithConnector =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
+        cik8InitializeTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(k8sConnectorHelper.getKubernetesConfig(any(ConnectorDetails.class))).thenReturn(kubernetesConfig);
     when(cik8JavaClientHandler.createRegistrySecret(coreV1Api, namespace, secretName, imageDetailsWithConnector))
         .thenReturn(imgSecret);
-    when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
+    when(podSpecBuilder.createSpec((PodParams) cik8InitializeTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     doThrow(ApiException.class)
         .when(cik8JavaClientHandler)
         .createOrReplacePodWithRetries(coreV1Api, podBuilder.build(), namespace);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -146,29 +146,29 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     Watch<V1Event> watch = mock(Watch.class);
     V1PodBuilder podBuilder = new V1PodBuilder();
 
-    CIK8BuildTaskParams cik8BuildTaskParams = buildTaskParams();
+    CIK8InitializeTaskParams cik8InitializeTaskParams = buildTaskParams();
     ConnectorDetails gitConnectorDetails = ConnectorDetails.builder().build();
     Map<String, SecretParams> gitSecretData = new HashMap<>();
     ImageDetailsWithConnector imageDetailsWithConnector =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
+        cik8InitializeTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(k8sConnectorHelper.getKubernetesConfig(any(ConnectorDetails.class))).thenReturn(kubernetesConfig);
     when(cik8JavaClientHandler.createRegistrySecret(coreV1Api, namespace, secretName, imageDetailsWithConnector))
         .thenReturn(imgSecret);
     when(secretSpecBuilder.decryptGitSecretVariables(gitConnectorDetails)).thenReturn(gitSecretData);
-    when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
+    when(podSpecBuilder.createSpec((PodParams) cik8InitializeTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(cik8JavaClientHandler.createOrReplacePodWithRetries(coreV1Api, podBuilder.build(), namespace))
         .thenReturn(podBuilder.build());
     when(k8EventHandler.startAsyncPodEventWatch(eq(kubernetesConfig), eq(namespace),
-             eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
+             eq(cik8InitializeTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
         .thenReturn(watch);
     when(cik8JavaClientHandler.waitUntilPodIsReady(
-             coreV1Api, cik8BuildTaskParams.getCik8PodParams().getName(), namespace, timeout))
+             coreV1Api, cik8InitializeTaskParams.getCik8PodParams().getName(), namespace, timeout))
         .thenReturn(PodStatus.builder().status(ERROR).build());
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -180,26 +180,26 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     V1PodBuilder podBuilder = new V1PodBuilder();
     Watch<V1Event> watch = mock(Watch.class);
 
-    CIK8BuildTaskParams cik8BuildTaskParams = buildTaskParamsWithPVC();
+    CIK8InitializeTaskParams cik8InitializeTaskParams = buildTaskParamsWithPVC();
     ImageDetailsWithConnector imageDetailsWithConnector =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
+        cik8InitializeTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(k8sConnectorHelper.getKubernetesConfig(any(ConnectorDetails.class))).thenReturn(kubernetesConfig);
     when(cik8JavaClientHandler.createRegistrySecret(coreV1Api, namespace, secretName, imageDetailsWithConnector))
         .thenReturn(imgSecret);
-    when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
+    when(podSpecBuilder.createSpec((PodParams) cik8InitializeTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(cik8JavaClientHandler.createOrReplacePodWithRetries(coreV1Api, podBuilder.build(), namespace))
         .thenReturn(podBuilder.build());
     when(k8EventHandler.startAsyncPodEventWatch(eq(kubernetesConfig), eq(namespace),
-             eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
+             eq(cik8InitializeTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
         .thenReturn(watch);
     when(cik8JavaClientHandler.waitUntilPodIsReady(
-             coreV1Api, cik8BuildTaskParams.getCik8PodParams().getName(), namespace, timeout))
+             coreV1Api, cik8InitializeTaskParams.getCik8PodParams().getName(), namespace, timeout))
         .thenReturn(PodStatus.builder().status(ERROR).build());
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -212,8 +212,8 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     V1PodBuilder podBuilder = new V1PodBuilder();
     Watch<V1Event> watch = mock(Watch.class);
 
-    CIK8BuildTaskParams cik8BuildTaskParams = buildTaskParams();
-    Map<String, ConnectorDetails> publishArtifactEncryptedValues = cik8BuildTaskParams.getCik8PodParams()
+    CIK8InitializeTaskParams cik8InitializeTaskParams = buildTaskParams();
+    Map<String, ConnectorDetails> publishArtifactEncryptedValues = cik8InitializeTaskParams.getCik8PodParams()
                                                                        .getContainerParamsList()
                                                                        .get(0)
                                                                        .getContainerSecrets()
@@ -225,10 +225,10 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     when(secretSpecBuilder.decryptCustomSecretVariables(getSecretVariableDetails())).thenReturn(getCustomVarSecret());
     when(secretSpecBuilder.decryptConnectorSecretVariables(publishArtifactEncryptedValues))
         .thenReturn(getPublishArtifactSecrets());
-    when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
+    when(podSpecBuilder.createSpec((PodParams) cik8InitializeTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(cik8JavaClientHandler.createOrReplacePodWithRetries(any(), any(), any())).thenReturn(podBuilder.build());
     when(k8EventHandler.startAsyncPodEventWatch(eq(kubernetesConfig), eq(namespace),
-             eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
+             eq(cik8InitializeTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
         .thenReturn(watch);
     when(cik8JavaClientHandler.waitUntilPodIsReady(any(), eq("pod"), eq(namespace), eq(timeout)))
         .thenReturn(PodStatus.builder().status(RUNNING).build());
@@ -236,7 +236,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
 
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
@@ -249,19 +249,19 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     V1PodBuilder podBuilder = new V1PodBuilder();
     Watch<V1Event> watch = mock(Watch.class);
 
-    CIK8BuildTaskParams cik8BuildTaskParams = buildTaskParamsWithPodSvc();
+    CIK8InitializeTaskParams cik8InitializeTaskParams = buildTaskParamsWithPodSvc();
     Map<String, SecretParams> gitSecretData = new HashMap<>();
-    Map<String, ConnectorDetails> publishArtifactConnectors = cik8BuildTaskParams.getCik8PodParams()
+    Map<String, ConnectorDetails> publishArtifactConnectors = cik8InitializeTaskParams.getCik8PodParams()
                                                                   .getContainerParamsList()
                                                                   .get(0)
                                                                   .getContainerSecrets()
                                                                   .getConnectorDetailsMap();
 
     ImageDetailsWithConnector imageDetailsWithConnector =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
+        cik8InitializeTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(k8sConnectorHelper.getKubernetesConfig(any(ConnectorDetails.class))).thenReturn(kubernetesConfig);
-    when(secretSpecBuilder.decryptGitSecretVariables(cik8BuildTaskParams.getCik8PodParams().getGitConnector()))
+    when(secretSpecBuilder.decryptGitSecretVariables(cik8InitializeTaskParams.getCik8PodParams().getGitConnector()))
         .thenReturn(gitSecretData);
     when(cik8JavaClientHandler.createRegistrySecret(coreV1Api, namespace, secretName, imageDetailsWithConnector))
         .thenReturn(imgSecret);
@@ -269,24 +269,24 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     when(secretSpecBuilder.decryptConnectorSecretVariables(publishArtifactConnectors))
         .thenReturn(getPublishArtifactSecrets());
 
-    CIK8ServicePodParams servicePodParams = cik8BuildTaskParams.getServicePodParams().get(0);
+    CIK8ServicePodParams servicePodParams = cik8InitializeTaskParams.getServicePodParams().get(0);
     when(podSpecBuilder.createSpec((PodParams) servicePodParams.getCik8PodParams())).thenReturn(podBuilder);
     when(cik8JavaClientHandler.createOrReplacePodWithRetries(coreV1Api, podBuilder.build(), namespace))
         .thenReturn(podBuilder.build());
     doNothing().when(cik8JavaClientHandler).createService(eq(coreV1Api), eq(namespace), any(), any(), any());
-    when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
+    when(podSpecBuilder.createSpec((PodParams) cik8InitializeTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(cik8JavaClientHandler.createOrReplacePodWithRetries(coreV1Api, podBuilder.build(), namespace))
         .thenReturn(podBuilder.build());
     when(k8EventHandler.startAsyncPodEventWatch(eq(kubernetesConfig), eq(namespace),
-             eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
+             eq(cik8InitializeTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
         .thenReturn(watch);
     when(cik8JavaClientHandler.waitUntilPodIsReady(
-             any(), eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(namespace), eq(timeout)))
+             any(), eq(cik8InitializeTaskParams.getCik8PodParams().getName()), eq(namespace), eq(timeout)))
         .thenReturn(PodStatus.builder().status(RUNNING).build());
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
     K8sTaskExecutionResponse response =
-        cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams, logStreamingTaskClient);
+        cik8BuildTaskHandler.executeTaskInternal(cik8InitializeTaskParams, logStreamingTaskClient);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -294,6 +294,6 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void getType() {
-    assertEquals(CIK8BuildTaskHandler.Type.GCP_K8, cik8BuildTaskHandler.getType());
+    assertEquals(CIK8InitializeTaskHandler.Type.GCP_K8, cik8BuildTaskHandler.getType());
   }
 }

@@ -99,7 +99,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
       criteria.and(PlanExecutionSummaryKeys.status).in(statusList);
     }
 
-    criteria.and(PlanExecutionSummaryKeys.isLatestExecution).is(isLatest);
+    criteria.and(PlanExecutionSummaryKeys.isLatestExecution).ne(!isLatest);
 
     Criteria filterCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {

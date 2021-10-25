@@ -63,7 +63,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
-import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -112,7 +111,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
   @Inject private DelegateServiceImpl delegateService;
-  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Override
@@ -755,7 +753,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     GcpConfig gcpConfig = (GcpConfig) settingValue;
     GcbState.GcbDelegateResponse delegateResponseData = null;
     try {
-      delegateResponseData = delegateTaskServiceClassic.executeTask(
+      delegateResponseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(gcpConfig.getAccountId())
               .data(TaskData.builder()

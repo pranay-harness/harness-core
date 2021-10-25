@@ -81,7 +81,15 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -94,11 +102,13 @@ import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
+import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
 import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
 import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
+import io.harness.encryption.SecretRefData;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
@@ -249,6 +259,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private SecretDecryptionService mockSecretDecryptionService;
   @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Mock private KubernetesHelperService kubernetesHelperService;
+  @Mock private ScmFetchFilesHelperNG scmFetchFilesHelper;
   @Mock private NGErrorHelper ngErrorHelper;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
@@ -2587,6 +2598,58 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     verify(gitDecryptionHelper, times(1)).decryptGitConfig(gitConfigDTO, encryptionDataDetails);
     verify(ngGitService, times(1))
         .downloadFiles(storeDelegateConfig, "manifest", "accountId", sshSessionConfig, gitConfigDTO);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectoryOptimizedFileFetch() throws Exception {
+    K8sTaskHelperBase spyHelperBase = spy(k8sTaskHelperBase);
+    GithubConnectorDTO githubConnectorDTO =
+        GithubConnectorDTO.builder()
+            .authentication(GithubAuthenticationDTO.builder()
+                                .authType(GitAuthType.HTTP)
+                                .credentials(GithubHttpCredentialsDTO.builder()
+                                                 .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                                                 .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                                                          .username("usermane")
+                                                                          .passwordRef(SecretRefData.builder().build())
+                                                                          .build())
+                                                 .build())
+                                .build())
+            .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
+            .build();
+    List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
+    List<EncryptedDataDetail> apiAuthEncryptedDataDetails = new ArrayList<>();
+    SshSessionConfig sshSessionConfig = mock(SshSessionConfig.class);
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    GitStoreDelegateConfig storeDelegateConfig = GitStoreDelegateConfig.builder()
+                                                     .branch("master")
+                                                     .fetchType(FetchType.BRANCH)
+                                                     .connectorName("conenctor")
+                                                     .gitConfigDTO(githubConnectorDTO)
+                                                     .path("manifest")
+                                                     .encryptedDataDetails(encryptionDataDetails)
+                                                     .apiAuthEncryptedDataDetails(apiAuthEncryptedDataDetails)
+                                                     .sshKeySpecDTO(sshKeySpecDTO)
+                                                     .optimizedFilesFetch(true)
+                                                     .build();
+
+    K8sManifestDelegateConfig manifestDelegateConfig =
+        K8sManifestDelegateConfig.builder().storeDelegateConfig(storeDelegateConfig).build();
+
+    doReturn("files").when(spyHelperBase).getManifestFileNamesInLogFormat("manifest");
+
+    boolean result = spyHelperBase.fetchManifestFilesAndWriteToDirectory(
+        manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId");
+    assertThat(result).isTrue();
+
+    verify(mockSecretDecryptionService, times(1)).decrypt(any(), eq(apiAuthEncryptedDataDetails));
+    verify(scmFetchFilesHelper, times(1)).downloadFilesUsingScm("manifest", storeDelegateConfig, executionLogCallback);
+
+    verify(gitDecryptionHelper, times(0)).decryptGitConfig(any(), eq(encryptionDataDetails));
+    verify(ngGitService, times(0))
+        .downloadFiles(eq(storeDelegateConfig), eq("manifest"), eq("accountId"), eq(sshSessionConfig), any());
   }
 
   @Test

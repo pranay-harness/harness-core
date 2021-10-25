@@ -1,9 +1,11 @@
 package software.wings.service.impl.applicationmanifest;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.manifests.request.ManifestCollectionPTaskClientParams.ManifestCollectionPTaskClientParamsKeys;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AccountLogContext;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
+@TargetModule(_870_CG_ORCHESTRATION)
 public class AppManifestPTaskHelper {
   public static final Duration ITERATION_INTERVAL = Durations.fromSeconds(90);
   public static final Duration TIMEOUT = Durations.fromMinutes(3);

@@ -22,10 +22,10 @@ import lombok.experimental.Wither;
 public class GitEntityInfo {
   String branch;
   String yamlGitConfigId;
-  @Setter String folderPath;
-  @Setter String filePath;
-  String commitMsg;
-  String lastObjectId; // required in case of update file
+  @Wither @Setter String folderPath;
+  @Wither @Setter String filePath;
+  @Wither String commitMsg;
+  @Wither String lastObjectId; // required in case of update file
   boolean isNewBranch;
   boolean isSyncFromGit;
   @Wither boolean findDefaultFromOtherRepos;

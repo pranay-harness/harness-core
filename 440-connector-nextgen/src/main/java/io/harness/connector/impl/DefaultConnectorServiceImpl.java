@@ -67,6 +67,7 @@ import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
@@ -128,10 +129,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Optional<Connector> connector = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
-        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+    Optional<Connector> connector =
+        getInternal(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     return connector.map(connectorMapper::writeDTO);
   }
 
@@ -350,11 +349,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     assurePredefined(connectorRequest, accountIdentifier);
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+    Optional<Connector> existingConnectorOptional = getInternal(
         accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
-    Optional<Connector> existingConnectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier,
-            connector.getProjectIdentifier(), connector.getOrgIdentifier(), accountIdentifier, true);
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
@@ -419,10 +415,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Optional<Connector> existingConnectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
-        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+    Optional<Connector> existingConnectorOptional =
+        getInternal(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
           accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
@@ -493,7 +487,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     Connector connector =
-        getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+        getConnectorOrThrowException(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
     ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
     return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
@@ -507,7 +501,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorValidationResult testGitRepoConnection(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String connectorIdentifier, String gitRepoURL) {
     Connector connector =
-        getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+        getConnectorOrThrowException(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorValidationResult validationResult;
 
     if (connector.getCategories() != null & !connector.getCategories().contains(ConnectorCategory.CODE_REPO)) {
@@ -557,13 +551,10 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult,
       Long activityTime) {}
 
-  private Connector getConnectorWithIdentifier(
+  private Connector getConnectorOrThrowException(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-
-    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
-        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+    Optional<Connector> connectorOptional =
+        getInternal(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
 
     if (connectorOptional.isPresent()) {
       return connectorOptional.get();
@@ -665,10 +656,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public String getHeartbeatPerpetualTaskId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
-        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+    Optional<Connector> connectorOptional =
+        getInternal(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
 
     return connectorOptional
         .filter(connector -> connector.getIsFromDefaultBranch() == null || connector.getIsFromDefaultBranch())
@@ -727,10 +716,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public void deleteBatch(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifiersList) {
     for (String connectorIdentifier : connectorIdentifiersList) {
-      String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
-          fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+      Optional<Connector> connectorOptional =
+          getInternal(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
       connectorOptional
           .map(item -> {
             String heartbeatTaskId = item.getHeartbeatPerpetualTaskId();
@@ -751,5 +738,29 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
                            -> new ConnectorNotFoundException(
                                String.format("No connector found with identifier %s", connectorIdentifier), USER));
     }
+  }
+
+  private Optional<Connector> getInternal(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+  }
+
+  @Override
+  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean invalid, String invalidYaml) {
+    Optional<Connector> existingConnectorOptional =
+        getInternal(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (!existingConnectorOptional.isPresent()) {
+      return false;
+    }
+    Connector existingConnector = existingConnectorOptional.get();
+    existingConnector.setEntityInvalid(invalid);
+    existingConnector.setInvalidYamlString(invalid ? invalidYaml : null);
+    existingConnector.setObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml));
+    connectorRepository.save(existingConnector, ChangeType.NONE);
+    return true;
   }
 }

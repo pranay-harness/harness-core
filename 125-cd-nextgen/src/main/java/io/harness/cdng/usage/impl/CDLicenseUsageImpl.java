@@ -14,6 +14,7 @@ import io.harness.dtos.InstanceDTO;
 import io.harness.licensing.usage.beans.ReferenceDTO;
 import io.harness.licensing.usage.beans.UsageDataDTO;
 import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
+import io.harness.licensing.usage.params.CDUsageRequestParams;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.service.instance.InstanceService;
@@ -30,12 +31,13 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.CDP)
 @Singleton
-public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageDTO> {
+public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageDTO, CDUsageRequestParams> {
   @Inject InstanceService instanceService;
   @Inject ServiceEntityService serviceEntityService;
 
   @Override
-  public CDLicenseUsageDTO getLicenseUsage(String accountIdentifier, ModuleType module, long timestamp) {
+  public CDLicenseUsageDTO getLicenseUsage(
+      String accountIdentifier, ModuleType module, long timestamp, CDUsageRequestParams usageRequest) {
     Preconditions.checkArgument(timestamp > 0, format("Invalid timestamp %d while fetching LicenseUsages.", timestamp));
     Preconditions.checkArgument(ModuleType.CD == module, format("Invalid Module type %s provided", module.toString()));
 

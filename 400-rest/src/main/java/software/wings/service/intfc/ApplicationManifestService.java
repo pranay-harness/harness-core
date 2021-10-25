@@ -110,4 +110,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   ApplicationManifest getAppManifestByName(String appId, String envId, String serviceId, String appManifestName);
 
   Map<String, String> getNamesForIds(String appId, Set<String> appManifestIds);
+
+  boolean deletePerpetualTaskByAppManifest(String accountId, String appManifestId);
 }

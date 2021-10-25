@@ -17,6 +17,7 @@ java_library(
     deps = [
         "//:lombok",
         "//930-delegate-tasks/src/main/proto/io/harness:930_delegate_tasks_java_proto",
+        "//932-connector-task:module",
         "//940-feature-flag:module",
         "//950-delegate-tasks-beans:module",
         "//952-scm-java-client:module",

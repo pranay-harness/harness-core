@@ -13,6 +13,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.DelegateSelectable;
+import io.harness.connector.EntityValidityDetails;
 import io.harness.connector.ManagerExecutable;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
@@ -59,6 +60,8 @@ public class ConnectorMapper {
     connector.setTags(TagMapper.convertToList(connectorInfo.getTags()));
     connector.setDescription(connectorInfo.getDescription());
     connector.setType(connectorInfo.getConnectorType());
+    connector.setEntityInvalid(false);
+    connector.setInvalidYamlString(null);
     connector.setCategories(Arrays.asList(ConnectorRegistryFactory.getConnectorCategory(connector.getType())));
     if (connectorInfo.getConnectorConfig() instanceof DelegateSelectable) {
       Set<String> delegateSelectors = ((DelegateSelectable) connectorInfo.getConnectorConfig()).getDelegateSelectors();
@@ -97,6 +100,10 @@ public class ConnectorMapper {
         .harnessManaged(isHarnessManaged(connector))
         .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
         .gitDetails(entityGitDetails)
+        .entityValidityDetails(EntityValidityDetails.builder()
+                                   .valid(!connector.isEntityInvalid())
+                                   .invalidYaml(connector.getInvalidYamlString())
+                                   .build())
         .build();
   }
 

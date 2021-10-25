@@ -103,9 +103,10 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
             .collect(toList());
     gitToHarnessProgressService.updateFilesInProgressRecord(gitToHarnessProgressRecordId, gitToHarnessFilesToProcess);
     String commitId = getCommitId(harnessFilesOfBranch);
+    String commitMessage = getCommitMessage(yamlGitConfig, commitId, accountIdentifier);
     GitToHarnessProgressStatus gitToHarnessProgressStatus =
         gitToHarnessProcessorService.processFiles(accountIdentifier, gitToHarnessFilesToProcess, branchName,
-            yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId, changeSetId);
+            yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId, changeSetId, commitMessage);
     return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
   }
 
@@ -159,5 +160,13 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
       filteredFileContents.add(fileContent);
     }
     return filteredFileContents;
+  }
+
+  private String getCommitMessage(YamlGitConfigDTO yamlGitConfig, String commitId, String accountIdentifier) {
+    return scmOrchestratorService
+        .processScmRequest(scmClientFacilitatorService
+            -> scmClientFacilitatorService.findCommitById(yamlGitConfig, commitId),
+            yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier(), accountIdentifier)
+        .getMessage();
   }
 }

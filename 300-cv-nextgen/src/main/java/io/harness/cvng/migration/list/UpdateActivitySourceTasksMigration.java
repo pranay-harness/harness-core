@@ -63,7 +63,7 @@ public class UpdateActivitySourceTasksMigration implements CVNGMigration {
     cvConfigKeys.forEach(cvConfigKey
         -> monitoringSourcePerpetualTaskService.createTask(cvConfigKey.getAccountId(), cvConfigKey.getOrgIdentifier(),
             cvConfigKey.getProjectIdentifier(), cvConfigKey.getConnectorIdentifier(),
-            cvConfigKey.getMonitoringSourceIdentifier()));
+            cvConfigKey.getMonitoringSourceIdentifier(), false));
     log.info("migration done");
   }
 

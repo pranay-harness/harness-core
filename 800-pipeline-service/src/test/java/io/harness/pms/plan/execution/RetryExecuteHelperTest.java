@@ -765,7 +765,7 @@ public class RetryExecuteHelperTest extends CategoryTest {
         .thenReturn(pipelineExecutionSummaryEntities);
     retryHistory = retryExecuteHelper.getRetryHistory(rootExecutionId);
     assertThat(retryHistory.getErrorMessage()).isNull();
-    assertThat(retryHistory.getLatestExecutionId()).isEqualTo("uuid3");
+    assertThat(retryHistory.getLatestExecutionId()).isEqualTo("uuid1");
     assertThat(retryHistory.getExecutionInfos().size()).isEqualTo(3);
   }
 
@@ -807,6 +807,6 @@ public class RetryExecuteHelperTest extends CategoryTest {
         .thenReturn(pipelineExecutionSummaryEntities);
     retryLatestExecutionResponse = retryExecuteHelper.getRetryLatestExecutionId(rootExecutionId);
     assertThat(retryLatestExecutionResponse.getErrorMessage()).isNull();
-    assertThat(retryLatestExecutionResponse.getLatestExecutionId()).isEqualTo("uuid3");
+    assertThat(retryLatestExecutionResponse.getLatestExecutionId()).isEqualTo("uuid1");
   }
 }

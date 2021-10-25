@@ -167,14 +167,6 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
     }
 
-    List<ModuleLicense> existing =
-        moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
-    if (!existing.isEmpty()) {
-      String cause = format("Account [%s] already have licenses for moduleType [%s]", accountIdentifier, moduleType);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, null, Edition.FREE, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
 
@@ -217,7 +209,6 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   @Override
   public ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO) {
     Edition edition = startTrialRequestDTO.getEdition();
-    LicenseType licenseType = LicenseType.TRIAL;
     ModuleLicenseDTO trialLicenseDTO =
         licenseInterface.generateTrialLicense(edition, accountIdentifier, startTrialRequestDTO.getModuleType());
 
@@ -226,19 +217,10 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
     }
 
-    List<ModuleLicense> existing = moduleLicenseRepository.findByAccountIdentifierAndModuleType(
-        accountIdentifier, startTrialRequestDTO.getModuleType());
-    if (!existing.isEmpty()) {
-      String cause = format("Account [%s] already have licenses for moduleType [%s]", accountIdentifier,
-          startTrialRequestDTO.getModuleType());
-      sendFailedTelemetryEvents(accountIdentifier, startTrialRequestDTO.getModuleType(), licenseType, edition, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
 
-    //    licenseComplianceResolver.preCheck(trialLicense, EditionAction.START_TRIAL);
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.START_TRIAL);
     ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
     sendSucceedTelemetryEvents(SUCCEED_START_TRIAL_OPERATION, savedEntity, accountIdentifier);
 
@@ -252,31 +234,19 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
   @Override
   public ModuleLicenseDTO extendTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO) {
-    LicenseType licenseType = LicenseType.TRIAL;
     ModuleType moduleType = startTrialRequestDTO.getModuleType();
 
     List<ModuleLicense> existing =
         moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
 
-    if (existing.isEmpty()) {
-      String cause =
-          format("Trial license for moduleType [%s] hasn't started in account [%s]", moduleType, accountIdentifier);
-      log.error(cause);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, licenseType, null, cause);
-      throw new InvalidRequestException(cause);
-    }
-
-    if (isNotEligibleToExtend(existing)) {
-      String cause = format("Can not extend trial for account [%s]. Please contact sales.", accountIdentifier);
-      sendFailedTelemetryEvents(accountIdentifier, moduleType, licenseType, null, cause);
-      throw new InvalidRequestException(cause);
-    }
-
     ModuleLicense existingModuleLicense = existing.get(0);
 
-    ModuleLicenseDTO trialLicense =
+    ModuleLicenseDTO trialLicenseDTO =
         licenseInterface.generateTrialLicense(existingModuleLicense.getEdition(), accountIdentifier, moduleType);
-    ModuleLicense savedEntity = moduleLicenseRepository.save(licenseObjectConverter.toEntity(trialLicense));
+
+    ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.EXTEND_TRIAL);
+    ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
 
     sendSucceedTelemetryEvents(SUCCEED_EXTEND_TRIAL_OPERATION, savedEntity, accountIdentifier);
     syncLicenseChangeToCGForCE(savedEntity);

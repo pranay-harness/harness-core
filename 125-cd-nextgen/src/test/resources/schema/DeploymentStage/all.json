@@ -72,9 +72,6 @@
     },
     "AddRuleYamlSpec": {
       "type": "object",
-      "required": [
-        "priority"
-      ],
       "properties": {
         "clauses": {
           "type": "array",
@@ -435,7 +432,6 @@
     "ClauseYamlSpec": {
       "type": "object",
       "required": [
-        "attribute",
         "op",
         "values"
       ],
@@ -3242,7 +3238,7 @@
             "UpdateRule",
             "AddTargetsToVariationTargetMap",
             "RemoveTargetsToVariationTargetMap",
-            "AddSegmentsToVariationTargetMap",
+            "AddSegmentToVariationTargetMap",
             "RemoveSegmentsToVariationTargetMap"
           ]
         }

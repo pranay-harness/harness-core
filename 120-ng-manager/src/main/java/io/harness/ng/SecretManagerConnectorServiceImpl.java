@@ -317,4 +317,11 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifierList) {
     defaultConnectorService.deleteBatch(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierList);
   }
+
+  @Override
+  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean invalid, String invalidYaml) {
+    return defaultConnectorService.markEntity(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalid, invalidYaml);
+  }
 }

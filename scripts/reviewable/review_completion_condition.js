@@ -46,7 +46,7 @@ pendingReviewers = _.uniq(pendingReviewers, 'username');
 
 const olderCheck = Math.min(...Object.values(review.pullRequest.checks).map(check => check.timestamp))
 
-let tooOld = olderCheck < Date.now() - 86400000
+let tooOld = olderCheck < Date.now() - 259200000
 
 let numUnreviewedFiles = 0;
 let fileBlockers = [];
