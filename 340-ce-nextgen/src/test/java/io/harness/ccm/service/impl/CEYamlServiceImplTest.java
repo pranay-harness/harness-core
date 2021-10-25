@@ -57,29 +57,7 @@ public class CEYamlServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
-  public void testUnifiedCloudCostK8sClusterYaml_Visibility_Optimization() throws Exception {
-    final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
-                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
-                                               .orgIdentifier(ORG_IDENTIFIER)
-                                               .projectIdentifier(PROJECT_IDENTIFIER)
-                                               .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
-                                               .build();
-
-    final String yamlContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
-        ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request, true, true);
-
-    verify(k8sServiceAccountDelegateTaskClient, times(1)).fetchServiceAccount(any(), any(), any(), any());
-
-    assertThat(yamlContent).isNotBlank();
-
-    assertContainsVisibilityParams(yamlContent);
-    assertContainsOptimizationParams(yamlContent);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.UTSAV)
-  @Category(UnitTests.class)
-  public void testUnifiedCloudCostK8sClusterYamlFileStructure() throws Exception {
+  public void testVisibilityAndOptimizationYamlFileStructure() throws Exception {
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
                                                .connectorIdentifier(CONNECTOR_IDENTIFIER)
                                                .orgIdentifier(ORG_IDENTIFIER)
@@ -91,12 +69,15 @@ public class CEYamlServiceImplTest extends CategoryTest {
         ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request, true, true);
 
     final String expectedYamlContent = IOUtils.toString(
-        this.getClass().getResourceAsStream("/yaml/unified-k8s-cluster-setup.yaml"), StandardCharsets.UTF_8);
+        this.getClass().getResourceAsStream("/yaml/visibility-and-optimization.yaml"), StandardCharsets.UTF_8);
 
     verify(k8sServiceAccountDelegateTaskClient, times(1)).fetchServiceAccount(any(), any(), any(), any());
 
     assertThat(actualYamlContent).isNotBlank();
     assertThat(actualYamlContent).isEqualTo(expectedYamlContent);
+
+    assertContainsVisibilityParams(actualYamlContent);
+    assertContainsOptimizationParams(actualYamlContent);
   }
 
   @Test
@@ -112,10 +93,16 @@ public class CEYamlServiceImplTest extends CategoryTest {
     final String expectedYamlContent =
         IOUtils.toString(this.getClass().getResourceAsStream("/yaml/autostopping-only.yaml"), StandardCharsets.UTF_8);
 
-    verify(k8sServiceAccountDelegateTaskClient, times(0)).fetchServiceAccount(any(), any(), any(), any());
+    verifyZeroInteractions(k8sServiceAccountDelegateTaskClient);
 
     assertThat(actualYamlContent).isNotBlank();
     assertThat(actualYamlContent).isEqualTo(expectedYamlContent);
+
+    assertContainsOptimizationParams(actualYamlContent);
+
+    // since visibility is not asked
+    assertThat(actualYamlContent).doesNotContain(SERVICE_NAME);
+    assertThat(actualYamlContent).doesNotContain(SERVICE_NAMESPACE);
   }
 
   @Test
@@ -138,57 +125,14 @@ public class CEYamlServiceImplTest extends CategoryTest {
 
     assertThat(actualYamlContent).isNotBlank();
     assertThat(actualYamlContent).isEqualTo(expectedYamlContent);
-  }
 
-  @Test
-  @Owner(developers = OwnerRule.UTSAV)
-  @Category(UnitTests.class)
-  public void testUnifiedCloudCostK8sClusterYaml_Visibility() throws Exception {
-    final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
-                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
-                                               .orgIdentifier(ORG_IDENTIFIER)
-                                               .projectIdentifier(PROJECT_IDENTIFIER)
-                                               .build();
-
-    final String yamlContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
-        ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request, true, false);
-
-    verify(k8sServiceAccountDelegateTaskClient, times(1)).fetchServiceAccount(any(), any(), any(), any());
-
-    assertThat(yamlContent).isNotBlank();
-
-    assertContainsVisibilityParams(yamlContent);
+    assertContainsVisibilityParams(actualYamlContent);
 
     // since optimization is not asked
-    assertThat(yamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
-    assertThat(yamlContent).doesNotContain(ACCOUNT_IDENTIFIER);
-    assertThat(yamlContent).doesNotContain(HARNESS_HOST);
-    assertThat(yamlContent).doesNotContain(SERVER_NAME);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.UTSAV)
-  @Category(UnitTests.class)
-  public void testUnifiedCloudCostK8sClusterYaml_Optimization() throws Exception {
-    final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
-                                               .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
-                                               .orgIdentifier(ORG_IDENTIFIER)
-                                               .projectIdentifier(PROJECT_IDENTIFIER)
-                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
-                                               .build();
-
-    final String yamlContent = ceYamlService.unifiedCloudCostK8sClusterYaml(
-        ACCOUNT_IDENTIFIER, HARNESS_HOST, SERVER_NAME, request, false, true);
-
-    verifyZeroInteractions(k8sServiceAccountDelegateTaskClient);
-
-    assertThat(yamlContent).isNotBlank();
-
-    assertContainsOptimizationParams(yamlContent);
-
-    // since visibility is not asked
-    assertThat(yamlContent).doesNotContain(SERVICE_NAME);
-    assertThat(yamlContent).doesNotContain(SERVICE_NAMESPACE);
+    assertThat(actualYamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
+    assertThat(actualYamlContent).doesNotContain(ACCOUNT_IDENTIFIER);
+    assertThat(actualYamlContent).doesNotContain(HARNESS_HOST);
+    assertThat(actualYamlContent).doesNotContain(SERVER_NAME);
   }
 
   @Test
