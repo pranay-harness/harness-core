@@ -10,6 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeSourceType;
@@ -17,8 +18,8 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.change.ChangeTimeline;
 import io.harness.cvng.core.beans.change.ChangeTimeline.TimeRangeDetail;
-import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
+import io.harness.cvng.core.services.impl.ChangeEventServiceImpl.TimelineObject;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventMetaDataTransformer;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -30,8 +31,10 @@ import io.harness.rule.Owner;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -42,7 +45,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 public class ChangeEventServiceImplTest extends CvNextGenTestBase {
-  @Inject ChangeEventService changeEventService;
+  @Inject ChangeEventServiceImpl changeEventService;
   @Inject ChangeSourceService changeSourceService;
   @Inject private Map<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMap;
   @Inject HPersistence hPersistence;
@@ -321,6 +324,55 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
     assertThat(infrastructureChanges.get(0).getCount()).isEqualTo(1);
     assertThat(infrastructureChanges.get(0).getStartTime()).isEqualTo(300000);
     assertThat(infrastructureChanges.get(0).getEndTime()).isEqualTo(500000);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetTimelineObject_forAggregationValidation() {
+    hPersistence.save(Arrays.asList(
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(50)).build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(100)).build(),
+        builderFactory.getDeploymentActivityBuilder()
+            .serviceIdentifier("service2")
+            .environmentIdentifier("env2")
+            .eventTime(Instant.ofEpochSecond(200))
+            .build(),
+        builderFactory.getDeploymentActivityBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
+        builderFactory.getKubernetesClusterActivityForAppServiceBuilder().eventTime(Instant.ofEpochSecond(300)).build(),
+        builderFactory.getKubernetesClusterActivityForAppServiceBuilder()
+            .eventTime(Instant.ofEpochSecond(600))
+            .build()));
+
+    Iterator<TimelineObject> changeTimelineObject =
+        changeEventService.getTimelineObject(builderFactory.getContext().getProjectParams(), null, null,
+            Instant.ofEpochSecond(100), Instant.ofEpochSecond(500), 2);
+    List<TimelineObject> timelineObjectList = new ArrayList<>();
+    changeTimelineObject.forEachRemaining(timelineObject -> timelineObjectList.add(timelineObject));
+
+    assertThat(timelineObjectList.size()).isEqualTo(3);
+    assertThat(timelineObjectList.stream()
+                   .filter(timelineObject
+                       -> timelineObject.id.index.equals(0) && timelineObject.id.type.equals(ActivityType.DEPLOYMENT))
+                   .findAny()
+                   .get()
+                   .count)
+        .isEqualTo(2);
+    assertThat(timelineObjectList.stream()
+                   .filter(timelineObject
+                       -> timelineObject.id.index.equals(1) && timelineObject.id.type.equals(ActivityType.DEPLOYMENT))
+                   .findAny()
+                   .get()
+                   .count)
+        .isEqualTo(1);
+    assertThat(timelineObjectList.stream()
+                   .filter(timelineObject
+                       -> timelineObject.id.index.equals(1) && timelineObject.id.type.equals(ActivityType.KUBERNETES))
+                   .findAny()
+                   .get()
+                   .count)
+        .isEqualTo(1);
   }
 
   @Test

@@ -38,7 +38,7 @@ public interface PatchInstruction {
     ADD_TARGETS_TO_VARIATION_TARGET_MAP("AddTargetsToVariationTargetMap"),
     @JsonProperty("RemoveTargetsToVariationTargetMap")
     REMOVE_TARGETS_TO_VARIATION_TARGET_MAP("RemoveTargetsToVariationTargetMap"),
-    @JsonProperty("AddSegmentsToVariationTargetMap")
+    @JsonProperty("AddSegmentToVariationTargetMap")
     ADD_SEGMENT_TO_VARIATION_TARGET_MAP("AddSegmentToVariationTargetMap"),
     @JsonProperty("RemoveSegmentsToVariationTargetMap")
     REMOVE_SEGMENT_TO_VARIATION_TARGET_MAP("RemoveSegmentToVariationTargetMap");

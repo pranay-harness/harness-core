@@ -5,6 +5,7 @@ import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -68,7 +69,7 @@ import retrofit2.Response;
 @Slf4j
 public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock KubernetesConnectionValidator kubernetesConnectionValidator;
-  @Mock ConnectorRepository connectorRepository;
+  @Inject ConnectorRepository connectorRepository;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
@@ -241,6 +242,19 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     createConnector(identifier, name);
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTO);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testMarkConnectorInvalid() {
+    createConnector(identifier, name);
+    connectorService.markEntity(accountIdentifier, null, null, identifier, true, "xyz");
+    Optional<ConnectorResponseDTO> connectorResponseDTO =
+        connectorService.get(accountIdentifier, null, null, identifier);
+    assertThat(connectorResponseDTO).isPresent();
+    assertThat(connectorResponseDTO.get().getEntityValidityDetails().isValid()).isFalse();
+    assertThat(connectorResponseDTO.get().getEntityValidityDetails().getInvalidYaml()).isEqualTo("xyz");
   }
 
   @Test

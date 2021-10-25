@@ -1,5 +1,6 @@
 package io.harness.manifest;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -19,6 +20,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
@@ -54,6 +58,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ManifestCollectionResponseHandlerTest extends CategoryTest {
   @Mock AppManifestPTaskHelper appManifestPTaskHelper;
   @Mock ApplicationManifestService applicationManifestService;
@@ -78,7 +84,7 @@ public class ManifestCollectionResponseHandlerTest extends CategoryTest {
     ManifestCollectionExecutionResponse response =
         ManifestCollectionExecutionResponse.builder().appManifestId(MANIFEST_ID + 2).build();
     manifestCollectionResponseHandler.handleManifestCollectionResponse(ACCOUNT_ID, PERPETUAL_TASK_ID, response);
-    verify(appManifestPTaskHelper).deletePerpetualTask(ACCOUNT_ID, MANIFEST_ID + 2, PERPETUAL_TASK_ID);
+    verify(appManifestPTaskHelper).deletePerpetualTask(PERPETUAL_TASK_ID, MANIFEST_ID + 2, ACCOUNT_ID);
   }
 
   @Test

@@ -3238,7 +3238,7 @@
             "UpdateRule",
             "AddTargetsToVariationTargetMap",
             "RemoveTargetsToVariationTargetMap",
-            "AddSegmentsToVariationTargetMap",
+            "AddSegmentToVariationTargetMap",
             "RemoveSegmentsToVariationTargetMap"
           ]
         }

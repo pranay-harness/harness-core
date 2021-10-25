@@ -1,7 +1,5 @@
 package io.harness.template.gitsync;
 
-import static io.harness.ng.core.utils.NGUtils.validate;
-
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -82,7 +80,6 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
   @Override
   public NGTemplateConfig save(String accountIdentifier, String yaml) {
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
-    validate(templateEntity);
     TemplateEntity createdTemplate = templateService.create(templateEntity, false, "");
     return NGTemplateDtoMapper.toDTO(createdTemplate);
   }
@@ -90,8 +87,13 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
   @Override
   public NGTemplateConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
-    validate(templateEntity);
     return NGTemplateDtoMapper.toDTO(templateService.updateTemplateEntity(templateEntity, changeType, false, ""));
+  }
+
+  @Override
+  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean invalid, String erroneousYaml) {
+    return false;
   }
 
   @Override

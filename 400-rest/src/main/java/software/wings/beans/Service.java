@@ -211,6 +211,12 @@ public class Service extends Base
     return NGMigrationEntityType.SERVICE;
   }
 
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

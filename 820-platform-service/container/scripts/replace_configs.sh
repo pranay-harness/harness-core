@@ -226,6 +226,8 @@ replace_key_value resourceGroupServiceConfig.redisLockConfig.userName "$LOCK_CON
 
 replace_key_value resourceGroupServiceConfig.redisLockConfig.password "$LOCK_CONFIG_REDIS_PASSWORD"
 
+replace_key_value resourceGroupServiceConfig.redisLockConfig.nettyThreads "$REDIS_NETTY_THREADS"
+
 replace_key_value resourceGroupServiceConfig.distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
 
 replace_key_value resourceGroupServiceConfig.auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
