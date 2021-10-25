@@ -264,10 +264,6 @@ public class RetryExecutionHelper {
     List<String> stagesFqn =
         nodeExecutionService.fetchStageFqnFromStageIdentifiers(previousExecutionId, identifierOfSkipStages);
 
-    if (stagesFqn.isEmpty()) {
-      throw new InvalidRequestException("This pipeline is too old for retry!!");
-    }
-
     /*
     NodeExecutionUuid -> Node
      */
