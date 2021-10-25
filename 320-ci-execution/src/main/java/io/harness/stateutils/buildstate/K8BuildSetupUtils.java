@@ -333,8 +333,8 @@ public class K8BuildSetupUtils {
       codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
     }
 
-    if (isNotEmpty(codebaseSweeping.getEvent())) {
-      codebaseRuntimeVars.put(DRONE_BUILD_EVENT, codebaseSweeping.getEvent());
+    if (isNotEmpty(codebaseSweeping.getBuildType()) && codebaseSweeping.getBuildType().equals("PR")) {
+      codebaseRuntimeVars.put(DRONE_BUILD_EVENT, "pull_request");
     }
 
     if (!isEmpty(codebaseSweeping.getTag())) {
