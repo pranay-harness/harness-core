@@ -143,8 +143,15 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     } else {
       name = email;
     }
-    log.info("LDAP user response with name {} and email {}", name, email);
-    return LdapUserResponse.builder().dn(user.getDn()).name(name).email(email).build();
+
+    String externalUserId = "";
+    if (Arrays.asList(user.getAttributeNames()).contains(userConfig.getUidAttr())
+        && user.getAttribute(userConfig.getUidAttr()) != null) {
+      externalUserId = user.getAttribute(userConfig.getUidAttr()).getStringValue();
+    }
+    log.info("LDAP user response with name {} and email {} and userId {}", name, email, externalUserId);
+
+    return LdapUserResponse.builder().dn(user.getDn()).name(name).email(email).userId(externalUserId).build();
   }
 
   @Override
