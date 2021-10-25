@@ -288,7 +288,7 @@ def ingest_data_to_preagg(jsonData):
                     min(unblendedrate) AS awsUnblendedRate, sum(unblendedcost) AS awsUnblendedCost, sum(unblendedcost) AS cost,
                     productname AS awsServicecode, region, availabilityzone AS awsAvailabilityzone, usageaccountid AS awsUsageaccountid,
                     instancetype AS awsInstancetype, usagetype AS awsUsagetype, "AWS" AS cloudProvider 
-               FROM `%s.awscur_%s` WHERE lineitemtype != 'Tax' AND usageaccountid IN (%s) 
+               FROM `%s.awscur_%s` WHERE usageaccountid IN (%s) 
                GROUP BY awsServicecode, region, awsAvailabilityzone, awsUsageaccountid, awsInstancetype, awsUsagetype, startTime;
     """ % (ds, date_start, date_end, jsonData["usageaccountid"], ds, ds, jsonData["awsCurTableSuffix"],
            jsonData["usageaccountid"])
@@ -328,7 +328,7 @@ def ingest_data_to_unified(jsonData):
                     awsAvailabilityzone, usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype
                     AS awsUsagetype, "AWS" AS cloudProvider, tags AS labels 
                FROM `%s.awscur_%s` 
-               WHERE lineitemtype != 'Tax' AND usageaccountid IN (%s);
+               WHERE usageaccountid IN (%s);
      """ % (tableName, date_start, date_end, jsonData["usageaccountid"], tableName, ds, jsonData["awsCurTableSuffix"],
             jsonData["usageaccountid"])
 
