@@ -217,8 +217,6 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     clusterBillingData.setStoragerequest(instanceBillingData.getStorageRequest());
     clusterBillingData.setMaxstorageutilizationvalue(instanceBillingData.getMaxStorageUtilizationValue());
     clusterBillingData.setMaxstoragerequest(instanceBillingData.getMaxStorageRequest());
-    clusterBillingData.setOrgIdentifier(instanceBillingData.getOrgIdentifier());
-    clusterBillingData.setProjectIdentifier(instanceBillingData.getProjectIdentifier());
 
     if (instanceBillingData.getAppId() != null) {
       clusterBillingData.setAppname(entityIdToNameCache.get(

@@ -1,7 +1,6 @@
 package io.harness.ccm.commons.entities.batch;
 
 import io.harness.annotation.StoreIn;
-import io.harness.ccm.HarnessServiceInfoNG;
 import io.harness.ccm.commons.beans.Container;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceState;
@@ -114,7 +113,6 @@ public final class InstanceData implements PersistentEntity, UuidAware, CreatedA
   long lastUpdatedAt;
 
   HarnessServiceInfo harnessServiceInfo;
-  HarnessServiceInfoNG harnessServiceInfoNG;
 
   @FdTtlIndex private Date ttl;
 

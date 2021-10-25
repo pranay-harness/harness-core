@@ -16,7 +16,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -88,13 +87,6 @@ public class Instance {
                  .sortField(InstanceKeys.createdAt)
                  .sortField(InstanceKeys.deletedAt)
                  .build())
-        .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_instanceInfo.Namespace_instanceInfoPodName_createdAt_idx")
-                 .field(InstanceKeys.accountIdentifier)
-                 .field(InstanceKeysAdditional.instanceInfoNamespace)
-                 .field(InstanceKeysAdditional.instanceInfoPodName)
-                 .sortField(InstanceKeys.createdAt)
-                 .build())
         .build();
   }
 
@@ -131,10 +123,4 @@ public class Instance {
   private long deletedAt;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
-
-  @UtilityClass
-  public static class InstanceKeysAdditional {
-    public static final String instanceInfoPodName = "instanceInfo.podName";
-    public static final String instanceInfoNamespace = "instanceInfo.namespace";
-  }
 }

@@ -6,7 +6,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.CEUserInfo;
-import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.config.GcpBillingAccount;
@@ -87,6 +86,4 @@ public interface CloudToHarnessMappingService {
   String getServiceName(String entityId);
 
   String getEnvironmentName(String entityId);
-
-  ClusterRecord getClusterRecord(String clusterId);
 }

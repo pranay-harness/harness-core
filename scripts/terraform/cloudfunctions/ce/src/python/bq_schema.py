@@ -703,8 +703,6 @@ unifiedTableTableSchema = [
         "name": "azureResourceRate",
         "type": "FLOAT"
     },
-    {'mode': 'NULLABLE', 'name': 'orgIdentifier', 'type': 'STRING'},
-    {'mode': 'NULLABLE', 'name': 'projectIdentifier', 'type': 'STRING'}
 ]
 
 
@@ -985,8 +983,6 @@ clusterDataTableFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type': 'INT
                           {'mode': 'NULLABLE', 'name': 'storagecost', 'type': 'FLOAT'},
                           {'mode': 'NULLABLE', 'name': 'maxstorageutilizationvalue', 'type': 'FLOAT'},
                           {'mode': 'NULLABLE', 'name': 'maxstoragerequest', 'type': 'FLOAT'},
-                          {'mode': 'NULLABLE', 'name': 'orgIdentifier', 'type': 'STRING'},
-                          {'mode': 'NULLABLE', 'name': 'projectIdentifier', 'type': 'STRING'},
                           {
                               "fields": [
                                   {
@@ -1045,8 +1041,6 @@ clusterDataAggregatedFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type':
                                {'mode': 'NULLABLE', 'name': 'cloudprovider', 'type': 'STRING'},
                                {'mode': 'NULLABLE', 'name': 'maxstorageutilizationvalue', 'type': 'FLOAT'},
                                {'mode': 'NULLABLE', 'name': 'maxstoragerequest', 'type': 'FLOAT'},
-                               {'mode': 'NULLABLE', 'name': 'orgIdentifier', 'type': 'STRING'},
-                               {'mode': 'NULLABLE', 'name': 'projectIdentifier', 'type': 'STRING'},
                                {
                                    "fields": [
                                        {

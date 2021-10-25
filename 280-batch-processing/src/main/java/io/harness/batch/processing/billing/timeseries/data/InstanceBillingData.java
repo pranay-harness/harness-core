@@ -72,6 +72,4 @@ public class InstanceBillingData {
   private double maxStorageUtilizationValue;
   private double maxStorageRequest;
   private double storageMbSeconds;
-  private String orgIdentifier;
-  private String projectIdentifier;
 }

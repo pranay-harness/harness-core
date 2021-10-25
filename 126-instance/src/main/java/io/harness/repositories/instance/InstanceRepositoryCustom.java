@@ -28,9 +28,6 @@ public interface InstanceRepositoryCustom {
   List<Instance> getActiveInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs);
 
-  List<Instance> getActiveInstancesByInstanceInfo(
-      String accountIdentifier, String instanceInfoNamespace, String instanceInfoPodName);
-
   List<Instance> getActiveInstancesByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
 
