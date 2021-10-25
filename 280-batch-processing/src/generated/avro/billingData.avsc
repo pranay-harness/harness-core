@@ -70,8 +70,6 @@
      {"name": "storagerequest", "type" : ["double", "null"]},
      {"name": "maxstorageutilizationvalue", "type" : ["double", "null"]},
      {"name": "maxstoragerequest", "type" : ["double", "null"]},
-     {"name": "orgIdentifier", "type" : ["string", "null"]},
-     {"name": "projectIdentifier", "type" : ["string", "null"]},
      {"name" : "labels", "type": {
           "type": "array",
           "items": [{

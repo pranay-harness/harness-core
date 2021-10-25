@@ -16,9 +16,9 @@ import org.apache.avro.util.Utf8;
 @org.apache.avro.specific.AvroGenerated
 public class ClusterBillingData
     extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -7745108068168076119L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
-      "{\"type\":\"record\",\"name\":\"ClusterBillingData\",\"namespace\":\"io.harness.avro\",\"fields\":[{\"name\":\"starttime\",\"type\":\"long\"},{\"name\":\"endtime\",\"type\":\"long\"},{\"name\":\"accountid\",\"type\":\"string\"},{\"name\":\"settingid\",\"type\":[\"string\",\"null\"]},{\"name\":\"instanceid\",\"type\":\"string\"},{\"name\":\"instancetype\",\"type\":\"string\"},{\"name\":\"billingaccountid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clusterid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustername\",\"type\":[\"string\",\"null\"]},{\"name\":\"appid\",\"type\":[\"string\",\"null\"]},{\"name\":\"serviceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"envid\",\"type\":[\"string\",\"null\"]},{\"name\":\"appname\",\"type\":[\"string\",\"null\"]},{\"name\":\"servicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"envname\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudproviderid\",\"type\":[\"string\",\"null\"]},{\"name\":\"parentinstanceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"region\",\"type\":[\"string\",\"null\"]},{\"name\":\"launchtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustertype\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadname\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"namespace\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudservicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"taskid\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudprovider\",\"type\":[\"string\",\"null\"]},{\"name\":\"billingamount\",\"type\":\"double\"},{\"name\":\"cpubillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorybillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"idlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"usagedurationseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunitseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorymbseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"systemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpusystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorysystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"actualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"unallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"instancename\",\"type\":[\"string\",\"null\"]},{\"name\":\"cpurequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryrequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpulimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorylimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"networkcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"pricingsource\",\"type\":[\"string\",\"null\"]},{\"name\":\"storagecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"storagerequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxstorageutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxstoragerequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"orgIdentifier\",\"type\":[\"string\",\"null\"]},{\"name\":\"projectIdentifier\",\"type\":[\"string\",\"null\"]},{\"name\":\"labels\",\"type\":{\"type\":\"array\",\"items\":[{\"type\":\"record\",\"name\":\"Label\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"string\"]},{\"name\":\"value\",\"type\":[\"null\",\"string\"]}]}]}}],\"javaAnnotation\":[\"javax.annotation.Generated(\\\"avro\\\")\"]}");
+  private static final long serialVersionUID = 7394417854386648331L;
+  public static final
+      org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ClusterBillingData\",\"namespace\":\"io.harness.avro\",\"fields\":[{\"name\":\"starttime\",\"type\":\"long\"},{\"name\":\"endtime\",\"type\":\"long\"},{\"name\":\"accountid\",\"type\":\"string\"},{\"name\":\"settingid\",\"type\":[\"string\",\"null\"]},{\"name\":\"instanceid\",\"type\":\"string\"},{\"name\":\"instancetype\",\"type\":\"string\"},{\"name\":\"billingaccountid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clusterid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustername\",\"type\":[\"string\",\"null\"]},{\"name\":\"appid\",\"type\":[\"string\",\"null\"]},{\"name\":\"serviceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"envid\",\"type\":[\"string\",\"null\"]},{\"name\":\"appname\",\"type\":[\"string\",\"null\"]},{\"name\":\"servicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"envname\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudproviderid\",\"type\":[\"string\",\"null\"]},{\"name\":\"parentinstanceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"region\",\"type\":[\"string\",\"null\"]},{\"name\":\"launchtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustertype\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadname\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"namespace\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudservicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"taskid\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudprovider\",\"type\":[\"string\",\"null\"]},{\"name\":\"billingamount\",\"type\":\"double\"},{\"name\":\"cpubillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorybillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"idlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"usagedurationseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunitseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorymbseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"systemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpusystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorysystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"actualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"unallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"instancename\",\"type\":[\"string\",\"null\"]},{\"name\":\"cpurequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryrequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpulimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorylimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"networkcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"pricingsource\",\"type\":[\"string\",\"null\"]},{\"name\":\"storagecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"storagerequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxstorageutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxstoragerequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"labels\",\"type\":{\"type\":\"array\",\"items\":[{\"type\":\"record\",\"name\":\"Label\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"string\"]},{\"name\":\"value\",\"type\":[\"null\",\"string\"]}]}]}}],\"javaAnnotation\":[\"javax.annotation.Generated(\\\"avro\\\")\"]}");
   public static org.apache.avro.Schema getClassSchema() {
     return SCHEMA$;
   }
@@ -141,8 +141,6 @@ public class ClusterBillingData
   private java.lang.Double storagerequest;
   private java.lang.Double maxstorageutilizationvalue;
   private java.lang.Double maxstoragerequest;
-  private java.lang.CharSequence orgIdentifier;
-  private java.lang.CharSequence projectIdentifier;
   private java.util.List<java.lang.Object> labels;
 
   /**
@@ -220,8 +218,6 @@ public class ClusterBillingData
    * @param storagerequest The new value for storagerequest
    * @param maxstorageutilizationvalue The new value for maxstorageutilizationvalue
    * @param maxstoragerequest The new value for maxstoragerequest
-   * @param orgIdentifier The new value for orgIdentifier
-   * @param projectIdentifier The new value for projectIdentifier
    * @param labels The new value for labels
    */
   public ClusterBillingData(java.lang.Long starttime, java.lang.Long endtime, java.lang.CharSequence accountid,
@@ -247,7 +243,6 @@ public class ClusterBillingData
       java.lang.Double storagecost, java.lang.Double storageactualidlecost, java.lang.Double storageunallocatedcost,
       java.lang.Double storageutilizationvalue, java.lang.Double storagerequest,
       java.lang.Double maxstorageutilizationvalue, java.lang.Double maxstoragerequest,
-      java.lang.CharSequence orgIdentifier, java.lang.CharSequence projectIdentifier,
       java.util.List<java.lang.Object> labels) {
     this.starttime = starttime;
     this.endtime = endtime;
@@ -315,8 +310,6 @@ public class ClusterBillingData
     this.storagerequest = storagerequest;
     this.maxstorageutilizationvalue = maxstorageutilizationvalue;
     this.maxstoragerequest = maxstoragerequest;
-    this.orgIdentifier = orgIdentifier;
-    this.projectIdentifier = projectIdentifier;
     this.labels = labels;
   }
 
@@ -462,10 +455,6 @@ public class ClusterBillingData
       case 65:
         return maxstoragerequest;
       case 66:
-        return orgIdentifier;
-      case 67:
-        return projectIdentifier;
-      case 68:
         return labels;
       default:
         throw new org.apache.avro.AvroRuntimeException("Bad index");
@@ -676,12 +665,6 @@ public class ClusterBillingData
         maxstoragerequest = (java.lang.Double) value$;
         break;
       case 66:
-        orgIdentifier = (java.lang.CharSequence) value$;
-        break;
-      case 67:
-        projectIdentifier = (java.lang.CharSequence) value$;
-        break;
-      case 68:
         labels = (java.util.List<java.lang.Object>) value$;
         break;
       default:
@@ -1746,38 +1729,6 @@ public class ClusterBillingData
   }
 
   /**
-   * Gets the value of the 'orgIdentifier' field.
-   * @return The value of the 'orgIdentifier' field.
-   */
-  public java.lang.CharSequence getOrgIdentifier() {
-    return orgIdentifier;
-  }
-
-  /**
-   * Sets the value of the 'orgIdentifier' field.
-   * @param value the value to set.
-   */
-  public void setOrgIdentifier(java.lang.CharSequence value) {
-    this.orgIdentifier = value;
-  }
-
-  /**
-   * Gets the value of the 'projectIdentifier' field.
-   * @return The value of the 'projectIdentifier' field.
-   */
-  public java.lang.CharSequence getProjectIdentifier() {
-    return projectIdentifier;
-  }
-
-  /**
-   * Sets the value of the 'projectIdentifier' field.
-   * @param value the value to set.
-   */
-  public void setProjectIdentifier(java.lang.CharSequence value) {
-    this.projectIdentifier = value;
-  }
-
-  /**
    * Gets the value of the 'labels' field.
    * @return The value of the 'labels' field.
    */
@@ -1899,8 +1850,6 @@ public class ClusterBillingData
     private java.lang.Double storagerequest;
     private java.lang.Double maxstorageutilizationvalue;
     private java.lang.Double maxstoragerequest;
-    private java.lang.CharSequence orgIdentifier;
-    private java.lang.CharSequence projectIdentifier;
     private java.util.List<java.lang.Object> labels;
 
     /** Creates a new Builder */
@@ -2178,17 +2127,9 @@ public class ClusterBillingData
         this.maxstoragerequest = data().deepCopy(fields()[65].schema(), other.maxstoragerequest);
         fieldSetFlags()[65] = other.fieldSetFlags()[65];
       }
-      if (isValidValue(fields()[66], other.orgIdentifier)) {
-        this.orgIdentifier = data().deepCopy(fields()[66].schema(), other.orgIdentifier);
+      if (isValidValue(fields()[66], other.labels)) {
+        this.labels = data().deepCopy(fields()[66].schema(), other.labels);
         fieldSetFlags()[66] = other.fieldSetFlags()[66];
-      }
-      if (isValidValue(fields()[67], other.projectIdentifier)) {
-        this.projectIdentifier = data().deepCopy(fields()[67].schema(), other.projectIdentifier);
-        fieldSetFlags()[67] = other.fieldSetFlags()[67];
-      }
-      if (isValidValue(fields()[68], other.labels)) {
-        this.labels = data().deepCopy(fields()[68].schema(), other.labels);
-        fieldSetFlags()[68] = other.fieldSetFlags()[68];
       }
     }
 
@@ -2462,17 +2403,9 @@ public class ClusterBillingData
         this.maxstoragerequest = data().deepCopy(fields()[65].schema(), other.maxstoragerequest);
         fieldSetFlags()[65] = true;
       }
-      if (isValidValue(fields()[66], other.orgIdentifier)) {
-        this.orgIdentifier = data().deepCopy(fields()[66].schema(), other.orgIdentifier);
+      if (isValidValue(fields()[66], other.labels)) {
+        this.labels = data().deepCopy(fields()[66].schema(), other.labels);
         fieldSetFlags()[66] = true;
-      }
-      if (isValidValue(fields()[67], other.projectIdentifier)) {
-        this.projectIdentifier = data().deepCopy(fields()[67].schema(), other.projectIdentifier);
-        fieldSetFlags()[67] = true;
-      }
-      if (isValidValue(fields()[68], other.labels)) {
-        this.labels = data().deepCopy(fields()[68].schema(), other.labels);
-        fieldSetFlags()[68] = true;
       }
     }
 
@@ -4982,82 +4915,6 @@ public class ClusterBillingData
     }
 
     /**
-     * Gets the value of the 'orgIdentifier' field.
-     * @return The value.
-     */
-    public java.lang.CharSequence getOrgIdentifier() {
-      return orgIdentifier;
-    }
-
-    /**
-     * Sets the value of the 'orgIdentifier' field.
-     * @param value The value of 'orgIdentifier'.
-     * @return This builder.
-     */
-    public io.harness.avro.ClusterBillingData.Builder setOrgIdentifier(java.lang.CharSequence value) {
-      validate(fields()[66], value);
-      this.orgIdentifier = value;
-      fieldSetFlags()[66] = true;
-      return this;
-    }
-
-    /**
-     * Checks whether the 'orgIdentifier' field has been set.
-     * @return True if the 'orgIdentifier' field has been set, false otherwise.
-     */
-    public boolean hasOrgIdentifier() {
-      return fieldSetFlags()[66];
-    }
-
-    /**
-     * Clears the value of the 'orgIdentifier' field.
-     * @return This builder.
-     */
-    public io.harness.avro.ClusterBillingData.Builder clearOrgIdentifier() {
-      orgIdentifier = null;
-      fieldSetFlags()[66] = false;
-      return this;
-    }
-
-    /**
-     * Gets the value of the 'projectIdentifier' field.
-     * @return The value.
-     */
-    public java.lang.CharSequence getProjectIdentifier() {
-      return projectIdentifier;
-    }
-
-    /**
-     * Sets the value of the 'projectIdentifier' field.
-     * @param value The value of 'projectIdentifier'.
-     * @return This builder.
-     */
-    public io.harness.avro.ClusterBillingData.Builder setProjectIdentifier(java.lang.CharSequence value) {
-      validate(fields()[67], value);
-      this.projectIdentifier = value;
-      fieldSetFlags()[67] = true;
-      return this;
-    }
-
-    /**
-     * Checks whether the 'projectIdentifier' field has been set.
-     * @return True if the 'projectIdentifier' field has been set, false otherwise.
-     */
-    public boolean hasProjectIdentifier() {
-      return fieldSetFlags()[67];
-    }
-
-    /**
-     * Clears the value of the 'projectIdentifier' field.
-     * @return This builder.
-     */
-    public io.harness.avro.ClusterBillingData.Builder clearProjectIdentifier() {
-      projectIdentifier = null;
-      fieldSetFlags()[67] = false;
-      return this;
-    }
-
-    /**
      * Gets the value of the 'labels' field.
      * @return The value.
      */
@@ -5071,9 +4928,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setLabels(java.util.List<java.lang.Object> value) {
-      validate(fields()[68], value);
+      validate(fields()[66], value);
       this.labels = value;
-      fieldSetFlags()[68] = true;
+      fieldSetFlags()[66] = true;
       return this;
     }
 
@@ -5082,7 +4939,7 @@ public class ClusterBillingData
      * @return True if the 'labels' field has been set, false otherwise.
      */
     public boolean hasLabels() {
-      return fieldSetFlags()[68];
+      return fieldSetFlags()[66];
     }
 
     /**
@@ -5091,7 +4948,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearLabels() {
       labels = null;
-      fieldSetFlags()[68] = false;
+      fieldSetFlags()[66] = false;
       return this;
     }
 
@@ -5205,12 +5062,8 @@ public class ClusterBillingData
             fieldSetFlags()[64] ? this.maxstorageutilizationvalue : (java.lang.Double) defaultValue(fields()[64]);
         record.maxstoragerequest =
             fieldSetFlags()[65] ? this.maxstoragerequest : (java.lang.Double) defaultValue(fields()[65]);
-        record.orgIdentifier =
-            fieldSetFlags()[66] ? this.orgIdentifier : (java.lang.CharSequence) defaultValue(fields()[66]);
-        record.projectIdentifier =
-            fieldSetFlags()[67] ? this.projectIdentifier : (java.lang.CharSequence) defaultValue(fields()[67]);
         record.labels =
-            fieldSetFlags()[68] ? this.labels : (java.util.List<java.lang.Object>) defaultValue(fields()[68]);
+            fieldSetFlags()[66] ? this.labels : (java.util.List<java.lang.Object>) defaultValue(fields()[66]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;

@@ -89,7 +89,6 @@ public class NextGenConfiguration extends Configuration {
   public static final String ACCESS_CONTROL_PACKAGE = "io.harness.ng.accesscontrol.resources";
   public static final String FEEDBACK_PACKAGE = "io.harness.ng.feedback.resources";
   public static final String INSTANCE_SYNC_PACKAGE = "io.harness.ng.instancesync.resources";
-  public static final String INSTANCE_NG_PACKAGE = "io.harness.ng.instance";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -171,7 +170,7 @@ public class NextGenConfiguration extends Configuration {
         ACTIVITY_HISTORY_PACKAGE, SERVICE_PACKAGE, SERVICE_ACCOUNTS_PACKAGE, BUCKETS_PACKAGE, CLUSTER_GCP_PACKAGE,
         WEBHOOK_PACKAGE, ENVIRONMENT_PACKAGE, USERPROFILE_PACKAGE, JIRA_PACKAGE, EXECUTION_PACKAGE, ENTITYSETUP_PACKAGE,
         SCHEMA_PACKAGE, DELEGATE_PACKAGE, ACCESS_CONTROL_PACKAGE, FEEDBACK_PACKAGE, INSTANCE_SYNC_PACKAGE,
-        INVITE_PACKAGE, USER_PACKAGE, INSTANCE_NG_PACKAGE);
+        INVITE_PACKAGE, USER_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

@@ -22,32 +22,26 @@ import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
-import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcherNG;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.beans.FeatureName;
-import io.harness.ccm.HarnessServiceInfoNG;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.ClusterRecord;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import io.harness.perpetualtask.k8s.watch.Volume;
 
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
@@ -64,13 +58,10 @@ public class K8sPodInfoTasklet implements Tasklet {
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
-  @Autowired private HarnessServiceInfoFetcherNG harnessServiceInfoFetcherNG;
   @Autowired private ClusterDataGenerationValidator clusterDataGenerationValidator;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
   @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
   @Autowired private FeatureFlagService featureFlagService;
-  @Autowired private io.harness.ccm.commons.service.intf.ClusterRecordService clusterRecordServiceNG;
-  @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
 
   private static final String POD = "Pod";
   private static final String KUBE_SYSTEM_NAMESPACE = "kube-system";
@@ -118,34 +109,12 @@ public class K8sPodInfoTasklet implements Tasklet {
     return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
   }
 
-  public Boolean isCurrentGenCluster(String clusterId) {
-    io.harness.ccm.cluster.entities.ClusterRecord clusterRecordCG;
-    if (clusterId.isEmpty()) {
-      return false;
-    }
-    clusterRecordCG = cloudToHarnessMappingService.getClusterRecord(clusterId);
-    log.info("clusterRecordCG: {}, clusterId: {}", clusterRecordCG, clusterId);
-    return clusterRecordCG != null;
-  }
-
-  public Boolean isNextGenCluster(String clusterId) {
-    ClusterRecord clusterRecordNG;
-    if (clusterId.isEmpty()) {
-      return false;
-    }
-    clusterRecordNG = clusterRecordServiceNG.get(clusterId);
-    log.info("clusterRecordNG: {}, clusterId: {}", clusterRecordNG, clusterId);
-    return clusterRecordNG != null;
-  }
-
   public InstanceInfo process(PublishedMessage publishedMessage) {
     String accountId = publishedMessage.getAccountId();
     PodInfo podInfo = (PodInfo) publishedMessage.getMessage();
     String podUid = podInfo.getPodUid();
     String clusterId = podInfo.getClusterId();
-    HarnessServiceInfo harnessServiceInfo = null;
-    HarnessServiceInfoNG harnessServiceInfoNG = null;
-    log.info("podinfo: {}, clusterId: {}", podInfo, clusterId);
+
     if (!clusterDataGenerationValidator.shouldGenerateClusterData(accountId, clusterId)) {
       return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
     }
@@ -212,25 +181,10 @@ public class K8sPodInfoTasklet implements Tasklet {
     }
 
     Map<String, String> labelsMap = podInfo.getLabelsMap();
-    log.info("labelsMap: {}", labelsMap);
-    // Check in events db clusterrecords table vs harness db clusterrecords table and then decide which one to call.
-    if (isCurrentGenCluster(clusterId)) {
-      harnessServiceInfo = harnessServiceInfoFetcher
-                               .fetchHarnessServiceInfo(accountId, podInfo.getCloudProviderId(), podInfo.getNamespace(),
-                                   podInfo.getPodName(), labelsMap)
-                               .orElse(null);
-    } else {
-      // NG Cluster
-      Optional<HarnessServiceInfoNG> harnessServiceInfoNG1;
-      log.info("accountId: {}, podInfo.getPodName(): {}, podInfo.getNamespace(): {}", accountId, podInfo.getPodName(),
-          podInfo.getNamespace());
-      harnessServiceInfoNG1 = harnessServiceInfoFetcherNG.fetchHarnessServiceInfoNG(
-          accountId, podInfo.getNamespace(), podInfo.getPodName(), labelsMap);
-      if (harnessServiceInfoNG1.isPresent()) {
-        harnessServiceInfoNG = harnessServiceInfoNG1.get();
-        log.info("harnessServiceInfoNG: {}", harnessServiceInfoNG);
-      }
-    }
+    HarnessServiceInfo harnessServiceInfo = harnessServiceInfoFetcher
+                                                .fetchHarnessServiceInfo(accountId, podInfo.getCloudProviderId(),
+                                                    podInfo.getNamespace(), podInfo.getPodName(), labelsMap)
+                                                .orElse(null);
 
     try {
       workloadRepository.savePodWorkload(accountId, podInfo);
@@ -268,7 +222,6 @@ public class K8sPodInfoTasklet implements Tasklet {
         .namespaceLabels(encodeDotsInKey(podInfo.getNamespaceLabelsMap()))
         .metadataAnnotations(podInfo.getMetadataAnnotationsMap())
         .harnessServiceInfo(harnessServiceInfo)
-        .harnessServiceInfoNg(harnessServiceInfoNG)
         .build();
   }
 }

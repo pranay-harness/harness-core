@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.timescaledb.AddAccountIdStatusIndexToDeployment;
 import io.harness.migrations.timescaledb.AddAlertTypeColumnToBudgetAlerts;
-import io.harness.migrations.timescaledb.AddCDNGEntitiesColumns;
 import io.harness.migrations.timescaledb.AddCostEvents;
 import io.harness.migrations.timescaledb.AddDeploymentTagsToDeployment;
 import io.harness.migrations.timescaledb.AddExplorerV2Indices;
@@ -126,7 +125,6 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(54, CreateIndexOnKubernetesUtilizationData.class))
         .add(Pair.of(55, AddMaxStorageColumns.class))
         .add(Pair.of(56, CreateServicesEnvPipelinesTable.class))
-        .add(Pair.of(57, AddCDNGEntitiesColumns.class))
         .build();
   }
 }

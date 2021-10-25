@@ -29,8 +29,6 @@ import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.dao.ClusterRecordDao;
-import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.constants.CloudProvider;
@@ -47,7 +45,6 @@ import io.harness.rule.Owner;
 import io.harness.testsupport.BaseTaskletTest;
 
 import software.wings.security.authentication.BatchQueryConfig;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Any;
@@ -82,8 +79,6 @@ public class K8sPodInfoEventTaskletTest extends BaseTaskletTest {
   @Mock private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Mock private ClusterDataGenerationValidator clusterDataGenerationValidator;
   @Mock private FeatureFlagService featureFlagService;
-  @Mock private ClusterRecordDao cgClusterRecordDao;
-  @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
 
   private static final String POD_UID = "pod_uid";
   private static final String POD_NAME = "pod_name";
@@ -121,11 +116,6 @@ public class K8sPodInfoEventTaskletTest extends BaseTaskletTest {
     when(harnessServiceInfoFetcher.fetchHarnessServiceInfo(any(), any(), any(), any(), any()))
         .thenReturn(Optional.empty());
     when(featureFlagService.isEnabled(eq(FeatureName.NODE_RECOMMENDATION_1), eq(ACCOUNT_ID))).thenReturn(false);
-    io.harness.ccm.cluster.entities.ClusterRecord clusterRecord =
-        io.harness.ccm.cluster.entities.ClusterRecord.builder()
-            .cluster(DirectKubernetesCluster.builder().clusterName(CLUSTER_NAME).build())
-            .build();
-    when(cloudToHarnessMappingService.getClusterRecord(CLUSTER_ID)).thenReturn(clusterRecord);
   }
 
   @Test
