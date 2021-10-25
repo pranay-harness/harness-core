@@ -72,6 +72,11 @@ else
     build_bazel_application 120-ng-manager
     [ "$DOCKERIZE" == "true" ] && copy_ng_manager_jars
   fi
+
+  if [ "${BUILD_EVENT_SERVER}" == "true" ]; then
+    build_bazel_application 350-event-server
+    [ "$DOCKERIZE" == "true" ] && copy_event_server_jars
+  fi
 fi
 
 
