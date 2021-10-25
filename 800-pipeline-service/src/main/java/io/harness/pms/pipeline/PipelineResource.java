@@ -136,6 +136,7 @@ public class PipelineResource implements YamlSchemaResource {
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
   private final PMSPipelineTemplateHelper pipelineTemplateHelper;
+  private final PipelineExecutionSummaryDtoMapper pipelineExecutionSummaryDtoMapper;
   private final GovernanceService governanceService;
 
   private PipelineEntity createPipelineInternal(String accountId, String orgId, String projectId, String yaml)
@@ -518,7 +519,7 @@ public class PipelineResource implements YamlSchemaResource {
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
         pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
             .map(e
-                -> PipelineExecutionSummaryDtoMapper.toDto(e,
+                -> pipelineExecutionSummaryDtoMapper.toDto(e,
                     e.getEntityGitDetails() != null
                         ? e.getEntityGitDetails()
                         : pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
@@ -562,7 +563,7 @@ public class PipelineResource implements YamlSchemaResource {
 
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(
+            .pipelineExecutionSummary(pipelineExecutionSummaryDtoMapper.toDto(
                 executionSummaryEntity, EntityGitDetailsMapper.mapEntityGitDetails(optionalPipelineEntity.get())))
             .executionGraph(ExecutionGraphMapper.toExecutionGraph(
                 pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
