@@ -10,7 +10,11 @@ import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
 import io.harness.request.RequestContextFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -186,11 +190,14 @@ public class DashboardApplication extends Application<DashboardServiceConfig> {
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(NotFoundExceptionMapper.class);
+    environment.jersey().register(InvalidUserRemoveRequestExceptionMapper.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
-
+    environment.jersey().register(GenericExceptionMapperV2.class);
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
     //    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
