@@ -44,7 +44,7 @@ public class InstallUtils {
   private static final String harnessPywinrmVersion = "v0.4-dev";
   private static final String harnessPywinrmBaseDir = "./client-tools/harness-pywinrm/";
 
-  static final String helm3Version = "v3.6.3";
+  static final String helm3Version = "v3.1.2";
 
   static final String helm2Version = "v2.13.1";
 

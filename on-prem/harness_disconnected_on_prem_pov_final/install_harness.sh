@@ -486,7 +486,7 @@ function setupClientUtils() {
       cp images/harness-pywinrm/${platform}/$harnessPywinrmVersion/harness-pywinrm ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnessPywinrmVersion/bin/${platform}/amd64/
     done
 
-    for helmversion in v2.13.1 v3.1.2 v3.6.3; do
+    for helmversion in v2.13.1 v3.0.2 v3.1.2; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
       cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
     done
