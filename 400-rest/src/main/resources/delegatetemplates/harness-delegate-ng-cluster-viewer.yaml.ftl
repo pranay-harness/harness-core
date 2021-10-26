@@ -111,8 +111,6 @@ spec:
           value: "true"
         - name: DELEGATE_DESCRIPTION
           value: "${delegateDescription}"
-        - name: DELEGATE_PROFILE
-          value: "${delegateProfile}"
         - name: DELEGATE_TYPE
           value: "${delegateType}"
         - name: DELEGATE_TAGS

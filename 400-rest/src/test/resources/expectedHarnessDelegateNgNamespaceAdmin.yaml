@@ -123,8 +123,6 @@ spec:
           value: "true"
         - name: DELEGATE_DESCRIPTION
           value: "desc"
-        - name: DELEGATE_PROFILE
-          value: "delConfigId"
         - name: DELEGATE_TYPE
           value: "KUBERNETES"
         - name: DELEGATE_TAGS
