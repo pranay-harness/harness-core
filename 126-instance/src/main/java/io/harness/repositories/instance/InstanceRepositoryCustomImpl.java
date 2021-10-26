@@ -61,10 +61,13 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   }
 
   @Override
-  public List<Instance> getInstancesDeployedAfter(String accountIdentifier, long startTimestamp) {
+  public List<Instance> getInstancesDeployedAfter(String accountIdentifier, long startTimestamp, long endTimeStamp) {
     Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier).is(accountIdentifier);
-    Criteria filterLastDeployedAt = Criteria.where(InstanceKeys.lastDeployedAt).gte(startTimestamp);
+    Criteria filterLastDeployedAt = Criteria.where(InstanceKeys.lastModifiedAt).gte(startTimestamp);
+    Criteria filterEndTimeStamp = Criteria.where(InstanceKeys.lastModifiedAt).lte(endTimeStamp);
+
     criteria = criteria.andOperator(filterLastDeployedAt);
+    criteria = criteria.andOperator(filterEndTimeStamp);
     Query query = new Query().addCriteria(criteria);
     return mongoTemplate.find(query, Instance.class);
   }
