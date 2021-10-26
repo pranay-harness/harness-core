@@ -185,7 +185,6 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.Event;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesCluster;
-import software.wings.beans.GitCommandTaskParameters;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.ProviderType;
 import software.wings.beans.GitFetchFilesConfig;
@@ -1596,7 +1595,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BatchCapabilityCheckTaskResponse.class, 8201);
     kryo.register(CapabilityCheckDetails.class, 8202);
     kryo.register(ArtifactoryCollectionTaskParameters.class, 8203);
-    kryo.register(GitCommandTaskParameters.class, 8204);
 
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
 

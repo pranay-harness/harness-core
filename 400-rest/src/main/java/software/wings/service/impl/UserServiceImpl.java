@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -491,11 +490,14 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    if (!featureFlagService.isGlobalEnabled(GTM_CD_ENABLED) && "CD".equalsIgnoreCase(userInvite.getIntent())) {
-      account.setDefaultExperience(DefaultExperience.CG);
-    }
-
     Account createdAccount = accountService.save(account, false);
+
+    if (!featureFlagService.isEnabled(FeatureName.CDNG_ENABLED, createdAccount.getUuid())
+        && "CD".equalsIgnoreCase(userInvite.getIntent())) {
+      createdAccount.setDefaultExperience(DefaultExperience.CG);
+
+      accountService.update(createdAccount);
+    }
 
     // create user
     User user = User.Builder.anUser()
