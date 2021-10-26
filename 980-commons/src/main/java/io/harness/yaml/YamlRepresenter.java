@@ -7,11 +7,13 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.NodeTuple;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.representer.Representer;
+
 import com.google.common.collect.Lists;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
+
 import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.util.Collection;

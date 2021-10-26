@@ -512,7 +512,7 @@ shared_dependencies = [
     "@maven//:org_eclipse_jetty_websocket_websocket_server",
     "@maven//:org_eclipse_jetty_websocket_websocket_servlet",
     "@maven//:org_eclipse_jgit_org_eclipse_jgit",
-    "@maven//:org_eclipse_jgit_org_eclipse_jgit_http_apache",
+
     "@maven//:org_eclipse_jgit_org_eclipse_jgit_ssh_jsch",
     "@maven//:org_elasticsearch_client_elasticsearch_rest_client",
     "@maven//:org_elasticsearch_client_elasticsearch_rest_high_level_client",

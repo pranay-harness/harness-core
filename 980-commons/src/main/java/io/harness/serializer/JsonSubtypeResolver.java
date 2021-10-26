@@ -65,6 +65,11 @@ public class JsonSubtypeResolver extends SubtypeResolver {
     subtypeResolver.registerSubtypes(classes);
   }
 
+  @Override
+  public void registerSubtypes(Collection<Class<?>> collection) {
+    subtypeResolver.registerSubtypes(collection);
+  }
+
   //  @Override
   //  public void registerSubtypes(Collection<Class<?>> collection) {
   //    subtypeResolver.registerSubtypes(collection);
