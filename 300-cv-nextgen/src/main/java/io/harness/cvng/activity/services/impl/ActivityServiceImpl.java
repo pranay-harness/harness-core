@@ -790,9 +790,16 @@ public class ActivityServiceImpl implements ActivityService {
         if (handler != null) {
           handler.handleUpdate(optionalFromDb.get(), activity);
         }
+        if (handler != null) {
+          handler.handleUpdate(optionalFromDb.get(), activity);
+        }
         hPersistence.update(optionalFromDb.get(), updateOperations);
         return optionalFromDb.get().getUuid();
       } else {
+        if (handler != null) {
+          handler.handleCreate(activity);
+        }
+        register(activity);
         if (handler != null) {
           handler.handleCreate(activity);
         }
