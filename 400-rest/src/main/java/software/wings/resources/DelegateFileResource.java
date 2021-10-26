@@ -5,7 +5,9 @@ import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
-import static java.time.Duration.*;
+import static java.time.Duration.ofHours;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import io.harness.annotations.dev.BreakDependencyOn;
@@ -38,7 +40,13 @@ import io.swagger.annotations.Api;
 import java.io.File;
 import java.io.InputStream;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.StreamingOutput;
 import lombok.Builder;
 import lombok.Value;

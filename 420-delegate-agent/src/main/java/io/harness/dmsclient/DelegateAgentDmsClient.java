@@ -4,7 +4,13 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
-import io.harness.delegate.beans.*;
+import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateParams;
+import io.harness.delegate.beans.DelegateProfileParams;
+import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.kryo.KryoRequest;
@@ -15,7 +21,15 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
-import retrofit2.http.*;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
+import retrofit2.http.Headers;
+import retrofit2.http.Multipart;
+import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Part;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.DEL)
 public interface DelegateAgentDmsClient {

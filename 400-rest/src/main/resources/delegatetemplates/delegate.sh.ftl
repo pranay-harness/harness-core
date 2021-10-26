@@ -221,11 +221,11 @@ if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /de
 fi
 
 if [ ! -z "$OC_PATH" ] && ! `grep ocPath config-delegate.yml > /dev/null` ; then
-  echo "ocPath: $OC_PATH" >> config-delegate.yml
+echo "ocPath: $OC_PATH" >> config-delegate.yml
 fi
 
 if [ ! -z "$KUBECTL_PATH" ] && ! `grep kubectlPath config-delegate.yml > /dev/null` ; then
-  echo "kubectlPath: $KUBECTL_PATH" >> config-delegate.yml
+echo "kubectlPath: $KUBECTL_PATH" >> config-delegate.yml
 fi
 
 if [ ! -z "$CF_CLI6_PATH" ] && ! `grep cfCli6Path config-delegate.yml > /dev/null` ; then
