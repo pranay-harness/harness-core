@@ -72,12 +72,14 @@ import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
-import io.harness.cvng.servicelevelobjective.beans.SLIType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
-import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -120,17 +122,8 @@ public class BuilderFactory {
   @Getter @Setter(AccessLevel.PRIVATE) private Clock clock;
   @Getter @Setter(AccessLevel.PRIVATE) private Context context;
 
-  public static class BuilderFactoryBuilder {
-    public BuilderFactory build() {
-      BuilderFactory builder = unsafeBuild();
-      if (builder.clock == null) {
-        builder.setClock(Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC));
-      }
-      if (builder.getContext() == null) {
-        builder.setContext(Context.defaultContext());
-      }
-      return builder;
-    }
+  public static BuilderFactory getDefault() {
+    return BuilderFactory.builder().build();
   }
 
   public CVNGStepTaskBuilder cvngStepTaskBuilder() {
@@ -575,8 +568,6 @@ public class BuilderFactory {
 
   public ServiceLevelObjectiveDTO getServiceLevelObjectiveDTOBuilder() {
     return ServiceLevelObjectiveDTO.builder()
-        .orgIdentifier(getContext().getOrgIdentifier())
-        .projectIdentifier(getContext().getProjectIdentifier())
         .identifier("sloIdentifier")
         .name("sloName")
         .tags(new HashMap<String, String>() {
@@ -591,20 +582,7 @@ public class BuilderFactory {
                     .sloTargetPercentage(80.0)
                     .spec(RollingSLOTargetSpec.builder().periodLength("30D").build())
                     .build())
-        .serviceLevelIndicators(
-            Collections.singletonList(ServiceLevelIndicator.builder()
-                                          .identifier("sliIndicator")
-                                          .name("sliName")
-                                          .type(SLIType.LATENCY)
-                                          .spec(ServiceLevelIndicator.SLISpec.builder()
-                                                    .type(SLIMetricType.THRESHOLD)
-                                                    .spec(ServiceLevelIndicator.SLISpec.SLIMetricSpec.builder()
-                                                              .eventType("eventName")
-                                                              .metric1("metric1")
-                                                              .metric2("metric2")
-                                                              .build())
-                                                    .build())
-                                          .build()))
+        .serviceLevelIndicators(Collections.singletonList(getServiceLevelIndicatorDTOBuilder()))
         .healthSourceRef("healthSourceIdentifier")
         .monitoredServiceRef(context.serviceIdentifier + "_" + context.getEnvIdentifier())
         .userJourneyRef("userJourney")
@@ -612,12 +590,16 @@ public class BuilderFactory {
   }
 
   public UserJourneyDTO getUserJourneyDTOBuilder() {
-    return UserJourneyDTO.builder()
-        .orgIdentifier(getContext().getAccountId())
-        .orgIdentifier(getContext().getOrgIdentifier())
-        .projectIdentifier(getContext().getProjectIdentifier())
-        .identifier("userJourney")
-        .name("userJourney")
+    return UserJourneyDTO.builder().identifier("userJourney").name("userJourney").build();
+  }
+
+  public ServiceLevelIndicatorDTO getServiceLevelIndicatorDTOBuilder() {
+    return ServiceLevelIndicatorDTO.builder()
+        .type(ServiceLevelIndicatorType.LATENCY)
+        .spec(ServiceLevelIndicatorSpec.builder()
+                  .type(SLIMetricType.RATIO)
+                  .spec(RatioSLIMetricSpec.builder().eventType("Good").metric1("metric1").metric2("metric2").build())
+                  .build())
         .build();
   }
 
@@ -637,8 +619,17 @@ public class BuilderFactory {
     return testVerificationJob;
   }
 
-  public static BuilderFactory getDefault() {
-    return BuilderFactory.builder().build();
+  public static class BuilderFactoryBuilder {
+    public BuilderFactory build() {
+      BuilderFactory builder = unsafeBuild();
+      if (builder.clock == null) {
+        builder.setClock(Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC));
+      }
+      if (builder.getContext() == null) {
+        builder.setContext(Context.defaultContext());
+      }
+      return builder;
+    }
   }
 
   @Value

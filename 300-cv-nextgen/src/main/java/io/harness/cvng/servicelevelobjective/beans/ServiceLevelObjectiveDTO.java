@@ -31,6 +31,6 @@ public class ServiceLevelObjectiveDTO implements YamlDTO {
   @ApiModelProperty(required = true) @NotNull String monitoredServiceRef;
   @ApiModelProperty(required = true) @NotNull String healthSourceRef;
 
-  @Valid @NotNull List<ServiceLevelIndicator> serviceLevelIndicators;
+  @Valid @NotNull List<ServiceLevelIndicatorDTO> serviceLevelIndicators;
   @Valid @NotNull SLOTarget target;
 }
