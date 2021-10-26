@@ -458,7 +458,7 @@ public class BuilderFactory {
         .environmentIdentifier(context.getEnvIdentifier())
         .eventTime(clock.instant())
         .changeSourceIdentifier("changeSourceID")
-        .type(ChangeSourceType.HARNESS_CD.getActivityType())
+        .type(ChangeSourceType.PAGER_DUTY.getActivityType())
         .pagerDutyUrl("https://myurl.com/pagerduty/token")
         .eventId("eventId")
         .activityName("New pager duty incident")
