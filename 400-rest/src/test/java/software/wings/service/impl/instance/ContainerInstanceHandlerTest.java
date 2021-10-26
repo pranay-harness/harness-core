@@ -62,6 +62,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.exception.WingsException;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
@@ -369,7 +370,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService, never()).delete(eq(instancesToNotDelete));
   }
 
-  @Test
+  @Test(expected = WingsException.class)
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testNewDeployment_DeleteOlderInstance_ECS() throws Exception {
@@ -600,7 +601,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertionsForSave("pod:1", KUBERNETES_CONTAINER_INSTANCE);
   }
 
-  @Test
+  @Test(expected = WingsException.class)
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testNewDeployment_DeleteOldInstances_Kubernetes() throws Exception {
@@ -696,7 +697,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertionsForSave("pod:1", KUBERNETES_CONTAINER_INSTANCE);
   }
 
-  @Test
+  @Test(expected = WingsException.class)
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testNewDeployment_Kubernetes_Rollback() throws Exception {
