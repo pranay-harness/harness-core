@@ -313,6 +313,10 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void setUp() throws IllegalAccessException {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
+    Map<String, String> jreTarPaths = new HashMap<>();
+    jreTarPaths.put("openjdk8u242", getOpenjdkJreConfig().getJreTarPath());
+    cdnConfig.setCdnJreTarPaths(jreTarPaths);
+    cdnConfig.setAlpnJarPath(getOpenjdkJreConfig().getAlpnJarPath());
     when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any()))
         .thenReturn("http://localhost:" + port + "/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
@@ -346,6 +350,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
         .thenReturn("http://localhost:" + port + "/builds/9/delegate.jar");
     when(infraDownloadService.getCdnWatcherBaseUrl()).thenReturn("http://localhost:9500/builds");
+    when(infraDownloadService.getCdnWatcherMetaDataFileUrl()).thenReturn("http://localhost:" + port + "/watcherci.txt");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
