@@ -594,8 +594,7 @@ public class DelegateServiceImpl implements DelegateService {
                                             .findFirst()
                                             .orElse(null);
 
-      DelegateGroup delegateGroup =
-          upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails);
+      upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails);
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
           ScriptRuntimeParamMapInquiry.builder()
@@ -604,9 +603,6 @@ public class DelegateServiceImpl implements DelegateService {
               .managerHost(managerHost)
               .verificationHost(verificationServiceUrl)
               .delegateName(delegateSetupDetails.getName())
-              .delegateProfile(delegateSetupDetails.getDelegateConfigurationId() == null
-                      ? ""
-                      : delegateSetupDetails.getDelegateConfigurationId())
               .delegateType(KUBERNETES)
               .ciEnabled(isCiEnabled)
               .delegateOrgIdentifier(delegateSetupDetails.getOrgIdentifier())
@@ -1955,16 +1951,12 @@ public class DelegateServiceImpl implements DelegateService {
     String accountId = delegate.getAccountId();
 
     DelegateProfile delegateProfile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
-    if (delegateProfile == null) {
-      if (delegate.isNg()) {
-        delegateProfile = delegateProfileService.fetchNgPrimaryProfile(accountId, delegate.getOwner());
-      } else {
-        delegateProfile = delegateProfileService.fetchCgPrimaryProfile(accountId);
-      }
+    if (delegateProfile == null && !delegate.isNg()) {
+      delegateProfile = delegateProfileService.fetchCgPrimaryProfile(accountId);
       delegate.setDelegateProfileId(delegateProfile.getUuid());
     }
 
-    if (delegateProfile.isApprovalRequired()) {
+    if (delegateProfile != null && delegateProfile.isApprovalRequired()) {
       delegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     } else {
       delegate.setStatus(DelegateInstanceStatus.ENABLED);
@@ -2364,7 +2356,6 @@ public class DelegateServiceImpl implements DelegateService {
                                                       .orgIdentifier(delegateParams.getOrgIdentifier())
                                                       .projectIdentifier(delegateParams.getProjectIdentifier())
                                                       .description(delegateParams.getDescription())
-                                                      .delegateConfigurationId(delegateParams.getDelegateProfileId())
                                                       .build();
       DelegateGroup delegateGroup =
           upsertDelegateGroup(delegateParams.getDelegateName(), delegateParams.getAccountId(), delegateSetupDetails);
@@ -2855,8 +2846,6 @@ public class DelegateServiceImpl implements DelegateService {
     boolean isNg = delegateSetupDetails != null;
     String delegateGroupIdentifier = getDelegateGroupIdentifier(name, delegateSetupDetails);
     String description = delegateSetupDetails != null ? delegateSetupDetails.getDescription() : null;
-    String delegateConfigurationId =
-        delegateSetupDetails != null ? delegateSetupDetails.getDelegateConfigurationId() : null;
     String orgIdentifier = delegateSetupDetails != null ? delegateSetupDetails.getOrgIdentifier() : null;
     String projectIdentifier = delegateSetupDetails != null ? delegateSetupDetails.getProjectIdentifier() : null;
     DelegateSizeDetails sizeDetails = delegateSetupDetails != null
@@ -2899,7 +2888,6 @@ public class DelegateServiceImpl implements DelegateService {
 
     setUnset(updateOperations, DelegateGroupKeys.owner, owner);
     setUnset(updateOperations, DelegateGroupKeys.description, description);
-    setUnset(updateOperations, DelegateGroupKeys.delegateConfigurationId, delegateConfigurationId);
 
     if (sizeDetails != null) {
       setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);

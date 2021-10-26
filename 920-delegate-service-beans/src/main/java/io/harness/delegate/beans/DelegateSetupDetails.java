@@ -23,6 +23,7 @@ public class DelegateSetupDetails implements YamlDTO {
   @NotNull private String name;
   private String description;
   @NotNull private DelegateSize size;
+  // TODO: Remove delegateCongigId once we drop this from UI.
   private String delegateConfigurationId;
   // This can be blank also, since we can create a group from delegate yaml itself.
   @EntityIdentifier(allowBlank = true) private String identifier;
