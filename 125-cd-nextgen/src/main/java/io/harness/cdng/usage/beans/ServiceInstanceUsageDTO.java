@@ -23,6 +23,4 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
-public class ServiceInstanceUsageDTO extends CDLicenseUsageDTO {
-  UsageDataDTO serviceLicenses;
-}
+public class ServiceInstanceUsageDTO extends CDLicenseUsageDTO {}
