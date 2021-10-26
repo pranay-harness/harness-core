@@ -2,6 +2,7 @@ package io.harness.cdng.licenserestriction;
 
 import static io.harness.data.structure.CollectionUtils.collectionToStream;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.licensing.beans.modules.types.CDLicenseType.SERVICES;
 import static io.harness.remote.client.NGRestUtils.getResponseWithRetry;
 
 import io.harness.EntityType;
@@ -11,9 +12,9 @@ import io.harness.cdng.usage.beans.CDLicenseUsageDTO;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
-import io.harness.licensing.usage.beans.LicenseUsageDTO;
 import io.harness.licensing.usage.beans.ReferenceDTO;
 import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
+import io.harness.licensing.usage.params.CDUsageRequestParams;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -29,10 +30,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 public class EnforcementValidator {
-  @Inject private LicenseUsageInterface licenseUsageInterface;
+  @Inject private LicenseUsageInterface<CDLicenseUsageDTO, CDUsageRequestParams> licenseUsageInterface;
   @Inject private EntitySetupUsageClient entitySetupUsageClient;
   @Inject private EnforcementClientService enforcementClientService;
 
@@ -42,22 +44,23 @@ public class EnforcementValidator {
   private Cache<String, Integer> newServiceCache =
       CacheBuilder.newBuilder().maximumSize(2000).expireAfterWrite(1, TimeUnit.MINUTES).build();
 
-  public Set<String> getActiveServices(String accountIdentifier) {
-    LicenseUsageDTO licenseUsage =
-        licenseUsageInterface.getLicenseUsage(accountIdentifier, ModuleType.CD, new Date().getTime());
+  public Pair<Set<String>, Integer> getActiveServiceLicenseInfo(String accountIdentifier) {
+    CDLicenseUsageDTO licenseUsage = licenseUsageInterface.getLicenseUsage(accountIdentifier, ModuleType.CD,
+        new Date().getTime(), CDUsageRequestParams.builder().cdLicenseType(SERVICES).build());
     Set<String> services = new HashSet<>();
-    if (licenseUsage instanceof CDLicenseUsageDTO) {
-      CDLicenseUsageDTO cdLicenseUsage = (CDLicenseUsageDTO) licenseUsage;
-      if (null != cdLicenseUsage.getActiveServices()
-          && isNotEmpty(cdLicenseUsage.getActiveServices().getReferences())) {
-        services = cdLicenseUsage.getActiveServices()
+    Integer serviceLicenses = 0;
+    if (licenseUsage != null) {
+      if (null != licenseUsage.getActiveServices() && isNotEmpty(licenseUsage.getActiveServices().getReferences())) {
+        services = licenseUsage.getActiveServices()
                        .getReferences()
                        .stream()
                        .map(ReferenceDTO::getName)
                        .collect(Collectors.toSet());
+
+        // TODO: add logic for serviceLicenses
       }
     }
-    return services;
+    return Pair.of(services, serviceLicenses);
   }
 
   public Set<String> getServicesBeingCreated(
@@ -73,12 +76,12 @@ public class EnforcementValidator {
     return collectionToStream(entityDetails).map(EntityDetail::getName).collect(Collectors.toSet());
   }
 
-  public int getIncrementForEnforcement(
+  public int getAdditionalServiceLicenseCount(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String pipelineId, String yaml) {
-    Set<String> activeServices = getActiveServices(accountIdentifier);
+    Pair<Set<String>, Integer> activeServiceLicenseInfo = getActiveServiceLicenseInfo(accountIdentifier);
     Set<String> newServices =
         getServicesBeingCreated(accountIdentifier, orgIdentifier, projectIdentifier, pipelineId, yaml);
-    Set<String> difference = Sets.difference(newServices, activeServices);
+    Set<String> difference = Sets.difference(newServices, activeServiceLicenseInfo.getKey());
     return difference.size();
   }
 
@@ -87,11 +90,11 @@ public class EnforcementValidator {
     Integer newServiceCount = newServiceCache.getIfPresent(executionId);
     if (null == newServiceCount) {
       newServiceCount =
-          getIncrementForEnforcement(accountIdentifier, orgIdentifier, projectIdentifier, pipelineId, yaml);
+          getAdditionalServiceLicenseCount(accountIdentifier, orgIdentifier, projectIdentifier, pipelineId, yaml);
       newServiceCache.put(executionId, newServiceCount);
     }
 
-    // update this method
-    enforcementClientService.checkAvailability(FeatureRestrictionName.SERVICES, accountIdentifier);
+    enforcementClientService.checkAvailabilityWithIncrement(
+        FeatureRestrictionName.SERVICES, accountIdentifier, newServiceCount);
   }
 }
