@@ -204,7 +204,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   // expected 1 Delete
-  @Test
+  @Test(expected = WingsException.class)
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstancesDelete_ECS() throws Exception {
@@ -499,7 +499,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     }
   }
 
-  @Test
+  @Test(expected = WingsException.class)
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstances_DeleteInstance_Kubernetes() throws Exception {
@@ -1750,7 +1750,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             ContainerMetadata.builder().namespace("default").releaseName("release-1").build());
   }
 
-  @Test
+  @Test(expected = WingsException.class)
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldUpdateAllIfWorkloadNameIsEmpty() {
@@ -1793,7 +1793,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_2_ID));
   }
 
-  @Test
+  @Test(expected = WingsException.class)
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldUpdateInstancesWithMatchingWorkloadName() {
@@ -1923,7 +1923,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(savedInstanceInfo.getReleaseName()).isNull();
   }
 
-  @Test
+  @Test(expected = WingsException.class)
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldDeleteOldInstancesWithoutReleaseName() {
