@@ -479,7 +479,9 @@ public class HelmDeployState extends State {
                 featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
             .isGitHostConnectivityCheck(
                 featureFlagService.isEnabled(FeatureName.GIT_HOST_CONNECTIVITY, context.getAccountId()))
-            .optimizedFilesFetch(featureFlagService.isEnabled(OPTIMIZED_GIT_FETCH_FILES, context.getAccountId()));
+            .optimizedFilesFetch(featureFlagService.isEnabled(OPTIMIZED_GIT_FETCH_FILES, context.getAccountId()))
+            .useNewKubectlVersion(
+                featureFlagService.isEnabled(FeatureName.NEW_KUBECTL_VERSION, context.getAccountId()));
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);

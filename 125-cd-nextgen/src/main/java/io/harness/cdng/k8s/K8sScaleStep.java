@@ -28,6 +28,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -85,6 +86,7 @@ public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployRes
             .timeoutIntervalInMin(
                 NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
+            .useNewKubectlVersion(k8sStepHelper.isUseNewKubectlVersion(AmbianceUtils.getAccountId(ambiance)))
             .build();
 
     k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);

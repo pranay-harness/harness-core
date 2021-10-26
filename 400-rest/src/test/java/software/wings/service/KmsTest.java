@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -269,7 +270,7 @@ public class KmsTest extends WingsBaseTest {
     when(delegateProxyFactory.get(eq(EncryptionService.class), any(SyncTaskContext.class)))
         .thenReturn(encryptionService);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
-    when(containerService.validate(any(ContainerServiceParams.class))).thenReturn(true);
+    when(containerService.validate(any(ContainerServiceParams.class), anyBoolean())).thenReturn(true);
     doNothing().when(newRelicService).validateConfig(anyObject(), anyObject(), anyObject());
     FieldUtils.writeField(secretService, "kmsRegistry", kmsEncryptorsRegistry, true);
     FieldUtils.writeField(encryptionService, "kmsEncryptorsRegistry", kmsEncryptorsRegistry, true);

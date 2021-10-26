@@ -261,7 +261,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @VisibleForTesting
   List<ContainerInfo> getKubectlContainerInfos(HelmCommandRequest commandRequest, List<KubernetesResourceId> workloads,
       LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
-    Kubectl client = Kubectl.client(k8sGlobalConfigService.getKubectlPath(), commandRequest.getKubeConfigLocation());
+    Kubectl client = Kubectl.client(k8sGlobalConfigService.getKubectlPath(commandRequest.isUseNewKubectlVersion()),
+        commandRequest.getKubeConfigLocation());
 
     List<ContainerInfo> containerInfoList = new ArrayList<>();
     final Map<String, List<KubernetesResourceId>> namespacewiseResources =

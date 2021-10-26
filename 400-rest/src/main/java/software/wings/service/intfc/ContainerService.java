@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 
 import software.wings.beans.TaskType;
@@ -12,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(CDP)
 public interface ContainerService {
   @DelegateTaskType(TaskType.CONTAINER_ACTIVE_SERVICE_COUNTS)
   Map<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams);
@@ -23,7 +27,7 @@ public interface ContainerService {
   Set<String> getControllerNames(ContainerServiceParams containerServiceParams, Map<String, String> labels);
 
   @DelegateTaskType(TaskType.CONTAINER_CONNECTION_VALIDATION)
-  Boolean validate(ContainerServiceParams containerServiceParams);
+  Boolean validate(ContainerServiceParams containerServiceParams, boolean useNewKubectlVersion);
 
   @DelegateTaskType(TaskType.CONTAINER_CE_VALIDATION) Boolean validateCE(ContainerServiceParams containerServiceParams);
 

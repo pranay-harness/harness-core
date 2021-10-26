@@ -20,6 +20,7 @@ public class K8sCanaryDeleteRequest implements K8sDeployRequest {
   Integer timeoutIntervalInMin;
   CommandUnitsProgress commandUnitsProgress;
   boolean useLatestKustomizeVersion;
+  boolean useNewKubectlVersion;
 
   @Override
   public ManifestDelegateConfig getManifestDelegateConfig() {
