@@ -421,8 +421,12 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
       ProjectsDashboardInfo cdProjectsDashBoardInfo, Map<String, String> mapOfProjectIdentifierAndProjectName,
       Map<String, String> mapOfOrganizationIdentifierAndOrganizationName) {
     List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> cdTopProjectsInfoList = new ArrayList<>();
-    log.info("project identifier from cd side is {}",
-        cdProjectsDashBoardInfo.getProjectDashBoardInfoList().get(0).getProjectIdentifier());
+    if (cdProjectsDashBoardInfo.getProjectDashBoardInfoList().get(0).getProjectIdentifier() != null) {
+      log.info("project identifier from cd side is {}",
+          cdProjectsDashBoardInfo.getProjectDashBoardInfoList().get(0).getProjectIdentifier());
+    } else {
+      log.info("project identifier from cd side is null");
+    }
     for (ProjectDashBoardInfo projectDashBoardInfo :
         emptyIfNull(cdProjectsDashBoardInfo.getProjectDashBoardInfoList())) {
       cdTopProjectsInfoList.add(
