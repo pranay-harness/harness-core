@@ -1,4 +1,4 @@
-package io.harness.steps.identity;
+package io.harness.engine.pms.execution.strategy;
 
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
@@ -15,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
+import io.harness.engine.pms.execution.strategy.identity.IdentityStep;
 import io.harness.engine.pms.steps.identity.IdentityStepParameters;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
