@@ -4,9 +4,11 @@ import io.harness.timescaledb.tables.pojos.ServiceInfraInfo;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.experimental.FieldNameConstants;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "AggregateServiceUsageInfoKeys")
 public class AggregateServiceUsageInfo extends ServiceInfraInfo {
   private long activeInstanceCount;
 
