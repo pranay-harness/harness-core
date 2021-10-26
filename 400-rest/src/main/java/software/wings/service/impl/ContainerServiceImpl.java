@@ -266,7 +266,7 @@ public class ContainerServiceImpl implements ContainerService {
   }
 
   @Override
-  public Boolean validate(ContainerServiceParams containerServiceParams) {
+  public Boolean validate(ContainerServiceParams containerServiceParams, boolean useNewKubectlVersion) {
     String namespace = containerServiceParams.getNamespace();
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof AwsConfig) {
@@ -281,7 +281,7 @@ public class ContainerServiceImpl implements ContainerService {
         KubernetesConfig kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig,
             containerServiceParams.getEncryptionDetails(), containerServiceParams.getSubscriptionId(),
             containerServiceParams.getResourceGroup(), containerServiceParams.getClusterName(), namespace, false);
-        kubernetesContainerService.validate(kubernetesConfig);
+        kubernetesContainerService.validate(kubernetesConfig, useNewKubectlVersion);
         return true;
       } else {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Invalid Argument: Not a valid AKS cluster");
@@ -291,11 +291,11 @@ public class ContainerServiceImpl implements ContainerService {
       encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails(), false);
 
       KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
-      kubernetesContainerService.validate(kubernetesConfig);
+      kubernetesContainerService.validate(kubernetesConfig, useNewKubectlVersion);
       return true;
     } else if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams, false);
-      kubernetesContainerService.validate(kubernetesConfig);
+      kubernetesContainerService.validate(kubernetesConfig, useNewKubectlVersion);
       return true;
     }
     throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)

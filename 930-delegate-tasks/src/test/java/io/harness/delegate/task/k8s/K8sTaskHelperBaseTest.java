@@ -540,7 +540,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                                       .build();
     Kubectl client = Kubectl.client("kubectl", "config-path");
 
-    spyK8sTaskHelperBase.dryRunManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback);
+    spyK8sTaskHelperBase.dryRunManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback, false);
 
     ArgumentCaptor<ApplyCommand> captor = ArgumentCaptor.forClass(ApplyCommand.class);
     verify(spyK8sTaskHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
@@ -554,7 +554,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                    .spec("")
                    .resourceId(KubernetesResourceId.builder().kind("Route").build())
                    .build()),
-        k8sDelegateTaskParams, executionLogCallback);
+        k8sDelegateTaskParams, executionLogCallback, false);
     verify(spyK8sTaskHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests-dry-run.yaml --dry-run");
@@ -578,7 +578,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
 
     assertThatThrownBy(()
                            -> spyK8sTaskHelperBase.dryRunManifests(
-                               client, emptyList(), k8sDelegateTaskParams, executionLogCallback, true))
+                               client, emptyList(), k8sDelegateTaskParams, executionLogCallback, true, false))
         .matches(throwable -> {
           HintException hint = ExceptionUtils.cause(HintException.class, throwable);
           ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);

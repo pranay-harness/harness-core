@@ -76,6 +76,7 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   private boolean k8SteadyStateCheckEnabled;
   private boolean mergeCapabilities; // HELM_MERGE_CAPABILITIES
   private boolean isGitHostConnectivityCheck;
+  private boolean useNewKubectlVersion;
   private boolean useLatestChartMuseumVersion;
 
   public HelmCommandRequest(HelmCommandType helmCommandType, boolean mergeCapabilities) {

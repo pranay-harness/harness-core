@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.structure.EmptyPredicate;
@@ -440,9 +441,10 @@ public class SettingValidationService {
                                                         .build();
 
     boolean isCloudCostEnabled = ccmSettingService.isCloudCostEnabled(settingAttribute);
-
+    boolean useNewKubectlVersion =
+        featureFlagService.isEnabled(FeatureName.NEW_KUBECTL_VERSION, settingAttribute.getAccountId());
     try {
-      return containerService.validate(containerServiceParams)
+      return containerService.validate(containerServiceParams, useNewKubectlVersion)
           && (!isCloudCostEnabled || containerService.validateCE(containerServiceParams));
     } catch (InvalidRequestException ex) {
       throw ex;

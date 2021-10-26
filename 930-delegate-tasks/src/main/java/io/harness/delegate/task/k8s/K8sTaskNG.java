@@ -113,7 +113,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
         K8sDelegateTaskParams k8SDelegateTaskParams =
             K8sDelegateTaskParams.builder()
-                .kubectlPath(k8sGlobalConfigService.getKubectlPath())
+                .kubectlPath(k8sGlobalConfigService.getKubectlPath(k8sDeployRequest.isUseNewKubectlVersion()))
                 .kubeconfigPath(KUBECONFIG_FILENAME)
                 .workingDirectory(workingDirectory)
                 .goTemplateClientPath(k8sGlobalConfigService.getGoTemplateClientPath())
