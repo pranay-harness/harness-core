@@ -150,7 +150,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
 
     verify(instanceService, times(1))
         .getInstancesDeployedAfter(eq(accountIdentifier),
-            eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(60)).toEpochMilli()), eq(timestamp));
+            eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
     verify(serviceEntityService, times(0)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
     assertThat(serviceTypeLicenseUsage.getActiveServices().getCount()).isZero();

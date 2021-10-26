@@ -21,7 +21,7 @@ public class CDLicenseUsageDslHelper {
         .select(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID,
             DSL.percentileDisc(percentile)
                 .withinGroupOrderBy(NG_INSTANCE_STATS.INSTANCECOUNT)
-                .as("activeInstanceCount"))
+                .as(AggregateServiceUsageInfo.AggregateServiceUsageInfoKeys.activeInstanceCount))
         .from(NG_INSTANCE_STATS)
         .where(NG_INSTANCE_STATS.ACCOUNTID.eq(accountIdentifier)
                    .and(reportedDateEpoch.greaterOrEqual(startInterval))
