@@ -17,6 +17,8 @@ import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
 import io.harness.delegate.beans.ScopingRuleDetailsNg;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.rest.RestResponse;
 
 import software.wings.security.annotations.AuthRule;
@@ -26,6 +28,12 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -46,6 +54,20 @@ import org.hibernate.validator.constraints.NotEmpty;
 // This NG specific, switching to NG access control. AuthRule to be removed also when NG access control is fully
 // enabled.
 @OwnedBy(HarnessTeam.DEL)
+@Tag(name = "Delegate Configuration Management",
+    description = "Contains APIs related to Delegate Configuration management")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 public class DelegateProfileNgResource {
   private final DelegateProfileManagerNgService delegateProfileManagerNgService;
   private final AccessControlClient accessControlClient;
@@ -59,12 +81,23 @@ public class DelegateProfileNgResource {
 
   @GET
   @Path("/{delegateProfileId}")
-  @ApiOperation(value = "Gets delegate profile", nickname = "getDelegateProfileNg")
+  @ApiOperation(value = "Gets Delegate Configuration (profile)", nickname = "getDelegateProfileNg")
   @Timed
   @ExceptionMetered
-  public RestResponse<DelegateProfileDetailsNg> get(@PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId) {
+  @Operation(operationId = "getDelegateConfigrationDetails",
+      summary = "Retrieves Delegate Configuration details for given Delegate Configuration Id.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "A Delegate Configuration. "
+                + "It includes uuid, accountId, name, description, startupScript, scopingRules, selectors, numberOfDelegates and other info.")
+      })
+  public RestResponse<DelegateProfileDetailsNg>
+  get(@Parameter(description = "Delegate Configuration Id") @PathParam(
+          "delegateProfileId") @NotEmpty String delegateProfileId,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, null), DELEGATE_CONFIG_VIEW_PERMISSION);
 
@@ -72,11 +105,23 @@ public class DelegateProfileNgResource {
   }
 
   @POST
-  @ApiOperation(value = "Adds a delegate profile", nickname = "addDelegateProfileNg")
+  @ApiOperation(value = "Adds a Delegate Configuration (profile)", nickname = "addDelegateProfileNg")
+  @Operation(operationId = "createDelegateConfiguration",
+      summary = "Creates Delegate Configuration specified by Configuration details in body",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Delegate Configuration which was created.")
+      })
   //@AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   // This NG specific, switching to NG access control
-  public RestResponse<DelegateProfileDetailsNg> add(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("orgId") String orgId, @QueryParam("projectId") String projectId,
+  public RestResponse<DelegateProfileDetailsNg>
+  add(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @RequestBody(required = true,
+          description =
+              "Delegate Configuration to be created. These include uuid, identifier, accountId, orgId, projId, name, startupScript, scopingRules, selectors...")
       DelegateProfileDetailsNg delegateProfile) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, null), DELEGATE_CONFIG_EDIT_PERMISSION);
@@ -87,15 +132,27 @@ public class DelegateProfileNgResource {
 
   @PUT
   @Path("/{delegateProfileId}")
-  @ApiOperation(value = "Updates a delegate profile", nickname = "updateDelegateProfileNg")
+  @ApiOperation(value = "Updates a Delegate profile", nickname = "updateDelegateProfileNg")
   @Timed
   @ExceptionMetered
+  @Operation(operationId = "updateDelegateConfiguration", summary = "Updates Delegate Configuration specified by Id",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Delegate Configuration which was updated.")
+      })
   //@AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   // This NG specific, switching to NG access control
-  public RestResponse<DelegateProfileDetailsNg> update(
-      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId, DelegateProfileDetailsNg delegateProfile) {
+  public RestResponse<DelegateProfileDetailsNg>
+  update(@Parameter(description = "Delegate Configuration Id") @PathParam(
+             "delegateProfileId") @NotEmpty String delegateProfileId,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @RequestBody(required = true,
+          description =
+              "Delegate Configuration to be created. These include uuid, identifier, accountId, orgId, projId, name, startupScript, scopingRules, selectors...")
+      DelegateProfileDetailsNg delegateProfile) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, delegateProfileId), DELEGATE_CONFIG_EDIT_PERMISSION);
 
@@ -108,13 +165,23 @@ public class DelegateProfileNgResource {
   @Path("/{delegateProfileId}/scoping-rules")
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "Updates the scoping rules inside the delegate profile", nickname = "updateScopingRulesNg")
+  @ApiOperation(value = "Updates the scoping rules inside the Delegate profile", nickname = "updateScopingRulesNg")
+  @Operation(operationId = "updateScopingRules",
+      summary = "Updates Scoping Rules for the Delegate Configuration specified by Id",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Delegate Configuration which was updated.")
+      })
   //@AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   // This NG specific, switching to NG access control
-  public RestResponse<DelegateProfileDetailsNg> updateScopingRules(
-      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId, List<ScopingRuleDetailsNg> scopingRules) {
+  public RestResponse<DelegateProfileDetailsNg>
+  updateScopingRules(@Parameter(description = "Delegate Configuration Id") @PathParam(
+                         "delegateProfileId") @NotEmpty String delegateProfileId,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @RequestBody(description = "Delegate Scoping Rules to be updated") List<ScopingRuleDetailsNg> scopingRules) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, delegateProfileId), DELEGATE_CONFIG_EDIT_PERMISSION);
 
@@ -124,14 +191,23 @@ public class DelegateProfileNgResource {
 
   @DELETE
   @Path("/{delegateProfileId}")
-  @ApiOperation(value = "Deletes a delegate profile", nickname = "deleteDelegateProfileNg")
+  @ApiOperation(value = "Deletes a Delegate Configuration (profile)", nickname = "deleteDelegateProfileNg")
   @Timed
   @ExceptionMetered
+  @Operation(operationId = "deleteDelegateConfig", summary = "Deletes Delegate Configuration specified by Id",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Boolean value resulting true if deletion was successful.")
+      })
   //@AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   // This NG specific, switching to NG access control
-  public RestResponse<Void> delete(@PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId) {
+  public RestResponse<Void>
+  delete(@Parameter(description = "Delegate Configuration Id") @PathParam(
+             "delegateProfileId") @NotEmpty String delegateProfileId,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, delegateProfileId), DELEGATE_CONFIG_DELETE_PERMISSION);
 
@@ -140,12 +216,21 @@ public class DelegateProfileNgResource {
   }
 
   @GET
-  @ApiOperation(value = "Lists the delegate profiles", nickname = "listDelegateProfilesNg")
+  @ApiOperation(value = "Lists the Delegate Configurations (profiles)", nickname = "listDelegateProfilesNg")
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<DelegateProfileDetailsNg>> list(
-      @BeanParam PageRequest<DelegateProfileDetailsNg> pageRequest, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("orgId") String orgId, @QueryParam("projectId") String projectId) {
+  @Operation(operationId = "getDelegateConfigurationsForAccount",
+      summary = "Lists Delegate Configuration for specified Account, Organization and Project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "A list of Delegate Configurations for the Account, Organization and Project")
+      })
+  public RestResponse<PageResponse<DelegateProfileDetailsNg>>
+  list(@BeanParam PageRequest<DelegateProfileDetailsNg> pageRequest,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, null), DELEGATE_CONFIG_VIEW_PERMISSION);
 
@@ -154,15 +239,25 @@ public class DelegateProfileNgResource {
 
   @PUT
   @Path("/{delegateProfileId}/selectors")
-  @ApiOperation(value = "Updates the selectors inside the delegate profile", nickname = "updateSelectorsNg")
+  @ApiOperation(value = "Updates the selectors inside the Delegate profile", nickname = "updateSelectorsNg")
   @Timed
   @ExceptionMetered
+  @Operation(operationId = "updateDelegateSelectors",
+      summary = "Updates Delegate Selectors for Delegate Configuration specified by Id",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Delegate Configuration which was updated.")
+      })
   //@AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   // This NG specific, switching to NG access control
-  public RestResponse<DelegateProfileDetailsNg> updateSelectors(
-      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId, List<String> selectors) {
+  public RestResponse<DelegateProfileDetailsNg>
+  updateSelectors(@Parameter(description = "Delegate Configuration Id") @PathParam(
+                      "delegateProfileId") @NotEmpty String delegateProfileId,
+      @Parameter(description = "Account Id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @RequestBody(description = "Delegate Selectors to be updated") List<String> selectors) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, delegateProfileId), DELEGATE_CONFIG_EDIT_PERMISSION);
 

@@ -3,8 +3,8 @@ package io.harness.connector;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
+import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.connector.validator.ConnectionValidator;
-import io.harness.delegate.task.ConnectorValidationHandler;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;

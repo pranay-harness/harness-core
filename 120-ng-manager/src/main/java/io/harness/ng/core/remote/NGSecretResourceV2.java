@@ -20,6 +20,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.api.NGEncryptedDataService;
@@ -37,6 +38,8 @@ import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
+
+import software.wings.service.impl.security.NGEncryptorService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -91,6 +94,7 @@ public class NGSecretResourceV2 {
   private final Validator validator;
   private final NGEncryptedDataService encryptedDataService;
   private final SecretPermissionValidator secretPermissionValidator;
+  private final NGEncryptorService ngEncryptorService;
 
   @GET
   @Path("/validateUniqueIdentifier/{identifier}")
@@ -349,6 +353,20 @@ public class NGSecretResourceV2 {
     }
 
     return ResponseDTO.newResponse(ngSecretService.createFile(accountIdentifier, dto.getSecret(), uploadedInputStream));
+  }
+
+  @POST
+  @Path("decrypt-encryption-details")
+  @Consumes("application/x-kryo")
+  @Produces("application/x-kryo")
+  @ApiOperation(hidden = true, value = "Decrypt Encrypted Details", nickname = "postDecryptEncryptedDetails")
+  @InternalApi
+  public ResponseDTO<DecryptableEntity> decryptEncryptedDetails(
+      @Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    return ResponseDTO.newResponse(
+        ngEncryptorService.decryptEncryptedDetails(decryptableEntityWithEncryptionConsumers.getDecryptableEntity(),
+            decryptableEntityWithEncryptionConsumers.getEncryptedDataDetailList(), accountIdentifier));
   }
 
   @POST

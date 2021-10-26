@@ -290,6 +290,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
           .sourceBranch(prWebhookEvent.getSourceBranch())
           .prNumber(String.valueOf(prWebhookEvent.getPullRequestId()))
           .prTitle(prWebhookEvent.getTitle())
+          .buildType("PR")
           .commitSha(prWebhookEvent.getBaseAttributes().getAfter())
           .baseCommitSha(prWebhookEvent.getBaseAttributes().getBefore())
           .repoUrl(prWebhookEvent.getRepository().getLink())
@@ -316,9 +317,15 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
         }
       }
 
+      String buildType = "branch";
+      if (branchWebhookEvent.getBranchName().startsWith("refs/tags/")) {
+        buildType = "tag";
+      }
+
       return CodebaseSweepingOutput.builder()
           .branch(branchWebhookEvent.getBranchName())
           .commits(codeBaseCommits)
+          .buildType(buildType)
           .targetBranch(branchWebhookEvent.getBranchName())
           .commitSha(branchWebhookEvent.getBaseAttributes().getAfter())
           .repoUrl(branchWebhookEvent.getRepository().getLink())
@@ -333,7 +340,12 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
 
   @VisibleForTesting
   CodebaseSweepingOutput buildManualCodebaseSweepingOutput(ManualExecutionSource manualExecutionSource) {
+    String buildType = "branch";
+    if (isNotEmpty(manualExecutionSource.getTag())) {
+      buildType = "tag";
+    }
     return CodebaseSweepingOutput.builder()
+        .buildType(buildType)
         .branch(manualExecutionSource.getBranch())
         .tag(manualExecutionSource.getTag())
         .commitSha(manualExecutionSource.getCommitSha())
@@ -377,7 +389,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
                                  .prNumber(String.valueOf(pr.getNumber()))
                                  .prTitle(pr.getTitle())
                                  .commitSha(pr.getSha())
-                                 .event("pull_request")
+                                 .buildType("PR")
                                  .baseCommitSha(pr.getBase().getSha())
                                  .commitRef(pr.getRef())
                                  .repoUrl(repoUrl) // Add repo url to scm.PullRequest and get it from there

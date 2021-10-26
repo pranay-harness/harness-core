@@ -53,26 +53,19 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    harness.io/app: harness-delegate
-    harness.io/account: ${kubernetesAccountLabel}
     harness.io/name: ${delegateName}
-  # Name must contain the six letter account identifier: ${kubernetesAccountLabel}
-  name: ${delegateName}-${kubernetesAccountLabel}
+  name: ${delegateName}
   namespace: ${delegateNamespace}
 spec:
   replicas: ${delegateReplicas}
   podManagementPolicy: Parallel
   selector:
     matchLabels:
-      harness.io/app: harness-delegate
-      harness.io/account: ${kubernetesAccountLabel}
       harness.io/name: ${delegateName}
   serviceName: ""
   template:
     metadata:
       labels:
-        harness.io/app: harness-delegate
-        harness.io/account: ${kubernetesAccountLabel}
         harness.io/name: ${delegateName}
     spec:
       containers:
@@ -132,16 +125,10 @@ spec:
           value: ${delegateName}
         - name: NEXT_GEN
           value: "true"
-        - name: DELEGATE_GROUP_ID
-          value: ${delegateGroupId}
         - name: DELEGATE_DESCRIPTION
           value: "${delegateDescription}"
-        - name: DELEGATE_PROFILE
-          value: "${delegateProfile}"
         - name: DELEGATE_TYPE
           value: "${delegateType}"
-        - name: DELEGATE_SESSION_IDENTIFIER
-          value: "${delegateSessionIdentifier}"
         - name: DELEGATE_TAGS
           value: "${delegateTags}"
         - name: DELEGATE_TASK_LIMIT

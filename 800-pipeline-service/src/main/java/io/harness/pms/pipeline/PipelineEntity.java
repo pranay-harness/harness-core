@@ -115,9 +115,21 @@ public class PipelineEntity
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
+  @Setter @NonFinal String invalidYamlString;
+  @NonFinal Boolean isEntityInvalid;
 
   @Override
   public String getAccountIdentifier() {
     return accountId;
+  }
+
+  @Override
+  public boolean isEntityInvalid() {
+    return Boolean.TRUE.equals(isEntityInvalid);
+  }
+
+  @Override
+  public void setEntityInvalid(boolean isEntityInvalid) {
+    this.isEntityInvalid = isEntityInvalid;
   }
 }

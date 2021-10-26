@@ -1,13 +1,16 @@
 package software.wings.service.impl.deployment.checks;
 
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,6 +27,8 @@ import io.harness.governance.AllEnvFilter;
 import io.harness.governance.BlackoutWindowFilterType;
 import io.harness.governance.CustomAppFilter;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
+import io.harness.governance.ServiceFilter;
+import io.harness.governance.ServiceFilter.ServiceFilterType;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.rule.Owner;
 
@@ -34,6 +39,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,8 +67,8 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
     frozenEnvs.put(FREEZE_ID, ImmutableSet.of(ENV_ID, ENV_ID + 2));
     frozenEnvs.put(FREEZE_ID + 2, ImmutableSet.of(ENV_ID + 3, ENV_ID + 2));
     frozenEnvs.put(FREEZE_ID + 3, ImmutableSet.of(ENV_ID + 4));
-    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(APP_ID, asList(ENV_ID + 2)), environmentService, featureFlagService);
+    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(APP_ID, asList(ENV_ID + 2), Collections.emptyList()), environmentService, featureFlagService);
     when(governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID, governanceConfig)).thenReturn(frozenEnvs);
     assertThatThrownBy(() -> deploymentFreezeChecker.checkIfEnvFrozen(ACCOUNT_ID, governanceConfig))
         .isInstanceOf(DeploymentFreezeException.class)
@@ -82,8 +88,8 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
     frozenEnvs.put(FREEZE_ID + 2, ImmutableSet.of(ENV_ID + 3, ENV_ID + 2));
     frozenEnvs.put(FREEZE_ID + 3, ImmutableSet.of(ENV_ID + 4));
 
-    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(APP_ID, asList(ENV_ID + 3)), environmentService, featureFlagService);
+    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(APP_ID, asList(ENV_ID + 3), Collections.emptyList()), environmentService, featureFlagService);
     when(governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID, governanceConfig)).thenReturn(frozenEnvs);
     assertThatThrownBy(() -> deploymentFreezeChecker.checkIfEnvFrozen(ACCOUNT_ID, governanceConfig))
         .isInstanceOf(DeploymentFreezeException.class)
@@ -103,8 +109,8 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
     frozenEnvs.put(FREEZE_ID + 2, ImmutableSet.of(ENV_ID + 3, ENV_ID + 2));
     frozenEnvs.put(FREEZE_ID + 3, ImmutableSet.of(ENV_ID + 4));
 
-    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(APP_ID, asList(ENV_ID + 5)), environmentService, featureFlagService);
+    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(APP_ID, asList(ENV_ID + 5), Collections.emptyList()), environmentService, featureFlagService);
     when(governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID, governanceConfigService.get(ACCOUNT_ID)))
         .thenReturn(frozenEnvs);
     deploymentFreezeChecker.checkIfEnvFrozen(ACCOUNT_ID, governanceConfig);
@@ -118,8 +124,8 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
     GovernanceConfig governanceConfig = generateGovernanceConfig();
 
     Map<String, Set<String>> frozenEnvs = new HashMap<>();
-    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(APP_ID, asList(ENV_ID + 5)), environmentService, featureFlagService);
+    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(APP_ID, asList(ENV_ID + 5), Collections.emptyList()), environmentService, featureFlagService);
     when(governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID, governanceConfigService.get(ACCOUNT_ID)))
         .thenReturn(frozenEnvs);
     deploymentFreezeChecker.checkIfEnvFrozen(ACCOUNT_ID, governanceConfig);
@@ -137,7 +143,8 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
     frozenEnvs.put(FREEZE_ID + 2, ImmutableSet.of(ENV_ID + 3, ENV_ID + 2));
     frozenEnvs.put(FREEZE_ID + 3, ImmutableSet.of(ENV_ID + 4));
     DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
-        new DeploymentCtx(APP_ID, Collections.emptyList()), environmentService, featureFlagService);
+        new DeploymentCtx(APP_ID, Collections.emptyList(), Collections.emptyList()), environmentService,
+        featureFlagService);
     when(governanceConfigService.get(ACCOUNT_ID)).thenReturn(governanceConfig);
     when(featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, ACCOUNT_ID)).thenReturn(true);
     when(governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID, governanceConfig)).thenReturn(frozenEnvs);
@@ -147,6 +154,69 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
             "Deployment Freeze Window [FREEZE1] is active for the environment. No deployments are allowed to proceed.")
         .extracting("deploymentFreezeIds", InstanceOfAssertFactories.ITERABLE)
         .containsExactlyInAnyOrder(FREEZE_ID);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkDeploymentFreezeWhenOnlyEnvFrozen() {
+    GovernanceConfig governanceConfig = generateGovernanceConfig();
+    governanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0).setServiceSelection(
+        new ServiceFilter(ServiceFilterType.CUSTOM, Collections.singletonList(SERVICE_ID + 1)));
+
+    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(APP_ID, Collections.singletonList(ENV_ID + 2), Collections.singletonList(SERVICE_ID)),
+        environmentService, featureFlagService);
+    when(governanceConfigService.getEnvIdsFromAppSelection(any(), any()))
+        .thenReturn(Arrays.asList(ENV_ID, ENV_ID + 1, ENV_ID + 2));
+    when(governanceConfigService.getServiceIdsFromAppSelection(any(), any())).thenReturn(Arrays.asList(SERVICE_ID + 1));
+    deploymentFreezeChecker.checkIfServiceFrozen(ACCOUNT_ID, governanceConfig);
+    verify(governanceConfigService, times(1))
+        .getServiceIdsFromAppSelection(
+            APP_ID, governanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0));
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkDeploymentFreezeWhenOnlyServiceFrozen() {
+    GovernanceConfig governanceConfig = generateGovernanceConfig();
+    governanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0).setServiceSelection(
+        new ServiceFilter(ServiceFilterType.CUSTOM, Collections.singletonList(SERVICE_ID + 1)));
+
+    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(APP_ID, Collections.singletonList(ENV_ID + 2), Collections.singletonList(SERVICE_ID)),
+        environmentService, featureFlagService);
+    when(governanceConfigService.getEnvIdsFromAppSelection(any(), any())).thenReturn(Arrays.asList(ENV_ID, ENV_ID + 1));
+    when(governanceConfigService.getServiceIdsFromAppSelection(any(), any()))
+        .thenReturn(Arrays.asList(SERVICE_ID, SERVICE_ID + 1));
+    deploymentFreezeChecker.checkIfServiceFrozen(ACCOUNT_ID, governanceConfig);
+    verify(governanceConfigService, times(1))
+        .getEnvIdsFromAppSelection(
+            APP_ID, governanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0));
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkDeploymentFreezeWhenBothEnvServiceFrozen() {
+    GovernanceConfig governanceConfig = generateGovernanceConfig();
+    governanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0).setServiceSelection(
+        new ServiceFilter(ServiceFilterType.CUSTOM, Arrays.asList(SERVICE_ID, SERVICE_ID + 1)));
+
+    DeploymentFreezeChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(APP_ID, Collections.singletonList(ENV_ID + 2), Collections.singletonList(SERVICE_ID)),
+        environmentService, featureFlagService);
+    when(governanceConfigService.getEnvIdsFromAppSelection(any(), any()))
+        .thenReturn(Arrays.asList(ENV_ID, ENV_ID + 1, ENV_ID + 2));
+    when(governanceConfigService.getServiceIdsFromAppSelection(any(), any()))
+        .thenReturn(Arrays.asList(SERVICE_ID, SERVICE_ID + 1));
+    assertThatThrownBy(() -> deploymentFreezeChecker.checkIfServiceFrozen(ACCOUNT_ID, governanceConfig))
+        .isInstanceOf(DeploymentFreezeException.class)
+        .hasMessage(
+            "Deployment Freeze Window [FREEZE1] is active for the service. No deployments are allowed to proceed.")
+        .extracting("accountId")
+        .isEqualTo(ACCOUNT_ID);
   }
 
   private GovernanceConfig generateGovernanceConfig() {

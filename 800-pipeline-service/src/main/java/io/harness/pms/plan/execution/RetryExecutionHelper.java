@@ -126,7 +126,10 @@ public class RetryExecutionHelper {
     }
     boolean isResumable = validateRetry(updatedYaml, executedYaml);
     if (!isResumable) {
-      return RetryInfo.builder().isResumable(isResumable).errorMessage("Pipeline is updated, cannot retry").build();
+      return RetryInfo.builder()
+          .isResumable(isResumable)
+          .errorMessage("Adding, deleting or changing the name of the stage identifier is not allowed for retrying")
+          .build();
     }
     List<RetryStageInfo> stageDetails = getStageDetails(planExecutionId);
 
@@ -257,6 +260,7 @@ public class RetryExecutionHelper {
     /*
     Fetching stageFqn from previousExecutionId and stage
      */
+    // TODO: add a condition: stagesFqn size should be equal to the size of identifierOfSkipStages
     List<String> stagesFqn =
         nodeExecutionService.fetchStageFqnFromStageIdentifiers(previousExecutionId, identifierOfSkipStages);
 
@@ -299,7 +303,7 @@ public class RetryExecutionHelper {
     }
     List<ExecutionInfo> executionInfos = fetchExecutionInfoFromPipelineEntities(entities);
 
-    String latestRetryExecutionId = executionInfos.get(executionInfos.size() - 1).getUuid();
+    String latestRetryExecutionId = executionInfos.get(0).getUuid();
 
     return RetryHistoryResponseDto.builder()
         .executionInfos(executionInfos)
@@ -315,7 +319,7 @@ public class RetryExecutionHelper {
       return RetryLatestExecutionResponseDto.builder().errorMessage("This is not a part of retry execution").build();
     }
 
-    String latestRetryExecutionId = entities.get(entities.size() - 1).getPlanExecutionId();
+    String latestRetryExecutionId = entities.get(0).getPlanExecutionId();
 
     return RetryLatestExecutionResponseDto.builder().latestExecutionId(latestRetryExecutionId).build();
   }

@@ -61,6 +61,13 @@ public class PipelineExecutor {
         runStageRequestDTO.getRuntimeInputYaml(), runStageRequestDTO.getStageIdentifiers(), useV2);
   }
 
+  public PlanExecutionResponseDto rerunStagesWithRuntimeInputYaml(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
+      String moduleType, String originalExecutionId, RunStageRequestDTO runStageRequestDTO, boolean useV2) {
+    return startPlanExecution(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, originalExecutionId,
+        moduleType, runStageRequestDTO.getRuntimeInputYaml(), runStageRequestDTO.getStageIdentifiers(), useV2);
+  }
+
   public PlanExecutionResponseDto rerunPipelineWithInputSetPipelineYaml(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, String moduleType, String originalExecutionId,
       String runtimeInputYaml, boolean useV2) {

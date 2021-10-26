@@ -16,6 +16,7 @@ import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
 import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
@@ -154,6 +155,11 @@ public class JgitGitServiceImpl implements ScmClient {
   @Override
   public CompareCommitsResponse compareCommits(
       ScmConnector scmConnector, String initialCommitId, String finalCommitId) {
+    return null;
+  }
+
+  @Override
+  public FindCommitResponse findCommit(ScmConnector scmConnector, String commitId) {
     return null;
   }
 }

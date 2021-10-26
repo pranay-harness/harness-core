@@ -62,4 +62,5 @@ public class PipelineExecutionSummaryDTO {
 
   boolean isStagesExecution;
   List<String> stagesExecuted;
+  Map<String, String> stagesExecutedNames;
 }

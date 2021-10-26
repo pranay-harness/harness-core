@@ -246,6 +246,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactSummary;
+import software.wings.beans.artifact.ArtifactoryCollectionTaskParameters;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -1590,6 +1591,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BatchCapabilityCheckTaskParameters.class, 8200);
     kryo.register(BatchCapabilityCheckTaskResponse.class, 8201);
     kryo.register(CapabilityCheckDetails.class, 8202);
+    kryo.register(ArtifactoryCollectionTaskParameters.class, 8203);
 
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
 

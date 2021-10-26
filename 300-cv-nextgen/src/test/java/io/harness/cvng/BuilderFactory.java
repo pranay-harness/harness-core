@@ -430,7 +430,9 @@ public class BuilderFactory {
         .planExecutionId("executionId")
         .artifactType("artifactType")
         .artifactTag("artifactTag")
-        .deploymentStatus("status")
+        .activityName(generateUuid())
+        .deploymentStatus(generateUuid())
+        .verificationJobInstanceIds(Arrays.asList(generateUuid()))
         .activityEndTime(clock.instant())
         .activityStartTime(clock.instant());
   }
