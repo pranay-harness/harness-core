@@ -49,11 +49,13 @@ public class ServiceLevelObjectiveResource {
   @ApiOperation(value = "saves slo data", nickname = "saveSLOData")
   public RestResponse<ServiceLevelObjectiveResponse> saveSLOData(
       @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @Valid @Body ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
-                                      .orgIdentifier(serviceLevelObjectiveDTO.getOrgIdentifier())
-                                      .projectIdentifier(serviceLevelObjectiveDTO.getProjectIdentifier())
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
                                       .build();
     return new RestResponse<>(serviceLevelObjectiveService.create(projectParams, serviceLevelObjectiveDTO));
   }
@@ -65,12 +67,14 @@ public class ServiceLevelObjectiveResource {
   @ApiOperation(value = "update slo data", nickname = "updateSLOData")
   public RestResponse<ServiceLevelObjectiveResponse> updateSLOData(
       @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @ApiParam(required = true) @NotNull @PathParam("identifier") String identifier,
       @NotNull @Valid @Body ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
-                                      .orgIdentifier(serviceLevelObjectiveDTO.getOrgIdentifier())
-                                      .projectIdentifier(serviceLevelObjectiveDTO.getProjectIdentifier())
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
                                       .build();
     return new RestResponse<>(serviceLevelObjectiveService.update(projectParams, identifier, serviceLevelObjectiveDTO));
   }

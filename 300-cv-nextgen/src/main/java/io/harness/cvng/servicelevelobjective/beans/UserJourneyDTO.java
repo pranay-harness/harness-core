@@ -17,8 +17,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserJourneyDTO implements YamlDTO {
-  @ApiModelProperty(required = true) @NotNull @EntityIdentifier String orgIdentifier;
-  @ApiModelProperty(required = true) @NotNull @EntityIdentifier String projectIdentifier;
   @ApiModelProperty(required = true) @NotNull @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) @NotNull @NGEntityName String name;
 }
