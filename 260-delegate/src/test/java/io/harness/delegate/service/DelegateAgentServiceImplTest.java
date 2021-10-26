@@ -1,11 +1,17 @@
 package io.harness.delegate.service;
 
-import static io.harness.rule.OwnerRule.*;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MARKOM;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
