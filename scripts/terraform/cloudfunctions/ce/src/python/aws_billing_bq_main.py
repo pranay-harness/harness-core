@@ -233,8 +233,8 @@ def ingest_data_to_awscur(jsonData):
                     ( SELECT ARRAY_AGG(STRUCT( regexp_replace(REGEXP_EXTRACT(unpivotedData, '[^"]*'), 'TAG_' , '') AS key , 
                          regexp_replace(REGEXP_EXTRACT(unpivotedData, r':\"[^"]*'), ':"', '') AS value )) 
                          FROM UNNEST(( SELECT REGEXP_EXTRACT_ALL(json, 'TAG_' || r'[^:]+:\"[^"]+\"') FROM (SELECT TO_JSON_STRING(table) json))) unpivotedData) 
-               AS tags FROM `%s` table;
-     """ % (tableName, date_start, date_end, jsonData["usageaccountid"], tableName, jsonData["tableId"])
+               AS tags FROM `%s` table WHERE DATE(usagestartdate) >= '%s' AND DATE(usagestartdate) <= '%s';
+     """ % (tableName, date_start, date_end, jsonData["usageaccountid"], tableName, jsonData["tableId"], date_start, date_end)
     # Configure the query job.
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -360,12 +360,16 @@ def ingest_data_to_costagg(jsonData):
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s table..." % table_name)
     query = """DELETE FROM `%s` WHERE DATE(day) >= '%s' AND DATE(day) <= '%s'  AND cloudProvider = "AWS" AND accountId = '%s';
-               INSERT INTO `%s` (day, cost, cloudProvider, accountId)
-                SELECT TIMESTAMP_TRUNC(startTime, DAY) AS day, SUM(cost) AS cost, "AWS" AS cloudProvider, '%s' as accountId
+               INSERT INTO `%s` (day, cost, cloudProvider, accountId) 
+                SELECT TIMESTAMP_TRUNC(startTime, DAY) AS day, SUM(cost) AS cost, "AWS" AS cloudProvider, '%s' as accountId 
                 FROM `%s`  
-                WHERE DATE(startTime) >= '%s' and cloudProvider = "AWS" 
+                WHERE DATE(startTime) >= '%s' AND DATE(day) <= '%s' AND cloudProvider = "AWS" 
                 GROUP BY day;
-     """ % (table_name, date_start, date_end, jsonData.get("accountId"), table_name, jsonData.get("accountId"), source_table, date_start)
+     """ % (table_name, date_start, date_end, jsonData.get("accountId"),
+            table_name,
+            jsonData.get("accountId"),
+            source_table,
+            date_start, date_end)
 
     job_config = bigquery.QueryJobConfig(
         priority=bigquery.QueryPriority.BATCH
