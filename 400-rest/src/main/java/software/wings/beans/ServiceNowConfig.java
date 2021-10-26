@@ -54,6 +54,8 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  private List<String> delegateSelectors;
+
   /**
    * Instantiates a new setting value.
    *
@@ -67,14 +69,15 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
     super(SettingVariableTypes.SERVICENOW.name());
   }
 
-  public ServiceNowConfig(
-      String baseUrl, String username, char[] password, String encryptedPassword, String accountId) {
+  public ServiceNowConfig(String baseUrl, String username, char[] password, String encryptedPassword, String accountId,
+      List<String> delegateSelectors) {
     this();
     this.baseUrl = baseUrl;
     this.username = username;
     this.password = Arrays.copyOf(password, password.length);
     this.encryptedPassword = encryptedPassword;
     this.accountId = accountId;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override
@@ -95,14 +98,16 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
     private String baseUrl;
     private String username;
     private String password = ENCRYPTED_VALUE_STR;
+    private List<String> delegateSelectors;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String baseUrl, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        List<String> delegateSelectors, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.baseUrl = baseUrl;
       this.username = username;
       this.password = password;
+      this.delegateSelectors = delegateSelectors;
     }
   }
 }
