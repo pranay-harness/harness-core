@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -112,7 +113,7 @@ public class K8sTaskNGTest extends CategoryTest {
     doReturn(mockKubeConfigFileContent)
         .when(containerDeploymentDelegateBaseHelper)
         .getKubeconfigFileContent(k8sInfraDelegateConfig);
-    doReturn(kubectlPath).when(k8sGlobalConfigService).getKubectlPath();
+    doReturn(kubectlPath).when(k8sGlobalConfigService).getKubectlPath(anyBoolean());
     doReturn(goTemplateClientPath).when(k8sGlobalConfigService).getGoTemplateClientPath();
     doReturn(helmV2Path).when(k8sGlobalConfigService).getHelmPath(HelmVersion.V2);
     doReturn(helmV3Path).when(k8sGlobalConfigService).getHelmPath(HelmVersion.V3);

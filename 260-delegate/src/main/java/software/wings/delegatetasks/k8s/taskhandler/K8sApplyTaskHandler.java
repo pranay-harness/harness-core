@@ -184,7 +184,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       }
 
       return k8sTaskHelperBase.dryRunManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
-          k8sDelegateTaskParams, executionLogCallback);
+          k8sDelegateTaskParams, executionLogCallback, k8sApplyTaskParameters.isUseNewKubectlVersion());
     } catch (Exception e) {
       log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
