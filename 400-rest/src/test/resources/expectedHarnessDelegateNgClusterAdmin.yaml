@@ -96,7 +96,7 @@ spec:
         - name: REMOTE_WATCHER_URL_CDN
           value: http://localhost:9500/builds
         - name: DELEGATE_STORAGE_URL
-          value: http://localhost:8888
+          value: http://localhost:9500
         - name: DELEGATE_CHECK_LOCATION
           value: delegateci.txt
         - name: DEPLOY_MODE
@@ -144,7 +144,7 @@ spec:
         - name: HELM_DESIRED_VERSION
           value: ""
         - name: USE_CDN
-          value: "false"
+          value: "true"
         - name: CDN_URL
           value: http://localhost:9500
         - name: JRE_VERSION
