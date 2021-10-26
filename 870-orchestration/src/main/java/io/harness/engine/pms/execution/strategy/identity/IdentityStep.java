@@ -1,5 +1,6 @@
-package io.harness.steps.identity;
+package io.harness.engine.pms.execution.strategy.identity;
 
+import io.harness.OrchestrationStepTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -8,15 +9,16 @@ import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.steps.identity.IdentityStepParameters;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.steps.OrchestrationStepTypes;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -70,5 +72,13 @@ public class IdentityStep
   @Override
   public Class<IdentityStepParameters> getStepParametersClass() {
     return IdentityStepParameters.class;
+  }
+
+  public static Ambiance modifyAmbiance(Ambiance ambiance) {
+    Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
+    return AmbianceUtils.cloneForFinish(ambiance,
+        level.toBuilder()
+            .setStepType(StepType.newBuilder().setType("IDENTITY_STEP").setStepCategory(StepCategory.STEP).build())
+            .build());
   }
 }
