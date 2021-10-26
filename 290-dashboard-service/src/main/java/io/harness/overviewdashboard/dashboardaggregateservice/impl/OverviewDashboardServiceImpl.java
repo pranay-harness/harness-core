@@ -2,6 +2,7 @@ package io.harness.overviewdashboard.dashboardaggregateservice.impl;
 
 import static io.harness.dashboards.SortBy.DEPLOYMENTS;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -421,7 +422,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
       ProjectsDashboardInfo cdProjectsDashBoardInfo, Map<String, String> mapOfProjectIdentifierAndProjectName,
       Map<String, String> mapOfOrganizationIdentifierAndOrganizationName) {
     List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> cdTopProjectsInfoList = new ArrayList<>();
-    if (cdProjectsDashBoardInfo.getProjectDashBoardInfoList().get(0).getProjectIdentifier() != null) {
+    if (!isEmpty(cdProjectsDashBoardInfo.getProjectDashBoardInfoList())) {
       log.info("project identifier from cd side is {}",
           cdProjectsDashBoardInfo.getProjectDashBoardInfoList().get(0).getProjectIdentifier());
     } else {
