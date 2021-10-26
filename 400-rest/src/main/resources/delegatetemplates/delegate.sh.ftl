@@ -229,24 +229,30 @@ if [ ! -z "$KUBECTL_PATH" ] && ! `grep kubectlPath config-delegate.yml > /dev/nu
 fi
 
 if [ ! -z "$CF_CLI6_PATH" ] && ! `grep cfCli6Path config-delegate.yml > /dev/null` ; then
-  echo "cfCli6Path: $CF_CLI6_PATH" >> config-delegate.yml
+echo "cfCli6Path: $CF_CLI6_PATH" >> config-delegate.yml
 fi
 
 if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/null` ; then
-  echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
+echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
 fi
 
 rm -f -- *.bak
+
+if ! `grep dmsUrl config-delegate.yml > /dev/null`; then
+echo "dmsUrl: ${managerHostAndPort}/dms/api/" >> config-delegate.yml
+else
+sed -i.bak "s|^dmsUrl:.*$|dmsUrl: ${managerHostAndPort}/dms/api/|" config-delegate.yml
+fi
 
 export KUBECTL_VERSION=${kubectlVersion}
 
 export SCM_VERSION=${scmVersion}
 
 <#if delegateName??>
-export DELEGATE_NAME=${delegateName}
+  export DELEGATE_NAME=${delegateName}
 </#if>
 <#if delegateProfile??>
-export DELEGATE_PROFILE=${delegateProfile}
+  export DELEGATE_PROFILE=${delegateProfile}
 </#if>
 <#if delegateType??>
 export DELEGATE_TYPE=${delegateType}

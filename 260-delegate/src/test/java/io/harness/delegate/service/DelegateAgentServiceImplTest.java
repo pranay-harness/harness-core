@@ -1,17 +1,11 @@
 package io.harness.delegate.service;
 
-import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.MARKOM;
-import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
@@ -21,7 +15,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.configuration.DelegateConfiguration;
-import io.harness.managerclient.DelegateAgentManagerClient;
+import io.harness.dmsclient.DelegateAgentDmsClient;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptionConfig;
@@ -45,7 +39,7 @@ import retrofit2.Call;
 public class DelegateAgentServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
+  @Mock private DelegateAgentDmsClient delegateAgentDmsClient;
   @Mock private Call<DelegateTaskPackage> delegatePackageCall;
   @Mock private DelegateDecryptionService delegateDecryptionService;
 
@@ -53,7 +47,7 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    when(delegateAgentManagerClient.acquireTask(Matchers.anyString(), Matchers.anyString(), Matchers.anyString()))
+    when(delegateAgentDmsClient.acquireTask(Matchers.anyString(), Matchers.anyString(), Matchers.anyString()))
         .thenReturn(delegatePackageCall);
   }
 

@@ -4,58 +4,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateTimeBasedUuid;
 import static io.harness.delegate.app.DelegateApplication.getProcessId;
-import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
-import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
-import static io.harness.delegate.configuration.InstallUtils.installHarnessPywinrm;
-import static io.harness.delegate.configuration.InstallUtils.installHelm;
-import static io.harness.delegate.configuration.InstallUtils.installKubectl;
-import static io.harness.delegate.configuration.InstallUtils.installKustomize;
-import static io.harness.delegate.configuration.InstallUtils.installOc;
-import static io.harness.delegate.configuration.InstallUtils.installScm;
-import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
-import static io.harness.delegate.configuration.InstallUtils.validateCfCliExists;
-import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
-import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
-import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
-import static io.harness.delegate.message.ManagerMessageConstants.UPDATE_PERPETUAL_TASK;
-import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
-import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_IS_NEW;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_JRE_VERSION;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_START_GRPC;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_GRPC;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SWITCH_STORAGE;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_VERSION;
-import static io.harness.delegate.message.MessageConstants.MIGRATE_TO_JRE_VERSION;
-import static io.harness.delegate.message.MessageConstants.UPGRADING_DELEGATE;
-import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
-import static io.harness.delegate.message.MessageConstants.WATCHER_HEARTBEAT;
-import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
-import static io.harness.delegate.message.MessageConstants.WATCHER_VERSION;
+import static io.harness.delegate.configuration.InstallUtils.*;
+import static io.harness.delegate.message.ManagerMessageConstants.*;
+import static io.harness.delegate.message.MessageConstants.*;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
-import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
-import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
-import static io.harness.eraro.ErrorCode.REVOKED_TOKEN;
+import static io.harness.eraro.ErrorCode.*;
 import static io.harness.expression.SecretString.SECRET_MASK;
-import static io.harness.filesystem.FileIo.acquireLock;
-import static io.harness.filesystem.FileIo.isLocked;
-import static io.harness.filesystem.FileIo.releaseLock;
+import static io.harness.filesystem.FileIo.*;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
@@ -69,26 +25,16 @@ import static io.harness.utils.MemoryPerformanceUtils.memoryUsage;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
+import static java.time.Duration.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static lombok.AccessLevel.PACKAGE;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.commons.lang3.StringUtils.*;
 
-import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.*;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.concurrent.HTimeLimiter;
@@ -96,34 +42,18 @@ import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.DelegateConnectionHeartbeat;
-import io.harness.delegate.beans.DelegateInstanceStatus;
-import io.harness.delegate.beans.DelegateParams;
+import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.DelegateParams.DelegateParamsBuilder;
-import io.harness.delegate.beans.DelegateProfileParams;
-import io.harness.delegate.beans.DelegateRegisterResponse;
-import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateTaskAbortEvent;
-import io.harness.delegate.beans.DelegateTaskEvent;
-import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.FileBucket;
-import io.harness.delegate.beans.SecretDetail;
-import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
-import io.harness.delegate.task.AbstractDelegateRunnableTask;
-import io.harness.delegate.task.ActivityAccess;
-import io.harness.delegate.task.Cd1ApplicationAccess;
-import io.harness.delegate.task.DelegateRunnableTask;
-import io.harness.delegate.task.TaskLogContext;
-import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.*;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
+import io.harness.dmsclient.DelegateAgentDmsClient;
+import io.harness.dmsclient.DelegateAgentDmsClientFactory;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
@@ -180,11 +110,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.ning.http.client.AsyncHttpClient;
 import com.sun.management.OperatingSystemMXBean;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.net.ConnectException;
@@ -196,25 +122,10 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -237,15 +148,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.Precision;
 import org.apache.http.client.utils.URIBuilder;
-import org.atmosphere.wasync.Client;
-import org.atmosphere.wasync.Encoder;
-import org.atmosphere.wasync.Event;
-import org.atmosphere.wasync.Function;
-import org.atmosphere.wasync.Options;
+import org.atmosphere.wasync.*;
 import org.atmosphere.wasync.Request.METHOD;
 import org.atmosphere.wasync.Request.TRANSPORT;
-import org.atmosphere.wasync.RequestBuilder;
-import org.atmosphere.wasync.Socket;
 import org.atmosphere.wasync.Socket.STATUS;
 import org.atmosphere.wasync.transport.TransportNotSupported;
 import org.slf4j.Logger;
@@ -320,6 +225,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private RestartableServiceManager restartableServiceManager;
 
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
+  @Inject private DelegateAgentDmsClient delegateAgentDmsClient;
 
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
@@ -1046,7 +952,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                             .pollingModeEnabled(delegateConfiguration.isPollForTasks())
                                             .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
                                             .build();
-        restResponse = delegateExecute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
+        restResponse = delegateExecute(delegateAgentDmsClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
         log.error(msg, e);
@@ -1101,11 +1007,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         boolean resultExists = new File("profile.result").exists();
         String profileId = profileParams == null ? "" : profileParams.getProfileId();
         long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
-        RestResponse<DelegateProfileParams> response =
-            HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
-                ()
-                    -> delegateExecute(
-                        delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)));
+        RestResponse<DelegateProfileParams> response = HTimeLimiter.callInterruptible21(timeLimiter,
+            Duration.ofSeconds(15),
+            () -> delegateExecute(delegateAgentDmsClient.checkForProfile(delegateId, accountId, profileId, updated)));
         if (response != null) {
           applyProfile(response.getResource());
         }
@@ -1225,7 +1129,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Part part = Part.createFormData("file", profileResult.getName(), requestFile);
     HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
         ()
-            -> delegateExecute(delegateAgentManagerClient.saveProfileResult(
+            -> delegateExecute(delegateAgentDmsClient.saveProfileResult(
                 delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)));
   }
 
@@ -1241,6 +1145,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
             DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
             delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
+            DelegateAgentDmsClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
+            delegateAgentDmsClient = injector.getInstance(DelegateAgentDmsClient.class);
           } else if (DELEGATE_START_GRPC.equals(message.getMessage())) {
             startGrpcService();
           } else if (DELEGATE_STOP_GRPC.equals(message.getMessage())) {
@@ -1348,7 +1254,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       try {
         DelegateTaskEventsResponse taskEventsResponse =
             HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
-                () -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)));
+                () -> delegateExecute(delegateAgentDmsClient.pollTaskEvents(delegateId, accountId)));
         if (shouldProcessDelegateTaskEvents(taskEventsResponse)) {
           List<DelegateTaskEvent> taskEvents = taskEventsResponse.getDelegateTaskEvents();
           log.info("Processing DelegateTaskEvents {}", taskEvents);
@@ -1679,7 +1585,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       lastHeartbeatSentAt.set(clock.millis());
 
       RestResponse<DelegateHeartbeatResponse> delegateParamsResponse =
-          delegateExecute(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
+          delegateExecute(delegateAgentDmsClient.delegateHeartbeat(accountId, delegateParams));
       long now = clock.millis();
       log.info("Delegate {} received heartbeat response {} after sending. {} since last response.", delegateId,
           getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
@@ -1705,7 +1611,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
           ()
               -> delegateExecute(
-                  delegateAgentManagerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)));
+                  delegateAgentDmsClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)));
       lastHeartbeatSentAt.set(clock.millis());
 
     } catch (UncheckedTimeoutException ex) {
@@ -1732,7 +1638,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       updateBuilderIfEcsDelegate(builder);
       DelegateParams delegateParams =
           builder.build().toBuilder().keepAlivePacket(true).pollingModeEnabled(true).build();
-      delegateExecute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
+      delegateExecute(delegateAgentDmsClient.registerDelegate(accountId, delegateParams));
     } catch (UncheckedTimeoutException ex) {
       log.warn("Timed out sending Keep Alive Request", ex);
     } catch (Exception e) {
@@ -1874,7 +1780,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       DelegateTaskPackage delegateTaskPackage =
-          delegateExecute(delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId));
+          delegateExecute(delegateAgentDmsClient.acquireTask(delegateId, delegateTaskId, accountId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
         if (log.isDebugEnabled()) {
           log.debug("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
@@ -1967,9 +1873,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         boolean validated = results.stream().allMatch(DelegateConnectionResult::isValidated);
         log.info("Validation {} for task", validated ? "succeeded" : "failed");
         try {
-          DelegateTaskPackage delegateTaskPackage =
-              execute(delegateAgentManagerClient.reportConnectionResults(delegateId,
-                  delegateTaskEvent.getDelegateTaskId(), accountId, getDelegateConnectionResultDetails(results)));
+          DelegateTaskPackage delegateTaskPackage = execute(delegateAgentDmsClient.reportConnectionResults(delegateId,
+              delegateTaskEvent.getDelegateTaskId(), accountId, getDelegateConnectionResultDetails(results)));
 
           if (delegateTaskPackage != null && delegateTaskPackage.getData() != null
               && delegateId.equals(delegateTaskPackage.getDelegateId())) {
@@ -1985,7 +1890,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               sleep(ofSeconds(delay));
               try {
                 log.info("Manager check whether to fail task");
-                execute(delegateAgentManagerClient.failIfAllDelegatesFailed(
+                execute(delegateAgentDmsClient.failIfAllDelegatesFailed(
                     delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, areAllClientToolsInstalled));
               } catch (IOException e) {
                 log.error("Unable to tell manager to check whether to fail for task", e);
@@ -2265,7 +2170,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           Response<ResponseBody> resp = null;
           int retries = 3;
           while (retries-- > 0) {
-            resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
+            resp = delegateAgentDmsClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               log.info("Task {} response sent to manager", taskId);
               return resp;

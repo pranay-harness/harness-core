@@ -5,14 +5,11 @@ import static io.harness.rule.OwnerRule.MATT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.managerclient.DelegateAgentManagerClient;
+import io.harness.dmsclient.DelegateAgentDmsClient;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.managerclient.HttpsCertRequirement;
@@ -40,14 +37,14 @@ public class DelegatePropertyServiceImplTest extends CategoryTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
+  @Mock private DelegateAgentDmsClient delegateAgentDmsClient;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private Call<RestResponse<String>> propertyResponse;
 
   @InjectMocks @Inject DelegatePropertyServiceImpl propertyService;
 
   @Before
   public void setUp() throws IOException {
-    when(delegateAgentManagerClient.getDelegateProperties(anyString(), any())).thenReturn(propertyResponse);
+    when(delegateAgentDmsClient.getDelegateProperties(anyString(), any())).thenReturn(propertyResponse);
   }
 
   @Test
@@ -67,7 +64,7 @@ public class DelegatePropertyServiceImplTest extends CategoryTest {
     GetDelegatePropertiesResponse response = propertyService.getDelegateProperties(request);
     propertyService.getDelegateProperties(request);
 
-    verify(delegateAgentManagerClient, times(1)).getDelegateProperties(anyString(), any());
+    verify(delegateAgentDmsClient, times(1)).getDelegateProperties(anyString(), any());
 
     assertThat(response.getResponseEntry(0).unpack(HttpsCertRequirement.class).getCertRequirement())
         .isEqualTo(CertRequirement.CERTIFICATE_REQUIRED);

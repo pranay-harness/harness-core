@@ -291,6 +291,12 @@ if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/nul
   echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
 fi
 
+if ! $(grep dmsUrl config-delegate.yml >/dev/null); then
+echo "dmsUrl: https://localhost:9090/dms/api/" >>config-delegate.yml
+else
+sed -i.bak "s|^dmsUrl:.*$|dmsUrl: https://localhost:9090/dms/api/|" config-delegate.yml
+fi
+
 rm -f -- *.bak
 
 export KUBECTL_VERSION=v1.12.2

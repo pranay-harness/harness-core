@@ -6,7 +6,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.BreakDependencyOn;
@@ -14,36 +13,15 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
-import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
-import io.harness.delegate.beans.ConnectionMode;
-import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.DelegateConfiguration.Action;
-import io.harness.delegate.beans.DelegateConnectionHeartbeat;
-import io.harness.delegate.beans.DelegateParams;
-import io.harness.delegate.beans.DelegateProfileParams;
-import io.harness.delegate.beans.DelegateRegisterResponse;
-import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateTaskEvent;
-import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
-import io.harness.delegate.task.TaskLogContext;
-import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.managerclient.AccountPreference;
-import io.harness.managerclient.AccountPreferenceQuery;
-import io.harness.managerclient.DelegateVersions;
-import io.harness.managerclient.DelegateVersionsQuery;
-import io.harness.managerclient.GetDelegatePropertiesRequest;
-import io.harness.managerclient.GetDelegatePropertiesResponse;
-import io.harness.managerclient.HttpsCertRequirement;
-import io.harness.managerclient.HttpsCertRequirementQuery;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.network.SafeHttpCall;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
@@ -55,13 +33,10 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
 
-import software.wings.beans.Account;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
-import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.instance.InstanceHelper;
@@ -72,27 +47,16 @@ import software.wings.service.intfc.DelegateTaskServiceClassic;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.InvalidProtocolBufferException;
 import io.swagger.annotations.Api;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.jetbrains.annotations.NotNull;
 
 @Api("/agent/delegates")
 @Path("/agent/delegates")
@@ -106,7 +70,6 @@ public class DelegateAgentResource {
   private DelegateService delegateService;
   private AccountService accountService;
   private HPersistence persistence;
-  private DelegateRequestRateLimiter delegateRequestRateLimiter;
   private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
   private InstanceHelper instanceHelper;
@@ -121,9 +84,8 @@ public class DelegateAgentResource {
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService, HPersistence persistence,
-      DelegateRequestRateLimiter delegateRequestRateLimiter, SubdomainUrlHelperIntfc subdomainUrlHelper,
-      ArtifactCollectionResponseHandler artifactCollectionResponseHandler, InstanceHelper instanceHelper,
-      ManifestCollectionResponseHandler manifestCollectionResponseHandler,
+      SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
+      InstanceHelper instanceHelper, ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
       ConfigurationController configurationController, FeatureFlagService featureFlagService,
       DelegateTaskServiceClassic delegateTaskServiceClassic, PollingResourceClient pollingResourceClient,
@@ -132,7 +94,6 @@ public class DelegateAgentResource {
     this.delegateService = delegateService;
     this.accountService = accountService;
     this.persistence = persistence;
-    this.delegateRequestRateLimiter = delegateRequestRateLimiter;
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
     this.manifestCollectionResponseHandler = manifestCollectionResponseHandler;
@@ -170,176 +131,11 @@ public class DelegateAgentResource {
     }
   }
 
-  @DelegateAuth
-  @POST
-  @Path("properties")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<String> getDelegateProperties(@QueryParam("accountId") String accountId, byte[] request)
-      throws InvalidProtocolBufferException {
-    GetDelegatePropertiesRequest requestProto = GetDelegatePropertiesRequest.parseFrom(request);
-
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      GetDelegatePropertiesResponse response =
-          GetDelegatePropertiesResponse.newBuilder()
-              .addAllResponseEntry(
-                  requestProto.getRequestEntryList()
-                      .stream()
-                      .map(requestEntry -> {
-                        if (requestEntry.is(DelegateVersionsQuery.class)) {
-                          return Any.pack(
-                              DelegateVersions.newBuilder()
-                                  .addAllDelegateVersion(
-                                      accountService.getDelegateConfiguration(accountId).getDelegateVersions())
-                                  .build());
-                        } else if (requestEntry.is(HttpsCertRequirementQuery.class)) {
-                          return Any.pack(
-                              HttpsCertRequirement.newBuilder()
-                                  .setCertRequirement(accountService.getHttpsCertificateRequirement(accountId))
-                                  .build());
-                        } else if (requestEntry.is(AccountPreferenceQuery.class)) {
-                          Account account = accountService.get(accountId);
-                          if (account.getAccountPreferences() != null
-                              && account.getAccountPreferences().getDelegateSecretsCacheTTLInHours() != null) {
-                            return Any.pack(AccountPreference.newBuilder()
-                                                .setDelegateSecretsCacheTTLInHours(
-                                                    account.getAccountPreferences().getDelegateSecretsCacheTTLInHours())
-                                                .build());
-                          }
-                          return Any.newBuilder().build();
-                        } else {
-                          return Any.newBuilder().build();
-                        }
-                      })
-                      .collect(toList()))
-              .build();
-      return new RestResponse<>(response.toString());
-
-    } catch (Exception e) {
-      log.error("Encountered an exception while parsing proto", e);
-      return null;
-    }
-  }
-
-  @DelegateAuth
-  @POST
-  @Path("register")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<DelegateRegisterResponse> register(
-      @QueryParam("accountId") @NotEmpty String accountId, DelegateParams delegateParams) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      long startTime = System.currentTimeMillis();
-      DelegateRegisterResponse registerResponse =
-          delegateService.register(delegateParams.toBuilder().accountId(accountId).build());
-      log.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
-      return new RestResponse<>(registerResponse);
-    }
-  }
-
-  @DelegateAuth
-  @GET
-  @Path("{delegateId}/profile")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<DelegateProfileParams> checkForProfile(@QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("delegateId") String delegateId, @QueryParam("profileId") String profileId,
-      @QueryParam("lastUpdatedAt") Long lastUpdatedAt) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      DelegateProfileParams profileParams =
-          delegateService.checkForProfile(accountId, delegateId, profileId, lastUpdatedAt);
-      return new RestResponse<>(profileParams);
-    }
-  }
-
-  @DelegateAuth
-  @POST
-  @Path("connectionHeartbeat/{delegateId}")
-  @Timed
-  @ExceptionMetered
-  public void connectionHeartbeat(@QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("delegateId") String delegateId, DelegateConnectionHeartbeat connectionHeartbeat) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.registerHeartbeat(accountId, delegateId, connectionHeartbeat, ConnectionMode.POLLING);
-    }
-  }
-
   @POST
   public RestResponse<Delegate> add(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       delegate.setAccountId(accountId);
       return new RestResponse<>(delegateService.add(delegate));
-    }
-  }
-
-  @DelegateAuth
-  @PUT
-  @Produces("application/x-kryo")
-  @Path("{delegateId}/tasks/{taskId}/acquire")
-  @Timed
-  @ExceptionMetered
-  public DelegateTaskPackage acquireDelegateTask(@PathParam("delegateId") String delegateId,
-      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      if (delegateRequestRateLimiter.isOverRateLimit(accountId, delegateId)) {
-        return null;
-      }
-      return delegateTaskServiceClassic.acquireDelegateTask(accountId, delegateId, taskId);
-    }
-  }
-
-  @DelegateAuth
-  @POST
-  @Produces("application/x-kryo")
-  @Path("{delegateId}/tasks/{taskId}/report")
-  @Timed
-  @ExceptionMetered
-  public DelegateTaskPackage reportConnectionResults(@PathParam("delegateId") String delegateId,
-      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
-      List<DelegateConnectionResultDetail> results) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return delegateTaskServiceClassic.reportConnectionResults(
-          accountId, delegateId, taskId, getDelegateConnectionResults(results));
-    }
-  }
-
-  @NotNull
-  private List<DelegateConnectionResult> getDelegateConnectionResults(List<DelegateConnectionResultDetail> results) {
-    List<DelegateConnectionResult> delegateConnectionResult = new ArrayList<>();
-    for (DelegateConnectionResultDetail source : results) {
-      DelegateConnectionResult target = DelegateConnectionResult.builder().build();
-      target.setAccountId(source.getAccountId());
-      target.setCriteria(source.getCriteria());
-      target.setDelegateId(source.getDelegateId());
-      target.setDuration(source.getDuration());
-      target.setLastUpdatedAt(source.getLastUpdatedAt());
-      target.setUuid(source.getUuid());
-      target.setValidated(source.isValidated());
-      target.setValidUntil(source.getValidUntil());
-      delegateConnectionResult.add(target);
-    }
-    return delegateConnectionResult;
-  }
-
-  @DelegateAuth
-  @GET
-  @Produces("application/x-kryo")
-  @Path("{delegateId}/tasks/{taskId}/fail")
-  @Timed
-  @ExceptionMetered
-  public void failIfAllDelegatesFailed(@PathParam("delegateId") final String delegateId,
-      @PathParam("taskId") final String taskId, @QueryParam("accountId") @NotEmpty final String accountId,
-      @QueryParam("areClientToolsInstalled") final boolean areClientToolsInstalled) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateTaskServiceClassic.failIfAllDelegatesFailed(accountId, delegateId, taskId, areClientToolsInstalled);
     }
   }
 
@@ -403,27 +199,6 @@ public class DelegateAgentResource {
       List<DelegateTaskEvent> delegateTaskEvents =
           delegateTaskServiceClassic.getDelegateTaskEvents(accountId, delegateId, syncOnly);
       return DelegateTaskEventsResponse.builder().delegateTaskEvents(delegateTaskEvents).build();
-    }
-  }
-
-  @DelegateAuth
-  @POST
-  @Path("heartbeat-with-polling")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<DelegateHeartbeatResponse> updateDelegateHB(
-      @QueryParam("accountId") @NotEmpty String accountId, DelegateParams delegateParams) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new DelegateLogContext(delegateParams.getDelegateId(), OVERRIDE_ERROR)) {
-      // delegate.isPollingModeEnabled() will be true here.
-      if ("ECS".equals(delegateParams.getDelegateType())) {
-        Delegate registeredDelegate = delegateService.handleEcsDelegateRequest(buildDelegateFromParams(delegateParams));
-
-        return new RestResponse<>(buildDelegateHBResponse(registeredDelegate));
-      } else {
-        return new RestResponse<>(buildDelegateHBResponse(
-            delegateService.updateHeartbeatForDelegateWithPollingEnabled(buildDelegateFromParams(delegateParams))));
-      }
     }
   }
 
@@ -541,40 +316,5 @@ public class DelegateAgentResource {
           RequestBody.create(MediaType.parse("application/octet-stream"), serializedExecutionResponse)));
     }
     return new RestResponse<>(Boolean.TRUE);
-  }
-
-  private DelegateHeartbeatResponse buildDelegateHBResponse(Delegate delegate) {
-    return DelegateHeartbeatResponse.builder()
-        .delegateId(delegate.getUuid())
-        .delegateRandomToken(delegate.getDelegateRandomToken())
-        .jreVersion(delegate.getUseJreVersion())
-        .sequenceNumber(delegate.getSequenceNum())
-        .status(delegate.getStatus().toString())
-        .useCdn(delegate.isUseCdn())
-        .build();
-  }
-
-  private Delegate buildDelegateFromParams(DelegateParams delegateParams) {
-    return Delegate.builder()
-        .uuid(delegateParams.getDelegateId())
-        .accountId(delegateParams.getAccountId())
-        .description(delegateParams.getDescription())
-        .ip(delegateParams.getIp())
-        .hostName(delegateParams.getHostName())
-        .delegateGroupName(delegateParams.getDelegateGroupName())
-        .delegateName(delegateParams.getDelegateName())
-        .delegateProfileId(delegateParams.getDelegateProfileId())
-        .lastHeartBeat(delegateParams.getLastHeartBeat())
-        .version(delegateParams.getVersion())
-        .sequenceNum(delegateParams.getSequenceNum())
-        .delegateType(delegateParams.getDelegateType())
-        .delegateRandomToken(delegateParams.getDelegateRandomToken())
-        .keepAlivePacket(delegateParams.isKeepAlivePacket())
-        .polllingModeEnabled(delegateParams.isPollingModeEnabled())
-        .ng(delegateParams.isNg())
-        .sampleDelegate(delegateParams.isSampleDelegate())
-        .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
-        .location(delegateParams.getLocation())
-        .build();
   }
 }

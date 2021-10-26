@@ -14,6 +14,7 @@ public class DelegateConfiguration {
   private String accountId;
   private String accountSecret;
   private String managerUrl;
+  private String dmsUrl;
   private String verificationServiceUrl;
   private String cvNextGenUrl;
   private String watcherCheckLocation;

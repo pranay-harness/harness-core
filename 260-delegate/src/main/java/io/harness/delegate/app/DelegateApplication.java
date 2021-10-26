@@ -2,17 +2,11 @@ package io.harness.delegate.app;
 
 import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_AGENT;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
-import static io.harness.delegate.message.MessageConstants.NEW_DELEGATE;
-import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
-import static io.harness.delegate.message.MessageConstants.WATCHER_HEARTBEAT;
-import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
+import static io.harness.delegate.message.MessageConstants.*;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
-import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
-import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractScheme;
-import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.*;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.base.Charsets.UTF_8;
@@ -54,22 +48,12 @@ import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 import ch.qos.logback.classic.LoggerContext;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import com.google.inject.*;
 import com.ning.http.client.AsyncHttpClient;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -164,9 +148,9 @@ public class DelegateApplication {
         bind(DelegateConfiguration.class).toInstance(configuration);
       }
     });
-    modules.add(
-        new DelegateManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
-            configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
+    modules.add(new DelegateManagerClientModule(configuration.getManagerUrl(),
+        configuration.getVerificationServiceUrl(), configuration.getCvNextGenUrl(), configuration.getAccountId(),
+        configuration.getAccountSecret(), configuration.getDmsUrl()));
     modules.add(new LogStreamingModule(configuration.getLogStreamingServiceBaseUrl()));
     modules.add(new AbstractManagerGrpcClientModule() {
       @Override

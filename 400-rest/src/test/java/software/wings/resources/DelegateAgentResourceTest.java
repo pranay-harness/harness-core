@@ -4,30 +4,15 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.rule.OwnerRule.AGORODETKI;
-import static io.harness.rule.OwnerRule.ANKIT;
-import static io.harness.rule.OwnerRule.DEEPAK;
-import static io.harness.rule.OwnerRule.JENNY;
-import static io.harness.rule.OwnerRule.MARKO;
-import static io.harness.rule.OwnerRule.NIKOLA;
-import static io.harness.rule.OwnerRule.ROHITKARELIA;
-import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.*;
 
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
-import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.*;
 
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -39,18 +24,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ConnectionMode;
-import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.DelegateConfiguration;
-import io.harness.delegate.beans.DelegateConnectionHeartbeat;
-import io.harness.delegate.beans.DelegateParams;
-import io.harness.delegate.beans.DelegateProfileParams;
-import io.harness.delegate.beans.DelegateRegisterResponse;
-import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateTaskEvent;
-import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -77,7 +51,6 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
-import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
@@ -122,7 +95,6 @@ public class DelegateAgentResourceTest extends CategoryTest {
 
   private static final AccountService accountService = mock(AccountService.class);
   private static final WingsPersistence wingsPersistence = mock(WingsPersistence.class);
-  private static final DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
   private static final SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
   private static final InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static final ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
@@ -150,11 +122,10 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
-              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
-              instanceSyncResponseHandler, manifestCollectionResponseHandler, connectorHearbeatPublisher,
-              kryoSerializer, configurationController, featureFlagService, delegateTaskServiceClassic,
-              pollResourceClient, instanceSyncResponsePublisher))
+          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence, subdomainUrlHelper,
+              artifactCollectionResponseHandler, instanceSyncResponseHandler, manifestCollectionResponseHandler,
+              connectorHearbeatPublisher, kryoSerializer, configurationController, featureFlagService,
+              delegateTaskServiceClassic, pollResourceClient, instanceSyncResponsePublisher))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {

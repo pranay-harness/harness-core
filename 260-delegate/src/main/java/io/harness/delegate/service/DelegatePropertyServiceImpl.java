@@ -6,7 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.managerclient.DelegateAgentManagerClient;
+import io.harness.dmsclient.DelegateAgentDmsClient;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 
@@ -39,18 +39,18 @@ public class DelegatePropertyServiceImpl implements DelegatePropertyService {
             @SneakyThrows
             public GetDelegatePropertiesResponse load(GetDelegatePropertiesRequest request) {
               return TextFormat.parse(
-                  execute(delegateAgentManagerClient.getDelegateProperties(request.getAccountId(),
+                  execute(delegateAgentDmsClient.getDelegateProperties(request.getAccountId(),
                               RequestBody.create(MediaType.parse("application/octet-stream"), request.toByteArray())))
                       .getResource(),
                   GetDelegatePropertiesResponse.class);
             }
           });
 
-  private final DelegateAgentManagerClient delegateAgentManagerClient;
+  private final DelegateAgentDmsClient delegateAgentDmsClient;
 
   @Inject
-  public DelegatePropertyServiceImpl(DelegateAgentManagerClient delegateAgentManagerClient) {
-    this.delegateAgentManagerClient = delegateAgentManagerClient;
+  public DelegatePropertyServiceImpl(DelegateAgentDmsClient delegateAgentDmsClient) {
+    this.delegateAgentDmsClient = delegateAgentDmsClient;
   }
 
   @Override
