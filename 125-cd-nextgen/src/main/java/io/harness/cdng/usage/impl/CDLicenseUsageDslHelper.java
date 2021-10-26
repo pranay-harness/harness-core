@@ -4,6 +4,8 @@ import static io.harness.timescaledb.Tables.NG_INSTANCE_STATS;
 
 import static java.util.Objects.isNull;
 
+import io.harness.cdng.usage.impl.AggregateServiceUsageInfo.AggregateServiceUsageInfoKeys;
+
 import com.google.inject.Inject;
 import java.util.List;
 import org.jooq.DSLContext;
@@ -21,7 +23,7 @@ public class CDLicenseUsageDslHelper {
         .select(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID,
             DSL.percentileDisc(percentile)
                 .withinGroupOrderBy(NG_INSTANCE_STATS.INSTANCECOUNT)
-                .as(AggregateServiceUsageInfo.AggregateServiceUsageInfoKeys.activeInstanceCount))
+                .as(AggregateServiceUsageInfoKeys.activeInstanceCount))
         .from(NG_INSTANCE_STATS)
         .where(NG_INSTANCE_STATS.ACCOUNTID.eq(accountIdentifier)
                    .and(reportedDateEpoch.greaterOrEqual(startInterval))
