@@ -193,6 +193,7 @@ public class LdapGroupSyncJobHelper {
   private void syncUserGroupMembers(String accountId, Map<UserGroup, Set<User>> removedGroupMembers,
       Map<LdapUserResponse, Set<UserGroup>> addedGroupMembers) {
     removedGroupMembers.forEach((userGroup, users) -> userGroupService.removeMembers(userGroup, users, false, true));
+
     for (Map.Entry<LdapUserResponse, Set<UserGroup>> entry : addedGroupMembers.entrySet()) {
       LdapUserResponse ldapUserResponse = entry.getKey();
       Set<UserGroup> userGroups = entry.getValue();
