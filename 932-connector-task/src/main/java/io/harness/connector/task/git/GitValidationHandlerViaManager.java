@@ -10,6 +10,8 @@ import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.remote.client.NGRestClientExecutor;
@@ -48,7 +50,11 @@ public class GitValidationHandlerViaManager extends AbstractGitValidationHandler
           buildDecryptableEntityWithEncryptionConsumers(
               apiAccessDecryptableEntity, scmValidationParams.getEncryptedDataDetails());
 
-      ngSecretDecryptionClient.decryptEncryptedDetails(decryptableEntityWithEncryptionConsumers, accountIdentifier);
+      final DecryptableEntity decryptedScmSpec =
+          restClientExecutor.getResponse(ngSecretDecryptionClient.decryptEncryptedDetails(
+              decryptableEntityWithEncryptionConsumers, accountIdentifier));
+      GithubConnectorDTO scmConnector = (GithubConnectorDTO) scmValidationParams.getScmConnector();
+      scmConnector.getApiAccess().setSpec((GithubApiAccessSpecDTO) decryptedScmSpec);
     }
   }
 

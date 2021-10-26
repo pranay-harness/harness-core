@@ -2,6 +2,7 @@ package io.harness.gitsync.common.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.GitSyncModule.SCM_ON_DELEGATE;
+import static io.harness.gitsync.GitSyncModule.SCM_ON_MANAGER;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
@@ -57,7 +58,7 @@ public class ScmFacilitatorResource {
 
   @Inject
   public ScmFacilitatorResource(ScmOrchestratorService scmOrchestratorService,
-      @Named(SCM_ON_DELEGATE) ScmClientFacilitatorService scmClientFacilitatorService) {
+      @Named(SCM_ON_MANAGER) ScmClientFacilitatorService scmClientFacilitatorService) {
     this.scmOrchestratorService = scmOrchestratorService;
     this.scmClientFacilitatorService = scmClientFacilitatorService;
   }

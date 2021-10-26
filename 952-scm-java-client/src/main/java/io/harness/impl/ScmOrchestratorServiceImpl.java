@@ -11,23 +11,7 @@ import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.impl.jgit.JgitGitServiceImpl;
 import io.harness.impl.scm.SCMServiceGitClientImpl;
-import io.harness.product.ci.scm.proto.CompareCommitsResponse;
-import io.harness.product.ci.scm.proto.CreateFileResponse;
-import io.harness.product.ci.scm.proto.CreatePRResponse;
-import io.harness.product.ci.scm.proto.CreateWebhookResponse;
-import io.harness.product.ci.scm.proto.DeleteFileResponse;
-import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
-import io.harness.product.ci.scm.proto.FileContent;
-import io.harness.product.ci.scm.proto.FindCommitResponse;
-import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
-import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
-import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
-import io.harness.product.ci.scm.proto.IsLatestFileResponse;
-import io.harness.product.ci.scm.proto.ListBranchesResponse;
-import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
-import io.harness.product.ci.scm.proto.ListCommitsResponse;
-import io.harness.product.ci.scm.proto.ListWebhooksResponse;
-import io.harness.product.ci.scm.proto.UpdateFileResponse;
+import io.harness.product.ci.scm.proto.*;
 import io.harness.service.ScmOrchestratorService;
 
 import com.google.inject.Inject;
@@ -168,5 +152,10 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public FindCommitResponse findCommit(ScmConnector scmConnector, String commitId) {
     return scmServiceGitClient.findCommit(scmConnector, commitId);
+  }
+
+  @Override
+  public GetUserReposResponse getUserRepos(ScmConnector scmConnector) {
+    return scmServiceGitClient.getUserRepos(scmConnector);
   }
 }

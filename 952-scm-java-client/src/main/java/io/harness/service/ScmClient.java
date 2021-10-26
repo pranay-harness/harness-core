@@ -9,23 +9,7 @@ import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.product.ci.scm.proto.CompareCommitsResponse;
-import io.harness.product.ci.scm.proto.CreateFileResponse;
-import io.harness.product.ci.scm.proto.CreatePRResponse;
-import io.harness.product.ci.scm.proto.CreateWebhookResponse;
-import io.harness.product.ci.scm.proto.DeleteFileResponse;
-import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
-import io.harness.product.ci.scm.proto.FileContent;
-import io.harness.product.ci.scm.proto.FindCommitResponse;
-import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
-import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
-import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
-import io.harness.product.ci.scm.proto.IsLatestFileResponse;
-import io.harness.product.ci.scm.proto.ListBranchesResponse;
-import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
-import io.harness.product.ci.scm.proto.ListCommitsResponse;
-import io.harness.product.ci.scm.proto.ListWebhooksResponse;
-import io.harness.product.ci.scm.proto.UpdateFileResponse;
+import io.harness.product.ci.scm.proto.*;
 
 import java.util.List;
 import java.util.Set;
@@ -81,4 +65,6 @@ public interface ScmClient {
   CompareCommitsResponse compareCommits(ScmConnector scmConnector, String initialCommitId, String finalCommitId);
 
   FindCommitResponse findCommit(ScmConnector scmConnector, String commitId);
+
+  GetUserReposResponse getUserRepos(ScmConnector scmConnector);
 }

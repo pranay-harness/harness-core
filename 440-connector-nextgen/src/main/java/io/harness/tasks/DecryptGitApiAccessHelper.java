@@ -24,6 +24,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
 
 import software.wings.beans.TaskType;
+import software.wings.service.impl.security.NGEncryptorService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DecryptGitApiAccessHelper {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject private EncryptionHelper encryptionHelper;
+  @Inject private NGEncryptorService ngEncryptorService;
 
   public ScmConnector decryptScmApiAccess(
       ScmConnector scmConnector, String accountId, String projectIdentifier, String orgIdentifier) {
@@ -50,8 +52,13 @@ public class DecryptGitApiAccessHelper {
         GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
     List<EncryptedDataDetail> encryptedDataDetailsForAPIAccess =
         getEncryptedDataDetailsForAPIAccess(apiAccessDecryptableEntity, baseNGAccess);
-    return executeDecryptionTask(
-        scmConnector, accountId, orgIdentifier, projectIdentifier, encryptedDataDetailsForAPIAccess);
+
+    ngEncryptorService.decryptEncryptedDetails(apiAccessDecryptableEntity, encryptedDataDetailsForAPIAccess, accountId);
+
+    return scmConnector;
+
+    //    return executeDecryptionTask(
+    //        scmConnector, accountId, orgIdentifier, projectIdentifier, encryptedDataDetailsForAPIAccess);
   }
 
   private ScmConnector executeDecryptionTask(ScmConnector scmConnector, String accountIdentifier, String orgIdentifier,

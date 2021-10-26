@@ -32,6 +32,7 @@ import io.harness.exception.runtime.SCMRuntimeException;
 import io.harness.git.GitClientHelper;
 import io.harness.product.ci.scm.proto.GetUserReposResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
+import io.harness.service.ScmClient;
 import io.harness.service.ScmServiceClient;
 import io.harness.shell.SshSessionConfig;
 
@@ -49,6 +50,7 @@ public class GitCommandTaskHandler {
   @Inject private NGErrorHelper ngErrorHelper;
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
+  @Inject private ScmClient scmClient;
 
   public ConnectorValidationResult validateGitCredentials(GitConfigDTO gitConnector, ScmConnector scmConnector,
       String accountIdentifier, SshSessionConfig sshSessionConfig) {
@@ -111,8 +113,7 @@ public class GitCommandTaskHandler {
 
     GetUserReposResponse reposResponse;
     try {
-      reposResponse = scmDelegateClient.processScmRequest(
-          c -> scmServiceClient.getUserRepos(scmConnector, SCMGrpc.newBlockingStub(c)));
+      reposResponse = scmClient.getUserRepos(scmConnector);
     } catch (Exception e) {
       throw SCMRuntimeException.builder().errorCode(ErrorCode.UNEXPECTED).cause(e).build();
     }
