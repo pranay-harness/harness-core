@@ -392,11 +392,11 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           }
         }
       }
+    }
 
-      // handle perpetual task deletion logic if all instances deleted for 7 days
-      if (instanceIdsToBeDeleted.size() == instancesInDBMap.size() && instancesToBeAdded.size() == 0) {
-        throw new WingsException("Container Instance Sync: All instances for perpetual task are deleted");
-      }
+    // handle perpetual task deletion logic if all instances deleted for 7 days
+    if (instanceIdsToBeDeleted.size() == instancesInDBMap.size() && instancesToBeAdded.size() == 0) {
+      throw new WingsException("Container Instance Sync: All instances for perpetual task are deleted");
     }
   }
 
