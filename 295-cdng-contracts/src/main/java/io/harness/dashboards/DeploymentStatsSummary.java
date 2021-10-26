@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -19,5 +20,5 @@ public class DeploymentStatsSummary {
   @Builder.Default double deploymentRate = DashboardHelper.MAX_VALUE;
   @Builder.Default double deploymentRateChangeRate = DashboardHelper.MAX_VALUE;
 
-  List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList;
+  @Builder.Default List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList = new ArrayList<>();
 }
