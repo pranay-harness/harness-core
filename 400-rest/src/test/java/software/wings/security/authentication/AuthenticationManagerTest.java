@@ -4,12 +4,15 @@ import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
+import static io.harness.ng.core.account.DefaultExperience.CG;
+import static io.harness.ng.core.account.DefaultExperience.NG;
 import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.LAZAR;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.OwnerRule.VIKAS_M;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
@@ -19,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -28,6 +32,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
@@ -35,7 +41,9 @@ import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -43,15 +51,18 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.security.UserPermissionInfo;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -66,6 +77,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import retrofit2.Call;
+import retrofit2.Response;
 
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class AuthenticationManagerTest extends WingsBaseTest {
@@ -80,6 +93,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Mock private UserService USER_SERVICE;
   @Mock private AuthenticationUtils AUTHENTICATION_UTL;
   @Mock private AuthService AUTHSERVICE;
+  @Mock private AccountService accountService;
+  @Mock private AccessControlAdminClient accessControlAdminClient;
   @Mock private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
 
   @Captor ArgumentCaptor<String> argCaptor;
@@ -396,5 +411,107 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     spyAuthenticationManager.ssoRedirectLogin("abcd");
 
     verify(AUTHSERVICE).auditLogin(any(), any());
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void testHarnessLocalLoginNgAdmin() throws IOException {
+    String accountId = "AccountId1";
+    Account account = anAccount().withUuid(accountId).withDefaultExperience(NG).build();
+    User mockUser = mock(User.class);
+    User authenticatedUser = mock(User.class);
+    String basicToken = Base64.encodeBase64String(("UserName"
+        + ":password")
+                                                      .getBytes());
+    AuthenticationResponse authenticationResponse = spy(new AuthenticationResponse(mockUser));
+    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(authenticationResponse);
+    when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
+    doNothing().when(AUTHSERVICE).auditLogin(any(), any());
+    when(accountService.get(accountId)).thenReturn(account);
+    Call<ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>> request = mock(Call.class);
+    doReturn(request)
+        .when(accessControlAdminClient)
+        .getFilteredRoleAssignments(anyString(), anyString(), anyString(), anyInt(), anyInt(), any());
+    RoleAssignmentResponseDTO dummyRole = RoleAssignmentResponseDTO.builder().harnessManaged(true).build();
+    ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> mockResponse = ResponseDTO.newResponse(
+        PageResponse.<RoleAssignmentResponseDTO>builder().content(Collections.singletonList(dummyRole)).build());
+    doReturn(Response.success(mockResponse)).when(request).execute();
+    assertThat(authenticationManager.loginUsingHarnessPassword(basicToken, accountId)).isEqualTo(authenticatedUser);
+  }
+
+  @Test(expected = NullPointerException.class)
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void testHarnessLocalLoginNgNotAdmin() throws IOException {
+    String accountId = "AccountId1";
+    Account account = anAccount().withUuid(accountId).withDefaultExperience(NG).build();
+    User mockUser = mock(User.class);
+    User authenticatedUser = mock(User.class);
+    String basicToken = Base64.encodeBase64String(("UserName"
+        + ":password")
+                                                      .getBytes());
+    AuthenticationResponse authenticationResponse = spy(new AuthenticationResponse(mockUser));
+    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(authenticationResponse);
+    when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
+    doNothing().when(AUTHSERVICE).auditLogin(any(), any());
+    when(accountService.get(accountId)).thenReturn(account);
+    Call<ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>> request = mock(Call.class);
+    doReturn(request)
+        .when(accessControlAdminClient)
+        .getFilteredRoleAssignments(anyString(), anyString(), anyString(), anyInt(), anyInt(), any());
+    PageResponse<RoleAssignmentResponseDTO> response = PageResponse.<RoleAssignmentResponseDTO>builder().build();
+    ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> mockResponse = ResponseDTO.newResponse(response);
+    doReturn(Response.success(mockResponse)).when(request).execute();
+    assertThat(authenticationManager.loginUsingHarnessPassword(basicToken, accountId))
+        .isEqualTo(NullPointerException.class);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void testHarnessLocalLoginCgAdmin() {
+    String accountId = "AccountId1";
+    Account account = anAccount().withUuid(accountId).withDefaultExperience(CG).build();
+    User mockUser = mock(User.class);
+    User authenticatedUser = mock(User.class);
+    String basicToken = Base64.encodeBase64String(("UserName"
+        + ":password")
+                                                      .getBytes());
+    AuthenticationResponse authenticationResponse = spy(new AuthenticationResponse(mockUser));
+    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(authenticationResponse);
+    when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
+    doNothing().when(AUTHSERVICE).auditLogin(any(), any());
+    when(accountService.get(accountId)).thenReturn(account);
+    UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder().build();
+    when(AUTHSERVICE.getUserPermissionInfo(accountId, authenticatedUser, false)).thenReturn(userPermissionInfo);
+    when(USER_SERVICE.isUserAccountAdmin(any(), any())).thenReturn(true);
+    assertThat(authenticationManager.loginUsingHarnessPassword(basicToken, accountId)).isEqualTo(authenticatedUser);
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void testHarnessLocalLoginCgNonAdmin() {
+    String accountId = "AccountId1";
+    Account account = anAccount().withUuid(accountId).withDefaultExperience(CG).build();
+    User mockUser = mock(User.class);
+    User authenticatedUser = mock(User.class);
+    String basicToken = Base64.encodeBase64String(("UserName"
+        + ":password")
+                                                      .getBytes());
+    AuthenticationResponse authenticationResponse = spy(new AuthenticationResponse(mockUser));
+    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(authenticationResponse);
+    when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
+    doNothing().when(AUTHSERVICE).auditLogin(any(), any());
+    when(accountService.get(accountId)).thenReturn(account);
+    UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder().build();
+    when(AUTHSERVICE.getUserPermissionInfo(accountId, authenticatedUser, false)).thenReturn(userPermissionInfo);
+    when(USER_SERVICE.isUserAccountAdmin(any(), any())).thenReturn(false);
+    assertThat(authenticationManager.loginUsingHarnessPassword(basicToken, accountId)).isEqualTo(WingsException.class);
   }
 }
