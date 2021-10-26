@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE_NEW;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -254,7 +254,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
             .filter(TimeSeriesRecordKeys.verificationTaskId, riskSummary.getVerificationTaskId())
             .field(TimeSeriesRecordKeys.bucketStartTime)
             .greaterThanOrEq(
-                riskSummary.getAnalysisEndTime().minus(TIMESERIES_SERVICE_GUARD_WINDOW_SIZE, ChronoUnit.MINUTES))
+                riskSummary.getAnalysisEndTime().minus(TIMESERIES_SERVICE_GUARD_WINDOW_SIZE_NEW, ChronoUnit.MINUTES))
             .field(TimeSeriesRecordKeys.bucketStartTime)
             .lessThan(riskSummary.getAnalysisEndTime())
             .field(TimeSeriesRecordKeys.metricName)

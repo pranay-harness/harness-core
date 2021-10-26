@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE_NEW;
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
@@ -290,7 +290,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
   public void testUpdateRiskScore() {
     int numOfMetrics = 4;
     int numOfTxnx = 5;
-    long numOfMins = TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
+    long numOfMins = TIMESERIES_SERVICE_GUARD_WINDOW_SIZE_NEW;
 
     List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
     Instant startTime = Instant.now().truncatedTo(ChronoUnit.HOURS);
@@ -858,8 +858,8 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
   private TimeSeriesRiskSummary createRiskSummary(int numMetrics, int numTxns, Instant startTime) {
     TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
                                             .verificationTaskId(verificationTaskId)
-                                            .analysisStartTime(startTime.plus(10, ChronoUnit.MINUTES))
-                                            .analysisEndTime(startTime.plus(15, ChronoUnit.MINUTES))
+                                            .analysisStartTime(startTime)
+                                            .analysisEndTime(startTime.plus(5, ChronoUnit.MINUTES))
                                             .build();
     List<TransactionMetricRisk> transactionMetricRisks = new ArrayList<>();
     for (int j = 0; j < numMetrics; j++) {
