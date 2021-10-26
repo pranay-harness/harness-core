@@ -67,7 +67,8 @@ public class ServicePMSPlanCreator {
   public PlanCreationResponse createPlanForServiceNode(YamlField serviceField, ServiceConfig serviceConfig,
       KryoSerializer kryoSerializer, InfraSectionStepParameters infraSectionStepParameters, PlanCreationContext ctx) {
     enforcementValidator.validate(ctx.getMetadata().getAccountIdentifier(), ctx.getMetadata().getOrgIdentifier(),
-        ctx.getMetadata().getProjectIdentifier(), "", ctx.getYaml(), "");
+        ctx.getMetadata().getProjectIdentifier(), ctx.getMetadata().getMetadata().getPipelineIdentifier(),
+        ctx.getYaml(), ctx.getMetadata().getMetadata().getExecutionUuid());
     YamlNode serviceNode = serviceField.getNode();
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
     actualServiceConfig = applyUseFromStageOverrides(actualServiceConfig);
