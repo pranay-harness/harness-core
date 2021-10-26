@@ -133,13 +133,14 @@ public class IdentityNodeExecutionStrategy
           newNodeExecutionId, Status.RUNNING, update, EnumSet.noneOf(Status.class));
 
       // If not leaf node then we need to call the identity step
+      Ambiance modifyAmbiance = IdentityStep.modifyAmbiance(ambiance);
       NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
-                                          .setAmbiance(newNodeExecution.getAmbiance())
+                                          .setAmbiance(modifyAmbiance)
                                           .setStepParameters(newNodeExecution.getResolvedStepParametersBytes())
                                           .setMode(newNodeExecution.getMode())
                                           .build();
-      eventSender.sendEvent(newNodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START,
-          node.getServiceName(), true);
+      eventSender.sendEvent(
+          modifyAmbiance, nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, node.getServiceName(), true);
     } catch (Exception exception) {
       log.error("Exception Occurred in facilitateAndStartStep NodeExecutionId : {}, PlanExecutionId: {}",
           AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), exception);
