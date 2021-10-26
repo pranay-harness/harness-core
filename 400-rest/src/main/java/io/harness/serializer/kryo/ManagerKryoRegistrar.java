@@ -1591,7 +1591,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(BatchCapabilityCheckTaskParameters.class, 8200);
     kryo.register(BatchCapabilityCheckTaskResponse.class, 8201);
-    kryo.register(CapabilityCheckDetails.class, 8202);
     kryo.register(ArtifactoryCollectionTaskParameters.class, 8203);
 
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
