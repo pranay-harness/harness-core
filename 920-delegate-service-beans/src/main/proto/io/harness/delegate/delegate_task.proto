@@ -23,12 +23,12 @@ message AbortExpireTaskRequest {
 }
 
 message CreatePerpetualTaskRequestClassic {
-   string perpetual_task_type = 1;
-   string account_id = 2;
-   bytes client_context_kryo = 3;
-   bytes perpetual_task_schedule_kryo = 4;
-   bool allowDuplicate = 5;
-   string task_description = 6;
+  string perpetual_task_type = 1;
+  string account_id = 2;
+  bytes client_context_kryo = 3;
+  bytes perpetual_task_schedule_kryo = 4;
+  bool allowDuplicate = 5;
+  string task_description = 6;
 }
 
 message QueueTaskResponse {
