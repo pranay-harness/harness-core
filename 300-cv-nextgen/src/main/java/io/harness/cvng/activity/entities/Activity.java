@@ -96,6 +96,36 @@ public abstract class Activity
                 .field(ActivityKeys.eventTime)
                 .build(),
             CompoundMongoIndex.builder()
+                .name("change_event_event_time_sort_query_index")
+                .field(ActivityKeys.accountId)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(ActivityKeys.eventTime)
+                .field(ActivityKeys.environmentIdentifier)
+                .field(ActivityKeys.serviceIdentifier)
+                .field(ActivityKeys.type)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("change_event_event_time_sort_query_infra_service_index")
+                .field(ActivityKeys.accountId)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(ActivityKeys.eventTime)
+                .field(KubernetesClusterActivityKeys.relatedAppServices + "."
+                    + ServiceEnvironmentKeys.environmentIdentifier)
+                .field(
+                    KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
+                .field(ActivityKeys.type)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("change_event_event_time_sort_query_type_index")
+                .field(ActivityKeys.accountId)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(ActivityKeys.eventTime)
+                .field(ActivityKeys.type)
+                .build(),
+            CompoundMongoIndex.builder()
                 .name("change_event_infra_service_query_index")
                 .field(ActivityKeys.accountId)
                 .field(ActivityKeys.orgIdentifier)

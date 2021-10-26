@@ -45,6 +45,7 @@ import io.harness.migrations.timescaledb.CreateKubernetesUtilizationData;
 import io.harness.migrations.timescaledb.CreateNewInstanceV2Migration;
 import io.harness.migrations.timescaledb.CreateNodeInfoTableAndIsAliveFunction;
 import io.harness.migrations.timescaledb.CreatePreAggHourlyTable;
+import io.harness.migrations.timescaledb.CreateServicesEnvPipelinesIndex;
 import io.harness.migrations.timescaledb.CreateServicesEnvPipelinesTable;
 import io.harness.migrations.timescaledb.CreateUtilizationData;
 import io.harness.migrations.timescaledb.DeploymentAdditionalColumns;
@@ -125,6 +126,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(54, CreateIndexOnKubernetesUtilizationData.class))
         .add(Pair.of(55, AddMaxStorageColumns.class))
         .add(Pair.of(56, CreateServicesEnvPipelinesTable.class))
+        .add(Pair.of(57, CreateServicesEnvPipelinesIndex.class))
         .build();
   }
 }

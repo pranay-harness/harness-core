@@ -16,6 +16,7 @@ import io.harness.eraro.Level;
 import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.governance.ApplicationFilter;
 import io.harness.governance.BlackoutWindowFilterType;
 import io.harness.governance.CustomAppFilter;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
@@ -66,7 +67,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
 
     if (governanceConfig.isDeploymentFreeze()) {
       throw new DeploymentFreezeException(
-          DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId, Collections.emptyList(), "", true);
+          DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId, Collections.emptyList(), "", true, false);
     }
 
     if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
@@ -74,6 +75,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
         checkIfAppFrozen(governanceConfig, accountId);
       }
       checkIfEnvFrozen(accountId, governanceConfig);
+      checkIfServiceFrozen(accountId, governanceConfig);
       return;
     }
 
@@ -83,6 +85,43 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
       throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "Deployment Freeze window is active. No deployments are allowed.");
     }
+  }
+
+  public void checkIfServiceFrozen(String accountId, GovernanceConfig governanceConfig) {
+    List<TimeRangeBasedFreezeConfig> blockingWindows = governanceConfig.getTimeRangeBasedFreezeConfigs()
+                                                           .stream()
+                                                           .filter(TimeRangeBasedFreezeConfig::checkIfActive)
+                                                           .filter(window -> isServiceFrozen(governanceConfig, window))
+                                                           .collect(Collectors.toList());
+    if (isNotEmpty(blockingWindows)) {
+      throw new DeploymentFreezeException(DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId,
+          blockingWindows.stream().map(GovernanceFreezeConfig::getUuid).collect(Collectors.toList()),
+          blockingWindows.stream().map(GovernanceFreezeConfig::getName).collect(Collectors.joining(", ", "[", "]")),
+          false, true);
+    }
+  }
+
+  private boolean isServiceFrozen(GovernanceConfig governanceConfig, TimeRangeBasedFreezeConfig window) {
+    // We will need to check here if some services are frozen.
+    //
+    boolean isFrozen = false;
+    for (ApplicationFilter applicationFilter : window.getAppSelections()) {
+      if (BlackoutWindowFilterType.CUSTOM.equals(applicationFilter.getFilterType())) {
+        // custom app filters with more than 1 entry cannot freeze individual services so those cases would be handled
+        // by isEnvFrozen logic
+        List<String> appIds = ((CustomAppFilter) applicationFilter).getApps();
+        if (appIds.size() == 1) {
+          if (!Collections.disjoint(governanceConfigService.getEnvIdsFromAppSelection(appIds.get(0), applicationFilter),
+                  deploymentCtx.getEnvIds())
+              && !Collections.disjoint(
+                  governanceConfigService.getServiceIdsFromAppSelection(appIds.get(0), applicationFilter),
+                  deploymentCtx.getServiceIds())) {
+            isFrozen = true;
+          }
+        }
+      }
+    }
+    return isFrozen;
   }
 
   // Checks if the app is completely frozen then sends notification to all windows that freeze the app
@@ -99,7 +138,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
       throw new DeploymentFreezeException(DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId,
           blockingWindows.stream().map(GovernanceFreezeConfig::getUuid).collect(Collectors.toList()),
           blockingWindows.stream().map(GovernanceFreezeConfig::getName).collect(Collectors.joining(", ", "[", "]")),
-          false);
+          false, false);
     }
   }
 
@@ -127,6 +166,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
       if (!allBlockedEnvs.containsAll(deploymentCtx.getEnvIds())) {
         return;
       }
+
       // Windows which blocks any of the environment in check
       List<GovernanceFreezeConfig> blockingWindows =
           frozenEnvsByWindow.entrySet()
@@ -140,7 +180,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
         throw new DeploymentFreezeException(DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId,
             blockingWindows.stream().map(GovernanceFreezeConfig::getUuid).collect(Collectors.toList()),
             blockingWindows.stream().map(GovernanceFreezeConfig::getName).collect(Collectors.joining(", ", "[", "]")),
-            false);
+            false, false);
       }
     }
   }

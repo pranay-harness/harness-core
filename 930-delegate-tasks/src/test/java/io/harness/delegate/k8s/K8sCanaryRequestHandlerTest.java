@@ -158,7 +158,8 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
 
     k8sCanaryRequestHandler.init(k8sCanaryDeployRequest, delegateTaskParams, logCallback);
     int wantedDryRunInvocations = skipDryRun ? 0 : 1;
-    verify(k8sTaskHelperBase, times(wantedDryRunInvocations)).dryRunManifests(any(), any(), any(), any(), eq(true));
+    verify(k8sTaskHelperBase, times(wantedDryRunInvocations))
+        .dryRunManifests(any(), any(), any(), any(), eq(true), anyBoolean());
     verify(k8sTaskHelperBase, times(1)).readManifests(manifestFiles, logCallback);
     verify(k8sTaskHelperBase, times(1))
         .renderTemplate(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, openshiftParamList,

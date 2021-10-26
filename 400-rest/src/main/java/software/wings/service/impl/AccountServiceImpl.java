@@ -460,9 +460,6 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
-    featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
-    featureFlagService.enableAccount(FeatureName.DISABLE_WINRM_ENV_VARIABLES, account.getUuid());
-
     if (fromDataGen) {
       updateNextGenEnabled(account.getUuid(), true);
       featureFlagService.enableAccount(FeatureName.CDNG_ENABLED, account.getUuid());

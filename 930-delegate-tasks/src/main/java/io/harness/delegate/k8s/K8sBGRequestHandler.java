@@ -220,7 +220,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       return;
     }
 
-    k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, true);
+    k8sTaskHelperBase.dryRunManifests(
+        client, resources, k8sDelegateTaskParams, executionLogCallback, true, request.isUseNewKubectlVersion());
   }
 
   @VisibleForTesting

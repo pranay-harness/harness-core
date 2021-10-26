@@ -15,4 +15,5 @@ public class TimeBasedDeploymentInfo {
   long totalCount;
   long successCount;
   long failedCount;
+  @Builder.Default double failureRate = DashboardHelper.MAX_VALUE;
 }

@@ -123,6 +123,20 @@ public class PipelineExecutorTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  public void testRerunStagesWithRuntimeInputYaml() {
+    doReturnStatementsForFreshRun(originalExecutionId, false, stageIdentifiers);
+
+    PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.rerunStagesWithRuntimeInputYaml(
+        accountId, orgId, projectId, pipelineId, moduleType, originalExecutionId, runStageRequestDTO, useV2);
+    assertThat(planExecutionResponse.getPlanExecution()).isEqualTo(planExecution);
+    assertThat(planExecutionResponse.getGitDetails()).isEqualTo(EntityGitDetails.builder().build());
+
+    verifyStatementsForFreshRun(originalExecutionId, false, stageIdentifiers);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
   public void testRerunPipelineWithInputSetPipelineYaml() {
     doReturnStatementsForFreshRun(originalExecutionId, false, null);
 

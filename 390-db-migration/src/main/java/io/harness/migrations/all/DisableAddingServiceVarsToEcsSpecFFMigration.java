@@ -1,7 +1,6 @@
 package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.ENABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 
 import static java.lang.String.format;
@@ -31,7 +30,7 @@ public class DisableAddingServiceVarsToEcsSpecFFMigration implements Migration {
     log.info("Starting the migration for ADDING_SERVICE_VARS_TO_ECS_SPEC");
     FeatureFlag oldFeatureFlag = wingsPersistence.createQuery(FeatureFlag.class)
                                      .field(FeatureFlagKeys.name)
-                                     .equal(DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC)
+                                     .equal("DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC")
                                      .get();
     FeatureFlag newFeatureFlag = wingsPersistence.createQuery(FeatureFlag.class)
                                      .field(FeatureFlagKeys.name)

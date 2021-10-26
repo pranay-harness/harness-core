@@ -8,10 +8,17 @@ option go_package = "920_delegate_service_beans";
 service DelegateTask {
   rpc QueueTask(DelegateClassicTaskRequest) returns (QueueTaskResponse);
   rpc ExecuteTask(DelegateClassicTaskRequest) returns (ExecuteTaskResponse);
+  rpc AbortTask(AbortExpireTaskRequest) returns (AbortTaskResponse);
+  rpc ExpireTask(AbortExpireTaskRequest) returns (ExpireTaskResponse);
 }
 
 message DelegateClassicTaskRequest {
   bytes delegate_task_kryo = 1;
+}
+
+message AbortExpireTaskRequest {
+  string account_id = 1;
+  string delegate_task_id = 2;
 }
 
 message QueueTaskResponse {
@@ -20,4 +27,12 @@ message QueueTaskResponse {
 
 message ExecuteTaskResponse {
   bytes delegate_task_response_kryo = 1;
+}
+
+message AbortTaskResponse {
+  bytes delegate_task_kryo = 1;
+}
+
+message ExpireTaskResponse {
+  string message = 1;
 }

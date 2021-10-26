@@ -5,6 +5,7 @@ import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.consumer.Message;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.events.base.PmsAbstractMessageListener;
 import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventHandler;
@@ -20,6 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationEventMessageListener
     extends PmsAbstractMessageListener<OrchestrationEvent, SdkOrchestrationEventHandler> {
+  @Override
+  public boolean isProcessable(Message message) {
+    return true;
+  }
+
   @Inject
   public OrchestrationEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
       SdkOrchestrationEventHandler sdkOrchestrationEventHandler,

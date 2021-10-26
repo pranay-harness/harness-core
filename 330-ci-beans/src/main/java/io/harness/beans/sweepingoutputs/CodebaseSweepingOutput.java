@@ -41,7 +41,7 @@ public class CodebaseSweepingOutput implements ExecutionSweepingOutput {
   String pullRequestLink;
   String pullRequestBody;
   String state;
-  String event;
+  Build build;
   List<CodeBaseCommit> commits;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore String uuid;
 

@@ -54,7 +54,7 @@ public class DelegateCacheImpl implements DelegateCache {
   private LoadingCache<ImmutablePair<String, String>, DelegateGroup> delegateGroupCache =
       CacheBuilder.newBuilder()
           .maximumSize(10000)
-          .expireAfterAccess(1, TimeUnit.HOURS)
+          .expireAfterAccess(5, TimeUnit.MINUTES)
           .build(new CacheLoader<ImmutablePair<String, String>, DelegateGroup>() {
             @Override
             public DelegateGroup load(ImmutablePair<String, String> delegateGroupKey) {
@@ -69,7 +69,7 @@ public class DelegateCacheImpl implements DelegateCache {
       delegateGroupCacheByAccountAndOwnerAndIdentifier =
           CacheBuilder.newBuilder()
               .maximumSize(10000)
-              .expireAfterAccess(1, TimeUnit.HOURS)
+              .expireAfterAccess(5, TimeUnit.MINUTES)
               .build(new CacheLoader<ImmutableTriple<String, DelegateEntityOwner, String>, DelegateGroup>() {
                 @Override
                 public DelegateGroup load(

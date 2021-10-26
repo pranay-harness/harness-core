@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Id;
@@ -109,19 +110,22 @@ public class ChangeEventServiceImpl implements ChangeEventService {
   public ChangeSummaryDTO getChangeSummary(ServiceEnvironmentParams serviceEnvironmentParams,
       List<String> changeSourceIdentifiers, Instant startTime, Instant endTime) {
     return getChangeSummary(serviceEnvironmentParams, Arrays.asList(serviceEnvironmentParams.getServiceIdentifier()),
-        Arrays.asList(serviceEnvironmentParams.getEnvironmentIdentifier()), startTime, endTime);
+        Arrays.asList(serviceEnvironmentParams.getEnvironmentIdentifier()), null, null, startTime, endTime);
   }
 
   @Override
   public PageResponse<ChangeEventDTO> getChangeEvents(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifier, Instant startTime, Instant endTime, PageRequest pageRequest) {
-    List<Activity> activities =
-        createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier)
-            .order(Sort.descending(ActivityKeys.eventTime))
-            .asList(new FindOptions()
-                        .skip(pageRequest.getPageIndex() * pageRequest.getPageSize())
-                        .limit(pageRequest.getPageSize()));
-    Long total = createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier).count();
+      List<String> environmentIdentifier, List<ChangeCategory> changeCategories,
+      List<ChangeSourceType> changeSourceTypes, Instant startTime, Instant endTime, PageRequest pageRequest) {
+    List<Activity> activities = createQuery(projectParams, startTime, endTime, serviceIdentifiers,
+        environmentIdentifier, changeCategories, changeSourceTypes)
+                                    .order(Sort.descending(ActivityKeys.eventTime))
+                                    .asList(new FindOptions()
+                                                .skip(pageRequest.getPageIndex() * pageRequest.getPageSize())
+                                                .limit(pageRequest.getPageSize()));
+    Long total = createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier,
+        changeCategories, changeSourceTypes)
+                     .count();
     Long totalPages = (total / pageRequest.getPageSize()) + ((total % pageRequest.getPageSize()) == 0 ? 0 : 1);
     return PageResponse.<ChangeEventDTO>builder()
         .pageIndex(pageRequest.getPageIndex())
@@ -135,10 +139,12 @@ public class ChangeEventServiceImpl implements ChangeEventService {
 
   @Override
   public ChangeTimeline getTimeline(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifier, Instant startTime, Instant endTime, Integer pointCount) {
+      List<String> environmentIdentifier, List<ChangeCategory> changeCategories,
+      List<ChangeSourceType> changeSourceTypes, Instant startTime, Instant endTime, Integer pointCount) {
     Map<ChangeCategory, Map<Integer, TimeRangeDetail>> categoryMilliSecondFromStartDetailMap = new HashMap<>();
     Duration timeRangeDuration = Duration.between(startTime, endTime).dividedBy(pointCount);
-    getTimelineObject(projectParams, serviceIdentifiers, environmentIdentifier, startTime, endTime, pointCount)
+    getTimelineObject(projectParams, serviceIdentifiers, environmentIdentifier, changeCategories, changeSourceTypes,
+        startTime, endTime, pointCount)
         .forEachRemaining(timelineObject -> {
           ChangeCategory changeCategory = ChangeSourceType.ofActivityType(timelineObject.id.type).getChangeCategory();
           Map<Integer, TimeRangeDetail> milliSecondFromStartDetailMap =
@@ -163,11 +169,13 @@ public class ChangeEventServiceImpl implements ChangeEventService {
 
   @VisibleForTesting
   Iterator<TimelineObject> getTimelineObject(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifier, Instant startTime, Instant endTime, Integer pointCount) {
+      List<String> environmentIdentifier, List<ChangeCategory> changeCategories,
+      List<ChangeSourceType> changeSourceTypes, Instant startTime, Instant endTime, Integer pointCount) {
     Duration timeRangeDuration = Duration.between(startTime, endTime).dividedBy(pointCount);
     return hPersistence.getDatastore(Activity.class)
         .createAggregation(Activity.class)
-        .match(createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier))
+        .match(createQuery(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier,
+            changeCategories, changeSourceTypes))
         .group(id(grouping("type", "type"),
                    grouping("index",
                        accumulator("$floor",
@@ -181,10 +189,11 @@ public class ChangeEventServiceImpl implements ChangeEventService {
 
   @Override
   public ChangeSummaryDTO getChangeSummary(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifier, Instant startTime, Instant endTime) {
+      List<String> environmentIdentifier, List<ChangeCategory> changeCategories,
+      List<ChangeSourceType> changeSourceTypes, Instant startTime, Instant endTime) {
     Map<ChangeCategory, Map<Integer, Integer>> changeCategoryToIndexToCount =
         Arrays.stream(ChangeCategory.values()).collect(Collectors.toMap(Function.identity(), c -> new HashMap<>()));
-    getTimelineObject(projectParams, serviceIdentifiers, environmentIdentifier,
+    getTimelineObject(projectParams, serviceIdentifiers, environmentIdentifier, changeCategories, changeSourceTypes,
         startTime.minus(Duration.between(startTime, endTime)), endTime, 2)
         .forEachRemaining(timelineObject -> {
           ChangeCategory changeCategory = ChangeSourceType.ofActivityType(timelineObject.id.type).getChangeCategory();
@@ -205,22 +214,30 @@ public class ChangeEventServiceImpl implements ChangeEventService {
         .build();
   }
 
-  private List<Criteria> getCriterias(
-      Query<Activity> q, ProjectParams projectParams, Instant startTime, Instant endTime) {
+  private List<Criteria> getCriterias(Query<Activity> q, ProjectParams projectParams,
+      List<ChangeCategory> changeCategories, List<ChangeSourceType> changeSourceTypes, Instant startTime,
+      Instant endTime) {
+    Stream<ChangeSourceType> changeSourceTypeStream = Arrays.stream(ChangeSourceType.values());
+    if (CollectionUtils.isNotEmpty(changeCategories)) {
+      changeSourceTypeStream = changeSourceTypeStream.filter(
+          changeSourceType -> changeCategories.contains(changeSourceType.getChangeCategory()));
+    }
+    if (CollectionUtils.isNotEmpty(changeSourceTypes)) {
+      changeSourceTypeStream = changeSourceTypeStream.filter(changeSourceTypes::contains);
+    }
     return new ArrayList<>(Arrays.asList(q.criteria(ActivityKeys.accountId).equal(projectParams.getAccountIdentifier()),
         q.criteria(ActivityKeys.orgIdentifier).equal(projectParams.getOrgIdentifier()),
         q.criteria(ActivityKeys.projectIdentifier).equal(projectParams.getProjectIdentifier()),
         q.criteria(ActivityKeys.type)
-            .in(Arrays.stream(ChangeSourceType.values())
-                    .map(ChangeSourceType::getActivityType)
-                    .collect(Collectors.toList())),
+            .in(changeSourceTypeStream.map(ChangeSourceType::getActivityType).collect(Collectors.toList())),
         q.criteria(ActivityKeys.eventTime).lessThan(endTime),
         q.criteria(ActivityKeys.eventTime).greaterThanOrEq(startTime)));
   }
 
   private Criteria[] getCriteriasForInfraEvents(Query<Activity> q, ProjectParams projectParams, Instant startTime,
-      Instant endTime, List<String> serviceIdentifiers, List<String> environmentIdentifier) {
-    List<Criteria> criterias = getCriterias(q, projectParams, startTime, endTime);
+      Instant endTime, List<String> serviceIdentifiers, List<String> environmentIdentifier,
+      List<ChangeCategory> changeCategories, List<ChangeSourceType> changeSourceTypes) {
+    List<Criteria> criterias = getCriterias(q, projectParams, changeCategories, changeSourceTypes, startTime, endTime);
     if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
       criterias.add(
           q.criteria(KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
@@ -235,8 +252,9 @@ public class ChangeEventServiceImpl implements ChangeEventService {
   }
 
   private Criteria[] getCriteriasForAppEvents(Query<Activity> q, ProjectParams projectParams, Instant startTime,
-      Instant endTime, List<String> serviceIdentifiers, List<String> environmentIdentifier) {
-    List<Criteria> criterias = getCriterias(q, projectParams, startTime, endTime);
+      Instant endTime, List<String> serviceIdentifiers, List<String> environmentIdentifier,
+      List<ChangeCategory> changeCategories, List<ChangeSourceType> changeSourceTypes) {
+    List<Criteria> criterias = getCriterias(q, projectParams, changeCategories, changeSourceTypes, startTime, endTime);
     if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
       criterias.add(q.criteria(ActivityKeys.serviceIdentifier).in(serviceIdentifiers));
     }
@@ -247,11 +265,14 @@ public class ChangeEventServiceImpl implements ChangeEventService {
   }
 
   private Query<Activity> createQuery(ProjectParams projectParams, Instant startTime, Instant endTime,
-      List<String> services, List<String> environments) {
+      List<String> services, List<String> environments, List<ChangeCategory> changeCategories,
+      List<ChangeSourceType> changeSourceTypes) {
     // authority and validation fails because of top level OR
     Query<Activity> query = hPersistence.createQuery(Activity.class, EnumSet.<QueryChecks>of(COUNT));
-    query.or(query.and(getCriteriasForAppEvents(query, projectParams, startTime, endTime, services, environments)),
-        query.and(getCriteriasForInfraEvents(query, projectParams, startTime, endTime, services, environments)));
+    query.or(query.and(getCriteriasForAppEvents(query, projectParams, startTime, endTime, services, environments,
+                 changeCategories, changeSourceTypes)),
+        query.and(getCriteriasForInfraEvents(
+            query, projectParams, startTime, endTime, services, environments, changeCategories, changeSourceTypes)));
     return query;
   }
 

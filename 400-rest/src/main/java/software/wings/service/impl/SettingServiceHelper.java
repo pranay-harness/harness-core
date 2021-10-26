@@ -10,6 +10,7 @@ import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
 import static software.wings.security.PermissionAttribute.PermissionType;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ACCOUNT_DEFAULTS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
@@ -350,7 +351,7 @@ public class SettingServiceHelper {
           return MANAGE_SSH_AND_WINRM;
         } else {
           if (GLOBAL_APP_ID.equals(settingAttribute.getAppId())) {
-            return ACCOUNT_MANAGEMENT;
+            return MANAGE_ACCOUNT_DEFAULTS;
           } else {
             return MANAGE_APPLICATIONS;
           }
