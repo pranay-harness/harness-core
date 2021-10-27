@@ -21,51 +21,50 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetStageExecutionResponse() {
-    String pipelineYaml = getPipelineYaml();
+    String pipelineYaml = getPipelineYamlForStagesRequired();
     List<StageExecutionResponse> stageExecutionResponse =
         StageExecutionSelectorHelper.getStageExecutionResponse(pipelineYaml);
-    assertThat(stageExecutionResponse).hasSize(6);
+    assertThat(stageExecutionResponse).hasSize(4);
 
-    StageExecutionResponse a1 = stageExecutionResponse.get(0);
-    assertStageResponse(a1, "a1", "a1", "[]", true);
-    StageExecutionResponse a2 = stageExecutionResponse.get(1);
-    assertStageResponse(a2, "a2", "a2", "[a1]", true);
-    StageExecutionResponse d1 = stageExecutionResponse.get(2);
-    assertStageResponse(d1, "d1", "d1", "[a1, a2]", false);
-    StageExecutionResponse p_d1 = stageExecutionResponse.get(3);
-    assertStageResponse(p_d1, "p_d1", "p d1", "[a1, a2]", false);
-    StageExecutionResponse p_d2 = stageExecutionResponse.get(4);
-    assertStageResponse(p_d2, "p_d2", "p d2", "[a1, a2]", false);
-    StageExecutionResponse d1_again = stageExecutionResponse.get(5);
-    assertStageResponse(d1_again, "d1_again", "d1 again", "[a1, a2]", false);
+    StageExecutionResponse s1 = stageExecutionResponse.get(0);
+    assertThat(s1.getStageIdentifier()).isEqualTo("s1");
+    assertThat(s1.getStageName()).isEqualTo("s1");
+    assertThat(s1.getStagesRequired()).containsExactlyInAnyOrder("s3", "s2");
+    assertThat(s1.getMessage()).isNotEmpty();
+    assertThat(s1.isToBeBlocked()).isTrue();
+
+    StageExecutionResponse s2 = stageExecutionResponse.get(1);
+    assertThat(s2.getStageIdentifier()).isEqualTo("s2");
+    assertThat(s2.getStageName()).isEqualTo("s2");
+    assertThat(s2.getStagesRequired()).containsExactlyInAnyOrder("s3", "s1");
+    assertThat(s2.getMessage()).isNotEmpty();
+    assertThat(s2.isToBeBlocked()).isTrue();
+
+    StageExecutionResponse s3 = stageExecutionResponse.get(2);
+    assertThat(s3.getStageIdentifier()).isEqualTo("s3");
+    assertThat(s3.getStageName()).isEqualTo("s3");
+    assertThat(s3.getStagesRequired()).containsExactlyInAnyOrder("s2", "s1");
+    assertThat(s3.getMessage()).isNotEmpty();
+    assertThat(s3.isToBeBlocked()).isTrue();
+
+    StageExecutionResponse s4 = stageExecutionResponse.get(3);
+    assertThat(s4.getStageIdentifier()).isEqualTo("s4");
+    assertThat(s4.getStageName()).isEqualTo("s4");
+    assertThat(s4.getStagesRequired()).isEmpty();
+    assertThat(s4.getMessage()).isNull();
+    assertThat(s4.isToBeBlocked()).isFalse();
   }
-
-  private void assertStageResponse(
-      StageExecutionResponse response, String identifier, String name, String requiredStages, boolean isApproval) {
-    assertThat(response.getStageIdentifier()).isEqualTo(identifier);
-    assertThat(response.getStageName()).isEqualTo(name);
-    if (isApproval) {
-      assertThat(response.getMessage()).isEqualTo("Running an approval stage individually can be redundant");
-    } else {
-      assertThat(response.getMessage()).isNull();
-    }
-    assertThat(response.getStagesRequired().toString()).isEqualTo(requiredStages);
-  }
-
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetStageInfoListWithStagesRequired() {
-    String pipelineYaml = getPipelineYaml();
+    String pipelineYaml = getPipelineYamlForStagesRequired();
     List<BasicStageInfo> stageInfoList = StageExecutionSelectorHelper.getStageInfoListWithStagesRequired(pipelineYaml);
 
-    assertBasicStageInfo(stageInfoList);
-    assertThat(stageInfoList.get(0).getStagesRequired().toString()).isEqualTo("[]");
-    assertThat(stageInfoList.get(1).getStagesRequired().toString()).isEqualTo("[a1]");
-    assertThat(stageInfoList.get(2).getStagesRequired().toString()).isEqualTo("[a1, a2]");
-    assertThat(stageInfoList.get(3).getStagesRequired().toString()).isEqualTo("[a1, a2]");
-    assertThat(stageInfoList.get(4).getStagesRequired().toString()).isEqualTo("[a1, a2]");
-    assertThat(stageInfoList.get(5).getStagesRequired().toString()).isEqualTo("[a1, a2]");
+    assertThat(stageInfoList.get(0).getStagesRequired()).containsExactlyInAnyOrder("s3", "s2");
+    assertThat(stageInfoList.get(1).getStagesRequired()).containsExactlyInAnyOrder("s3", "s1");
+    assertThat(stageInfoList.get(2).getStagesRequired()).containsExactlyInAnyOrder("s1", "s2");
+    assertThat(stageInfoList.get(3).getStagesRequired()).hasSize(0);
   }
 
   @Test
@@ -104,6 +103,20 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  public void testAddStagesRequired() {
+    String pipelineYaml = getPipelineYamlForStagesRequired();
+    List<BasicStageInfo> stageYamlList = StageExecutionSelectorHelper.getStageInfoList(pipelineYaml);
+    List<BasicStageInfo> res = StageExecutionSelectorHelper.addStagesRequired(stageYamlList);
+    assertThat(res).hasSize(4);
+    assertThat(res.get(0).getStagesRequired()).containsExactlyInAnyOrder("s2", "s3");
+    assertThat(res.get(1).getStagesRequired()).containsExactlyInAnyOrder("s3", "s1");
+    assertThat(res.get(2).getStagesRequired()).containsExactlyInAnyOrder("s1", "s2");
+    assertThat(res.get(3).getStagesRequired()).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
   public void testAddStagesRequiredStartingWithApproval() {
     BasicStageInfo stageInfo0 = BasicStageInfo.builder().name("a0").identifier("a0").type("Approval").build();
     BasicStageInfo stageInfo1 = BasicStageInfo.builder().name("a1").identifier("a1").type("Approval").build();
@@ -113,7 +126,8 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
     BasicStageInfo stageInfo5 = BasicStageInfo.builder().name("d2").identifier("d2").type("Deployment").build();
     List<BasicStageInfo> stageInfos =
         Arrays.asList(stageInfo0, stageInfo1, stageInfo2, stageInfo3, stageInfo4, stageInfo5);
-    List<BasicStageInfo> stageInfosWithRequiredStages = StageExecutionSelectorHelper.addStagesRequired(stageInfos);
+    List<BasicStageInfo> stageInfosWithRequiredStages =
+        StageExecutionSelectorHelper.addApprovalStagesRequired(stageInfos);
     assertThat(stageInfosWithRequiredStages).hasSize(6);
     assertThat(stageInfosWithRequiredStages.get(0).getStagesRequired().toString()).isEqualTo("[]");
     assertThat(stageInfosWithRequiredStages.get(1).getStagesRequired().toString()).isEqualTo("[a0]");
@@ -132,7 +146,8 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
     BasicStageInfo stageInfo2 = BasicStageInfo.builder().name("a2").identifier("a2").type("Approval").build();
     BasicStageInfo stageInfo3 = BasicStageInfo.builder().name("d2").identifier("d2").type("Deployment").build();
     List<BasicStageInfo> stageInfos = Arrays.asList(stageInfo0, stageInfo1, stageInfo2, stageInfo3);
-    List<BasicStageInfo> stageInfosWithRequiredStages = StageExecutionSelectorHelper.addStagesRequired(stageInfos);
+    List<BasicStageInfo> stageInfosWithRequiredStages =
+        StageExecutionSelectorHelper.addApprovalStagesRequired(stageInfos);
     assertThat(stageInfosWithRequiredStages).hasSize(4);
     assertThat(stageInfosWithRequiredStages.get(0).getStagesRequired().toString()).isEqualTo("[]");
     assertThat(stageInfosWithRequiredStages.get(1).getStagesRequired().toString()).isEqualTo("[]");
@@ -168,5 +183,56 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
         + "      identifier: d1_again\n"
         + "      name: d1 again\n"
         + "      type: Deployment";
+  }
+
+  private String getPipelineYamlForStagesRequired() {
+    return "pipeline:\n"
+        + "  stages:\n"
+        + "    - stage:\n"
+        + "        identifier: s1\n"
+        + "        name: s1\n"
+        + "        type: Deployment\n"
+        + "        spec:\n"
+        + "          serviceConfig:\n"
+        + "            useFromStage:\n"
+        + "              stage: s3\n"
+        + "          infrastructure:\n"
+        + "            useFromStage:\n"
+        + "              stage: s2\n"
+        + "    - stage:\n"
+        + "        identifier: s2\n"
+        + "        name: s2\n"
+        + "        type: Deployment\n"
+        + "        spec:\n"
+        + "          something:\n"
+        + "            useFromStage:\n"
+        + "              stage: s3\n"
+        + "          somethingElse:\n"
+        + "            useFromStage:\n"
+        + "              stage: s1\n"
+        + "    - stage:\n"
+        + "        identifier: s3\n"
+        + "        name: s3\n"
+        + "        type: Deployment\n"
+        + "        manifests:\n"
+        + "          - manifest:\n"
+        + "              identifier: m1\n"
+        + "              useFromStage:\n"
+        + "                stage: s2\n"
+        + "          - manifest:\n"
+        + "              identifier: m2\n"
+        + "              useFromStage:\n"
+        + "                stage: s3\n"
+        + "          - manifest:\n"
+        + "              identifier: m3\n"
+        + "              useFromStage:\n"
+        + "                stage: s1\n"
+        + "    - stage:\n"
+        + "        identifier: s4\n"
+        + "        name: s4\n"
+        + "        type: Deployment\n"
+        + "        manifests:\n"
+        + "          - manifest:\n"
+        + "              identifier: m1\n";
   }
 }
