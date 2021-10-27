@@ -452,6 +452,7 @@ instanceChangeQueue {"name": "earliestGet_1", "background": true, "expireAfterSe
 instanceChangeQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 instanceEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 instanceEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
+instanceNG {"name": "accountId_instanceInfo.Namespace_instanceInfoPodName_createdAt_idx", "background": true} {"accountIdentifier": 1, "instanceInfo.namespace": 1, "instanceInfo.podName": 1, "createdAt": 1}
 instanceNG {"name": "accountId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
 instanceNG {"name": "accountId_organizationId_projectId_infrastructureMappingId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "infrastructureMappingId": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
 instanceNG {"name": "accountId_organizationId_projectId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
