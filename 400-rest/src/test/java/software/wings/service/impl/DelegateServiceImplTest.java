@@ -109,6 +109,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -938,6 +939,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void testUpsertDelegateGroup_noExistingGroup() throws IOException {
     K8sConfigDetails k8sConfigDetails =
         K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN).namespace("namespace").build();
+    final ImmutableSet<String> tags = ImmutableSet.of("sometag", "anothertag");
     DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID,
         DelegateSetupDetails.builder()
             .name(TEST_DELEGATE_GROUP_NAME)
@@ -947,6 +949,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
             .description("description")
             .size(DelegateSize.LAPTOP)
             .identifier(DELEGATE_GROUP_IDENTIFIER)
+            .tags(tags)
             .build());
 
     assertThat(returnedDelegateGroup).isNotNull();
@@ -959,6 +962,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(returnedDelegateGroup.getSizeDetails().getSize()).isEqualTo(DelegateSize.LAPTOP);
     assertThat(returnedDelegateGroup.isNg()).isTrue();
     assertThat(returnedDelegateGroup.getIdentifier()).isEqualTo(DELEGATE_GROUP_IDENTIFIER);
+    assertThat(returnedDelegateGroup.getTags()).containsAll(tags);
 
     List<OutboxEvent> outboxEvents = outboxService.list(OutboxEventFilter.builder().maximumEventsPolled(100).build());
     assertThat(outboxEvents.size()).isEqualTo(1);
@@ -984,6 +988,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .description("description")
                        .size(DelegateSize.LAPTOP)
                        .identifier(DELEGATE_GROUP_IDENTIFIER)
+                       .tags(tags)
                        .build());
 
     // test delete event
