@@ -3,6 +3,8 @@ package io.harness.gitsync.common.impl;
 import static io.harness.gitsync.GitSyncModule.SCM_ON_DELEGATE;
 import static io.harness.gitsync.GitSyncModule.SCM_ON_MANAGER;
 
+import io.harness.connector.ManagerExecutable;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.gitsync.common.service.ScmFacilitatorService;
@@ -30,6 +32,16 @@ public class ScmFacilitatorServiceImpl implements ScmFacilitatorService {
   public List<String> listBranchesUsingConnector(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String connectorIdentifierRef, String repoURL, PageRequest pageRequest,
       String searchTerm) {
-    gitSyncConnectorHelper.getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef);
+    final ScmConnector scmConnector = gitSyncConnectorHelper.getScmConnector(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef);
+    if (scmConnector instanceof ManagerExecutable) {
+      final Boolean executeOnManager = ((ManagerExecutable) scmConnector).getExecuteOnManager();
+      if (executeOnManager) {
+        return scmThroughManagerService.listBranchesForRepoByConnector(accountIdentifier, orgIdentifier,
+            projectIdentifier, connectorIdentifierRef, repoURL, pageRequest, searchTerm);
+      }
+    }
+    return scmThroughDelegateService.listBranchesForRepoByConnector(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef, repoURL, pageRequest, searchTerm);
   }
 }
