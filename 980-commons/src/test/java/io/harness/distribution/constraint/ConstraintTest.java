@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
+import static io.harness.distribution.constraint.Consumer.State.REJECTED;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -17,7 +19,9 @@ import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
 
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -255,5 +259,23 @@ public class ConstraintTest extends CategoryTest {
 
     final List<Consumer> consumers = registry.loadConsumers(constraint.getId(), unit1);
     assertThat(consumers.stream().anyMatch(consumer -> consumer.getState() != FINISHED)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testRegisterConsumerWithBlockedConsumersGreaterThan20()
+      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
+             PermanentlyBlockedConsumerException {
+    ConstraintRegistry registry = new InprocConstraintRegistry();
+    Map<String, Object> constraintContext = new HashMap<>();
+    constraintContext.put("RESOURCE_CONSTRAINT_MAX_QUEUE", true);
+
+    Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
+    assertThat(constraint.registerConsumer(unit1, consumer1, 1, constraintContext, registry)).isEqualTo(ACTIVE);
+    for (int i = 0; i < 20; i++) {
+      assertThat(constraint.registerConsumer(unit1, consumer2, 10, constraintContext, registry)).isEqualTo(BLOCKED);
+    }
+    assertThat(constraint.registerConsumer(unit1, consumer3, 1, constraintContext, registry)).isEqualTo(REJECTED);
   }
 }
