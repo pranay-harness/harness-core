@@ -2847,6 +2847,7 @@ public class DelegateServiceImpl implements DelegateService {
         : null;
     K8sConfigDetails k8sConfigDetails =
         delegateSetupDetails != null ? delegateSetupDetails.getK8sConfigDetails() : null;
+    final Set<String> tags = delegateSetupDetails != null ? delegateSetupDetails.getTags() : null;
 
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgIdentifier, projectIdentifier);
 
@@ -2878,6 +2879,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     setUnset(updateOperations, DelegateGroupKeys.owner, owner);
     setUnset(updateOperations, DelegateGroupKeys.description, description);
+    setUnset(updateOperations, DelegateGroupKeys.tags, tags);
 
     if (sizeDetails != null) {
       setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);
