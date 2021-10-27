@@ -200,7 +200,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
 
         try {
           PlanCreationResponse planForField =
-              planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field), obj);
+              planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field, yaml), obj);
           String stageFqn = YamlUtils.getStageFqnPath(field.getNode());
           if (!EmptyPredicate.isEmpty(stageFqn)) {
             planForField.getNodes().forEach((k, v) -> v.setStageFqn(stageFqn));

@@ -5,12 +5,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.AbortExpireTaskRequest;
 import io.harness.delegate.AbortTaskResponse;
+import io.harness.delegate.CreatePerpetualTaskRequestClassic;
+import io.harness.delegate.CreatePerpetualTaskResponseClassic;
 import io.harness.delegate.DelegateClassicTaskRequest;
 import io.harness.delegate.DelegateTaskGrpc;
 import io.harness.delegate.ExecuteTaskResponse;
 import io.harness.delegate.ExpireTaskResponse;
 import io.harness.delegate.QueueTaskResponse;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.serializer.KryoSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,5 +70,21 @@ public class DelegateServiceClassicGrpcClient {
     final ExpireTaskResponse expireTaskResponse = delegateTaskBlockingStub.expireTask(
         AbortExpireTaskRequest.newBuilder().setAccountId(accountId).setDelegateTaskId(delegateTaskId).build());
     return (String) kryoSerializer.asInflatedObject(expireTaskResponse.getMessageBytes().toByteArray());
+  }
+
+  public String createPerpetualTask(String perpetualTaskType, String accountId,
+      PerpetualTaskClientContext clientContext, PerpetualTaskSchedule schedule, boolean allowDuplicate,
+      String taskDescription) {
+    final CreatePerpetualTaskResponseClassic createPerpetualTaskResponse =
+        delegateTaskBlockingStub.createPerpetualTaskClassic(
+            CreatePerpetualTaskRequestClassic.newBuilder()
+                .setPerpetualTaskType(perpetualTaskType)
+                .setAccountId(accountId)
+                .setPerpetualTaskScheduleKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(schedule)))
+                .setClientContextKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(clientContext)))
+                .setAllowDuplicate(allowDuplicate)
+                .setTaskDescription(taskDescription)
+                .build());
+    return createPerpetualTaskResponse.getMessage();
   }
 }

@@ -202,8 +202,6 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    harness.io/app: harness-delegate
-    harness.io/account: ${kubernetesAccountLabel}
     harness.io/name: ${delegateName}
   ports:
     - port: ${delegateGrpcServicePort}
