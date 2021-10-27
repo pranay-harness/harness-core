@@ -106,6 +106,7 @@ import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.K8sConstants;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
+import io.harness.k8s.RetryHelper;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -153,6 +154,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.github.resilience4j.retry.Retry;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
@@ -186,6 +188,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -1945,7 +1948,7 @@ public class K8sTaskHelperBase {
         }
       } else {
         executionLogCallback.saveExecutionLog(
-            format("%nStatus check for resources in namespace [%s] failed.", namespaces), INFO,
+            format("%nStatus check for resources in namespace [%s] failed.", namespaces), ERROR,
             CommandExecutionStatus.FAILURE);
       }
     }
@@ -2006,9 +2009,13 @@ public class K8sTaskHelperBase {
     executionLogCallback.saveExecutionLog(getPrintableCommand(crdStatusCommand.command()) + "\n");
     final Map<String, Object> evaluatorResponseContext = new HashMap<>(1);
 
-    while (true) {
-      ProcessResult result = crdStatusCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false);
+    Predicate<Object> retryCondition = retryConditionForProcessResult();
+    Retry retry = buildRetryAndRegisterListeners(retryCondition);
 
+    while (true) {
+      Callable<ProcessResult> callable = Retry.decorateCallable(
+          retry, () -> crdStatusCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false));
+      ProcessResult result = callable.call();
       boolean success = 0 == result.getExitValue();
       if (!success) {
         log.warn(result.outputUTF8());
@@ -2034,7 +2041,21 @@ public class K8sTaskHelperBase {
           return true;
         }
       }
+      sleep(ofSeconds(1));
     }
+  }
+
+  private Predicate<Object> retryConditionForProcessResult() {
+    return o -> {
+      ProcessResult p = (ProcessResult) o;
+      return p.getExitValue() != 0;
+    };
+  }
+
+  private Retry buildRetryAndRegisterListeners(Predicate<Object> retryCondition) {
+    Retry exponentialRetry = RetryHelper.getExponentialRetry(this.getClass().getSimpleName(), retryCondition);
+    RetryHelper.registerEventListeners(exponentialRetry);
+    return exponentialRetry;
   }
 
   @VisibleForTesting
