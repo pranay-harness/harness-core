@@ -68,6 +68,7 @@ import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
+import io.harness.expression.ConfigSecretReflectionUtils;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
@@ -396,6 +397,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     log.info("Starting app ...");
     log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
+
+    if (configuration.isPullSecrets()) {
+      ConfigSecretReflectionUtils.resolveSecret(configuration, configuration.getSmProject());
+    }
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));

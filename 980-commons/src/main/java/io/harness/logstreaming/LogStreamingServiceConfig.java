@@ -1,5 +1,7 @@
 package io.harness.logstreaming;
 
+import io.harness.expression.ConfigSecret;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -7,5 +9,5 @@ import lombok.Value;
 @Builder
 public class LogStreamingServiceConfig {
   private String baseUrl;
-  private String serviceToken;
+  @ConfigSecret private String serviceToken;
 }

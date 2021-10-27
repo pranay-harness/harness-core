@@ -1,5 +1,7 @@
 package io.harness.cf;
 
+import io.harness.expression.ConfigSecret;
+
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Singleton
 public class CfClientConfig {
-  private String apiKey;
+  @ConfigSecret private String apiKey;
   @Default private String configUrl = "https://config.feature-flags.uat.harness.io/api/1.0";
   @Default private String eventUrl = "https://event.feature-flags.uat.harness.io/api/1.0";
   private boolean analyticsEnabled;

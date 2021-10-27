@@ -2,6 +2,7 @@ package io.harness.cf;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.ConfigSecret;
 
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ import lombok.NoArgsConstructor;
 public class CfMigrationConfig {
   private boolean enabled;
   private String adminUrl;
-  private String apiKey;
+  @ConfigSecret private String apiKey;
   private String account;
   private String org;
   private String project;

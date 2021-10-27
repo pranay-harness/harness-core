@@ -1,5 +1,7 @@
 package io.harness.event.handler.marketo;
 
+import io.harness.expression.ConfigSecret;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
@@ -19,5 +21,5 @@ public class MarketoConfig {
   @JsonProperty(defaultValue = "false") private boolean enabled;
   private String url;
   private String clientId;
-  private String clientSecret;
+  @ConfigSecret private String clientSecret;
 }

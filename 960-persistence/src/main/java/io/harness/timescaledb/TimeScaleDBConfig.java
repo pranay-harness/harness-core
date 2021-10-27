@@ -1,5 +1,7 @@
 package io.harness.timescaledb;
 
+import io.harness.expression.ConfigSecret;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Value;
@@ -10,9 +12,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldNameConstants(innerTypeName = "TimeScaleDBConfigFields")
 public class TimeScaleDBConfig {
-  @JsonProperty(defaultValue = "jdbc:postgresql://localhost:5432/harness") @NotEmpty private String timescaledbUrl;
-  private String timescaledbUsername;
-  private String timescaledbPassword;
+  @ConfigSecret
+  @JsonProperty(defaultValue = "jdbc:postgresql://localhost:5432/harness")
+  @NotEmpty
+  private String timescaledbUrl;
+  @ConfigSecret private String timescaledbUsername;
+  @ConfigSecret private String timescaledbPassword;
   int connectTimeout;
   int socketTimeout;
   boolean logUnclosedConnections;

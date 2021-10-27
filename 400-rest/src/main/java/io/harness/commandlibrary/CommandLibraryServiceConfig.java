@@ -1,5 +1,7 @@
 package io.harness.commandlibrary;
 
+import io.harness.expression.ConfigSecret;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -10,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommandLibraryServiceConfig {
   String baseUrl;
-  String managerToCommandLibraryServiceSecret;
+  @ConfigSecret String managerToCommandLibraryServiceSecret;
   boolean publishingAllowed;
-  String publishingSecret;
+  @ConfigSecret String publishingSecret;
 }

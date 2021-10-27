@@ -3,6 +3,7 @@ package io.harness.redis;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.ConfigSecret;
 
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
@@ -19,5 +20,5 @@ import lombok.NoArgsConstructor;
 public class RedisSSLConfig {
   private boolean enabled;
   private String CATrustStorePath;
-  private String CATrustStorePassword;
+  @ConfigSecret private String CATrustStorePassword;
 }

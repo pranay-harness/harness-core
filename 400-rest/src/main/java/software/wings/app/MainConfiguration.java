@@ -27,6 +27,7 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.expression.ConfigSecret;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -100,13 +101,13 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
           .build();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
-  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
+  @ConfigSecret @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("events-mongo") private MongoConfig eventsMongo = MongoConfig.builder().uri("").build();
   @JsonProperty("elasticsearch")
   private ElasticsearchConfig elasticsearchConfig = ElasticsearchConfig.builder().build();
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
-  @JsonProperty private PortalConfig portal = new PortalConfig();
+  @ConfigSecret @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;
@@ -122,7 +123,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("exportAccountDataBatchSize") private int exportAccountDataBatchSize;
   @JsonProperty("supportEmail") private String supportEmail;
   @JsonProperty("envPath") private String envPath;
-  @JsonProperty("smtp") private SmtpConfig smtpConfig;
+  @ConfigSecret @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty("deployVersion") private DeployVersion deployVersion;
@@ -141,10 +142,12 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
   @JsonProperty("deploymentClusterName") private String deploymentClusterName;
-  @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
-  @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
+  @ConfigSecret @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
+  @ConfigSecret @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
-  @JsonProperty("salesforceConfig") private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
+  @ConfigSecret
+  @JsonProperty("salesforceConfig")
+  private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
   @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty("redisAtmosphereConfig") private RedisConfig redisAtmosphereConfig;
@@ -155,10 +158,10 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("azureConfig") private AzureConfig azureConfig;
   @JsonProperty("bitbucketConfig") private BitbucketConfig bitbucketConfig;
   @JsonProperty("gitlabConfig") private GitlabConfig gitlabConfig;
-  @JsonProperty("mktPlaceConfig") private MarketPlaceConfig marketPlaceConfig;
+  @ConfigSecret @JsonProperty("mktPlaceConfig") private MarketPlaceConfig marketPlaceConfig;
   @JsonProperty("sampleTargetEnv") private String sampleTargetEnv;
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
-  @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
+  @ConfigSecret @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("ngAuthUIEnabled") private boolean ngAuthUIEnabled;
   @JsonProperty("gcpMarketplaceConfig") private GcpMarketplaceConfig gcpMarketplaceConfig;
@@ -174,7 +177,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("currentJre") private String currentJre;
   @JsonProperty("migrateToJre") private String migrateToJre;
   @JsonProperty("jreConfigs") private Map<String, JreConfig> jreConfigs;
-  @JsonProperty("cdnConfig") private CdnConfig cdnConfig;
+  @ConfigSecret @JsonProperty("cdnConfig") private CdnConfig cdnConfig;
+  @ConfigSecret
   @JsonProperty("commandLibraryServiceConfig")
   private CommandLibraryServiceConfig commandLibraryServiceConfig = CommandLibraryServiceConfig.builder().build();
   @JsonProperty(value = "bugsnagApiKey") private String bugsnagApiKey;
@@ -184,17 +188,21 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
   @JsonProperty("numberOfRemindersBeforeAccountDeletion") private int numberOfRemindersBeforeAccountDeletion;
   @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
-  @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
-  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
-  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
-  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
-  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @ConfigSecret @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
+  @ConfigSecret
+  @JsonProperty("accessControlClient")
+  private AccessControlClientConfiguration accessControlClientConfiguration;
+  @ConfigSecret @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @ConfigSecret @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @ConfigSecret @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
-  @JsonProperty("dmsSecret") private String dmsSecret;
+  @ConfigSecret @JsonProperty("dmsSecret") private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
+  @JsonProperty(value = "pullSecrets", defaultValue = "false") private boolean pullSecrets;
+  @JsonProperty(value = "smProject") private String smProject;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
   @JsonProperty("eventListenersCountConfig") private EventListenersCountConfig eventListenersCountConfig;
   @JsonProperty(value = "useGlobalKMSAsBaseAlgo", defaultValue = "false") private boolean useGlobalKMSAsBaseAlgo;

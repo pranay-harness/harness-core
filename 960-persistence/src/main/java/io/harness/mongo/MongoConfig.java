@@ -6,6 +6,7 @@ import static lombok.AccessLevel.NONE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.ConfigSecret;
 import io.harness.mongo.tracing.TraceMode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -42,6 +43,7 @@ public class MongoConfig {
     ImmutableMap<String, String> tagSet;
   }
 
+  @ConfigSecret
   @JsonProperty(defaultValue = "mongodb://localhost:27017/wings")
   @Default
   @NotEmpty

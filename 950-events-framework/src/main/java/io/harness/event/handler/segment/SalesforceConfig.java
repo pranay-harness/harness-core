@@ -3,6 +3,7 @@ package io.harness.event.handler.segment;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.ConfigSecret;
 
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
@@ -20,10 +21,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Singleton
 public class SalesforceConfig {
-  String userName;
-  String password;
-  String consumerKey;
-  String consumerSecret;
+  @ConfigSecret String userName;
+  @ConfigSecret String password;
+  @ConfigSecret String consumerKey;
+  @ConfigSecret String consumerSecret;
   String grantType;
   String loginInstanceDomain;
   String apiVersion;

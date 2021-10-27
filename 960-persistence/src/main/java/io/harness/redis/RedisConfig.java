@@ -3,6 +3,7 @@ package io.harness.redis;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.ConfigSecret;
 
 import com.google.inject.Singleton;
 import java.util.List;
@@ -27,7 +28,7 @@ public class RedisConfig {
   private RedisReadMode readMode;
   private int nettyThreads;
   private boolean useScriptCache;
-  private String password;
+  @ConfigSecret private String password;
   private String userName;
-  private RedisSSLConfig sslConfig;
+  @ConfigSecret private RedisSSLConfig sslConfig;
 }

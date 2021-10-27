@@ -8,6 +8,7 @@ import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.expression.ConfigSecret;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.annotation.EncryptableSetting;
@@ -46,8 +47,8 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
   @DefaultValue("false") @Attributes(title = "Start TLS") private boolean startTLS;
-  @Attributes(title = "Username") private String username;
-  @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
+  @ConfigSecret @Attributes(title = "Username") private String username;
+  @ConfigSecret @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;

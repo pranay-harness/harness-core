@@ -662,6 +662,9 @@ iteratorsConfig:
 
 disableDelegateMgmtInManager: false
 
+pullSecrets: false
+smProject: harness-playground
+
 ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15

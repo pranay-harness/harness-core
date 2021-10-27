@@ -3,6 +3,7 @@ package software.wings.security.authentication;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.ConfigSecret;
 
 import com.google.inject.Singleton;
 import lombok.Builder;
@@ -13,10 +14,10 @@ import lombok.Data;
 @Builder
 @Singleton
 public class MarketPlaceConfig {
-  private String awsAccessKey;
-  private String awsSecretKey;
-  private String awsMarketPlaceProductCode;
-  private String awsMarketPlaceCeProductCode;
-  private String azureMarketplaceAccessKey;
-  private String azureMarketplaceSecretKey;
+  @ConfigSecret private String awsAccessKey;
+  @ConfigSecret private String awsSecretKey;
+  @ConfigSecret private String awsMarketPlaceProductCode;
+  @ConfigSecret private String awsMarketPlaceCeProductCode;
+  @ConfigSecret private String azureMarketplaceAccessKey;
+  @ConfigSecret private String azureMarketplaceSecretKey;
 }

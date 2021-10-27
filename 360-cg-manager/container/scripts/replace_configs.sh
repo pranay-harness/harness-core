@@ -893,6 +893,14 @@ if [[ "" != "$DISABLE_DELEGATE_MGMT_IN_MANAGER" ]]; then
   yq write -i $CONFIG_FILE disableDelegateMgmtInManager "$DISABLE_DELEGATE_MGMT_IN_MANAGER"
 fi
 
+if [[ "" != "$SM_PROJECT" ]]; then
+  yq write -i $CONFIG_FILE smProject "$SM_PROJECT"
+fi
+
+if [[ "" != "$PULL_SECRETS" ]]; then
+  yq write -i $CONFIG_FILE pullSecrets "$PULL_SECRETS"
+fi
+
 if [[ "" != "$LDAP_GROUP_SYNC_INTERVAL" ]]; then
   yq write -i $CONFIG_FILE ldapSyncJobConfig.syncInterval "$LDAP_GROUP_SYNC_INTERVAL"
 fi
