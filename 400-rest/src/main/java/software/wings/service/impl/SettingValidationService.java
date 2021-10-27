@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
-import static io.harness.beans.FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -276,19 +275,15 @@ public class SettingValidationService {
         gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
       }
     } else if (settingValue instanceof AzureConfig) {
-      if (featureFlagService.isEnabled(AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, settingAttribute.getAccountId())) {
-        try {
-          AzureConfig azureConfig = (AzureConfig) settingValue;
-          // Need to add these modifications to azure config for secret to get resolved on delegate side
-          azureConfig.setDecrypted(false);
-          azureConfig.setKey(null);
-          List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, null, null);
-          azureVMSSHelperServiceManager.listSubscriptions(azureConfig, encryptionDetails, null);
-        } catch (Exception e) {
-          azureHelperService.handleAzureAuthenticationException(e);
-        }
-      } else {
-        azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
+      try {
+        AzureConfig azureConfig = (AzureConfig) settingValue;
+        // Need to add these modifications to azure config for secret to get resolved on delegate side
+        azureConfig.setDecrypted(false);
+        azureConfig.setKey(null);
+        List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, null, null);
+        azureVMSSHelperServiceManager.listSubscriptions(azureConfig, encryptionDetails, null);
+      } catch (Exception e) {
+        azureHelperService.handleAzureAuthenticationException(e);
       }
     } else if (settingValue instanceof PcfConfig) {
       if (!((PcfConfig) settingValue).isSkipValidation()) {
