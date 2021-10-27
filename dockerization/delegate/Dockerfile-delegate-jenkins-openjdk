@@ -20,28 +20,28 @@ WORKDIR /opt/harness-delegate
 
 ARG watcher_version
 RUN mkdir -p client-tools/go-template/v0.4
-RUN curl -s -L -o client-tools/go-template/go-template https://app.harness.io/storage/harness-download/snapshot-go-template/release/v0.4/bin/darwin/go-template
+RUN curl -s -L -o client-tools/go-template/v0.4/go-template https://app.harness.io/storage/harness-download/snapshot-go-template/release/v0.4/bin/darwin/go-template
 
 RUN mkdir -p client-tools/harness-pywinrm/v0.4-dev
-RUN curl -s -L -o client-tools/harness-pywinrm/harness-pywinrm https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/v0.4-dev/bin/darwin/amd64/harness-pywinrm
+RUN curl -s -L -o client-tools/harness-pywinrm/v0.4-dev/harness-pywinrm https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/v0.4-dev/bin/darwin/amd64/harness-pywinrm
 
 RUN mkdir -p client-tools/helm/v2.13.1
-RUN curl -s -L -o client-tools/helm/helm https://app.harness.io/storage/harness-download/harness-helm/release/v2.13.1/bin/darwin/amd64/helm
+RUN curl -s -L -o client-tools/helm/v2.13.1/helm https://app.harness.io/storage/harness-download/harness-helm/release/v2.13.1/bin/darwin/amd64/helm
 
 RUN mkdir -p client-tools/chartmuseum/v0.13.0
-RUN curl -s -L -o client-tools/chartmuseum/chartmuseum https://app.harness.io/storage/harness-download/harness-chartmuseum/release/v0.13.0/bin/darwin/amd64/chartmuseum
+RUN curl -s -L -o client-tools/chartmuseum/v0.13.0/chartmuseum https://app.harness.io/storage/harness-download/harness-chartmuseum/release/v0.13.0/bin/darwin/amd64/chartmuseum
 
 RUN mkdir -p client-tools/tf-config-inspect/v1.1/darwin/amd64
-RUN curl -s -L -o client-tools/tf-config/terraform-config-inspect https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.1/darwin/amd64/terraform-config-inspect
+RUN curl -s -L -o client-tools/tf-config-inspect/v1.1/darwin/amd64/tf-config-inspect https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.1/darwin/amd64/terraform-config-inspect
 
 RUN mkdir -p client-tools/oc/v4.2.16
-RUN curl -s -L -o client-tools/oc/oc https://app.harness.io/storage/harness-download/harness-oc/release/v4.2.16/bin/darwin/amd64/oc
+RUN curl -s -L -o client-tools/oc/v4.2.16/oc https://app.harness.io/storage/harness-download/harness-oc/release/v4.2.16/bin/darwin/amd64/oc
 
 RUN mkdir -p client-tools/kustomize/v3.5.4
-RUN curl -s -L -o client-tools/kustomize/kustomize https://app.harness.io/storage/harness-download/harness-kustomize/release/v3.5.4/bin/darwin/amd64/kustomize
+RUN curl -s -L -o client-tools/kustomize/v3.5.4/kustomize https://app.harness.io/storage/harness-download/harness-kustomize/release/v3.5.4/bin/darwin/amd64/kustomize
 
 RUN mkdir -p client-tools/scm/72f01538/darwin/amd64
-RUN curl -s -L -o client-tools/scm/scm https://app.harness.io/storage/harness-download/harness-scm/release/87448d72/bin/darwin/amd64/scm
+RUN curl -s -L -o client-tools/scm/72f01538/darwin/amd64/scm https://app.harness.io/storage/harness-download/harness-scm/release/87448d72/bin/darwin/amd64/scm
 
 RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz
 RUN curl -#k https://app.harness.io/public/shared/watchers/builds/openjdk-8u242/$watcher_version/watcher.jar -o watcher.jar
