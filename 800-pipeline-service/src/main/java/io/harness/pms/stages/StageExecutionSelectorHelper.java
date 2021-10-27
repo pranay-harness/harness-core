@@ -14,7 +14,9 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class StageExecutionSelectorHelper {
+  private static final List<String> stageReferenceKeys = Collections.singletonList("useFromStage");
+
   public List<StageExecutionResponse> getStageExecutionResponse(String pipelineYaml) {
     List<BasicStageInfo> stagesInfo = getStageInfoListWithStagesRequired(pipelineYaml);
 
@@ -30,9 +34,13 @@ public class StageExecutionSelectorHelper {
       StageExecutionResponseBuilder builder = StageExecutionResponse.builder()
                                                   .stageIdentifier(stageInfo.getIdentifier())
                                                   .stageName(stageInfo.getName())
-                                                  .stagesRequired(stageInfo.getStagesRequired());
+                                                  .stagesRequired(stageInfo.getStagesRequired())
+                                                  .isToBeBlocked(stageInfo.isToBeBlocked());
       if (stageInfo.getType().equals("Approval")) {
         builder.message("Running an approval stage individually can be redundant");
+      }
+      if (stageInfo.isToBeBlocked()) {
+        builder.message("This stage has a \"useFromStage\" dependency on " + stageInfo.getStagesRequired().toString());
       }
       executionResponses.add(builder.build());
     }
@@ -77,11 +85,55 @@ public class StageExecutionSelectorHelper {
     String identifier = stageYamlNode.getField(YAMLFieldNameConstants.STAGE).getNode().getIdentifier();
     String name = stageYamlNode.getField(YAMLFieldNameConstants.STAGE).getNode().getName();
     String type = stageYamlNode.getField(YAMLFieldNameConstants.STAGE).getNode().getType();
-    return BasicStageInfo.builder().identifier(identifier).name(name).type(type).build();
+    return BasicStageInfo.builder().identifier(identifier).name(name).type(type).stageYamlNode(stageYamlNode).build();
   }
 
   @VisibleForTesting
   List<BasicStageInfo> addStagesRequired(List<BasicStageInfo> stageYamlList) {
+    List<BasicStageInfo> fullStageInfoList = new ArrayList<>();
+    for (BasicStageInfo basicStageInfo : stageYamlList) {
+      YamlNode stageYamlNode = basicStageInfo.getStageYamlNode();
+      Set<String> references = new HashSet<>();
+      getNonExpressionReferences(stageYamlNode, references);
+      references.remove(basicStageInfo.getIdentifier());
+      fullStageInfoList.add(
+          basicStageInfo.withStagesRequired(new ArrayList<>(references)).withToBeBlocked(!references.isEmpty()));
+    }
+    return fullStageInfoList;
+  }
+
+  private static void getNonExpressionReferences(YamlNode yamlNode, Set<String> references) {
+    if (yamlNode.isObject()) {
+      getNonExpressionReferencesForObject(yamlNode, references);
+    } else if (yamlNode.isArray()) {
+      getNonExpressionReferencesForArray(yamlNode, references);
+    }
+  }
+
+  private static void getNonExpressionReferencesForArray(YamlNode yamlNode, Set<String> references) {
+    List<YamlNode> yamlNodes = yamlNode.asArray();
+    for (YamlNode node : yamlNodes) {
+      getNonExpressionReferences(node, references);
+    }
+  }
+
+  private static void getNonExpressionReferencesForObject(YamlNode yamlNode, Set<String> references) {
+    List<String> keys = yamlNode.fetchKeys();
+    for (String key : keys) {
+      if (stageReferenceKeys.contains(key)) {
+        String stage = yamlNode.getField(key).getNode().getField("stage").getNode().asText();
+        references.add(stage);
+        continue;
+      }
+      getNonExpressionReferences(yamlNode.getField(key).getNode(), references);
+    }
+  }
+
+  /**
+   * Not in use right now. But keeping this just in case the product requirement comes back
+   */
+  @VisibleForTesting
+  List<BasicStageInfo> addApprovalStagesRequired(List<BasicStageInfo> stageYamlList) {
     List<BasicStageInfo> fullStageInfoList = new ArrayList<>();
 
     List<String> currRequiredStages = new ArrayList<>();
