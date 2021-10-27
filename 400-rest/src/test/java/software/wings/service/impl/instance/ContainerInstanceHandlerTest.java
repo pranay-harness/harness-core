@@ -204,7 +204,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   // expected 1 Delete
-  @Test(expected = WingsException.class)
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstancesDelete_ECS() throws Exception {
@@ -370,7 +370,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService, never()).delete(eq(instancesToNotDelete));
   }
 
-  @Test(expected = WingsException.class)
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testNewDeployment_DeleteOlderInstance_ECS() throws Exception {
@@ -499,7 +499,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     }
   }
 
-  @Test(expected = WingsException.class)
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstances_DeleteInstance_Kubernetes() throws Exception {
@@ -601,7 +601,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertionsForSave("pod:1", KUBERNETES_CONTAINER_INSTANCE);
   }
 
-  @Test(expected = WingsException.class)
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testNewDeployment_DeleteOldInstances_Kubernetes() throws Exception {
@@ -697,7 +697,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertionsForSave("pod:1", KUBERNETES_CONTAINER_INSTANCE);
   }
 
-  @Test(expected = WingsException.class)
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testNewDeployment_Kubernetes_Rollback() throws Exception {
@@ -1923,7 +1923,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(savedInstanceInfo.getReleaseName()).isNull();
   }
 
-  @Test(expected = WingsException.class)
+  @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldDeleteOldInstancesWithoutReleaseName() {

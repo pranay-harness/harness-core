@@ -274,6 +274,18 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
   }
 
+  private Set<String> getDeletedInstances(Map<String, Instance> instancesInDBMap) {
+    Set<String> deletedInstances = new HashSet<>();
+    for (Map.Entry<String, Instance> entry : instancesInDBMap.entrySet()) {
+      String key = entry.getKey();
+      Instance instance = entry.getValue();
+      if (instance.isDeleted()) {
+        deletedInstances.add(key);
+      }
+    }
+    return deletedInstances;
+  }
+
   private void handleContainerServiceInstances(boolean rollback, DelegateResponseData responseData,
       InstanceSyncFlow instanceSyncFlow, ContainerInfrastructureMapping containerInfraMapping,
       Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
@@ -286,12 +298,13 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     // latestContainerInfoList.size(),
     //    containerInfraMapping.getAppId(), containerMetadata.getContainerServiceName());
     processContainerServiceInstances(rollback, containerInfraMapping, deploymentSummaryMap, containerMetadata,
-        instancesInDB, latestContainerInfoList);
+        instancesInDB, latestContainerInfoList, instanceSyncFlow);
   }
 
   private void processContainerServiceInstances(boolean rollback, ContainerInfrastructureMapping containerInfraMapping,
       Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
-      Collection<Instance> instancesInDB, List<ContainerInfo> latestContainerInfoList) {
+      Collection<Instance> instancesInDB, List<ContainerInfo> latestContainerInfoList,
+      InstanceSyncFlow instanceSyncFlow) {
     // Key - containerId(taskId in ECS / podId+namespace in Kubernetes), Value - ContainerInfo
     Map<String, ContainerInfo> latestContainerInfoMap = new HashMap<>();
     HelmChartInfo helmChartInfo = getContainerHelmChartInfo(deploymentSummaryMap.get(containerMetadata), instancesInDB);
@@ -395,7 +408,10 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
 
     // handle perpetual task deletion logic if all instances deleted for 7 days
-    if (instanceIdsToBeDeleted.size() == instancesInDBMap.size() && instancesToBeAdded.size() == 0) {
+    Set<String> alreadyDeletedInstances = getDeletedInstances(instancesInDBMap);
+    if (instanceSyncFlow == PERPETUAL_TASK
+        && (instanceIdsToBeDeleted.size() + alreadyDeletedInstances.size()) == instancesInDBMap.size()
+        && instancesToBeAdded.size() == 0) {
       throw new WingsException("Container Instance Sync: All instances for perpetual task are deleted");
     }
   }
