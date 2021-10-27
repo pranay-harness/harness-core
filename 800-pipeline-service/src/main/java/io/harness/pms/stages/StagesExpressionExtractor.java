@@ -39,7 +39,7 @@ public class StagesExpressionExtractor {
     return pipelineYaml;
   }
 
-  Set<String> getNonLocalExpressions(String pipelineYaml, List<String> stageIdentifiers) {
+  public Set<String> getNonLocalExpressions(String pipelineYaml, List<String> stageIdentifiers) {
     Map<String, List<String>> allExpressions = getAllExpressionsInListOfStages(pipelineYaml, stageIdentifiers);
     return removeLocalExpressions(allExpressions);
   }

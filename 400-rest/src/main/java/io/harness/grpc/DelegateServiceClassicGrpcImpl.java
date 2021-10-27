@@ -3,11 +3,19 @@ package io.harness.grpc;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.AbortExpireTaskRequest;
+import io.harness.delegate.AbortTaskResponse;
+import io.harness.delegate.CreatePerpetualTaskRequestClassic;
+import io.harness.delegate.CreatePerpetualTaskResponseClassic;
 import io.harness.delegate.DelegateClassicTaskRequest;
 import io.harness.delegate.DelegateTaskGrpc;
 import io.harness.delegate.ExecuteTaskResponse;
+import io.harness.delegate.ExpireTaskResponse;
 import io.harness.delegate.QueueTaskResponse;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.service.intfc.DelegateTaskServiceClassic;
@@ -22,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTaskImplBase {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private PerpetualTaskService perpetualTaskService;
 
   @Override
   public void queueTask(DelegateClassicTaskRequest request, StreamObserver<QueueTaskResponse> responseObserver) {
@@ -49,8 +58,64 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
               .setDelegateTaskResponseKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateResponseData)))
               .build());
       responseObserver.onCompleted();
+
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing execute task request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void abortTask(AbortExpireTaskRequest request, StreamObserver<AbortTaskResponse> responseObserver) {
+    try {
+      String accountId = request.getAccountId();
+      String delegateTaskId = request.getDelegateTaskId();
+
+      DelegateTask delegateTask = delegateTaskServiceClassic.abortTask(accountId, delegateTaskId);
+      responseObserver.onNext(
+          AbortTaskResponse.newBuilder()
+              .setDelegateTaskKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateTask)))
+              .build());
+      responseObserver.onCompleted();
+
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing abort task request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void expireTask(AbortExpireTaskRequest request, StreamObserver<ExpireTaskResponse> responseObserver) {
+    try {
+      String accountId = request.getAccountId();
+      String delegateTaskId = request.getDelegateTaskId();
+
+      String message = delegateTaskServiceClassic.expireTask(accountId, delegateTaskId);
+      responseObserver.onNext(ExpireTaskResponse.newBuilder().setMessage(message).build());
+      responseObserver.onCompleted();
+
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing expire task request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void createPerpetualTaskClassic(
+      CreatePerpetualTaskRequestClassic request, StreamObserver<CreatePerpetualTaskResponseClassic> responseObserver) {
+    try {
+      String perpetualTaskType = request.getPerpetualTaskType();
+      String accountId = request.getAccountId();
+      PerpetualTaskClientContext clientContext =
+          (PerpetualTaskClientContext) kryoSerializer.asInflatedObject(request.getClientContextKryo().toByteArray());
+      PerpetualTaskSchedule schedule =
+          (PerpetualTaskSchedule) kryoSerializer.asInflatedObject(request.getPerpetualTaskScheduleKryo().toByteArray());
+      boolean allowDuplicate = request.getAllowDuplicate();
+      String taskDescription = request.getTaskDescription();
+      perpetualTaskService.createPerpetualTaskInternal(
+          perpetualTaskType, accountId, clientContext, schedule, allowDuplicate, taskDescription);
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while creating perpetual task classic request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

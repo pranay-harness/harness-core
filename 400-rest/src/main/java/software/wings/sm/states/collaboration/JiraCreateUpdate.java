@@ -270,6 +270,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                       .parameters(new Object[] {parameters})
                       .timeout(JIRA_TASK_TIMEOUT_MILLIS)
                       .build())
+            .tags(jiraConfig.getDelegateSelectors())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();

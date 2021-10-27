@@ -17,6 +17,7 @@ public class QLFreezeWindowInput {
   List<String> appIds;
   BlackoutWindowFilterType appFilter;
   QLEnvironmentTypeFilterInput envTypeFilter;
+  QLServiceTypeFilterInput serviceTypeFilter;
   List<String> envIds;
   List<String> servIds;
 }

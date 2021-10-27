@@ -18,14 +18,18 @@ import io.harness.governance.BlackoutWindowFilterType;
 import io.harness.governance.CustomAppFilter;
 import io.harness.governance.CustomEnvFilter;
 import io.harness.governance.EnvironmentFilter;
+import io.harness.governance.ServiceFilter;
+import io.harness.governance.ServiceFilter.ServiceFilterType;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.TimeRangeOccurrence;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.schema.mutation.deploymentfreezewindow.input.QLCreateDeploymentFreezeWindowInput;
 import software.wings.graphql.schema.mutation.deploymentfreezewindow.input.QLFreezeWindowInput;
+import software.wings.graphql.schema.mutation.deploymentfreezewindow.input.QLServiceTypeFilterInput;
 import software.wings.graphql.schema.mutation.deploymentfreezewindow.input.QLSetupInput;
 import software.wings.graphql.schema.mutation.deploymentfreezewindow.input.QLUpdateDeploymentFreezeWindowInput;
 import software.wings.graphql.schema.type.deploymentfreezewindow.QLDeploymentFreezeWindow;
@@ -34,16 +38,19 @@ import software.wings.graphql.schema.type.deploymentfreezewindow.QLSetup;
 import software.wings.resources.stats.model.TimeRange;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DeploymentFreezeWindowController {
   @Inject UserGroupService userGroupService;
   @Inject AppService appService;
   @Inject EnvironmentService environmentService;
+  @Inject ServiceResourceService serviceResourceService;
 
   public TimeRangeBasedFreezeConfig populateDeploymentFreezeWindowEntity(
       QLCreateDeploymentFreezeWindowInput qlCreateDeploymentFreezeWindowInput) {
@@ -207,16 +214,25 @@ public class DeploymentFreezeWindowController {
       if (qlFreezeWindowInput.getAppFilter() == ALL) {
         BlackoutWindowFilterType filterType = ALL;
 
-        if (qlFreezeWindowInput.getAppIds() != null || qlFreezeWindowInput.getEnvIds() != null) {
+        if (qlFreezeWindowInput.getAppIds() != null || qlFreezeWindowInput.getEnvIds() != null
+            || qlFreezeWindowInput.getServIds() != null) {
           throw new InvalidRequestException(
-              "'appIds' and 'envIds' must not be given when 'appFilter' is selected as 'ALL'.");
+              "'appIds', 'envIds' and 'servIds' must not be given when 'appFilter' is selected as 'ALL'.");
         }
+        QLServiceTypeFilterInput serviceTypeFilter = qlFreezeWindowInput.getServiceTypeFilter();
+        if (!QLServiceTypeFilterInput.ALL.equals(serviceTypeFilter)) {
+          throw new InvalidRequestException(
+              "Invalid filter type. 'Custom' service filter type is applicable only for a single application. You have selected all applications.");
+        }
+
+        ServiceFilter serviceFilter = new ServiceFilter(ServiceFilterType.ALL, null);
 
         switch (qlFreezeWindowInput.getEnvTypeFilter()) {
           // ENV_FILTER_TYPE -> ALL
           case ALL: {
             EnvironmentFilter envSelection = new AllEnvFilter(EnvironmentFilterType.ALL);
-            ApplicationFilter applicationFilter = new AllAppFilter(filterType, envSelection);
+
+            ApplicationFilter applicationFilter = new AllAppFilter(filterType, envSelection, serviceFilter);
             applicationFilterList.add(applicationFilter);
             break;
           }
@@ -224,7 +240,7 @@ public class DeploymentFreezeWindowController {
           // ENV_FILTER_TYPE -> ALL_PROD
           case ALL_PROD: {
             EnvironmentFilter envSelection = new AllProdEnvFilter(EnvironmentFilterType.ALL_PROD);
-            ApplicationFilter applicationFilter = new AllAppFilter(filterType, envSelection);
+            ApplicationFilter applicationFilter = new AllAppFilter(filterType, envSelection, serviceFilter);
             applicationFilterList.add(applicationFilter);
             break;
           }
@@ -232,7 +248,7 @@ public class DeploymentFreezeWindowController {
           // ENV_FILTER_TYPE -> ALL_NON_PROD
           case ALL_NON_PROD: {
             EnvironmentFilter envSelection = new AllNonProdEnvFilter(EnvironmentFilterType.ALL_NON_PROD);
-            ApplicationFilter applicationFilter = new AllAppFilter(filterType, envSelection);
+            ApplicationFilter applicationFilter = new AllAppFilter(filterType, envSelection, serviceFilter);
             applicationFilterList.add(applicationFilter);
             break;
           }
@@ -254,11 +270,33 @@ public class DeploymentFreezeWindowController {
               "'appIds' cannot be empty. Please enter the application ids applicable to the deployment freeze window.");
         }
 
+        QLServiceTypeFilterInput serviceTypeFilter = qlFreezeWindowInput.getServiceTypeFilter();
+        ServiceFilter serviceFilter = null;
+        switch (serviceTypeFilter) {
+          case ALL: {
+            if (qlFreezeWindowInput.getServIds() != null) {
+              throw new InvalidRequestException(
+                  "'servIds' must not be given when 'serviceTypeFilter' is given as 'ALL'.");
+            }
+            serviceFilter = new ServiceFilter(ServiceFilterType.ALL, Collections.emptyList());
+            break;
+          }
+          case CUSTOM: {
+            if (isEmpty(qlFreezeWindowInput.getServIds())) {
+              throw new InvalidRequestException(
+                  "'servIds' cannot be empty. Please enter the service Ids applicable to the deployment freeze window.");
+            }
+            serviceFilter = new ServiceFilter(ServiceFilterType.CUSTOM, qlFreezeWindowInput.getServIds());
+            break;
+          }
+          default:
+            serviceFilter = new ServiceFilter(ServiceFilterType.ALL, null);
+        }
         switch (qlFreezeWindowInput.getEnvTypeFilter()) {
           // ENV_FILTER_TYPE -> ALL
           case ALL: {
             EnvironmentFilter envSelection = new AllEnvFilter(EnvironmentFilterType.ALL);
-            ApplicationFilter applicationFilter = new CustomAppFilter(filterType, envSelection, appIds);
+            ApplicationFilter applicationFilter = new CustomAppFilter(filterType, envSelection, appIds, serviceFilter);
             applicationFilterList.add(applicationFilter);
             if (qlFreezeWindowInput.getEnvIds() != null) {
               throw new InvalidRequestException("'envIds' must not be given when 'envTypeFilter' is given as 'ALL'.");
@@ -269,7 +307,7 @@ public class DeploymentFreezeWindowController {
           // ENV_FILTER_TYPE -> ALL_PROD
           case ALL_PROD: {
             EnvironmentFilter envSelection = new AllProdEnvFilter(EnvironmentFilterType.ALL_PROD);
-            ApplicationFilter applicationFilter = new CustomAppFilter(filterType, envSelection, appIds);
+            ApplicationFilter applicationFilter = new CustomAppFilter(filterType, envSelection, appIds, serviceFilter);
             applicationFilterList.add(applicationFilter);
             if (qlFreezeWindowInput.getEnvIds() != null) {
               throw new InvalidRequestException(
@@ -281,7 +319,7 @@ public class DeploymentFreezeWindowController {
           // ENV_FILTER_TYPE -> ALL_NON_PROD
           case ALL_NON_PROD: {
             EnvironmentFilter envSelection = new AllNonProdEnvFilter(EnvironmentFilterType.ALL_NON_PROD);
-            ApplicationFilter applicationFilter = new CustomAppFilter(filterType, envSelection, appIds);
+            ApplicationFilter applicationFilter = new CustomAppFilter(filterType, envSelection, appIds, serviceFilter);
             applicationFilterList.add(applicationFilter);
             if (qlFreezeWindowInput.getEnvIds() != null) {
               throw new InvalidRequestException(
@@ -300,7 +338,8 @@ public class DeploymentFreezeWindowController {
                     "'envIds' cannot be empty. Please enter the environment ids applicable to the deployment freeze window.");
               }
               EnvironmentFilter envSelection = new CustomEnvFilter(EnvironmentFilterType.CUSTOM, environments);
-              ApplicationFilter applicationFilter = new CustomAppFilter(filterType, envSelection, appIds);
+              ApplicationFilter applicationFilter =
+                  new CustomAppFilter(filterType, envSelection, appIds, serviceFilter);
               applicationFilterList.add(applicationFilter);
               break;
             } else {
@@ -358,11 +397,19 @@ public class DeploymentFreezeWindowController {
         envIds = ((CustomEnvFilter) applicationFilter.getEnvSelection()).getEnvironments();
       }
 
+      List<String> servIds = new ArrayList<>();
+      if (appIds.size() == 1
+          && applicationFilter.getServiceSelection().getFilterType().equals(ServiceFilterType.CUSTOM)) {
+        servIds = applicationFilter.getServiceSelection().getServices();
+      }
+
       QLFreezeWindow qlFreezeWindow = QLFreezeWindow.builder()
                                           .appFilter(applicationFilter.getFilterType())
                                           .envFilterType(applicationFilter.getEnvSelection().getFilterType())
                                           .appIds(appIds)
                                           .envIds(envIds)
+                                          .servIds(servIds)
+                                          .servFilterType(applicationFilter.getServiceSelection().getFilterType())
                                           .build();
 
       qlFreezeWindowList.add(qlFreezeWindow);
@@ -437,6 +484,24 @@ public class DeploymentFreezeWindowController {
           if (environment == null) {
             throw new InvalidRequestException(
                 format("Invalid Environment Id: %s for the given Application Id: %s", envId, appIds.get(0)));
+          }
+        }
+      }
+
+      // Service Ids
+      if (appIds.size() == 1
+          && applicationFilter.getServiceSelection().getFilterType().equals(ServiceFilterType.CUSTOM)) {
+        List<String> serviceIds = applicationFilter.getServiceSelection().getServices();
+        for (String serviceId : serviceIds) {
+          if (EmptyPredicate.isEmpty(serviceId)) {
+            throw new InvalidRequestException(
+                "'serviceId' cannot be an empty string. Please insert a valid serviceId.");
+          }
+
+          Service service = serviceResourceService.get(appIds.get(0), serviceId);
+          if (service == null) {
+            throw new InvalidRequestException(
+                format("Invalid Service Id: %s for the given Application Id: %s", serviceId, appIds.get(0)));
           }
         }
       }

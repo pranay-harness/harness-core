@@ -4,6 +4,7 @@ import static io.harness.timescaledb.Tables.PIPELINES;
 
 import static org.jooq.impl.DSL.row;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.OrgProjectIdentifier;
 import io.harness.pms.dashboards.PipelinesCount;
 
@@ -23,6 +24,9 @@ public class PMSLandingDashboardServiceImpl implements PMSLandingDashboardServic
   @Override
   public PipelinesCount getPipelinesCount(String accountIdentifier, List<OrgProjectIdentifier> orgProjectIdentifiers,
       long startInterval, long endInterval) {
+    if (EmptyPredicate.isEmpty(orgProjectIdentifiers)) {
+      return PipelinesCount.builder().build();
+    }
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
     Integer totalCount = getTotalPipelinesCount(accountIdentifier, orgProjectTable);
@@ -71,6 +75,7 @@ public class PMSLandingDashboardServiceImpl implements PMSLandingDashboardServic
         .and(PIPELINES.LAST_UPDATED_AT.greaterOrEqual(startInterval))
         .and(PIPELINES.LAST_UPDATED_AT.lessThan(endInterval))
         .and(PIPELINES.DELETED.eq(true))
+        .and(PIPELINES.CREATED_AT.lessThan(startInterval))
         .andExists(
             dsl.selectOne()
                 .from(orgProjectTable)

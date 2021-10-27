@@ -29,4 +29,5 @@ public class K8sScaleRequest implements K8sDeployRequest {
   boolean skipSteadyStateCheck;
   CommandUnitsProgress commandUnitsProgress;
   boolean useLatestKustomizeVersion;
+  boolean useNewKubectlVersion;
 }

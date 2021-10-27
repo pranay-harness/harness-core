@@ -14,6 +14,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateHeartbeatDetails;
 import io.harness.delegate.beans.DelegateInitializationDetails;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.rest.RestResponse;
 
 import software.wings.security.annotations.AuthRule;
@@ -21,6 +23,11 @@ import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.GET;
@@ -41,6 +48,20 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Slf4j
 @OwnedBy(DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@Tag(name = "Delegate Verification",
+    description = "Contains APIs related to Delegate initialization, connectivity and heartbeat verification.")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
 public class DelegateVerificationNgResource {
   private final DelegateService delegateService;
   private final AccessControlClient accessControlClient;
@@ -53,9 +74,22 @@ public class DelegateVerificationNgResource {
 
   @GET
   @Path("/heartbeatV2")
-  public RestResponse<DelegateHeartbeatDetails> getDelegatesHeartbeatDetailsV2(
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId, @QueryParam("delegateName") @NotEmpty String delegateName) {
+  @Operation(operationId = "getDelegatesHeartbeatDetailsV2",
+      summary =
+          "Retrieves number of registered Delegates and number of connected Delegates, filtered by Account Id and Delegate name.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Number of registered and number of connected Delegates, "
+                + "filtered by the Account id and Delegate name.")
+      })
+  public RestResponse<DelegateHeartbeatDetails>
+  getDelegatesHeartbeatDetailsV2(
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @Parameter(description = "Delegate name used to filter out delegates") @QueryParam(
+          "delegateName") @NotEmpty String delegateName) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
 
@@ -75,9 +109,22 @@ public class DelegateVerificationNgResource {
 
   @GET
   @Path("/initializedV2")
-  public RestResponse<List<DelegateInitializationDetails>> getDelegatesInitializationDetailsV2(
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId, @QueryParam("delegateName") @NotEmpty String delegateName) {
+  @Operation(operationId = "getDelegatesInitializationDetails",
+      summary = "Retrieves Delegate initialization details filtered by Delegate name. "
+          + "The details include delegateId, hostname, initialized status, profileError and profileExecutedAt time.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Delegate initialization details, "
+                + "including delegateId, hostname, initialized status, profileError and profileExecutedAt time.")
+      })
+  public RestResponse<List<DelegateInitializationDetails>>
+  getDelegatesInitializationDetailsV2(
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @Parameter(description = "Delegate name used to filter out delegates") @QueryParam(
+          "delegateName") @NotEmpty String delegateName) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
 

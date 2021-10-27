@@ -9,6 +9,7 @@ import software.wings.graphql.schema.type.QLUser;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -22,6 +23,7 @@ public class QLServiceNowConnector implements QLConnector {
   private String name;
   private Long createdAt;
   private QLUser createdBy;
+  private List<String> delegateSelectors;
 
   public static class QLServiceNowConnectorBuilder implements QLConnectorBuilder {}
 }

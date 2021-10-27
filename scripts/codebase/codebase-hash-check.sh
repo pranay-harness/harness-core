@@ -32,7 +32,7 @@ do
       HASH=${CODEBASE_HASH_STRING:14:64}
       echo "New hash: " $HASH
 
-      EXISTING_HASH=$(head -n 1 $MODULE/module-dependency.hash)
+      EXISTING_HASH=$(cat $MODULE/module-dependency.hash)
       echo "Existing hash: " $EXISTING_HASH
 
       if [[ $HASH != $EXISTING_HASH ]];

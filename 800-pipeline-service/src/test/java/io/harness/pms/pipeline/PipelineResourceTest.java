@@ -34,6 +34,7 @@ import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.governance.PipelineSaveResponse;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
+import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
@@ -74,6 +75,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Mock PmsGitSyncHelper pmsGitSyncHelper;
   @Mock PMSPipelineTemplateHelper pipelineTemplateHelper;
   @Mock GovernanceService mockGovernanceService;
+  @Mock PipelineExecutionSummaryDtoMapper pipelineExecutionSummaryDtoMapper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -94,7 +96,7 @@ public class PipelineResourceTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     pipelineResource = new PipelineResource(pmsPipelineService, pmsExecutionService, pmsYamlSchemaService,
         nodeExecutionService, accessControlClient, nodeExecutionToExecutioNodeMapper, pmsGitSyncHelper,
-        pipelineTemplateHelper, mockGovernanceService);
+        pipelineTemplateHelper, pipelineExecutionSummaryDtoMapper, mockGovernanceService);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -368,6 +370,12 @@ public class PipelineResourceTest extends CategoryTest {
     doReturn(Optional.of(PipelineEntity.builder().build()))
         .when(pmsPipelineService)
         .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
+    doReturn(PipelineExecutionSummaryDTO.builder()
+                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
+                 .planExecutionId(PLAN_EXECUTION_ID)
+                 .build())
+        .when(pipelineExecutionSummaryDtoMapper)
+        .toDto(executionSummaryEntity, executionSummaryEntity.getEntityGitDetails());
 
     Page<PipelineExecutionSummaryDTO> content =
         pipelineResource
@@ -380,7 +388,6 @@ public class PipelineResourceTest extends CategoryTest {
     PipelineExecutionSummaryDTO responseDTO = content.toList().get(0);
     assertThat(responseDTO.getPipelineIdentifier()).isEqualTo(PIPELINE_IDENTIFIER);
     assertThat(responseDTO.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
-    assertThat(responseDTO.getName()).isEqualTo(PLAN_EXECUTION_ID);
     assertThat(responseDTO.getRunSequence()).isEqualTo(0);
   }
 
@@ -401,6 +408,13 @@ public class PipelineResourceTest extends CategoryTest {
         .when(pmsPipelineService)
         .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
+    doReturn(PipelineExecutionSummaryDTO.builder()
+                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
+                 .planExecutionId(PLAN_EXECUTION_ID)
+                 .build())
+        .when(pipelineExecutionSummaryDtoMapper)
+        .toDto(executionSummaryEntity, executionSummaryEntity.getEntityGitDetails());
+
     ResponseDTO<PipelineExecutionDetailDTO> executionDetails = pipelineResource.getExecutionDetail(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, STAGE_NODE_ID, PLAN_EXECUTION_ID);
 
@@ -408,7 +422,6 @@ public class PipelineResourceTest extends CategoryTest {
         .isEqualTo(PIPELINE_IDENTIFIER);
     assertThat(executionDetails.getData().getPipelineExecutionSummary().getPlanExecutionId())
         .isEqualTo(PLAN_EXECUTION_ID);
-    assertThat(executionDetails.getData().getPipelineExecutionSummary().getName()).isEqualTo(PLAN_EXECUTION_ID);
     assertThat(executionDetails.getData().getPipelineExecutionSummary().getRunSequence()).isEqualTo(0);
     assertThat(executionDetails.getData().getExecutionGraph().getRootNodeId()).isEqualTo(STAGE_NODE_ID);
     assertThat(executionDetails.getData().getExecutionGraph().getNodeMap().size()).isEqualTo(0);

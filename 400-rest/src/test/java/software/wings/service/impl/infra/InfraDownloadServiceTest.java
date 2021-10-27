@@ -6,13 +6,9 @@ import static io.harness.rule.OwnerRule.RUSHABH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.environment.SystemEnvironment;
 import io.harness.ff.FeatureFlagService;
@@ -21,6 +17,7 @@ import io.harness.rule.Owner;
 
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.GcsUtils;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -35,7 +32,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -53,6 +49,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   @Mock private SystemEnvironment sysenv;
   @Mock private MainConfiguration mainConfiguration;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private CdnStorageUrlGenerator cdnStorageUrlGenerator;
   @InjectMocks @Inject InfraDownloadServiceImpl infraDownloadService;
 
   @Mock private GoogleCredential credential;
@@ -78,7 +75,6 @@ public class InfraDownloadServiceTest extends CategoryTest {
     when(mainConfiguration.getPortal()).thenReturn(portalConfig);
     PowerMockito.when(GoogleCredential.fromStream(any(InputStream.class))).thenReturn(credential);
     when(credential.createScoped(any())).thenReturn(credential);
-    when(featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, eq(anyString()))).thenReturn(true);
   }
 
   @Test
@@ -86,8 +82,11 @@ public class InfraDownloadServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testInfraDownloadFailForEnvWhenNoServiceAccDefined() {
     when(sysenv.get("ENV")).thenReturn("dummy");
-    String url = infraDownloadService.getDownloadUrlForDelegate("4333", null);
-    assertThat(url).isEqualTo(InfraDownloadServiceImpl.DEFAULT_ERROR_STRING);
+    String version = "4333";
+    String someUrl = "some.url";
+    when(cdnStorageUrlGenerator.getDelegateJarUrl(version)).thenReturn(someUrl);
+    String url = infraDownloadService.getDownloadUrlForDelegate(version, null);
+    assertThat(url).isEqualTo(someUrl);
   }
 
   @Test
@@ -95,8 +94,11 @@ public class InfraDownloadServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testInfraDownloadFailForWatcherEnvWhenNoServiceAccDefined() {
     when(sysenv.get("ENV")).thenReturn("dummy");
-    String url = infraDownloadService.getDownloadUrlForWatcher("4333", null);
-    assertThat(url).isEqualTo(InfraDownloadServiceImpl.DEFAULT_ERROR_STRING);
+    String version = "4333";
+    String someUrl = "some.url";
+    when(cdnStorageUrlGenerator.getWatcherJarUrl(version)).thenReturn(someUrl);
+    String url = infraDownloadService.getDownloadUrlForWatcher(version, null);
+    assertThat(url).isEqualTo(someUrl);
   }
 
   @Test
@@ -125,11 +127,11 @@ public class InfraDownloadServiceTest extends CategoryTest {
       FileUtils.writeStringToFile(serviceAccFile, prodTestKey, StandardCharsets.UTF_8);
       when(sysenv.get("SERVICE_ACC")).thenReturn(path);
       when(sysenv.get("ENV")).thenReturn("dummy");
-      ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-      when(gcsUtils.getSignedUrlForServiceAccount(captor.capture(), any(), anyLong(), any())).thenReturn("abc");
-      String url = infraDownloadService.getDownloadUrlForDelegate("123", null);
-      assertThat(url).isEqualTo("abc");
-      assertThat(captor.getValue()).isEqualTo("/harness-dummy-delegates/builds/123/delegate.jar");
+      String version = "4333";
+      String someUrl = "some.url";
+      when(cdnStorageUrlGenerator.getDelegateJarUrl(version)).thenReturn(someUrl);
+      String url = infraDownloadService.getDownloadUrlForDelegate(version, null);
+      assertThat(url).isEqualTo(someUrl);
     } finally {
       FileUtils.deleteQuietly(serviceAccFile);
     }

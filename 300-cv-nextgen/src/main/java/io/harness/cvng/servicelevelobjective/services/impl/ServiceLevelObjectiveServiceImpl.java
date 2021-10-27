@@ -7,6 +7,7 @@ import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective.ServiceLevelObjectiveKeys;
+import io.harness.cvng.servicelevelobjective.services.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -17,6 +18,7 @@ import io.harness.utils.PageUtils;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -29,6 +31,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   @Inject private HPersistence hPersistence;
 
   @Inject private MonitoredServiceService monitoredServiceService;
+
+  @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
 
   @Override
   public ServiceLevelObjectiveResponse create(
@@ -50,10 +54,10 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
       throw new InvalidRequestException(String.format(
           "SLO  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
           serviceLevelObjectiveDTO.getIdentifier(), projectParams.getAccountIdentifier(),
-          serviceLevelObjectiveDTO.getOrgIdentifier(), serviceLevelObjectiveDTO.getProjectIdentifier()));
+          projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier()));
     }
     validate(serviceLevelObjectiveDTO, projectParams);
-    updateSLOEntity(serviceLevelObjective, serviceLevelObjectiveDTO);
+    updateSLOEntity(projectParams, serviceLevelObjective, serviceLevelObjectiveDTO);
     return getSLOResponse(serviceLevelObjectiveDTO.getIdentifier(), projectParams);
   }
 
@@ -100,6 +104,15 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         .build();
   }
 
+  @Override
+  public ServiceLevelObjectiveResponse get(ProjectParams projectParams, String identifier) {
+    ServiceLevelObjective serviceLevelObjective = getServiceLevelObjective(projectParams, identifier);
+    if (Objects.isNull(serviceLevelObjective)) {
+      return null;
+    }
+    return sloEntityToSLOResponse(serviceLevelObjective);
+  }
+
   private ServiceLevelObjective getServiceLevelObjective(ProjectParams projectParams, String identifier) {
     return hPersistence.createQuery(ServiceLevelObjective.class)
         .filter(ServiceLevelObjectiveKeys.accountId, projectParams.getAccountIdentifier())
@@ -109,8 +122,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         .get();
   }
 
-  private void updateSLOEntity(
-      ServiceLevelObjective serviceLevelObjective, ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
+  private void updateSLOEntity(ProjectParams projectParams, ServiceLevelObjective serviceLevelObjective,
+      ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
     UpdateOperations<ServiceLevelObjective> updateOperations =
         hPersistence.createUpdateOperations(ServiceLevelObjective.class);
     updateOperations.set(ServiceLevelObjectiveKeys.name, serviceLevelObjectiveDTO.getName());
@@ -123,8 +136,9 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
         ServiceLevelObjectiveKeys.monitoredServiceIdentifier, serviceLevelObjectiveDTO.getMonitoredServiceRef());
     updateOperations.set(
         ServiceLevelObjectiveKeys.healthSourceIdentifier, serviceLevelObjectiveDTO.getHealthSourceRef());
-    updateOperations.set(
-        ServiceLevelObjectiveKeys.serviceLevelIndicators, serviceLevelObjectiveDTO.getServiceLevelIndicators());
+    updateOperations.set(ServiceLevelObjectiveKeys.serviceLevelIndicators,
+        serviceLevelIndicatorService.update(projectParams, serviceLevelObjectiveDTO.getServiceLevelIndicators(),
+            serviceLevelObjectiveDTO.getIdentifier(), serviceLevelObjective.getServiceLevelIndicators()));
     updateOperations.set(ServiceLevelObjectiveKeys.sloTarget, serviceLevelObjectiveDTO.getTarget());
     hPersistence.update(serviceLevelObjective, updateOperations);
   }
@@ -136,16 +150,20 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   }
 
   private ServiceLevelObjectiveResponse sloEntityToSLOResponse(ServiceLevelObjective serviceLevelObjective) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(serviceLevelObjective.getAccountId())
+                                      .orgIdentifier(serviceLevelObjective.getOrgIdentifier())
+                                      .projectIdentifier(serviceLevelObjective.getProjectIdentifier())
+                                      .build();
     ServiceLevelObjectiveDTO serviceLevelObjectiveDTO =
         ServiceLevelObjectiveDTO.builder()
-            .orgIdentifier(serviceLevelObjective.getOrgIdentifier())
-            .projectIdentifier(serviceLevelObjective.getProjectIdentifier())
             .identifier(serviceLevelObjective.getIdentifier())
             .name(serviceLevelObjective.getName())
             .description(serviceLevelObjective.getDesc())
             .monitoredServiceRef(serviceLevelObjective.getMonitoredServiceIdentifier())
             .healthSourceRef(serviceLevelObjective.getHealthSourceIdentifier())
-            .serviceLevelIndicators(serviceLevelObjective.getServiceLevelIndicators())
+            .serviceLevelIndicators(
+                serviceLevelIndicatorService.get(projectParams, serviceLevelObjective.getServiceLevelIndicators()))
             .target(serviceLevelObjective.getSloTarget())
             .tags(TagMapper.convertToMap(serviceLevelObjective.getTags()))
             .userJourneyRef(serviceLevelObjective.getUserJourneyIdentifier())
@@ -167,7 +185,8 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .identifier(serviceLevelObjectiveDTO.getIdentifier())
             .name(serviceLevelObjectiveDTO.getName())
             .desc(serviceLevelObjectiveDTO.getDescription())
-            .serviceLevelIndicators(serviceLevelObjectiveDTO.getServiceLevelIndicators())
+            .serviceLevelIndicators(serviceLevelIndicatorService.create(projectParams,
+                serviceLevelObjectiveDTO.getServiceLevelIndicators(), serviceLevelObjectiveDTO.getIdentifier()))
             .monitoredServiceIdentifier(serviceLevelObjectiveDTO.getMonitoredServiceRef())
             .healthSourceIdentifier(serviceLevelObjectiveDTO.getHealthSourceRef())
             .tags(TagMapper.convertToList(serviceLevelObjectiveDTO.getTags()))

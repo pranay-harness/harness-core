@@ -54,6 +54,7 @@ import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.ccm.K8sClusterInfo;
 import io.harness.delegate.beans.ci.CIClusterType;
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
+import io.harness.delegate.beans.ci.CITaskExecutionResponse;
 import io.harness.delegate.beans.ci.ExecuteCommandTaskParams;
 import io.harness.delegate.beans.ci.ShellScriptType;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
@@ -937,5 +938,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ReleaseInfo.class, 543439);
     kryo.register(TaskNGDataException.class, 543440);
     kryo.register(K8sCanaryDataException.class, 543441);
+    kryo.register(CITaskExecutionResponse.class, 543442);
   }
 }
