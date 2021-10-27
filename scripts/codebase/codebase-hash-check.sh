@@ -3,6 +3,7 @@
 bold=$(tput bold)
 normal=$(tput sgr0)
 
+errors=()
 ALL_MODULES=`ls -a`
 for MODULE in $@
 do
@@ -10,7 +11,7 @@ do
 
       if [[ ! $ALL_MODULES[*] =~ $MODULE ]]; then
           echo "Module not found in the project root."
-          exit 0
+          exit 1
       fi
 
 
@@ -37,16 +38,32 @@ do
 
       if [[ $HASH != $EXISTING_HASH ]];
       then
-        echo "${bold}You have changed files which are being used for delegate task communication. Your change should be backward compatible."
-        echo "If the change is backward compatible replace the new hash $HASH in file $MODULE/module-dependency.hash"
-        echo "If you want to generate hash locally run this script: ./scripts/codebase/codebase-hash-check.sh $@"
-        echo "Please contact delegate team for backward compatibility check."
-        echo -e "\nFailure.${normal}"
-        exit 1
+        message="$HASH in file $MODULE/module-dependency.hash"
+        echo -e "\n${bold}$MODULE check failed.\n${normal}"
+        errors+=("$message")
+      else
+        echo "There are no changes in dependencies for module: $MODULE"
+        echo -e "\n${bold}$MODULE check is successful${normal}"
       fi
-      echo "There are no changes in dependencies for module: $MODULE"
-      echo -e "\n${bold}Successful${normal}"
 done
 
-echo -e "\n${bold}All checks are successful.${normal}"
+if [ ${#errors[@]} -eq 0 ]; then
+   echo -e "\n${bold}All checks are successful.${normal}"
+else
+    echo "${bold}You have changed files which are being used for delegate task communication. Your change should be backward compatible."
+    echo "If you want to generate hash locally run this script: ./scripts/codebase/codebase-hash-check.sh $@"
+    echo "Please contact delegate team for backward compatibility check."
+
+    echo -e "${bold}\n----------------------------------------------------------------------------\n"
+    echo "If the change is backward compatible replace the new hash:"
+
+    for i in "${!errors[@]}"
+    do
+        echo $(($i +1))")" ${errors[$i]}
+    done
+    echo -e "\n----------------------------------------------------------------------------\n"
+    echo -e "\nFailure.${normal}"
+    exit 1
+fi
+
 
