@@ -16,6 +16,7 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 
 import com.google.common.collect.ImmutableList;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -36,6 +37,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "ceReportSchedule", noClassnameStored = true)
 @StoreIn(DbAliases.CENG)
 @OwnedBy(HarnessTeam.CE)
+@Schema(description = "This object will contain the complete definition of a Cloud Cost Report Schedule")
 public final class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware,
                                                AccountAccess, CreatedByAware, UpdatedByAware {
   public static List<MongoIndex> mongoIndexes() {
