@@ -182,6 +182,10 @@ public abstract class ArtifactStream
     return !this.sourceName.equals(artifactStream.getSourceName());
   }
 
+  public boolean artifactCollectionEnabledFromDisabled(ArtifactStream artifactStream) {
+    return Boolean.FALSE.equals(collectionEnabled) && !Boolean.FALSE.equals(artifactStream.getCollectionEnabled());
+  }
+
   public boolean artifactServerChanged(ArtifactStream artifactStream) {
     if (settingId == null) {
       if (artifactStream.getSettingId() == null) {

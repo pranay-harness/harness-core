@@ -19,6 +19,7 @@ import software.wings.graphql.datafetcher.approval.ApproveOrRejectApprovalsDataF
 import software.wings.graphql.datafetcher.artifact.ArtifactCleanupDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactConnectionDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
+import software.wings.graphql.datafetcher.artifact.SetArtifactCollectionEnabledDataFetcher;
 import software.wings.graphql.datafetcher.deploymentfreezewindow.CreateDeploymentFreezeWindowDataFetcher;
 import software.wings.graphql.datafetcher.deploymentfreezewindow.DeleteDeploymentFreezeWindowDataFetcher;
 import software.wings.graphql.datafetcher.deploymentfreezewindow.DeploymentFreezeWindowConnectionDataFetcher;
@@ -144,6 +145,7 @@ public class GraphQLModule extends AbstractModule {
         .bind(SecretManagerMutationDataFetcher.class)
         .annotatedWith(Names.named(SecretManagerDataFetchers.CUSTOM_SECRET_MANAGER_DATA_FETCHER.getName()))
         .to(CustomSecretManagerDataFetcher.class);
+    bindDataFetcherWithAnnotation(SetArtifactCollectionEnabledDataFetcher.class);
   }
 
   @NotNull
