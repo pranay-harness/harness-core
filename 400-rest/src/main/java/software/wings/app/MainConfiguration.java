@@ -197,6 +197,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   private boolean disableDelegateMgmtInManager;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
   @JsonProperty("eventListenersCountConfig") private EventListenersCountConfig eventListenersCountConfig;
+  @JsonProperty(value = "useGlobalKMSAsBaseAlgo", defaultValue = "false") private boolean useGlobalKMSAsBaseAlgo;
 
   private int applicationPort;
   private boolean sslEnabled;
