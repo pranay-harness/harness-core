@@ -76,18 +76,18 @@ public class DelegateVerificationNgResource {
   @Path("/heartbeatV2")
   @Operation(operationId = "getDelegatesHeartbeatDetailsV2",
       summary =
-          "Retrieves number of registered Delegates and number of connected Delegates, filtered by Account Id and Delegate name.",
+          "Retrieves number of registered Delegates and number of connected Delegates, filtered by Account UUID and Delegate name.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description = "Number of registered and number of connected Delegates, "
-                + "filtered by the Account id and Delegate name.")
+                + "filtered by the Account UUID and Delegate name.")
       })
   public RestResponse<DelegateHeartbeatDetails>
   getDelegatesHeartbeatDetailsV2(
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId,
       @Parameter(description = "Delegate name used to filter out delegates") @QueryParam(
           "delegateName") @NotEmpty String delegateName) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
@@ -120,9 +120,9 @@ public class DelegateVerificationNgResource {
       })
   public RestResponse<List<DelegateInitializationDetails>>
   getDelegatesInitializationDetailsV2(
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId,
       @Parameter(description = "Delegate name used to filter out delegates") @QueryParam(
           "delegateName") @NotEmpty String delegateName) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),

@@ -62,16 +62,16 @@ public class DelegateSelectionLogResource {
   @GET
   @Timed
   @ExceptionMetered
-  @Operation(operationId = "getSelectionLogs", summary = "Retrieves list of Selection Logs for the Task Id.",
+  @Operation(operationId = "getSelectionLogs", summary = "Retrieves list of Selection Logs for the Task UUID.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
-            description = "A list of Task Selection logs. It includes delegateId, delegateType, delegateName, "
-                + "delegateHostName, delegateProfileName, conclusion, message, eventTimestamp and profileScopingRulesDetails")
+            description = "A list of Task Selection logs. It includes Delegate UUID, Delegate Type, Delegate name, "
+                + "Delegate hostname, Delegate Configuration name, conclusion, message, Event timestamp and Profile Scoping Rules Details")
       })
   public RestResponse<List<DelegateSelectionLogParams>>
-  getSelectionLogs(@Parameter(description = "Account id") @QueryParam("accountId") String accountId,
-      @Parameter(description = "Task id") @QueryParam("taskId") String taskId) {
+  getSelectionLogs(@Parameter(description = "Account UUID") @QueryParam("accountId") String accountId,
+      @Parameter(description = "Task UUID") @QueryParam("taskId") String taskId) {
     return new RestResponse(delegateSelectionLogsService.fetchTaskSelectionLogs(accountId, taskId));
   }
 
@@ -80,17 +80,17 @@ public class DelegateSelectionLogResource {
   @Timed
   @ExceptionMetered
   @Operation(operationId = "getTaskSelectionLogsData",
-      summary = "Retrieves list of Selection Logs and map of preview setup for selection logs for the given task id.",
+      summary = "Retrieves list of Selection Logs and map of preview setup for selection logs for the given task UUID.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description =
-                "A list of Task Selection Logs and a map of preview setup abstractions. It includes delegateId, delegateType, delegateName, "
-                + "delegateHostName, delegateProfileName, conclusion, message, eventTimestamp and profileScopingRulesDetails")
+                "A list of Task Selection Logs and a map of preview setup abstractions. It includes Delegate UUID, Delegate Type, Delegate name, "
+                + "Delegate hostname, Delegate Configuration name, conclusion, message, Event timestamp and Profile Scoping Rules Details")
       })
   public RestResponse<DelegateSelectionLogResponse>
-  getSelectionLogsV2(@Parameter(description = "Account id") @QueryParam("accountId") String accountId,
-      @Parameter(description = "Task id") @QueryParam("taskId") String taskId) {
+  getSelectionLogsV2(@Parameter(description = "Account UUID") @QueryParam("accountId") String accountId,
+      @Parameter(description = "Task UUID") @QueryParam("taskId") String taskId) {
     return new RestResponse(delegateSelectionLogsService.fetchTaskSelectionLogsData(accountId, taskId));
   }
 }

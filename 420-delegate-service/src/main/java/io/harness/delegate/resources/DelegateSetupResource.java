@@ -79,7 +79,7 @@ public class DelegateSetupResource {
   @ExceptionMetered
   @Operation(operationId = "listDelegateGroupDetails",
       summary = "Lists Delegate groups details for the account, organization and project. "
-          + "These include Delegate group identifier, Delegate type, group name, Delegate description, Delegate configuration id"
+          + "These include Delegate group ID, Delegate type, group name, Delegate description, Delegate Configuration ID"
           + "Delegate size details, group implicit and custom selectors, last heartbeat time, is Delegate actively connected and other details",
       responses =
       {
@@ -87,9 +87,9 @@ public class DelegateSetupResource {
         ApiResponse(responseCode = "default", description = "A list of Delegate group details for the account.")
       })
   public RestResponse<DelegateGroupListing>
-  list(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId) {
+  list(@Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
 
@@ -105,17 +105,17 @@ public class DelegateSetupResource {
   @Operation(operationId = "listDelegateGroupDetailsUpTheHierarchy",
       summary = "Lists Delegate groups details for the account, organization and project. "
           + "If no organization or project is submitted the result will ignore matching on them and will include cases where they are null. "
-          + "These include Delegate group identifier, Delegate type, group name, Delegate description, Delegate configuration id"
-          + "Delegate size details, group implicit and custom selectors, last heartbeat time, is Delegate actively connected.",
+          + "These include Delegate Group ID, Delegate type, Group name, Delegate description, Delegate Configuration ID"
+          + "Delegate size details, Group implicit and custom selectors, last heartbeat time, is Delegate actively connected.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "A list of Delegate group details for the account.")
       })
   public RestResponse<DelegateGroupListing>
-  listUpTheHierarchy(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId) {
+  listUpTheHierarchy(@Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
 
@@ -130,19 +130,19 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @Operation(operationId = "getDelegateGroupDetails",
-      summary = "Retrieves a Delegate group details object by Delegate group id.",
+      summary = "Retrieves a Delegate group details object by Delegate Group ID.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description = "Delegate group details object representation. "
-                + "It includes Delegate group identifier, Delegate type, group name, Delegate description, Delegate configuration id"
+                + "It includes Delegate group ID, Delegate type, group name, Delegate description, Delegate configuration ID"
                 + "Delegate size details, group implicit and custom selectors, last heartbeat time, is Delegate actively connected.")
       })
   public RestResponse<DelegateGroupDetails>
-  get(@Parameter(description = "Delegate Group Id") @PathParam("delegateGroupId") @NotEmpty String delegateGroupId,
-      @Parameter(description = "Account Id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId) {
+  get(@Parameter(description = "Delegate Group UUID") @PathParam("delegateGroupId") @NotEmpty String delegateGroupId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
 
@@ -160,19 +160,19 @@ public class DelegateSetupResource {
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description = "Delegate group details object representation for the updated group. "
-                + "It includes Delegate group identifier, Delegate type, group name, Delegate description, Delegate Configuration id"
+                + "It includes Delegate Group ID, Delegate type, group name, Delegate description, Delegate Configuration ID"
                 + "Delegate size details, group implicit and Custom Selectors, last heartbeat time, is Delegate actively connected.")
       })
   public RestResponse<DelegateGroupDetails>
-  update(@Parameter(description = "Delegate group id to be updated") @PathParam(
+  update(@Parameter(description = "Delegate Group UUID to be updated") @PathParam(
              "delegateGroupId") @NotEmpty String delegateGroupId,
-      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id") @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id") @QueryParam("projectId") String projectId,
+      @Parameter(description = "Account UUID") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Organization ID") @QueryParam("orgId") String orgId,
+      @Parameter(description = "Project ID") @QueryParam("projectId") String projectId,
       @RequestBody(required = true,
           description =
-              "Delegate group details, including: groupId, delegateGroupIdentifier, delegateType, groupName, groupHostName, delegateDescription"
-              + "delegateConfigurationId, sizeDetails, groupImplicitSelectors, groupCustomSelectors, delegateInsightsDetails, lastHeartBeat, activelyConnected")
+              "Delegate group details, including: groupId, Delegate Group ID, Delegate type, Group name, Group hostname, Delegate Description"
+              + "Delegate Configuration ID, size details, Group implicit selectors, Group custom selectors, Delegate Insights Details, last heart beat, is actively connected")
       DelegateGroupDetails delegateGroupDetails) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, delegateGroupId), DELEGATE_EDIT_PERMISSION);

@@ -88,9 +88,9 @@ public class DelegateSetupResourceV2 {
       })
   public RestResponse<DelegateGroupListing>
   list(@QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id. If left empty, all Delegate groups will be listed") @QueryParam(
+      @Parameter(description = "Organization ID. If left empty, all Delegate groups will be listed") @QueryParam(
           "orgId") String orgId,
-      @Parameter(description = "Project Id. If lefty empty all Delegate Groups will be listed for organization")
+      @Parameter(description = "Project ID. If lefty empty all Delegate Groups will be listed for organization")
       @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
@@ -111,9 +111,9 @@ public class DelegateSetupResourceV2 {
       })
   public RestResponse<DelegateGroupListing>
   listV2(@QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id. If left empty, Delegate groups won't be filtered by organisation")
+      @Parameter(description = "Organization ID. If left empty, Delegate groups won't be filtered by organisation")
       @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id. If left empty Delegate groups with no project will be listed") @QueryParam(
+      @Parameter(description = "Project ID. If left empty Delegate groups with no project will be listed") @QueryParam(
           "projectId") String projectId,
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
@@ -141,9 +141,9 @@ public class DelegateSetupResourceV2 {
       })
   public RestResponse<DelegateGroupListing>
   listUpTheHierarchy(@QueryParam("accountId") @NotEmpty String accountId,
-      @Parameter(description = "Organization Id. If left empty, Delegate groups won't be filtered by organisation")
+      @Parameter(description = "Organization ID. If left empty, Delegate groups won't be filtered by organisation")
       @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id. If left empty Delegate groups with no project will be listed") @QueryParam(
+      @Parameter(description = "Project ID. If left empty Delegate groups with no project will be listed") @QueryParam(
           "projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
@@ -158,19 +158,19 @@ public class DelegateSetupResourceV2 {
   @Path("{identifier}")
   @Timed
   @ExceptionMetered
-  @Operation(operationId = "getDelegateGroup", summary = "Get Delegate group details by identifier.",
+  @Operation(operationId = "getDelegateGroup", summary = "Get Delegate group details by ID.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Delegate group details.")
       })
   public RestResponse<DelegateGroupDetails>
-  get(@Parameter(description = "Delegate Group Identifier") @PathParam("identifier") @NotEmpty String identifier,
+  get(@Parameter(description = "Delegate Group ID") @PathParam("identifier") @NotEmpty String identifier,
       @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(
-          description = "Organization Id. If left empty Delegate group with no organization specified will be returned")
+          description = "Organization ID. If left empty Delegate group with no organization specified will be returned")
       @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id. If left empty Delegate group with no project specified will be returned")
+      @Parameter(description = "Project ID. If left empty Delegate group with no project specified will be returned")
       @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
@@ -185,19 +185,19 @@ public class DelegateSetupResourceV2 {
   @Path("{identifier}")
   @Timed
   @ExceptionMetered
-  @Operation(operationId = "updateDelegateGroup", summary = "Updates Delegate Group details by identifier.",
+  @Operation(operationId = "updateDelegateGroup", summary = "Updates Delegate Group details by ID.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Delegate Group details for updated group.")
       })
   public RestResponse<DelegateGroupDetails>
-  update(@Parameter(description = "Delegate Group Identifier") @PathParam("identifier") @NotEmpty String identifier,
+  update(@Parameter(description = "Delegate Group ID") @PathParam("identifier") @NotEmpty String identifier,
       @QueryParam("accountId") @NotEmpty String accountId,
       @Parameter(
-          description = "Organization Id. If left empty Delegate group with no organization specified will be updated")
+          description = "Organization ID. If left empty Delegate group with no organization specified will be updated")
       @QueryParam("orgId") String orgId,
-      @Parameter(description = "Project Id. If left empty Delegate group with no project specified will be updated")
+      @Parameter(description = "Project ID. If left empty Delegate group with no project specified will be updated")
       @QueryParam("projectId") String projectId, DelegateGroupDetails delegateGroupDetails) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, identifier), DELEGATE_EDIT_PERMISSION);
