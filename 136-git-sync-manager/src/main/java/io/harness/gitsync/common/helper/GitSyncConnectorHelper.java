@@ -148,12 +148,17 @@ public class GitSyncConnectorHelper {
   }
 
   public ScmConnector getScmConnector(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorRef) {
+    IdentifierRef identifierRef =
+        IdentifierRefHelper.getIdentifierRef(connectorRef, accountIdentifier, orgIdentifier, projectIdentifier);
     final ConnectorResponseDTO connectorResponseDTO =
-        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier)
+        connectorService
+            .get(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
+                identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())
             .orElseThrow(()
                              -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-                                 accountIdentifier, orgIdentifier, projectIdentifier, identifier)));
+                                 identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
+                                 identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())));
     return (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
   }
 }
