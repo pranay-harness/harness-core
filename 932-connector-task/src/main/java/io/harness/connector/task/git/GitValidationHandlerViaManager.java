@@ -53,8 +53,8 @@ public class GitValidationHandlerViaManager extends AbstractGitValidationHandler
       final DecryptableEntity decryptedScmSpec =
           restClientExecutor.getResponse(ngSecretDecryptionClient.decryptEncryptedDetails(
               decryptableEntityWithEncryptionConsumers, accountIdentifier));
-      GithubConnectorDTO scmConnector = (GithubConnectorDTO) scmValidationParams.getScmConnector();
-      scmConnector.getApiAccess().setSpec((GithubApiAccessSpecDTO) decryptedScmSpec);
+      GitApiAccessDecryptionHelper.setAPIAccessDecryptableEntity(
+          scmValidationParams.getScmConnector(), decryptedScmSpec);
     }
   }
 

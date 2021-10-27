@@ -365,19 +365,27 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
     setGitDetails(existingConnector, newConnector);
+    final Boolean executeOnManager = newConnector.getExecuteOnManager();
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+        newConnector.getOrgIdentifier(), newConnector.getProjectIdentifier(), newConnector.getIdentifier());
 
     if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
       if (existingConnector.getHeartbeatPerpetualTaskId() == null
-          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+          && (!harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector) || !executeOnManager)) {
         PerpetualTaskId connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
             accountIdentifier, existingConnector.getOrgIdentifier(), existingConnector.getProjectIdentifier(),
             existingConnector.getIdentifier());
         newConnector.setHeartbeatPerpetualTaskId(
             connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
       } else if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
-        connectorHeartbeatService.resetPerpetualTask(
-            accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
-        newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+        if (executeOnManager) {
+          connectorHeartbeatService.deletePerpetualTask(
+              accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId(), fullyQualifiedIdentifier);
+        } else {
+          connectorHeartbeatService.resetPerpetualTask(
+              accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+          newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+        }
       }
     }
     try {
