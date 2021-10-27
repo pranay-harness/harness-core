@@ -61,6 +61,7 @@ import software.wings.service.impl.yaml.handler.governance.CustomEnvFilterYamlHa
 import software.wings.service.impl.yaml.handler.governance.EnvironmentFilterYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.GovernanceConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.GovernanceFreezeConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.ServiceFilterYamlHandler;
 import software.wings.service.impl.yaml.handler.governance.TimeRangeBasedFreezeConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
@@ -185,6 +186,7 @@ public class YamlHandlerFactory {
   @Inject private CustomAppFilterYamlHandler customAppFilterYamlHandler;
   @Inject private CustomEnvFilterYamlHandler customEnvFilterYamlHandler;
   @Inject private EventConfigYamlHandler eventConfigYamlHandler;
+  @Inject private ServiceFilterYamlHandler serviceFilterYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -415,6 +417,9 @@ public class YamlHandlerFactory {
         yamlHandler = eventConfigYamlHandler;
         break;
 
+      case SERVICE_FILTER:
+        yamlHandler = serviceFilterYamlHandler;
+        break;
       default:
         break;
     }

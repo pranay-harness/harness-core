@@ -4,8 +4,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
+import io.harness.engine.pms.execution.strategy.identity.IdentityStep;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.Node;
+import io.harness.plan.NodeType;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
@@ -32,20 +34,23 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
     Node planNode = nodeExecution.getNode();
     String serviceName = planNode.getServiceName();
-    NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
-                                                     .setAmbiance(nodeExecution.getAmbiance())
-                                                     .setExecutionMode(nodeExecution.getMode())
-                                                     .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-                                                     //.addAllRefObjects(planNode.getRefObjects())
-                                                     .setAsyncError(isError)
-                                                     .putAllResponse(responseMap);
+    NodeResumeEvent.Builder resumeEventBuilder =
+        NodeResumeEvent.newBuilder()
+            .setAmbiance(nodeExecution.getNode().getNodeType() == NodeType.IDENTITY_PLAN_NODE
+                    ? IdentityStep.modifyAmbiance(nodeExecution.getAmbiance())
+                    : nodeExecution.getAmbiance())
+            .setExecutionMode(nodeExecution.getMode())
+            .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+            //.addAllRefObjects(planNode.getRefObjects())
+            .setAsyncError(isError)
+            .putAllResponse(responseMap);
 
     ChainDetails chainDetails = buildChainDetails(nodeExecution);
     if (chainDetails != null) {
       resumeEventBuilder.setChainDetails(chainDetails);
     }
 
-    eventSender.sendEvent(nodeExecution.getAmbiance(), resumeEventBuilder.build().toByteString(),
+    eventSender.sendEvent(resumeEventBuilder.getAmbiance(), resumeEventBuilder.build().toByteString(),
         PmsEventCategory.NODE_RESUME, serviceName, true);
   }
 

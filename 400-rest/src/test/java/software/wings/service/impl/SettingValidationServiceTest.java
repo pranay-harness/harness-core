@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.PRANJAL;
@@ -197,6 +198,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         .thenReturn(dynaTraceDelegateService);
     when(delegateProxyFactory.get(eq(APMDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(apmDelegateService);
+    when(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, ACCOUNT_ID)).thenReturn(false);
   }
 
   @Test

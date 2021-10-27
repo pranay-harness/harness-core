@@ -2,6 +2,7 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.sm.StateType.K8S_DELETE;
@@ -123,17 +124,19 @@ public class K8sDelete extends AbstractK8sState {
 
       Activity activity = createActivity(context);
 
-      K8sTaskParameters k8sTaskParameters = K8sDeleteTaskParameters.builder()
-                                                .activityId(activity.getUuid())
-                                                .releaseName(fetchReleaseName(context, infraMapping))
-                                                .commandName(K8S_DELETE_COMMAND_NAME)
-                                                .k8sTaskType(K8sTaskType.DELETE)
-                                                .resources(context.renderExpression(this.resources))
-                                                .deleteNamespacesForRelease(deleteNamespacesForRelease)
-                                                .timeoutIntervalInMin(10)
-                                                .useLatestKustomizeVersion(featureFlagService.isEnabled(
-                                                    FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
-                                                .build();
+      K8sTaskParameters k8sTaskParameters =
+          K8sDeleteTaskParameters.builder()
+              .activityId(activity.getUuid())
+              .releaseName(fetchReleaseName(context, infraMapping))
+              .commandName(K8S_DELETE_COMMAND_NAME)
+              .k8sTaskType(K8sTaskType.DELETE)
+              .resources(context.renderExpression(this.resources))
+              .deleteNamespacesForRelease(deleteNamespacesForRelease)
+              .timeoutIntervalInMin(10)
+              .useLatestKustomizeVersion(
+                  featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
+              .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
+              .build();
 
       return queueK8sDelegateTask(context, k8sTaskParameters, null);
     } catch (WingsException e) {

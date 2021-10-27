@@ -22,7 +22,6 @@ import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
-import io.harness.steps.identity.IdentityStep;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -264,10 +263,6 @@ public class RetryExecutionHelper {
     List<String> stagesFqn =
         nodeExecutionService.fetchStageFqnFromStageIdentifiers(previousExecutionId, identifierOfSkipStages);
 
-    if (stagesFqn.isEmpty()) {
-      throw new InvalidRequestException("This pipeline is too old for retry!!");
-    }
-
     /*
     NodeExecutionUuid -> Node
      */
@@ -284,7 +279,7 @@ public class RetryExecutionHelper {
     List<Node> finalUpdatedPlanNodes = updatedPlanNodes;
     nodeUuidToNodeExecutionUuid.forEach((nodeExecutionUuid, planNode)
                                             -> finalUpdatedPlanNodes.add(IdentityPlanNode.mapPlanNodeToIdentityNode(
-                                                planNode, IdentityStep.STEP_TYPE, nodeExecutionUuid)));
+                                                planNode, planNode.getStepType(), nodeExecutionUuid)));
 
     return Plan.builder()
         .uuid(plan.getUuid())

@@ -20,7 +20,7 @@ public class UserJourneyServiceImpl implements UserJourneyService {
 
   @Override
   public UserJourneyResponse create(ProjectParams projectParams, UserJourneyDTO userJourneyDTO) {
-    saveUserJourneyEntity(projectParams.getAccountIdentifier(), userJourneyDTO);
+    saveUserJourneyEntity(projectParams, userJourneyDTO);
     return getUserJourneyResponse(userJourneyDTO.getIdentifier(), projectParams);
   }
 
@@ -36,12 +36,8 @@ public class UserJourneyServiceImpl implements UserJourneyService {
   }
 
   private UserJourneyResponse userJourneyEntityToUserJourneyResponse(UserJourney userJourney) {
-    UserJourneyDTO userJourneyDTO = UserJourneyDTO.builder()
-                                        .orgIdentifier(userJourney.getOrgIdentifier())
-                                        .projectIdentifier(userJourney.getProjectIdentifier())
-                                        .identifier(userJourney.getIdentifier())
-                                        .name(userJourney.getName())
-                                        .build();
+    UserJourneyDTO userJourneyDTO =
+        UserJourneyDTO.builder().identifier(userJourney.getIdentifier()).name(userJourney.getName()).build();
     return UserJourneyResponse.builder()
         .userJourneyDTO(userJourneyDTO)
         .createdAt(userJourney.getCreatedAt())
@@ -49,11 +45,11 @@ public class UserJourneyServiceImpl implements UserJourneyService {
         .build();
   }
 
-  private void saveUserJourneyEntity(String accountId, UserJourneyDTO userJourneyDTO) {
+  private void saveUserJourneyEntity(ProjectParams projectParams, UserJourneyDTO userJourneyDTO) {
     UserJourney userJourney = UserJourney.builder()
-                                  .accountId(accountId)
-                                  .projectIdentifier(userJourneyDTO.getProjectIdentifier())
-                                  .orgIdentifier(userJourneyDTO.getOrgIdentifier())
+                                  .accountId(projectParams.getAccountIdentifier())
+                                  .projectIdentifier(projectParams.getProjectIdentifier())
+                                  .orgIdentifier(projectParams.getOrgIdentifier())
                                   .name(userJourneyDTO.getName())
                                   .identifier(userJourneyDTO.getIdentifier())
                                   .build();

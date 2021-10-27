@@ -945,7 +945,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
             .projectIdentifier(PROJECT_ID)
             .k8sConfigDetails(k8sConfigDetails)
             .description("description")
-            .delegateConfigurationId("delConfigId")
             .size(DelegateSize.LAPTOP)
             .identifier(DELEGATE_GROUP_IDENTIFIER)
             .build());
@@ -957,7 +956,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(returnedDelegateGroup.getName()).isEqualTo(TEST_DELEGATE_GROUP_NAME);
     assertThat(returnedDelegateGroup.getK8sConfigDetails()).isEqualTo(k8sConfigDetails);
     assertThat(returnedDelegateGroup.getDescription()).isEqualTo("description");
-    assertThat(returnedDelegateGroup.getDelegateConfigurationId()).isEqualTo("delConfigId");
     assertThat(returnedDelegateGroup.getSizeDetails().getSize()).isEqualTo(DelegateSize.LAPTOP);
     assertThat(returnedDelegateGroup.isNg()).isTrue();
     assertThat(returnedDelegateGroup.getIdentifier()).isEqualTo(DELEGATE_GROUP_IDENTIFIER);
@@ -984,7 +982,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .projectIdentifier(PROJECT_ID)
                        .k8sConfigDetails(k8sConfigDetails)
                        .description("description")
-                       .delegateConfigurationId("delConfigId")
                        .size(DelegateSize.LAPTOP)
                        .identifier(DELEGATE_GROUP_IDENTIFIER)
                        .build());
@@ -1013,7 +1010,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .projectIdentifier(PROJECT_ID)
                        .k8sConfigDetails(k8sConfigDetails)
                        .description("description")
-                       .delegateConfigurationId("delConfigId")
                        .size(DelegateSize.LAPTOP)
                        .identifier(null)
                        .build());

@@ -1035,9 +1035,10 @@ public class K8sTaskHelperBase {
   }
 
   public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) {
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean useKubectlNewVersion) {
     try {
-      return dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, false);
+      return dryRunManifests(
+          client, resources, k8sDelegateTaskParams, executionLogCallback, false, useKubectlNewVersion);
     } catch (Exception ignore) {
       // Not expected if error framework is not enabled. Make the compiler happy until will not adopt error framework
       // for all steps
@@ -1046,8 +1047,8 @@ public class K8sTaskHelperBase {
   }
 
   public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled)
-      throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled,
+      boolean useKubectlNewVersion) throws Exception {
     try {
       executionLogCallback.saveExecutionLog(color("\nValidating manifests with Dry Run", White, Bold), INFO);
 
@@ -1056,7 +1057,9 @@ public class K8sTaskHelperBase {
 
       Kubectl overriddenClient = getOverriddenClient(client, resources, k8sDelegateTaskParams);
 
-      final ApplyCommand dryrun = overriddenClient.apply().filename("manifests-dry-run.yaml").dryrun(true);
+      final ApplyCommand dryrun = useKubectlNewVersion
+          ? overriddenClient.apply().filename("manifests-dry-run.yaml").dryRunClient(true)
+          : overriddenClient.apply().filename("manifests-dry-run.yaml").dryrun(true);
       ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, dryrun);
       if (result.getExitValue() != 0) {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);

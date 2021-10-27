@@ -1,10 +1,12 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +39,8 @@ import io.harness.governance.CustomEnvFilter;
 import io.harness.governance.DeploymentFreezeInfo;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 import io.harness.governance.GovernanceFreezeConfig;
+import io.harness.governance.ServiceFilter;
+import io.harness.governance.ServiceFilter.ServiceFilterType;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.rule.Owner;
 
@@ -414,6 +418,83 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(ENV_ID, ENV_ID + 2, ENV_ID + 3);
     assertThat(deploymentFreezeInfo.get(timeRangeBasedFreezeConfig.getUuid()))
         .containsExactlyInAnyOrder(ENV_ID, ENV_ID + 3);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyMapWhenEnvIsFrozenForParticularService() {
+    TimeRange range = new TimeRange(System.currentTimeMillis() + 1, System.currentTimeMillis() + 54_00_000,
+        "Asia/Kolkatta", false, null, null, null, false);
+
+    ApplicationFilter appSelection =
+        CustomAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.CUSTOM)
+            .apps(Collections.singletonList(APP_ID))
+            .envSelection(new AllProdEnvFilter(EnvironmentFilterType.ALL_PROD))
+            .serviceSelection(new ServiceFilter(ServiceFilterType.CUSTOM, Collections.singletonList(SERVICE_ID)))
+            .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig = new TimeRangeBasedFreezeConfig(true,
+        Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD), range, "shouldGetFrozenEnvsForApp",
+        null, true, asList(appSelection), Collections.singletonList("testUserGroup"), "uuid");
+
+    GovernanceConfig governanceConfig =
+        GovernanceConfig.builder()
+            .accountId(ACCOUNT_ID)
+            .timeRangeBasedFreezeConfigs(Collections.singletonList(timeRangeBasedFreezeConfig))
+            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    when(environmentService.getEnvIdsByAppsAndType(anyList(), eq(EnvironmentType.PROD.name())))
+        .thenReturn(asList(ENV_ID, ENV_ID + 2));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+
+    Map<String, Set<String>> deploymentFreezeInfo =
+        governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID, governanceConfigService.get(ACCOUNT_ID));
+    assertThat(deploymentFreezeInfo).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnOnlyCompletelyFrozenEnv() {
+    TimeRange range = new TimeRange(System.currentTimeMillis() + 1, System.currentTimeMillis() + 54_00_000,
+        "Asia/Kolkatta", false, null, null, null, false);
+
+    ApplicationFilter allProdForParticularService =
+        AllAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+            .envSelection(new AllProdEnvFilter(EnvironmentFilterType.ALL_PROD))
+            .serviceSelection(new ServiceFilter(ServiceFilterType.CUSTOM, Collections.singletonList(SERVICE_ID)))
+            .build();
+
+    ApplicationFilter allNonProd = AllAppFilter.builder()
+                                       .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+                                       .envSelection(new AllProdEnvFilter(EnvironmentFilterType.ALL_NON_PROD))
+                                       .serviceSelection(new ServiceFilter(ServiceFilterType.ALL, null))
+                                       .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig = new TimeRangeBasedFreezeConfig(true,
+        Collections.emptyList(), Collections.emptyList(), range, "shouldGetFrozenEnvsForApp", null, true,
+        asList(allProdForParticularService, allNonProd), Collections.singletonList("testUserGroup"), "uuid");
+
+    GovernanceConfig governanceConfig =
+        GovernanceConfig.builder()
+            .accountId(ACCOUNT_ID)
+            .timeRangeBasedFreezeConfigs(Collections.singletonList(timeRangeBasedFreezeConfig))
+            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    when(environmentService.getEnvIdsByAppsAndType(anyList(), eq(EnvironmentType.PROD.name())))
+        .thenReturn(asList(ENV_ID, ENV_ID + 2));
+    when(environmentService.getEnvIdsByAppsAndType(anyList(), eq(EnvironmentType.NON_PROD.name())))
+        .thenReturn(Collections.singletonList(ENV_ID + 3));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+
+    Map<String, Set<String>> deploymentFreezeInfo =
+        governanceConfigService.getFrozenEnvIdsForApp(ACCOUNT_ID, APP_ID + 2, governanceConfigService.get(ACCOUNT_ID));
+    assertThat(deploymentFreezeInfo.get(timeRangeBasedFreezeConfig.getUuid())).containsOnly(ENV_ID + 3);
   }
 
   @Test

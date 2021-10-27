@@ -186,7 +186,8 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
             valuesList, releaseName, namespace, logCallback, timeoutIntervalInMin);
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .dryRunManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), anyBoolean());
     doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig, true);
     doReturn(true)
         .when(k8sTaskHelperBase)
@@ -205,7 +206,8 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(1))
-        .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .dryRunManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), anyBoolean());
     verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(1))
         .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(true));
@@ -250,7 +252,8 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
     RuntimeException exception = new RuntimeException("Dry run manifest failed");
     doThrow(exception)
         .when(k8sTaskHelperBase)
-        .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .dryRunManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), anyBoolean());
 
     assertThatThrownBy(()
                            -> requestHandler.executeTaskInternal(
@@ -261,7 +264,8 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(1))
-        .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .dryRunManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), anyBoolean());
     verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(0))
         .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(true));
@@ -314,7 +318,8 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(0))
-        .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .dryRunManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), anyBoolean());
     verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(0))
         .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(true));

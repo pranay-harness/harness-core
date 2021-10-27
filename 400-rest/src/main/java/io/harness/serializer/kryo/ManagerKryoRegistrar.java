@@ -12,7 +12,7 @@ import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
-import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.serializer.KryoRegistrar;
 
@@ -183,7 +183,6 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.Event;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesCluster;
-import software.wings.beans.GitCommandTaskParameters;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.ProviderType;
 import software.wings.beans.GitFetchFilesConfig;
@@ -773,6 +772,7 @@ import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
 import com.google.gson.internal.LinkedTreeMap;
+import com.google.protobuf.Duration;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
@@ -1591,9 +1591,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(BatchCapabilityCheckTaskParameters.class, 8200);
     kryo.register(BatchCapabilityCheckTaskResponse.class, 8201);
-    kryo.register(CapabilityCheckDetails.class, 8202);
     kryo.register(ArtifactoryCollectionTaskParameters.class, 8203);
-    kryo.register(GitCommandTaskParameters.class, 8204);
 
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
 
@@ -1640,5 +1638,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sGitConfigMapInfo.class, 40023);
     kryo.register(K8sApplicationManifestSourceInfo.class, 40024);
     kryo.register(LinkedTreeMap.class, 40025);
+    kryo.register(PerpetualTaskSchedule.class, 40028);
+    kryo.register(Duration.class, 40029);
   }
 }

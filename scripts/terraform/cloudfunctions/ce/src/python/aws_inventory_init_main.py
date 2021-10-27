@@ -63,7 +63,7 @@ def manage_inventory_scheduler_job(event, inventory_type):
         'time_zone': "UTC"
     }
     print(job)
-    if event["action"] == "create":
+    if event["action"] in ["create", "update"]:
         print("Creating %s" % name)
         upsert_job(job)
     elif event["action"] == "delete":
@@ -113,7 +113,7 @@ def manage_inventory_load_scheduler_job(event, inventory_type):
         'time_zone': "UTC"
     }
 
-    if event["action"] == "create":
+    if event["action"] in ["create", "update"]:
         print("Creating %s" % name)
         upsert_job(job)
     elif event["action"] == "delete":
@@ -144,7 +144,7 @@ def manage_inventory_metric_scheduler_job(event, inventory_type):
         'time_zone': "UTC"
     }
 
-    if event["action"] == "create":
+    if event["action"] in ["create", "update"]:
         print("Creating %s" % name)
         upsert_job(job)
     elif event["action"] == "delete":

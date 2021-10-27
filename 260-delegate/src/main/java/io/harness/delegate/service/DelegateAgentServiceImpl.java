@@ -508,8 +508,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       String delegateProfile = System.getenv().get("DELEGATE_PROFILE");
       if (isNotBlank(delegateProfile)) {
         log.info("Registering delegate with delegate profile: {}", delegateProfile);
-      } else {
-        delegateProfile = "";
       }
 
       boolean isSample = "true".equals(System.getenv().get("SAMPLE_DELEGATE"));
@@ -531,7 +529,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateName(DELEGATE_NAME)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)
                                           .delegateGroupId(delegateGroupId)
-                                          .delegateProfileId(delegateProfile)
+                                          .delegateProfileId(isNotBlank(delegateProfile) ? delegateProfile : null)
                                           .description(description)
                                           .version(getVersion())
                                           .delegateType(DELEGATE_TYPE)
@@ -606,8 +604,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Manager Authority:{}, Manager Target:{}", delegateConfiguration.getManagerAuthority(),
           delegateConfiguration.getManagerTarget());
 
-      startProfileCheck();
-
+      if (!delegateNg || isNotBlank(delegateProfile)) {
+        startProfileCheck();
+      }
       if (!isClientToolsInstallationFinished()) {
         systemExecutor.submit(() -> {
           int retries = CLIENT_TOOL_RETRIES;

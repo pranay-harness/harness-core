@@ -2,6 +2,8 @@ package io.harness.delegate.service;
 
 import static io.harness.k8s.model.HelmVersion.V2;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -11,10 +13,11 @@ import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
   @Override
-  public String getKubectlPath() {
-    return InstallUtils.getKubectlPath();
+  public String getKubectlPath(boolean useNewKubectlVersion) {
+    return useNewKubectlVersion ? InstallUtils.getNewKubectlPath() : InstallUtils.getDefaultKubectlPath();
   }
 
   @Override
