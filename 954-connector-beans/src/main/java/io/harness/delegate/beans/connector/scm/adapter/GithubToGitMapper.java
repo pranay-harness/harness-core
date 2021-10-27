@@ -25,6 +25,13 @@ public class GithubToGitMapper {
     final GitConnectionType connectionType = githubConnectorDTO.getConnectionType();
     final String url = githubConnectorDTO.getUrl();
     final String validationRepo = githubConnectorDTO.getValidationRepo();
+
+    //    GitConfigDTO.GitConfigDTOBuilder resultGitConfigBuilder =
+    //        GitConfigDTO.builder()
+    //            .executeOnManager(githubConnectorDTO.getExecuteOnManager())
+    //            .delegateSelectors(githubConnectorDTO.getDelegateSelectors())
+    //            .url(url)
+    //            .validationRepo(validationRepo);
     if (authType == GitAuthType.HTTP) {
       final GithubHttpCredentialsDTO credentials =
           (GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials();
@@ -43,8 +50,10 @@ public class GithubToGitMapper {
         usernameRef = githubUsernameTokenDTO.getUsernameRef();
         passwordRef = githubUsernameTokenDTO.getTokenRef();
       }
-      return GitConfigCreater.getGitConfigForHttp(connectionType, url, validationRepo, username, usernameRef,
-          passwordRef, githubConnectorDTO.getDelegateSelectors());
+      GitConfigDTO gitConfigForHttp = GitConfigCreater.getGitConfigForHttp(connectionType, url, validationRepo,
+          username, usernameRef, passwordRef, githubConnectorDTO.getDelegateSelectors());
+      gitConfigForHttp.setExecuteOnManager(githubConnectorDTO.getExecuteOnManager());
+      return gitConfigForHttp;
 
     } else if (authType == GitAuthType.SSH) {
       final GithubSshCredentialsDTO credentials =

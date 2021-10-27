@@ -51,7 +51,7 @@ public class GitCommandTaskHandler {
   @Inject private NGErrorHelper ngErrorHelper;
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
-  @Inject private ScmClient scmClient;
+  @Inject(optional = true) private ScmClient scmClient;
 
   public ConnectorValidationResult validateGitCredentials(GitConfigDTO gitConnector, ScmConnector scmConnector,
       String accountIdentifier, SshSessionConfig sshSessionConfig) {

@@ -200,7 +200,6 @@ public class DelegateApplication {
     modules.add(KubernetesClientFactoryModule.getInstance());
     modules.add(KubernetesApiClientFactoryModule.getInstance());
     modules.add(new CITaskFactoryModule());
-
     modules.add(new AppenderModule(Config.builder()
                                        .queueFilePath(Optional.ofNullable(configuration.getQueueFilePath())
                                                           .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))

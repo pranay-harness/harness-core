@@ -184,7 +184,12 @@ public class ConnectorServiceImpl implements ConnectorService {
   private Boolean checkConnectorExecutableOnManager(ConnectorInfoDTO connectorInfo) {
     final ConnectorConfigDTO connectorConfig = connectorInfo.getConnectorConfig();
     if (connectorConfig instanceof ManagerExecutable) {
-      return ((ManagerExecutable) connectorConfig).getExecuteOnManager();
+      final Boolean executeOnManager = ((ManagerExecutable) connectorConfig).getExecuteOnManager();
+      if (executeOnManager == null) {
+        return Boolean.FALSE;
+      } else {
+        return executeOnManager;
+      }
     }
     return Boolean.FALSE;
   }
