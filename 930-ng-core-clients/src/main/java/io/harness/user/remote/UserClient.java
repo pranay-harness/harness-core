@@ -32,6 +32,7 @@ public interface UserClient {
   String USERS_API = "ng/user";
   String USERS_API_OAUTH = "ng/user/oauth";
   String USERS_SIGNUP_INVITE_API = "ng/user/signup-invite";
+  String USER_SIGNUP_COMMUNITY = "ng/user/signup-invite/community";
   String USER_BATCH_LIST_API = "ng/user/batch";
   String USER_IN_ACCOUNT_VERIFICATION = "ng/user/user-account";
   String USER_SAFE_DELETE = "ng/user/safeDelete/{userId}";
@@ -53,6 +54,9 @@ public interface UserClient {
   @GET(USERS_SIGNUP_INVITE_API) Call<RestResponse<SignupInviteDTO>> getSignupInvite(@Query("email") String email);
 
   @PUT(USERS_SIGNUP_INVITE_API) Call<RestResponse<UserInfo>> completeSignupInvite(@Query("email") String email);
+
+  @POST(USER_SIGNUP_COMMUNITY)
+  Call<RestResponse<UserInfo>> createCommunityUserAndCompleteSignup(@Body SignupInviteDTO userRequest);
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,
