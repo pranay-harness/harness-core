@@ -33,6 +33,7 @@ public interface CVConstants {
 
   String DATA_SOURCE_TYPE = "type";
   String SLO_TARGET_TYPE = "type";
+  String SLI_METRIC_TYPE = "type";
   String LIVE_MONITORING = "live_monitoring";
   String DEPLOYMENT = "deployment";
 

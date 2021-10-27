@@ -25,14 +25,6 @@ JRE_LINUX_2=jre-8u191-linux-x64.tar.gz
 ALPN_BOOT_JAR_URL=https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017
 ALPN_BOOT_JAR=alpn-boot-8.1.13.v20181017.jar
 
-KUBECTL_VERSION=v1.13.2
-
-KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$KUBECTL_VERSION/"
-KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$KUBECTL_VERSION/"
-
-KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/linux/amd64/kubectl
-KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/darwin/amd64/kubectl
-
 OC_VERSION=v4.2.16
 OC_LINUX_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/linux/amd64/oc
 OC_MAC_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/darwin/amd64/oc
@@ -55,12 +47,6 @@ curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" >"${JRE_LINUX_2}"
 
 curl "${ALPN_BOOT_JAR_URL}/${ALPN_BOOT_JAR}" >"${ALPN_BOOT_JAR}"
 
-mkdir -p $KUBECTL_LINUX_DIR
-mkdir -p $KUBECTL_MAC_DIR
-
-curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
-curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
-
 mkdir -p $OC_LINUX_DIR
 mkdir -p $OC_MAC_DIR
 
@@ -76,6 +62,26 @@ mv "${JRE_MACOSX_2}" "${IMAGES_DIR}/"
 mv "${JRE_LINUX_2}" "${IMAGES_DIR}/"
 
 mv "${ALPN_BOOT_JAR}" "${IMAGES_DIR}/"
+
+for kubectlVersion in v1.13.2 v1.19.2; do
+  echo "Adding kubectl $kubectlVersion"
+
+  KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$kubectlVersion/"
+  KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$kubectlVersion/"
+
+  KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$kubectlVersion"/bin/linux/amd64/kubectl
+  KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$kubectlVersion"/bin/darwin/amd64/kubectl
+
+  echo "$KUBECTL_MAC_DIR"
+  echo "$KUBECTL_LINUX_DIR"
+
+  mkdir -p $KUBECTL_LINUX_DIR
+  mkdir -p $KUBECTL_MAC_DIR
+
+  curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
+  curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
+
+done
 
 for goversion in v0.2 v0.3 v0.4; do
   echo "Adding goversion $goversion"
@@ -244,7 +250,7 @@ function setupClientUtils() {
   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect oc kustomize and scm"
 
   for platform in linux darwin; do
-    for kubectlversion in v1.13.2; do
+    for kubectlversion in v1.13.2 v1.19.2; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
       cp images/kubectl/${platform}/$kubectlversion/kubectl ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
     done

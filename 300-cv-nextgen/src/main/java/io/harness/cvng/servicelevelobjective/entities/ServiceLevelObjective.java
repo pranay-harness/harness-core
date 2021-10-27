@@ -5,7 +5,6 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
-import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicator;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -58,7 +57,7 @@ public class ServiceLevelObjective
   String userJourneyIdentifier;
   String healthSourceIdentifier;
   String monitoredServiceIdentifier;
-  List<ServiceLevelIndicator> serviceLevelIndicators;
+  List<String> serviceLevelIndicators;
   SLOTarget sloTarget;
   private long lastUpdatedAt;
   private long createdAt;

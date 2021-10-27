@@ -21,6 +21,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
@@ -42,7 +44,7 @@ public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicens
   public static final String TABLE_NAME = "costAggregated";
   public static final String QUERY_TEMPLATE =
       "SELECT SUM(cost) AS cost, TIMESTAMP_TRUNC(day, month) AS month, cloudProvider FROM `%s` "
-      + "WHERE day >= TIMESTAMP_MILLIS(%s) AND accountId = '%s' GROUP BY month, cloudProvider";
+      + "WHERE day >= TIMESTAMP_MILLIS(%s) AND day <= TIMESTAMP_MILLIS(%s) AND accountId = '%s' GROUP BY month, cloudProvider";
 
   private final Cache<CacheKey, CELicenseUsageDTO> licenseUsageCache =
       Caffeine.newBuilder().expireAfterWrite(8, TimeUnit.HOURS).build();
@@ -77,7 +79,8 @@ public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicens
   private Long getActiveSpend(long timestamp, String accountIdentifier) {
     String gcpProjectId = configuration.getGcpConfig().getGcpProjectId();
     String cloudProviderTableName = format("%s.%s.%s", gcpProjectId, DATA_SET_NAME, TABLE_NAME);
-    String query = format(QUERY_TEMPLATE, cloudProviderTableName, timestamp, accountIdentifier);
+    long endOfDay = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS).toEpochMilli();
+    String query = format(QUERY_TEMPLATE, cloudProviderTableName, timestamp, endOfDay, accountIdentifier);
 
     BigQuery bigQuery = bigQueryService.get();
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();

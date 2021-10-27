@@ -6,7 +6,9 @@ import static io.harness.cvng.core.services.CVNextGenConstants.CHANGE_EVENT_RESO
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.change.ChangeTimeline;
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -77,10 +79,13 @@ public class ChangeEventResource {
   public RestResponse<PageResponse<ChangeEventDTO>> get(@BeanParam ProjectParams projectParams,
       @ApiParam(required = true) @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
       @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @ApiParam(required = true) @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
+      @ApiParam(required = true) @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime, @BeanParam PageRequest pageRequest) {
-    return new RestResponse<>(changeEventService.getChangeEvents(projectParams, serviceIdentifiers, envIdentifiers,
-        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pageRequest));
+    return new RestResponse<>(
+        changeEventService.getChangeEvents(projectParams, serviceIdentifiers, envIdentifiers, changeCategories,
+            changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pageRequest));
   }
 
   @GET
@@ -92,10 +97,12 @@ public class ChangeEventResource {
   public RestResponse<ChangeSummaryDTO> get(@BeanParam ProjectParams projectParams,
       @ApiParam(required = true) @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
       @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @ApiParam(required = true) @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
+      @ApiParam(required = true) @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime) {
     return new RestResponse<>(changeEventService.getChangeSummary(projectParams, serviceIdentifiers, envIdentifiers,
-        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+        changeCategories, changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @GET
@@ -118,10 +125,13 @@ public class ChangeEventResource {
   public RestResponse<ChangeTimeline> get(@BeanParam ProjectParams projectParams,
       @ApiParam(required = true) @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
       @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @ApiParam(required = true) @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
+      @ApiParam(required = true) @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime,
       @ApiParam @QueryParam("pointCount") @DefaultValue("48") Integer pointCount) {
-    return new RestResponse<>(changeEventService.getTimeline(projectParams, serviceIdentifiers, envIdentifiers,
-        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pointCount));
+    return new RestResponse<>(
+        changeEventService.getTimeline(projectParams, serviceIdentifiers, envIdentifiers, changeCategories,
+            changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pointCount));
   }
 }

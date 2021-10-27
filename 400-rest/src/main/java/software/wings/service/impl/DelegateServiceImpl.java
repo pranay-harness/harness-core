@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
-import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertFromBase64;
@@ -18,7 +17,6 @@ import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
-import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
@@ -136,6 +134,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.Misc;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
+import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
 import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HIterator;
@@ -594,8 +593,7 @@ public class DelegateServiceImpl implements DelegateService {
                                             .findFirst()
                                             .orElse(null);
 
-      DelegateGroup delegateGroup =
-          upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails);
+      upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails);
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
           ScriptRuntimeParamMapInquiry.builder()
@@ -604,9 +602,6 @@ public class DelegateServiceImpl implements DelegateService {
               .managerHost(managerHost)
               .verificationHost(verificationServiceUrl)
               .delegateName(delegateSetupDetails.getName())
-              .delegateProfile(delegateSetupDetails.getDelegateConfigurationId() == null
-                      ? ""
-                      : delegateSetupDetails.getDelegateConfigurationId())
               .delegateType(KUBERNETES)
               .ciEnabled(isCiEnabled)
               .delegateOrgIdentifier(delegateSetupDetails.getOrgIdentifier())
@@ -980,8 +975,8 @@ public class DelegateServiceImpl implements DelegateService {
       existingDelegate.setStatus(DelegateInstanceStatus.DELETED);
     }
 
-    existingDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
-    existingDelegate.setUseJreVersion(getTargetJreVersion(delegate.getAccountId()));
+    existingDelegate.setUseCdn(true);
+    existingDelegate.setUseJreVersion(getTargetJreVersion());
     return existingDelegate;
   }
 
@@ -1231,8 +1226,7 @@ public class DelegateServiceImpl implements DelegateService {
     boolean jarFileExists = false;
     String delegateDockerImage = "harness/delegate:latest";
     CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
-    boolean useCDN =
-        featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
+    boolean useCDN = cdnConfig != null;
 
     boolean isCiEnabled = inquiry.isCiEnabled()
         && isNotEmpty(mainConfiguration.getPortal().getJwtNextGenManagerSecret())
@@ -1374,7 +1368,7 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateXmx", "-Xmx4096m");
       }
 
-      JreConfig jreConfig = getJreConfig(inquiry.getAccountId());
+      JreConfig jreConfig = getJreConfig();
 
       Preconditions.checkNotNull(jreConfig, "jreConfig cannot be null");
 
@@ -1464,19 +1458,17 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   /**
-   * Returns JreConfig for a given account Id on the basis of UPGRADE_JRE and USE_CDN_FOR_STORAGE_FILES FeatureFlags.
+   * Returns JreConfig for a given account Id on the basis of UPGRADE_JRE.
    *
    * @param accountId
    * @return
    */
-  private JreConfig getJreConfig(String accountId) {
-    boolean useCDN = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, accountId);
-
+  private JreConfig getJreConfig() {
     String jreVersion = mainConfiguration.getCurrentJre();
     JreConfig jreConfig = mainConfiguration.getJreConfigs().get(jreVersion);
     CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
 
-    if (useCDN && cdnConfig != null) {
+    if (cdnConfig != null) {
       String tarPath = cdnConfig.getCdnJreTarPaths().get(jreVersion);
       String alpnJarPath = cdnConfig.getAlpnJarPath();
       jreConfig = JreConfig.builder()
@@ -1491,13 +1483,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   /**
-   * Returns delegate's JRE version for a given account Id
+   * Returns delegate's JRE version
    *
-   * @param accountId
    * @return
    */
-  private String getTargetJreVersion(String accountId) {
-    return getJreConfig(accountId).getVersion();
+  private String getTargetJreVersion() {
+    return getJreConfig().getVersion();
   }
 
   private Integer getMinorVersion(String delegateVersion) {
@@ -1955,16 +1946,12 @@ public class DelegateServiceImpl implements DelegateService {
     String accountId = delegate.getAccountId();
 
     DelegateProfile delegateProfile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
-    if (delegateProfile == null) {
-      if (delegate.isNg()) {
-        delegateProfile = delegateProfileService.fetchNgPrimaryProfile(accountId, delegate.getOwner());
-      } else {
-        delegateProfile = delegateProfileService.fetchCgPrimaryProfile(accountId);
-      }
+    if (delegateProfile == null && !delegate.isNg()) {
+      delegateProfile = delegateProfileService.fetchCgPrimaryProfile(accountId);
       delegate.setDelegateProfileId(delegateProfile.getUuid());
     }
 
-    if (delegateProfile.isApprovalRequired()) {
+    if (delegateProfile != null && delegateProfile.isApprovalRequired()) {
       delegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     } else {
       delegate.setStatus(DelegateInstanceStatus.ENABLED);
@@ -2243,11 +2230,9 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
 
-    boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
-    broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
-        .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
+    broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(USE_CDN);
 
-    String delegateTargetJreVersion = getTargetJreVersion(delegate.getAccountId());
+    String delegateTargetJreVersion = getTargetJreVersion();
     StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
     broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(jreMessage.toString());
     log.debug("Sending message to delegate: {}", jreMessage);
@@ -2309,11 +2294,9 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
 
-    boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegateParams.getAccountId());
-    broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
-        .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
+    broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(USE_CDN);
 
-    String delegateTargetJreVersion = getTargetJreVersion(delegateParams.getAccountId());
+    String delegateTargetJreVersion = getTargetJreVersion();
     StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
     broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(jreMessage.toString());
     log.info("Sending message to delegate: {}", jreMessage);
@@ -2364,7 +2347,6 @@ public class DelegateServiceImpl implements DelegateService {
                                                       .orgIdentifier(delegateParams.getOrgIdentifier())
                                                       .projectIdentifier(delegateParams.getProjectIdentifier())
                                                       .description(delegateParams.getDescription())
-                                                      .delegateConfigurationId(delegateParams.getDelegateProfileId())
                                                       .build();
       DelegateGroup delegateGroup =
           upsertDelegateGroup(delegateParams.getDelegateName(), delegateParams.getAccountId(), delegateSetupDetails);
@@ -2844,8 +2826,8 @@ public class DelegateServiceImpl implements DelegateService {
     }
     Delegate registeredDelegate = handleEcsDelegateRegistration(delegate);
     updateExistingDelegateWithSequenceConfigData(registeredDelegate);
-    registeredDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
-    registeredDelegate.setUseJreVersion(getTargetJreVersion(delegate.getAccountId()));
+    registeredDelegate.setUseCdn(true);
+    registeredDelegate.setUseJreVersion(getTargetJreVersion());
 
     return registeredDelegate;
   }
@@ -2854,9 +2836,15 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails) {
     boolean isNg = delegateSetupDetails != null;
     String delegateGroupIdentifier = getDelegateGroupIdentifier(name, delegateSetupDetails);
+    if (isNg) {
+      try {
+        delegateSetupDetails.setIdentifier(delegateGroupIdentifier);
+        NGUtils.validate(delegateSetupDetails);
+      } catch (JerseyViolationException exception) {
+        throw new InvalidRequestException(getMessage(exception));
+      }
+    }
     String description = delegateSetupDetails != null ? delegateSetupDetails.getDescription() : null;
-    String delegateConfigurationId =
-        delegateSetupDetails != null ? delegateSetupDetails.getDelegateConfigurationId() : null;
     String orgIdentifier = delegateSetupDetails != null ? delegateSetupDetails.getOrgIdentifier() : null;
     String projectIdentifier = delegateSetupDetails != null ? delegateSetupDetails.getProjectIdentifier() : null;
     DelegateSizeDetails sizeDetails = delegateSetupDetails != null
@@ -2868,6 +2856,7 @@ public class DelegateServiceImpl implements DelegateService {
         : null;
     K8sConfigDetails k8sConfigDetails =
         delegateSetupDetails != null ? delegateSetupDetails.getK8sConfigDetails() : null;
+    final Set<String> tags = delegateSetupDetails != null ? delegateSetupDetails.getTags() : null;
 
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgIdentifier, projectIdentifier);
 
@@ -2899,7 +2888,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     setUnset(updateOperations, DelegateGroupKeys.owner, owner);
     setUnset(updateOperations, DelegateGroupKeys.description, description);
-    setUnset(updateOperations, DelegateGroupKeys.delegateConfigurationId, delegateConfigurationId);
+    setUnset(updateOperations, DelegateGroupKeys.tags, tags);
 
     if (sizeDetails != null) {
       setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);

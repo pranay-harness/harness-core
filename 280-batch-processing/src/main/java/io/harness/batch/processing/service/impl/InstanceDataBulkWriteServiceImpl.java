@@ -189,6 +189,11 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
               InstanceDataKeys.harnessServiceInfo, objectToDocument(instanceInfo.getHarnessServiceInfo()));
         }
 
+        if (!isNull(instanceInfo.getHarnessServiceInfoNg())) {
+          instanceInfoDocument.append(
+              InstanceDataKeys.harnessServiceInfoNG, objectToDocument(instanceInfo.getHarnessServiceInfoNg()));
+        }
+
         if (!isEmpty(instanceInfo.getPvcClaimNames())) {
           instanceInfoDocument.append(InstanceDataKeys.pvcClaimNames, instanceInfo.getPvcClaimNames());
         }

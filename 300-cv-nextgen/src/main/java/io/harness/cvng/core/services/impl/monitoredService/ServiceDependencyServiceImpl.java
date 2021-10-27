@@ -6,15 +6,19 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceDependency.Key;
 import io.harness.cvng.core.entities.ServiceDependency.ServiceDependencyKeys;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
+import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -144,6 +148,33 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
     }
 
     return query.asList();
+  }
+
+  @Override
+  public Map<ServiceEnvKey, List<String>> getMonitoredServiceToDependentServicesMap(
+      @NonNull ProjectParams projectParams, List<MonitoredService> monitoredServices) {
+    Map<ServiceEnvKey, List<String>> monitoredServiceToDependentServicesMap = new HashMap<>();
+    monitoredServices.forEach(monitoredService -> {
+      ServiceEnvironmentParams serviceEnvironmentParams =
+          ServiceEnvironmentParams.builder()
+              .accountIdentifier(projectParams.getAccountIdentifier())
+              .orgIdentifier(projectParams.getOrgIdentifier())
+              .projectIdentifier(projectParams.getProjectIdentifier())
+              .serviceIdentifier(monitoredService.getServiceIdentifier())
+              .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
+              .build();
+      ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
+                                        .serviceIdentifier(monitoredService.getServiceIdentifier())
+                                        .envIdentifier(monitoredService.getEnvironmentIdentifier())
+                                        .build();
+      Set<ServiceDependencyDTO> serviceDependencyDTOS =
+          getDependentServicesForMonitoredService(serviceEnvironmentParams, monitoredService.getIdentifier());
+      List<String> dependentServiceIdentifiers = new ArrayList<>();
+      serviceDependencyDTOS.forEach(serviceDependencyDTO
+          -> dependentServiceIdentifiers.add(serviceDependencyDTO.getMonitoredServiceIdentifier()));
+      monitoredServiceToDependentServicesMap.put(serviceEnvKey, dependentServiceIdentifiers);
+    });
+    return monitoredServiceToDependentServicesMap;
   }
 
   @Override

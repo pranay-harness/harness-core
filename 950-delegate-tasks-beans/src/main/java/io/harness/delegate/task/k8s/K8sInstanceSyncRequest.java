@@ -21,4 +21,5 @@ public class K8sInstanceSyncRequest implements K8sDeployRequest {
   ManifestDelegateConfig manifestDelegateConfig;
   CommandUnitsProgress commandUnitsProgress;
   boolean useLatestKustomizeVersion;
+  boolean useNewKubectlVersion;
 }
