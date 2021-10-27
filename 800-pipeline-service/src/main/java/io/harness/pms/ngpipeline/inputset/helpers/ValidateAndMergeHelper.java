@@ -132,12 +132,9 @@ public class ValidateAndMergeHelper {
       if (EmptyPredicate.isEmpty(stageIdentifiers)) {
         template = createTemplateFromPipeline(pipelineYaml);
       } else {
-        String replacedExpressionsPipeline =
-            StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-                pipelineYaml, stageIdentifiers);
         replacedExpressions =
             new ArrayList<>(StagesExpressionExtractor.getNonLocalExpressions(pipelineYaml, stageIdentifiers));
-        template = createTemplateFromPipelineForGivenStages(replacedExpressionsPipeline, stageIdentifiers);
+        template = createTemplateFromPipelineForGivenStages(pipelineYaml, stageIdentifiers);
       }
       return InputSetTemplateResponseDTOPMS.builder()
           .inputSetTemplateYaml(template)
@@ -157,10 +154,7 @@ public class ValidateAndMergeHelper {
       if (EmptyPredicate.isEmpty(stageIdentifiers)) {
         return createTemplateFromPipeline(pipelineYaml);
       } else {
-        String replacedExpressionsPipeline =
-            StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-                pipelineYaml, stageIdentifiers);
-        return createTemplateFromPipelineForGivenStages(replacedExpressionsPipeline, stageIdentifiers);
+        return createTemplateFromPipelineForGivenStages(pipelineYaml, stageIdentifiers);
       }
 
     } else {
