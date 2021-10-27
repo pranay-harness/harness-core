@@ -128,7 +128,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(55, AddMaxStorageColumns.class))
         .add(Pair.of(56, CreateServicesEnvPipelinesTable.class))
         .add(Pair.of(57, CreateServicesEnvPipelinesIndex.class))
-        .add(Pair.of(57, AddCDNGEntitiesColumns.class))
+        .add(Pair.of(58, AddCDNGEntitiesColumns.class))
         .build();
   }
 }
