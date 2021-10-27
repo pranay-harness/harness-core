@@ -619,6 +619,7 @@ progressUpdate {"name": "validUntil_1", "background": true, "expireAfterSeconds"
 projects {"name": "accountDeletedLastModifiedAtIdx", "background": true} {"accountIdentifier": 1, "deleted": 1, "lastModifiedAt": -1}
 projects {"name": "accountDeletedModulesLastModifiedAtIdx", "background": true} {"accountIdentifier": 1, "deleted": 1, "modules": 1, "lastModifiedAt": -1}
 projects {"name": "accountDeletedOrgIdentifierLastModifiedAtIdx", "background": true} {"accountIdentifier": 1, "deleted": 1, "orgIdentifier": 1, "identifier": 1, "lastModifiedAt": 1}
+projects {"name": "accountOrgIdentifierDeletedLastModifiedAtCreatedAtIdx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "identifier": 1, "deleted": 1, "lastModifiedAt": 1, "createdAt": 1}
 projects {"name": "unique_accountIdentifier_organizationIdentifier_projectIdentifier", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "identifier": 1}
 pruneQueue2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 pruneQueue2 {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
