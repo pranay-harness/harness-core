@@ -101,13 +101,12 @@ public class PerspectiveResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Get forecast cost for perspective", nickname = "getForecastCost")
-  @Operation(operationId = "getForecastCost",
-      description = "TODO(Current Month or next 30 days ?) Get the forecasted cost of a Perspective for current month",
-      summary = "TODO(Current Month or next 30 days ?) Get the forecasted cost of a Perspective for current month",
+  @Operation(operationId = "getForecastCost", description = "Get the forecasted cost of a Perspective for next 30 days",
+      summary = "Get the forecasted cost of a Perspective for next 30 days",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            description = "Returns a number having the forecast cost of a Perspective for next month", content = {
+            description = "Returns a number having the forecast cost of a Perspective for next 30 days", content = {
               @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
             })
       })
