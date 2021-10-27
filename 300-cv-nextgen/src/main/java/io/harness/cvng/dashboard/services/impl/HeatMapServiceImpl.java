@@ -579,7 +579,46 @@ public class HeatMapServiceImpl implements HeatMapService {
   }
 
   @Override
-  public List<RiskData> getLatestRiskScoreForAllServices(String accountId, String orgIdentifier,
+  public Map<ServiceEnvKey, RiskData> getLatestRiskScoreByServiceMap(
+      ProjectParams projectParams, List<Pair<String, String>> serviceEnvIdentifiers) {
+    Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 100,
+        "Based on page size, the health score calculation should be done for less than 100 services");
+    int size = serviceEnvIdentifiers.size();
+    if (size == 0) {
+      return Collections.emptyMap();
+    }
+    Map<ServiceEnvKey, RiskData> serviceEnvKeyToRiskDataMap = new HashMap<>();
+    List<String> serviceIdentifiers = new ArrayList<>();
+    List<String> envIdentifiers = new ArrayList<>();
+
+    for (int i = 0; i < size; i++) {
+      ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
+                                        .serviceIdentifier(serviceEnvIdentifiers.get(i).getLeft())
+                                        .envIdentifier(serviceEnvIdentifiers.get(i).getRight())
+                                        .build();
+      serviceEnvKeyToRiskDataMap.put(
+          serviceEnvKey, RiskData.builder().riskStatus(Risk.NO_DATA).healthScore(null).build());
+      serviceIdentifiers.add(serviceEnvKey.getServiceIdentifier());
+      envIdentifiers.add(serviceEnvKey.getEnvIdentifier());
+    }
+    Map<ServiceEnvKey, RiskData> latestHealthScores =
+        getLatestHealthScore(projectParams, serviceIdentifiers, envIdentifiers);
+
+    latestHealthScores.forEach((key, value) -> {
+      ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
+                                        .serviceIdentifier(key.getServiceIdentifier())
+                                        .envIdentifier(key.getEnvIdentifier())
+                                        .build();
+      if (serviceEnvKeyToRiskDataMap.containsKey(serviceEnvKey)) {
+        serviceEnvKeyToRiskDataMap.put(serviceEnvKey, value);
+      }
+    });
+
+    return serviceEnvKeyToRiskDataMap;
+  }
+
+  @Override
+  public List<RiskData> getLatestRiskScoreForAllServicesList(String accountId, String orgIdentifier,
       String projectIdentifier, List<Pair<String, String>> serviceEnvIdentifiers) {
     int size = serviceEnvIdentifiers.size();
     if (size == 0) {
@@ -615,11 +654,11 @@ public class HeatMapServiceImpl implements HeatMapService {
   }
 
   @Override
-  public List<RiskData> getLatestRiskScoreForLimitedServices(String accountId, String orgIdentifier,
+  public List<RiskData> getLatestRiskScoreForLimitedServicesList(String accountId, String orgIdentifier,
       String projectIdentifier, List<Pair<String, String>> serviceEnvIdentifiers) {
     Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 10,
         "Based on page size, the health score calculation should be done for less than 10 services");
-    return getLatestRiskScoreForAllServices(accountId, orgIdentifier, projectIdentifier, serviceEnvIdentifiers);
+    return getLatestRiskScoreForAllServicesList(accountId, orgIdentifier, projectIdentifier, serviceEnvIdentifiers);
   }
 
   @Override

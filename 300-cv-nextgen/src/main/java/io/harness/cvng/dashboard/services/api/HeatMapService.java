@@ -45,11 +45,14 @@ public interface HeatMapService {
   List<HistoricalTrend> getHistoricalTrend(String accountId, String orgIdentifier, String projectIdentifier,
       List<Pair<String, String>> serviceEnvIdentifiers, int hours);
 
-  List<RiskData> getLatestRiskScoreForAllServices(String accountId, String orgIdentifier, String projectIdentifier,
+  List<RiskData> getLatestRiskScoreForAllServicesList(String accountId, String orgIdentifier, String projectIdentifier,
       List<Pair<String, String>> serviceEnvIdentifiers);
 
-  List<RiskData> getLatestRiskScoreForLimitedServices(String accountId, String orgIdentifier, String projectIdentifier,
-      List<Pair<String, String>> serviceEnvIdentifiers);
+  Map<ServiceEnvKey, RiskData> getLatestRiskScoreByServiceMap(
+      ProjectParams projectParams, List<Pair<String, String>> serviceEnvIdentifiers);
+
+  List<RiskData> getLatestRiskScoreForLimitedServicesList(String accountId, String orgIdentifier,
+      String projectIdentifier, List<Pair<String, String>> serviceEnvIdentifiers);
 
   HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
       String environmentIdentifier, DurationDTO duration, Instant endTime);
