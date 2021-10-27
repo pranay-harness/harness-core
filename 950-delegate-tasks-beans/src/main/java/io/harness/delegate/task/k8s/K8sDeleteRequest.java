@@ -30,4 +30,5 @@ public class K8sDeleteRequest implements K8sDeployRequest {
   @Builder.Default boolean shouldOpenFetchFilesLogStream = true;
   CommandUnitsProgress commandUnitsProgress;
   boolean useLatestKustomizeVersion;
+  boolean useNewKubectlVersion;
 }

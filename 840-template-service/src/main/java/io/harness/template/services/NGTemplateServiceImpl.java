@@ -347,7 +347,7 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       // make given version stable template as true.
       TemplateEntity oldTemplateForGivenVersion = optionalTemplateEntity.get();
 
-      try (TemplateGitSyncBranchContextGuard ignored = templateServiceHelper.getTemplateGitContext(
+      try (TemplateGitSyncBranchContextGuard ignored = templateServiceHelper.getTemplateGitContextForGivenTemplate(
                oldTemplateForGivenVersion, GitContextHelper.getGitEntityInfo(),
                format("Template with identifier [%s] and versionLabel [%s] marking stable template as true.",
                    templateIdentifier, newStableTemplateVersion))) {
@@ -415,10 +415,10 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       templateConfig.getTemplateInfoConfig().setOrgIdentifier(newOrgIdentifier);
 
       TemplateEntity updateEntity = NGTemplateDtoMapper.toTemplateEntity(accountId, templateConfig);
-      try (TemplateGitSyncBranchContextGuard ignored =
-               templateServiceHelper.getTemplateGitContext(updateEntity, GitContextHelper.getGitEntityInfo(),
-                   format("Template with identifier [%s] and versionLabel [%s] updating the template scope to [%s].",
-                       templateIdentifier, updateEntity.getVersionLabel(), updateEntity.getTemplateScope()))) {
+      try (TemplateGitSyncBranchContextGuard ignored = templateServiceHelper.getTemplateGitContextForGivenTemplate(
+               updateEntity, GitContextHelper.getGitEntityInfo(),
+               format("Template with identifier [%s] and versionLabel [%s] updating the template scope to [%s].",
+                   templateIdentifier, updateEntity.getVersionLabel(), updateEntity.getTemplateScope()))) {
         String orgIdBasedOnScope = currentScope.equals(Scope.ACCOUNT) ? null : orgIdentifier;
         String projectIdBasedOnScope = currentScope.equals(Scope.PROJECT) ? projectIdentifier : null;
 
@@ -449,10 +449,10 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       }
 
       // Update the git context with details of the template on which the operation is going to run.
-      try (TemplateGitSyncBranchContextGuard ignored =
-               templateServiceHelper.getTemplateGitContext(oldTemplate, GitContextHelper.getGitEntityInfo(),
-                   format("Template with identifier [%s] and versionLabel [%s] marking stable template as false.",
-                       templateIdentifier, oldTemplate.getVersionLabel()))) {
+      try (TemplateGitSyncBranchContextGuard ignored = templateServiceHelper.getTemplateGitContextForGivenTemplate(
+               oldTemplate, GitContextHelper.getGitEntityInfo(),
+               format("Template with identifier [%s] and versionLabel [%s] marking stable template as false.",
+                   templateIdentifier, oldTemplate.getVersionLabel()))) {
         TemplateEntity templateToUpdate = oldTemplate.withStableTemplate(false);
         makeTemplateUpdateCall(
             templateToUpdate, oldTemplate, ChangeType.MODIFY, "", TemplateUpdateEventType.TEMPLATE_STABLE_FALSE_EVENT);
@@ -472,10 +472,10 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       TemplateEntity oldTemplate = optionalTemplateEntity.get();
 
       // Update the git context with details of the template on which the operation is going to run.
-      try (TemplateGitSyncBranchContextGuard ignored =
-               templateServiceHelper.getTemplateGitContext(oldTemplate, GitContextHelper.getGitEntityInfo(),
-                   format("Template with identifier [%s] and versionLabel [%s] marking last updated template as false.",
-                       templateIdentifier, oldTemplate.getVersionLabel()))) {
+      try (TemplateGitSyncBranchContextGuard ignored = templateServiceHelper.getTemplateGitContextForGivenTemplate(
+               oldTemplate, GitContextHelper.getGitEntityInfo(),
+               format("Template with identifier [%s] and versionLabel [%s] marking last updated template as false.",
+                   templateIdentifier, oldTemplate.getVersionLabel()))) {
         TemplateEntity templateToUpdate = oldTemplate.withLastUpdatedTemplate(false);
         makeTemplateUpdateCall(templateToUpdate, oldTemplate, ChangeType.MODIFY, "",
             TemplateUpdateEventType.TEMPLATE_LAST_UPDATED_FALSE_EVENT);

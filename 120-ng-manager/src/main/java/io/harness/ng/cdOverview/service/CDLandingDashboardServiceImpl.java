@@ -1,13 +1,11 @@
 package io.harness.ng.cdOverview.service;
 
-import static io.harness.timescaledb.Tables.ENVIRONMENTS;
-import static io.harness.timescaledb.Tables.NG_INSTANCE_STATS;
-import static io.harness.timescaledb.Tables.PIPELINE_EXECUTION_SUMMARY_CD;
-import static io.harness.timescaledb.Tables.SERVICES;
-import static io.harness.timescaledb.Tables.SERVICE_INFRA_INFO;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import static org.jooq.impl.DSL.row;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.dashboards.DashboardHelper;
 import io.harness.dashboards.DeploymentStatsSummary;
 import io.harness.dashboards.EnvCount;
 import io.harness.dashboards.GroupBy;
@@ -21,11 +19,12 @@ import io.harness.dashboards.ServicesDashboardInfo;
 import io.harness.dashboards.SortBy;
 import io.harness.dashboards.TimeBasedDeploymentInfo;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ng.cdOverview.dto.AggregateProjectInfo;
+import io.harness.ng.cdOverview.dto.AggregateServiceInfo;
+import io.harness.ng.cdOverview.dto.TimeWiseExecutionSummary;
 import io.harness.ng.core.OrgProjectIdentifier;
-import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.timescaledb.tables.pojos.PipelineExecutionSummaryCd;
-import io.harness.timescaledb.tables.pojos.ServiceInfraInfo;
 import io.harness.timescaledb.tables.pojos.Services;
 
 import com.google.inject.Inject;
@@ -36,10 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import org.jooq.DSLContext;
-import org.jooq.Field;
 import org.jooq.Record2;
 import org.jooq.Record3;
 import org.jooq.Row2;
@@ -47,58 +42,27 @@ import org.jooq.Row3;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 
+@OwnedBy(PIPELINE)
 public class CDLandingDashboardServiceImpl implements CDLandingDashboardService {
-  public static final int RECORDS_LIMIT = 100;
   public static final long DAY_IN_MS = 86400000; // 24*60*60*1000
 
-  @Inject private DSLContext dsl;
-  @Inject private ServiceEntityService serviceEntityService;
-
-  @Getter
-  @EqualsAndHashCode(callSuper = true)
-  public static class AggregateServiceInfo extends ServiceInfraInfo {
-    private long count;
-
-    public AggregateServiceInfo(String orgIdentifier, String projectId, String serviceId, long count) {
-      super(null, null, serviceId, null, null, null, null, null, null, null, null, null, null, orgIdentifier, projectId,
-          null);
-      this.count = count;
-    }
-
-    public AggregateServiceInfo(
-        String orgIdentifier, String projectId, String serviceId, String serviceStatus, long count) {
-      super(null, null, serviceId, null, null, null, null, null, null, serviceStatus, null, null, null, orgIdentifier,
-          projectId, null);
-      this.count = count;
-    }
-  }
+  @Inject private TimeScaleDAL timeScaleDAL;
 
   @Override
   public ServicesDashboardInfo getActiveServices(@NotNull String accountIdentifier,
       @NotNull List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval,
       @NotNull SortBy sortBy) {
+    if (EmptyPredicate.isEmpty(orgProjectIdentifiers)) {
+      return ServicesDashboardInfo.builder().build();
+    }
+
     if (sortBy == SortBy.INSTANCES) {
       return getActiveServicesByInstances(accountIdentifier, orgProjectIdentifiers, startInterval, endInterval);
     }
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
     List<AggregateServiceInfo> serviceInfraInfoList =
-        dsl.select(SERVICE_INFRA_INFO.ORGIDENTIFIER, SERVICE_INFRA_INFO.PROJECTIDENTIFIER,
-               SERVICE_INFRA_INFO.SERVICE_ID, DSL.count().as("count"))
-            .from(SERVICE_INFRA_INFO)
-            .where(SERVICE_INFRA_INFO.ACCOUNTID.eq(accountIdentifier)
-                       .and(SERVICE_INFRA_INFO.SERVICE_STARTTS.greaterOrEqual(startInterval))
-                       .and(SERVICE_INFRA_INFO.SERVICE_STARTTS.lessThan(endInterval)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectTable)
-                           .where(SERVICE_INFRA_INFO.ORGIDENTIFIER.eq((Field<String>) orgProjectTable.field("orgId"))
-                                      .and(SERVICE_INFRA_INFO.PROJECTIDENTIFIER.eq(
-                                          (Field<String>) orgProjectTable.field("projectId")))))
-            .groupBy(
-                SERVICE_INFRA_INFO.ORGIDENTIFIER, SERVICE_INFRA_INFO.PROJECTIDENTIFIER, SERVICE_INFRA_INFO.SERVICE_ID)
-            .orderBy(DSL.inline(4).desc())
-            .limit(RECORDS_LIMIT)
-            .fetchInto(AggregateServiceInfo.class);
+        timeScaleDAL.getTopServicesByDeploymentCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
 
     if (EmptyPredicate.isEmpty(serviceInfraInfoList)) {
       return ServicesDashboardInfo.builder().build();
@@ -134,23 +98,8 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
       List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval) {
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
-    Field<Long> reportedDateEpoch = DSL.epoch(NG_INSTANCE_STATS.REPORTEDAT).cast(Long.class).mul(1000);
     List<AggregateServiceInfo> serviceInfraInfoList =
-        dsl.select(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID,
-               DSL.count().as("count"))
-            .from(NG_INSTANCE_STATS)
-            .where(NG_INSTANCE_STATS.ACCOUNTID.eq(accountIdentifier)
-                       .and(reportedDateEpoch.greaterOrEqual(startInterval))
-                       .and(reportedDateEpoch.lessThan(endInterval)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectTable)
-                           .where(NG_INSTANCE_STATS.ORGID.eq((Field<String>) orgProjectTable.field("orgId"))
-                                      .and(NG_INSTANCE_STATS.PROJECTID.eq(
-                                          (Field<String>) orgProjectTable.field("projectId")))))
-            .groupBy(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID)
-            .orderBy(DSL.inline(4).desc())
-            .limit(RECORDS_LIMIT)
-            .fetchInto(AggregateServiceInfo.class);
+        timeScaleDAL.getTopServicesByInstanceCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
 
     if (EmptyPredicate.isEmpty(serviceInfraInfoList)) {
       return ServicesDashboardInfo.builder().build();
@@ -188,26 +137,8 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     startInterval -= duration;
     endInterval -= duration;
 
-    Field<Long> reportedDateEpoch = DSL.epoch(NG_INSTANCE_STATS.REPORTEDAT).cast(Long.class).mul(1000);
-
-    List<AggregateServiceInfo> serviceInstanceList =
-        dsl.select(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID,
-               DSL.count().as("count"))
-            .from(NG_INSTANCE_STATS)
-            .where(NG_INSTANCE_STATS.ACCOUNTID.eq(accountIdentifier)
-                       .and(reportedDateEpoch.greaterOrEqual(startInterval))
-                       .and(reportedDateEpoch.lessThan(endInterval)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectServiceTable)
-                           .where(NG_INSTANCE_STATS.ORGID.eq((Field<String>) orgProjectServiceTable.field("orgId"))
-                                      .and(NG_INSTANCE_STATS.PROJECTID.eq(
-                                          (Field<String>) orgProjectServiceTable.field("projectId")))
-                                      .and(NG_INSTANCE_STATS.SERVICEID.eq(
-                                          (Field<String>) orgProjectServiceTable.field("serviceId")))))
-            .groupBy(NG_INSTANCE_STATS.ORGID, NG_INSTANCE_STATS.PROJECTID, NG_INSTANCE_STATS.SERVICEID)
-            .orderBy(DSL.inline(4).desc())
-            .limit(RECORDS_LIMIT)
-            .fetchInto(AggregateServiceInfo.class);
+    List<AggregateServiceInfo> serviceInstanceList = timeScaleDAL.getInstanceCountForGivenServices(
+        orgProjectServiceTable, accountIdentifier, startInterval, endInterval);
 
     for (AggregateServiceInfo aggregateServiceInfo : serviceInstanceList) {
       String combinedId = getCombinedId(aggregateServiceInfo.getOrgidentifier(),
@@ -220,18 +151,7 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
 
   private void addServiceNames(Map<String, ServiceDashboardInfo> combinedIdToRecordMap, String accountIdentifier,
       Table<Record3<String, String, String>> orgProjectServiceTable) {
-    List<Services> servicesList =
-        dsl.select(SERVICES.ORG_IDENTIFIER, SERVICES.PROJECT_IDENTIFIER, SERVICES.IDENTIFIER, SERVICES.NAME)
-            .from(SERVICES)
-            .where(SERVICES.ACCOUNT_ID.eq(accountIdentifier))
-            .andExists(
-                dsl.selectOne()
-                    .from(orgProjectServiceTable)
-                    .where(SERVICES.ORG_IDENTIFIER.eq((Field<String>) orgProjectServiceTable.field("orgId"))
-                               .and(SERVICES.PROJECT_IDENTIFIER.eq(
-                                   (Field<String>) orgProjectServiceTable.field("projectId")))
-                               .and(SERVICES.IDENTIFIER.eq((Field<String>) orgProjectServiceTable.field("serviceId")))))
-            .fetchInto(Services.class);
+    List<Services> servicesList = timeScaleDAL.getNamesForServiceIds(accountIdentifier, orgProjectServiceTable);
 
     for (Services service : servicesList) {
       String key = getCombinedId(service.getOrgIdentifier(), service.getProjectIdentifier(), service.getIdentifier());
@@ -247,25 +167,8 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
       return;
     }
 
-    List<AggregateServiceInfo> previousServiceInfraInfoList =
-        dsl.select(SERVICE_INFRA_INFO.ORGIDENTIFIER, SERVICE_INFRA_INFO.PROJECTIDENTIFIER,
-               SERVICE_INFRA_INFO.SERVICE_ID, SERVICE_INFRA_INFO.SERVICE_STATUS, DSL.count().as("count"))
-            .from(SERVICE_INFRA_INFO)
-            .where(SERVICE_INFRA_INFO.ACCOUNTID.eq(accountIdentifier)
-                       .and(SERVICE_INFRA_INFO.SERVICE_STARTTS.greaterOrEqual(startInterval))
-                       .and(SERVICE_INFRA_INFO.SERVICE_STARTTS.lessThan(endInterval)))
-            .andExists(
-                dsl.selectOne()
-                    .from(orgProjectServiceTable)
-                    .where(SERVICE_INFRA_INFO.ORGIDENTIFIER.eq((Field<String>) orgProjectServiceTable.field("orgId"))
-                               .and(SERVICE_INFRA_INFO.PROJECTIDENTIFIER.eq(
-                                   (Field<String>) orgProjectServiceTable.field("projectId")))
-                               .and(SERVICE_INFRA_INFO.SERVICE_ID.eq(
-                                   (Field<String>) orgProjectServiceTable.field("serviceId")))))
-            .groupBy(SERVICE_INFRA_INFO.ORGIDENTIFIER, SERVICE_INFRA_INFO.PROJECTIDENTIFIER,
-                SERVICE_INFRA_INFO.SERVICE_ID, SERVICE_INFRA_INFO.SERVICE_STATUS)
-            .limit(RECORDS_LIMIT)
-            .fetchInto(AggregateServiceInfo.class);
+    List<AggregateServiceInfo> previousServiceInfraInfoList = timeScaleDAL.getStatusWiseDeploymentCountForGivenServices(
+        orgProjectServiceTable, accountIdentifier, startInterval, endInterval);
 
     Map<String, ServiceDashboardInfo> combinedIdToRecordMap = new HashMap<>();
 
@@ -297,25 +200,8 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     startInterval -= duration;
     endInterval -= duration;
 
-    List<AggregateServiceInfo> previousServiceInfraInfoList =
-        dsl.select(SERVICE_INFRA_INFO.ORGIDENTIFIER, SERVICE_INFRA_INFO.PROJECTIDENTIFIER,
-               SERVICE_INFRA_INFO.SERVICE_ID, DSL.count().as("count"))
-            .from(SERVICE_INFRA_INFO)
-            .where(SERVICE_INFRA_INFO.ACCOUNTID.eq(accountIdentifier)
-                       .and(SERVICE_INFRA_INFO.SERVICE_STARTTS.greaterOrEqual(startInterval))
-                       .and(SERVICE_INFRA_INFO.SERVICE_STARTTS.lessThan(endInterval)))
-            .andExists(
-                dsl.selectOne()
-                    .from(orgProjectServiceTable)
-                    .where(SERVICE_INFRA_INFO.ORGIDENTIFIER.eq((Field<String>) orgProjectServiceTable.field("orgId"))
-                               .and(SERVICE_INFRA_INFO.PROJECTIDENTIFIER.eq(
-                                   (Field<String>) orgProjectServiceTable.field("projectId")))
-                               .and(SERVICE_INFRA_INFO.SERVICE_ID.eq(
-                                   (Field<String>) orgProjectServiceTable.field("serviceId")))))
-            .groupBy(
-                SERVICE_INFRA_INFO.ORGIDENTIFIER, SERVICE_INFRA_INFO.PROJECTIDENTIFIER, SERVICE_INFRA_INFO.SERVICE_ID)
-            .limit(RECORDS_LIMIT)
-            .fetchInto(AggregateServiceInfo.class);
+    List<AggregateServiceInfo> previousServiceInfraInfoList = timeScaleDAL.getDeploymentCountForGivenServices(
+        orgProjectServiceTable, accountIdentifier, startInterval, endInterval);
 
     Map<String, AggregateServiceInfo> combinedIdToRecordMap = new HashMap<>();
 
@@ -330,13 +216,8 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
           serviceDashboardInfo.getIdentifier());
       if (combinedIdToRecordMap.containsKey(key)) {
         AggregateServiceInfo previousServiceInfo = combinedIdToRecordMap.get(key);
-        long previousDeploymentsCount = previousServiceInfo.getCount();
-        long change = serviceDashboardInfo.getTotalDeploymentsCount() - previousDeploymentsCount;
-
-        if (previousDeploymentsCount != 0) {
-          double changeRate = (change * 100.0) / previousDeploymentsCount;
-          serviceDashboardInfo.setTotalDeploymentsChangeRate(changeRate);
-        }
+        serviceDashboardInfo.setTotalDeploymentsChangeRate(
+            getChangeRate(previousServiceInfo.getCount(), serviceDashboardInfo.getTotalDeploymentsCount()));
       }
     }
   }
@@ -377,54 +258,16 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     return DSL.values(orgProjectRows).as("t", "orgId", "projectId");
   }
 
-  @Getter
-  @EqualsAndHashCode(callSuper = true)
-  public static class AggregateProjectInfo extends PipelineExecutionSummaryCd {
-    private final long count;
-    private long epoch;
-
-    public AggregateProjectInfo(long epoch, String status, long count) {
-      this.count = count;
-      this.epoch = epoch;
-      this.setStatus(status);
-    }
-
-    public AggregateProjectInfo(String orgIdentifier, String projectId, long count) {
-      this.count = count;
-      this.setOrgidentifier(orgIdentifier);
-      this.setProjectidentifier(projectId);
-    }
-
-    public AggregateProjectInfo(String orgIdentifier, String projectId, String status, long count) {
-      this.count = count;
-      this.setOrgidentifier(orgIdentifier);
-      this.setProjectidentifier(projectId);
-      this.setStatus(status);
-    }
-  }
-
   @Override
   public ProjectsDashboardInfo getTopProjects(String accountIdentifier,
       List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval) {
+    if (EmptyPredicate.isEmpty(orgProjectIdentifiers)) {
+      return ProjectsDashboardInfo.builder().build();
+    }
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
     List<AggregateProjectInfo> projectInfoList =
-        dsl.select(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER,
-               DSL.count().as("count"))
-            .from(PIPELINE_EXECUTION_SUMMARY_CD)
-            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.greaterOrEqual(startInterval))
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.lessThan(endInterval)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectTable)
-                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
-                                      .eq((Field<String>) orgProjectTable.field("orgId"))
-                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
-                                          (Field<String>) orgProjectTable.field("projectId")))))
-            .groupBy(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER)
-            .orderBy(DSL.inline(3).desc())
-            .limit(RECORDS_LIMIT)
-            .fetchInto(AggregateProjectInfo.class);
+        timeScaleDAL.getTopProjectsByDeploymentCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
 
     List<ProjectDashBoardInfo> projectDashBoardInfoList = new ArrayList<>();
 
@@ -454,28 +297,39 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
   @Override
   public ServicesCount getServicesCount(String accountIdentifier, List<OrgProjectIdentifier> orgProjectIdentifiers,
       long startInterval, long endInterval) {
+    if (EmptyPredicate.isEmpty(orgProjectIdentifiers)) {
+      return ServicesCount.builder().build();
+    }
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
-    Integer totalServicesCount = getTotalServicesCount(accountIdentifier, orgProjectTable);
-    Integer newCount = getServicesCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
+    Integer totalServicesCount = timeScaleDAL.getTotalServicesCount(accountIdentifier, orgProjectTable);
+    int trendCount = timeScaleDAL.getNewServicesCount(accountIdentifier, startInterval, endInterval, orgProjectTable)
+        - timeScaleDAL.getDeletedServiceCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
 
-    return ServicesCount.builder().totalCount(totalServicesCount).newCount(newCount).build();
+    return ServicesCount.builder().totalCount(totalServicesCount).newCount(trendCount).build();
   }
 
   @Override
   public EnvCount getEnvCount(String accountIdentifier, List<OrgProjectIdentifier> orgProjectIdentifiers,
       long startInterval, long endInterval) {
+    if (EmptyPredicate.isEmpty(orgProjectIdentifiers)) {
+      return EnvCount.builder().build();
+    }
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
-    Integer totalCount = getTotalEnvCount(accountIdentifier, orgProjectTable);
-    Integer newCount = getEnvCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
+    Integer totalCount = timeScaleDAL.getTotalEnvCount(accountIdentifier, orgProjectTable);
+    int trendCount = timeScaleDAL.getNewEnvCount(accountIdentifier, startInterval, endInterval, orgProjectTable)
+        - timeScaleDAL.getDeletedEnvCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
 
-    return EnvCount.builder().totalCount(totalCount).newCount(newCount).build();
+    return EnvCount.builder().totalCount(totalCount).newCount(trendCount).build();
   }
 
   @Override
   public PipelinesExecutionDashboardInfo getActiveDeploymentStats(
       String accountIdentifier, List<OrgProjectIdentifier> orgProjectIdentifiers) {
+    if (EmptyPredicate.isEmpty(orgProjectIdentifiers)) {
+      return PipelinesExecutionDashboardInfo.builder().build();
+    }
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
     List<String> requiredStatuses =
@@ -484,20 +338,7 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     requiredStatuses.addAll(CDOverviewDashboardServiceImpl.activeStatusList);
 
     List<PipelineExecutionSummaryCd> executionsList =
-        dsl.select(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER,
-               PIPELINE_EXECUTION_SUMMARY_CD.PIPELINEIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.NAME,
-               PIPELINE_EXECUTION_SUMMARY_CD.STARTTS, PIPELINE_EXECUTION_SUMMARY_CD.STATUS,
-               PIPELINE_EXECUTION_SUMMARY_CD.PLANEXECUTIONID)
-            .from(PIPELINE_EXECUTION_SUMMARY_CD)
-            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STATUS.in(requiredStatuses)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectTable)
-                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
-                                      .eq((Field<String>) orgProjectTable.field("orgId"))
-                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
-                                          (Field<String>) orgProjectTable.field("projectId")))))
-            .fetchInto(PipelineExecutionSummaryCd.class);
+        timeScaleDAL.getPipelineExecutionsForGivenExecutionStatus(accountIdentifier, orgProjectTable, requiredStatuses);
 
     PipelinesExecutionDashboardInfo pipelinesExecutionDashboardInfo =
         filterByStatuses(accountIdentifier, executionsList);
@@ -510,7 +351,10 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
   @Override
   public DeploymentStatsSummary getDeploymentStatsSummary(String accountIdentifier,
       List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval, GroupBy groupBy) {
-    DeploymentStatsSummary deploymentStatsSummary1 = getDeploymentStatsSummaryWithoutChangeRate(
+    if (EmptyPredicate.isEmpty(orgProjectIdentifiers)) {
+      return DeploymentStatsSummary.builder().build();
+    }
+    DeploymentStatsSummary currentDeploymentStatsSummary = getDeploymentStatsSummaryWithoutChangeRate(
         accountIdentifier, orgProjectIdentifiers, startInterval, endInterval, groupBy);
 
     long duration = endInterval - startInterval;
@@ -521,42 +365,25 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
         accountIdentifier, orgProjectIdentifiers, startInterval, endInterval, groupBy);
 
     double totalCountChangeRate =
-        getChangeRate(previousDeploymentStatsSummary.getTotalCount(), deploymentStatsSummary1.getTotalCount());
+        getChangeRate(previousDeploymentStatsSummary.getTotalCount(), currentDeploymentStatsSummary.getTotalCount());
     double failureRateChangeRate =
-        getChangeRate(previousDeploymentStatsSummary.getFailureRate(), deploymentStatsSummary1.getFailureRate());
-    double deploymentRateChangeRate =
-        getChangeRate(previousDeploymentStatsSummary.getDeploymentRate(), deploymentStatsSummary1.getDeploymentRate());
+        getChangeRate(previousDeploymentStatsSummary.getFailureRate(), currentDeploymentStatsSummary.getFailureRate());
+    double deploymentRateChangeRate = getChangeRate(
+        previousDeploymentStatsSummary.getDeploymentRate(), currentDeploymentStatsSummary.getDeploymentRate());
 
-    deploymentStatsSummary1.setTotalCountChangeRate(totalCountChangeRate);
-    deploymentStatsSummary1.setFailureRateChangeRate(failureRateChangeRate);
-    deploymentStatsSummary1.setDeploymentRateChangeRate(deploymentRateChangeRate);
+    currentDeploymentStatsSummary.setTotalCountChangeRate(totalCountChangeRate);
+    currentDeploymentStatsSummary.setFailureRateChangeRate(failureRateChangeRate);
+    currentDeploymentStatsSummary.setDeploymentRateChangeRate(deploymentRateChangeRate);
 
-    return deploymentStatsSummary1;
+    return currentDeploymentStatsSummary;
   }
 
   private DeploymentStatsSummary getDeploymentStatsSummaryWithoutChangeRate(String accountIdentifier,
       List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval, GroupBy groupBy) {
     Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
 
-    Field<Long> epoch =
-        DSL.field("extract(epoch from date_trunc('" + groupBy.getDatePart() + "', to_timestamp({0}/1000)))*1000",
-            Long.class, PIPELINE_EXECUTION_SUMMARY_CD.STARTTS);
-
-    List<AggregateProjectInfo> timeWiseDeploymentStatsList =
-        dsl.select(epoch, PIPELINE_EXECUTION_SUMMARY_CD.STATUS, DSL.count().as("count"))
-            .from(PIPELINE_EXECUTION_SUMMARY_CD)
-            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.greaterOrEqual(startInterval))
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.lessThan(endInterval)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectTable)
-                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
-                                      .eq((Field<String>) orgProjectTable.field("orgId"))
-                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
-                                          (Field<String>) orgProjectTable.field("projectId")))))
-            .groupBy(DSL.one(), PIPELINE_EXECUTION_SUMMARY_CD.STATUS)
-            .orderBy(DSL.one())
-            .fetchInto(AggregateProjectInfo.class);
+    List<TimeWiseExecutionSummary> timeWiseDeploymentStatsList = timeScaleDAL.getTimeExecutionStatusWiseDeploymentCount(
+        accountIdentifier, startInterval, endInterval, groupBy, orgProjectTable);
 
     List<TimeBasedDeploymentInfo> timeWiseDeploymentInfoList = new ArrayList<>();
     long totalDeploymentsCount = 0;
@@ -564,7 +391,7 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
 
     long prevEpoch = 0;
     TimeBasedDeploymentInfo prevTimeDeploymentInfo = null;
-    for (AggregateProjectInfo deploymentStats : timeWiseDeploymentStatsList) {
+    for (TimeWiseExecutionSummary deploymentStats : timeWiseDeploymentStatsList) {
       long count = deploymentStats.getCount();
       String status = deploymentStats.getStatus();
 
@@ -586,9 +413,13 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
       }
     }
 
-    double failureRate = totalDeploymentsCount == 0 ? 0 : ((failedDeploymentsCount * 100.0) / totalDeploymentsCount);
+    timeWiseDeploymentInfoList.forEach(timeBasedDeploymentInfo
+        -> timeBasedDeploymentInfo.setFailureRate(
+            getRate(timeBasedDeploymentInfo.getFailedCount(), timeBasedDeploymentInfo.getTotalCount())));
+
+    double failureRate = getRate(failedDeploymentsCount, totalDeploymentsCount);
     double noOfBuckets = Math.ceil(((endInterval - startInterval) * 1.0) / groupBy.getNoOfMilliseconds());
-    double deploymentRate = totalDeploymentsCount / noOfBuckets;
+    double deploymentRate = DashboardHelper.truncate(totalDeploymentsCount / noOfBuckets);
 
     return DeploymentStatsSummary.builder()
         .totalCount(totalDeploymentsCount)
@@ -596,6 +427,13 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
         .deploymentRate(deploymentRate)
         .timeBasedDeploymentInfoList(timeWiseDeploymentInfoList)
         .build();
+  }
+
+  private double getRate(double count, double totalCount) {
+    if (count == 0) {
+      return 0;
+    }
+    return totalCount == 0 ? DashboardHelper.MAX_VALUE : DashboardHelper.truncate(count * 100 / totalCount);
   }
 
   private PipelinesExecutionDashboardInfo filterByStatuses(
@@ -642,22 +480,7 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     long startTime = System.currentTimeMillis() - DAY_IN_MS;
 
     List<PipelineExecutionSummaryCd> executionsList =
-        dsl.select(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER,
-               PIPELINE_EXECUTION_SUMMARY_CD.PIPELINEIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.NAME,
-               PIPELINE_EXECUTION_SUMMARY_CD.STARTTS, PIPELINE_EXECUTION_SUMMARY_CD.STATUS,
-               PIPELINE_EXECUTION_SUMMARY_CD.PLANEXECUTIONID)
-            .from(PIPELINE_EXECUTION_SUMMARY_CD)
-            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STATUS.in(CDDashboardServiceHelper.failedStatusList))
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.greaterOrEqual(startTime))
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.lessThan(endTime)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectTable)
-                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
-                                      .eq((Field<String>) orgProjectTable.field("orgId"))
-                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
-                                          (Field<String>) orgProjectTable.field("projectId")))))
-            .fetchInto(PipelineExecutionSummaryCd.class);
+        timeScaleDAL.getFailedExecutionsForGivenTimeRange(accountIdentifier, orgProjectTable, endTime, startTime);
 
     return executionsList.stream()
         .map(execution
@@ -673,68 +496,6 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
         .collect(Collectors.toList());
   }
 
-  private Integer getTotalEnvCount(String accountIdentifier, Table<Record2<String, String>> orgProjectTable) {
-    return dsl.select(DSL.count())
-        .from(ENVIRONMENTS)
-        .where(ENVIRONMENTS.ACCOUNT_ID.eq(accountIdentifier))
-        .and(ENVIRONMENTS.DELETED.eq(false))
-        .andExists(dsl.selectOne()
-                       .from(orgProjectTable)
-                       .where(ENVIRONMENTS.ORG_IDENTIFIER.eq((Field<String>) orgProjectTable.field("orgId"))
-                                  .and(ENVIRONMENTS.PROJECT_IDENTIFIER.eq(
-                                      (Field<String>) orgProjectTable.field("projectId")))))
-        .fetchInto(Integer.class)
-        .get(0);
-  }
-
-  private Integer getEnvCount(
-      String accountIdentifier, long startInterval, long endInterval, Table<Record2<String, String>> orgProjectTable) {
-    return dsl.select(DSL.count())
-        .from(ENVIRONMENTS)
-        .where(ENVIRONMENTS.ACCOUNT_ID.eq(accountIdentifier))
-        .and(ENVIRONMENTS.CREATED_AT.greaterOrEqual(startInterval))
-        .and(ENVIRONMENTS.CREATED_AT.lessThan(endInterval))
-        .and(ENVIRONMENTS.DELETED.eq(false))
-        .andExists(dsl.selectOne()
-                       .from(orgProjectTable)
-                       .where(ENVIRONMENTS.ORG_IDENTIFIER.eq((Field<String>) orgProjectTable.field("orgId"))
-                                  .and(ENVIRONMENTS.PROJECT_IDENTIFIER.eq(
-                                      (Field<String>) orgProjectTable.field("projectId")))))
-        .fetchInto(Integer.class)
-        .get(0);
-  }
-
-  private Integer getTotalServicesCount(String accountIdentifier, Table<Record2<String, String>> orgProjectTable) {
-    return dsl.select(DSL.count())
-        .from(SERVICES)
-        .where(SERVICES.ACCOUNT_ID.eq(accountIdentifier))
-        .and(SERVICES.DELETED.eq(false))
-        .andExists(
-            dsl.selectOne()
-                .from(orgProjectTable)
-                .where(SERVICES.ORG_IDENTIFIER.eq((Field<String>) orgProjectTable.field("orgId"))
-                           .and(SERVICES.PROJECT_IDENTIFIER.eq((Field<String>) orgProjectTable.field("projectId")))))
-        .fetchInto(Integer.class)
-        .get(0);
-  }
-
-  private Integer getServicesCount(
-      String accountIdentifier, long startInterval, long endInterval, Table<Record2<String, String>> orgProjectTable) {
-    return dsl.select(DSL.count())
-        .from(SERVICES)
-        .where(SERVICES.ACCOUNT_ID.eq(accountIdentifier))
-        .and(SERVICES.CREATED_AT.greaterOrEqual(startInterval))
-        .and(SERVICES.CREATED_AT.lessThan(endInterval))
-        .and(SERVICES.DELETED.eq(false))
-        .andExists(
-            dsl.selectOne()
-                .from(orgProjectTable)
-                .where(SERVICES.ORG_IDENTIFIER.eq((Field<String>) orgProjectTable.field("orgId"))
-                           .and(SERVICES.PROJECT_IDENTIFIER.eq((Field<String>) orgProjectTable.field("projectId")))))
-        .fetchInto(Integer.class)
-        .get(0);
-  }
-
   private Map<String, ProjectDashBoardInfo> getCombinedIdToRecordMap(List<ProjectDashBoardInfo> projectInfoList) {
     Map<String, ProjectDashBoardInfo> combinedIdToRecordMap = new HashMap<>();
 
@@ -748,22 +509,8 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
 
   private void prepareStatusWiseCount(Table<Record2<String, String>> orgProjectTable, String accountIdentifier,
       long startInterval, long endInterval, Map<String, ProjectDashBoardInfo> combinedIdToRecordMap) {
-    List<AggregateProjectInfo> projectInfoList =
-        dsl.select(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER,
-               PIPELINE_EXECUTION_SUMMARY_CD.STATUS, DSL.count().as("count"))
-            .from(PIPELINE_EXECUTION_SUMMARY_CD)
-            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.greaterOrEqual(startInterval))
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.lessThan(endInterval)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectTable)
-                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
-                                      .eq((Field<String>) orgProjectTable.field("orgId"))
-                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
-                                          (Field<String>) orgProjectTable.field("projectId")))))
-            .groupBy(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER,
-                PIPELINE_EXECUTION_SUMMARY_CD.STATUS)
-            .fetchInto(AggregateProjectInfo.class);
+    List<AggregateProjectInfo> projectInfoList = timeScaleDAL.getProjectWiseStatusWiseDeploymentCount(
+        orgProjectTable, accountIdentifier, startInterval, endInterval);
 
     for (AggregateProjectInfo aggregateProjectInfo : projectInfoList) {
       String key = getCombinedId(aggregateProjectInfo.getOrgidentifier(), aggregateProjectInfo.getProjectidentifier());
@@ -786,20 +533,7 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     endInterval -= duration;
 
     List<AggregateProjectInfo> previousProjectInfoList =
-        dsl.select(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER,
-               DSL.count().as("count"))
-            .from(PIPELINE_EXECUTION_SUMMARY_CD)
-            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.greaterOrEqual(startInterval))
-                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.lessThan(endInterval)))
-            .andExists(dsl.selectOne()
-                           .from(orgProjectTable)
-                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
-                                      .eq((Field<String>) orgProjectTable.field("orgId"))
-                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
-                                          (Field<String>) orgProjectTable.field("projectId")))))
-            .groupBy(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER)
-            .fetchInto(AggregateProjectInfo.class);
+        timeScaleDAL.getProjectWiseDeploymentCount(orgProjectTable, accountIdentifier, startInterval, endInterval);
 
     for (AggregateProjectInfo previousProjectInfo : previousProjectInfoList) {
       String key = getCombinedId(previousProjectInfo.getOrgidentifier(), previousProjectInfo.getProjectidentifier());
@@ -811,7 +545,11 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
 
   private double getChangeRate(double previousValue, double newValue) {
     double change = newValue - previousValue;
-    return previousValue != 0 ? (change * 100.0) / previousValue : 0;
+    if (change == 0) {
+      return 0;
+    }
+    double rate = previousValue != 0 ? (change * 100.0) / previousValue : Double.MAX_VALUE;
+    return DashboardHelper.truncate(rate);
   }
 
   private Table<Record2<String, String>> prepareOrgProjectTable(List<AggregateProjectInfo> projectInfoList) {

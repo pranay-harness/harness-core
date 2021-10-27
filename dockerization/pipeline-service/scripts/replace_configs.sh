@@ -290,9 +290,27 @@ replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
 replace_key_value eventsFramework.redis.masterName $EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME
 replace_key_value eventsFramework.redis.userName $EVENTS_FRAMEWORK_REDIS_USERNAME
 replace_key_value eventsFramework.redis.password $EVENTS_FRAMEWORK_REDIS_PASSWORD
+replace_key_value eventsFramework.redis.nettyThreads $EVENTS_FRAMEWORK_NETTY_THREADS
 replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDIS_SSL_ENABLED
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
+
+if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+replace_key_value redisLockConfig.redisUrl "$LOCK_CONFIG_REDIS_URL"
+replace_key_value redisLockConfig.envNamespace "$LOCK_CONFIG_ENV_NAMESPACE"
+replace_key_value redisLockConfig.sentinel "$LOCK_CONFIG_USE_SENTINEL"
+replace_key_value redisLockConfig.masterName "$LOCK_CONFIG_SENTINEL_MASTER_NAME"
+replace_key_value redisLockConfig.userName "$LOCK_CONFIG_REDIS_USERNAME"
+replace_key_value redisLockConfig.password "$LOCK_CONFIG_REDIS_PASSWORD"
+replace_key_value redisLockConfig.nettyThreads "$REDIS_NETTY_THREADS"
 
 replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 
@@ -326,3 +344,49 @@ replace_key_value delegatePollingConfig.progressDelay "$POLLING_PROGRESS_DELAY"
 
 replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
 replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
+
+#Iterators Configuration
+replace_key_value iteratorsConfig.approvalInstance.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.approvalInstance.threadPoolCount "$BARRIER_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.approvalInstance.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.webhook.enabled "$WEBHOOK_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.webhook.threadPoolCount "$WEBHOOK_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.webhook.targetIntervalInSeconds "$WEBHOOK_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.scheduledTrigger.enabled "$SCHEDULED_TRIGGER_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.scheduledTrigger.threadPoolCount "$SCHEDULED_TRIGGER_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.scheduledTrigger.targetIntervalInSeconds "$SCHEDULED_TRIGGER_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.timeoutEngine.enabled "$TIME_OUT_ENGINE_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.timeoutEngine.threadPoolCount "$TIMEOUT_ENGINE_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.timeoutEngine.targetIntervalInSeconds "$TIME_OUT_ENGINE_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.barrier.enabled "$BARRIER_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.barrier.threadPoolCount "$BARRIER_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.barrier.targetIntervalInSeconds "$BARRIER_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.resourceRestraint.enabled "$RESOURCE_RESTRAINT_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.resourceRestraint.threadPoolCount "$RESOURCE_RESTRAINT_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.resourceRestraint.targetIntervalInSeconds "$RESOURCE_RESTRAINT_ITERATOR_INTERVAL_SEC"
+
+replace_key_value iteratorsConfig.interruptMonitor.enabled "$INTERRUPT_MONITOR_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.interruptMonitor.threadPoolCount "$INTERRUPT_MONITOR_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value iteratorsConfig.interruptMonitor.targetIntervalInSeconds "$INTERRUPT_MONITOR_ITERATOR_INTERVAL_SEC"
+
+#consumers configuration
+replace_key_value pipelineEventConsumersConfig.interrupt.threads "$INTERRUPT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.orchestrationEvent.threads "$ORCHESTRATION_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.facilitatorEvent.threads "$FACILITATE_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.nodeStart.threads "$NODE_START_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.progress.threads "$PROGRESS_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.advise.threads "$ADVISE_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.resume.threads "$RESUME_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.sdkResponse.threads "$SDK_RESPONSE_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.graphUpdate.threads "$GRAPH_UPDATE_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.partialPlanResponse.threads "$PARTIAL_PLAN_RESPONSE_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.createPlan.threads "$CREATE_PLAN_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.planNotify.threads "$PLAN_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.pmsNotify.threads "$PMS_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
+
+replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"

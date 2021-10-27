@@ -28,22 +28,33 @@ import org.redisson.api.StreamMessageId;
 @Slf4j
 public class RedisProducer extends AbstractProducer {
   private static final String PRODUCER = "producer";
-  private final RStream<String, String> stream;
-  private final RedissonClient redissonClient;
+  private RStream<String, String> stream;
+  private RedissonClient redissonClient;
   // This is used when the consumer for the event are no longer accepting due to some failure and
   // the messages are continuously being accumulated in Redis. To come up with this number, it is
   // very important to understand the alerting on the consumers and the scale estimations of a
   // particular use-case which is pushing to the topic
-  private final int maxTopicSize;
+  private int maxTopicSize;
 
   private Retry retry;
 
   public RedisProducer(String topicName, @NotNull RedisConfig redisConfig, int maxTopicSize, String producerName) {
     super(topicName, producerName);
+    RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
+    initProducer(topicName, redissonClient, maxTopicSize, redisConfig.getEnvNamespace());
+  }
+
+  public RedisProducer(String topicName, @NotNull RedissonClient redissonClient, int maxTopicSize, String producerName,
+      String envNamespace) {
+    super(topicName, producerName);
+    initProducer(topicName, redissonClient, maxTopicSize, envNamespace);
+  }
+
+  private void initProducer(
+      String topicName, @NotNull RedissonClient redissonClient, int maxTopicSize, String envNamespace) {
     this.maxTopicSize = maxTopicSize;
-    this.redissonClient = io.harness.eventsframework.impl.redis.RedisUtils.getClient(redisConfig);
-    this.stream = io.harness.eventsframework.impl.redis.RedisUtils.getStream(
-        topicName, redissonClient, redisConfig.getEnvNamespace());
+    this.redissonClient = redissonClient;
+    this.stream = RedisUtils.getStream(topicName, redissonClient, envNamespace);
     RetryConfig retryConfig =
         RetryConfig.custom().intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 1.5)).maxAttempts(6).build();
 
@@ -89,6 +100,11 @@ public class RedisProducer extends AbstractProducer {
   public static RedisProducer of(
       String topicName, @NotNull RedisConfig redisConfig, int maxTopicLength, String producerName) {
     return new RedisProducer(topicName, redisConfig, maxTopicLength, producerName);
+  }
+
+  public static RedisProducer of(String topicName, @NotNull RedissonClient redissonClient, int maxTopicSize,
+      String producerName, String envNamespace) {
+    return new RedisProducer(topicName, redissonClient, maxTopicSize, producerName, envNamespace);
   }
 
   private void waitForRedisToComeUp() {

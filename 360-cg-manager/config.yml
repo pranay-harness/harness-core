@@ -307,7 +307,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 87448d72
+scmVersion: 72f01538
 
 ngAuthUIEnabled: false
 
@@ -634,9 +634,37 @@ eventListenersCountConfig:
   generalNotifyEventListenerCount: ${GENERAL_NOTIFY_EVENT_LISTENER_COUNT:-5}
   orchestrationNotifyEventListenerCount: ${ORCHESTRATION_NOTIFY_EVENT_LISTENER_COUNT:-5}
 
+iteratorsConfig:
+  resourceConstraintBackupIteratorConfig:
+    threadPoolSize: ${RESOURCE_CONSTRAINT_BACKUP_ITERATOR_THREAD_COUNT:-10}
+  delegateCapabilitiesRecordIteratorConfig:
+    threadPoolSize: ${DELEGATE_CAPABILITIES_RECORD_ITERATOR_THREAD_COUNT:-5}
+  settingAttributeValidateConnectivityIteratorConfig:
+    threadPoolSize: ${SETTING_ATTRIBUTE_VALIDATE_CONNECTIVITY_ITERATOR_THREAD_COUNT:-5}
+  instanceSyncIteratorConfig:
+    threadPoolSize: ${INSTANCE_SYNC_ITERATOR_THREAD_COUNT:-10}
+  artifactCollectionIteratorConfig:
+    threadPoolSize: ${ARTIFACT_COLLECTION_ITERATOR_THREAD_COUNT:-25}
+  eventDeliveryIteratorConfig:
+    threadPoolSize: ${EVENT_DELIVERY_ITERATOR_THREAD_COUNT:-25}
+  workflowExecutionMonitorIteratorConfig:
+    threadPoolSize: ${WORKFLOW_EXECUTION_MONITOR_ITERATOR_THREAD_COUNT:-5}
+  blockingCapabilityPermissionsRecordHandlerIteratorConfig:
+    threadPoolSize: ${BLOCKING_CAPABILITY_PERMISSIONS_RECORD_ITERATOR_THREAD_COUNT:-5}
+  vaultSecretManagerRenewalIteratorConfig:
+    threadPoolSize: ${VAULT_SECRET_MANAGER_ITERATOR_THREAD_COUNT:-5}
+  delegateTaskExpiryCheckIteratorConfig:
+    threadPoolSize: ${DELEGATE_TASK_EXPIRY_CHECK_ITERATOR_THREAD_COUNT:-5}
+  perpetualTaskRebalanceIteratorConfig:
+    threadPoolSize: ${PERPETUAL_TASK_REBALANCE_ITERATOR_THREAD_COUNT:-5}
+  perpetualTaskAssignmentIteratorConfig:
+    threadPoolSize: ${PERPETUAL_TASK_ASSIGNMENT_ITERATOR_THREAD_COUNT:-5}
+
 disableDelegateMgmtInManager: false
 
 ldapSyncJobConfig:
   poolSize: 3
   syncInterval: 15
   defaultCronExpression: "0 0/15 * 1/1 * ? *"
+
+useGlobalKMSAsBaseAlgo: false

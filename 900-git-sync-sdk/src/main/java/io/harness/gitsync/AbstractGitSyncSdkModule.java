@@ -16,11 +16,13 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.persistance.GitAwareRepository;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.redis.RedisConfig;
 import io.harness.version.VersionInfoManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
+import org.redisson.api.RedissonClient;
 
 @OwnedBy(DX)
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
@@ -61,19 +64,19 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
+      RedisConfig redisConfig = getGitSyncSdkConfiguration().getEventsRedisConfig();
+      RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH,
-              getGitSyncSdkConfiguration().getEventsRedisConfig(),
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH, redissonClient,
               EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE,
-              getAuthorizationServiceHeader().getServiceId()));
+              getAuthorizationServiceHeader().getServiceId(), redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM + GIT_SYNC_SDK))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM,
-              getGitSyncSdkConfiguration().getServiceHeader().getServiceId() + GIT_SYNC_SDK,
-              getGitSyncSdkConfiguration().getEventsRedisConfig(),
+              getGitSyncSdkConfiguration().getServiceHeader().getServiceId() + GIT_SYNC_SDK, redissonClient,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME,
-              EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE));
+              EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
     }
     final Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfiguration =
         getGitSyncSdkConfiguration().getGitSyncEntitiesConfiguration();

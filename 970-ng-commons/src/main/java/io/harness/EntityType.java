@@ -83,7 +83,10 @@ public enum EntityType {
       ModuleType.CV, EntityTypeConstants.MONITORED_SERVICE, IdentifierRef.class, EntityYamlRootNames.MONITORED_SERVICE),
   @JsonProperty(EntityTypeConstants.GIT_REPOSITORIES)
   GIT_REPOSITORIES(
-      ModuleType.CORE, EntityTypeConstants.GIT_REPOSITORIES, IdentifierRef.class, EntityYamlRootNames.GIT_REPOSITORY);
+      ModuleType.CORE, EntityTypeConstants.GIT_REPOSITORIES, IdentifierRef.class, EntityYamlRootNames.GIT_REPOSITORY),
+  @JsonProperty(EntityTypeConstants.FEATURE_FLAGS)
+  FEATURE_FLAGS(
+      ModuleType.CF, EntityTypeConstants.FEATURE_FLAGS, IdentifierRef.class, EntityYamlRootNames.FEATURE_FLAGS);
 
   private final ModuleType moduleType;
   String yamlName;

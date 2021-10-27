@@ -134,8 +134,6 @@ public interface DelegateService extends OwnedByAccount {
 
   String obtainDelegateName(String accountId, String delegateId, boolean forceRefresh);
 
-  List<String> obtainDelegateIds(String accountId, String sessionIdentifier);
-
   List<String> obtainDelegateIdsUsingName(String accountId, String delegateName);
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
@@ -176,4 +174,8 @@ public interface DelegateService extends OwnedByAccount {
   boolean checkDelegateConnected(String accountId, String delegateId);
 
   void updateLastExpiredEventHeartbeatTime(long lastExpiredEventHeartbeatTime, String delegateId, String accountId);
+
+  DelegateTask abortTask(String accountId, String delegateTaskId);
+
+  String expireTask(String accountId, String delegateTaskId);
 }

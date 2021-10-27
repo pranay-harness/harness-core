@@ -100,9 +100,19 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -266,10 +276,40 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     scheduleJobs(injector);
     registerQueueListener(injector);
     registerPmsSdkEvents(injector);
-
+    registerOasResource(configuration, environment, injector);
     log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);
     LogManager.shutdown();
+  }
+  private OpenAPIConfiguration getOasConfig(CIManagerConfiguration appConfig) {
+    OpenAPI oas = new OpenAPI();
+    Info info =
+        new Info()
+            .title("CIE API Reference")
+            .description(
+                "This is the Open Api Spec 3 for the CIE Manager. This is under active development. Beware of the breaking change with respect to the generated code stub")
+            .termsOfService("https://harness.io/terms-of-use/")
+            .version("3.0")
+            .contact(new Contact().email("contact@harness.io"));
+    oas.info(info);
+    URL baseurl = null;
+    try {
+      baseurl = new URL("https", appConfig.getHostname(), appConfig.getBasePathPrefix());
+      Server server = new Server();
+      server.setUrl(baseurl.toString());
+      oas.servers(Collections.singletonList(server));
+    } catch (MalformedURLException e) {
+      log.error("failed to set baseurl for server, {}/{}", appConfig.hostname, appConfig.getBasePathPrefix());
+    }
+    Set<String> packages = CIManagerConfiguration.getUniquePackagesContainingResources();
+    return new SwaggerConfiguration().openAPI(oas).prettyPrint(true).resourcePackages(packages).scannerClass(
+        "io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
+  }
+
+  private void registerOasResource(CIManagerConfiguration appConfig, Environment environment, Injector injector) {
+    OpenApiResource openApiResource = injector.getInstance(OpenApiResource.class);
+    openApiResource.setOpenApiConfiguration(getOasConfig(appConfig));
+    environment.jersey().register(openApiResource);
   }
 
   private void registerQueueListener(Injector injector) {

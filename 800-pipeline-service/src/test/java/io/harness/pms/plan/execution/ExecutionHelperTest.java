@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,6 +22,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.retry.RetryExecutionParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -31,10 +33,12 @@ import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.RerunInfo;
+import io.harness.pms.contracts.plan.RetryExecutionInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.helpers.TriggeredByHelper;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
@@ -43,11 +47,13 @@ import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.ExecArgs;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,6 +82,7 @@ public class ExecutionHelperTest extends CategoryTest {
   @Mock OrchestrationService orchestrationService;
   @Mock PlanExecutionMetadataService planExecutionMetadataService;
   @Mock PMSPipelineTemplateHelper pipelineTemplateHelper;
+  @Mock PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
 
   String accountId = "accountId";
   String orgId = "orgId";
@@ -89,7 +96,7 @@ public class ExecutionHelperTest extends CategoryTest {
       + "      description: desc\n"
       + "  - stage:\n"
       + "      identifier: s2\n"
-      + "      description: desc";
+      + "      description: desc\n";
   String pipelineYaml = "pipeline:\n"
       + "  stages:\n"
       + "  - stage:\n"
@@ -97,7 +104,16 @@ public class ExecutionHelperTest extends CategoryTest {
       + "      description: <+input>\n"
       + "  - stage:\n"
       + "      identifier: s2\n"
-      + "      description: <+input>";
+      + "      description: <+input>\n";
+  String pipelineYamlWithExpressions = "pipeline:\n"
+      + "  stages:\n"
+      + "  - stage:\n"
+      + "      identifier: \"s1\"\n"
+      + "      description: \"desc\"\n"
+      + "  - stage:\n"
+      + "      identifier: \"s2\"\n"
+      + "      description: \"<+pipeline.stages.s1.description>\"\n";
+  Map<String, String> expressionValues = Collections.singletonMap("<+pipeline.stages.s1.description>", "desc");
   String mergedPipelineYaml = "pipeline:\n"
       + "  stages:\n"
       + "  - stage:\n"
@@ -115,6 +131,7 @@ public class ExecutionHelperTest extends CategoryTest {
   String generatedExecutionId = "newExecId";
 
   PipelineEntity pipelineEntity;
+  PipelineEntity pipelineEntityWithExpressions;
   TriggeredBy triggeredBy;
   ExecutionTriggerInfo executionTriggerInfo;
   ExecutionPrincipalInfo executionPrincipalInfo;
@@ -130,6 +147,14 @@ public class ExecutionHelperTest extends CategoryTest {
                          .yaml(pipelineYaml)
                          .runSequence(394)
                          .build();
+    pipelineEntityWithExpressions = PipelineEntity.builder()
+                                        .accountId(accountId)
+                                        .orgIdentifier(orgId)
+                                        .projectIdentifier(projectId)
+                                        .identifier(pipelineId)
+                                        .yaml(pipelineYamlWithExpressions)
+                                        .runSequence(394)
+                                        .build();
     triggeredBy = TriggeredBy.newBuilder().setUuid("userUuid").setIdentifier("username").build();
     executionTriggerInfo =
         ExecutionTriggerInfo.newBuilder().setTriggeredBy(triggeredBy).setTriggerType(MANUAL).setIsRerun(false).build();
@@ -206,9 +231,14 @@ public class ExecutionHelperTest extends CategoryTest {
 
     TemplateMergeResponseDTO templateMergeResponseDTO =
         TemplateMergeResponseDTO.builder().mergedPipelineYaml(mergedPipelineYaml).build();
-    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
-    ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml,
-        Collections.emptyList(), executionTriggerInfo, null, false, null, null, null);
+    String mergedYaml = InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), runtimeInputYaml, true);
+    doReturn(templateMergeResponseDTO)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
+            pipelineEntity.getProjectIdentifier(), mergedYaml);
+    ExecArgs execArgs =
+        executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, Collections.emptyList(), null,
+            executionTriggerInfo, null, RetryExecutionParameters.builder().isRetry(false).build());
     executionMetadataAssertions(execArgs.getMetadata());
 
     PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
@@ -228,12 +258,16 @@ public class ExecutionHelperTest extends CategoryTest {
     buildExecutionArgsMocks();
     TemplateMergeResponseDTO templateMergeResponseDTO =
         TemplateMergeResponseDTO.builder().mergedPipelineYaml(mergedPipelineYaml).build();
+    String mergedYaml = InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), runtimeInputYaml, true);
     PipelineEntity entityWithTemplateReference = pipelineEntity.withTemplateReference(true);
     doReturn(templateMergeResponseDTO)
         .when(pipelineTemplateHelper)
-        .resolveTemplateRefsInPipeline(entityWithTemplateReference);
+        .resolveTemplateRefsInPipeline(entityWithTemplateReference.getAccountId(),
+            entityWithTemplateReference.getOrgIdentifier(), entityWithTemplateReference.getProjectIdentifier(),
+            mergedYaml);
     ExecArgs execArgs = executionHelper.buildExecutionArgs(entityWithTemplateReference, moduleType, runtimeInputYaml,
-        Collections.emptyList(), executionTriggerInfo, null, false, null, null, null);
+        Collections.emptyList(), null, executionTriggerInfo, null,
+        RetryExecutionParameters.builder().isRetry(false).build());
     executionMetadataAssertions(execArgs.getMetadata());
 
     PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
@@ -262,9 +296,14 @@ public class ExecutionHelperTest extends CategoryTest {
 
     TemplateMergeResponseDTO templateMergeResponseDTO =
         TemplateMergeResponseDTO.builder().mergedPipelineYaml(mergedPipelineYaml).build();
-    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
+    String mergedYaml = InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), runtimeInputYaml, true);
+    doReturn(templateMergeResponseDTO)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
+            pipelineEntity.getProjectIdentifier(), mergedYaml);
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml,
-        Collections.singletonList("s2"), executionTriggerInfo, null, false, null, null, null);
+        Collections.singletonList("s2"), null, executionTriggerInfo, null,
+        RetryExecutionParameters.builder().isRetry(false).build());
     executionMetadataAssertions(execArgs.getMetadata());
 
     PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
@@ -275,9 +314,48 @@ public class ExecutionHelperTest extends CategoryTest {
     assertThat(planExecutionMetadata.getStagesExecutionMetadata().getFullPipelineYaml()).isEqualTo(mergedPipelineYaml);
     assertThat(planExecutionMetadata.getStagesExecutionMetadata().getStageIdentifiers())
         .isEqualTo(Collections.singletonList("s2"));
+    assertThat(planExecutionMetadata.getStagesExecutionMetadata().getExpressionValues()).isNull();
     assertThat(planExecutionMetadata.getProcessedYaml()).isEqualTo(YamlUtils.injectUuid(mergedPipelineYamlForS2));
 
     buildExecutionMetadataVerifications();
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testBuildExecutionArgsForRunStageWithExpressions() throws IOException {
+    buildExecutionArgsMocks();
+
+    TemplateMergeResponseDTO templateMergeResponseDTO =
+        TemplateMergeResponseDTO.builder().mergedPipelineYaml(pipelineYamlWithExpressions).build();
+    doReturn(templateMergeResponseDTO)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(pipelineEntityWithExpressions.getAccountId(),
+            pipelineEntityWithExpressions.getOrgIdentifier(), pipelineEntityWithExpressions.getProjectIdentifier(),
+            pipelineYamlWithExpressions);
+    ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntityWithExpressions, moduleType, null,
+        Collections.singletonList("s2"), expressionValues, executionTriggerInfo, null,
+        RetryExecutionParameters.builder().isRetry(false).build());
+    executionMetadataAssertions(execArgs.getMetadata());
+
+    PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
+    assertThat(planExecutionMetadata.getPlanExecutionId()).isEqualTo(generatedExecutionId);
+    assertThat(planExecutionMetadata.getInputSetYaml()).isEqualTo(null);
+    assertThat(planExecutionMetadata.getYaml()).isEqualTo(mergedPipelineYamlForS2);
+    assertThat(planExecutionMetadata.getStagesExecutionMetadata().isStagesExecution()).isEqualTo(true);
+    assertThat(planExecutionMetadata.getStagesExecutionMetadata().getFullPipelineYaml()).isEqualTo(mergedPipelineYaml);
+    assertThat(planExecutionMetadata.getStagesExecutionMetadata().getStageIdentifiers())
+        .isEqualTo(Collections.singletonList("s2"));
+    assertThat(planExecutionMetadata.getStagesExecutionMetadata().getExpressionValues()).isEqualTo(expressionValues);
+    assertThat(planExecutionMetadata.getProcessedYaml()).isEqualTo(YamlUtils.injectUuid(mergedPipelineYamlForS2));
+
+    verify(principalInfoHelper, times(1)).getPrincipalInfoFromSecurityContext();
+    verify(pmsGitSyncHelper, times(1)).getGitSyncBranchContextBytesThreadLocal(pipelineEntityWithExpressions);
+    verify(pmsYamlSchemaService, times(1)).validateYamlSchema(accountId, orgId, projectId, pipelineYamlWithExpressions);
+    verify(pipelineRbacServiceImpl, times(1))
+        .extractAndValidateStaticallyReferredEntities(
+            accountId, orgId, projectId, pipelineId, pipelineYamlWithExpressions);
+    verify(planExecutionMetadataService, times(0)).findByPlanExecutionId(anyString());
   }
 
   private void buildExecutionArgsMocks() {
@@ -346,5 +424,29 @@ public class ExecutionHelperTest extends CategoryTest {
     verify(planCreatorMergeService, times(1))
         .createPlan(accountId, orgId, projectId, executionMetadata, planExecutionMetadata);
     verify(orchestrationService, times(1)).startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testBuildRetryInfo() {
+    // isRetry: false
+    RetryExecutionInfo retryExecutionInfo = executionHelper.buildRetryInfo(false, null);
+    assertThat(retryExecutionInfo.getIsRetry()).isEqualTo(false);
+
+    // isRetry: true and originalId: null
+    retryExecutionInfo = executionHelper.buildRetryInfo(true, null);
+    assertThat(retryExecutionInfo.getIsRetry()).isEqualTo(false);
+
+    // isRetry: true and originalId: empty
+    retryExecutionInfo = executionHelper.buildRetryInfo(true, "");
+    assertThat(retryExecutionInfo.getIsRetry()).isEqualTo(false);
+
+    // isRetry: true
+    when(pmsExecutionSummaryRespository.fetchRootRetryExecutionId("originalId")).thenReturn("rootParentId");
+    retryExecutionInfo = executionHelper.buildRetryInfo(true, "originalId");
+    assertThat(retryExecutionInfo.getIsRetry()).isEqualTo(true);
+    assertThat(retryExecutionInfo.getParentRetryId()).isEqualTo("originalId");
+    assertThat(retryExecutionInfo.getRootExecutionId()).isEqualTo("rootParentId");
   }
 }

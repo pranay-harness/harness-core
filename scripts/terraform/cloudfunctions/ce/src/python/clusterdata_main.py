@@ -130,6 +130,8 @@ def create_dataset_and_tables(jsonData):
                 alterTableAggregated(jsonData)
             elif table_ref == cluster_data_table_ref:
                 alterTable(jsonData)
+            elif table_ref == unified_table_ref:
+                alter_unified_table(jsonData)
 
 
 def ingest_data_from_avro(jsonData):
@@ -225,7 +227,8 @@ def ingest_data_in_unified(jsonData):
             INSERT INTO `%s.unifiedTable` (CLOUDPROVIDER, PRODUCT, STARTTIME, ENDTIME, COST, CPUBILLINGAMOUNT,
                 MEMORYBILLINGAMOUNT, ACTUALIDLECOST, SYSTEMCOST, UNALLOCATEDCOST, NETWORKCOST, CLUSTERCLOUDPROVIDER,
                 ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,
-                INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, LABELS)
+                INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, 
+                ORGIDENTIFIER, PROJECTIDENTIFIER, LABELS)
             SELECT "CLUSTER" AS CLOUDPROVIDER,
                 (CASE
                     WHEN CLUSTERTYPE = "K8S" THEN "Kubernetes Cluster"
@@ -238,12 +241,12 @@ def ingest_data_in_unified(jsonData):
                 clustername AS CLUSTERNAME, clustertype AS CLUSTERTYPE, region AS REGION, namespace AS NAMESPACE, workloadname AS WORKLOADNAME,
                 workloadtype AS WORKLOADTYPE, instancetype AS INSTANCETYPE, appname AS APPID, servicename AS SERVICEID, envname AS ENVID,
                 cloudproviderid AS CLOUDPROVIDERID, launchtype AS LAUNCHTYPE, cloudservicename AS CLOUDSERVICENAME, 
-                ANY_VALUE(labels) as LABELS 
+                ORGIDENTIFIER, PROJECTIDENTIFIER, ANY_VALUE(labels) as LABELS 
             FROM `%s` 
             WHERE DATE(TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(starttime), DAY)) = DATE(%s, %s, %s) AND instancetype != "CLUSTER_UNALLOCATED"
             GROUP BY ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE,
                 WORKLOADNAME,WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, 
-                CLOUDSERVICENAME, STARTTIME, ENDTIME, CLUSTERCLOUDPROVIDER;
+                CLOUDSERVICENAME, STARTTIME, ENDTIME, CLUSTERCLOUDPROVIDER, ORGIDENTIFIER, PROJECTIDENTIFIER;
     """ % (ds,  jsonData["fileYear"], jsonData["fileMonth"], jsonData["fileDay"], ds,
            jsonData['tableId'], jsonData["fileYear"], jsonData["fileMonth"], jsonData["fileDay"])
     job_config = bigquery.QueryJobConfig(
@@ -288,7 +291,7 @@ def ingest_aggregated_data(jsonData):
                         CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, 
                         REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, 
                         CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCENAME, CLOUDPROVIDER, NETWORKCOST, APPNAME,
-                        SERVICENAME, ENVNAME, LABELS)  
+                        SERVICENAME, ENVNAME, ORGIDENTIFIER, PROJECTIDENTIFIER, LABELS)  
                      SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, 
                         max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, 
                         sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, 
@@ -299,14 +302,15 @@ def ingest_aggregated_data(jsonData):
                         SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, 
                         ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  
                         INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCENAME,
-                        CLOUDPROVIDER, SUM(networkcost) AS NETWORKCOST, APPNAME, SERVICENAME, ENVNAME, ANY_VALUE(labels) as LABELS
+                        CLOUDPROVIDER, SUM(networkcost) AS NETWORKCOST, APPNAME, SERVICENAME, ENVNAME, ORGIDENTIFIER, 
+                        PROJECTIDENTIFIER, ANY_VALUE(labels) as LABELS 
                     FROM %s 
                     WHERE STARTTIME = UNIX_MILLIS(TIMESTAMP(DATETIME(%s, %s, %s, %s, 00, 00))) 
                         AND INSTANCETYPE IN ("K8S_POD", 
                         "ECS_CONTAINER_INSTANCE", "ECS_TASK_EC2", "ECS_TASK_FARGATE", "K8S_POD_FARGATE") 
                     GROUP BY ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, 
                         WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, 
-                        INSTANCENAME, CLOUDPROVIDER, APPNAME, SERVICENAME, ENVNAME ;
+                        INSTANCENAME, CLOUDPROVIDER, APPNAME, SERVICENAME, ENVNAME, ORGIDENTIFIER, PROJECTIDENTIFIER ;
                     """ % (jsonData["tableIdAggregated"], jsonData["tableId"], jsonData["fileYear"], jsonData["fileMonth"], jsonData["fileDay"],
                            jsonData["fileHour"])
 
@@ -326,7 +330,7 @@ def ingest_aggregated_data(jsonData):
                             CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, 
                             NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, 
                             LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID, INSTANCENAME, CLOUDPROVIDER, NETWORKCOST, APPNAME,
-                            SERVICENAME, ENVNAME, LABELS) 
+                            SERVICENAME, ENVNAME, ORGIDENTIFIER, PROJECTIDENTIFIER, LABELS) 
                         SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, 
                             max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, 
                             sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, sum(SYSTEMCOST) as SYSTEMCOST, 
@@ -337,12 +341,13 @@ def ingest_aggregated_data(jsonData):
                             SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, 
                             REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, 
                             CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID, INSTANCENAME, CLOUDPROVIDER,
-                            SUM(networkcost) AS NETWORKCOST, APPNAME, SERVICENAME, ENVNAME, ANY_VALUE(labels) as LABELS
+                            SUM(networkcost) AS NETWORKCOST, APPNAME, SERVICENAME, ENVNAME, ORGIDENTIFIER, 
+                            PROJECTIDENTIFIER, ANY_VALUE(labels) as LABELS 
                         FROM %s 
                         WHERE STARTTIME = UNIX_MILLIS(TIMESTAMP(DATETIME(%s, %s, %s, %s, 00, 00))) and INSTANCETYPE IN ("K8S_NODE", "K8S_PV") 
                         GROUP BY ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, 
                             WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, 
-                            CLOUDSERVICENAME, INSTANCEID, INSTANCENAME, CLOUDPROVIDER, APPNAME, SERVICENAME, ENVNAME ;
+                            CLOUDSERVICENAME, INSTANCEID, INSTANCENAME, CLOUDPROVIDER, APPNAME, SERVICENAME, ENVNAME, ORGIDENTIFIER, PROJECTIDENTIFIER ;
                         """ % (jsonData["tableIdAggregated"], jsonData["tableId"], jsonData["fileYear"], jsonData["fileMonth"], jsonData["fileDay"],
                                jsonData["fileHour"])
 
@@ -367,7 +372,9 @@ def alterTableAggregated(jsonData):
             ADD COLUMN IF NOT EXISTS labels ARRAY<STRUCT<key STRING, value STRING>>, \
             ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64, \
             ADD COLUMN IF NOT EXISTS maxstorageutilizationvalue FLOAT64, \
-            ADD COLUMN IF NOT EXISTS maxstoragerequest FLOAT64;" % (jsonData["tableIdAggregated"])
+            ADD COLUMN IF NOT EXISTS maxstoragerequest FLOAT64, \
+            ADD COLUMN IF NOT EXISTS orgIdentifier STRING, \
+            ADD COLUMN IF NOT EXISTS projectIdentifier STRING;" % (jsonData["tableIdAggregated"])
     try:
         query_job = client.query(query)
         print_(query_job.job_id)
@@ -383,7 +390,9 @@ def alterTable(jsonData):
     query = "ALTER TABLE `%s` \
             ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64, \
             ADD COLUMN IF NOT EXISTS maxstorageutilizationvalue FLOAT64, \
-            ADD COLUMN IF NOT EXISTS maxstoragerequest FLOAT64;" % (jsonData["tableId"])
+            ADD COLUMN IF NOT EXISTS maxstoragerequest FLOAT64, \
+            ADD COLUMN IF NOT EXISTS orgIdentifier STRING, \
+            ADD COLUMN IF NOT EXISTS projectIdentifier STRING;" % (jsonData["tableId"])
     try:
         query_job = client.query(query)
         print_(query_job.job_id)
@@ -393,6 +402,24 @@ def alterTable(jsonData):
         print_(e)
     else:
         print_("Finished altering %s table" % jsonData["tableId"])
+
+
+def alter_unified_table(jsonData):
+    print_("Altering unifiedTable Table")
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    query = "ALTER TABLE `%s.unifiedTable` \
+        ADD COLUMN IF NOT EXISTS orgIdentifier STRING, \
+        ADD COLUMN IF NOT EXISTS projectIdentifier STRING;" % ds
+
+    try:
+        print_(query)
+        query_job = client.query(query)
+        query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e)
+    else:
+        print_("Finished Altering unifiedTable Table")
 
 
 def ingest_data_to_costagg(jsonData):

@@ -21,7 +21,7 @@ public interface GitSyncErrorRepositoryCustom {
 
   DeleteResult deleteByIds(List<String> ids);
 
-  UpdateResult upsertGitError(Criteria criteria, Update update);
+  UpdateResult updateGitError(Criteria criteria, Update update);
 
   Page<GitSyncError> findAll(Criteria criteria, Pageable pageable);
 

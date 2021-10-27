@@ -9,6 +9,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT
 import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ACCOUNT_DEFAULTS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
@@ -59,6 +60,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.DefaultsAuthHandler;
 import software.wings.service.impl.security.auth.TemplateAuthHandler;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -130,6 +132,7 @@ public class YamlResource {
   @Inject private YamlCloneService yamlCloneService;
   @Inject private ExecutorService executorService;
   @Inject TemplateAuthHandler templateAuthHandler;
+  @Inject DefaultsAuthHandler defaultsAuthHandler;
 
   /**
    * Instantiates a new service resource.
@@ -523,10 +526,11 @@ public class YamlResource {
   @Path("/defaults/{uuid}")
   @Timed
   @ExceptionMetered
-  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @ApiKeyAuthorized(permissionType = MANAGE_ACCOUNT_DEFAULTS, skipAuth = true)
+  @AuthRule(permissionType = MANAGE_ACCOUNT_DEFAULTS, skipAuth = true)
   public RestResponse<ServiceCommand> updateDefaults(
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload, @PathParam("uuid") String uuid) {
+    defaultsAuthHandler.authorizeUpdate(uuid, accountId);
     return yamlService.update(yamlPayload, accountId, uuid);
   }
 

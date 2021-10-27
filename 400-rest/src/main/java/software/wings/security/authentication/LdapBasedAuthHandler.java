@@ -85,6 +85,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
                                   .hideFromListing(true)
                                   .name(UUID.randomUUID().toString())
                                   .scopedToAccount(true)
+                                  .kmsId(settings.getAccountId())
                                   .build();
       EncryptedData encryptedSecret = secretManager.encryptSecret(settings.getAccountId(), secretText, false);
       EncryptedDataDetail passwordEncryptedDataDetail =

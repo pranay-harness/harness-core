@@ -2525,6 +2525,28 @@ public class WorkflowServiceHelper {
     }
   }
 
+  public List<String> getResolvedServiceIds(Workflow workflow, Map<String, String> workflowVariables) {
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow.isServiceTemplatized()) {
+      List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
+      List<String> serviceNames = new ArrayList<>();
+      if (isNotEmpty(userVariables)) {
+        serviceNames = getEntityNames(userVariables, SERVICE);
+      }
+      List<String> serviceIds = getTemplatizedIds(workflowVariables, serviceNames);
+      List<String> templatizedServiceIds = orchestrationWorkflow.getTemplatizedServiceIds();
+      List<String> workflowServiceIds = orchestrationWorkflow.getServiceIds();
+      if (workflowServiceIds != null) {
+        workflowServiceIds.stream()
+            .filter(serviceId -> !templatizedServiceIds.contains(serviceId))
+            .forEach(serviceIds::add);
+      }
+      return serviceIds;
+    } else {
+      return workflow.getServices().stream().map(Service::getUuid).collect(toList());
+    }
+  }
+
   /**
    * Retrieve resolved service id from specific Workflow phase
    *

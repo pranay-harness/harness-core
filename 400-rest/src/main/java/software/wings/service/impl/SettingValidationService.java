@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
-import static io.harness.beans.FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -22,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.structure.EmptyPredicate;
@@ -275,19 +275,15 @@ public class SettingValidationService {
         gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
       }
     } else if (settingValue instanceof AzureConfig) {
-      if (featureFlagService.isEnabled(AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, settingAttribute.getAccountId())) {
-        try {
-          AzureConfig azureConfig = (AzureConfig) settingValue;
-          // Need to add these modifications to azure config for secret to get resolved on delegate side
-          azureConfig.setDecrypted(false);
-          azureConfig.setKey(null);
-          List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, null, null);
-          azureVMSSHelperServiceManager.listSubscriptions(azureConfig, encryptionDetails, null);
-        } catch (Exception e) {
-          azureHelperService.handleAzureAuthenticationException(e);
-        }
-      } else {
-        azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
+      try {
+        AzureConfig azureConfig = (AzureConfig) settingValue;
+        // Need to add these modifications to azure config for secret to get resolved on delegate side
+        azureConfig.setDecrypted(false);
+        azureConfig.setKey(null);
+        List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, null, null);
+        azureVMSSHelperServiceManager.listSubscriptions(azureConfig, encryptionDetails, null);
+      } catch (Exception e) {
+        azureHelperService.handleAzureAuthenticationException(e);
       }
     } else if (settingValue instanceof PcfConfig) {
       if (!((PcfConfig) settingValue).isSkipValidation()) {
@@ -440,9 +436,10 @@ public class SettingValidationService {
                                                         .build();
 
     boolean isCloudCostEnabled = ccmSettingService.isCloudCostEnabled(settingAttribute);
-
+    boolean useNewKubectlVersion =
+        featureFlagService.isEnabled(FeatureName.NEW_KUBECTL_VERSION, settingAttribute.getAccountId());
     try {
-      return containerService.validate(containerServiceParams)
+      return containerService.validate(containerServiceParams, useNewKubectlVersion)
           && (!isCloudCostEnabled || containerService.validateCE(containerServiceParams));
     } catch (InvalidRequestException ex) {
       throw ex;

@@ -255,8 +255,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return true;
     }
 
-    return k8sTaskHelperBase.dryRunManifests(
-        client, canaryHandlerConfig.getResources(), k8sDelegateTaskParams, executionLogCallback);
+    return k8sTaskHelperBase.dryRunManifests(client, canaryHandlerConfig.getResources(), k8sDelegateTaskParams,
+        executionLogCallback, k8sCanaryDeployTaskParameters.isUseNewKubectlVersion());
   }
 
   @VisibleForTesting
@@ -272,7 +272,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       canaryHandlerConfig.setReleaseHistory(releaseHistory);
 
       boolean success = k8sCanaryBaseHandler.prepareForCanary(canaryHandlerConfig, k8sDelegateTaskParams,
-          k8sCanaryDeployTaskParameters.getSkipVersioningForAllK8sObjects(), executionLogCallback);
+          k8sCanaryDeployTaskParameters.getSkipVersioningForAllK8sObjects(), executionLogCallback, false);
       if (!success) {
         return false;
       }

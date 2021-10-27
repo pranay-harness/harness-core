@@ -345,7 +345,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         return true;
       }
 
-      return k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+      return k8sTaskHelperBase.dryRunManifests(
+          client, resources, k8sDelegateTaskParams, executionLogCallback, request.isUseNewKubectlVersion());
     } catch (Exception e) {
       log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(getMessage(e), ERROR);

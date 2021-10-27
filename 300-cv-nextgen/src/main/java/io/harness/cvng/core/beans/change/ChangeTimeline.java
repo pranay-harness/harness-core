@@ -21,8 +21,8 @@ public class ChangeTimeline {
     Long startTime;
     Long endTime;
 
-    public Long incrementCount() {
-      return ++count;
+    public Long incrementCount(int count) {
+      return this.count = this.count + count;
     }
   }
 }

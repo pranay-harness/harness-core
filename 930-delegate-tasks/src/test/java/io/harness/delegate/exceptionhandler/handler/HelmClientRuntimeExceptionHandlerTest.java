@@ -1,6 +1,13 @@
 package io.harness.delegate.exceptionhandler.handler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_CHART_VERSION_IMPROPER_CONSTRAINT;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_NO_CHART_FOUND;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Explanations.EXPLAIN_NO_CHART_VERSION_FOUND;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_CHART_VERSION_IMPROPER_CONSTRAINT;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_NO_CHART_FOUND;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HINT_NO_CHART_VERSION_FOUND;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -137,11 +144,59 @@ public class HelmClientRuntimeExceptionHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void handleNoChartFound() {
+    HelmClientRuntimeException runtimeException = new HelmClientRuntimeException(new HelmClientException(
+        ": Error: chart \"invalid\" matching latest not found in Htttp_Charts_Stable index. (try 'helm repo update'): no chart name found",
+        HelmCliCommandType.FETCH));
+    final WingsException handledException = handler.handleException(runtimeException);
+    assertThat(handledException).isInstanceOf(HintException.class);
+    assertThat(handledException.getMessage()).contains(HINT_NO_CHART_FOUND);
+    assertThat(handledException.getCause()).isInstanceOf(ExplanationException.class);
+    assertThat(handledException.getCause().getMessage()).contains(EXPLAIN_NO_CHART_FOUND);
+    assertThat(handledException.getCause().getCause()).isInstanceOf(HelmClientException.class);
+    assertThat(handledException.getCause().getCause().getMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void handleNoChartVersionFound() {
+    HelmClientRuntimeException runtimeException = new HelmClientRuntimeException(new HelmClientException(
+        "Error: chart \"invalid\" matching invalid-version not found in Htttp_Charts_Stable index. (try 'helm repo update'): no chart version found for invalid-version",
+        HelmCliCommandType.FETCH));
+    final WingsException handledException = handler.handleException(runtimeException);
+    assertThat(handledException).isInstanceOf(HintException.class);
+    assertThat(handledException.getMessage()).contains(HINT_NO_CHART_VERSION_FOUND);
+    assertThat(handledException.getCause()).isInstanceOf(ExplanationException.class);
+    assertThat(handledException.getCause().getMessage()).contains(EXPLAIN_NO_CHART_VERSION_FOUND);
+    assertThat(handledException.getCause().getCause()).isInstanceOf(HelmClientException.class);
+    assertThat(handledException.getCause().getCause().getMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void handleInvalidChartVersionFormat() {
+    HelmClientRuntimeException runtimeException = new HelmClientRuntimeException(new HelmClientException(
+        "Failed to fetch chart \"some-chart\"  from repo \"Playground\". Please check if the chart is present in the repo. Details: Error: chart \"some-chart\" matching \"invalid-semantic\" not found in AWS_Playground index. (try 'helm repo update'). improper constraint: invalid-semantic",
+        HelmCliCommandType.FETCH));
+    final WingsException handledException = handler.handleException(runtimeException);
+    assertThat(handledException).isInstanceOf(HintException.class);
+    assertThat(handledException.getMessage()).contains(HINT_CHART_VERSION_IMPROPER_CONSTRAINT);
+    assertThat(handledException.getCause()).isInstanceOf(ExplanationException.class);
+    assertThat(handledException.getCause().getMessage()).contains(EXPLAIN_CHART_VERSION_IMPROPER_CONSTRAINT);
+    assertThat(handledException.getCause().getCause()).isInstanceOf(HelmClientException.class);
+    assertThat(handledException.getCause().getCause().getMessage()).isNotEmpty();
+  }
+
+  @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void handleUnhandledHelmCommandType() {
     HelmClientRuntimeException runtimeException = new HelmClientRuntimeException(
-        new HelmClientException("Error: Some Error I have not seen before", HelmCliCommandType.FETCH));
+        new HelmClientException("Error: Some Error I have not seen before", HelmCliCommandType.INIT));
     final WingsException handledException = handler.handleException(runtimeException);
     assertThat(handledException).isInstanceOf(InvalidRequestException.class);
     assertThat(handledException.getMessage()).contains("Error: Some Error I have not seen before");

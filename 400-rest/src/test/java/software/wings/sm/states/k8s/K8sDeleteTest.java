@@ -35,6 +35,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.expression.VariableResolverTracker;
@@ -124,6 +125,7 @@ public class K8sDeleteTest extends CategoryTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void executeWithoutManifestDeleteNamespace() {
+    when(featureFlagService.isEnabled(eq(FeatureName.NEW_KUBECTL_VERSION), any())).thenReturn(false);
     doReturn("Deployment/test").when(context).renderExpression("${workflow.variables.resources}");
     doReturn(ExecutionResponse.builder().build()).when(k8sDelete).queueK8sDelegateTask(any(), any(), any());
 
@@ -154,6 +156,7 @@ public class K8sDeleteTest extends CategoryTest {
                     .k8sTaskType(DELETE)
                     .deleteNamespacesForRelease(true)
                     .timeoutIntervalInMin(10)
+                    .useNewKubectlVersion(false)
                     .build()),
             anyMap());
   }
@@ -162,6 +165,7 @@ public class K8sDeleteTest extends CategoryTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void executeWithoutManifestNotDeleteNamespace() {
+    when(featureFlagService.isEnabled(eq(FeatureName.NEW_KUBECTL_VERSION), any())).thenReturn(false);
     doReturn("Deployment/test").when(context).renderExpression("${workflow.variables.resources}");
     doReturn(ExecutionResponse.builder().build()).when(k8sDelete).queueK8sDelegateTask(any(), any(), any());
 
@@ -192,6 +196,7 @@ public class K8sDeleteTest extends CategoryTest {
                     .k8sTaskType(DELETE)
                     .deleteNamespacesForRelease(false)
                     .timeoutIntervalInMin(10)
+                    .useNewKubectlVersion(false)
                     .build()),
             anyMap());
   }

@@ -1,6 +1,7 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.K8sNodeRecommendationTasklet;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,8 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class NodeRecommendationConfig {
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
+
   @Bean
   public Tasklet K8sNodeRecommendationTasklet() {
     return new K8sNodeRecommendationTasklet();
@@ -34,6 +37,7 @@ public class NodeRecommendationConfig {
   public Job k8sNodeRecommendationJob(JobBuilderFactory jobBuilderFactory, Step k8sNodeRecommendationStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_NODE_RECOMMENDATION.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(k8sNodeRecommendationStep)
         .build();
   }

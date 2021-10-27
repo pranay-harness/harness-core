@@ -14,7 +14,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.api.ApprovalStateExecutionData;
@@ -26,7 +25,6 @@ import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -55,8 +53,6 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject WaitNotifyEngine waitNotifyEngine;
   @Inject StateExecutionService stateExecutionService;
-  @Inject FeatureFlagService featureFlagService;
-  @Inject WingsPersistence wingsPersistence;
 
   private static final String WORKFLOW_EXECUTION_ID = "workflow-execution-id";
   private static final String APP_ID = "app-id";
@@ -95,13 +91,14 @@ public class ServiceNowServiceImpl implements ServiceNowService {
 
   @Override
   public void validateCredential(SettingAttribute settingAttribute) {
+    ServiceNowConfig serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
     SyncTaskContext snowTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
                                           .appId(SCOPE_WILDCARD)
+                                          .tags(serviceNowConfig.getDelegateSelectors())
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
 
-    ServiceNowConfig serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
             .serviceNowConfig(serviceNowConfig)
@@ -113,35 +110,38 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   @Override
   public List<ServiceNowMetaDTO> getStates(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
-    ServiceNowTaskParameters taskParameters = getServiceNowTaskParameters(ticketType, accountId, connectorId, appId);
+    ServiceNowConfig serviceNowConfig = getServiceNowConfig(accountId, connectorId);
+    ServiceNowTaskParameters taskParameters =
+        getServiceNowTaskParameters(ticketType, accountId, serviceNowConfig, appId);
 
-    SyncTaskContext snowTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext snowTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(GLOBAL_APP_ID)
+                                          .tags(serviceNowConfig.getDelegateSelectors())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
 
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getStates(taskParameters);
   }
 
   public List<ServiceNowMetaDTO> getApprovalValues(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
-    ServiceNowTaskParameters taskParameters = getServiceNowTaskParameters(ticketType, accountId, connectorId, appId);
+    ServiceNowConfig serviceNowConfig = getServiceNowConfig(accountId, connectorId);
+    ServiceNowTaskParameters taskParameters =
+        getServiceNowTaskParameters(ticketType, accountId, serviceNowConfig, appId);
 
-    SyncTaskContext snowTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext snowTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(GLOBAL_APP_ID)
+                                          .tags(serviceNowConfig.getDelegateSelectors())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
 
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getApprovalStates(taskParameters);
   }
 
   private ServiceNowTaskParameters getServiceNowTaskParameters(
-      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
-    ServiceNowConfig serviceNowConfig;
-    try {
-      serviceNowConfig = getServiceNowConfig(accountId, connectorId);
-    } catch (Exception e) {
-      log.error("Error getting ServiceNow connector for ID: {}", connectorId);
-      throw new ServiceNowException(
-          "Error getting ServiceNow connector " + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
-    }
-
+      ServiceNowTicketType ticketType, String accountId, ServiceNowConfig serviceNowConfig, String appId) {
     return ServiceNowTaskParameters.builder()
         .accountId(accountId)
         .ticketType(ticketType)
@@ -153,13 +153,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   @Override
   public Map<String, List<ServiceNowMetaDTO>> getCreateMeta(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
-    ServiceNowConfig serviceNowConfig;
-    try {
-      serviceNowConfig = getServiceNowConfig(accountId, connectorId);
-    } catch (Exception e) {
-      log.error("Error getting ServiceNow connector for ID: {}", connectorId);
-      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
-    }
+    ServiceNowConfig serviceNowConfig = getServiceNowConfig(accountId, connectorId);
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
             .accountId(accountId)
@@ -167,8 +161,12 @@ public class ServiceNowServiceImpl implements ServiceNowService {
             .serviceNowConfig(serviceNowConfig)
             .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
             .build();
-    SyncTaskContext snowTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext snowTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(GLOBAL_APP_ID)
+                                          .tags(serviceNowConfig.getDelegateSelectors())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
 
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getCreateMeta(taskParameters);
   }
@@ -176,13 +174,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   @Override
   public List<ServiceNowMetaDTO> getAdditionalFields(ServiceNowTicketType ticketType, String accountId,
       String connectorId, String appId, ServiceNowFieldType typeFilter) {
-    ServiceNowConfig serviceNowConfig;
-    try {
-      serviceNowConfig = getServiceNowConfig(accountId, connectorId);
-    } catch (Exception e) {
-      log.error("Error getting ServiceNow connector for ID: {}", connectorId);
-      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
-    }
+    ServiceNowConfig serviceNowConfig = getServiceNowConfig(accountId, connectorId);
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
             .accountId(accountId)
@@ -191,8 +183,12 @@ public class ServiceNowServiceImpl implements ServiceNowService {
             .typeFilter(typeFilter)
             .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
             .build();
-    SyncTaskContext snowTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext snowTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(GLOBAL_APP_ID)
+                                          .tags(serviceNowConfig.getDelegateSelectors())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
 
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext)
         .getAdditionalFields(taskParameters);
@@ -200,13 +196,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
 
   @Override
   public ServiceNowExecutionData getIssueUrl(String appId, String accountId, ServiceNowApprovalParams approvalParams) {
-    ServiceNowConfig serviceNowConfig;
-    try {
-      serviceNowConfig = getServiceNowConfig(accountId, approvalParams.getSnowConnectorId());
-    } catch (Exception e) {
-      log.error("Error getting ServiceNow connector for ID: {}", approvalParams.getSnowConnectorId());
-      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
-    }
+    ServiceNowConfig serviceNowConfig = getServiceNowConfig(accountId, approvalParams.getSnowConnectorId());
 
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
@@ -216,29 +206,33 @@ public class ServiceNowServiceImpl implements ServiceNowService {
             .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
             .build();
 
-    SyncTaskContext snowTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext snowTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(GLOBAL_APP_ID)
+                                          .tags(serviceNowConfig.getDelegateSelectors())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
 
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext)
         .getIssueUrl(taskParameters, approvalParams);
   }
 
   private ServiceNowConfig getServiceNowConfig(String accountId, String connectorId) {
-    SettingAttribute settingAttribute = settingService.getByAccountAndId(accountId, connectorId);
-    notNullCheck("Service Now connector may be deleted.", settingAttribute, USER);
-    return (ServiceNowConfig) settingAttribute.getValue();
+    try {
+      SettingAttribute settingAttribute = settingService.getByAccountAndId(accountId, connectorId);
+      notNullCheck("Service Now connector may be deleted.", settingAttribute, USER);
+      return (ServiceNowConfig) settingAttribute.getValue();
+    } catch (Exception e) {
+      log.error("Error getting ServiceNow connector for ID: {}", connectorId);
+      throw new ServiceNowException(
+          "Error getting ServiceNow connector " + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
+    }
   }
 
   @Override
   public ServiceNowExecutionData getApprovalStatus(ApprovalPollingJobEntity approvalPollingJobEntity) {
-    ServiceNowConfig serviceNowConfig;
-    try {
-      serviceNowConfig =
-          getServiceNowConfig(approvalPollingJobEntity.getAccountId(), approvalPollingJobEntity.getConnectorId());
-    } catch (Exception e) {
-      log.error("Error getting ServiceNow connector for ID: {}", approvalPollingJobEntity.getConnectorId());
-      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
-    }
+    ServiceNowConfig serviceNowConfig =
+        getServiceNowConfig(approvalPollingJobEntity.getAccountId(), approvalPollingJobEntity.getConnectorId());
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
             .accountId(approvalPollingJobEntity.getAccountId())
@@ -252,6 +246,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     SyncTaskContext snowTaskContext = SyncTaskContext.builder()
                                           .accountId(approvalPollingJobEntity.getAccountId())
                                           .appId(approvalPollingJobEntity.getAppId())
+                                          .tags(serviceNowConfig.getDelegateSelectors())
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
 

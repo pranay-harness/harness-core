@@ -13,6 +13,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -21,7 +22,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -43,9 +44,16 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.HarnessAnnotations;
@@ -116,8 +124,8 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
 
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .dryRunManifests(
-            any(Kubectl.class), anyListOf(KubernetesResource.class), eq(k8sDelegateTaskParams), eq(logCallback));
+        .dryRunManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), eq(k8sDelegateTaskParams),
+            eq(logCallback), anyBoolean());
 
     doReturn(kubernetesConfig)
         .when(containerDeploymentDelegateBaseHelper)
@@ -173,17 +181,18 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   public void testExecuteTaskInternalFetchManifestFilesAndWriteToDirectoryFailed() throws Exception {
     final K8sBGDeployRequest k8sBGDeployRequest =
         K8sBGDeployRequest.builder().skipResourceVersioning(true).releaseName("releaseName").build();
+    final RuntimeException thrownException = new RuntimeException("failed");
 
-    doReturn(false)
+    doThrow(thrownException)
         .when(k8sTaskHelperBase)
         .fetchManifestFilesAndWriteToDirectory(
             any(ManifestDelegateConfig.class), anyString(), eq(logCallback), anyLong(), anyString());
 
-    K8sDeployResponse response = k8sBGRequestHandler.executeTaskInternal(
-        k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
+    assertThatThrownBy(()
+                           -> k8sBGRequestHandler.executeTaskInternal(
+                               k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(thrownException);
 
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isEqualTo(K8sBGDeployResponse.builder().build());
     verify(k8sBGRequestHandler, never())
         .init(any(K8sBGDeployRequest.class), any(K8sDelegateTaskParams.class), any(LogCallback.class));
   }
@@ -194,14 +203,14 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   public void testExecuteTaskInternalInitFailed() throws Exception {
     final K8sBGDeployRequest k8sBGDeployRequest =
         K8sBGDeployRequest.builder().skipResourceVersioning(true).releaseName("releaseName").build();
+    final RuntimeException runtimeException = new RuntimeException("failed");
 
-    doReturn(false).when(k8sBGRequestHandler).init(k8sBGDeployRequest, k8sDelegateTaskParams, logCallback);
+    doThrow(runtimeException).when(k8sBGRequestHandler).init(k8sBGDeployRequest, k8sDelegateTaskParams, logCallback);
 
-    K8sDeployResponse response = k8sBGRequestHandler.executeTaskInternal(
-        k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
-
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isEqualTo(K8sBGDeployResponse.builder().build());
+    assertThatThrownBy(()
+                           -> k8sBGRequestHandler.executeTaskInternal(
+                               k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(runtimeException);
     verify(k8sBGRequestHandler, never())
         .prepareForBlueGreen(any(K8sDelegateTaskParams.class), any(LogCallback.class), anyBoolean());
     verify(k8sTaskHelperBase, never())
@@ -214,15 +223,16 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   public void testExecuteTaskInternalPrepareForBlueGreenFailed() throws Exception {
     final K8sBGDeployRequest k8sBGDeployRequest =
         K8sBGDeployRequest.builder().skipResourceVersioning(true).releaseName("releaseName").build();
+    final RuntimeException thrownException = new RuntimeException("failed");
 
-    doReturn(true).when(k8sBGRequestHandler).init(k8sBGDeployRequest, k8sDelegateTaskParams, logCallback);
-    doReturn(false).when(k8sBGRequestHandler).prepareForBlueGreen(k8sDelegateTaskParams, logCallback, true);
+    doNothing().when(k8sBGRequestHandler).init(k8sBGDeployRequest, k8sDelegateTaskParams, logCallback);
+    doThrow(thrownException).when(k8sBGRequestHandler).prepareForBlueGreen(k8sDelegateTaskParams, logCallback, true);
 
-    K8sDeployResponse response = k8sBGRequestHandler.executeTaskInternal(
-        k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
+    assertThatThrownBy(()
+                           -> k8sBGRequestHandler.executeTaskInternal(
+                               k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(thrownException);
 
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isEqualTo(K8sBGDeployResponse.builder().build());
     verify(k8sTaskHelperBase, never())
         .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), anyString(), anyString());
     verify(k8sTaskHelperBase, never())
@@ -236,6 +246,7 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   public void testExecuteTaskInternalApplyManifestFailed() throws Exception {
     final K8sBGDeployRequest k8sBGDeployRequest =
         K8sBGDeployRequest.builder().skipResourceVersioning(true).releaseName("releaseName").build();
+    final RuntimeException exception = new RuntimeException("failed");
 
     doReturn(HarnessLabelValues.colorBlue)
         .when(k8sBGBaseHandler)
@@ -244,21 +255,24 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .readManifests(anyListOf(FileData.class), eq(logCallback));
 
-    doReturn(false)
+    doThrow(exception)
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), eq(k8sDelegateTaskParams),
-            eq(logCallback), eq(true));
+            eq(logCallback), eq(true), eq(true));
 
-    K8sDeployResponse response = k8sBGRequestHandler.executeTaskInternal(
-        k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
+    assertThatThrownBy(()
+                           -> k8sBGRequestHandler.executeTaskInternal(
+                               k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(exception);
 
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isEqualTo(K8sBGDeployResponse.builder().build());
+    assertThatCode(() -> k8sBGRequestHandler.handleTaskFailure(k8sBGDeployRequest, exception))
+        .doesNotThrowAnyException();
+
     verify(k8sTaskHelperBase)
         .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName"), anyString());
     verify(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), eq(k8sDelegateTaskParams),
-            eq(logCallback), eq(true));
+            eq(logCallback), eq(true), eq(true));
   }
 
   @Test
@@ -267,6 +281,7 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   public void testExecuteTaskInternalStatusCheckFailed() throws Exception {
     final K8sBGDeployRequest k8sBGDeployRequest =
         K8sBGDeployRequest.builder().skipResourceVersioning(true).releaseName("releaseName").build();
+    final RuntimeException thrownException = new RuntimeException();
 
     doReturn(HarnessLabelValues.colorBlue)
         .when(k8sBGBaseHandler)
@@ -278,49 +293,25 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
     doReturn(true)
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), eq(k8sDelegateTaskParams),
-            eq(logCallback), eq(true));
-    doReturn(false)
-        .when(k8sTaskHelperBase)
-        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), eq(k8sDelegateTaskParams), eq(logCallback));
-
-    K8sDeployResponse response = k8sBGRequestHandler.executeTaskInternal(
-        k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
-
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isEqualTo(K8sBGDeployResponse.builder().build());
-    verify(k8sTaskHelperBase, times(2))
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName"), anyString());
-    verify(k8sTaskHelperBase)
-        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), eq(k8sDelegateTaskParams), eq(logCallback));
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void shouldCatchGetPodDetailsException() throws Exception {
-    K8sBGDeployRequest k8sBGDeployRequest =
-        K8sBGDeployRequest.builder().skipResourceVersioning(true).releaseName("releaseName").build();
-    InvalidRequestException thrownException = new InvalidRequestException("Failed to get pod details");
-
-    doReturn(HarnessLabelValues.colorBlue)
-        .when(k8sBGBaseHandler)
-        .getPrimaryColor(any(KubernetesResource.class), eq(kubernetesConfig), eq(logCallback));
-    doReturn(new ArrayList<>(asList(deployment(), service())))
-        .when(k8sTaskHelperBase)
-        .readManifests(anyListOf(FileData.class), eq(logCallback));
+            eq(logCallback), eq(true), eq(true));
     doThrow(thrownException)
-        .when(k8sBGBaseHandler)
-        .getAllPods(anyLong(), eq(kubernetesConfig), any(KubernetesResource.class), eq(HarnessLabelValues.colorBlue),
-            eq(HarnessLabelValues.colorGreen), eq("releaseName"));
+        .when(k8sTaskHelperBase)
+        .doStatusCheck(
+            any(Kubectl.class), any(KubernetesResourceId.class), eq(k8sDelegateTaskParams), eq(logCallback), eq(true));
 
     assertThatThrownBy(()
                            -> k8sBGRequestHandler.executeTaskInternal(
                                k8sBGDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
-        .isEqualTo(thrownException);
+        .isSameAs(thrownException);
 
-    verify(logCallback, atLeastOnce()).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
+    assertThatCode(() -> k8sBGRequestHandler.handleTaskFailure(k8sBGDeployRequest, thrownException))
+        .doesNotThrowAnyException();
+
     verify(k8sTaskHelperBase, times(2))
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), anyString(), anyString());
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName"), anyString());
+    verify(k8sTaskHelperBase)
+        .doStatusCheck(
+            any(Kubectl.class), any(KubernetesResourceId.class), eq(k8sDelegateTaskParams), eq(logCallback), eq(true));
   }
 
   @Test
@@ -358,6 +349,7 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
                                                       .valuesYamlList(valuesYamlFiles)
                                                       .skipDryRun(skipDryRun)
                                                       .build();
+    final InvalidRequestException thrownException = new InvalidRequestException("failed");
 
     doReturn(kubernetesConfig)
         .when(containerDeploymentDelegateBaseHelper)
@@ -368,14 +360,17 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
             anyString(), eq("default"), eq(logCallback), eq(10));
 
     if (throwException) {
-      doThrow(new InvalidRequestException("failed")).when(k8sTaskHelperBase).readManifests(renderedFiles, logCallback);
+      doThrow(thrownException).when(k8sTaskHelperBase).readManifests(renderedFiles, logCallback);
     } else {
       doReturn(resources).when(k8sTaskHelperBase).readManifests(renderedFiles, logCallback);
     }
 
-    boolean result = k8sBGRequestHandler.init(k8sBGDeployRequest, k8sDelegateTaskParams, logCallback);
-
-    assertThat(result).isEqualTo(!throwException);
+    if (throwException) {
+      assertThatThrownBy(() -> k8sBGRequestHandler.init(k8sBGDeployRequest, k8sDelegateTaskParams, logCallback))
+          .isSameAs(thrownException);
+    } else {
+      k8sBGRequestHandler.init(k8sBGDeployRequest, k8sDelegateTaskParams, logCallback);
+    }
 
     verify(containerDeploymentDelegateBaseHelper).createKubernetesConfig(k8sInfraDelegateConfig);
     verify(k8sTaskHelperBase).getReleaseHistoryDataFromConfigMap(kubernetesConfig, "releaseName");
@@ -383,7 +378,8 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
     if (!throwException) {
       verify(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(resources, "default");
       verify(k8sTaskHelperBase, skipDryRun ? never() : times(1))
-          .dryRunManifests(any(Kubectl.class), eq(resources), eq(k8sDelegateTaskParams), eq(logCallback));
+          .dryRunManifests(
+              any(Kubectl.class), eq(resources), eq(k8sDelegateTaskParams), eq(logCallback), eq(true), anyBoolean());
     }
   }
 
@@ -400,9 +396,8 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
     on(k8sBGRequestHandler).set("releaseHistory", releaseHistory);
     on(k8sBGRequestHandler).set("client", client);
 
-    boolean result = k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false);
+    k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false);
 
-    assertThat(result).isTrue();
     verify(k8sBGBaseHandler)
         .cleanupForBlueGreen(k8sDelegateTaskParams, releaseHistory, logCallback, HarnessLabelValues.colorGreen,
             HarnessLabelValues.colorBlue, releaseHistory.getLatestRelease(), client);
@@ -418,11 +413,20 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testPrepareForBlueGreenEmptyWorkloads() {
+  public void testPrepareForBlueGreenEmptyWorkloads() throws Exception {
     on(k8sBGRequestHandler).set("resources", emptyList());
 
-    boolean result = k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false);
-    assertThat(result).isFalse();
+    assertThatThrownBy(() -> k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.BG_NO_WORKLOADS_FOUND);
+          assertThat(explanation).hasMessageContaining(KubernetesExceptionExplanation.BG_NO_WORKLOADS_FOUND);
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.NO_WORKLOADS_FOUND);
+          return true;
+        });
+
     verify(logCallback)
         .saveExecutionLog(
             "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Blue/Green workflow type.",
@@ -435,8 +439,18 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   public void testPrepareForBlueGreenMultipleWorkloads() throws Exception {
     on(k8sBGRequestHandler).set("resources", asList(deployment(), deployment(), deployment()));
 
-    boolean result = k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false);
-    assertThat(result).isFalse();
+    assertThatThrownBy(() -> k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.BG_MULTIPLE_WORKLOADS);
+          assertThat(explanation)
+              .hasMessageContaining(format(KubernetesExceptionExplanation.BG_MULTIPLE_WORKLOADS, 3,
+                  "Deployment/nginx-deployment, Deployment/nginx-deployment, Deployment/nginx-deployment"));
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.MULTIPLE_WORKLOADS);
+          return true;
+        });
     verify(logCallback)
         .saveExecutionLog(
             "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only. To deploy additional workloads in Manifests, annotate them with "
@@ -450,9 +464,16 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   public void testPrepareBlueGreenNoServicesInManifest() throws Exception {
     on(k8sBGRequestHandler).set("resources", singletonList(deployment()));
 
-    boolean result = k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false);
-    assertThat(result).isFalse();
-    verify(logCallback).saveExecutionLog(anyString(), eq(ERROR), eq(FAILURE));
+    assertThatThrownBy(() -> k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesYamlException taskException = ExceptionUtils.cause(KubernetesYamlException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.BG_NO_SERVICE_FOUND);
+          assertThat(explanation).hasMessageContaining(KubernetesExceptionExplanation.BG_NO_SERVICE_FOUND);
+          assertThat(taskException.getParams().get("reason")).isEqualTo(KubernetesExceptionMessages.NO_SERVICE_FOUND);
+          return true;
+        });
   }
 
   @Test
@@ -461,9 +482,18 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
   public void testPrepareBlueGreenMultipleServicesInManifest() throws Exception {
     on(k8sBGRequestHandler).set("resources", asList(deployment(), service(), service()));
 
-    boolean result = k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false);
-    assertThat(result).isFalse();
-    verify(logCallback).saveExecutionLog(anyString(), eq(ERROR), eq(FAILURE));
+    assertThatThrownBy(() -> k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesYamlException taskException = ExceptionUtils.cause(KubernetesYamlException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.BG_MULTIPLE_PRIMARY_SERVICE);
+          assertThat(explanation)
+              .hasMessageContaining(format(KubernetesExceptionExplanation.BG_MULTIPLE_PRIMARY_SERVICE, 2,
+                  "Service/my-service, Service/my-service"));
+          assertThat(taskException.getParams().get("reason")).isEqualTo(KubernetesExceptionMessages.MULTIPLE_SERVICES);
+          return true;
+        });
   }
 
   @Test
@@ -477,8 +507,18 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
 
     doReturn(null).when(k8sBGBaseHandler).getPrimaryColor(primaryService, kubernetesConfig, logCallback);
 
-    boolean result = k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false);
-    assertThat(result).isFalse();
+    assertThatThrownBy(() -> k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(format(KubernetesExceptionHints.BG_CONFLICTING_SERVICE, "my-service"));
+          assertThat(explanation).hasMessageContaining(KubernetesExceptionExplanation.BG_CONFLICTING_SERVICE);
+          assertThat(taskException)
+              .hasMessageContaining(format(KubernetesExceptionMessages.BG_CONFLICTING_SERVICE, "my-service"));
+          return true;
+        });
+
     verify(logCallback)
         .saveExecutionLog(
             format(
@@ -498,9 +538,8 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
     InvalidRequestException thrownException = new InvalidRequestException("Failed to get");
 
     doThrow(thrownException).when(kubernetesContainerService).getService(kubernetesConfig, "my-service-stage");
-    boolean result = k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false);
-    assertThat(result).isFalse();
-    verify(logCallback).saveExecutionLog(ExceptionUtils.getMessage(thrownException), ERROR, FAILURE);
+    assertThatThrownBy(() -> k8sBGRequestHandler.prepareForBlueGreen(k8sDelegateTaskParams, logCallback, false))
+        .isSameAs(thrownException);
   }
 
   private void assertResourceColor(KubernetesResource resource, String expected) {

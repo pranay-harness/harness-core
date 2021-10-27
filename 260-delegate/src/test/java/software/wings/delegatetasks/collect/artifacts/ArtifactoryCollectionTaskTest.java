@@ -3,7 +3,6 @@ package software.wings.delegatetasks.collect.artifacts;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
@@ -21,6 +20,7 @@ import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.rule.Owner;
 
 import software.wings.beans.TaskType;
+import software.wings.beans.artifact.ArtifactoryCollectionTaskParameters;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -48,12 +48,16 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
 
   private ArtifactoryConfig artifactoryConfig =
       ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
+  private ArtifactoryCollectionTaskParameters artifactoryCollectionTaskParameters =
+      ArtifactoryCollectionTaskParameters.builder()
+          .artifactoryConfig(artifactoryConfig)
+          .jobName("harness-maven")
+          .metadata(ImmutableMap.of("buildNo", "1.1"))
+          .build();
   private TaskData taskData = TaskData.builder()
                                   .async(true)
                                   .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
-                                  .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(),
-                                      artifactoryConfig.getUsername(), artifactoryConfig.getPassword(), "harness-maven",
-                                      "io.harness.todolist", asList("todolist"), "", ImmutableMap.of("buildNo", "1.1")})
+                                  .parameters(new Object[] {artifactoryCollectionTaskParameters})
                                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                   .build();
 

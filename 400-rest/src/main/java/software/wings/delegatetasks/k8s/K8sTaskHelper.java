@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
@@ -25,9 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.FileData;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.k8s.beans.K8sHandlerConfig;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
@@ -37,7 +34,6 @@ import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.scm.ScmDelegateClient;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.KubernetesContainerService;
@@ -49,8 +45,6 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.manifest.CustomManifestService;
-import io.harness.product.ci.scm.proto.FileContent;
-import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.service.ScmServiceClient;
 
 import software.wings.beans.GitConfig;
@@ -82,7 +76,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -147,28 +140,6 @@ public class K8sTaskHelper {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }
-  }
-
-  private void writeFile(String directoryPath, FileContent fileContent, String basePath, boolean relativize)
-      throws IOException {
-    String filePath;
-    if (relativize) {
-      filePath = Paths.get(basePath).relativize(Paths.get(fileContent.getPath())).toString();
-      if (isEmpty(filePath)) {
-        filePath = Paths.get(fileContent.getPath()).getFileName().toString();
-      }
-    } else {
-      filePath = fileContent.getPath();
-    }
-
-    Path finalPath = Paths.get(directoryPath, filePath);
-    Path parent = finalPath.getParent();
-    if (parent == null) {
-      throw new WingsException("Failed to create file at path " + finalPath.toString());
-    }
-
-    createDirectoryIfDoesNotExist(parent.toString());
-    FileIo.writeUtf8StringToFile(finalPath.toString(), fileContent.getContent());
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -326,7 +297,8 @@ public class K8sTaskHelper {
       encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails(), false);
 
       if (scmFetchFilesHelper.shouldUseScm(delegateManifestConfig.isOptimizedFilesFetch(), gitConfig)) {
-        downloadFilesUsingScm(manifestFilesDirectory, gitFileConfig, gitConfig, executionLogCallback);
+        scmFetchFilesHelper.downloadFilesUsingScm(
+            manifestFilesDirectory, gitFileConfig, gitConfig, executionLogCallback);
       } else {
         latestCommitSha = gitService.downloadFiles(
             gitConfig, gitFileConfig, manifestFilesDirectory, delegateManifestConfig.isShouldSaveManifest());
@@ -354,78 +326,6 @@ public class K8sTaskHelper {
           CommandExecutionStatus.FAILURE);
       return false;
     }
-  }
-
-  private void downloadFilesUsingScm(String manifestFilesDirectory, GitFileConfig gitFileConfig, GitConfig gitConfig,
-      ExecutionLogCallback executionLogCallback) {
-    String directoryPath = Paths.get(manifestFilesDirectory).toString();
-    ScmConnector scmConnector = scmFetchFilesHelper.getScmConnector(gitConfig);
-
-    FileContentBatchResponse fileBatchContentResponse =
-        getFileContentBatchResponseByFolder(gitFileConfig, scmConnector);
-
-    boolean relativize = true;
-    if (isEmpty(fileBatchContentResponse.getFileBatchContentResponse().getFileContentsList())) {
-      fileBatchContentResponse = getFileContentBatchResponseByFilePath(gitFileConfig, scmConnector);
-      relativize = false;
-    }
-
-    List<FileContent> fileContents = fileBatchContentResponse.getFileBatchContentResponse()
-                                         .getFileContentsList()
-                                         .stream()
-                                         .filter(fileContent -> fileContent.getStatus() == 200)
-                                         .collect(toList());
-    if (fileContents.isEmpty()) {
-      throw new YamlException(
-          new StringBuilder()
-              .append("Failed while fetching files ")
-              .append(gitFileConfig.isUseBranch() ? "for Branch: " : "for CommitId: ")
-              .append(gitFileConfig.isUseBranch() ? gitFileConfig.getBranch() : gitFileConfig.getCommitId())
-              .append(", FilePaths: ")
-              .append(gitFileConfig.getFilePath())
-              .append(". Reason: File not found")
-              .toString(),
-          USER);
-    }
-
-    try {
-      for (FileContent fileContent : fileContents) {
-        writeFile(directoryPath, fileContent, gitFileConfig.getFilePath(), relativize);
-      }
-    } catch (Exception ex) {
-      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR, CommandExecutionStatus.FAILURE);
-    }
-  }
-
-  private FileContentBatchResponse getFileContentBatchResponseByFilePath(
-      GitFileConfig gitFileConfig, ScmConnector scmConnector) {
-    FileContentBatchResponse fileBatchContentResponse;
-    if (gitFileConfig.isUseBranch()) {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFilesByFilePaths(scmConnector, Collections.singletonList(gitFileConfig.getFilePath()),
-              gitFileConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
-    } else {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFilesByCommitId(scmConnector, Collections.singletonList(gitFileConfig.getFilePath()),
-              gitFileConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
-    }
-    return fileBatchContentResponse;
-  }
-
-  private FileContentBatchResponse getFileContentBatchResponseByFolder(
-      GitFileConfig gitFileConfig, ScmConnector scmConnector) {
-    FileContentBatchResponse fileBatchContentResponse;
-    if (gitFileConfig.isUseBranch()) {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFiles(scmConnector, Collections.singleton(gitFileConfig.getFilePath()),
-              gitFileConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
-    } else {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFoldersFilesByCommitId(scmConnector,
-              Collections.singleton(gitFileConfig.getFilePath()), gitFileConfig.getCommitId(),
-              SCMGrpc.newBlockingStub(c)));
-    }
-    return fileBatchContentResponse;
   }
 
   private boolean downloadManifestFilesFromCustomSource(K8sDelegateManifestConfig delegateManifestConfig,

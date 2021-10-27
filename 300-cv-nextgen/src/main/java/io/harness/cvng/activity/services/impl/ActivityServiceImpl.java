@@ -60,6 +60,8 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Verifica
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
@@ -88,7 +90,6 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FindOptions;
@@ -113,6 +114,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private Map<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMap;
   // TODO: remove the dependency once UI moves to new APIs
   @Inject private CVNGStepTaskService cvngStepTaskService;
+  @Inject private PersistentLocker persistentLocker;
 
   @Override
   public Activity get(String activityId) {
@@ -160,6 +162,9 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public void updateActivityStatus(Activity activity) {
+    if (CollectionUtils.isEmpty(activity.getVerificationJobInstanceIds())) {
+      return;
+    }
     ActivityVerificationSummary summary = verificationJobInstanceService.getActivityVerificationSummary(
         verificationJobInstanceService.get(activity.getVerificationJobInstanceIds()));
     if (!summary.getAggregatedStatus().equals(ActivityVerificationStatus.IN_PROGRESS)
@@ -171,7 +176,6 @@ public class ActivityServiceImpl implements ActivityService {
               .set(ActivityKeys.analysisStatus, summary.getAggregatedStatus())
               .set(ActivityKeys.verificationSummary, summary);
       hPersistence.update(activityQuery, activityUpdateOperations);
-
       log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
     }
 
@@ -775,31 +779,25 @@ public class ActivityServiceImpl implements ActivityService {
   public String upsert(Activity activity) {
     ActivityUpdateHandler handler = activityUpdateHandlerMap.get(activity.getType());
     ActivityUpdatableEntity activityUpdatableEntity = activityUpdatableEntityMap.get(activity.getType());
-    Optional<Activity> optionalFromDb =
-        StringUtils.isEmpty(activity.getUuid()) ? getFromDb(activity) : Optional.ofNullable(get(activity.getUuid()));
-    if (optionalFromDb.isPresent()) {
-      List<String> verificationInstanceIds =
-          ListUtils.defaultIfNull(optionalFromDb.get().getVerificationJobInstanceIds(), new ArrayList<>());
-      ListUtils.emptyIfNull(activity.getVerificationJobInstanceIds())
-          .stream()
-          .filter(id -> !verificationInstanceIds.contains(id))
-          .forEach(verificationInstanceIds::add);
-      activity.setVerificationJobInstanceIds(verificationInstanceIds);
-      UpdateOperations<Activity> updateOperations =
-          hPersistence.createUpdateOperations(activityUpdatableEntity.getEntityClass());
-      activityUpdatableEntity.setUpdateOperations(updateOperations, activity);
-      if (handler != null) {
-        handler.handleUpdate(optionalFromDb.get(), activity);
+    try (AcquiredLock acquiredLock = persistentLocker.waitToAcquireLock(Activity.class,
+             activityUpdatableEntity.getEntityKeyString(activity), Duration.ofSeconds(6), Duration.ofSeconds(4))) {
+      Optional<Activity> optionalFromDb =
+          StringUtils.isEmpty(activity.getUuid()) ? getFromDb(activity) : Optional.ofNullable(get(activity.getUuid()));
+      if (optionalFromDb.isPresent()) {
+        UpdateOperations<Activity> updateOperations =
+            hPersistence.createUpdateOperations(activityUpdatableEntity.getEntityClass());
+        activityUpdatableEntity.setUpdateOperations(updateOperations, activity);
+        if (handler != null) {
+          handler.handleUpdate(optionalFromDb.get(), activity);
+        }
+        hPersistence.update(optionalFromDb.get(), updateOperations);
+        return optionalFromDb.get().getUuid();
+      } else {
+        if (handler != null) {
+          handler.handleCreate(activity);
+        }
+        hPersistence.save(activity);
       }
-      hPersistence.update(optionalFromDb.get(), updateOperations);
-      return optionalFromDb.get().getUuid();
-    } else {
-      if (handler != null) {
-        handler.handleCreate(activity);
-      }
-      register(activity);
-
-      hPersistence.save(activity);
       log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(),
           activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
       return activity.getUuid();

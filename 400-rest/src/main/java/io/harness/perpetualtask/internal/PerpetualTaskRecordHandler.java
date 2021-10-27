@@ -54,7 +54,6 @@ import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
 import com.google.inject.Inject;
@@ -86,7 +85,6 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private DelegateService delegateService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
@@ -100,11 +98,11 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   PersistenceIterator<PerpetualTaskRecord> assignmentIterator;
   PersistenceIterator<PerpetualTaskRecord> rebalanceIterator;
 
-  public void registerIterators() {
+  public void registerIterators(int perpetualTaskAssignmentThreadPoolSize, int perpetualTaskRebalanceThreadPoolSize) {
     assignmentIterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("PerpetualTaskAssignment")
-            .poolSize(5)
+            .poolSize(perpetualTaskAssignmentThreadPoolSize)
             .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .build(),
         PerpetualTaskRecordHandler.class,
@@ -127,7 +125,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
     rebalanceIterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("PerpetualTaskRebalance")
-            .poolSize(5)
+            .poolSize(perpetualTaskRebalanceThreadPoolSize)
             .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .build(),
         PerpetualTaskRecordHandler.class,
@@ -153,7 +151,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
       DelegateTask validationTask = getValidationTask(taskRecord);
 
       try {
-        DelegateResponseData response = delegateTaskServiceClassic.executeTask(validationTask);
+        DelegateResponseData response = delegateService.executeTask(validationTask);
 
         if (response instanceof DelegateTaskNotifyResponseData) {
           if (response instanceof PerpetualTaskCapabilityCheckResponse) {

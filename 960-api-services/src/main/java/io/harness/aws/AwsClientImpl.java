@@ -93,24 +93,30 @@ public class AwsClientImpl implements AwsClient {
              new CloseableAmazonWebServiceClient(getAmazonEc2Client(awsConfig))) {
       tracker.trackEC2Call("Get Ec2 client");
       closeableAmazonEC2Client.getClient().describeRegions();
-    } catch (AmazonEC2Exception amazonEC2Exception) {
-      if (amazonEC2Exception.getStatusCode() == 401 && !awsConfig.isEc2IamCredentials() && !awsConfig.isIRSA()) {
-        if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
-          throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_EMPTY_ACCESS_KEY,
-              ExplanationException.EXPLANATION_EMPTY_ACCESS_KEY, amazonEC2Exception);
-        } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
-          throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_EMPTY_SECRET_KEY,
-              ExplanationException.EXPLANATION_EMPTY_SECRET_KEY, amazonEC2Exception);
-        }
-      }
-      throw amazonEC2Exception;
-    } catch (Exception e) {
-      log.error("Exception validateAwsAccountCredential", e);
+    } catch (Exception exception) {
+      log.error("Exception validateAwsAccountCredential", exception);
+      StringBuilder hintMessageBuilder = new StringBuilder();
+      StringBuilder explanationMessageBuilder = new StringBuilder();
       if (awsConfig.isIRSA()) {
-        throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_AWS_IRSA_CHECK,
-            ExplanationException.EXPLANATION_IRSA_ROLE_CHECK, new InvalidRequestException(e.getMessage()));
+        hintMessageBuilder.append(HintException.HINT_AWS_IRSA_CHECK);
+        explanationMessageBuilder.append(ExplanationException.EXPLANATION_IRSA_ROLE_CHECK);
+      } else if (awsConfig.isEc2IamCredentials()) {
+        hintMessageBuilder.append(HintException.HINT_AWS_IAM_ROLE_CHECK);
+        explanationMessageBuilder.append(ExplanationException.EXPLANATION_AWS_AM_ROLE_CHECK);
+      } else {
+        hintMessageBuilder.append(HintException.HINT_INCORRECT_ACCESS_KEY_SECRET_KEY_PERMISSIONS_KEY);
+        explanationMessageBuilder.append(
+            ExplanationException.EXPLANATION_INCORRECT_ACCESS_KEY_SECRET_KEY_PERMISSIONS_KEY);
       }
-      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+
+      if (awsConfig.getCrossAccountAccess() != null) {
+        hintMessageBuilder.append(HintException.HINT_INVALID_CROSS_ACCOUNT_ROLE_ARN_EXTERNAL_ID_PERMISSIONS_KEY);
+        explanationMessageBuilder.append(
+            ExplanationException.EXPLANATION_INVALID_CROSS_ACCOUNT_ROLE_ARN_EXTERNAL_ID_PERMISSIONS_KEY);
+      }
+
+      throw NestedExceptionUtils.hintWithExplanationException(
+          hintMessageBuilder.toString(), explanationMessageBuilder.toString(), exception);
     }
   }
 

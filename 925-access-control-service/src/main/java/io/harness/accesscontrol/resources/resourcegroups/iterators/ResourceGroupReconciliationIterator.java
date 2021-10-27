@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.resources.resourcegroups.iterators;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofSeconds;
@@ -70,6 +71,9 @@ public class ResourceGroupReconciliationIterator implements Handler<ResourceGrou
 
   @Override
   public void handle(ResourceGroupDBO entity) {
+    if (isEmpty(entity.getScopeIdentifier())) {
+      return;
+    }
     harnessResourceGroupService.sync(
         entity.getIdentifier(), scopeService.buildScopeFromScopeIdentifier(entity.getScopeIdentifier()));
   }
