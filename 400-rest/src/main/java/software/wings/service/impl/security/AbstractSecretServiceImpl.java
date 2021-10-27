@@ -11,15 +11,18 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretText;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.expression.SecretString;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptionType;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
 import software.wings.beans.alert.AlertType;
@@ -28,12 +31,14 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.SecretsManagementFeature;
 import software.wings.features.api.PremiumFeature;
+import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.util.HashSet;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,6 +59,8 @@ public abstract class AbstractSecretServiceImpl {
   @Inject protected AlertService alertService;
   @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private SecretService secretService;
+  @Inject private MainConfiguration mainConfiguration;
 
   static EncryptedData encryptLocal(char[] value) {
     final String encryptionKey = UUID.randomUUID().toString();
@@ -65,6 +72,27 @@ public abstract class AbstractSecretServiceImpl {
         .encryptedValue(encryptChars)
         .encryptionType(EncryptionType.LOCAL)
         .build();
+  }
+
+  EncryptedData encryptUsingBaseAlgo(String accountId, char[] value) {
+    String kmsId = accountId;
+    if (mainConfiguration.isUseGlobalKMSAsBaseAlgo()) {
+      SecretManagerConfig globalSecretManager = secretManagerConfigService.getGlobalSecretManager(accountId);
+      if (null != globalSecretManager) {
+        kmsId = globalSecretManager.getUuid();
+      } else {
+        log.info("No Global Secret Manager configured. Using Local Encryption instead for accountId: " + accountId);
+      }
+    }
+    SecretText secret = SecretText.builder()
+                            .value(String.valueOf(value))
+                            .hideFromListing(true)
+                            .name(UUID.randomUUID().toString())
+                            .scopedToAccount(true)
+                            .kmsId(kmsId)
+                            .usageRestrictions(UsageRestrictions.builder().appEnvRestrictions(new HashSet()).build())
+                            .build();
+    return secretService.encryptSecret(accountId, secret, false);
   }
 
   static NGEncryptedDataMetadata getNgEncryptedDataMetadata(SecretManagerConfig secretManagerConfig) {
@@ -80,14 +108,13 @@ public abstract class AbstractSecretServiceImpl {
     return metadata;
   }
 
-  static char[] decryptLocal(EncryptedData data) {
-    final SimpleEncryption simpleEncryption = new SimpleEncryption(data.getEncryptionKey());
-    return simpleEncryption.decryptChars(data.getEncryptedValue());
+  char[] decryptUsingBaseAlgo(EncryptedData encryptedData) {
+    return secretService.fetchSecretValue(encryptedData);
   }
 
   char[] decryptKey(char[] key) {
     final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, new String(key));
-    return decryptLocal(encryptedData);
+    return decryptUsingBaseAlgo(encryptedData);
   }
 
   protected void checkIfSecretsManagerConfigCanBeCreatedOrUpdated(String accountId) {
