@@ -1,4 +1,4 @@
-package io.harness.steps;
+package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 

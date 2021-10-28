@@ -64,7 +64,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     log.info("Initiating validateLdapUserSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
-    LdapResponse response = helper.validateUserConfig(settings.getUserSettingsList());
+    LdapResponse response = helper.validateUserConfig(settings);
     if (response.getStatus() == LdapResponse.Status.SUCCESS) {
       return LdapTestResponse.builder().status(Status.SUCCESS).message(response.getMessage()).build();
     }
@@ -76,7 +76,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     log.info("Initiating validateLdapGroupSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
-    LdapResponse response = helper.validateGroupConfig(settings.getGroupSettingsList().get(0));
+    LdapResponse response = helper.validateGroupConfig(settings);
     if (response.getStatus() == LdapResponse.Status.SUCCESS) {
       return LdapTestResponse.builder().status(Status.SUCCESS).message(response.getMessage()).build();
     }
@@ -89,7 +89,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     settings.decryptFields(settingsEncryptedDataDetail, encryptionService);
     String password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail, false));
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
-    return helper.authenticate(settings.getUserSettingsList(), username, password);
+    return helper.authenticate(settings, username, password);
   }
 
   @VisibleForTesting
@@ -106,11 +106,6 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     int totalMembers = Integer.parseInt(group.getAttribute(LdapConstants.GROUP_SIZE_ATTR).getStringValue());
     boolean selectable = true;
     String message = "";
-
-    if (LdapConstants.MAX_GROUP_MEMBERS_LIMIT < totalMembers) {
-      selectable = false;
-      message = LdapConstants.GROUP_MEMBERS_EXCEEDED;
-    }
 
     return LdapGroupResponse.builder()
         .dn(group.getDn())
@@ -143,8 +138,15 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     } else {
       name = email;
     }
-    log.info("LDAP user response with name {} and email {}", name, email);
-    return LdapUserResponse.builder().dn(user.getDn()).name(name).email(email).build();
+
+    String externalUserId = "";
+    if (Arrays.asList(user.getAttributeNames()).contains(userConfig.getUidAttr())
+        && user.getAttribute(userConfig.getUidAttr()) != null) {
+      externalUserId = user.getAttribute(userConfig.getUidAttr()).getStringValue();
+    }
+    log.info("LDAP user response with name {} and email {} and userId {}", name, email, externalUserId);
+
+    return LdapUserResponse.builder().dn(user.getDn()).name(name).email(email).userId(externalUserId).build();
   }
 
   @Override
@@ -153,8 +155,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     try {
-      List<LdapListGroupsResponse> ldapListGroupsResponses =
-          helper.searchGroupsByName(settings.getGroupSettingsList(), nameQuery);
+      List<LdapListGroupsResponse> ldapListGroupsResponses = helper.searchGroupsByName(settings, nameQuery);
       return createLdapGroupResponse(helper, ldapListGroupsResponses, settings);
     } catch (LdapException e) {
       throw new LdapDelegateException(e.getResultCode().toString(), e);
@@ -182,7 +183,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapGroupResponse groupResponse;
     try {
-      LdapListGroupsResponse listGroupsResponse = helper.getGroupByDn(settings.getGroupSettingsList(), dn);
+      LdapListGroupsResponse listGroupsResponse = helper.getGroupByDn(settings, dn);
 
       if (listGroupsResponse == null || listGroupsResponse.getLdapResponse() == null
           || LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {

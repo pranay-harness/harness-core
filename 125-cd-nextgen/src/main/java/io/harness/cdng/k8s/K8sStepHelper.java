@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
@@ -1403,5 +1404,9 @@ public class K8sStepHelper {
   public boolean isUseLatestKustomizeVersion(String accountId) {
     return RestClientUtils.getResponse(
         accountClient.isFeatureFlagEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE.name(), accountId));
+  }
+
+  public boolean isUseNewKubectlVersion(String accountId) {
+    return featureFlagService.isEnabled(NEW_KUBECTL_VERSION, accountId);
   }
 }

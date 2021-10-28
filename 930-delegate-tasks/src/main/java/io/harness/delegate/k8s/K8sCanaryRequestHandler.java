@@ -194,7 +194,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     }
 
     k8sTaskHelperBase.dryRunManifests(k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(),
-        k8sDelegateTaskParams, logCallback, true);
+        k8sDelegateTaskParams, logCallback, true, request.isUseNewKubectlVersion());
   }
 
   @VisibleForTesting

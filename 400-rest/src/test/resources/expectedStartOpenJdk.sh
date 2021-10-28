@@ -43,9 +43,9 @@ case "$OSTYPE" in
     ;;
 esac
 
-JVM_URL=http://localhost:8888/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+JVM_URL=http://localhost:9500/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
 
-ALPN_BOOT_JAR_URL=http://localhost:8888/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+ALPN_BOOT_JAR_URL=http://localhost:9500/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -197,7 +197,7 @@ if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
   exit 1
 fi
 
-USE_CDN=false
+USE_CDN=true
 
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=http://localhost:8888
@@ -227,7 +227,7 @@ export DEPLOY_MODE=KUBERNETES
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=http://localhost:8888
+  DELEGATE_STORAGE_URL=http://localhost:9500
   REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/delegateci.txt)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
@@ -271,9 +271,9 @@ if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 43200" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
-  echo "delegateCheckLocation: http://localhost:8888/delegateci.txt" >> config-watcher.yml
+  echo "delegateCheckLocation: http://localhost:9500/delegateci.txt" >> config-watcher.yml
 else
-  sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: http://localhost:8888/delegateci.txt|" config-watcher.yml
+  sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: http://localhost:9500/delegateci.txt|" config-watcher.yml
 fi
 if ! `grep fileHandlesMonitoringEnabled config-watcher.yml > /dev/null`; then
   echo "fileHandlesMonitoringEnabled: false" >> config-watcher.yml
@@ -299,12 +299,12 @@ if [[ $1 == "upgrade" ]]; then
   WATCHER_CURRENT_VERSION=$(jar_app_version watcher.jar)
   mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
   cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
-  $JRE_BINARY $JAVA_OPTS $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Dwatchersourcedir="$DIR" -Xmx512m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -jar watcher.jar config-watcher.yml upgrade $2
+  $JRE_BINARY $JAVA_OPTS $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Dwatchersourcedir="$DIR" -Xmx192m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -jar watcher.jar config-watcher.yml upgrade $2
 else
   if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
     echo "Watcher already running"
   else
-    nohup $JRE_BINARY $JAVA_OPTS $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Dwatchersourcedir="$DIR" -Xmx512m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
+    nohup $JRE_BINARY $JAVA_OPTS $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Dwatchersourcedir="$DIR" -Xmx192m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -jar watcher.jar config-watcher.yml >nohup-watcher.out 2>&1 &
     sleep 1
     if [ -s nohup-watcher.out ]; then
       echo "Failed to start Watcher."

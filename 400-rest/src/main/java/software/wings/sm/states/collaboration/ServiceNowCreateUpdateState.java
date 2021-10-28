@@ -168,6 +168,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
                       .parameters(new Object[] {serviceNowTaskParameters})
                       .timeout(ASYNC_TASK_TIMEOUT_MILLIS)
                       .build())
+            .tags(config.getDelegateSelectors())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();

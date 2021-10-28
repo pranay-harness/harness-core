@@ -25,6 +25,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEW
 import static software.wings.security.PermissionAttribute.PermissionType.CREATE_CUSTOM_DASHBOARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ACCOUNT_DEFAULTS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
@@ -59,6 +60,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -189,6 +191,10 @@ public class AuthHandler {
   @Inject private TemplateGalleryService templateGalleryService;
 
   public UserPermissionInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
+    double accountPermissionsTime, getAppIdsTime, collectAppIdsTime, fetchRequiredEntitiesTime,
+        populateAppPermissionsTime, dashboardAccessPermissionsTime;
+    long startTime = System.currentTimeMillis();
+
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
 
     Set<PermissionType> accountPermissionSet = new HashSet<>();
@@ -196,16 +202,25 @@ public class AuthHandler {
         AccountPermissionSummary.builder().permissions(accountPermissionSet);
 
     populateRequiredAccountPermissions(userGroups, accountPermissionSet);
+    accountPermissionsTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
 
     // Get all app ids
     HashSet<String> allAppIds = new HashSet<>(appService.getAppIdsByAccountId(accountId));
+    getAppIdsTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
 
     // Cache all the entities by app id first
     Map<PermissionType, Set<String>> permissionTypeAppIdSetMap = collectRequiredAppIds(userGroups, allAppIds);
+    collectAppIdsTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
 
     // Fetch all entities by appIds
     Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap =
         fetchRequiredEntities(accountId, permissionTypeAppIdSetMap);
+
+    fetchRequiredEntitiesTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
 
     // Filter and assign permissions
     Map<String, AppPermissionSummary> appPermissionMap =
@@ -219,10 +234,18 @@ public class AuthHandler {
     UserPermissionInfo userPermissionInfo = userPermissionInfoBuilder.build();
     setAppPermissionMap(userPermissionInfo);
 
+    populateAppPermissionsTime = System.currentTimeMillis() - startTime;
+    startTime = System.currentTimeMillis();
+
     Map<String, Set<io.harness.dashboard.Action>> dashboardPermissions =
         dashboardAuthHandler.getDashboardAccessPermissions(user, accountId, userPermissionInfo, userGroups);
     userPermissionInfo.setDashboardPermissions(dashboardPermissions);
 
+    dashboardAccessPermissionsTime = System.currentTimeMillis() - startTime;
+    log.info(
+        "evaluateUserPermissionInfo benchmarking - accountPermissionsTime:{}, getAppIdsTime:{}, collectAppIdsTime:{}, fetchRequiredEntitiesTime:{}, populateAppPermissionsTime:{}, dashboardAccessPermissionsTime:{}",
+        accountPermissionsTime, getAppIdsTime, collectAppIdsTime, fetchRequiredEntitiesTime, populateAppPermissionsTime,
+        dashboardAccessPermissionsTime);
     return userPermissionInfo;
   }
 
@@ -429,6 +452,7 @@ public class AuthHandler {
         case WORKFLOW: {
           if (entityFilter instanceof GenericEntityFilter) {
             // Workflow Permissions given per workflow basis
+            long startTime = System.nanoTime();
             Set<String> workflowIdSet = null;
             if (actions.contains(Action.CREATE)) {
               appPermissionSummary.setCanCreateWorkflow(true);
@@ -461,6 +485,9 @@ public class AuthHandler {
             Map<Action, Set<String>> actionEntityIdMap =
                 buildActionEntityMap(finalAppPermissionSummary.getWorkflowPermissions(), entityIds, entityActions);
             finalAppPermissionSummary.setWorkflowPermissions(actionEntityIdMap);
+            long endTime = System.nanoTime();
+            log.info("{}: Elapsed time(ns) for attaching workflow permission: {}",
+                FeatureName.WORKFLOW_PIPELINE_PERMISSION_BY_ENTITY.name(), endTime - startTime);
             break;
           } else {
             // Workflow Permissions given via Environment
@@ -630,6 +657,7 @@ public class AuthHandler {
       switch (permissionType) {
         case PIPELINE:
           if (entityFilter instanceof GenericEntityFilter) {
+            long startTime = System.nanoTime();
             Set<String> pipelineIdSet = null;
             if (actions.contains(Action.CREATE)) {
               appPermissionSummary.setCanCreatePipeline(true);
@@ -658,6 +686,9 @@ public class AuthHandler {
             Map<Action, Set<String>> actionEntityIdMap =
                 buildActionPipelineMap(finalAppPermissionSummary.getPipelinePermissions(), pipelineIdActionMap);
             finalAppPermissionSummary.setPipelinePermissions(actionEntityIdMap);
+            long endTime = System.nanoTime();
+            log.info("{}: Elapsed time(ns) for attaching pipeline permission: {}",
+                FeatureName.WORKFLOW_PIPELINE_PERMISSION_BY_ENTITY.name(), endTime - startTime);
             break;
           } else {
             Set<String> envIdSet = null;
@@ -1801,11 +1832,12 @@ public class AuthHandler {
 
   public Set<PermissionType> getAllAccountPermissions() {
     return Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, MANAGE_APPLICATIONS, TEMPLATE_MANAGEMENT,
-        USER_PERMISSION_READ, AUDIT_VIEWER, MANAGE_TAGS, CE_ADMIN, CE_VIEWER, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS,
-        MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES, MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES,
-        MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS, MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS,
-        MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES, MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS,
-        MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS, MANAGE_SSH_AND_WINRM, MANAGE_RESTRICTED_ACCESS);
+        USER_PERMISSION_READ, AUDIT_VIEWER, MANAGE_TAGS, MANAGE_ACCOUNT_DEFAULTS, CE_ADMIN, CE_VIEWER,
+        MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
+        MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
+        MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
+        MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS, MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS,
+        MANAGE_SSH_AND_WINRM, MANAGE_RESTRICTED_ACCESS);
   }
 
   private Set<Action> getAllActions() {

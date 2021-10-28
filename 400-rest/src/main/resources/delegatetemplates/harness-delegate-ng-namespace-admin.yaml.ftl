@@ -127,8 +127,6 @@ spec:
           value: "true"
         - name: DELEGATE_DESCRIPTION
           value: "${delegateDescription}"
-        - name: DELEGATE_PROFILE
-          value: "${delegateProfile}"
         - name: DELEGATE_TYPE
           value: "${delegateType}"
         - name: DELEGATE_TAGS
@@ -204,8 +202,6 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    harness.io/app: harness-delegate
-    harness.io/account: ${kubernetesAccountLabel}
     harness.io/name: ${delegateName}
   ports:
     - port: ${delegateGrpcServicePort}

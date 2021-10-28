@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
-import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.beans.ExecutionInterruptType.ABORT;
 import static io.harness.beans.ExecutionInterruptType.END_EXECUTION;
 import static io.harness.beans.ExecutionInterruptType.IGNORE;
 import static io.harness.beans.ExecutionInterruptType.MARK_SUCCESS;
@@ -102,8 +102,7 @@ public class FailureStrategyYamlHandlerTest extends CategoryTest {
   public void shouldThrowInvalidArgumentsExceptionWhenActionAfterTimeoutIsNotProvided() {
     Yaml yaml = Yaml.builder().manualInterventionTimeout(60000L).repairActionCode("manual_intervention").build();
 
-    List<ExecutionInterruptType> allowedActions =
-        Arrays.asList(ABORT_ALL, END_EXECUTION, IGNORE, MARK_SUCCESS, ROLLBACK);
+    List<ExecutionInterruptType> allowedActions = Arrays.asList(ABORT, END_EXECUTION, IGNORE, MARK_SUCCESS, ROLLBACK);
     assertThatThrownBy(()
                            -> failureStrategyYamlHandler.upsertFromYaml(
                                Builder.aChangeContext().withYaml(yaml).build(), Collections.emptyList()))
