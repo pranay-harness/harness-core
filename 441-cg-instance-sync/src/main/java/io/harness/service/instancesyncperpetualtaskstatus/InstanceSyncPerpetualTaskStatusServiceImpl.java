@@ -22,7 +22,7 @@ public class InstanceSyncPerpetualTaskStatusServiceImpl implements InstanceSyncP
   public boolean handlePerpetualTaskFailure(String perpetualTaskId, String errorMessage) {
     InstanceSyncPerpetualTaskStatus status = get(perpetualTaskId);
     if (status != null) {
-      if (System.currentTimeMillis() - status.getInitialFailureAt() >= Duration.ofDays(7).toMillis()) {
+      if (System.currentTimeMillis() - status.getInitialFailureAt() >= Duration.ofMinutes(20).toMillis()) {
         delete(perpetualTaskId);
         return true;
       }
