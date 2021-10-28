@@ -457,8 +457,6 @@ public class InstallUtils {
   private static boolean validateGoTemplateClientExists(String goTemplateClientDirectory) {
     try {
       if (!Files.exists(Paths.get(goTemplateClientDirectory + "/go-template"))) {
-        log.info("GoTemplate Directory  "+ goTemplateClientDirectory);
-        log.info("Path is " + Files.exists(Paths.get(goTemplateClientDirectory + "/go-template")));
         return false;
       }
 
@@ -684,8 +682,6 @@ public class InstallUtils {
   private static boolean validateChartMuseumExists(String chartMuseumDirectory) {
     try {
       if (!Files.exists(Paths.get(chartMuseumDirectory + "/chartmuseum"))) {
-        log.info("chartMuseumDirectory  "+ chartMuseumDirectory);
-        log.info("Path is " + Paths.get(chartMuseumDirectory + "/chartmuseum"));
         return false;
       }
 
