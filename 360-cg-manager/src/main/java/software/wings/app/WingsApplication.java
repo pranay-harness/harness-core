@@ -87,6 +87,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
+import io.harness.mongo.DMSMongoPersistence;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.mongo.QueryFactory;
 import io.harness.mongo.tracing.TraceMode;
@@ -112,7 +113,6 @@ import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
@@ -429,14 +429,11 @@ public class WingsApplication extends Application<MainConfiguration> {
       registerHealthChecksDelegateService(environment, injector);
     }
 
-    if (isManager()) {
+    if (shouldEnableDelegateMgmt && configuration.isInitializeDMSMongo()) {
+      registerStoresDMS(configuration, injector);
+    } else {
       registerStores(configuration, injector);
     }
-    if (shouldEnableDelegateMgmt) {
-      registerStoresDMS(configuration, injector);
-    }
-
-
 
     if (configuration.getMongoConnectionFactory().getTraceMode() == TraceMode.ENABLED) {
       registerQueryTracer(injector);
@@ -854,9 +851,9 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerStoresDMS(MainConfiguration configuration, Injector injector) {
-    final DMSPersistence persistence = injector.getInstance(DMSPersistence.class);
+    final HPersistence persistence = injector.getInstance(DMSMongoPersistence.class);
     if (isNotEmpty(configuration.getDmsMongo().getUri())
-            && !configuration.getDmsMongo().getUri().equals(configuration.getMongoConnectionFactory().getUri())) {
+        && !configuration.getDmsMongo().getUri().equals(configuration.getMongoConnectionFactory().getUri())) {
       persistence.register(Store.builder().name("dms").build(), configuration.getDmsMongo().getUri());
     }
   }

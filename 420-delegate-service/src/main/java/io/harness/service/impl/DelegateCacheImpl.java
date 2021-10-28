@@ -1,5 +1,7 @@
 package io.harness.service.impl;
 
+import static io.harness.persistence.DMSConstants.DMS;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -11,7 +13,7 @@ import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
-import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 
 import com.google.common.cache.CacheBuilder;
@@ -20,6 +22,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +40,7 @@ import org.jetbrains.annotations.NotNull;
 public class DelegateCacheImpl implements DelegateCache {
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
 
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
 
   private LoadingCache<String, Optional<Delegate>> delegateCache =
       CacheBuilder.newBuilder()

@@ -38,7 +38,8 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 @Singleton
 @Slf4j
-public class DMSMongoPersistence implements DMSPersistence {
+public class DMSMongoPersistence extends MongoPersistence implements HPersistence {
+    Store DMS_STORE = Store.builder().name("dms").build();
 
     @Override
     public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req) {
@@ -73,9 +74,9 @@ public class DMSMongoPersistence implements DMSPersistence {
 
     @Inject
     public DMSMongoPersistence(@Named("dms") AdvancedDatastore primaryDatastore) {
-        datastoreMap = new HashMap<>();
-        datastoreMap.put(DMS_STORE.getName(), primaryDatastore);
+        super(primaryDatastore);
     }
+
 
     @Override
     public Duration healthExpectedResponseTimeout() {
@@ -99,6 +100,7 @@ public class DMSMongoPersistence implements DMSPersistence {
     public void register(Store store, String uri) {
         storeInfo.put(store.getName(), DMSMongoPersistence.Info.builder().uri(uri).build());
     }
+
 
     @Override
     public AdvancedDatastore getDatastore(Store store) {
@@ -320,14 +322,6 @@ public class DMSMongoPersistence implements DMSPersistence {
         return deleteOnServer(query);
     }
 
-    @Override
-    public final <T extends PersistentEntity> boolean deleteOnServer(Query<T> query) {
-        AdvancedDatastore datastore = getDatastore(query.getEntityClass());
-        return HPersistence.retry(() -> {
-            WriteResult result = datastore.delete(query);
-            return !(result == null || result.getN() == 0);
-        });
-    }
 
     @Override
     public <T extends PersistentEntity> boolean delete(T entity) {

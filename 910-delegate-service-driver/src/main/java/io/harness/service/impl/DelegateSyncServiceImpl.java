@@ -1,6 +1,7 @@
 package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.DMSConstants.DMS;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
@@ -13,7 +14,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskRespon
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.BinaryResponseData;
@@ -35,7 +36,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateSyncServiceImpl implements DelegateSyncService {
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
   @Inject @Named("disableDeserialization") private boolean disableDeserialization;
 

@@ -8,6 +8,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.returnNewOptions;
+import static io.harness.persistence.DMSConstants.DMS;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -37,7 +38,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
-import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HPersistence;
 import io.harness.secrets.SecretService;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateProfileObserver;
@@ -82,7 +83,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   // Command to use secrets in startUp script is ${secrets.getValue("secretName")}. Hence the pattern is like this.
   private static final Pattern secretNamePattern = Pattern.compile("\\$\\{secrets.getValue\\([^{}]+\\)}");
 
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretService secretService;

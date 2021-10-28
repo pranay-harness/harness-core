@@ -26,6 +26,7 @@ import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
+import static io.harness.persistence.DMSConstants.DMS;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
@@ -139,7 +140,6 @@ import io.harness.network.Http;
 import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
 import io.harness.outbox.api.OutboxService;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -323,7 +323,7 @@ public class DelegateServiceImpl implements DelegateService {
   // base delegate memory + 250 to handle 50 tasks + 250 for ramp down for old version delegate during release)
   private static final int POD_BASE_RAM_IN_MB = 400;
 
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;

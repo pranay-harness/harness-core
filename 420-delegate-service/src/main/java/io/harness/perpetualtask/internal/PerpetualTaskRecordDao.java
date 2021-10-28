@@ -4,9 +4,11 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_ASSIGNED;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_UNASSIGNED;
 
+import static io.harness.persistence.DMSConstants.DMS;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 
+import com.google.inject.name.Named;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.network.FibonacciBackOff;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -14,7 +16,6 @@ import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
 
 import com.google.inject.Inject;
@@ -22,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -29,11 +32,11 @@ import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
 public class PerpetualTaskRecordDao {
-  private final DMSPersistence persistence;
+  @Named(DMS) private HPersistence persistence;
   private static final int MAX_FIBONACCI_INDEX_FOR_TASK_ASSIGNMENT = 8;
 
   @Inject
-  public PerpetualTaskRecordDao(DMSPersistence persistence) {
+  public PerpetualTaskRecordDao(HPersistence persistence) {
     this.persistence = persistence;
   }
 

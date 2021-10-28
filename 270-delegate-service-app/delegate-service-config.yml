@@ -194,6 +194,7 @@ dms-mongo:
   indexManagerMode: AUTO
   aliasDBName: dms
 
+initializeDMSMongo: true
 
 watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
 

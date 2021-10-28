@@ -2,6 +2,7 @@ package io.harness.insights;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.DMSConstants.DMS;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -12,7 +13,6 @@ import io.harness.delegate.beans.DelegateInsightsType;
 import io.harness.insights.DelegateInsightsSummaryKey.DelegateInsightsSummaryKeyBuilder;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 
@@ -23,6 +23,7 @@ import software.wings.beans.DelegateTaskUsageInsights.DelegateTaskUsageInsightsK
 import software.wings.beans.DelegateTaskUsageInsightsEventType;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -47,7 +48,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(DEL)
 @Slf4j
 public class DelegateInsightsSummaryJob implements Runnable {
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private DelegateCache delegateCache;
 
   @Override

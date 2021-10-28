@@ -1,5 +1,6 @@
 package io.harness.service.impl;
 
+import com.google.inject.name.Named;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -10,7 +11,7 @@ import io.harness.delegate.beans.DelegateToken.DelegateTokenKeys;
 import io.harness.delegate.beans.DelegateTokenDetails;
 import io.harness.delegate.beans.DelegateTokenDetails.DelegateTokenDetailsBuilder;
 import io.harness.delegate.beans.DelegateTokenStatus;
-import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateTokenService;
 import io.harness.utils.Misc;
 
@@ -29,10 +30,12 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import static io.harness.persistence.DMSConstants.DMS;
+
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateTokenServiceImpl implements DelegateTokenService, AccountCrudObserver {
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
 
   private static final String DEFAULT_TOKEN_NAME = "default";
@@ -69,7 +72,7 @@ public class DelegateTokenServiceImpl implements DelegateTokenService, AccountCr
             .set(DelegateTokenKeys.status, DelegateTokenStatus.ACTIVE)
             .set(DelegateTokenKeys.value, tokenValue);
 
-    DelegateToken delegateToken = persistence.upsert(query, updateOperations, DMSPersistence.upsertReturnNewOptions);
+    DelegateToken delegateToken = persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
 
     return getDelegateTokenDetails(delegateToken, false);
   }

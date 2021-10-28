@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.DMSConstants.DMS;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -12,9 +13,9 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import com.google.inject.name.Named;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateConnectionDetails;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.DelegateConnection;
@@ -37,7 +38,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @OwnedBy(DEL)
 public class DelegateConnectionDao {
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
 
   public void delegateDisconnected(String accountId, String delegateConnectionId) {
     log.info("Mark as disconnected delegateConnectionId: {}", delegateConnectionId);

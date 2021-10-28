@@ -5,6 +5,7 @@ import static io.harness.capability.CapabilitySubjectPermission.CapabilitySubjec
 import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
+import static io.harness.persistence.DMSConstants.DMS;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -25,7 +26,6 @@ import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 
 import software.wings.service.impl.DelegateObserver;
@@ -35,6 +35,7 @@ import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -54,7 +55,7 @@ public class BlockingCapabilityPermissionsRecordHandler
   private static final long MAX_PROCESSING_DURATION_MILLIS = 60000L;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<CapabilityTaskSelectionDetails> persistenceProvider;
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private DelegateService delegateService;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private FeatureFlagService featureFlagService;

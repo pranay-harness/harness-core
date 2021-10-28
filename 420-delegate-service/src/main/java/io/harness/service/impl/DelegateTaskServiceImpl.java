@@ -2,6 +2,7 @@ package io.harness.service.impl;
 
 import static io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.persistence.DMSConstants.DMS;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -15,8 +16,8 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
 import io.harness.observer.Subject;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCallbackRegistry;
@@ -33,6 +34,7 @@ import software.wings.service.impl.DelegateTaskStatusObserver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
@@ -45,7 +47,7 @@ import org.mongodb.morphia.query.Query;
 @ValidateOnExecution
 @Slf4j
 public class DelegateTaskServiceImpl implements DelegateTaskService {
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateCallbackRegistry delegateCallbackRegistry;

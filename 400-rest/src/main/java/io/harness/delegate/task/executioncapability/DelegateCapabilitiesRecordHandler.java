@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.persistence.DMSConstants.DMS;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -26,13 +27,14 @@ import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
-import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HPersistence;
 
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
@@ -51,7 +53,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
   private static final FindOptions FETCH_LIMIT_OPTIONS = new FindOptions().limit(10);
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<Delegate> persistenceProvider;
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private DelegateService delegateService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CapabilityService capabilityService;

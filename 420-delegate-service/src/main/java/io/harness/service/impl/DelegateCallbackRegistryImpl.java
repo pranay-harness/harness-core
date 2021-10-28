@@ -1,5 +1,7 @@
 package io.harness.service.impl;
 
+import static io.harness.persistence.DMSConstants.DMS;
+
 import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -7,7 +9,7 @@ import io.harness.callback.DelegateCallback;
 import io.harness.delegate.beans.DelegateCallbackRecord;
 import io.harness.delegate.beans.DelegateCallbackRecord.DelegateCallbackRecordKeys;
 import io.harness.exception.UnexpectedException;
-import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateTaskResultsProvider;
@@ -19,6 +21,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -34,7 +37,7 @@ import org.apache.commons.codec.binary.Base64;
 @ValidateOnExecution
 @Slf4j
 public class DelegateCallbackRegistryImpl implements DelegateCallbackRegistry {
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
 
   private LoadingCache<String, DelegateCallbackService> delegateCallbackServiceCache =
       CacheBuilder.newBuilder()

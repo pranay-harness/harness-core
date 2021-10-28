@@ -9,6 +9,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
+import static io.harness.persistence.DMSConstants.DMS;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
@@ -152,7 +153,6 @@ import io.harness.pcf.CfDeploymentManager;
 import io.harness.perpetualtask.PerpetualTaskScheduleService;
 import io.harness.perpetualtask.PerpetualTaskScheduleServiceImpl;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.polling.client.PollResourceClientModule;
 import io.harness.queue.QueueController;
@@ -868,7 +868,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
-    install(new DMSMongoModule(configuration.getDmsMongo()));
+      install(new DMSMongoModule(configuration.getDmsMongo()));
+    if (configuration.isInitializeDMSMongo()) {
+
+    }
 
     install(new EventsFrameworkModule(
         configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
@@ -898,8 +901,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(DelegateConfiguration.class).toInstance(DelegateConfiguration.builder().build());
     bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
+    bind(HPersistence.class).annotatedWith(Names.named(DMS)).to(DMSMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
-    bind(DMSPersistence.class).to(DMSMongoPersistence.class);
+
     bind(AppService.class).to(AppServiceImpl.class);
     bind(HarnessSampleAppService.class).to(HarnessSampleAppServiceImpl.class);
     bind(SampleDataProviderService.class).to(SampleDataProviderServiceImpl.class);

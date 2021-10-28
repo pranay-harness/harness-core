@@ -6,6 +6,7 @@ import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
+import static io.harness.persistence.DMSConstants.DMS;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
@@ -20,8 +21,8 @@ import io.harness.exception.RevokedTokenException;
 import io.harness.exception.WingsException;
 import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.manage.GlobalContextManager;
-import io.harness.persistence.DMSPersistence;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.security.DelegateTokenAuthenticator;
 
 import software.wings.beans.Account;
@@ -30,6 +31,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
@@ -56,7 +58,7 @@ import org.mongodb.morphia.query.Query;
 @Singleton
 @OwnedBy(DEL)
 public class DelegateTokenEventServerAuthenticatorImpl implements DelegateTokenAuthenticator {
-  @Inject private DMSPersistence persistence;
+  @Inject private HPersistence persistence;
 
   private final LoadingCache<String, String> keyCache =
       Caffeine.newBuilder()

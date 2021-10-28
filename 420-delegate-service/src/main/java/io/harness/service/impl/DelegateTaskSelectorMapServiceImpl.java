@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskSelectorMap.TaskSelectorMapKeys;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
+import static io.harness.persistence.DMSConstants.DMS;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -12,11 +13,12 @@ import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
-import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.mongodb.DuplicateKeyException;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
@@ -26,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Slf4j
 public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorMapService {
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
 
   @Override
   public List<TaskSelectorMap> list(String accountId) {

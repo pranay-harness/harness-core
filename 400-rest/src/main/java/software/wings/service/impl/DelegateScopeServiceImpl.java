@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.DMSConstants.DMS;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -24,7 +25,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.DMSPersistence;
+import io.harness.persistence.HPersistence;
 
 import software.wings.beans.Event;
 import software.wings.service.intfc.DelegateScopeService;
@@ -33,6 +34,7 @@ import software.wings.service.intfc.DelegateService;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.mongodb.DuplicateKeyException;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
@@ -46,7 +48,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 public class DelegateScopeServiceImpl implements DelegateScopeService {
-  @Inject private DMSPersistence persistence;
+  @Inject @Named(DMS) private HPersistence persistence;
   @Inject private DelegateService delegateService;
   @Inject private AuditServiceHelper auditServiceHelper;
 
