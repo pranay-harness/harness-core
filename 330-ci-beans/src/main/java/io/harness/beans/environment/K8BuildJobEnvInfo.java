@@ -20,7 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @Value
 @Builder
-@TypeAlias("k8")
+@TypeAlias("k8BuildJobEnvInfo")
 public class K8BuildJobEnvInfo implements BuildJobEnvInfo {
   @NotEmpty private PodsSetupInfo podsSetupInfo;
   @NotEmpty private String workDir;

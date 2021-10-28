@@ -7,6 +7,7 @@ import io.harness.beans.build.PublishedArtifact;
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.dependencies.ServiceDependency;
+import io.harness.beans.environment.AwsVmBuildJobInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
@@ -47,15 +48,19 @@ import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
+import io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
-import io.harness.beans.sweepingoutputs.PodCleanupDetails;
+import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StageDetails;
+import io.harness.beans.sweepingoutputs.StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
+import io.harness.beans.yaml.extended.infrastrucutre.AwsVmInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.AwsVmInfraYaml.AwsVmInfraYamlSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
@@ -133,7 +138,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(UploadToGCSStepInfo.class, 100084);
     kryo.register(K8BuildJobEnvInfo.ConnectorConversionInfo.class, 100085);
     kryo.register(UploadToArtifactoryStepInfo.class, 100086);
-    kryo.register(PodCleanupDetails.class, 100087);
+    kryo.register(K8StageInfraDetails.class, 100087);
     kryo.register(CustomExecutionSource.class, 100088);
     kryo.register(LiteEnginePodDetailsOutcome.class, 100089);
     kryo.register(ContainerPortDetails.class, 100090);
@@ -141,5 +146,10 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PublishedFileArtifact.class, 100092);
     kryo.register(PublishedImageArtifact.class, 100093);
     kryo.register(StageDetails.class, 100094);
+    kryo.register(AwsVmBuildJobInfo.class, 100095);
+    kryo.register(AwsVmInfraYaml.class, 100096);
+    kryo.register(AwsVmInfraYamlSpec.class, 100097);
+    kryo.register(AwsVmStageInfraDetails.class, 100098);
+    kryo.register(StageInfraDetails.class, 100099);
   }
 }

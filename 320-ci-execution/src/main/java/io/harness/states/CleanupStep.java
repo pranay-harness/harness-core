@@ -1,11 +1,11 @@
 package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
+import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
-import io.harness.beans.sweepingoutputs.PodCleanupDetails;
+import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.delegate.beans.TaskData;
@@ -65,8 +65,8 @@ public class CleanupStep implements TaskExecutable<CleanupStepInfo, K8sTaskExecu
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
 
-    PodCleanupDetails podCleanupDetails = (PodCleanupDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(CLEANUP_DETAILS));
+    K8StageInfraDetails k8StageDetails = (K8StageInfraDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS));
 
     // It should always resolved to K8sDirectInfraYaml
     K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
@@ -80,14 +80,13 @@ public class CleanupStep implements TaskExecutable<CleanupStepInfo, K8sTaskExecu
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, clusterName);
 
-    CIK8CleanupTaskParams cik8CleanupTaskParams =
-        CIK8CleanupTaskParams.builder()
-            .k8sConnector(connectorDetails)
-            .cleanupContainerNames(podCleanupDetails.getCleanUpContainerNames())
-            .namespace(namespace)
-            .podNameList(podNames)
-            .serviceNameList(new ArrayList<>())
-            .build();
+    CIK8CleanupTaskParams cik8CleanupTaskParams = CIK8CleanupTaskParams.builder()
+                                                      .k8sConnector(connectorDetails)
+                                                      .cleanupContainerNames(k8StageDetails.getContainerNames())
+                                                      .namespace(namespace)
+                                                      .podNameList(podNames)
+                                                      .serviceNameList(new ArrayList<>())
+                                                      .build();
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)

@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.sweepingoutputs.PodCleanupDetails;
+import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -28,12 +28,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class PodCleanupUtilityTest extends CIExecutionTestBase {
+public class StageCleanupUtilityTest extends CIExecutionTestBase {
   @Mock private ConnectorUtils connectorUtils;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
 
-  @InjectMocks private PodCleanupUtility podCleanupUtility;
+  @InjectMocks private StageCleanupUtility stageCleanupUtility;
   private Ambiance ambiance = Ambiance.newBuilder()
                                   .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
                                       "projectIdentfier", "orgIdentifier", "orgIdentifier"))
@@ -50,13 +50,13 @@ public class PodCleanupUtilityTest extends CIExecutionTestBase {
   public void testHandleEventForRunning() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(PodCleanupDetails.builder()
+        .thenReturn(K8StageInfraDetails.builder()
                         .podName("podName")
-                        .cleanUpContainerNames(new ArrayList<>())
+                        .containerNames(new ArrayList<>())
                         .infrastructure(ciExecutionPlanTestHelper.getInfrastructure())
                         .build());
 
-    CIK8CleanupTaskParams cik8CleanupTaskParams = podCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
+    CICleanupTaskParams cik8CleanupTaskParams = stageCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
 
     assertThat(cik8CleanupTaskParams).isNotNull();
   }

@@ -7,7 +7,7 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParam
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
-import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
+import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_EVENT;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_AUTHOR;
@@ -77,7 +77,7 @@ import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
-import io.harness.beans.sweepingoutputs.PodCleanupDetails;
+import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.config.CIExecutionServiceConfig;
@@ -278,11 +278,11 @@ public class K8BuildSetupUtils {
     List<String> containerNames =
         containerParamsList.stream().map(CIK8ContainerParams::getName).collect(Collectors.toList());
     containerNames.add(setupAddOnContainerParams.getName());
-    executionSweepingOutputResolver.consume(ambiance, CLEANUP_DETAILS,
-        PodCleanupDetails.builder()
+    executionSweepingOutputResolver.consume(ambiance, STAGE_INFRA_DETAILS,
+        K8StageInfraDetails.builder()
             .infrastructure(infrastructure)
             .podName(podSetupInfo.getName())
-            .cleanUpContainerNames(containerNames)
+            .containerNames(containerNames)
             .build(),
         StepOutcomeGroup.STAGE.name());
 

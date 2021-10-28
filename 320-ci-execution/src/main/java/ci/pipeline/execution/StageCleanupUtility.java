@@ -1,12 +1,17 @@
 package ci.pipeline.execution;
 
-import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
+import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DETAILS;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.sweepingoutputs.PodCleanupDetails;
+import io.harness.beans.sweepingoutputs.ContextElement;
+import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
+import io.harness.beans.sweepingoutputs.StageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.delegate.beans.ci.CICleanupTaskParams;
+import io.harness.delegate.beans.ci.awsvm.CIAwsVmCleanupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -26,15 +31,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.CI)
-public class PodCleanupUtility {
+public class StageCleanupUtility {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;
-  public CIK8CleanupTaskParams buildAndfetchCleanUpParameters(Ambiance ambiance) {
-    PodCleanupDetails podCleanupDetails = (PodCleanupDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(CLEANUP_DETAILS));
 
-    Infrastructure infrastructure = podCleanupDetails.getInfrastructure();
+  public CICleanupTaskParams buildAndfetchCleanUpParameters(Ambiance ambiance) {
+    StageInfraDetails stageInfraDetails = (StageInfraDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(STAGE_INFRA_DETAILS));
+    if (stageInfraDetails.getType() == StageInfraDetails.Type.K8) {
+      K8StageInfraDetails k8StageInfraDetails = (K8StageInfraDetails) stageInfraDetails;
+      return buildK8CleanupParameters(k8StageInfraDetails, ambiance);
+    } else if (stageInfraDetails.getType() == StageInfraDetails.Type.AWS_VM) {
+      return buildAwsVmCleanupParameters(ambiance);
+    } else {
+      throw new CIStageExecutionException("Unknown infra type");
+    }
+  }
 
+  public CIK8CleanupTaskParams buildK8CleanupParameters(K8StageInfraDetails k8StageInfraDetails, Ambiance ambiance) {
+    Infrastructure infrastructure = k8StageInfraDetails.getInfrastructure();
     if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
@@ -45,7 +60,7 @@ public class PodCleanupUtility {
     final String clusterConnectorRef = k8sDirectInfraYaml.getSpec().getConnectorRef();
     final String namespace = k8sDirectInfraYaml.getSpec().getNamespace();
     final List<String> podNames = new ArrayList<>();
-    podNames.add(podCleanupDetails.getPodName());
+    podNames.add(k8StageInfraDetails.getPodName());
 
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
 
@@ -53,10 +68,16 @@ public class PodCleanupUtility {
 
     return CIK8CleanupTaskParams.builder()
         .k8sConnector(connectorDetails)
-        .cleanupContainerNames(podCleanupDetails.getCleanUpContainerNames())
+        .cleanupContainerNames(k8StageInfraDetails.getContainerNames())
         .namespace(namespace)
         .podNameList(podNames)
         .serviceNameList(new ArrayList<>())
         .build();
+  }
+
+  public CIAwsVmCleanupTaskParams buildAwsVmCleanupParameters(Ambiance ambiance) {
+    K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
+    return CIAwsVmCleanupTaskParams.builder().stageRuntimeId(k8PodDetails.getStageRuntimeID()).build();
   }
 }

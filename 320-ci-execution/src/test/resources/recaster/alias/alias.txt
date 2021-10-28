@@ -30,7 +30,7 @@ io.harness.beans.steps.outcome.CIStepOutcome
 io.harness.beans.steps.stepinfo.ECRStepInfo
 io.harness.beans.steps.stepinfo.RestoreCacheGCSStepInfo
 io.harness.steps.approval.step.harness.HarnessApprovalStepInfo
-io.harness.beans.sweepingoutputs.PodCleanupDetails
+io.harness.beans.sweepingoutputs.K8StageInfraDetails
 io.harness.steps.http.HttpOutcome
 io.harness.advisers.rollback.OnFailRollbackParameters
 io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome
