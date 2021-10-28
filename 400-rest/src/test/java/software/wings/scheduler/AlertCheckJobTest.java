@@ -53,6 +53,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   @Mock private EmailHelperUtils emailHelperUtils;
   @Mock private MainConfiguration mainConfiguration;
   @InjectMocks @Inject AlertCheckJob alertCheckJob;
+  @InjectMocks @Inject AlertCheckJobInternal alertCheckJobInternal;
   @Inject private HPersistence persistence;
 
   @Before
@@ -73,7 +74,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     final Delegate delegate = saveDelegate("host1", 2, true);
     doReturn(Arrays.asList(delegate)).when(delegateService).getNonDeletedDelegatesForAccount(any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
-    alertCheckJob.executeInternal(ACCOUNT_ID);
+    alertCheckJobInternal.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).closeAlert(any(), any(), any(), any());
   }
 
@@ -89,7 +90,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     doReturn(Arrays.asList(delegate1, delegate2)).when(delegateService).getNonDeletedDelegatesForAccount(any());
     doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
-    alertCheckJob.executeInternal(ACCOUNT_ID);
+    alertCheckJobInternal.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).openAlert(any(), any(), any(), any());
 
     ArgumentCaptor<AlertType> captor = ArgumentCaptor.forClass(AlertType.class);
@@ -111,7 +112,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
 
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
 
-    alertCheckJob.executeInternal(ACCOUNT_ID);
+    alertCheckJobInternal.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).closeAlert(any(), any(), any(), any());
   }
 
@@ -138,7 +139,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);
     when(emailHelperUtils.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(false);
 
-    alertCheckJob.checkForInvalidValidSMTP(ACCOUNT_ID);
+    alertCheckJobInternal.checkForInvalidValidSMTP(ACCOUNT_ID);
     verify(alertService, times(1)).openAlert(any(), any(), any(), any());
 
     ArgumentCaptor<AlertType> captor = ArgumentCaptor.forClass(AlertType.class);
@@ -176,7 +177,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     Set<String> primaryConnections = new HashSet();
     primaryConnections.add(delegateGroupName);
 
-    alertCheckJob.processDelegateWhichBelongsToGroup(ACCOUNT_ID, delegates, primaryConnections);
+    alertCheckJobInternal.processDelegateWhichBelongsToGroup(ACCOUNT_ID, delegates, primaryConnections);
 
     verify(alertService, times(1))
         .openAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegatesScalingGroupDownAlert),
@@ -203,7 +204,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     Set<String> primaryConnections = new HashSet();
     primaryConnections.add(delegate.getUuid());
 
-    alertCheckJob.processDelegateWhichBelongsToGroup(ACCOUNT_ID, delegates, primaryConnections);
+    alertCheckJobInternal.processDelegateWhichBelongsToGroup(ACCOUNT_ID, delegates, primaryConnections);
 
     verify(alertService, times(1))
         .closeAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegatesScalingGroupDownAlert),

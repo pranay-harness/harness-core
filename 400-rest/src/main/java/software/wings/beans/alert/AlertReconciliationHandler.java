@@ -4,6 +4,7 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 
 import static java.time.Duration.ofMinutes;
 
+import io.harness.dms.DmsProxy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -18,7 +19,6 @@ import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.AssignDelegateService;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AlertReconciliationHandler implements Handler<Alert> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
 
-  @Inject private AssignDelegateService assignDelegateService;
+  @Inject private DmsProxy dmsProxy;
   @Inject private AlertService alertService;
 
   @Inject private HPersistence persistence;
@@ -69,14 +69,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
   }
 
   public void handleNoEligibleDelegates(Alert alert) {
-    NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
-    NoEligibleDelegatesAlertReconciliation alertReconciliation =
-        (NoEligibleDelegatesAlertReconciliation) alert.getAlertReconciliation();
-
-    boolean canAssign = alertReconciliation.getDelegates().stream().anyMatch(delegateId
-        -> assignDelegateService.canAssign(null, delegateId, alert.getAccountId(), data.getAppId(), data.getEnvId(),
-            data.getInfraMappingId(), data.getTaskGroup(), data.getExecutionCapabilities(), null));
-
+    final boolean canAssign = dmsProxy.alertReconCanAssign(alert);
     if (canAssign) {
       alertService.close(alert);
       return;
