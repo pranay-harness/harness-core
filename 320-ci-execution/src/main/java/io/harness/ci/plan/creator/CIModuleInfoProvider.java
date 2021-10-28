@@ -337,6 +337,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
 
   private boolean isPrivateRepo(String urlString) {
     try {
+      log.error("====" + urlString);
       URL url = new URL(urlString);
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod("GET");
