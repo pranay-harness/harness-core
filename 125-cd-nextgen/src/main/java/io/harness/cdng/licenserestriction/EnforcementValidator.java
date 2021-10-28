@@ -9,12 +9,13 @@ import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.PipelineSetupUsageUtils;
 import io.harness.cdng.usage.beans.CDLicenseUsageDTO;
+import io.harness.common.EntityReference;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
-import io.harness.licensing.usage.beans.ReferenceDTO;
 import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
 import io.harness.licensing.usage.params.CDUsageRequestParams;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 public class EnforcementValidator {
@@ -44,26 +44,28 @@ public class EnforcementValidator {
   private Cache<String, Integer> newServiceCache =
       CacheBuilder.newBuilder().maximumSize(2000).expireAfterWrite(1, TimeUnit.MINUTES).build();
 
-  public Pair<Set<String>, Integer> getActiveServiceLicenseInfo(String accountIdentifier) {
+  private Set<BaseNGAccess> getActiveServices(String accountIdentifier) {
     CDLicenseUsageDTO licenseUsage = licenseUsageInterface.getLicenseUsage(accountIdentifier, ModuleType.CD,
         new Date().getTime(), CDUsageRequestParams.builder().cdLicenseType(SERVICES).build());
-    Set<String> services = new HashSet<>();
-    Integer serviceLicenses = 0;
-    if (licenseUsage != null) {
-      if (null != licenseUsage.getActiveServices() && isNotEmpty(licenseUsage.getActiveServices().getReferences())) {
-        services = licenseUsage.getActiveServices()
-                       .getReferences()
-                       .stream()
-                       .map(ReferenceDTO::getName)
-                       .collect(Collectors.toSet());
-
-        // TODO: add logic for serviceLicenses
-      }
+    Set<BaseNGAccess> services = new HashSet<>();
+    if (licenseUsage != null && null != licenseUsage.getActiveServices()
+        && isNotEmpty(licenseUsage.getActiveServices().getReferences())) {
+      services = licenseUsage.getActiveServices()
+                     .getReferences()
+                     .stream()
+                     .map(referenceDTO
+                         -> BaseNGAccess.builder()
+                                .accountIdentifier(referenceDTO.getAccountIdentifier())
+                                .orgIdentifier(referenceDTO.getOrgIdentifier())
+                                .projectIdentifier(referenceDTO.getProjectIdentifier())
+                                .identifier(referenceDTO.getIdentifier())
+                                .build())
+                     .collect(Collectors.toSet());
     }
-    return Pair.of(services, serviceLicenses);
+    return services;
   }
 
-  public Set<String> getServicesBeingCreated(
+  private Set<BaseNGAccess> getServicesBeingCreated(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String pipelineId, String yaml) {
     List<EntitySetupUsageDTO> allReferredUsages =
         getResponseWithRetry(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
@@ -73,15 +75,25 @@ public class EnforcementValidator {
             "Could not extract setup usage of pipeline with id " + pipelineId + " after {} attempts.");
     List<EntityDetail> entityDetails = PipelineSetupUsageUtils.extractInputReferredEntityFromYaml(
         accountIdentifier, orgIdentifier, projectIdentifier, yaml, allReferredUsages);
-    return collectionToStream(entityDetails).map(EntityDetail::getName).collect(Collectors.toSet());
+    return collectionToStream(entityDetails)
+        .map(entityDetail -> {
+          EntityReference entityRef = entityDetail.getEntityRef();
+          return BaseNGAccess.builder()
+              .accountIdentifier(entityRef.getAccountIdentifier())
+              .orgIdentifier(entityRef.getOrgIdentifier())
+              .projectIdentifier(entityRef.getProjectIdentifier())
+              .identifier(entityRef.getIdentifier())
+              .build();
+        })
+        .collect(Collectors.toSet());
   }
 
-  public int getAdditionalServiceLicenseCount(
+  private int getAdditionalServiceLicenseCount(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String pipelineId, String yaml) {
-    Pair<Set<String>, Integer> activeServiceLicenseInfo = getActiveServiceLicenseInfo(accountIdentifier);
-    Set<String> newServices =
+    Set<BaseNGAccess> activeServices = getActiveServices(accountIdentifier);
+    Set<BaseNGAccess> newServices =
         getServicesBeingCreated(accountIdentifier, orgIdentifier, projectIdentifier, pipelineId, yaml);
-    Set<String> difference = Sets.difference(newServices, activeServiceLicenseInfo.getKey());
+    Set<BaseNGAccess> difference = Sets.difference(newServices, activeServices);
     return difference.size();
   }
 
