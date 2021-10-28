@@ -66,6 +66,7 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.instance.exceptions.ZeroInstancesException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -738,7 +739,7 @@ public class InstanceHelper {
     }
 
     InstanceSyncByPerpetualTaskHandler handler = (InstanceSyncByPerpetualTaskHandler) instanceHandler.get();
-
+    Exception instanceSyncProcessException = null;
     try {
       handler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, response);
     } catch (Exception ex) {
@@ -765,15 +766,17 @@ public class InstanceHelper {
             infrastructureMapping.getUuid());
         instanceSyncPerpetualTaskService.deletePerpetualTasks(infrastructureMapping);
       }
-
+      instanceSyncProcessException = ex;
       throw ex;
     } finally {
       Status status = handler.getStatus(infrastructureMapping, response);
       if (status.isSuccess()) {
-        instanceService.updateSyncSuccess(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(),
-            infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(),
-            System.currentTimeMillis());
-        instanceSyncPerpetualTaskStatusService.updatePerpetualTaskSuccess(perpetualTaskRecord.getUuid());
+        if (!(instanceSyncProcessException != null && instanceSyncProcessException instanceof ZeroInstancesException)) {
+          instanceService.updateSyncSuccess(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(),
+              infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(),
+              System.currentTimeMillis());
+          instanceSyncPerpetualTaskStatusService.updatePerpetualTaskSuccess(perpetualTaskRecord.getUuid());
+        }
       }
       if (!status.isRetryable()) {
         log.info("Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",

@@ -84,6 +84,7 @@ import software.wings.service.ContainerInstanceSyncPerpetualTaskCreator;
 import software.wings.service.InstanceSyncPerpetualTaskCreator;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerMetadataType;
+import software.wings.service.impl.instance.exceptions.ZeroInstancesException;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.request.ContainerFilter;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
@@ -412,7 +413,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     if (instanceSyncFlow == PERPETUAL_TASK
         && (instanceIdsToBeDeleted.size() + alreadyDeletedInstances.size()) == instancesInDBMap.size()
         && instancesToBeAdded.size() == 0) {
-      throw new WingsException("Container Instance Sync: All instances for perpetual task are deleted");
+      throw new ZeroInstancesException(
+          "Container Instance Sync: All instances for perpetual task are deleted", null, WingsException.USER);
     }
   }
 
