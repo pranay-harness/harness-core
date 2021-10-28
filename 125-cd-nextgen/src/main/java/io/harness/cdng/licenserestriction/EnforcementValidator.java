@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class EnforcementValidator {
-  @Inject private LicenseUsageInterface<CDLicenseUsageDTO, CDUsageRequestParams> licenseUsageInterface;
+  @Inject private LicenseUsageInterface licenseUsageInterface;
   @Inject private EntitySetupUsageClient entitySetupUsageClient;
   @Inject private EnforcementClientService enforcementClientService;
 
@@ -45,8 +45,8 @@ public class EnforcementValidator {
       CacheBuilder.newBuilder().maximumSize(2000).expireAfterWrite(1, TimeUnit.MINUTES).build();
 
   private Set<BaseNGAccess> getActiveServices(String accountIdentifier) {
-    CDLicenseUsageDTO licenseUsage = licenseUsageInterface.getLicenseUsage(accountIdentifier, ModuleType.CD,
-        new Date().getTime(), CDUsageRequestParams.builder().cdLicenseType(SERVICES).build());
+    CDLicenseUsageDTO licenseUsage = (CDLicenseUsageDTO) licenseUsageInterface.getLicenseUsage(accountIdentifier,
+        ModuleType.CD, new Date().getTime(), CDUsageRequestParams.builder().cdLicenseType(SERVICES).build());
     Set<BaseNGAccess> services = new HashSet<>();
     if (licenseUsage != null && null != licenseUsage.getActiveServices()
         && isNotEmpty(licenseUsage.getActiveServices().getReferences())) {
