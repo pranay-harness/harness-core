@@ -479,7 +479,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           kustomizeInstalled = true;
           scmInstalled = true;
         } else {
-          kubectlInstalled = installKubectl(delegateConfiguration);
+          //kubectlInstalled = installKubectl(delegateConfiguration);
           goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
           harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
           helmInstalled = installHelm(delegateConfiguration);
