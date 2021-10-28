@@ -32,4 +32,12 @@ public interface GitSyncableEntity extends NGAccess {
   String getFilePath();
 
   void setFilePath(String filePath);
+
+  boolean isEntityInvalid();
+
+  void setEntityInvalid(boolean isEntityInvalid);
+
+  String getInvalidYamlString();
+
+  void setInvalidYamlString(String yamlString);
 }

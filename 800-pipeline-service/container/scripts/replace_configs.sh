@@ -314,6 +314,7 @@ replace_key_value redisLockConfig.sentinel "$LOCK_CONFIG_USE_SENTINEL"
 replace_key_value redisLockConfig.masterName "$LOCK_CONFIG_SENTINEL_MASTER_NAME"
 replace_key_value redisLockConfig.userName "$LOCK_CONFIG_REDIS_USERNAME"
 replace_key_value redisLockConfig.password "$LOCK_CONFIG_REDIS_PASSWORD"
+replace_key_value redisLockConfig.nettyThreads "$REDIS_NETTY_THREADS"
 
 replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 

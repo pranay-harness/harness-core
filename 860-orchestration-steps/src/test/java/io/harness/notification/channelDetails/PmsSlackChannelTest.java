@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.notification.channeldetails.NotificationChannel;
 import io.harness.notification.channeldetails.SlackChannel;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ import org.junit.experimental.categories.Category;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSlackChannelTest extends CategoryTest {
   List<String> userGroups = new ArrayList<>();
-  String webhookUrl = "url";
+  ParameterField<String> webhookUrl = ParameterField.createValueField("url");
   PmsSlackChannel pmsSlackChannel;
   @Before
   public void setUp() {
@@ -45,7 +46,7 @@ public class PmsSlackChannelTest extends CategoryTest {
     NotificationChannel notificationChannel =
         pmsSlackChannel.toNotificationChannel(accountId, orgId, projectId, templateId, templateData);
     assertEquals(notificationChannel.getAccountId(), accountId);
-    assertEquals(((SlackChannel) notificationChannel).getWebhookUrls().get(0), webhookUrl);
+    assertEquals(((SlackChannel) notificationChannel).getWebhookUrls().get(0), webhookUrl.getValue());
     assertEquals(notificationChannel.getUserGroups().get(0).getOrgIdentifier(), orgId);
     assertEquals(notificationChannel.getUserGroups().get(0).getProjectIdentifier(), projectId);
 

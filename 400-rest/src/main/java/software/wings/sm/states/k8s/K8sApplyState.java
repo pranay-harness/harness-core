@@ -2,6 +2,7 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
@@ -171,6 +172,7 @@ public class K8sApplyState extends AbstractK8sState {
             .skipRendering(skipRendering)
             .useLatestKustomizeVersion(
                 featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, infraMapping.getAccountId()))
+            .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
             .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);

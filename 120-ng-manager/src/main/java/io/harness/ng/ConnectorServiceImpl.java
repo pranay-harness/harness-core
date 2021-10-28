@@ -643,6 +643,13 @@ public class ConnectorServiceImpl implements ConnectorService {
     defaultConnectorService.deleteBatch(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifiersList);
   }
 
+  @Override
+  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean invalid, String invalidYaml) {
+    return defaultConnectorService.markEntity(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalid, invalidYaml);
+  }
+
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {
     List<ErrorDetail> errorDetails = Collections.singletonList(ngErrorHelper.getGenericErrorDetail());
     return ConnectorValidationResult.builder()

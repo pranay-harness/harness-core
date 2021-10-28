@@ -24,7 +24,11 @@ public class HttpConnectionExecutionCapabilityCheck implements CapabilityCheck, 
       valid = Http.connectableHttpUrlWithHeaders(
           httpConnectionExecutionCapability.fetchConnectableUrl(), httpConnectionExecutionCapability.getHeaders());
     } else {
-      valid = Http.connectableHttpUrl(httpConnectionExecutionCapability.fetchConnectableUrl());
+      if (httpConnectionExecutionCapability.isIgnoreRedirect()) {
+        valid = Http.connectableHttpUrlWithoutFollowingRedirect(httpConnectionExecutionCapability.getUrl());
+      } else {
+        valid = Http.connectableHttpUrl(httpConnectionExecutionCapability.fetchConnectableUrl());
+      }
     }
     return CapabilityResponse.builder().delegateCapability(httpConnectionExecutionCapability).validated(valid).build();
   }

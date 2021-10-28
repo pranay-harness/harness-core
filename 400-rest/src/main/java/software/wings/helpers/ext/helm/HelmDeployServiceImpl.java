@@ -33,6 +33,9 @@ import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitRepositoryType;
+import io.harness.helm.HelmClient;
+import io.harness.helm.HelmClientImpl.HelmCliResponse;
+import io.harness.helm.HelmCommandResponseMapper;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
@@ -64,7 +67,6 @@ import software.wings.delegatetasks.helm.HelmDeployChartSpec;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
@@ -154,7 +156,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(
           "List all existing deployed releases for release name: " + commandRequest.getReleaseName());
 
-      HelmCliResponse helmCliResponse = helmClient.releaseHistory(commandRequest);
+      HelmCliResponse helmCliResponse =
+          helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(commandRequest));
       executionLogCallback.saveExecutionLog(
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
@@ -169,10 +172,12 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       if (checkNewHelmInstall(commandRequest)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
-        commandResponse = helmClient.install(commandRequest);
+        commandResponse = HelmCommandResponseMapper.getHelmInstallCommandResponse(
+            helmClient.install(HelmCommandDataMapper.getHelmCommandData(commandRequest)));
       } else {
         executionLogCallback.saveExecutionLog("Previous release exists for chart. Upgrading chart");
-        commandResponse = helmClient.upgrade(commandRequest);
+        commandResponse = HelmCommandResponseMapper.getHelmInstallCommandResponse(
+            helmClient.upgrade(HelmCommandDataMapper.getHelmCommandData(commandRequest)));
       }
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
       commandResponse.setHelmChartInfo(helmChartInfo);
@@ -256,7 +261,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @VisibleForTesting
   List<ContainerInfo> getKubectlContainerInfos(HelmCommandRequest commandRequest, List<KubernetesResourceId> workloads,
       LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
-    Kubectl client = Kubectl.client(k8sGlobalConfigService.getKubectlPath(), commandRequest.getKubeConfigLocation());
+    Kubectl client = Kubectl.client(k8sGlobalConfigService.getKubectlPath(commandRequest.isUseNewKubectlVersion()),
+        commandRequest.getKubeConfigLocation());
 
     List<ContainerInfo> containerInfoList = new ArrayList<>();
     final Map<String, List<KubernetesResourceId>> namespacewiseResources =
@@ -565,7 +571,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     commandRequest.setExecutionLogCallback(executionLogCallback);
 
     try {
-      HelmInstallCommandResponse commandResponse = helmClient.rollback(commandRequest);
+      HelmInstallCommandResponse commandResponse = HelmCommandResponseMapper.getHelmInstallCommandResponse(
+          helmClient.rollback(HelmCommandDataMapper.getHelmCommandData(commandRequest)));
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;
@@ -645,7 +652,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     try {
       return HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMillis(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS), () -> {
-            HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
+            HelmCliResponse cliResponse =
+                helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest));
             if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
               throw new InvalidRequestException(cliResponse.getOutput());
             }
@@ -672,7 +680,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     executionLogCallback.saveExecutionLog(
         "Checking if the repository has already been added", LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
-    HelmCliResponse cliResponse = helmClient.getHelmRepoList(commandRequest);
+    HelmCliResponse cliResponse = helmClient.getHelmRepoList(HelmCommandDataMapper.getHelmCommandData(commandRequest));
     List<RepoListInfo> repoListInfos = (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS)
         ? parseHelmAddRepoOutput(cliResponse.getOutput())
         : Collections.emptyList();
@@ -686,7 +694,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog("Adding repository " + commandRequest.getChartSpecification().getChartUrl()
               + " with name " + commandRequest.getRepoName(),
           LogLevel.INFO, CommandExecutionStatus.RUNNING);
-      cliResponse = helmClient.addPublicRepo(commandRequest);
+      cliResponse = helmClient.addPublicRepo(HelmCommandDataMapper.getHelmCommandData(commandRequest));
       if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
         String msg = "Failed to add repository. Reason: " + cliResponse.getOutput();
         executionLogCallback.saveExecutionLog(msg);
@@ -710,7 +718,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     executionLogCallback.saveExecutionLog("Rendering Helm chart", LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
-    HelmCliResponse cliResponse = helmClient.renderChart(commandRequest, chartLocation, namespace, valueOverrides);
+    HelmCliResponse cliResponse = helmClient.renderChart(
+        HelmCommandDataMapper.getHelmCommandData(commandRequest), chartLocation, namespace, valueOverrides);
     if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       String msg = format("Failed to render chart location: %s. Reason %s ", chartLocation, cliResponse.getOutput());
       executionLogCallback.saveExecutionLog(msg);
@@ -745,7 +754,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Override
   public HelmListReleasesCommandResponse listReleases(HelmInstallCommandRequest helmCommandRequest) {
     try {
-      HelmCliResponse helmCliResponse = helmClient.listReleases(helmCommandRequest);
+      HelmCliResponse helmCliResponse =
+          helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest));
       List<ReleaseInfo> releaseInfoList =
           parseHelmReleaseCommandOutput(helmCliResponse.getOutput(), HelmCommandType.LIST_RELEASE);
       return HelmListReleasesCommandResponse.builder()
@@ -766,7 +776,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   public HelmReleaseHistoryCommandResponse releaseHistory(HelmReleaseHistoryCommandRequest helmCommandRequest) {
     List<ReleaseInfo> releaseInfoList = new ArrayList<>();
     try {
-      HelmCliResponse helmCliResponse = helmClient.releaseHistory(helmCommandRequest);
+      HelmCliResponse helmCliResponse =
+          helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest));
       releaseInfoList =
           parseHelmReleaseCommandOutput(helmCliResponse.getOutput(), helmCommandRequest.getHelmCommandType());
     } catch (Exception e) {
@@ -840,7 +851,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       String message = "Cleaning up. Deleting the release, freeing it up for later use";
       executionLogCallback.saveExecutionLog(message);
 
-      HelmCliResponse deleteCommandResponse = helmClient.deleteHelmRelease(commandRequest);
+      HelmCliResponse deleteCommandResponse =
+          helmClient.deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(commandRequest));
       executionLogCallback.saveExecutionLog(deleteCommandResponse.getOutput());
     } catch (Exception e) {
       log.error("Helm delete failed", e);
@@ -1017,7 +1029,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     executionLogCallback.saveExecutionLog("Updating information about charts from the respective chart repositories");
 
     try {
-      HelmCliResponse helmCliResponse = helmClient.repoUpdate(helmCommandRequest);
+      HelmCliResponse helmCliResponse =
+          helmClient.repoUpdate(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest));
       executionLogCallback.saveExecutionLog(helmCliResponse.getOutput());
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(
@@ -1075,7 +1088,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       return request.getChartSpecification().getChartName();
     }
 
-    HelmCliResponse cliResponse = helmClient.getHelmRepoList(request);
+    HelmCliResponse cliResponse = helmClient.getHelmRepoList(HelmCommandDataMapper.getHelmCommandData(request));
     List<RepoListInfo> repoListInfos = (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS)
         ? parseHelmAddRepoOutput(cliResponse.getOutput())
         : Collections.emptyList();
@@ -1100,7 +1113,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       return chartSpecification.getChartVersion();
     }
 
-    HelmCliResponse helmCliResponse = helmClient.searchChart(request, chartInfo);
+    HelmCliResponse helmCliResponse =
+        helmClient.searchChart(HelmCommandDataMapper.getHelmCommandData(request), chartInfo);
     List<SearchInfo> searchInfos = parseHelmSearchCommandOutput(helmCliResponse.getOutput());
 
     if (isEmpty(searchInfos)) {

@@ -1,12 +1,12 @@
 package io.harness.pms.stages;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.common.NGExpressionUtils.DEFAULT_INPUT_SET_EXPRESSION;
 import static io.harness.expression.EngineExpressionEvaluator.EXPR_END;
 import static io.harness.expression.EngineExpressionEvaluator.EXPR_START;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -30,16 +30,24 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class StagesExpressionExtractor {
-  public String replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-      String pipelineYaml, List<String> stageIdentifiers) {
-    Set<String> nonLocalExpressions = getNonLocalExpressions(pipelineYaml, stageIdentifiers);
-    for (String nonLocalExpression : nonLocalExpressions) {
-      pipelineYaml = pipelineYaml.replace(nonLocalExpression, DEFAULT_INPUT_SET_EXPRESSION);
+  public String replaceExpressions(String pipelineYaml, Map<String, String> expressionValues) {
+    if (EmptyPredicate.isEmpty(expressionValues)) {
+      return pipelineYaml;
+    }
+    for (Map.Entry<String, String> entry : expressionValues.entrySet()) {
+      String expression = entry.getKey();
+      String replacement = entry.getValue();
+      if (!NGExpressionUtils.containsPattern(NGExpressionUtils.GENERIC_EXPRESSIONS_PATTERN, expression)) {
+        log.error(expression + " is not a syntactically valid pipeline expression.");
+        throw new InvalidRequestException(
+            expression + " is not a syntactically valid pipeline expression. Is the expression surrounded by <+ >?");
+      }
+      pipelineYaml = pipelineYaml.replace(expression, replacement);
     }
     return pipelineYaml;
   }
 
-  Set<String> getNonLocalExpressions(String pipelineYaml, List<String> stageIdentifiers) {
+  public Set<String> getNonLocalExpressions(String pipelineYaml, List<String> stageIdentifiers) {
     Map<String, List<String>> allExpressions = getAllExpressionsInListOfStages(pipelineYaml, stageIdentifiers);
     return removeLocalExpressions(allExpressions);
   }

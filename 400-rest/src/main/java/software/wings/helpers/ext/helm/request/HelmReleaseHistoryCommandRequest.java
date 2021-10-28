@@ -37,10 +37,12 @@ public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
       List<EncryptedDataDetail> encryptedDataDetails, LogCallback executionLogCallback, String commandFlags,
       HelmCommandFlag helmCommandFlag, HelmVersion helmVersion, String ocPath, String workingDir,
       List<String> variableOverridesYamlFiles, GitFileConfig gitFileConfig, boolean k8SteadyStateCheckEnabled,
-      boolean mergeCapabilities, boolean isGitHostConnectivityCheck, boolean useLatestChartMuseumVersion) {
+      boolean mergeCapabilities, boolean isGitHostConnectivityCheck, boolean useLatestChartMuseumVersion,
+      boolean useNewKubectlVersion) {
     super(HelmCommandType.RELEASE_HISTORY, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, null, null, gitConfig, encryptedDataDetails, executionLogCallback,
         commandFlags, helmCommandFlag, null, helmVersion, ocPath, workingDir, variableOverridesYamlFiles, gitFileConfig,
-        k8SteadyStateCheckEnabled, mergeCapabilities, isGitHostConnectivityCheck, useLatestChartMuseumVersion);
+        k8SteadyStateCheckEnabled, mergeCapabilities, isGitHostConnectivityCheck, useLatestChartMuseumVersion,
+        useNewKubectlVersion);
   }
 }

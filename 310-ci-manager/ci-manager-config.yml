@@ -194,6 +194,9 @@ eventsFramework:
       CATrustStorePath: "/tmp/ca_trust_store"
       CATrustStorePassword: ""
 
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-""}
 
 cacheConfig:
   cacheBackend: REDIS

@@ -56,4 +56,6 @@ public interface ScmClientFacilitatorService {
   UpdateFileResponse updateFile(InfoForGitPush infoForPush);
 
   DeleteFileResponse deleteFile(InfoForGitPush infoForPush);
+
+  Commit findCommitById(YamlGitConfigDTO yamlGitConfigDTO, String commitId);
 }

@@ -89,7 +89,7 @@ function setupDelegateJars() {
 
   for platform in linux darwin; do
 
-    for version in v1.13.2; do
+    for version in v1.13.2 v1.19.2; do
 
       echo "Copying kubectl ${version} binaries for ${platform}"
 
@@ -201,7 +201,7 @@ function setupDelegateJars() {
 
     done
 
-    for version in 87448d72; do
+    for version in 90882846; do
 
       echo "Copying scm ${version} binaries for ${platform}"
 

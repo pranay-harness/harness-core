@@ -1261,7 +1261,7 @@
           "properties" : {
             "type" : {
               "type" : "string",
-              "enum" : [ "SetFeatureFlagState", "SetOnVariation", "SetOffVariation", "AddRule", "UpdateRule", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
+              "enum" : [ "SetFeatureFlagState", "SetOnVariation", "SetOffVariation", "AddRule", "UpdateRule", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
             }
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"

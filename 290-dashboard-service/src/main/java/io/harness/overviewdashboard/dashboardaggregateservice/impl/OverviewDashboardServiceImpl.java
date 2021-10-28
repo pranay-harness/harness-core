@@ -60,22 +60,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @OwnedBy(HarnessTeam.PL)
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   private final String SUCCESS_MESSAGE = "Successfully fetched data";
   private final String FAILURE_MESSAGE = "Failed to fetch data";
 
-  private DashboardRBACService dashboardRBACService;
-  @Inject CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
-  @Inject PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
-  @Inject ParallelRestCallExecutor parallelRestCallExecutor;
-  @Inject private UserNGClient userNGClient;
-
-  @Inject
-  public OverviewDashboardServiceImpl(DashboardRBACService dashboardRBACService) {
-    this.dashboardRBACService = dashboardRBACService;
-  }
+  DashboardRBACService dashboardRBACService;
+  CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
+  PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
+  ParallelRestCallExecutor parallelRestCallExecutor;
+  UserNGClient userNGClient;
 
   @Override
   public ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
@@ -201,7 +201,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     Optional<RestCallResponse> projectsCountOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_PROJECTS_COUNT);
 
-    if (servicesCountOptional.isPresent() && envCountOptional.isPresent() && pipelinesCountOptional.isPresent()) {
+    if (servicesCountOptional.isPresent() && envCountOptional.isPresent() && pipelinesCountOptional.isPresent()
+        && projectsCountOptional.isPresent()) {
       if (servicesCountOptional.get().isCallFailed() || envCountOptional.get().isCallFailed()
           || pipelinesCountOptional.get().isCallFailed() || projectsCountOptional.get().isCallFailed()) {
         return ExecutionResponse.<CountOverview>builder()
@@ -445,7 +446,12 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                .build())
               .countDetails(CountWithSuccessFailureDetails.builder()
                                 .count(projectDashBoardInfo.getDeploymentsCount())
-                                .countChangeAndCountChangeRateInfo(CountChangeAndCountChangeRateInfo.builder().build())
+                                .failureCount(projectDashBoardInfo.getFailedDeploymentsCount())
+                                .successCount(projectDashBoardInfo.getSuccessDeploymentsCount())
+                                .countChangeAndCountChangeRateInfo(
+                                    CountChangeAndCountChangeRateInfo.builder()
+                                        .countChangeRate(projectDashBoardInfo.getDeploymentsCountChangeRate())
+                                        .build())
                                 .build())
               .build());
     }

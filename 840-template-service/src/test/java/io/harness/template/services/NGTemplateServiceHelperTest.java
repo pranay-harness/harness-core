@@ -71,15 +71,32 @@ public class NGTemplateServiceHelperTest extends CategoryTest {
                                 .projectIdentifier(PROJ_IDENTIFIER)
                                 .identifier(TEMPLATE_IDENTIFIER)
                                 .versionLabel(TEMPLATE_VERSION_LABEL)
+                                .filePath("FILE_PATH")
+                                .rootFolder("ROOT")
+                                .objectIdOfYaml("YAML_ID_TEMPLATE")
                                 .build();
-    try (TemplateGitSyncBranchContextGuard ignored = templateServiceHelper.getTemplateGitContext(entity, null, "")) {
+    try (TemplateGitSyncBranchContextGuard ignored =
+             templateServiceHelper.getTemplateGitContextForGivenTemplate(entity, null, "")) {
+      GitEntityInfo gitEntityInfo = GitContextHelper.getGitEntityInfo();
+      assertThat(gitEntityInfo).isNull();
+    }
+
+    GitEntityInfo gitEntityInfoInput = GitEntityInfo.builder()
+                                           .commitId("COMMIT_ID")
+                                           .yamlGitConfigId("YAML_ID")
+                                           .branch("BRANCH")
+                                           .isSyncFromGit(true)
+                                           .build();
+    try (TemplateGitSyncBranchContextGuard ignored =
+             templateServiceHelper.getTemplateGitContextForGivenTemplate(entity, gitEntityInfoInput, "")) {
       GitEntityInfo gitEntityInfo = GitContextHelper.getGitEntityInfo();
       assertThat(gitEntityInfo).isNotNull();
-      assertThat(gitEntityInfo.getBranch()).isEqualTo("");
-      assertThat(gitEntityInfo.getYamlGitConfigId()).isEqualTo("");
-      assertThat(gitEntityInfo.getCommitMsg()).isEqualTo("");
-      assertThat(gitEntityInfo.getFilePath()).isNull();
-      assertThat(gitEntityInfo.getFolderPath()).isNull();
+      assertThat(gitEntityInfo.getBranch()).isEqualTo("BRANCH");
+      assertThat(gitEntityInfo.getYamlGitConfigId()).isEqualTo("YAML_ID");
+      assertThat(gitEntityInfo.getFilePath()).isEqualTo("FILE_PATH");
+      assertThat(gitEntityInfo.getFolderPath()).isEqualTo("ROOT");
+      assertThat(gitEntityInfo.getLastObjectId()).isEqualTo("YAML_ID_TEMPLATE");
+      assertThat(gitEntityInfo.isSyncFromGit()).isTrue();
     }
   }
 

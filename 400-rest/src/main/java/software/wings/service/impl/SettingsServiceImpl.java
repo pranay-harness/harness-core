@@ -672,6 +672,7 @@ public class SettingsServiceImpl implements SettingsService {
         settingAttributeList.stream()
             .filter(sa
                 -> sa.getValue() instanceof KubernetesClusterConfig
+                    && ((KubernetesClusterConfig) sa.getValue()).getDelegateSelectors() != null
                     && (((KubernetesClusterConfig) sa.getValue()).getDelegateSelectors()).contains(delegateName))
             .findFirst()
             .orElse(null);

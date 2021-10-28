@@ -48,16 +48,6 @@ JRE_LINUX_2=jre_x64_linux_8u242b08.tar.gz
 ALPN_BOOT_JAR_URL=https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017
 ALPN_BOOT_JAR=alpn-boot-8.1.13.v20181017.jar
 
-KUBECTL_VERSION=v1.13.2
-KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$KUBECTL_VERSION/"
-KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$KUBECTL_VERSION/"
-
-echo "$KUBECTL_MAC_DIR"
-echo "$KUBECTL_LINUX_DIR"
-
-KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/linux/amd64/kubectl
-KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/darwin/amd64/kubectl
-
 OC_VERSION=v4.2.16
 OC_LINUX_DIR="${IMAGES_DIR}/oc/linux/$OC_VERSION/"
 OC_MAC_DIR="${IMAGES_DIR}/oc/darwin/$OC_VERSION/"
@@ -84,7 +74,6 @@ echo "Watcher version is ${WATCHER_VERSION}"
 echo "Proxy version is ${PROXY_VERSION}"
 echo "UI version is ${UI_VERSION}"
 echo "Learning Engine version is ${LEARNING_ENGINE_VERSION}"
-echo "kubectl version is ${KUBECTL_VERSION}"
 echo "oc version is ${OC_VERSION}"
 echo "Prometheus version is ${PROM_VERSION}"
 echo "Grafana version is ${GRAFANA_VERSION}"
@@ -94,8 +83,6 @@ echo "Alert manager version is ${ALERT_MAN_VERSION}"
 cp -r ../${INSTALLER_TEMPLATE_DIR}/* ${INSTALLER_DIR}/
 cp "${VERSION_PROPERTIES_FILE}" "${INSTALLER_DIR}/"
 
-mkdir -p $KUBECTL_LINUX_DIR
-mkdir -p $KUBECTL_MAC_DIR
 mkdir -p $OC_LINUX_DIR
 mkdir -p $OC_MAC_DIR
 
@@ -141,11 +128,28 @@ curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" >"${JRE_LINUX_2}"
 
 curl "${ALPN_BOOT_JAR_URL}/${ALPN_BOOT_JAR}" >"${ALPN_BOOT_JAR}"
 
-curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
-curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
-
 curl -L -o "${OC_MAC_DIR}oc" "${OC_MAC_URL}"
 curl -L -o "${OC_LINUX_DIR}oc" "${OC_LINUX_URL}"
+
+for kubectlVersion in v1.13.2 v1.19.2; do
+  echo "Adding kubectl $kubectlVersion"
+
+  KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$kubectlVersion/"
+  KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$kubectlVersion/"
+
+  KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$kubectlVersion"/bin/linux/amd64/kubectl
+  KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$kubectlVersion"/bin/darwin/amd64/kubectl
+
+  echo "$KUBECTL_MAC_DIR"
+  echo "$KUBECTL_LINUX_DIR"
+
+  mkdir -p "$KUBECTL_MAC_DIR"
+  mkdir -p "$KUBECTL_LINUX_DIR"
+
+  curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
+  curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
+
+done
 
 for goversion in v0.2 v0.3 v0.4; do
   echo "Adding goversion $goversion"
@@ -259,7 +263,7 @@ for kustomizeVersion in v3.5.4 v4.0.0; do
 
 done
 
-for scmVersion in 87448d72; do
+for scmVersion in 72f01538; do
   echo "Adding scm" $scmVersion
 
   SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"

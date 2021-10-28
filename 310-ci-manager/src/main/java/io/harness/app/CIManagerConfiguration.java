@@ -73,6 +73,8 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("apiUrl") private String apiUrl;
+  @JsonProperty("hostname") String hostname;
+  @JsonProperty("basePathPrefix") String basePathPrefix;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
@@ -98,6 +100,9 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
+  public static Set<String> getUniquePackagesContainingResources() {
+    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  }
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }

@@ -13,6 +13,7 @@ public enum FeatureRestrictionName {
 
   // CCM Features
   PERSPECTIVES,
+  CCM_K8S_CLUSTERS,
 
   // All Features
   MULTIPLE_ORGANIZATIONS,

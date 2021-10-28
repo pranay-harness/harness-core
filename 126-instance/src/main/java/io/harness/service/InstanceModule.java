@@ -3,10 +3,6 @@ package io.harness.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.perpetualtask.PerpetualTaskScheduleService;
-import io.harness.perpetualtask.PerpetualTaskScheduleServiceImpl;
-import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.repositories.instancestats.InstanceStatsRepository;
 import io.harness.repositories.instancestats.InstanceStatsRepositoryImpl;
@@ -57,8 +53,6 @@ public class InstanceModule extends AbstractModule {
     bind(InstanceSyncPerpetualTaskInfoService.class).to(InstanceSyncPerpetualTaskInfoServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
     bind(InstanceSyncHandlerFactoryService.class).to(InstanceSyncHandlerFactoryServiceImpl.class);
-    bind(PerpetualTaskScheduleService.class).to(PerpetualTaskScheduleServiceImpl.class);
-    bind(PerpetualTaskService.class).to(PerpetualTaskServiceImpl.class);
     bind(InstanceSyncService.class).to(InstanceSyncServiceImpl.class);
     bind(DeploymentSummaryService.class).to(DeploymentSummaryServiceImpl.class);
     bind(InstanceSyncPerpetualTaskService.class).to(InstanceSyncPerpetualTaskServiceImpl.class);

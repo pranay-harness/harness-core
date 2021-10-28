@@ -9,7 +9,8 @@ import lombok.Getter;
 @OwnedBy(HarnessTeam.PL)
 @Getter
 public enum TestScopeLevels implements ScopeLevel {
-  TEST_SCOPE("testScope", 0, "TEST_SCOPE");
+  TEST_SCOPE("testScope", 0, "TEST_SCOPE"),
+  EXTRA_SCOPE("extraScope", 0, "EXTRA_SCOPE");
 
   private final String name;
   private final int rank;

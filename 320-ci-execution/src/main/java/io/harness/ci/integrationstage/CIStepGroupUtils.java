@@ -101,7 +101,7 @@ public class CIStepGroupUtils {
       List<ExecutionWrapperConfig> liteEngineExecutionSections, StageElementConfig integrationStage,
       CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, Infrastructure infrastructure) {
     // TODO Do not generate new id
-    InitializeStepInfo initializeStepInfo = initializeStepGenerator.createLiteEngineTaskStepInfo(
+    InitializeStepInfo initializeStepInfo = initializeStepGenerator.createInitializeStepInfo(
         ExecutionElementConfig.builder().uuid(generateUuid()).steps(liteEngineExecutionSections).build(), ciCodebase,
         integrationStage, ciExecutionArgs, infrastructure);
 

@@ -15,5 +15,6 @@ public class StageExecutionResponse {
   String stageIdentifier;
   String stageName;
   String message;
+  boolean isToBeBlocked;
   List<String> stagesRequired;
 }

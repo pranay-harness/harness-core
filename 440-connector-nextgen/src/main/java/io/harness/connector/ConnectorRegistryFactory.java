@@ -84,6 +84,8 @@ import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicDTOToEntity;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicEntityToDTO;
+import io.harness.connector.task.ConnectorValidationHandler;
+import io.harness.connector.task.NotSupportedValidationHandler;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
@@ -105,7 +107,6 @@ import io.harness.connector.validator.scmValidators.GitConnectorValidator;
 import io.harness.connector.validator.scmValidators.GithubConnectorValidator;
 import io.harness.connector.validator.scmValidators.GitlabConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.task.ConnectorValidationHandler;
 
 import java.util.HashMap;
 import java.util.Map;

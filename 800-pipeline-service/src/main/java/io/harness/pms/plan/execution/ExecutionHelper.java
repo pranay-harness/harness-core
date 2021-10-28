@@ -38,6 +38,7 @@ import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.ExecArgs;
 import io.harness.pms.plan.execution.beans.StagesExecutionInfo;
 import io.harness.pms.rbac.validator.PipelineRbacService;
+import io.harness.pms.stages.StagesExpressionExtractor;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.threading.Morpheus;
@@ -50,6 +51,7 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -117,8 +119,8 @@ public class ExecutionHelper {
   }
 
   public ExecArgs buildExecutionArgs(PipelineEntity pipelineEntity, String moduleType, String mergedRuntimeInputYaml,
-      List<String> stagesToRun, ExecutionTriggerInfo triggerInfo, String originalExecutionId,
-      RetryExecutionParameters retryExecutionParameters) {
+      List<String> stagesToRun, Map<String, String> expressionValues, ExecutionTriggerInfo triggerInfo,
+      String originalExecutionId, RetryExecutionParameters retryExecutionParameters) {
     final String executionId = generateUuid();
 
     boolean isRetry = retryExecutionParameters.isRetry();
@@ -131,7 +133,9 @@ public class ExecutionHelper {
     StagesExecutionInfo stagesExecutionInfo =
         StagesExecutionInfo.builder().isStagesExecution(false).pipelineYamlToRun(pipelineYaml).build();
     if (EmptyPredicate.isNotEmpty(stagesToRun)) {
-      stagesExecutionInfo = StagesExecutionHelper.getStagesExecutionInfo(pipelineYaml, stagesToRun);
+      StagesExecutionHelper.throwErrorIfAllStagesAreDeleted(pipelineYaml, stagesToRun);
+      pipelineYaml = StagesExpressionExtractor.replaceExpressions(pipelineYaml, expressionValues);
+      stagesExecutionInfo = StagesExecutionHelper.getStagesExecutionInfo(pipelineYaml, stagesToRun, expressionValues);
     }
     PlanExecutionMetadata planExecutionMetadata = obtainPlanExecutionMetadata(
         mergedRuntimeInputYaml, executionId, stagesExecutionInfo, originalExecutionId, retryExecutionParameters);

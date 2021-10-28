@@ -18,6 +18,7 @@ import io.harness.file.FileServiceConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.licensing.LicenseConfig;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
@@ -89,6 +90,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String ACCESS_CONTROL_PACKAGE = "io.harness.ng.accesscontrol.resources";
   public static final String FEEDBACK_PACKAGE = "io.harness.ng.feedback.resources";
   public static final String INSTANCE_SYNC_PACKAGE = "io.harness.ng.instancesync.resources";
+  public static final String INSTANCE_NG_PACKAGE = "io.harness.ng.instance";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -117,6 +119,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("accountConfig") private AccountConfig accountConfig;
+  @JsonProperty("licenseConfig") private LicenseConfig licenseConfig;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   private OpaServiceConfiguration opaServerConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
@@ -171,7 +174,7 @@ public class NextGenConfiguration extends Configuration {
         ACTIVITY_HISTORY_PACKAGE, SERVICE_PACKAGE, SERVICE_ACCOUNTS_PACKAGE, BUCKETS_PACKAGE, CLUSTER_GCP_PACKAGE,
         WEBHOOK_PACKAGE, ENVIRONMENT_PACKAGE, USERPROFILE_PACKAGE, JIRA_PACKAGE, EXECUTION_PACKAGE, ENTITYSETUP_PACKAGE,
         SCHEMA_PACKAGE, DELEGATE_PACKAGE, ACCESS_CONTROL_PACKAGE, FEEDBACK_PACKAGE, INSTANCE_SYNC_PACKAGE,
-        INVITE_PACKAGE, USER_PACKAGE);
+        INVITE_PACKAGE, USER_PACKAGE, INSTANCE_NG_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
