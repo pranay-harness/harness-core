@@ -9,10 +9,10 @@ import io.harness.beans.KeyValuePair;
 import java.time.Duration;
 import java.util.List;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import org.apache.http.client.utils.URIBuilder;
 
-@Value
+@Data
 @Builder
 public class HttpConnectionExecutionCapability implements ExecutionCapability {
   private final CapabilityType capabilityType = CapabilityType.HTTP;
@@ -25,6 +25,7 @@ public class HttpConnectionExecutionCapability implements ExecutionCapability {
   private int port;
   private String path;
   private String query;
+  private boolean ignoreRedirect;
 
   @Override
   public EvaluationMode evaluationMode() {
