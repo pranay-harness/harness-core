@@ -190,7 +190,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           ReferenceDTO reference = ReferenceDTO.builder()
                                        .identifier(resultSet.getString("moduleinfo_author_id"))
                                        .projectIdentifier(resultSet.getString("projectidentifier"))
-                                       .orgIdentifier(resultSet.getString("orgidentifierd"))
+                                       .orgIdentifier(resultSet.getString("orgidentifier"))
                                        .build();
           usageReferences.add(reference);
         }
@@ -213,7 +213,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   public UsageDataDTO getMonthlyBuild(String accountId, long timestamp) {
     long totalTries = 0;
     String query = "select count(*) as total from " + tableName
-        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private IS 1 nd startts<=? and startts>=?;";
+        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private = TRUE and startts<=? and startts>=?;";
 
     while (totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
@@ -251,7 +251,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   public UsageDataDTO getTotalBuild(String accountId) {
     long totalTries = 0;
     String query = "select count(*) as total from " + tableName
-        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private IS 1;";
+        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private = TRUE;";
 
     while (totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
