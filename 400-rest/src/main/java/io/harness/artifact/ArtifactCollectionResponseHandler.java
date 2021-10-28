@@ -22,6 +22,7 @@ import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamCollectionStatus;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
@@ -142,13 +143,21 @@ public class ArtifactCollectionResponseHandler {
   }
 
   private void onSuccess(ArtifactStream artifactStream) {
+    if (!ArtifactStreamCollectionStatus.STABLE.name().equals(artifactStream.getCollectionStatus())
+        && featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, artifactStream.getAccountId())) {
+      artifactStreamService.updateCollectionStatus(
+          artifactStream.getAccountId(), artifactStream.getUuid(), ArtifactStreamCollectionStatus.STABLE.name());
+    }
+
     if (artifactStream.getFailedCronAttempts() == 0) {
+      artifactStreamService.updateLastIterationFields(artifactStream.getAccountId(), artifactStream.getUuid(), true);
       return;
     }
 
     log.info("Successfully fetched builds after {} failures", artifactStream.getFailedCronAttempts());
     artifactStreamService.updateFailedCronAttemptsAndLastIteration(
-        artifactStream.getAccountId(), artifactStream.getUuid(), 0);
+        artifactStream.getAccountId(), artifactStream.getUuid(), 0, true);
+
     alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
         ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStream.getUuid()).build());
   }
@@ -160,9 +169,15 @@ public class ArtifactCollectionResponseHandler {
     }
 
     artifactStreamService.updateFailedCronAttemptsAndLastIteration(
-        artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
+        artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts, false);
     log.warn("Failed to fetch/process builds, total failed attempts: {}", failedCronAttempts);
     if (failedCronAttempts != MAX_FAILED_ATTEMPTS) {
+      if (!ArtifactStreamCollectionStatus.UNSTABLE.name().equals(artifactStream.getCollectionStatus())
+          && featureFlagService.isEnabled(
+              FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, artifactStream.getAccountId())) {
+        artifactStreamService.updateCollectionStatus(
+            artifactStream.getAccountId(), artifactStream.getUuid(), ArtifactStreamCollectionStatus.UNSTABLE.name());
+      }
       return;
     }
 
@@ -181,6 +196,10 @@ public class ArtifactCollectionResponseHandler {
                                           .build();
     }
 
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, artifactStream.getAccountId())) {
+      artifactStreamService.updateCollectionStatus(
+          artifactStream.getAccountId(), artifactStream.getUuid(), ArtifactStreamCollectionStatus.STOPPED.name());
+    }
     alertService.openAlert(
         artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED, artifactCollectionFailedAlert);
     artifactStreamPTaskHelper.deletePerpetualTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId());

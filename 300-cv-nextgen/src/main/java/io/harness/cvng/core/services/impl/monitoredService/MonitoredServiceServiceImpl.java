@@ -25,6 +25,8 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.MonitoredServiceListItemDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources.HealthSourceSummary;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
@@ -455,6 +457,31 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
+  public List<MonitoredServiceWithHealthSources> getAllWithTimeSeriesHealthSources(ProjectParams projectParams) {
+    List<MonitoredService> monitoredServiceEntities = getMonitoredServices(projectParams);
+    if (isEmpty(monitoredServiceEntities)) {
+      throw new InvalidRequestException(String.format(
+          "There are no Monitored Services for the given project: %s", projectParams.getProjectIdentifier()));
+    }
+
+    return monitoredServiceEntities.stream()
+        .map(monitoredServiceEntity -> {
+          Set<HealthSource> healthSource = healthSourceService.get(monitoredServiceEntity.getAccountId(),
+              monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
+              monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers());
+          return MonitoredServiceWithHealthSources.builder()
+              .name(monitoredServiceEntity.getName())
+              .identifier(monitoredServiceEntity.getIdentifier())
+              .healthSources(
+                  healthSource.stream()
+                      .map(x -> HealthSourceSummary.builder().name(x.getName()).identifier(x.getIdentifier()).build())
+                      .collect(Collectors.toSet()))
+              .build();
+        })
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public MonitoredServiceDTO getMonitoredServiceDTO(ServiceEnvironmentParams serviceEnvironmentParams) {
     MonitoredServiceResponse monitoredServiceResponse = get(serviceEnvironmentParams);
     if (monitoredServiceResponse == null) {
@@ -489,6 +516,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .filter(MonitoredServiceKeys.orgIdentifier, projectParams.getOrgIdentifier())
         .filter(MonitoredServiceKeys.projectIdentifier, projectParams.getProjectIdentifier())
         .filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier)
+        .asList();
+  }
+
+  private List<MonitoredService> getMonitoredServices(ProjectParams projectParams) {
+    return hPersistence.createQuery(MonitoredService.class)
+        .filter(MonitoredServiceKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(MonitoredServiceKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(MonitoredServiceKeys.projectIdentifier, projectParams.getProjectIdentifier())
         .asList();
   }
 

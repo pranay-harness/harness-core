@@ -516,6 +516,46 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public User completeCommunitySignup(UserInvite userInvite) {
+    User existingUser = getUserByEmail(userInvite.getEmail());
+    if (existingUser != null) {
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
+    }
+
+    // create account
+    String username = userInvite.getEmail().split("@")[0];
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(username)
+                          .withCompanyName(username)
+                          .withDefaultExperience(DefaultExperience.NG)
+                          .withCreatedFromNG(true)
+                          .withAppId(GLOBAL_APP_ID)
+                          .build();
+    account.setLicenseInfo(LicenseInfo.builder()
+                               .accountType(AccountType.COMMUNITY)
+                               .accountStatus(AccountStatus.ACTIVE)
+                               .licenseUnits(50)
+                               .build());
+
+    Account createdAccount = accountService.save(account, false);
+
+    // create user
+    User user = User.Builder.anUser()
+                    .email(userInvite.getEmail())
+                    .name(createdAccount.getAccountName())
+                    .passwordHash(userInvite.getPasswordHash())
+                    .accountName(createdAccount.getAccountName())
+                    .companyName(createdAccount.getCompanyName())
+                    .accounts(Lists.newArrayList(createdAccount))
+                    .emailVerified(true)
+                    .defaultAccountId(createdAccount.getUuid())
+                    .utmInfo(userInvite.getUtmInfo())
+                    .build();
+    completeUserInviteForSignup(userInvite, createdAccount.getUuid());
+    return createNewUserAndSignIn(user, createdAccount.getUuid());
+  }
+
+  @Override
   public UserInvite createUserInviteForMarketPlace() {
     UserInvite userInvite = new UserInvite();
     userInvite.setSource(UserInviteSource.builder().type(SourceType.MARKETPLACE).build());
