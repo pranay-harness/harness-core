@@ -133,6 +133,7 @@ public class ExecutionHelper {
     StagesExecutionInfo stagesExecutionInfo =
         StagesExecutionInfo.builder().isStagesExecution(false).pipelineYamlToRun(pipelineYaml).build();
     if (EmptyPredicate.isNotEmpty(stagesToRun)) {
+      StagesExecutionHelper.throwErrorIfAllStagesAreDeleted(pipelineYaml, stagesToRun);
       pipelineYaml = StagesExpressionExtractor.replaceExpressions(pipelineYaml, expressionValues);
       stagesExecutionInfo = StagesExecutionHelper.getStagesExecutionInfo(pipelineYaml, stagesToRun, expressionValues);
     }
