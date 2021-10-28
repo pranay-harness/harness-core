@@ -10,6 +10,7 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedDataParams;
+import io.harness.security.encryption.EncryptedMech;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 
@@ -75,6 +76,7 @@ public class NGEncryptedData implements PersistentEntity, EncryptedRecord {
   EncryptionType backupEncryptionType;
   boolean base64Encoded;
   AdditionalMetadata additionalMetadata;
+  EncryptedMech encryptedMech;
 
   @Override
   @JsonIgnore

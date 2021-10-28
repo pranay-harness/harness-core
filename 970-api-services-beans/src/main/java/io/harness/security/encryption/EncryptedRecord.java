@@ -22,4 +22,5 @@ public interface EncryptedRecord {
   EncryptionType getBackupEncryptionType(); // Only relevant in case of GLOBAL secret manager.
   boolean isBase64Encoded();
   AdditionalMetadata getAdditionalMetadata();
+  EncryptedMech getEncryptedMech();
 }
