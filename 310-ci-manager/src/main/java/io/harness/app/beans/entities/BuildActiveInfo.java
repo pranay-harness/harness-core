@@ -10,6 +10,7 @@ import lombok.Value;
 public class BuildActiveInfo {
   private String piplineName;
   private String pipelineIdentifier;
+  private String planExecutionId;
   private String branch;
   private String commit;
   private String commitID;
