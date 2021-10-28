@@ -190,7 +190,7 @@ public class OverviewDashboardServiceImplTest {
     CountChangeDetails expectedServiceCountDetails1 = getExpectedCountDetail(10L, 12L);
     CountChangeDetails expectedEnvCountDetails1 = getExpectedCountDetail(10L, 12L);
     CountChangeDetails expectedPipelinesCountDetails1 = getExpectedCountDetail(10L, 12L);
-    CountChangeDetails expectedProjectsCountDetails1 = getExpectedCountDetail(10L, 12L);
+    CountChangeDetails expectedProjectsCountDetails1 = getExpectedCountDetail(1L, 12L);
     expectedCountOverview1 = getExpectedResponseForGetCountOverview(expectedServiceCountDetails1,
         expectedEnvCountDetails1, expectedPipelinesCountDetails1, expectedProjectsCountDetails1);
   }
