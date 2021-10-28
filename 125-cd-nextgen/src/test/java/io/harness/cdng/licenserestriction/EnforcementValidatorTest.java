@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.licensing.beans.modules.types.CDLicenseType.SERVICES;
 import static io.harness.rule.OwnerRule.ARVIND;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
@@ -120,6 +121,7 @@ public class EnforcementValidatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateWithoutCache() throws Exception {
     Cache<String, Integer> cache = getCache();
+    assertThat(cache.asMap().containsKey(EXECUTION_ID)).isFalse();
     doReturn(getServiceUsageDto("S1", "S2", "S3"))
         .when(licenseUsageInterface)
         .getLicenseUsage(eq(ACCOUNT_ID), eq(ModuleType.CD), anyLong(),
@@ -142,6 +144,7 @@ public class EnforcementValidatorTest extends CategoryTest {
 
     enforcementValidator.validate(ACCOUNT_ID, ORG_ID, PROJECT_ID, PIPELINE_ID, YAML, EXECUTION_ID);
     verify(enforcementClientService).checkAvailabilityWithIncrement(FeatureRestrictionName.SERVICES, ACCOUNT_ID, 1);
+    assertThat(cache.asMap().containsKey(EXECUTION_ID)).isTrue();
   }
 
   private List<EntitySetupUsageDTO> getReferredUsages(String... services) {
