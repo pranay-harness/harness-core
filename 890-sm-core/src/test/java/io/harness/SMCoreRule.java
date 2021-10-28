@@ -23,6 +23,9 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.secretkey.AESSecretKeyServiceImpl;
+import io.harness.secretkey.SecretKeyService;
+import io.harness.secretkey.SecretKeyType;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secrets.SecretsAuditService;
@@ -194,6 +197,11 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
         bind(SecretsAuditService.class).toInstance(mock(SecretsAuditService.class));
         bind(SecretsRBACService.class).toInstance(mock(SecretsRBACService.class));
         bind(SecretsManagerRBACService.class).toInstance(mock(SecretsManagerRBACService.class));
+
+        binder()
+            .bind(SecretKeyService.class)
+            .annotatedWith(Names.named(SecretKeyType.AES_SECRET_KEY))
+            .to(AESSecretKeyServiceImpl.class);
       }
     });
     modules.add(VersionModule.getInstance());

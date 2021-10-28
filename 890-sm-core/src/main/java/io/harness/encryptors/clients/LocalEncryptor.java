@@ -8,6 +8,8 @@ import io.harness.beans.FeatureName;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.ff.FeatureFlagService;
+import io.harness.secretkey.SecretKeyService;
+import io.harness.secretkey.SecretKeyType;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedRecord;
@@ -27,6 +29,7 @@ import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -40,7 +43,14 @@ import lombok.extern.slf4j.Slf4j;
 public class LocalEncryptor implements KmsEncryptor {
   private static final String AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP = "AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP";
   private static final AwsCrypto crypto = AwsCrypto.standard();
-  @Inject private FeatureFlagService featureFlagService;
+  private SecretKeyService secretKeyService;
+  private FeatureFlagService featureFlagService;
+
+  public LocalEncryptor(
+      @Named(SecretKeyType.AES_SECRET_KEY) SecretKeyService secretKeyService, FeatureFlagService featureFlagService) {
+    this.secretKeyService = secretKeyService;
+    this.featureFlagService = featureFlagService;
+  }
 
   @Override
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
