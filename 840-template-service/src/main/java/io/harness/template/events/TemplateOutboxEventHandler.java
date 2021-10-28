@@ -11,6 +11,7 @@ import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
+import io.harness.audit.beans.custom.template.TemplateEventData;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -40,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
 public class TemplateOutboxEventHandler implements OutboxEventHandler {
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
   private final AuditClientService auditClientService;
   private final Producer eventProducer;
 
@@ -57,6 +58,7 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
         objectMapper.readValue(outboxEvent.getEventData(), TemplateCreateEvent.class);
 
     boolean publishedToRedis = publishEvent(outboxEvent, EventsFrameworkMetadataConstants.CREATE_ACTION);
+    TemplateEventData templateEventData = new TemplateEventData(templateCreateEvent.getComments(), null);
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.CREATE)
                                 .module(ModuleType.TEMPLATESERVICE)
@@ -64,6 +66,7 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .auditEventData(templateEventData)
                                 .insertId(outboxEvent.getId())
                                 .build();
     return publishedToRedis && publishAudit(auditEntry, outboxEvent);
@@ -73,6 +76,8 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
     TemplateUpdateEvent templateUpdateEvent =
         objectMapper.readValue(outboxEvent.getEventData(), TemplateUpdateEvent.class);
     boolean publishedToRedis = publishEvent(outboxEvent, EventsFrameworkMetadataConstants.UPDATE_ACTION);
+    TemplateEventData templateEventData = new TemplateEventData(
+        templateUpdateEvent.getComments(), templateUpdateEvent.getTemplateUpdateEventType().fetchYamlType());
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.UPDATE)
                                 .module(ModuleType.TEMPLATESERVICE)
@@ -81,6 +86,7 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .auditEventData(templateEventData)
                                 .insertId(outboxEvent.getId())
                                 .build();
     return publishedToRedis && publishAudit(auditEntry, outboxEvent);
@@ -90,6 +96,7 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
     TemplateDeleteEvent templateDeleteEvent =
         objectMapper.readValue(outboxEvent.getEventData(), TemplateDeleteEvent.class);
     boolean publishedToRedis = publishEvent(outboxEvent, EventsFrameworkMetadataConstants.DELETE_ACTION);
+    TemplateEventData templateEventData = new TemplateEventData(templateDeleteEvent.getComments(), null);
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.DELETE)
                                 .module(ModuleType.TEMPLATESERVICE)
@@ -97,6 +104,7 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .auditEventData(templateEventData)
                                 .insertId(outboxEvent.getId())
                                 .build();
     return publishedToRedis && publishAudit(auditEntry, outboxEvent);

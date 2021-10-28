@@ -50,4 +50,8 @@ public enum TemplateUpdateEventType {
   public String toString() {
     return this.yamlType;
   }
+
+  public String fetchYamlType() {
+    return yamlType;
+  }
 }
