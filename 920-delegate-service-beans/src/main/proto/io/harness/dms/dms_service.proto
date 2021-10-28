@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package io.harness.dms;
+
+option java_multiple_files = true;
+option go_package = "920_delegate_service_beans";
+
+service DmsService {
+  rpc CrudEvent(CrudEventRequest) returns (CrudEventResponse);
+}
+
+message CrudEventRequest {
+  Action action = 1;
+  EntityType entity_type = 2;
+  Data data = 3;
+}
+
+enum Action {
+  CREATE = 0;
+  UPDATE = 1;
+  DELETE = 2;
+}
+
+enum EntityType { ACCOUNT = 0; }
+
+message Data {
+  oneof data {
+    AccountCreateData account_create_data = 1;
+    AccountDeleteData account_delete_data = 2;
+  }
+}
+
+message AccountCreateData {
+  string account_id = 1;
+}
+
+message AccountDeleteData {
+  string account_id = 1;
+}
+
+message CrudEventResponse {}

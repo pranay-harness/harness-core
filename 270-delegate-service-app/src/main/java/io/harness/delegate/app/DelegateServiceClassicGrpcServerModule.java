@@ -6,6 +6,7 @@ import io.harness.grpc.DelegateServiceClassicGrpcImpl;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.auth.ValidateAuthServerInterceptor;
+import io.harness.grpc.dms.DmsServiceGrpcImpl;
 import io.harness.grpc.exception.GrpcExceptionMapper;
 import io.harness.grpc.exception.WingsExceptionGrpcMapper;
 import io.harness.grpc.server.Connector;
@@ -50,6 +51,7 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
     // bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
 
     bindableServiceMultibinder.addBinding().to(DelegateServiceClassicGrpcImpl.class);
+    bindableServiceMultibinder.addBinding().to(DmsServiceGrpcImpl.class);
 
     // Service Interceptors
     Provider<Set<ServerInterceptor>> serverInterceptorsProvider =
