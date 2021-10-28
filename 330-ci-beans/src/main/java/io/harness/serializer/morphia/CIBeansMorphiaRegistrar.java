@@ -5,6 +5,7 @@ import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
+import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.CIBuild;
@@ -21,6 +22,7 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(BuildNumberDetails.class);
     set.add(CIBuild.class);
     set.add(K8PodDetails.class);
+    set.add(StageDetails.class);
     set.add(StepTaskDetails.class);
     set.add(BuildStandardVariables.class);
     set.add(GitVariables.class);
@@ -33,6 +35,7 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     w.put("sweepingoutputs.K8PodDetails", K8PodDetails.class);
+    w.put("sweepingoutputs.StageDetails", StageDetails.class);
     w.put("sweepingoutputs.PodCleanupDetails", PodCleanupDetails.class);
   }
 }
