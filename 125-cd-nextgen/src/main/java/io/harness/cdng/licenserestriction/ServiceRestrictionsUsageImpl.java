@@ -18,7 +18,7 @@ import static io.harness.licensing.beans.modules.types.CDLicenseType.SERVICES;
 
 @OwnedBy(HarnessTeam.CDP)
 public class ServiceRestrictionsUsageImpl implements RestrictionUsageInterface<RateLimitRestrictionMetadataDTO> {
-  @Inject private LicenseUsageInterface<CDLicenseUsageDTO, CDUsageRequestParams> licenseUsageInterface;
+  @Inject private LicenseUsageInterface licenseUsageInterface;
 
   @Override
   public long getCurrentValue(String accountIdentifier, RateLimitRestrictionMetadataDTO restrictionMetadataDTO) {
