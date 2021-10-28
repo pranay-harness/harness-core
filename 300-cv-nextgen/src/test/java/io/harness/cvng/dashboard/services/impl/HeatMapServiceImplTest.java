@@ -975,7 +975,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, heatMap.getHeatMapBucketStartTime(), 0.5, 0.5);
     hPersistence.save(previousHeatmap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServices(
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
         accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
 
     assertThat(riskDataList.size()).isEqualTo(1);
@@ -997,7 +997,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     heatMap.setHeatMapRisks(risks.stream().collect(Collectors.toList()));
     hPersistence.save(heatMap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServices(
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
         accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HEALTHY);
@@ -1007,7 +1007,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     heatMap.setHeatMapRisks(risks.stream().collect(Collectors.toList()));
     hPersistence.save(heatMap);
 
-    riskDataList = heatMapService.getLatestRiskScoreForLimitedServices(
+    riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
         accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
@@ -1024,7 +1024,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, endTime.minus(4, ChronoUnit.HOURS), 0.50, 0.10);
     hPersistence.save(previousHeatmap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServices(
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
         accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
 
     assertThat(riskDataList.size()).isEqualTo(1);
@@ -1048,7 +1048,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
             .build();
     hPersistence.save(previousHeatmap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServices(
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
         accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
 
     assertThat(riskDataList.size()).isEqualTo(1);
@@ -1074,7 +1074,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(previousHeatmap, heatMap.getHeatMapBucketStartTime(), 0.5, 0.5);
     hPersistence.save(previousHeatmap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServices(
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(
         accountId, orgIdentifier, projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier)));
 
     assertThat(riskDataList.size()).isEqualTo(1);
@@ -1101,7 +1101,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(anotherServiceEnvHeatMap, endTime, 0.11, 0.37);
     hPersistence.save(anotherServiceEnvHeatMap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServices(accountId, orgIdentifier,
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(accountId, orgIdentifier,
         projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(newService, newEnv)));
 
     assertThat(riskDataList.size()).isEqualTo(2);
@@ -1140,7 +1140,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(anotherServiceEnvHeatMap, endTime, 0.11, 0.37);
     hPersistence.save(anotherServiceEnvHeatMap);
 
-    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServices(accountId, orgIdentifier,
+    List<RiskData> riskDataList = heatMapService.getLatestRiskScoreForLimitedServicesList(accountId, orgIdentifier,
         projectIdentifier, Arrays.asList(Pair.of(serviceIdentifier, envIdentifier), Pair.of(newService, newEnv)));
 
     assertThat(riskDataList.size()).isEqualTo(2);

@@ -11,6 +11,7 @@ import lombok.experimental.UtilityClass;
 public class AuditEventDataTypeConstants {
   public static final String USER_INVITATION_AUDIT_EVENT_DATA = "UserInvitationAuditEventData";
   public static final String ADD_COLLABORATOR_AUDIT_EVENT_DATA = "AddCollaboratorAuditEventData";
+  public static final String TEMPLATE_AUDIT_EVENT_DATA = "TemplateAuditEventData";
 
   // Deprecated
   public static final String USER_INVITE = "USER_INVITE";

@@ -24,7 +24,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -52,8 +51,8 @@ public class ServiceLevelIndicator
   String name;
   private long lastUpdatedAt;
   private long createdAt;
-  @NonNull ServiceLevelIndicatorType type;
-  @NonNull ServiceLevelIndicatorSpec spec;
+  ServiceLevelIndicatorType type;
+  ServiceLevelIndicatorSpec spec;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -71,6 +71,7 @@ public class LdapSearch implements LdapValidator {
     }
   }
 
+  @SuppressWarnings("PMD")
   public SearchResult execute(String... attrs) throws LdapException {
     SearchRequest request = new SearchRequest();
 

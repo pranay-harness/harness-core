@@ -135,9 +135,8 @@ public class BuildSourceCallback implements OldNotifyCallback {
     // NOTE: buildSourceResponse is not null at this point.
     try {
       boolean isUnstable = UNSTABLE.name().equals(artifactStream.getCollectionStatus());
-      boolean isStopped = featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, accountId)
-          && STOPPED.name().equals(artifactStream.getCollectionStatus());
-      if ((isUnstable || isStopped) && buildSourceResponse.isStable()) {
+      boolean isStopped = STOPPED.name().equals(artifactStream.getCollectionStatus());
+      if ((isUnstable || isStopped || artifactStream.getCollectionStatus() == null) && buildSourceResponse.isStable()) {
         // If the artifact stream is unstable and buildSourceResponse has stable as true, mark this artifact
         // stream as stable.
         artifactStreamService.updateCollectionStatus(accountId, artifactStreamId, STABLE.name());
@@ -203,7 +202,7 @@ public class BuildSourceCallback implements OldNotifyCallback {
     if (failed) {
       int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
       artifactStreamService.updateFailedCronAttemptsAndLastIteration(
-          artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
+          artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts, false);
       log.warn(
           "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds totalFailedAttempt:[{}] artifactStreamId:[{}]",
           failedCronAttempts, artifactStreamId);
@@ -237,7 +236,7 @@ public class BuildSourceCallback implements OldNotifyCallback {
         log.warn("ASYNC_ARTIFACT_COLLECTION: successfully fetched builds after [{}] failures for artifactStream[{}]",
             artifactStream.getFailedCronAttempts(), artifactStreamId);
         artifactStreamService.updateFailedCronAttemptsAndLastIteration(
-            artifactStream.getAccountId(), artifactStream.getUuid(), 0);
+            artifactStream.getAccountId(), artifactStream.getUuid(), 0, false);
         permitService.releasePermitByKey(artifactStream.getUuid());
         alertService.closeAlert(accountId, null, AlertType.ARTIFACT_COLLECTION_FAILED,
             ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStreamId).build());

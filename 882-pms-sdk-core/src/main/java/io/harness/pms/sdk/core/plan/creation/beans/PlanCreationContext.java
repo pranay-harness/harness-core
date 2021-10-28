@@ -24,10 +24,13 @@ import lombok.Singular;
 public class PlanCreationContext implements AsyncCreatorContext {
   YamlField currentField;
   @Singular("globalContext") Map<String, PlanCreationContextValue> globalContext;
+  String yaml;
 
-  public static PlanCreationContext cloneWithCurrentField(PlanCreationContext planCreationContext, YamlField field) {
+  public static PlanCreationContext cloneWithCurrentField(
+      PlanCreationContext planCreationContext, YamlField field, String yaml) {
     return PlanCreationContext.builder()
         .currentField(field)
+        .yaml(yaml)
         .globalContext(planCreationContext.getGlobalContext())
         .build();
   }
@@ -45,6 +48,10 @@ public class PlanCreationContext implements AsyncCreatorContext {
 
   @Override
   public ByteString getGitSyncBranchContext() {
-    return null;
+    PlanCreationContextValue value = getMetadata();
+    if (value == null) {
+      return null;
+    }
+    return getMetadata().getMetadata().getGitSyncBranchContext();
   }
 }

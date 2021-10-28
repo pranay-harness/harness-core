@@ -707,7 +707,7 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
       EncryptedData encryptedData =
           wingsPersistence.get(EncryptedData.class, secretManagerRuntimeParameters.getRuntimeParameters());
       secretManagerRuntimeParameters.setRuntimeParameters(
-          String.valueOf(AbstractSecretServiceImpl.decryptLocal(encryptedData)));
+          String.valueOf(secretService.fetchSecretValue(encryptedData)));
       return Optional.of(secretManagerRuntimeParameters);
     }
     return Optional.empty();
@@ -722,7 +722,6 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
   public SecretManagerRuntimeParameters configureSecretManagerRuntimeCredentialsForExecution(
       String accountId, String kmsId, String executionId, Map<String, String> runtimeParameters) {
     String runtimeParametersString = JsonUtils.asJson(runtimeParameters);
-
     EncryptedData encryptedData = encryptLocal(runtimeParametersString.toCharArray());
     encryptedData.setAccountId(accountId);
     encryptedData.setName(String.format("%s_%s_%s", executionId, kmsId, accountId));
@@ -826,7 +825,12 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
   }
 
   private String getFileInternal(String accountId, String uuid) {
-    char[] fileContent = secretService.fetchSecretValue(accountId, uuid);
+    EncryptedData encryptedData =
+        secretsDao.getSecretById(accountId, uuid).<SecretManagementException>orElseThrow(() -> {
+          String message = String.format("Could not find the secret with secret id %s to get content", uuid);
+          throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
+        });
+    char[] fileContent = secretService.fetchSecretValue(encryptedData);
     if (fileContent == null) {
       return null;
     }

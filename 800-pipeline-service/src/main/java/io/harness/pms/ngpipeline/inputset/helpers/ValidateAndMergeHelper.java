@@ -23,6 +23,7 @@ import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateRespons
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.plan.execution.StagesExecutionHelper;
 import io.harness.pms.stages.StagesExpressionExtractor;
 
 import com.google.inject.Inject;
@@ -132,12 +133,10 @@ public class ValidateAndMergeHelper {
       if (EmptyPredicate.isEmpty(stageIdentifiers)) {
         template = createTemplateFromPipeline(pipelineYaml);
       } else {
-        String replacedExpressionsPipeline =
-            StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-                pipelineYaml, stageIdentifiers);
+        StagesExecutionHelper.throwErrorIfAllStagesAreDeleted(pipelineYaml, stageIdentifiers);
         replacedExpressions =
             new ArrayList<>(StagesExpressionExtractor.getNonLocalExpressions(pipelineYaml, stageIdentifiers));
-        template = createTemplateFromPipelineForGivenStages(replacedExpressionsPipeline, stageIdentifiers);
+        template = createTemplateFromPipelineForGivenStages(pipelineYaml, stageIdentifiers);
       }
       return InputSetTemplateResponseDTOPMS.builder()
           .inputSetTemplateYaml(template)
@@ -157,10 +156,7 @@ public class ValidateAndMergeHelper {
       if (EmptyPredicate.isEmpty(stageIdentifiers)) {
         return createTemplateFromPipeline(pipelineYaml);
       } else {
-        String replacedExpressionsPipeline =
-            StagesExpressionExtractor.replaceExpressionsReferringToOtherStagesWithRuntimeInput(
-                pipelineYaml, stageIdentifiers);
-        return createTemplateFromPipelineForGivenStages(replacedExpressionsPipeline, stageIdentifiers);
+        return createTemplateFromPipelineForGivenStages(pipelineYaml, stageIdentifiers);
       }
 
     } else {
