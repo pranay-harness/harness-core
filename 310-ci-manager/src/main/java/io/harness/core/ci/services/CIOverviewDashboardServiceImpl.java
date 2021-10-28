@@ -200,6 +200,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
             .references(usageReferences)
             .build();
       } catch (SQLException ex) {
+        log.error(query, ex);
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
@@ -226,6 +227,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           return UsageDataDTO.builder().count(resultSet.getInt("total")).displayName("Total Builds count").build();
         }
       } catch (SQLException ex) {
+        log.error(query, ex);
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
@@ -261,6 +263,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           return UsageDataDTO.builder().count(resultSet.getInt("total")).displayName("Total Builds count").build();
         }
       } catch (SQLException ex) {
+        log.error(query, ex);
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
