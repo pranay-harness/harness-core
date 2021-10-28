@@ -23,6 +23,7 @@ import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateRespons
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.plan.execution.StagesExecutionHelper;
 import io.harness.pms.stages.StagesExpressionExtractor;
 
 import com.google.inject.Inject;
@@ -132,6 +133,7 @@ public class ValidateAndMergeHelper {
       if (EmptyPredicate.isEmpty(stageIdentifiers)) {
         template = createTemplateFromPipeline(pipelineYaml);
       } else {
+        StagesExecutionHelper.throwErrorIfAllStagesAreDeleted(pipelineYaml, stageIdentifiers);
         replacedExpressions =
             new ArrayList<>(StagesExpressionExtractor.getNonLocalExpressions(pipelineYaml, stageIdentifiers));
         template = createTemplateFromPipelineForGivenStages(pipelineYaml, stageIdentifiers);
