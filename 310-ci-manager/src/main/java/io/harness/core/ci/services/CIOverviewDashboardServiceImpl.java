@@ -215,6 +215,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     String query = "select count(*) as total from " + tableName
         + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private = TRUE and startts<=? and startts>=?;";
 
+    UsageDataDTO usageDataDTO = UsageDataDTO.builder().count(0).displayName("Total Builds count").build();
     while (totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -223,8 +224,9 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         statement.setLong(2, timestamp);
         statement.setLong(3, getStartofTheMonth(timestamp));
         resultSet = statement.executeQuery();
-        if (resultSet != null && resultSet.next()) {
-          return UsageDataDTO.builder().count(resultSet.getInt("total")).displayName("Total Builds count").build();
+        if (resultSet != null) {
+          usageDataDTO.setCount(resultSet.getInt("total"));
+          return usageDataDTO;
         }
       } catch (SQLException ex) {
         log.error(query, ex);
@@ -233,7 +235,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
-    return null;
+    return usageDataDTO;
   }
 
   private long getStartofTheMonth(long timestamp) {
@@ -253,14 +255,15 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     String query = "select count(*) as total from " + tableName
         + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private = TRUE;";
 
+    UsageDataDTO usageDataDTO = UsageDataDTO.builder().count(0).displayName("Total Builds count").build();
     while (totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = connection.prepareStatement(query)) {
         statement.setString(1, accountId);
         resultSet = statement.executeQuery();
-        if (resultSet != null && resultSet.next()) {
-          return UsageDataDTO.builder().count(resultSet.getInt("total")).displayName("Total Builds count").build();
+        if (resultSet != null) {
+          usageDataDTO.setCount(resultSet.getInt("total"));
         }
       } catch (SQLException ex) {
         log.error(query, ex);
@@ -269,7 +272,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
-    return null;
+    return usageDataDTO;
   }
 
   public StatusAndTime queryCalculatorForStatusAndTime(String query) {
