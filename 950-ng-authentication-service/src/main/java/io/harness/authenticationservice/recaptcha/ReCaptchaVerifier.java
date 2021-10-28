@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import retrofit2.Response;
 
 @Slf4j
@@ -25,11 +26,11 @@ public class ReCaptchaVerifier {
     this.reCaptchaClientBuilder = reCaptchaClientBuilder;
   }
 
-  public void verify(String captchaResponseToken) {
+  public void verify(String captchaResponseToken, String captchaSecret) {
     Optional<Error> err;
 
     try {
-      err = verifyCaptcha(captchaResponseToken, false);
+      err = verifyCaptcha(captchaResponseToken, captchaSecret);
     } catch (Exception e) {
       // catching exception because login should not be blocked because of error in verifying captcha
       log.error("Exception occurred while trying to verify captcha.", e);
@@ -56,7 +57,6 @@ public class ReCaptchaVerifier {
       throw new WingsException(err.get().getCode(), err.get().getMessage());
     }
   }
-
   /**
    * @param captchaToken - captcha token sent by FE
    * @return optional error, presence of which should be treated as failed captcha verification
@@ -64,6 +64,11 @@ public class ReCaptchaVerifier {
   private Optional<Error> verifyCaptcha(String captchaToken, boolean invisibleCaptcha) {
     String captchaEnvSecretName = invisibleCaptcha ? "INVISIBLE_RECAPTCHA_SECRET" : "RECAPTCHA_SECRET";
     String secret = System.getenv(captchaEnvSecretName);
+    return verifyCaptcha(captchaToken, secret);
+  }
+
+  @NotNull
+  private Optional<Error> verifyCaptcha(String captchaToken, String secret) {
     if (StringUtils.isEmpty(secret)) {
       log.error(
           "Could not find captcha secret. Marking captcha verification as pass since it is an error on our side.");

@@ -410,7 +410,10 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateLearningEngineServiceToken(String learningEngineServiceToken) {
-    String jwtLearningEngineServiceSecret = verificationServiceSecretManager.getVerificationServiceSecretKey();
+    String jwtLearningEngineServiceSecret = configuration.getVerificationServiceSecretKey();
+    if (isNotEmpty(jwtLearningEngineServiceSecret)) {
+      jwtLearningEngineServiceSecret = verificationServiceSecretManager.getLearningEngineServiceSecret();
+    }
     if (StringUtils.isBlank(jwtLearningEngineServiceSecret)) {
       throw new InvalidRequestException("no secret key for service found for " + ServiceType.LEARNING_ENGINE);
     }

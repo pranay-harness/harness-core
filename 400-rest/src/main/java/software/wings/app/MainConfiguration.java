@@ -203,6 +203,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   private boolean disableDelegateMgmtInManager;
   @JsonProperty(value = "pullSecrets", defaultValue = "false") private boolean pullSecrets;
   @JsonProperty(value = "smProject") private String smProject;
+  @ConfigSecret @JsonProperty(value = "captchaSecret") private String captchaSecret;
+  @ConfigSecret @JsonProperty(value = "verificationServiceSecretKey") private String verificationServiceSecretKey;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
   @JsonProperty("eventListenersCountConfig") private EventListenersCountConfig eventListenersCountConfig;
   @JsonProperty(value = "useGlobalKMSAsBaseAlgo", defaultValue = "false") private boolean useGlobalKMSAsBaseAlgo;

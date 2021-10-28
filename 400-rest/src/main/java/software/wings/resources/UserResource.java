@@ -1457,6 +1457,6 @@ public class UserResource {
       return;
     }
 
-    reCaptchaVerifier.verify(captchaToken);
+    reCaptchaVerifier.verify(captchaToken, mainConfiguration.getCaptchaSecret());
   }
 }

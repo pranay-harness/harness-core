@@ -34,6 +34,10 @@ public class VerificationServiceSecretManagerImpl implements VerificationService
     if (isNotEmpty(verificationServiceSecret)) {
       return verificationServiceSecret;
     }
+    return getLearningEngineServiceSecret();
+  }
+  @Override
+  public String getLearningEngineServiceSecret() {
     return hPersistence.createQuery(ServiceSecretKey.class)
         .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE)
         .get()

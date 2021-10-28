@@ -901,6 +901,14 @@ if [[ "" != "$PULL_SECRETS" ]]; then
   yq write -i $CONFIG_FILE pullSecrets "$PULL_SECRETS"
 fi
 
+if [[ "" != "$RECAPTCHA_SECRET" ]]; then
+  yq write -i $CONFIG_FILE captchaSecret "$RECAPTCHA_SECRET"
+fi
+
+if [[ "" != "$VERIFICATION_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE verificationServiceSecretKey "$VERIFICATION_SERVICE_SECRET"
+fi
+
 if [[ "" != "$LDAP_GROUP_SYNC_INTERVAL" ]]; then
   yq write -i $CONFIG_FILE ldapSyncJobConfig.syncInterval "$LDAP_GROUP_SYNC_INTERVAL"
 fi

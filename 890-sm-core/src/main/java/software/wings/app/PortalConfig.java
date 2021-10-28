@@ -33,7 +33,7 @@ public class PortalConfig {
   @ConfigSecret private String jwtMultiAuthSecret;
   @ConfigSecret private String jwtSsoRedirectSecret;
   @ConfigSecret private String jwtAuthSecret;
-  @ConfigSecret private String jwtMarketPlaceSecret;
+  private String jwtMarketPlaceSecret;
   @ConfigSecret private String jwtIdentityServiceSecret;
   @ConfigSecret private String jwtDataHandlerSecret;
   @ConfigSecret private String jwtNextGenManagerSecret;
