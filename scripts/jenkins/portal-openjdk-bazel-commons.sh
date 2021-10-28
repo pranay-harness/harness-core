@@ -29,7 +29,6 @@ function copy_cg_manager_jars(){
 	cp ../../keystore.jks .
 	cp ../../360-cg-manager/key.pem .
 	cp ../../360-cg-manager/cert.pem .
-	cp ../../360-cg-manager/newrelic.yml .
 	cp ../../360-cg-manager/config.yml .
 	cp ../../400-rest/src/main/resources/redisson-jcache.yaml .
 	cp ../../alpn-boot-8.1.13.v20181017.jar .
