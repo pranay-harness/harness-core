@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @OwnedBy(HarnessTeam.PL)
 public interface SecretKeyService {
-  SecretKey save(String secretKey);
-  Optional<SecretKey> get(String uuid);
+  SecretKey createSecretKey();
+  Optional<SecretKey> getSecretKey(String uuid);
 }

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.crypto.spec.SecretKeySpec;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
@@ -21,5 +22,5 @@ import org.springframework.data.annotation.Id;
 @Entity(value = "SecretKey", noClassnameStored = true)
 public class SecretKey {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
-  private String key;
+  private SecretKeySpec secretKeySpec;
 }
