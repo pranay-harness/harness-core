@@ -25,6 +25,7 @@ features:
       FREE:
         restrictionType: RATE_LIMIT
         limit: 5
+        allowedIfEqual: true
         timeUnit:
           unit: DAYS
           numberOfUnits: 30
@@ -32,6 +33,7 @@ features:
       TEAM:
         restrictionType: RATE_LIMIT
         limit: 100
+        allowedIfEqual: true
         timeUnit:
           unit: DAYS
           numberOfUnits: 30
