@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.beans.SecretKey;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.ff.FeatureFlagService;
@@ -20,19 +21,14 @@ import software.wings.beans.LocalEncryptionConfig;
 
 import com.amazonaws.encryptionsdk.AwsCrypto;
 import com.amazonaws.encryptionsdk.CryptoResult;
-import com.amazonaws.encryptionsdk.kms.KmsMasterKey;
-import com.amazonaws.encryptionsdk.kms.KmsMasterKeyProvider;
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.AWSKMSClientBuilder;
-import com.amazonaws.services.kms.model.DecryptRequest;
-import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
-import com.amazonaws.services.kms.model.GenerateDataKeyResult;
-import com.google.inject.Inject;
+import com.amazonaws.encryptionsdk.jce.JceMasterKey;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,8 +50,9 @@ public class LocalEncryptor implements KmsEncryptor {
 
   @Override
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
-    final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value);
-    if (featureFlagService.isEnabled(FeatureName.AWS_LOCAL_ENCRYPTION_WITHOUT_BACKWARD_COMP, accountId)) {
+    SecretKey secretKey = secretKeyService.createSecretKey();
+    final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
+    if (featureFlagService.isEnabled(FeatureName.LOCAL_MULTI_CRYPTO_MODE, accountId)) {
       return EncryptedRecordData.builder().encryptionKey(accountId).encryptedValue(awsEncryptedSecret).build();
     }
 
@@ -74,14 +71,18 @@ public class LocalEncryptor implements KmsEncryptor {
       return null;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.AWS_LOCAL_ENCRYPTION_WITHOUT_BACKWARD_COMP, accountId)) {
-      return getAwsDecryptedSecret(accountId, new String(encryptedRecord.getEncryptedValue()).getBytes()).toCharArray();
+    Optional<SecretKey> secretKey = secretKeyService.getSecretKey("");
+    if (featureFlagService.isEnabled(FeatureName.LOCAL_MULTI_CRYPTO_MODE, accountId)) {
+      return getAwsDecryptedSecret(
+          accountId, new String(encryptedRecord.getEncryptedValue()).getBytes(), secretKey.get())
+          .toCharArray();
     }
 
     if (encryptedRecord.getBackupEncryptedValue() != null) {
       // The record has both aws encrypted secret as well as locally encrypted secret, try for both
       try {
-        return getAwsDecryptedSecret(accountId, new String(encryptedRecord.getEncryptedValue()).getBytes())
+        return getAwsDecryptedSecret(
+            accountId, new String(encryptedRecord.getEncryptedValue()).getBytes(), secretKey.get())
             .toCharArray();
       } catch (Exception exception) {
         // unable to decrypt via aws encryption sdk
@@ -109,24 +110,21 @@ public class LocalEncryptor implements KmsEncryptor {
 
   // ------------------------------ PRIVATE METHODS -----------------------------
 
-  private char[] getAwsEncryptedSecret(String accountId, String value) {
-    AWSKMS awskms = AWSKMSClientBuilder.standard().build();
-    GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
-    GenerateDataKeyResult keyResult = awskms.generateDataKey(dataKeyRequest);
+  private char[] getAwsEncryptedSecret(String accountId, String value, SecretKey secretKey) {
+    JceMasterKey escrowPub =
+        JceMasterKey.getInstance(secretKey.getSecretKeySpec(), "Escrow", "Escrow", "AES/GCM/NOPADDING");
+    Map<String, String> context = Collections.singletonMap("accountId", accountId);
 
-    final KmsMasterKeyProvider prov = KmsMasterKeyProvider.builder().buildStrict(keyResult.getPlaintext().toString());
-    final Map<String, String> context = Collections.singletonMap("accountId", accountId);
-    final byte[] encryptedBytes = crypto.encryptData(prov, value.getBytes(), context).getResult();
+    final byte[] encryptedBytes =
+        crypto.encryptData(escrowPub, value.getBytes(StandardCharsets.UTF_8), context).getResult();
     return new String(encryptedBytes).toCharArray();
   }
 
-  private String getAwsDecryptedSecret(String accountId, byte[] encryptedSecret) {
-    final KmsMasterKeyProvider prov = KmsMasterKeyProvider.builder().buildStrict(accountId);
+  private String getAwsDecryptedSecret(String accountId, byte[] encryptedSecret, SecretKey secretKey) {
+    JceMasterKey escrowPub =
+        JceMasterKey.getInstance(secretKey.getSecretKeySpec(), "Escrow", "Escrow", "AES/GCM/NOPADDING");
 
-    DecryptRequest decryptRequest = new DecryptRequest();
-    decryptRequest.set
-
-        final CryptoResult<byte[], KmsMasterKey> decryptResult = crypto.decryptData(prov, encryptedSecret);
+    final CryptoResult<byte[], ?> decryptResult = crypto.decryptData(escrowPub, encryptedSecret);
     if (!decryptResult.getMasterKeyIds().get(0).equals(accountId)) {
       // throw exception
     }
