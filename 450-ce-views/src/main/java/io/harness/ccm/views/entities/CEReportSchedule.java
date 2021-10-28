@@ -37,7 +37,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "ceReportSchedule", noClassnameStored = true)
 @StoreIn(DbAliases.CENG)
 @OwnedBy(HarnessTeam.CE)
-@Schema(description = "This object will contain the complete definition of a Cloud Cost Report Schedule")
+@Schema(
+    description = "Cloud Cost Report Schedule contains definition of 'how often' and 'to whom' the Report will be sent")
 public final class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware,
                                                AccountAccess, CreatedByAware, UpdatedByAware {
   public static List<MongoIndex> mongoIndexes() {

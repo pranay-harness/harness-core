@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
@@ -43,12 +44,13 @@ import org.springframework.stereotype.Service;
 // import org.springframework.web.bind.annotation.RequestBody;
 
 @Api("perspectiveReport")
-@Path("/perspectiveReport")
+@Path("perspectiveReport")
 @Produces(MediaType.APPLICATION_JSON)
 @NextGenManagerAuth
 @Slf4j
 @Service
 @OwnedBy(CE)
+@Tag(name = "perspectiveReport", description = "This resource contains the APIs Reports created on Perspectives")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FailureDTO.class)) })
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
@@ -139,9 +141,10 @@ public class PerspectiveReportResource {
   @LogAccountIdentifier
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
-  @Operation(operationId = "createReportSetting", description = "Create Report Setting",
-      summary =
+  @Operation(operationId = "createReportSetting",
+      description =
           "Create setting by Report identifier or by Perspective identifier, by sending CEReportSchedule as request body",
+      summary = "Create Report Setting",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -170,8 +173,9 @@ public class PerspectiveReportResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")
-  @Operation(operationId = "updateReportSetting", description = "Update perspective reports",
-      summary = "Update perspective reports by sending CEReportSchedule as request body",
+  @Operation(operationId = "updateReportSetting",
+      description = "Update perspective reports by sending CEReportSchedule as request body",
+      summary = "Update perspective reports",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.

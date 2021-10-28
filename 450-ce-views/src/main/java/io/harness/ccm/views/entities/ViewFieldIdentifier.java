@@ -1,5 +1,8 @@
 package io.harness.ccm.views.entities;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "//TODO")
 public enum ViewFieldIdentifier {
   CLUSTER("Cluster"),
   AWS("AWS"),

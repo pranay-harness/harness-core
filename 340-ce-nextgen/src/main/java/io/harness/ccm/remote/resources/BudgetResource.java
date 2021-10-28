@@ -64,8 +64,8 @@ public class BudgetResource {
   @ExceptionMetered
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create budget", nickname = "createBudget")
-  @Operation(operationId = "createBudget", description = "Create a Budget",
-      summary = "Creates a Budget from the Budget object passed as a request body",
+  @Operation(operationId = "createBudget",
+      description = "Creates a Budget from the Budget object passed as a request body", summary = "Create a Budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -86,8 +86,8 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "Clone budget", nickname = "cloneBudget")
-  @Operation(operationId = "cloneBudget", description = "Clone an existing Budget",
-      summary = "Clone an existing Budget using an existing Budget identifier",
+  @Operation(operationId = "cloneBudget", description = "Clone an existing Budget using an existing Budget identifier",
+      summary = "Clone an existing Budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -109,11 +109,12 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "Get budget", nickname = "getBudget")
-  @Operation(operationId = "getBudget", description = "Get a Budget",
-      summary = "Get a Cloud Cost Budget by an identifier",
+  @Operation(operationId = "getBudget", description = "Get a Cloud Cost Budget by an identifier",
+      summary = "Get a Budget",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default", description = "", content = {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Get a Budget by it's identifier", content = {
           @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDTO.class))
         })
       })
@@ -129,8 +130,8 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "List budgets for account", nickname = "listBudgetsForAccount")
-  @Operation(operationId = "listBudgets", description = "List all the Budgets",
-      summary = "List all the Cloud Cost Budgets",
+  @Operation(operationId = "listBudgets", description = "List all the Cloud Cost Budgets",
+      summary = "List all the Budgets",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -150,8 +151,8 @@ public class BudgetResource {
   @ExceptionMetered
   @ApiOperation(value = "List budgets for perspective", nickname = "listBudgetsForPerspective")
   @Operation(operationId = "listBudgetsForPerspective",
-      description = "List all the Budgets associated with a Perspective",
-      summary = "List all the Cloud Cost Budgets associated with a Cloud Cost Perspective identifier",
+      description = "List all the Cloud Cost Budgets associated with a Cloud Cost Perspective identifier",
+      summary = "List all the Budgets associated with a Perspective",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -172,8 +173,9 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "Update budget", nickname = "updateBudget")
-  @Operation(operationId = "updateBudget", description = "Update an existing Budget",
-      summary = "Update an existing Budget using the identifier passed as a path param",
+  @Operation(operationId = "updateBudget",
+      description = "Update an existing Budget using the identifier passed as a path param",
+      summary = "Update an existing Budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -196,8 +198,8 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "Delete budget", nickname = "deleteBudget")
-  @Operation(operationId = "deleteBudget", description = "Delete an existing Budget",
-      summary = "Delete an existing Cloud Cost Budget by identifier",
+  @Operation(operationId = "deleteBudget", description = "Delete an existing Cloud Cost Budget by identifier",
+      summary = "Delete an existing Budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
@@ -247,8 +249,9 @@ public class BudgetResource {
   @LogAccountIdentifier
   @ExceptionMetered
   @ApiOperation(value = "Get cost details for budget", nickname = "getCostDetails")
-  @Operation(operationId = "getCostDetails", description = "Get the cost details associated with a Budget",
-      summary = "Get the cost details associated with a Cloud Cost Budget identifier",
+  @Operation(operationId = "getCostDetails",
+      description = "Get the cost details associated with a Cloud Cost Budget identifier",
+      summary = "Get the cost details associated with a Budget",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.

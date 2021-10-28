@@ -102,7 +102,7 @@ public class PerspectiveResource {
   @ExceptionMetered
   @ApiOperation(value = "Get forecast cost for perspective", nickname = "getForecastCost")
   @Operation(operationId = "getForecastCost", description = "Get the forecasted cost of a Perspective for next 30 days",
-      summary = "Get the forecasted cost of a Perspective for next 30 days",
+      summary = "Get the forecasted cost of a Perspective",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -125,9 +125,10 @@ public class PerspectiveResource {
   @ApiOperation(value = "Create perspective", nickname = "createPerspective")
   //  @FeatureRestrictionCheck(FeatureRestrictionName.PERSPECTIVES)
   @LogAccountIdentifier
-  @Operation(operationId = "createPerspective", description = "Create a Perspective",
-      summary =
+  @Operation(operationId = "createPerspective",
+      description =
           "Create a Perspective, accepts a url param 'clone' which decides whether the Perspective being created should be a clone of existing Perspective, and a Request Body with the PerspectiveDefinition",
+      summary = "Create a Perspective",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -165,8 +166,9 @@ public class PerspectiveResource {
   @ApiOperation(value = "Get perspective", nickname = "getPerspective")
   @LogAccountIdentifier
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(operationId = "getPerspective", description = "Get a Perspective by identifier",
-      summary = "Get complete CEView object by Perspective identifier passed as a url param",
+  @Operation(operationId = "getPerspective",
+      description = "Get complete CEView object by Perspective identifier passed as a url param",
+      summary = "Get a Perspective by identifier",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -189,9 +191,10 @@ public class PerspectiveResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update perspective", nickname = "updatePerspective")
   @LogAccountIdentifier
-  @Operation(operationId = "updatePerspective", description = "Update an existing Perspective",
-      summary =
+  @Operation(operationId = "updatePerspective",
+      description =
           "Update an existing Perspective, it accepts a CEView and upserts it using the uuid mentioned in the definition",
+      summary = "Update an existing Perspective",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -214,9 +217,10 @@ public class PerspectiveResource {
   @ExceptionMetered
   @ApiOperation(value = "Delete perspective", nickname = "deletePerspective")
   @LogAccountIdentifier
-  @Operation(operationId = "deletePerspective", description = "Delete a Perspective by identifier",
-      summary =
+  @Operation(operationId = "deletePerspective",
+      description =
           "Deletes a perspective by identifier, it accepts a mandatory CEView's identifier as url param and returns a test response on successful deletion",
+      summary = "Delete a Perspective by identifier",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
