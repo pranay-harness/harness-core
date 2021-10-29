@@ -89,7 +89,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     String triggerRepoName = null;
     String url = null;
     CIBuildAuthor author = null;
-    Boolean isPrivateRepo = null;
+    Boolean isPrivateRepo = false;
     List<CIBuildCommit> triggerCommits = null;
     ExecutionTriggerInfo executionTriggerInfo = event.getAmbiance().getMetadata().getTriggerInfo();
     Ambiance ambiance = event.getAmbiance();
@@ -118,6 +118,9 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
             }
             if (repoName == null) {
               repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
+            }
+            if (url == null) {
+              url = connectorUtils.retrieveURL(connectorDetails);
             }
           } catch (Exception exception) {
             log.warn("Failed to retrieve repo");
@@ -209,6 +212,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .tag(tag)
         .repoName(repoName)
         .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput, author, prNumber, triggerCommits))
+        .isPrivateRepo(isPrivateRepo)
         .build();
   }
 
@@ -345,7 +349,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       int code = connection.getResponseCode();
       return !Response.Status.Family.familyOf(code).equals(Response.Status.Family.SUCCESSFUL);
     } catch (IOException e) {
-      log.warn("Failed to get repo info, assuming private");
+      log.warn("Failed to get repo info, assuming private. url: [%s]", urlString);
       return true;
     }
   }
