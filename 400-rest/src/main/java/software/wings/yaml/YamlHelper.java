@@ -35,8 +35,8 @@ import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.GitSyncWebhook.GitSyncWebhookKeys;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.introspector.PropertyUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

@@ -41,7 +41,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.Yaml;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.io.FileWriter;

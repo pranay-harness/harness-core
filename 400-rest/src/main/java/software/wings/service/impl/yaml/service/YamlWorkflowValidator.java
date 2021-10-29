@@ -17,8 +17,8 @@ import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.beans.ARMSourceType;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
