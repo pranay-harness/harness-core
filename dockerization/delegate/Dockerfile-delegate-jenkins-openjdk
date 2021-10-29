@@ -16,7 +16,7 @@ COPY scripts /opt/harness-delegate/
 
 RUN chmod +x /opt/harness-delegate/*.sh
 
-COPY --from=appdynamics/java-agent:latest /opt/appdynamics /opt/appdynamics
+COPY --from=appdynamics/java-agent:latest /opt/appdynamics /opt/harness-delegate
 
 ENV APPDYNAMICS_CONTROLLER_HOST_NAME=harness-test.saas.appdynamics.com
 ENV APPDYNAMICS_CONTROLLER_PORT=443
