@@ -101,7 +101,7 @@ public class BudgetResource {
   clone(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @PathParam("id") @Parameter(required = true, description = "The identifier of the Budget") String budgetId,
-      @QueryParam("cloneName") @Parameter(
+      @QueryParam("cloneName") @Parameter(required = true,
           description = "The name of the new Budget created after cloning operation") String budgetName) {
     return ResponseDTO.newResponse(budgetService.clone(budgetId, budgetName, accountId));
   }
