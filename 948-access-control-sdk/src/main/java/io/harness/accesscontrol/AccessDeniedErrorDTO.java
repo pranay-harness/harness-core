@@ -8,6 +8,7 @@ import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel(value = "AccessControlCheckError")
+@Schema(name = "AccessDeniedError")
 public class AccessDeniedErrorDTO extends ErrorDTO {
   private List<PermissionCheckDTO> failedPermissionChecks;
 

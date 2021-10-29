@@ -72,6 +72,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.service.git.NGGitService;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -96,7 +97,6 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
-import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.k8s.K8sTestHelper;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
@@ -1042,7 +1042,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
+  @Owner(developers = {YOGESH, ACASIAN})
   @Category(UnitTests.class)
   public void readManifests() throws IOException {
     final List<KubernetesResource> resources =
@@ -1055,6 +1055,19 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         .containsExactly("ConfigMap", "Deployment", "DeploymentConfig");
     assertThatExceptionOfType(KubernetesYamlException.class)
         .isThrownBy(() -> k8sTaskHelperBase.readManifests(prepareSomeInCorrectManifestFiles(), executionLogCallback));
+
+    assertThatThrownBy(
+        () -> k8sTaskHelperBase.readManifests(prepareSomeInCorrectManifestFiles(), executionLogCallback, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.READ_MANIFEST_FAILED);
+          assertThat(explanation).hasMessageContaining(throwable.getCause().getMessage());
+          assertThat(taskException)
+              .hasMessageContaining(format(KubernetesExceptionMessages.READ_MANIFEST_FAILED, "manifest.yaml"));
+          return true;
+        });
   }
 
   private List<FileData> prepareSomeCorrectManifestFiles() throws IOException {
