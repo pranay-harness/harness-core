@@ -845,6 +845,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
   @Provides
   @Singleton
+  @Named("gcpConfig")
+  public io.harness.ccm.commons.beans.config.GcpConfig noOpDummyConfig() {
+    return io.harness.ccm.commons.beans.config.GcpConfig.builder().build();
+  }
+
+  @Provides
+  @Singleton
   public CdnStorageUrlGenerator cdnStorageUrlGenerator() {
     String clusterType = System.getenv("CLUSTER_TYPE");
     boolean isFreeCluster = StringUtils.equals(clusterType, "freemium");
@@ -1077,6 +1084,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(LoginSettingsService.class).to(LoginSettingsServiceImpl.class);
     bind(CCMSettingService.class).to(CCMSettingServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
+    bind(io.harness.ccm.bigQuery.BigQueryService.class).to(BigQueryServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
     bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
