@@ -21,6 +21,9 @@ public class KubernetesExceptionHints {
 
   public final String DRY_RUN_MANIFEST_FAILED =
       "Check manifest output for invalid fields name, types or empty manifest";
+  public final String READ_MANIFEST_FAILED =
+      "Manifest file contains invalid kubernetes yaml. Check invalid fields name, types or empty manifest";
+
   public final String APPLY_MANIFEST_FAILED =
       "Manifest could contain invalid values, one of resources name may not match kubernetes requirements or missing permissions to create or update specific kubernetes resources";
   public final String APPLY_NO_FILEPATH_SPECIFIED = "Please specify a valid file path to manifests from repository";

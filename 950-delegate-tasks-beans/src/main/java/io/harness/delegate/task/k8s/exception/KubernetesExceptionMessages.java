@@ -10,6 +10,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class KubernetesExceptionMessages {
   public final String DRY_RUN_MANIFEST_FAILED = "Dry run of manifest failed";
+  public final String READ_MANIFEST_FAILED = "Failed to read manifest: [%s]";
   public final String APPLY_MANIFEST_FAILED = "Apply manifest failed";
   public final String APPLY_NO_FILEPATH_SPECIFIED = "No file specified in the state";
   public final String WAIT_FOR_STEADY_STATE_FAILED = "Wait for steady state failed";
