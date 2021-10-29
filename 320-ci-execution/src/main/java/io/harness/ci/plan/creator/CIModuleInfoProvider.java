@@ -350,7 +350,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       int code = connection.getResponseCode();
       return !Response.Status.Family.familyOf(code).equals(Response.Status.Family.SUCCESSFUL);
     } catch (IOException e) {
-      log.warn("Failed to get repo info, assuming private. url: [%s]", urlString);
+      log.warn("Failed to get repo info, assuming private. url");
       return true;
     }
   }
