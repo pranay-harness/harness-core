@@ -8,6 +8,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretKey;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptor;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.secretkey.SecretKeyService;
 import io.harness.secretkey.SecretKeyType;
@@ -85,26 +86,27 @@ public class LocalEncryptor implements KmsEncryptor {
       return null;
     }
 
-    Optional<SecretKey> secretKey = secretKeyService.getSecretKey("");
-    if (featureFlagService.isEnabled(FeatureName.LOCAL_MULTI_CRYPTO_MODE, accountId)) {
-      return getAwsDecryptedSecret(
-          accountId, new String(encryptedRecord.getEncryptedValue()).getBytes(), secretKey.get())
-          .toCharArray();
+    if (encryptedRecord.getEncryptedMech() == null) {
+      return getLocalJavaDecryptedSecret(encryptedRecord);
     }
 
-    if (encryptedRecord.getBackupEncryptedValue() != null) {
-      // The record has both aws encrypted secret as well as locally encrypted secret, try for both
-      try {
-        return getAwsDecryptedSecret(
-            accountId, new String(encryptedRecord.getEncryptedValue()).getBytes(), secretKey.get())
-            .toCharArray();
-      } catch (Exception exception) {
-        // unable to decrypt via aws encryption sdk
-      }
+    String secretKeyUuid = null;
+    char[] encryptedSecret = null;
+    if (featureFlagService.isEnabled(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE, accountId)) {
+      secretKeyUuid = encryptedRecord.getEncryptionKey();
+      encryptedSecret = encryptedRecord.getEncryptedValue();
+    } else {
+      secretKeyUuid =
+          (String) encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_KEY);
+      encryptedSecret =
+          (char[]) encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET);
     }
 
-    final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptedRecord.getEncryptionKey());
-    return simpleEncryption.decryptChars(encryptedRecord.getEncryptedValue());
+    Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
+    if (!secretKey.isPresent()) {
+      // throw proper exception
+    }
+    return getAwsDecryptedSecret(accountId, new String(encryptedSecret).getBytes(), secretKey.get()).toCharArray();
   }
 
   @Override
@@ -147,5 +149,10 @@ public class LocalEncryptor implements KmsEncryptor {
 
   private char[] getLocalJavaEncryptedSecret(String accountId, String value) {
     return new SimpleEncryption(accountId).encryptChars(value.toCharArray());
+  }
+
+  private char[] getLocalJavaDecryptedSecret(EncryptedRecord encryptedRecord) {
+    final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptedRecord.getEncryptionKey());
+    return simpleEncryption.decryptChars(encryptedRecord.getEncryptedValue());
   }
 }
