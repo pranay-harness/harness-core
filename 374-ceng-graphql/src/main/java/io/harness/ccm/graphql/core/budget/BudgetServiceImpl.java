@@ -1,4 +1,4 @@
-package io.harness.ccm.service.impl;
+package io.harness.ccm.graphql.core.budget;
 
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
@@ -15,7 +15,6 @@ import io.harness.ccm.commons.entities.budget.BudgetData;
 import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.graphql.core.perspectives.PerspectiveTimeSeriesHelper;
 import io.harness.ccm.graphql.dto.common.TimeSeriesDataPoints;
-import io.harness.ccm.service.intf.BudgetService;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.ccm.views.graphql.QLCEViewGroupBy;
@@ -68,6 +67,8 @@ public class BudgetServiceImpl implements BudgetService {
                              .scope(budget.getScope())
                              .type(budget.getType())
                              .budgetAmount(budget.getBudgetAmount())
+                             .period(budget.getPeriod())
+                             .growthRate(budget.getGrowthRate())
                              .actualCost(budget.getActualCost())
                              .forecastCost(budget.getForecastCost())
                              .lastMonthCost(budget.getLastMonthCost())
@@ -75,6 +76,8 @@ public class BudgetServiceImpl implements BudgetService {
                              .userGroupIds(budget.getUserGroupIds())
                              .emailAddresses(budget.getEmailAddresses())
                              .notifyOnSlack(budget.isNotifyOnSlack())
+                             .startTime(budget.getStartTime())
+                             .endTime(budget.getEndTime())
                              .build();
     return create(cloneBudget);
   }
