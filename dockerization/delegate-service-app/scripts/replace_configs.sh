@@ -127,6 +127,47 @@ else
   yq delete -i $CONFIG_FILE events-mongo
 fi
 
+if [[ "" != "$DMS_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.uri "${DMS_MONGO_URI//\\&/&}"
+fi
+
+if [[ "" != "$DMS_MONGO_TRACE_MODE" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.traceMode $DMS_MONGO_TRACE_MODE
+fi
+
+if [[ "" != "$DMS_MONGO_SSL_CONFIG" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.mongoSSLConfig.mongoSSLEnabled "$DMS_MONGO_SSL_CONFIG"
+fi
+
+if [[ "" != "$DMS_MONGO_SSL_CA_TRUST_STORE_PATH" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.mongoSSLConfig.mongoTrustStorePath "$DMS_MONGO_SSL_CA_TRUST_STORE_PATH"
+fi
+
+if [[ "" != "$DMS_MONGO_SSL_CA_TRUST_STORE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.mongoSSLConfig.mongoTrustStorePassword "$DMS_MONGO_SSL_CA_TRUST_STORE_PASSWORD"
+fi
+
+if [[ "" != "$DMS_MONGO_CONNECT_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.connectTimeout $DMS_MONGO_CONNECT_TIMEOUT
+fi
+
+if [[ "" != "$DMS_MONGO_SERVER_SELECTION_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.serverSelectionTimeout $DMS_MONGO_SERVER_SELECTION_TIMEOUT
+fi
+
+if [[ "" != "$DMS_MAX_CONNECTION_IDLE_TIME" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.maxConnectionIdleTime $DMS_MAX_CONNECTION_IDLE_TIME
+fi
+
+if [[ "" != "$DMS_MONGO_CONNECTIONS_PER_HOST" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.connectionsPerHost $DMS_MONGO_CONNECTIONS_PER_HOST
+fi
+
+if [[ "" != "$DMS_MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE dms-mongo.indexManagerMode $DMS_MONGO_INDEX_MANAGER_MODE
+fi
+
+
 if [[ "" != "$CF_CLIENT_API_KEY" ]]; then
   yq write -i $CONFIG_FILE cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 fi

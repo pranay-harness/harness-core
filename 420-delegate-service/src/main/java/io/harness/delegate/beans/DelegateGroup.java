@@ -1,6 +1,7 @@
 package io.harness.delegate.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
@@ -32,6 +33,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @OwnedBy(HarnessTeam.DEL)
+@StoreIn("dms")
 public class DelegateGroup implements PersistentEntity, UuidAware {
   @Id @NotNull private String uuid;
 

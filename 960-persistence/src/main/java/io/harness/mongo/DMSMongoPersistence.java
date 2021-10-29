@@ -75,6 +75,8 @@ public class DMSMongoPersistence extends MongoPersistence implements HPersistenc
     @Inject
     public DMSMongoPersistence(@Named("dms") AdvancedDatastore primaryDatastore) {
         super(primaryDatastore);
+        datastoreMap = new HashMap<>();
+        datastoreMap.put(DMS_STORE.getName(), primaryDatastore);
     }
 
 

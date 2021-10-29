@@ -177,7 +177,7 @@ mongo:
     mongoTrustStorePassword:
 
 events-mongo:
-  uri: mongodb://admin:admin@mongo-replicaset.phandler.svc.cluster.local:27017/dms
+  uri: mongodb://localhost:27017/events
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
@@ -193,8 +193,13 @@ dms-mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
   aliasDBName: dms
+  traceMode: DISABLED
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 
-initializeDMSMongo: true
+initializeDMSMongo: false
 
 watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
 
