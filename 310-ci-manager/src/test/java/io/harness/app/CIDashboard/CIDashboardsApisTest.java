@@ -202,7 +202,7 @@ public class CIDashboardsApisTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildFailureInfo() {
     String queryRequired =
-        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, endts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
+        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_event, moduleinfo_repository, planexecutionid, source_branch, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, trigger_type, endts, status, id  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
     buildFailureInfos.add(BuildFailureInfo.builder()
@@ -215,6 +215,8 @@ public class CIDashboardsApisTest extends CategoryTest {
                               .startTs(20L)
                               .endTs(30L)
                               .status("status")
+                              .triggerType("Webhook")
+                              .planExecutionId("plan")
                               .build());
 
     doReturn(buildFailureInfos).when(ciOverviewDashboardServiceImpl).queryCalculatorBuildFailureInfo(queryRequired);
@@ -228,7 +230,7 @@ public class CIDashboardsApisTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildActiveInfo() {
     String queryRequired =
-        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED','PAUSING') ORDER BY startts DESC LIMIT 5;";
+        "select name, pipelineidentifier, moduleinfo_branch_name, planexecutionid, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, source_branch, moduleinfo_author_id, author_avatar, moduleinfo_event, moduleinfo_repository, startts, status, trigger_type, id   from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED','PAUSING') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
     buildActiveInfos.add(BuildActiveInfo.builder()
@@ -236,11 +238,14 @@ public class CIDashboardsApisTest extends CategoryTest {
                              .pipelineIdentifier("pip")
                              .branch("branch")
                              .commit("commit")
+                             .planExecutionId("plan")
+                             .triggerType("Webhook")
                              .commitID("commitId")
                              .author(AuthorInfo.builder().name(null).url(null).build())
                              .startTs(20L)
                              .endTs(30L)
                              .status("Running")
+                             .planExecutionId("plan")
                              .build());
 
     doReturn(buildActiveInfos).when(ciOverviewDashboardServiceImpl).queryCalculatorBuildActiveInfo(queryRequired);
@@ -493,7 +498,10 @@ public class CIDashboardsApisTest extends CategoryTest {
                                         .commitID("id1")
                                         .branch("branch1")
                                         .status("status")
+                                        .triggerType("Webhook")
+                                        .planExecutionId("plan")
                                         .build();
+
     BuildActiveInfo activeInfo = BuildActiveInfo.builder()
                                      .piplineName("pip2")
                                      .pipelineIdentifier("pip2")
@@ -502,14 +510,16 @@ public class CIDashboardsApisTest extends CategoryTest {
                                      .commitID("id2")
                                      .endTs(13L)
                                      .startTs(10L)
+                                     .triggerType("Webhook")
+                                     .planExecutionId("plan")
                                      .status(ExecutionStatus.RUNNING.name())
                                      .build();
 
     assertThat(failureBuild)
         .isEqualTo(ciOverviewDashboardServiceImpl.getBuildFailureInfo(
-            "pip1", "pip1", "branch1", "commit1", "id1", 10, 13, null, "status"));
+            "pip1", "pip1", "branch1", "commit1", "id1", 10, 13, null, "status", "plan", "Webhook", null, null));
     assertThat(activeInfo)
-        .isEqualTo(ciOverviewDashboardServiceImpl.getBuildActiveInfo(
-            "pip2", "pip2", "branch2", "commit2", "id2", null, 10, ExecutionStatus.RUNNING.name(), 13));
+        .isEqualTo(ciOverviewDashboardServiceImpl.getBuildActiveInfo("pip2", "pip2", "branch2", "commit2", "id2", null,
+            10, ExecutionStatus.RUNNING.name(), "plan", 13, "Webhook", null, null));
   }
 }
