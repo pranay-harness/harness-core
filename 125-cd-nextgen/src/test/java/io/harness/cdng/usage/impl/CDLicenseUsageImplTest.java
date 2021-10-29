@@ -2,6 +2,7 @@ package io.harness.cdng.usage.impl;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyLong;
@@ -22,11 +23,11 @@ import io.harness.dtos.InstanceDTO;
 import io.harness.licensing.beans.modules.types.CDLicenseType;
 import io.harness.licensing.usage.beans.ReferenceDTO;
 import io.harness.licensing.usage.params.CDUsageRequestParams;
-import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.service.instance.InstanceService;
+import io.harness.timescaledb.tables.pojos.Services;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -69,9 +70,8 @@ public class CDLicenseUsageImplTest extends CategoryTest {
         ModuleType.CD, timestamp, CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
-        .getInstancesDeployedAfter(eq(accountIdentifier),
+        .getInstancesModifiedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
-    verify(serviceEntityService, times(3)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
     assertActiveInstanceUsageDTOOutput(cdServiceUsageDTO);
     assertActiveServiceDTOOutput(cdServiceUsageDTO);
@@ -95,6 +95,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
 
   private void assertActiveInstanceUsageDTOOutput(ServiceUsageDTO cdServiceUsageDTO) {
     assertThat(cdServiceUsageDTO.getActiveServiceInstances()).isNotNull();
+    assertThat(cdServiceUsageDTO.getActiveServiceInstances().getCount()).isEqualTo(90);
     List<ReferenceDTO> activeServiceInstanceReferences = cdServiceUsageDTO.getActiveServiceInstances().getReferences();
     assertThat(activeServiceInstanceReferences).hasSize(3);
     ReferenceDTO expectedInstanceReference = getExpectedInstanceReference();
@@ -113,9 +114,8 @@ public class CDLicenseUsageImplTest extends CategoryTest {
             CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICE_INSTANCES).build());
 
     verify(instanceService, times(1))
-        .getInstancesDeployedAfter(eq(accountIdentifier),
+        .getInstancesModifiedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
-    verify(serviceEntityService, times(3)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
     assertThat(cdServiceInstanceUsageDTO.getActiveServiceInstances()).isNotNull();
     List<ReferenceDTO> activeServiceInstanceReferences =
@@ -149,7 +149,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
         ModuleType.CD, timestamp, CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
-        .getInstancesDeployedAfter(eq(accountIdentifier),
+        .getInstancesModifiedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
     verify(serviceEntityService, times(0)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
@@ -160,25 +160,22 @@ public class CDLicenseUsageImplTest extends CategoryTest {
 
   private void prepareTestData() {
     List<InstanceDTO> testInstanceDTOData = createTestInstanceDTOData(3);
-    List<ServiceEntity> testServiceEntityData = createTestServiceEntityData(3);
+    List<Services> testServiceData = createTestServiceData(3);
     List<AggregateServiceUsageInfo> testServiceUsageInfoData = createTestServiceUsageInfoData(3);
 
     when(cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
              anyString(), anyDouble(), anyLong(), anyLong()))
         .thenReturn(testServiceUsageInfoData);
-
-    when(instanceService.getInstancesDeployedAfter(anyString(), anyLong(), anyLong())).thenReturn(testInstanceDTOData);
-    when(serviceEntityService.find(anyString(), anyString(), anyString(), anyString(), anyBoolean()))
-        .thenReturn(testServiceEntityData.get(0))
-        .thenReturn(testServiceEntityData.get(1))
-        .thenReturn(testServiceEntityData.get(2));
+    when(instanceService.getInstancesModifiedInInterval(anyString(), anyLong(), anyLong()))
+        .thenReturn(testInstanceDTOData);
+    when(cdLicenseUsageHelper.getNamesForServiceIds(any(), any())).thenReturn(testServiceData);
   }
 
   private ReferenceDTO getExpectedActiveServiceReference() {
     return ReferenceDTO.builder()
         .name("SERVICE0")
         .identifier("SERVICE0")
-        .accountIdentifier("ACCOUNT_ID0")
+        .accountIdentifier("ACCOUNT_ID")
         .projectIdentifier("PROJECT_ID0")
         .orgIdentifier("ORG_ID0")
         .build();
@@ -207,18 +204,13 @@ public class CDLicenseUsageImplTest extends CategoryTest {
     return instanceDTOList;
   }
 
-  private List<ServiceEntity> createTestServiceEntityData(int dataSize) {
-    List<ServiceEntity> serviceEntityList = new ArrayList<>();
+  private List<Services> createTestServiceData(int dataSize) {
+    List<Services> services = new ArrayList<>();
     for (int i = 0; i < dataSize; i++) {
-      serviceEntityList.add(ServiceEntity.builder()
-                                .identifier(serviceIdentifier + i)
-                                .name(serviceIdentifier + i)
-                                .accountId(accountIdentifier + i)
-                                .projectIdentifier(projectIdentifier + i)
-                                .orgIdentifier(orgIdentifier + i)
-                                .build());
+      services.add(new Services(serviceIdentifier + i, accountIdentifier + i, orgIdentifier + i, projectIdentifier + i,
+          serviceIdentifier + i, serviceIdentifier + i, false, null, null));
     }
-    return serviceEntityList;
+    return services;
   }
 
   private List<AggregateServiceUsageInfo> createTestServiceUsageInfoData(int dataSize) {

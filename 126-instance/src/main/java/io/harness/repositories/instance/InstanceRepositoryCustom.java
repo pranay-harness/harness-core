@@ -20,7 +20,7 @@ public interface InstanceRepositoryCustom {
 
   List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
-  List<Instance> getInstancesDeployedAfter(String accountIdentifier, long startTimestamp, long endTimeStamp);
+  List<Instance> getInstancesModifiedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
 
   List<Instance> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
