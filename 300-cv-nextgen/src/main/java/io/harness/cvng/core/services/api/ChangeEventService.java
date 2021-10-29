@@ -23,10 +23,10 @@ public interface ChangeEventService {
   ChangeSummaryDTO getChangeSummary(ServiceEnvironmentParams serviceEnvironmentParams,
       List<String> changeSourceIdentifiers, Instant startTime, Instant endTime);
   PageResponse<ChangeEventDTO> getChangeEvents(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifier, List<ChangeCategory> changeCategories,
+      List<String> environmentIdentifier, String searchText, List<ChangeCategory> changeCategories,
       List<ChangeSourceType> changeSourceTypes, Instant startTime, Instant endTime, PageRequest pageRequest);
   ChangeTimeline getTimeline(ProjectParams projectParams, List<String> serviceIdentifiers,
-      List<String> environmentIdentifier, List<ChangeCategory> changeCategories,
+      List<String> environmentIdentifier, String searchText, List<ChangeCategory> changeCategories,
       List<ChangeSourceType> changeSourceTypes, Instant startTime, Instant endTime, Integer pointCount);
   ChangeSummaryDTO getChangeSummary(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifier, List<ChangeCategory> changeCategories,
