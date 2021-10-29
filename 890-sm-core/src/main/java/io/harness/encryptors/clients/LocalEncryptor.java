@@ -13,6 +13,7 @@ import io.harness.secretkey.SecretKeyService;
 import io.harness.secretkey.SecretKeyType;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.AdditionalMetadata;
+import io.harness.security.encryption.EncryptedMech;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -50,18 +51,32 @@ public class LocalEncryptor implements KmsEncryptor {
 
   @Override
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
+    if (featureFlagService.isEnabled(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE, accountId)) {
+      SecretKey secretKey = secretKeyService.createSecretKey();
+      final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
+      return EncryptedRecordData.builder()
+          .encryptionKey(secretKey.getUuid())
+          .encryptedValue(awsEncryptedSecret)
+          .encryptedMech(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO)
+          .build();
+    }
+
+    final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
     if (featureFlagService.isEnabled(FeatureName.LOCAL_MULTI_CRYPTO_MODE, accountId)) {
       SecretKey secretKey = secretKeyService.createSecretKey();
       final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
-      final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
-
       return EncryptedRecordData.builder()
           .encryptionKey(accountId)
           .encryptedValue(localJavaEncryptedSecret)
-          .additionalMetadata(
-              AdditionalMetadata.builder().value(AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP, true).build())
+          .encryptedMech(EncryptedMech.MULTI_CRYPTO)
+          .additionalMetadata(AdditionalMetadata.builder()
+                                  .value(AdditionalMetadata.SECRET_KEY_KEY, secretKey.getUuid())
+                                  .value(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret)
+                                  .build())
           .build();
     }
+
+    return EncryptedRecordData.builder().encryptionKey(accountId).encryptedValue(localJavaEncryptedSecret).build();
   }
 
   @Override
