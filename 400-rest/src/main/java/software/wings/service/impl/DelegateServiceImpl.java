@@ -134,6 +134,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.Misc;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
+import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
 import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HIterator;
@@ -2835,6 +2836,14 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails) {
     boolean isNg = delegateSetupDetails != null;
     String delegateGroupIdentifier = getDelegateGroupIdentifier(name, delegateSetupDetails);
+    if (isNg) {
+      try {
+        delegateSetupDetails.setIdentifier(delegateGroupIdentifier);
+        NGUtils.validate(delegateSetupDetails);
+      } catch (JerseyViolationException exception) {
+        throw new InvalidRequestException(getMessage(exception));
+      }
+    }
     String description = delegateSetupDetails != null ? delegateSetupDetails.getDescription() : null;
     String orgIdentifier = delegateSetupDetails != null ? delegateSetupDetails.getOrgIdentifier() : null;
     String projectIdentifier = delegateSetupDetails != null ? delegateSetupDetails.getProjectIdentifier() : null;
@@ -2847,6 +2856,7 @@ public class DelegateServiceImpl implements DelegateService {
         : null;
     K8sConfigDetails k8sConfigDetails =
         delegateSetupDetails != null ? delegateSetupDetails.getK8sConfigDetails() : null;
+    final Set<String> tags = delegateSetupDetails != null ? delegateSetupDetails.getTags() : null;
 
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgIdentifier, projectIdentifier);
 
@@ -2878,6 +2888,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     setUnset(updateOperations, DelegateGroupKeys.owner, owner);
     setUnset(updateOperations, DelegateGroupKeys.description, description);
+    setUnset(updateOperations, DelegateGroupKeys.tags, tags);
 
     if (sizeDetails != null) {
       setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);

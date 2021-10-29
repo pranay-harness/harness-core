@@ -42,12 +42,9 @@ public class K8sSwapServiceSelectorsHandler extends K8sRequestHandler {
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateBaseHelper.createKubernetesConfig(
         k8sSwapServiceSelectorsRequest.getK8sInfraDelegateConfig());
 
-    boolean success = k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(kubernetesConfig,
-        k8sSwapServiceSelectorsRequest.getService1(), k8sSwapServiceSelectorsRequest.getService2(), logCallback);
-
-    if (!success) {
-      return getGenericFailureResponse(null);
-    }
+    k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(kubernetesConfig,
+        k8sSwapServiceSelectorsRequest.getService1(), k8sSwapServiceSelectorsRequest.getService2(), logCallback,
+        isErrorFrameworkSupported());
 
     return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }

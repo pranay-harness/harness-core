@@ -51,6 +51,7 @@ import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
+import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
@@ -139,5 +140,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(StepArtifacts.class, 100091);
     kryo.register(PublishedFileArtifact.class, 100092);
     kryo.register(PublishedImageArtifact.class, 100093);
+    kryo.register(StageDetails.class, 100094);
   }
 }

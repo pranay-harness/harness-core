@@ -16,7 +16,6 @@ import io.harness.batch.processing.k8s.WatchEventCostEstimator;
 import io.harness.batch.processing.reader.PublishedMessageBatchedReader;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.support.Deduper;
-import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.ccm.cluster.dao.K8sYamlDao;
@@ -57,7 +56,6 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class K8sWatchEventConfig {
   private static final int BATCH_SIZE = 100;
-  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
   private final PublishedMessageDao publishedMessageDao;
   private final StepBuilderFactory stepBuilderFactory;
 
@@ -225,7 +223,6 @@ public class K8sWatchEventConfig {
   public Job k8sWatchEventsJob(JobBuilderFactory jobBuilderFactory, Step k8sWatchEventsStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_WATCH_EVENT.name())
         .incrementer(new RunIdIncrementer())
-        .listener(batchJobExecutionListener)
         .start(k8sWatchEventsStep)
         .build();
   }

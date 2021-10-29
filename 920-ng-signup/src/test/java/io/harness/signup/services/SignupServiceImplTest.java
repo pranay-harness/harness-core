@@ -26,6 +26,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
 import io.harness.exception.WingsException;
+import io.harness.licensing.LicenseConfig;
+import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
@@ -72,6 +74,8 @@ public class SignupServiceImplTest extends CategoryTest {
   @Mock SignupNotificationHelper signupNotificationHelper;
   @Mock SignupVerificationTokenRepository verificationTokenRepository;
   @Mock @Named("NGSignupNotification") ExecutorService executorService;
+  @Mock LicenseConfig licenseConfig;
+  @Mock LicenseService licenseService;
 
   private static final String EMAIL = "test@test.com";
   private static final String INVALID_EMAIL = "test";
@@ -84,7 +88,8 @@ public class SignupServiceImplTest extends CategoryTest {
   public void setup() throws IllegalAccessException {
     initMocks(this);
     signupServiceImpl = new SignupServiceImpl(accountService, userClient, signupValidator, reCaptchaVerifier,
-        telemetryReporter, signupNotificationHelper, verificationTokenRepository, executorService, accessControlClient);
+        telemetryReporter, signupNotificationHelper, verificationTokenRepository, executorService, accessControlClient,
+        licenseConfig, licenseService);
   }
 
   @Test

@@ -86,12 +86,13 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
       }
 
       if (encryptedToken != null) {
-        char[] decryptToken = decryptLocal(encryptedToken);
+        char[] decryptToken = decryptUsingBaseAlgo(encryptedToken);
         baseVaultConfig.setAuthToken(String.valueOf(decryptToken));
       }
 
       if (encryptedSecretId != null) {
-        char[] decryptedSecretId = decryptLocal(encryptedSecretId);
+        char[] decryptedSecretId = decryptUsingBaseAlgo(encryptedSecretId);
+
         baseVaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
       boolean isCertValidationRequired = baseVaultConfig.isCertValidationRequired();
@@ -186,7 +187,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
 
   private String saveSecretField(String accountId, String vaultConfigId, String secretValue, String secretNameSuffix,
       String fieldName, SettingVariableTypes settingVariableTypes) {
-    EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
+    EncryptedData encryptedData = encryptUsingBaseAlgo(accountId, secretValue.toCharArray());
     // Get by auth token encrypted record by Id or name.
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .field(SecretManagerConfigKeys.accountId)
@@ -198,6 +199,8 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     if (savedEncryptedData != null) {
       savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
       savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+      savedEncryptedData.setEncryptionType(encryptedData.getEncryptionType());
+      savedEncryptedData.setKmsId(encryptedData.getKmsId());
       encryptedData = savedEncryptedData;
     }
     encryptedData.setAccountId(accountId);
@@ -205,7 +208,6 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
         EncryptedDataParent.createParentRef(vaultConfigId, SSHVaultConfig.class, fieldName, settingVariableTypes));
     encryptedData.setType(settingVariableTypes);
     encryptedData.setName(vaultConfigId + secretNameSuffix);
-    encryptedData.setKmsId(accountId);
     return wingsPersistence.save(encryptedData);
   }
 
@@ -229,7 +231,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
 
   protected String updateSecretField(String secretFieldUuid, String accountId, String vaultConfigId, String secretValue,
       String secretNameSuffix, String fieldName, SettingVariableTypes settingVariableTypes) {
-    EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
+    EncryptedData encryptedData = encryptUsingBaseAlgo(accountId, secretValue.toCharArray());
     // Get by auth token encrypted record by Id or name.
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .field(SecretManagerConfigKeys.accountId)
@@ -243,12 +245,13 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     }
     savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
     savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+    savedEncryptedData.setEncryptionType(encryptedData.getEncryptionType());
+    savedEncryptedData.setKmsId(encryptedData.getKmsId());
     savedEncryptedData.setAccountId(accountId);
     savedEncryptedData.addParent(
         EncryptedDataParent.createParentRef(vaultConfigId, VaultConfig.class, fieldName, settingVariableTypes));
     savedEncryptedData.setType(settingVariableTypes);
     savedEncryptedData.setName(vaultConfigId + secretNameSuffix);
-    savedEncryptedData.setKmsId(accountId);
     return wingsPersistence.save(savedEncryptedData);
   }
 
@@ -313,11 +316,11 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
       }
 
       if (tokenData != null) {
-        char[] decryptedToken = decryptLocal(tokenData);
+        char[] decryptedToken = decryptUsingBaseAlgo(tokenData);
         vaultConfig.setAuthToken(String.valueOf(decryptedToken));
       }
       if (secretIdData != null) {
-        char[] decryptedSecretId = decryptLocal(secretIdData);
+        char[] decryptedSecretId = decryptUsingBaseAlgo(secretIdData);
         vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
     }

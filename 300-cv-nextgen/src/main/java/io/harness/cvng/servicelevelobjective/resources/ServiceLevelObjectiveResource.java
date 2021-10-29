@@ -117,4 +117,22 @@ public class ServiceLevelObjectiveResource {
     return ResponseDTO.newResponse(
         serviceLevelObjectiveService.get(projectParams, offset, pageSize, serviceLevelObjectiveFilter));
   }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("{identifier}")
+  @ApiOperation(value = "get service level objective data", nickname = "getServiceLevelObjective")
+  public RestResponse<ServiceLevelObjectiveResponse> getServiceLevelObjective(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @PathParam("identifier") String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(serviceLevelObjectiveService.get(projectParams, identifier));
+  }
 }

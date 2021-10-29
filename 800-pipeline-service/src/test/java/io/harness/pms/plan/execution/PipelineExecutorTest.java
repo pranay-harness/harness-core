@@ -55,8 +55,11 @@ public class PipelineExecutorTest extends CategoryTest {
       + "    type: String\n"
       + "    value: c";
   List<String> stageIdentifiers = Arrays.asList("a1", "a2", "s1");
-  RunStageRequestDTO runStageRequestDTO =
-      RunStageRequestDTO.builder().runtimeInputYaml(runtimeInputYaml).stageIdentifiers(stageIdentifiers).build();
+  RunStageRequestDTO runStageRequestDTO = RunStageRequestDTO.builder()
+                                              .runtimeInputYaml(runtimeInputYaml)
+                                              .stageIdentifiers(stageIdentifiers)
+                                              .expressionValues(Collections.emptyMap())
+                                              .build();
   String originalExecutionId = "originalExecutionId";
   boolean useV2 = false;
   List<String> inputSetReferences = Arrays.asList("i1", "i2", "i3");
@@ -179,12 +182,12 @@ public class PipelineExecutorTest extends CategoryTest {
       doReturn(execArgs)
           .when(executionHelper)
           .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, Collections.emptyList(),
-              executionTriggerInfo, originalExecutionId, retryExecutionParameters);
+              Collections.emptyMap(), executionTriggerInfo, originalExecutionId, retryExecutionParameters);
     } else {
       doReturn(execArgs)
           .when(executionHelper)
-          .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, executionTriggerInfo,
-              originalExecutionId, retryExecutionParameters);
+          .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, Collections.emptyMap(),
+              executionTriggerInfo, originalExecutionId, retryExecutionParameters);
     }
 
     doReturn(planExecution)
@@ -206,11 +209,11 @@ public class PipelineExecutorTest extends CategoryTest {
     if (EmptyPredicate.isEmpty(stageIdentifiers)) {
       verify(executionHelper, times(1))
           .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, Collections.emptyList(),
-              executionTriggerInfo, originalExecutionId, retryExecutionParameters);
+              Collections.emptyMap(), executionTriggerInfo, originalExecutionId, retryExecutionParameters);
     } else {
       verify(executionHelper, times(1))
-          .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, executionTriggerInfo,
-              originalExecutionId, retryExecutionParameters);
+          .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, Collections.emptyMap(),
+              executionTriggerInfo, originalExecutionId, retryExecutionParameters);
     }
     verify(executionHelper, times(1))
         .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null, null);
@@ -229,7 +232,7 @@ public class PipelineExecutorTest extends CategoryTest {
 
     String processedYaml = "This is a processed Yaml";
     List<String> stagesIdentifier = Arrays.asList("stage1", "stage2");
-    List<String> identifierOfSkippedStages = Arrays.asList("stage1");
+    List<String> identifierOfSkippedStages = Collections.singletonList("stage1");
     retryExecutionParameters = pipelineExecutor.buildRetryExecutionParameters(
         true, processedYaml, stagesIdentifier, identifierOfSkippedStages);
     assertThat(retryExecutionParameters.isRetry()).isEqualTo(true);

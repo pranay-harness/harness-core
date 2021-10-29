@@ -41,9 +41,13 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
 
   @Override
   public TemplateEntity save(TemplateEntity templateToSave, NGTemplateConfig templateConfig, String comments) {
-    Supplier<OutboxEvent> supplier = ()
-        -> outboxService.save(new TemplateCreateEvent(templateToSave.getAccountIdentifier(),
-            templateToSave.getOrgIdentifier(), templateToSave.getProjectIdentifier(), templateToSave, comments));
+    Supplier<OutboxEvent> supplier = null;
+    if (shouldLogAudits(
+            templateToSave.getAccountId(), templateToSave.getOrgIdentifier(), templateToSave.getProjectIdentifier())) {
+      supplier = ()
+          -> outboxService.save(new TemplateCreateEvent(templateToSave.getAccountIdentifier(),
+              templateToSave.getOrgIdentifier(), templateToSave.getProjectIdentifier(), templateToSave, comments));
+    }
     return gitAwarePersistence.save(
         templateToSave, templateToSave.getYaml(), ChangeType.ADD, TemplateEntity.class, supplier);
   }
@@ -111,7 +115,7 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
       NGTemplateConfig templateConfig, ChangeType changeType, String comments,
       TemplateUpdateEventType templateUpdateEventType) {
     Supplier<OutboxEvent> supplier = null;
-    if (!gitSyncSdkService.isGitSyncEnabled(templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
+    if (shouldLogAudits(templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
             templateToUpdate.getProjectIdentifier())) {
       supplier = ()
           -> outboxService.save(new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(),
@@ -125,9 +129,14 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   @Override
   public TemplateEntity deleteTemplate(
       TemplateEntity templateToDelete, NGTemplateConfig templateConfig, String comments) {
-    Supplier<OutboxEvent> supplier = ()
-        -> outboxService.save(new TemplateDeleteEvent(templateToDelete.getAccountIdentifier(),
-            templateToDelete.getOrgIdentifier(), templateToDelete.getProjectIdentifier(), templateToDelete, comments));
+    Supplier<OutboxEvent> supplier = null;
+    if (shouldLogAudits(templateToDelete.getAccountId(), templateToDelete.getOrgIdentifier(),
+            templateToDelete.getProjectIdentifier())) {
+      supplier = ()
+          -> outboxService.save(
+              new TemplateDeleteEvent(templateToDelete.getAccountIdentifier(), templateToDelete.getOrgIdentifier(),
+                  templateToDelete.getProjectIdentifier(), templateToDelete, comments));
+    }
     return gitAwarePersistence.save(
         templateToDelete, templateToDelete.getYaml(), ChangeType.DELETE, TemplateEntity.class, supplier);
   }
@@ -146,5 +155,14 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
         ()
             -> gitAwarePersistence.count(
                 criteria, projectIdentifier, orgIdentifier, accountIdentifier, TemplateEntity.class));
+  }
+
+  boolean shouldLogAudits(String accountId, String orgIdentifier, String projectIdentifier) {
+    // if git sync is disabled or if git sync is enabled (only for default branch)
+    if (!gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)) {
+      return true;
+    }
+    return gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)
+        && gitSyncSdkService.isDefaultBranch(accountId, orgIdentifier, projectIdentifier);
   }
 }

@@ -448,7 +448,10 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                 .count(projectDashBoardInfo.getDeploymentsCount())
                                 .failureCount(projectDashBoardInfo.getFailedDeploymentsCount())
                                 .successCount(projectDashBoardInfo.getSuccessDeploymentsCount())
-                                .countChangeAndCountChangeRateInfo(CountChangeAndCountChangeRateInfo.builder().build())
+                                .countChangeAndCountChangeRateInfo(
+                                    CountChangeAndCountChangeRateInfo.builder()
+                                        .countChangeRate(projectDashBoardInfo.getDeploymentsCountChangeRate())
+                                        .build())
                                 .build())
               .build());
     }

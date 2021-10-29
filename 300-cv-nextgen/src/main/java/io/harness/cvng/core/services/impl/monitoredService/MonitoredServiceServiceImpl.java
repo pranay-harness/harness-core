@@ -25,6 +25,8 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.MonitoredServiceListItemDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources.HealthSourceSummary;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
@@ -40,6 +42,7 @@ import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
+import io.harness.cvng.core.utils.ServiceEnvKey;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
@@ -63,7 +66,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -454,6 +456,31 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
+  public List<MonitoredServiceWithHealthSources> getAllWithTimeSeriesHealthSources(ProjectParams projectParams) {
+    List<MonitoredService> monitoredServiceEntities = getMonitoredServices(projectParams);
+    if (isEmpty(monitoredServiceEntities)) {
+      throw new InvalidRequestException(String.format(
+          "There are no Monitored Services for the given project: %s", projectParams.getProjectIdentifier()));
+    }
+
+    return monitoredServiceEntities.stream()
+        .map(monitoredServiceEntity -> {
+          Set<HealthSource> healthSource = healthSourceService.get(monitoredServiceEntity.getAccountId(),
+              monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
+              monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers());
+          return MonitoredServiceWithHealthSources.builder()
+              .name(monitoredServiceEntity.getName())
+              .identifier(monitoredServiceEntity.getIdentifier())
+              .healthSources(
+                  healthSource.stream()
+                      .map(x -> HealthSourceSummary.builder().name(x.getName()).identifier(x.getIdentifier()).build())
+                      .collect(Collectors.toSet()))
+              .build();
+        })
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public MonitoredServiceDTO getMonitoredServiceDTO(ServiceEnvironmentParams serviceEnvironmentParams) {
     MonitoredServiceResponse monitoredServiceResponse = get(serviceEnvironmentParams);
     if (monitoredServiceResponse == null) {
@@ -488,6 +515,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .filter(MonitoredServiceKeys.orgIdentifier, projectParams.getOrgIdentifier())
         .filter(MonitoredServiceKeys.projectIdentifier, projectParams.getProjectIdentifier())
         .filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier)
+        .asList();
+  }
+
+  private List<MonitoredService> getMonitoredServices(ProjectParams projectParams) {
+    return hPersistence.createQuery(MonitoredService.class)
+        .filter(MonitoredServiceKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(MonitoredServiceKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(MonitoredServiceKeys.projectIdentifier, projectParams.getProjectIdentifier())
         .asList();
   }
 
@@ -586,9 +621,46 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     return query.asList();
   }
 
+  private List<Pair<String, String>> getDependentServiceEnvIdentifiers(
+      ProjectParams projectParams, Map<ServiceEnvKey, List<String>> monitoredServiceToDependentServicesMap) {
+    List<Pair<String, String>> serviceEnvironmentIdentifiers = new ArrayList<>();
+    for (ServiceEnvKey monitoredServiceEnvKey : monitoredServiceToDependentServicesMap.keySet()) {
+      List<String> dependentServices = monitoredServiceToDependentServicesMap.get(monitoredServiceEnvKey);
+      dependentServices.forEach(dependentService -> {
+        MonitoredService dependentMonitoredService = getMonitoredService(projectParams, dependentService);
+        serviceEnvironmentIdentifiers.add(Pair.of(
+            dependentMonitoredService.getServiceIdentifier(), dependentMonitoredService.getEnvironmentIdentifier()));
+      });
+    }
+    return serviceEnvironmentIdentifiers;
+  }
+
+  private List<RiskData> getDependentServiceRiskScoreList(ProjectParams projectParams, List<String> dependentServices,
+      Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap) {
+    List<RiskData> dependentServiceRiskScores = new ArrayList<>();
+    dependentServices.forEach(dependentService -> {
+      MonitoredService dependentMonitoredService = getMonitoredService(projectParams, dependentService);
+      ServiceEnvKey dependentServiceEnvKey = ServiceEnvKey.builder()
+                                                 .serviceIdentifier(dependentMonitoredService.getServiceIdentifier())
+                                                 .envIdentifier(dependentMonitoredService.getEnvironmentIdentifier())
+                                                 .build();
+      dependentServiceRiskScores.add(latestRiskScoreByServiceMap.get(dependentServiceEnvKey));
+    });
+    if (dependentServiceRiskScores.isEmpty()) {
+      dependentServiceRiskScores.add(RiskData.builder().riskStatus(Risk.NO_DATA).build());
+    }
+    dependentServiceRiskScores.sort(RiskData::compareTo);
+    return dependentServiceRiskScores;
+  }
+
   @Override
   public PageResponse<MonitoredServiceListItemDTO> list(String accountId, String orgIdentifier,
       String projectIdentifier, String environmentIdentifier, Integer offset, Integer pageSize, String filter) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
     List<MonitoredServiceListItemDTOBuilder> monitoredServiceListItemDTOS = new ArrayList<>();
     Query<MonitoredService> monitoredServicesQuery =
         hPersistence.createQuery(MonitoredService.class)
@@ -600,6 +672,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       monitoredServicesQuery.filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier);
     }
     List<MonitoredService> monitoredServices = monitoredServicesQuery.asList();
+    Map<ServiceEnvKey, List<String>> monitoredServiceToDependentServicesMap =
+        serviceDependencyService.getMonitoredServiceToDependentServicesMap(projectParams, monitoredServices);
+
     Map<String, MonitoredService> idToMonitoredServiceMap =
         monitoredServices.stream().collect(Collectors.toMap(MonitoredService::getIdentifier, Function.identity()));
     if (monitoredServices != null) {
@@ -613,7 +688,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     PageResponse<MonitoredServiceListItemDTOBuilder> monitoredServiceListDTOBuilderPageResponse =
         PageUtils.offsetAndLimit(monitoredServiceListItemDTOS, offset, pageSize);
 
-    List<Pair<String, String>> serviceEnvironmentIdentifiers = new ArrayList();
+    List<Pair<String, String>> serviceEnvironmentIdentifiers = new ArrayList<>();
     List<String> serviceIdentifiers = new ArrayList<>();
     List<String> environmentIdentifiers = new ArrayList<>();
 
@@ -624,29 +699,36 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       serviceIdentifiers.add(monitoredServiceListDTOBuilder.getServiceRef());
       environmentIdentifiers.add(monitoredServiceListDTOBuilder.getEnvironmentRef());
     }
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
+
     Map<String, String> serviceIdNameMap =
         nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers));
     Map<String, String> environmentIdNameMap =
         nextGenService.getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers));
-
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);
-    List<RiskData> currentRiskScoreList = heatMapService.getLatestRiskScoreForLimitedServices(
-        accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers);
+
+    List<Pair<String, String>> dependentServiceEnvIdentifiers =
+        getDependentServiceEnvIdentifiers(projectParams, monitoredServiceToDependentServicesMap);
+    Set<Pair<String, String>> allServiceEnvIdentifiers = new HashSet<>();
+    allServiceEnvIdentifiers.addAll(serviceEnvironmentIdentifiers);
+    allServiceEnvIdentifiers.addAll(dependentServiceEnvIdentifiers);
+    Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap =
+        heatMapService.getLatestRiskScoreByServiceMap(projectParams, new ArrayList<>(allServiceEnvIdentifiers));
 
     List<MonitoredServiceListItemDTO> monitoredServiceListDTOS = new ArrayList<>();
     int index = 0;
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
-      String serviceName = serviceIdNameMap.get(monitoredServiceListDTOBuilder.getServiceRef());
-      String environmentName = environmentIdNameMap.get(monitoredServiceListDTOBuilder.getEnvironmentRef());
+      ServiceEnvKey serviceEnvKey = ServiceEnvKey.builder()
+                                        .serviceIdentifier(monitoredServiceListDTOBuilder.getServiceRef())
+                                        .envIdentifier(monitoredServiceListDTOBuilder.getEnvironmentRef())
+                                        .build();
+      String serviceName = serviceIdNameMap.get(serviceEnvKey.getServiceIdentifier());
+      String environmentName = environmentIdNameMap.get(serviceEnvKey.getEnvIdentifier());
       HistoricalTrend historicalTrend = historicalTrendList.get(index);
-      RiskData riskData = currentRiskScoreList.get(index);
+      RiskData monitoredServiceRiskScore = latestRiskScoreByServiceMap.get(serviceEnvKey);
+      List<RiskData> dependentServiceRiskScoreList = getDependentServiceRiskScoreList(
+          projectParams, monitoredServiceToDependentServicesMap.get(serviceEnvKey), latestRiskScoreByServiceMap);
       index++;
       ServiceEnvironmentParams serviceEnvironmentParams =
           ServiceEnvironmentParams.builder()
@@ -656,11 +738,13 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
               .serviceIdentifier(monitoredServiceListDTOBuilder.getServiceRef())
               .environmentIdentifier(monitoredServiceListDTOBuilder.getEnvironmentRef())
               .build();
+
       ChangeSummaryDTO changeSummary = changeSourceService.getChangeSummary(serviceEnvironmentParams,
           idToMonitoredServiceMap.get(monitoredServiceListDTOBuilder.getIdentifier()).getChangeSourceIdentifiers(),
           clock.instant().minus(Duration.ofDays(1)), clock.instant());
       monitoredServiceListDTOS.add(monitoredServiceListDTOBuilder.historicalTrend(historicalTrend)
-                                       .currentHealthScore(riskData)
+                                       .currentHealthScore(monitoredServiceRiskScore)
+                                       .dependentHealthScore(dependentServiceRiskScoreList)
                                        .serviceName(serviceName)
                                        .environmentName(environmentName)
                                        .changeSummary(changeSummary)
@@ -830,27 +914,28 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     List<Pair<String, String>> serviceEnvIdentifiers = new ArrayList<>(Arrays.asList(
         Pair.of(serviceEnvironmentParams.getServiceIdentifier(), serviceEnvironmentParams.getEnvironmentIdentifier())));
     MonitoredService monitoredService = getMonitoredService(serviceEnvironmentParams);
-    List<ServiceDependencyDTO> serviceDependencyDTOS =
-        new ArrayList<>(serviceDependencyService.getDependentServicesForMonitoredService(
-            serviceEnvironmentParams, monitoredService.getIdentifier()));
-    serviceDependencyDTOS.forEach(serviceDependencyDTO
-        -> serviceEnvIdentifiers.add(Pair.of(serviceDependencyDTO.getMonitoredServiceIdentifier(),
-            serviceEnvironmentParams.getEnvironmentIdentifier())));
-    List<RiskData> currentAndDependentRiskScoreList = heatMapService.getLatestRiskScoreForAllServices(
+    Set<ServiceDependencyDTO> dependentServiceDTOS = serviceDependencyService.getDependentServicesForMonitoredService(
+        serviceEnvironmentParams, monitoredService.getIdentifier());
+    dependentServiceDTOS.forEach(dependentServiceDTO -> {
+      MonitoredService dependentMonitoredService =
+          getMonitoredService(serviceEnvironmentParams, dependentServiceDTO.getMonitoredServiceIdentifier());
+      serviceEnvIdentifiers.add(Pair.of(
+          dependentMonitoredService.getServiceIdentifier(), dependentMonitoredService.getEnvironmentIdentifier()));
+    });
+    List<RiskData> allServiceRiskScoreList = heatMapService.getLatestRiskScoreForAllServicesList(
         serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getOrgIdentifier(),
         serviceEnvironmentParams.getProjectIdentifier(), serviceEnvIdentifiers);
-    List<RiskData> dependentRiskScoreList =
-        currentAndDependentRiskScoreList.subList(1, currentAndDependentRiskScoreList.size())
-            .stream()
-            .filter(r -> r.getHealthScore() != null && r.getHealthScore() >= 0)
-            .collect(Collectors.toList());
-    RiskData minimumDependentRiskScore = dependentRiskScoreList.isEmpty()
+    List<RiskData> dependentRiskScoreList = allServiceRiskScoreList.subList(1, allServiceRiskScoreList.size())
+                                                .stream()
+                                                .filter(r -> r.getHealthScore() != null && r.getHealthScore() >= 0)
+                                                .collect(Collectors.toList());
+    RiskData minDependentRiskScore = dependentRiskScoreList.isEmpty()
         ? RiskData.builder().riskStatus(Risk.NO_DATA).build()
-        : Collections.min(dependentRiskScoreList, Comparator.comparingInt(RiskData::getHealthScore));
+        : Collections.min(dependentRiskScoreList);
 
     return HealthScoreDTO.builder()
-        .currentHealthScore(currentAndDependentRiskScoreList.get(0))
-        .dependentHealthScore(minimumDependentRiskScore)
+        .currentHealthScore(allServiceRiskScoreList.get(0))
+        .dependentHealthScore(minDependentRiskScore)
         .build();
   }
 

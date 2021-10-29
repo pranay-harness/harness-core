@@ -1,14 +1,14 @@
 package io.harness.cvng.servicelevelobjective.beans;
 
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 
 @Data
 @Builder
 public class ServiceLevelIndicatorDTO {
   String name;
   String identifier;
-  @NonNull ServiceLevelIndicatorType type;
-  @NonNull ServiceLevelIndicatorSpec spec;
+  @NotNull ServiceLevelIndicatorType type;
+  @NotNull ServiceLevelIndicatorSpec spec;
 }

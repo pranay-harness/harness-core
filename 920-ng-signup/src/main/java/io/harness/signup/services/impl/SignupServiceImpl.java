@@ -8,18 +8,22 @@ import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
 import static java.lang.Boolean.FALSE;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
+import io.harness.ModuleType;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
+import io.harness.configuration.DeployVariant;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
+import io.harness.licensing.LicenseConfig;
+import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
@@ -78,6 +82,8 @@ public class SignupServiceImpl implements SignupService {
   private final SignupVerificationTokenRepository verificationTokenRepository;
   private final ExecutorService executorService;
   private final AccessControlClient accessControlClient;
+  private final LicenseConfig licenseConfig;
+  private final LicenseService licenseService;
 
   public static final String FAILED_EVENT_NAME = "SIGNUP_ATTEMPT_FAILED";
   public static final String SUCCEED_EVENT_NAME = "NEW_SIGNUP";
@@ -93,7 +99,8 @@ public class SignupServiceImpl implements SignupService {
       ReCaptchaVerifier reCaptchaVerifier, TelemetryReporter telemetryReporter,
       SignupNotificationHelper signupNotificationHelper, SignupVerificationTokenRepository verificationTokenRepository,
       @Named("NGSignupNotification") ExecutorService executorService,
-      @Named("PRIVILEGED") AccessControlClient accessControlClient) {
+      @Named("PRIVILEGED") AccessControlClient accessControlClient, LicenseConfig licenseConfig,
+      LicenseService licenseService) {
     this.accountService = accountService;
     this.userClient = userClient;
     this.signupValidator = signupValidator;
@@ -103,6 +110,8 @@ public class SignupServiceImpl implements SignupService {
     this.verificationTokenRepository = verificationTokenRepository;
     this.executorService = executorService;
     this.accessControlClient = accessControlClient;
+    this.licenseConfig = licenseConfig;
+    this.licenseService = licenseService;
   }
 
   /**
@@ -133,10 +142,60 @@ public class SignupServiceImpl implements SignupService {
   }
 
   /**
+   * Signup in non email verification blocking flow
+   */
+  @Override
+  public UserInfo communitySignup(SignupDTO dto) throws WingsException {
+    String deployMode = System.getenv().get("DEPLOY_MODE");
+
+    if (!"ONPREM".equals(deployMode) || !"KUBERNETES_ONPREM".equals(deployMode)) {
+      throw new InvalidRequestException("Deploy mode is not on prem", ErrorCode.DEPLOY_MODE_IS_NOT_ON_PREM, USER);
+    }
+
+    if (!DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
+      throw new InvalidRequestException("Community edition not found", ErrorCode.COMMNITY_EDITION_NOT_FOUND, USER);
+    }
+
+    verifySignupDTO(dto);
+
+    dto.setEmail(dto.getEmail().toLowerCase());
+
+    String passwordHash = hashpw(dto.getPassword(), BCrypt.gensalt());
+    SignupInviteDTO signupRequest = SignupInviteDTO.builder()
+                                        .email(dto.getEmail())
+                                        .passwordHash(passwordHash)
+                                        .intent(dto.getIntent())
+                                        .signupAction(dto.getSignupAction())
+                                        .edition(dto.getEdition())
+                                        .billingFrequency(dto.getBillingFrequency())
+                                        .build();
+
+    UserInfo userInfo = null;
+    try {
+      userInfo = getResponse(userClient.createCommunityUserAndCompleteSignup(signupRequest));
+    } catch (InvalidRequestException e) {
+      if (e.getMessage().contains("User with this email is already registered")) {
+        throw new InvalidRequestException("Email is already signed up", ErrorCode.USER_ALREADY_REGISTERED, USER);
+      }
+      throw e;
+    }
+
+    waitForRbacSetup(userInfo.getDefaultAccountId(), userInfo.getUuid(), userInfo.getEmail());
+
+    licenseService.startCommunityLicense(userInfo.getDefaultAccountId(), ModuleType.CD);
+
+    return userInfo;
+  }
+
+  /**
    * Signup Invite in email verification blocking flow
    */
   @Override
   public boolean createSignupInvite(SignupDTO dto, String captchaToken) {
+    if (DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
+      throw new InvalidRequestException("You are not allowed to create a signup invite with community edition");
+    }
+
     verifyReCaptcha(dto, captchaToken);
     verifySignupDTO(dto);
 
@@ -183,6 +242,10 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo completeSignupInvite(String token) {
+    if (DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
+      throw new InvalidRequestException("You are not allowed to complete a signup invite with community edition");
+    }
+
     Optional<SignupVerificationToken> verificationTokenOptional = verificationTokenRepository.findByToken(token);
 
     if (!verificationTokenOptional.isPresent()) {

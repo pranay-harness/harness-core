@@ -98,7 +98,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     }
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttemptsAndLastIteration(
-          artifactStream.getAccountId(), savedArtifact.getArtifactStreamId(), 0);
+          artifactStream.getAccountId(), savedArtifact.getArtifactStreamId(), 0, false);
       permitService.releasePermitByKey(artifactStream.getUuid());
       alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
           ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStream.getUuid()).build());
@@ -138,7 +138,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
         // TODO:: mark inactive maybe
         int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
         artifactStreamService.updateFailedCronAttemptsAndLastIteration(
-            artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
+            artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts, false);
         if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
           String appId = artifactStream.fetchAppId();
           if (!GLOBAL_APP_ID.equals(appId)) {
