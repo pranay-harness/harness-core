@@ -16,8 +16,6 @@ COPY scripts /opt/harness-delegate/
 
 RUN chmod +x /opt/harness-delegate/*.sh
 
-COPY --from=appdynamics/java-agent:latest /opt/appdynamics /opt/harness-delegate
-
 ENV APPDYNAMICS_CONTROLLER_HOST_NAME=harness-test.saas.appdynamics.com
 ENV APPDYNAMICS_CONTROLLER_PORT=443
 ENV APPDYNAMICS_AGENT_ACCOUNT_NAME=harness-test
@@ -25,12 +23,10 @@ ENV APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY=g99q8cbgwccb
 ENV APPDYNAMICS_CONTROLLER_SSL_ENABLED=true
 ENV APPDYNAMICS_AGENT_APPLICATION_NAME=delegate-app-monitoring
 ENV APPDYNAMICS_AGENT_TIER_NAME=delegate-app-tier
-ENV ENABLE_APPDYNAMICS=true
-ENV APPDYNAMICS_AGENT_NODE_NAME=delegate-app-node
 
 WORKDIR /opt/harness-delegate
 
-RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz
+RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz && curl -L -O -H "Authorization: Bearer eyJraWQiOiJMSkdEV2txa0cxeUVKOHhlZ2RxS3BGd2gwR3BiTXpnVUNYQWNpb1V5SU8wIiwiYWxnIjoiUlMyNTYifQ.eyJ2ZXIiOjEsImp0aSI6IkFULjlSWlZUUnp4Zzd3UHlHajNnVGFfMXYwSno0OHF2aXNWUHRmMkhOV0ZObWMub2FyMTNhNXU1dlV6S1ZURWEycDciLCJpc3MiOiJodHRwczovL2FwcGQtaWRlbnRpdHkub2t0YS5jb20vb2F1dGgyL2F1c3B2bnAzdmtrclNIMk9RMnA2IiwiYXVkIjoibWljb3JzZXJ2aWNlcyIsImlhdCI6MTYzNTUyNjkwNiwiZXhwIjoxNjM1NjEzMzA2LCJjaWQiOiIwb2ExanMxMHQ3ekJjTENnRzJwNyIsInVpZCI6IjAwdXQzcTJudW0xQjlYa1VnMnA2Iiwic2NwIjpbIm9wZW5pZCIsIm9mZmxpbmVfYWNjZXNzIiwiZG93bmxvYWQiXSwic3ViIjoicmFnaHVAaGFybmVzcy5pbyJ9.E2xlk4NU_tux5efe4XPVeI_om4N-3cZMDD3GVYwESaYDlI9CoKelJl3ymbTld86BYbIA4M9d68INAiluzzCoIucjREmWsDeO50Il3D1iagBIxGrzDEzKq8psOvZHaCfqHW9S0nD14uou8adFJuAc9YvUruQ-0xeEp7YFPQFAUsGHuPyisli8ZvwTvKZgVG6hrNnABFeVyc8b1sMNQAyvMCZRThQ1zvFvD7TyJnPUHJeUMji-WZQooT2P4qID4eWGuOTVAe_y_tU6vJrOfA_WOm4nuDsr73GxgcpB3RKJ4h2I23KcEOgY5SVh977TASvv9c5Q60u7lmXWwB2VVNJxRg;" "https://download.appdynamics.com/download/prox/download-file/java-jdk8/21.10.0.33144/AppServerAgent-1.8-21.10.0.33144.zip" && unzip AppServerAgent-1.8-21.10.0.33144.zip
 RUN curl -#k https://app.harness.io/public/shared/watchers/builds/openjdk-8u242/72500/watcher.jar -o watcher.jar
 CMD ./entrypoint.sh && bash -c ' \
     while [[ ! -e watcher.log ]]; do sleep 1s; done; tail -F watcher.log & \
