@@ -23,16 +23,16 @@ public class RedisFacilitateEventPublisher implements FacilitateEventPublisher {
   public String publishEvent(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     PlanNode planNode = nodeExecution.getNode();
-    FacilitatorEvent event = FacilitatorEvent.newBuilder()
-                                 .setNodeExecutionId(nodeExecutionId)
-                                 .setAmbiance(nodeExecution.getAmbiance())
-                                 .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-                                 .setStepType(planNode.getStepType())
-                                 .setNotifyId(generateUuid())
-                                 .addAllResolvedInput(transputHelper.resolveInputs(
-                                     nodeExecution.getAmbiance(), planNode.getRefObjects()))
-                                 .addAllFacilitatorObtainments(planNode.getFacilitatorObtainments())
-                                 .build();
+    FacilitatorEvent event =
+        FacilitatorEvent.newBuilder()
+            .setNodeExecutionId(nodeExecutionId)
+            .setAmbiance(nodeExecution.getAmbiance())
+            .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+            .setStepType(planNode.getStepType())
+            .setNotifyId(generateUuid())
+            .addAllResolvedInput(transputHelper.resolveInputs(nodeExecution.getAmbiance(), planNode.getRefObjects()))
+            .addAllFacilitatorObtainments(planNode.getFacilitatorObtainments())
+            .build();
 
     String serviceName = planNode.getServiceName();
     return eventSender.sendEvent(

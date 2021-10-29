@@ -7,7 +7,7 @@ import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.engine.pms.data.PmsTransputHelper;
 import io.harness.engine.pms.execution.strategy.identity.IdentityStep;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.Node;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
@@ -33,15 +33,16 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
 
   @Override
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
-    Node planNode = nodeExecution.getNode();
+    PlanNode planNode = nodeExecution.getNode();
     String serviceName = planNode.getServiceName();
-    NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
-                                                     .setAmbiance(nodeExecution.getAmbiance())
-                                                     .setExecutionMode(nodeExecution.getMode())
-                                                     .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-        .addAllResolvedInput(transputHelper.resolveInputs(nodeExecution.getAmbiance(), planNode.getRefObjects()))
-                                                     .setAsyncError(isError)
-                                                     .putAllResponse(responseMap);
+    NodeResumeEvent.Builder resumeEventBuilder =
+        NodeResumeEvent.newBuilder()
+            .setAmbiance(nodeExecution.getAmbiance())
+            .setExecutionMode(nodeExecution.getMode())
+            .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+            .addAllResolvedInput(transputHelper.resolveInputs(nodeExecution.getAmbiance(), planNode.getRefObjects()))
+            .setAsyncError(isError)
+            .putAllResponse(responseMap);
 
     ChainDetails chainDetails = buildChainDetails(nodeExecution);
     if (chainDetails != null) {
