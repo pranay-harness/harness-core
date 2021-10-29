@@ -1,7 +1,7 @@
 package io.harness.ccm.remote.resources;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.CE;
-import static io.harness.ccm.remote.beans.Constants.ACCOUNT_ID_DESC;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -86,7 +86,7 @@ public class PerspectiveReportResource {
   getReportSetting(
       @Parameter(description = "The identifier of the Perspective") @QueryParam("perspectiveId") String perspectiveId,
       @Parameter(description = "The identifier of the Report") @QueryParam("reportId") String reportId,
-      @Parameter(required = true, description = ACCOUNT_ID_DESC) @PathParam(
+      @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
     if (perspectiveId != null) {
       return ResponseDTO.newResponse(ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
@@ -121,7 +121,7 @@ public class PerspectiveReportResource {
   public ResponseDTO<String>
   deleteReportSetting(@Parameter(description = "The Report Identifier") @QueryParam("reportId") String reportId,
       @Parameter(description = "The Perspective Identifier") @QueryParam("perspectiveId") String perspectiveId,
-      @Parameter(required = true, description = ACCOUNT_ID_DESC) @PathParam(
+      @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
     final String deleteSuccessfulMsg = "Successfully deleted the record";
 
@@ -157,7 +157,7 @@ public class PerspectiveReportResource {
         })
       })
   public ResponseDTO<List<CEReportSchedule>>
-  createReportSetting(@Parameter(required = true, description = ACCOUNT_ID_DESC) @PathParam(
+  createReportSetting(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
                           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId,
       @NotNull @Valid @RequestBody(
           required = true, description = "CEReportSchedule object to be saved") CEReportSchedule schedule) {
@@ -188,7 +188,7 @@ public class PerspectiveReportResource {
         })
       })
   public ResponseDTO<List<CEReportSchedule>>
-  updateReportSetting(@Parameter(required = true, description = ACCOUNT_ID_DESC) @PathParam(
+  updateReportSetting(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
                           NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid @RequestBody(
           required = true, description = "CEReportSchedule object to be updated") CEReportSchedule schedule) {

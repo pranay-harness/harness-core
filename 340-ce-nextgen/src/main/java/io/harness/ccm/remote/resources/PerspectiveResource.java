@@ -1,8 +1,8 @@
 package io.harness.ccm.remote.resources;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
-import static io.harness.ccm.remote.beans.Constants.ACCOUNT_ID_DESC;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -91,7 +91,7 @@ public class PerspectiveResource {
         })
       })
   public ResponseDTO<Double>
-  getLastMonthCost(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+  getLastMonthCost(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
                        NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @NotNull @Valid @QueryParam("perspectiveId") @Parameter(required = true,
           description = "The Perspective identifier for which we want the last month cost") String perspectiveId) {
@@ -113,7 +113,7 @@ public class PerspectiveResource {
             })
       })
   public ResponseDTO<Double>
-  getForecastCost(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+  getForecastCost(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
                       NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @Valid @NotNull @Parameter(
           required = true, description = "The Perspective identifier for which we want the forecast cost")
@@ -140,7 +140,7 @@ public class PerspectiveResource {
         })
       })
   public ResponseDTO<CEView>
-  create(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+  create(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
              NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("clone") @Parameter(required = true,
           description =
@@ -183,7 +183,7 @@ public class PerspectiveResource {
             })
       })
   public ResponseDTO<CEView>
-  get(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+  get(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("perspectiveId") @Parameter(required = true,
           description = "The identifier of the Perspective to fetch") @NotBlank @Valid String perspectiveId) {
@@ -208,7 +208,7 @@ public class PerspectiveResource {
         })
       })
   public ResponseDTO<CEView>
-  update(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+  update(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
              NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @Valid @RequestBody(required = true,
           description = "Request body containing Perspective's CEView object to update") CEView ceView) {
@@ -235,7 +235,7 @@ public class PerspectiveResource {
         })
       })
   public ResponseDTO<String>
-  delete(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+  delete(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
              NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("perspectiveId") @Parameter(required = true,
           description = "The identifier of the CEView object to delete") @NotNull @Valid String perspectiveId) {
