@@ -1,4 +1,4 @@
-package io.harness.delegate.git;
+package io.harness.connector.service.git;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 

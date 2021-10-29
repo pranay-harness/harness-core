@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -58,4 +60,11 @@ public interface SecretNGManagerClient {
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.MASK_SECRETS) boolean maskSecrets);
+
+  @POST(SECRETS_API + "/decrypt-encryption-details")
+  @KryoRequest
+  @KryoResponse
+  Call<ResponseDTO<DecryptableEntity>> decryptEncryptedDetails(
+      @Body DecryptableEntityWithEncryptionConsumers decryptableEntityWithEncryptionConsumers,
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);
 }
