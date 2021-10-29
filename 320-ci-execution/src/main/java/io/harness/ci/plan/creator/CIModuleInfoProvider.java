@@ -116,12 +116,13 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
             if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
               url = IntegrationStageUtils.getGitURLFromConnector(connectorDetails, initializeStepInfo.getCiCodebase());
             }
-            if (repoName == null) {
-              repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
-            }
             if (url == null) {
               url = connectorUtils.retrieveURL(connectorDetails);
             }
+            if (repoName == null) {
+              repoName = getGitRepo(url);
+            }
+
           } catch (Exception exception) {
             log.warn("Failed to retrieve repo");
           }

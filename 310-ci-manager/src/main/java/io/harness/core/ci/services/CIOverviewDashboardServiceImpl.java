@@ -224,7 +224,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         statement.setLong(2, timestamp);
         statement.setLong(3, getStartofTheMonth(timestamp));
         resultSet = statement.executeQuery();
-        if (resultSet != null) {
+        if (resultSet != null && resultSet.next()) {
           usageDataDTO.setCount(resultSet.getInt("total"));
           return usageDataDTO;
         }
@@ -262,7 +262,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
            PreparedStatement statement = connection.prepareStatement(query)) {
         statement.setString(1, accountId);
         resultSet = statement.executeQuery();
-        if (resultSet != null) {
+        if (resultSet != null && resultSet.next()) {
           usageDataDTO.setCount(resultSet.getInt("total"));
         }
       } catch (SQLException ex) {
