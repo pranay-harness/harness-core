@@ -36,7 +36,6 @@ import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
 import io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome;
 import io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -135,8 +134,8 @@ public class ImagePullSecretUtils {
   private void getImageDetailsFromEcr(
       EcrArtifactOutcome ecrArtifactOutcome, ImageDetailsBuilder imageDetailsBuilder, Ambiance ambiance) {
     String connectorRef = ecrArtifactOutcome.getConnectorRef();
-    BaseNGAccess baseNGAccess = ecrImagePullSecretHelper.getBaseNGAccess(AmbianceHelper.getAccountId(ambiance),
-        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
+    BaseNGAccess baseNGAccess = ecrImagePullSecretHelper.getBaseNGAccess(AmbianceUtils.getAccountId(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
     ConnectorInfoDTO connectorIntoDTO = getConnector(connectorRef, ambiance);
     AwsConnectorDTO connectorDTO = (AwsConnectorDTO) connectorIntoDTO.getConnectorConfig();
     List<EncryptedDataDetail> encryptionDetails =
