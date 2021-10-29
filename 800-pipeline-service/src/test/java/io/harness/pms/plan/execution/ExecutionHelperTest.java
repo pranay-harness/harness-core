@@ -396,6 +396,23 @@ public class ExecutionHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  public void testGetPipelineYamlAndValidate() {
+    String wrongRuntimeInputYaml = "pipeline:\n"
+        + "  stages:\n"
+        + "  - stage:\n"
+        + "      identifier: s1\n"
+        + "      description: desc\n"
+        + "  - stage:\n"
+        + "      identifier: s2\n"
+        + "      name: s2\n"
+        + "      description: desc\n";
+    assertThatThrownBy(() -> executionHelper.getPipelineYamlAndValidate(wrongRuntimeInputYaml, pipelineEntity))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
   public void testStartExecution() throws IOException {
     ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder().build();
     PlanExecutionMetadata planExecutionMetadata = PlanExecutionMetadata.builder().build();
