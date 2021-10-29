@@ -124,7 +124,7 @@ public class ResourceTestRule implements TestRule {
      * @param resourceTestRule the resource test rule
      */
     public ResourceTestResourceConfig(String ruleId, ResourceTestRule resourceTestRule) {
-      super(true, new MetricRegistry());
+      super(new MetricRegistry()); // TODO: get it for testing using forTesting static method
       RULE_ID_TO_RULE.put(ruleId, resourceTestRule);
       configure(resourceTestRule);
     }
@@ -135,7 +135,7 @@ public class ResourceTestRule implements TestRule {
      * @param servletConfig the servlet config
      */
     public ResourceTestResourceConfig(@Context ServletConfig servletConfig) {
-      super(true, new MetricRegistry());
+      super( new MetricRegistry()); // TODO: fix this
       String ruleId = servletConfig.getInitParameter(RULE_ID);
       Preconditions.checkNotNull(ruleId);
 

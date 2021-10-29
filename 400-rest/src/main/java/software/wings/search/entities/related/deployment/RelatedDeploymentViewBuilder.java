@@ -20,6 +20,7 @@ public class RelatedDeploymentViewBuilder {
         workflowExecution.getPipelineExecutionId(), workflowExecution.getWorkflowId(),
         workflowExecution.getWorkflowType().name(), workflowExecution.getEnvId());
     ObjectMapper mapper = new ObjectMapper();
-    return mapper.convertValue(relatedDeploymentView, new TypeReference<Object>() {});
+    // TODO
+    return null; //mapper.convertValue(relatedDeploymentView, new TypeReference<Object>() {});
   }
 }
