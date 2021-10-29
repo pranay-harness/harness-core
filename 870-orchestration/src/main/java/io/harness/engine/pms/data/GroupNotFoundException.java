@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.resolver;
+package io.harness.engine.pms.data;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.ENGINE_SWEEPING_OUTPUT_EXCEPTION;
