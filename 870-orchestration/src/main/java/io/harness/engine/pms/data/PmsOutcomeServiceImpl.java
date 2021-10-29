@@ -22,8 +22,6 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.data.PmsOutcome;
-import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
@@ -69,12 +67,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep, String groupName) {
-    Level producedBy = AmbianceUtils.obtainCurrentLevel(ambiance);
-    if (levelsToKeep >= 0) {
-      ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
-    }
-
+  public String consumeInternal(Ambiance ambiance, Level producedBy, String name, String value, String groupName) {
     try {
       OutcomeInstance instance =
           mongoTemplate.insert(OutcomeInstance.builder()

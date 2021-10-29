@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder(builderClassName = "Builder")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "PermissionCheck")
+@Schema(name = "PermissionCheck")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.PL)
 public class PermissionCheckDTO {

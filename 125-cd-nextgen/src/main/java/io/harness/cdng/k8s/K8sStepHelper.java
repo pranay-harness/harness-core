@@ -138,7 +138,6 @@ import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -441,7 +440,7 @@ public class K8sStepHelper {
     SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-    boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceHelper.getAccountId(ambiance));
+    boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceUtils.getAccountId(ambiance));
 
     if (optimizedFilesFetch) {
       scmConnector = (ScmConnector) connectorDTO.getConnectorConfig();
@@ -578,8 +577,8 @@ public class K8sStepHelper {
   }
 
   private SSHKeySpecDTO getSshKeySpecDTO(GitConfigDTO gitConfigDTO, Ambiance ambiance) {
-    return gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceHelper.getAccountId(ambiance),
-        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
+    return gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceUtils.getAccountId(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
   }
 
   public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
@@ -746,7 +745,7 @@ public class K8sStepHelper {
   private TaskChainResponse prepareHelmFetchValuesTaskChainResponse(Ambiance ambiance,
       StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
       ManifestOutcome k8sManifestOutcome, List<ValuesManifestOutcome> aggregatedValuesManifests) {
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     HelmChartManifestDelegateConfig helmManifest =
         (HelmChartManifestDelegateConfig) getManifestDelegateConfig(k8sManifestOutcome, ambiance);
     HelmValuesFetchRequest helmValuesFetchRequest = HelmValuesFetchRequest.builder()
@@ -786,7 +785,7 @@ public class K8sStepHelper {
   private TaskChainResponse getGitFetchFileTaskChainResponse(Ambiance ambiance,
       List<GitFetchFilesConfig> gitFetchFilesConfigs, StepElementParameters stepElementParameters,
       K8sStepPassThroughData k8sStepPassThroughData, boolean shouldOpenLogStream) {
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     GitFetchRequest gitFetchRequest = GitFetchRequest.builder()
                                           .gitFetchFilesConfigs(gitFetchFilesConfigs)
                                           .shouldOpenLogStream(shouldOpenLogStream)

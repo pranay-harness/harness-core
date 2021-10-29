@@ -170,4 +170,13 @@ public class DelegateConnectionDao {
     persistence.delete(DelegateConnection.class, delegateConnectionId);
     persistence.save(existingConnection);
   }
+
+  public void updateLastGrpcHeartbeat(String accountId, String delegateId, String version) {
+    persistence.update(persistence.createQuery(DelegateConnection.class)
+                           .filter(DelegateConnectionKeys.accountId, accountId)
+                           .filter(DelegateConnectionKeys.delegateId, delegateId)
+                           .filter(DelegateConnectionKeys.version, version),
+        persistence.createUpdateOperations(DelegateConnection.class)
+            .set(DelegateConnectionKeys.lastGrpcHeartbeat, System.currentTimeMillis()));
+  }
 }
