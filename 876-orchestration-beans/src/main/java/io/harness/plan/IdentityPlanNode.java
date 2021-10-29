@@ -1,6 +1,5 @@
 package io.harness.plan;
 
-import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.SkipType;
@@ -30,6 +29,7 @@ public class IdentityPlanNode implements Node {
   String stageFqn;
   StepType stepType;
   String originalNodeExecutionId;
+  String serviceName;
 
   @Override
   public String getStageFqn() {
@@ -39,11 +39,6 @@ public class IdentityPlanNode implements Node {
   @Override
   public NodeType getNodeType() {
     return NodeType.IDENTITY_PLAN_NODE;
-  }
-
-  @Override
-  public String getServiceName() {
-    return ModuleType.PMS.name().toLowerCase();
   }
 
   @Override
@@ -88,6 +83,7 @@ public class IdentityPlanNode implements Node {
         .skipGraphType(node.getSkipGraphType())
         .stepType(stepType)
         .isSkipExpressionChain(node.isSkipExpressionChain())
+        .serviceName(node.getServiceName())
         .originalStepType(node.getNodeType() == NodeType.IDENTITY_PLAN_NODE
                 ? ((IdentityPlanNode) node).getOriginalStepType()
                 : node.getStepType())
