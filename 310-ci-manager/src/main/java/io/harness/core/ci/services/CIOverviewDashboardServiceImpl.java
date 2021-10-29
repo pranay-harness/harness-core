@@ -277,6 +277,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         resultSet = statement.executeQuery();
         if (resultSet != null && resultSet.next()) {
           usageDataDTO.setCount(resultSet.getInt("total"));
+          return usageDataDTO;
         }
       } catch (SQLException ex) {
         log.error(query, ex);
