@@ -33,10 +33,11 @@ public class CIAwsVmCleanupTaskHandler implements CICleanupTaskHandler {
 
   public AwsVmTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams) {
     CIAwsVmCleanupTaskParams params = (CIAwsVmCleanupTaskParams) ciCleanupTaskParams;
-    return callRunnerForSetup(params.getStageRuntimeId());
+    log.info("Received request to clean AWS VM with stage runtime ID {}", params.getStageRuntimeId());
+    return callRunnerForCleanup(params.getStageRuntimeId());
   }
 
-  private AwsVmTaskExecutionResponse callRunnerForSetup(String stageExecutionId) {
+  private AwsVmTaskExecutionResponse callRunnerForCleanup(String stageExecutionId) {
     Map<String, String> params = new HashMap<>();
     params.put("stage_id", stageExecutionId);
     JSONObject obj = new JSONObject(params);

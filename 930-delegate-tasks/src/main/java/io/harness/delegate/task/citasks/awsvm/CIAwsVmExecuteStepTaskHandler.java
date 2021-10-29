@@ -36,6 +36,8 @@ public class CIAwsVmExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   @Override
   public AwsVmTaskExecutionResponse executeTaskInternal(CIExecuteStepTaskParams ciExecuteStepTaskParams) {
     CIAWSVmExecuteStepTaskParams ciawsVmExecuteStepTaskParams = (CIAWSVmExecuteStepTaskParams) ciExecuteStepTaskParams;
+    log.info(
+        "Received request to execute step with stage runtime ID {}", ciawsVmExecuteStepTaskParams.getStageRuntimeId());
     return callRunnerForStepExecution(ciawsVmExecuteStepTaskParams);
   }
 

@@ -4,9 +4,11 @@ import static io.harness.beans.sweepingoutputs.StageInfraDetails.STAGE_INFRA_DET
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
+import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.StageInfraDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
@@ -18,9 +20,12 @@ import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+import io.harness.steps.OutputExpressionConstants;
+import io.harness.steps.environment.EnvironmentOutcome;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -76,8 +81,13 @@ public class StageCleanupUtility {
   }
 
   public CIAwsVmCleanupTaskParams buildAwsVmCleanupParameters(Ambiance ambiance) {
-    K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
-    return CIAwsVmCleanupTaskParams.builder().stageRuntimeId(k8PodDetails.getStageRuntimeID()).build();
+    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
+    if (!optionalSweepingOutput.isFound()) {
+      throw new CIStageExecutionException("Stage details sweeping output cannot be empty");
+    }
+
+    StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
+    return CIAwsVmCleanupTaskParams.builder().stageRuntimeId(stageDetails.getStageRuntimeID()).build();
   }
 }

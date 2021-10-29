@@ -6,11 +6,13 @@ import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.AwsVmInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.delegate.beans.ci.awsvm.CIAWSVmInitializeTaskParams;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -33,9 +35,13 @@ public class AWSVmInitializeTaskUtils {
         AwsVmStageInfraDetails.builder().poolId(awsVmInfraYaml.getSpec().getPoolId()).build(),
         StepOutcomeGroup.STAGE.name());
 
-    K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
+    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
+    if (!optionalSweepingOutput.isFound()) {
+      throw new CIStageExecutionException("Stage details sweeping output cannot be empty");
+    }
 
-    return CIAWSVmInitializeTaskParams.builder().stageRuntimeId(k8PodDetails.getStageRuntimeID()).build();
+    StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
+    return CIAWSVmInitializeTaskParams.builder().stageRuntimeId(stageDetails.getStageRuntimeID()).build();
   }
 }

@@ -29,6 +29,7 @@ import io.harness.beans.sweepingoutputs.CodeBaseConnectorRefSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.StageInfraDetails;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.PluginCompatibleStepSerializer;
@@ -183,10 +184,15 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         RunTimeInputHandler.resolveStringParameter("Image", "Run", stepIdentifier, runStepInfo.getImage(), true);
     String logServiceBaseUrl = logServiceUtils.getLogServiceConfig().getBaseUrl();
 
-    K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
+    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
+    if (!optionalSweepingOutput.isFound()) {
+      throw new CIStageExecutionException("Stage details sweeping output cannot be empty");
+    }
+
+    StageDetails stageDetails = (StageDetails) optionalSweepingOutput.getOutput();
     CIAWSVmExecuteStepTaskParams params = CIAWSVmExecuteStepTaskParams.builder()
-                                              .stageRuntimeId(k8PodDetails.getStageRuntimeID())
+                                              .stageRuntimeId(stageDetails.getStageRuntimeID())
                                               .stepId(stepIdentifier)
                                               .accountId(accountId)
                                               .command(command)

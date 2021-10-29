@@ -35,6 +35,8 @@ public class CIAwsVmInitializeTaskHandler implements CIInitializeTaskHandler {
   public AwsVmTaskExecutionResponse executeTaskInternal(
       CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
     CIAWSVmInitializeTaskParams ciawsVmInitializeTaskParams = (CIAWSVmInitializeTaskParams) ciInitializeTaskParams;
+    log.info("Received request to initialize stage with stage runtime ID {}",
+        ciawsVmInitializeTaskParams.getStageRuntimeId());
     return callRunnerForSetup(ciawsVmInitializeTaskParams.getStageRuntimeId());
   }
 
