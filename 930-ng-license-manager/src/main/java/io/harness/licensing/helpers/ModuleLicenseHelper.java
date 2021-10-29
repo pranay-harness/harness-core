@@ -96,7 +96,7 @@ public class ModuleLicenseHelper {
           // license expired
           if (LicenseType.TRIAL.equals(latestLicense.getLicenseType())) {
             // expired trial
-            if (currentLicenses.size() == 1
+            if (!latestLicense.isExtendedTrial()
                 && ModuleLicenseHelper.isTrialLicenseUnderExtendPeriod(latestLicense.getExpiryTime())) {
               return ModuleLicenseState.EXPIRED_TEAM_TRIAL_CAN_EXTEND;
             } else {
@@ -121,7 +121,7 @@ public class ModuleLicenseHelper {
           // license expired
           if (LicenseType.TRIAL.equals(latestLicense.getLicenseType())) {
             // expired trial
-            if (currentLicenses.size() == 1
+            if (!latestLicense.isExtendedTrial()
                 && ModuleLicenseHelper.isTrialLicenseUnderExtendPeriod(latestLicense.getExpiryTime())) {
               return ModuleLicenseState.EXPIRED_ENTERPRISE_TRIAL_CAN_EXTEND;
             } else {

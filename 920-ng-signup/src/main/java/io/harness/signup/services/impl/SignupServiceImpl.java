@@ -25,6 +25,7 @@ import io.harness.exception.WingsException;
 import io.harness.licensing.LicenseConfig;
 import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.AccountDTO;
+import io.harness.ng.core.dto.GatewayAccountRequestDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.ng.core.user.UtmInfo;
@@ -529,6 +530,10 @@ public class SignupServiceImpl implements SignupService {
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
     properties.put("accountId", accountId);
     properties.put("source", source);
+    if (userInfo.getAccounts().get(0) != null) {
+      GatewayAccountRequestDTO gatewayAccountRequestDTO = userInfo.getAccounts().get(0);
+      properties.put("company", gatewayAccountRequestDTO.getCompanyName());
+    }
 
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(userInfo.getEmail(), properties,

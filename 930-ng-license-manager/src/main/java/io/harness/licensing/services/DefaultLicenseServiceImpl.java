@@ -41,6 +41,7 @@ import io.harness.telemetry.TelemetryReporter;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +52,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -123,15 +123,15 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   public ModuleLicenseDTO createModuleLicense(ModuleLicenseDTO moduleLicense) {
     ModuleLicense license = licenseObjectConverter.toEntity(moduleLicense);
 
-    // Validate entity
-    ModuleLicense savedEntity;
-    try {
-      license.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
-      savedEntity = moduleLicenseRepository.save(license);
-      // Send telemetry
-    } catch (DuplicateKeyException ex) {
+    List<ModuleLicense> existingModuleLicenses = moduleLicenseRepository.findByAccountIdentifierAndModuleType(
+        license.getAccountIdentifier(), license.getModuleType());
+    if (!existingModuleLicenses.isEmpty()) {
       throw new DuplicateFieldException("ModuleLicense already exists");
     }
+
+    // Validate entity
+    license.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+    ModuleLicense savedEntity = moduleLicenseRepository.save(license);
 
     log.info("Created license for module [{}] in account [{}]", savedEntity.getModuleType(),
         savedEntity.getAccountIdentifier());
@@ -240,13 +240,15 @@ public class DefaultLicenseServiceImpl implements LicenseService {
         moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
 
     ModuleLicense existingModuleLicense = existing.get(0);
+    licenseComplianceResolver.preCheck(existingModuleLicense, EditionAction.EXTEND_TRIAL);
 
-    ModuleLicenseDTO trialLicenseDTO =
-        licenseInterface.generateTrialLicense(existingModuleLicense.getEdition(), accountIdentifier, moduleType);
+    // Update license base info for trial extending
+    existingModuleLicense.setExtendedTrial(true);
+    existingModuleLicense.setStatus(LicenseStatus.ACTIVE);
+    long extendedExpiryTime = Instant.now().plus(14, ChronoUnit.DAYS).toEpochMilli();
+    existingModuleLicense.setExpiryTime(extendedExpiryTime);
 
-    ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
-    licenseComplianceResolver.preCheck(trialLicense, EditionAction.EXTEND_TRIAL);
-    ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
+    ModuleLicense savedEntity = moduleLicenseRepository.save(existingModuleLicense);
 
     sendSucceedTelemetryEvents(SUCCEED_EXTEND_TRIAL_OPERATION, savedEntity, accountIdentifier);
     syncLicenseChangeToCGForCE(savedEntity);
@@ -429,18 +431,6 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       email = ((UserPrincipal) principal).getEmail();
     }
     return email;
-  }
-
-  private boolean isNotEligibleToExtend(List<ModuleLicense> moduleLicenses) {
-    if (moduleLicenses.size() > 1) {
-      return true;
-    }
-
-    ModuleLicense moduleLicense = moduleLicenses.get(0);
-    boolean trialLicenseUnderExtendPeriod =
-        ModuleLicenseHelper.isTrialLicenseUnderExtendPeriod(moduleLicense.getExpiryTime());
-    return !trialLicenseUnderExtendPeriod || LicenseType.PAID.equals(moduleLicense.getLicenseType())
-        || Edition.FREE.equals(moduleLicense.getEdition());
   }
 
   private void startTrialInCGIfCE(ModuleLicense moduleLicense) {

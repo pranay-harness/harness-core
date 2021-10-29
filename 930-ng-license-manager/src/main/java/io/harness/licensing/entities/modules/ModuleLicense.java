@@ -48,6 +48,7 @@ public abstract class ModuleLicense implements PersistentEntity, NGAccountAccess
   @NotEmpty protected LicenseStatus status;
   @NotEmpty protected long startTime;
   @NotEmpty protected long expiryTime;
+  @NotEmpty protected boolean extendedTrial;
   @CreatedBy protected EmbeddedUser createdBy;
   @LastModifiedBy protected EmbeddedUser lastUpdatedBy;
   @CreatedDate protected Long createdAt;
