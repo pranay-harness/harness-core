@@ -1,6 +1,7 @@
 package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.remote.beans.Constants.ACCOUNT_ID_DESC;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -49,7 +50,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @OwnedBy(CE)
-@Tag(name = "budgets", description = "This contains APIs related to Cloud Cost Budgets")
+@Tag(name = "Cloud Cost Budgets", description = "This contains APIs related to Cloud Cost Budgets")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FailureDTO.class)) })
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
@@ -74,7 +75,8 @@ public class BudgetResource {
             })
       })
   public ResponseDTO<String>
-  save(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  save(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @RequestBody(required = true, description = "The Budget definition") Budget budget) {
     budget.setAccountId(accountId);
     return ResponseDTO.newResponse(budgetService.create(budget));
@@ -96,7 +98,8 @@ public class BudgetResource {
             })
       })
   public ResponseDTO<String>
-  clone(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  clone(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+            NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @PathParam("id") @Parameter(required = true, description = "The identifier of the Budget") String budgetId,
       @QueryParam("cloneName") @Parameter(
           description = "The name of the new Budget created after cloning operation") String budgetName) {
@@ -119,7 +122,8 @@ public class BudgetResource {
         })
       })
   public ResponseDTO<Budget>
-  get(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  get(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @Parameter(required = true, description = "The identifier of an existing Budget") @PathParam(
           "id") String budgetId) {
     return ResponseDTO.newResponse(budgetService.get(budgetId, accountId));
@@ -140,7 +144,8 @@ public class BudgetResource {
         })
       })
   public ResponseDTO<List<Budget>>
-  list(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId) {
+  list(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+      NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId) {
     return ResponseDTO.newResponse(budgetService.list(accountId));
   }
 
@@ -161,7 +166,8 @@ public class BudgetResource {
         })
       })
   public ResponseDTO<List<Budget>>
-  list(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  list(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @Parameter(required = true, description = "The identifier of an existing Perspective") @QueryParam(
           "perspectiveId") String perspectiveId) {
     return ResponseDTO.newResponse(budgetService.list(accountId, perspectiveId));
@@ -184,7 +190,8 @@ public class BudgetResource {
             })
       })
   public ResponseDTO<String>
-  update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  update(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @Valid @NotNull @Parameter(required = true, description = "The identifier of an existing Budget") @PathParam(
           "id") String budgetId,
       @RequestBody(required = true, description = "The Budget object as a request body") @NotNull Budget budget) {
@@ -208,7 +215,8 @@ public class BudgetResource {
             })
       })
   public ResponseDTO<String>
-  delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  delete(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @NotNull @Valid @Parameter(required = true, description = "The identifier of the Budget") @PathParam(
           "id") String budgetId) {
     budgetService.delete(budgetId, accountId);
@@ -224,7 +232,8 @@ public class BudgetResource {
       nickname = "getLastMonthCost")
   @Deprecated
   public ResponseDTO<Double>
-  getLastMonthCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  getLastMonthCost(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("perspectiveId") @Parameter(
           required = true, description = "The identifier of the perspective") String perspectiveId) {
     return ResponseDTO.newResponse(ceViewService.getLastMonthCostForPerspective(accountId, perspectiveId));
@@ -238,7 +247,8 @@ public class BudgetResource {
       nickname = "getForecastCost")
   @Deprecated
   public ResponseDTO<Double>
-  getForecastCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  getForecastCost(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+                      NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam("perspectiveId") String perspectiveId) {
     return ResponseDTO.newResponse(ceViewService.getForecastCostForPerspective(accountId, perspectiveId));
   }
@@ -260,7 +270,8 @@ public class BudgetResource {
         })
       })
   public ResponseDTO<BudgetData>
-  getCostDetails(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  getCostDetails(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+                     NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @Parameter(required = true, description = "The identifier of the Budget") @PathParam("id") String budgetId) {
     return ResponseDTO.newResponse(budgetService.getBudgetTimeSeriesStats(budgetService.get(budgetId, accountId)));
   }

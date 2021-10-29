@@ -1,6 +1,7 @@
 package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.remote.beans.Constants.ACCOUNT_ID_DESC;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -50,7 +51,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @OwnedBy(CE)
-@Tag(name = "perspectiveReport", description = "This resource contains the APIs Reports created on Perspectives")
+@Tag(name = "Cloud Cost Perspective Reports",
+    description = "This resource contains the APIs Reports created on Perspectives")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FailureDTO.class)) })
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
@@ -84,7 +86,8 @@ public class PerspectiveReportResource {
   getReportSetting(
       @Parameter(description = "The identifier of the Perspective") @QueryParam("perspectiveId") String perspectiveId,
       @Parameter(description = "The identifier of the Report") @QueryParam("reportId") String reportId,
-      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
+      @Parameter(required = true, description = ACCOUNT_ID_DESC) @PathParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
     if (perspectiveId != null) {
       return ResponseDTO.newResponse(ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
     } else if (reportId != null) {
@@ -118,7 +121,8 @@ public class PerspectiveReportResource {
   public ResponseDTO<String>
   deleteReportSetting(@Parameter(description = "The Report Identifier") @QueryParam("reportId") String reportId,
       @Parameter(description = "The Perspective Identifier") @QueryParam("perspectiveId") String perspectiveId,
-      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
+      @Parameter(required = true, description = ACCOUNT_ID_DESC) @PathParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
     final String deleteSuccessfulMsg = "Successfully deleted the record";
 
     if (perspectiveId != null) {
@@ -153,10 +157,10 @@ public class PerspectiveReportResource {
         })
       })
   public ResponseDTO<List<CEReportSchedule>>
-  createReportSetting(
-      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId,
+  createReportSetting(@Parameter(required = true, description = ACCOUNT_ID_DESC) @PathParam(
+                          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId,
       @NotNull @Valid @RequestBody(
-          required = true, description = "CEReportSchedule object to be created") CEReportSchedule schedule) {
+          required = true, description = "CEReportSchedule object to be saved") CEReportSchedule schedule) {
     List<CEReportSchedule> ceList = new ArrayList<>();
     try {
       ceList.add(ceReportScheduleService.createReportSetting(accountId, schedule));
@@ -184,7 +188,8 @@ public class PerspectiveReportResource {
         })
       })
   public ResponseDTO<List<CEReportSchedule>>
-  updateReportSetting(@PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  updateReportSetting(@Parameter(required = true, description = ACCOUNT_ID_DESC) @PathParam(
+                          NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid @RequestBody(
           required = true, description = "CEReportSchedule object to be updated") CEReportSchedule schedule) {
     try {

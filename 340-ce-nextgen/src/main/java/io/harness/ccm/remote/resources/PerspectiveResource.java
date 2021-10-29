@@ -2,6 +2,7 @@ package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
+import static io.harness.ccm.remote.beans.Constants.ACCOUNT_ID_DESC;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -52,7 +53,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @OwnedBy(CE)
-@Tag(name = "perspective", description = "This contains APIs related to Cloud Cost Perspectives")
+@Tag(name = "Cloud Cost Perspectives", description = "This contains APIs related to Cloud Cost Perspectives")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FailureDTO.class)) })
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
@@ -90,7 +91,8 @@ public class PerspectiveResource {
         })
       })
   public ResponseDTO<Double>
-  getLastMonthCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  getLastMonthCost(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @NotNull @Valid @QueryParam("perspectiveId") @Parameter(required = true,
           description = "The Perspective identifier for which we want the last month cost") String perspectiveId) {
     return ResponseDTO.newResponse(ceViewService.getLastMonthCostForPerspective(accountId, perspectiveId));
@@ -111,7 +113,8 @@ public class PerspectiveResource {
             })
       })
   public ResponseDTO<Double>
-  getForecastCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  getForecastCost(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+                      NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @Valid @NotNull @Parameter(
           required = true, description = "The Perspective identifier for which we want the forecast cost")
       @QueryParam("perspectiveId") String perspectiveId) {
@@ -137,7 +140,8 @@ public class PerspectiveResource {
         })
       })
   public ResponseDTO<CEView>
-  create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  create(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("clone") @Parameter(required = true,
           description =
               "Whether the Perspective being created should be a clone of existing Perspective, if true we will ignore the uuid field in the request body and create a completely new Perspective")
@@ -179,7 +183,8 @@ public class PerspectiveResource {
             })
       })
   public ResponseDTO<CEView>
-  get(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  get(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("perspectiveId") @Parameter(required = true,
           description = "The identifier of the Perspective to fetch") @NotBlank @Valid String perspectiveId) {
     return ResponseDTO.newResponse(ceViewService.get(perspectiveId));
@@ -203,7 +208,8 @@ public class PerspectiveResource {
         })
       })
   public ResponseDTO<CEView>
-  update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  update(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @Valid @RequestBody(required = true,
           description = "Request body containing Perspective's CEView object to update") CEView ceView) {
     ceView.setAccountId(accountId);
@@ -229,7 +235,8 @@ public class PerspectiveResource {
         })
       })
   public ResponseDTO<String>
-  delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
+  delete(@Parameter(required = true, description = ACCOUNT_ID_DESC) @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull @Valid String accountId,
       @QueryParam("perspectiveId") @Parameter(required = true,
           description = "The identifier of the CEView object to delete") @NotNull @Valid String perspectiveId) {
     ceViewService.delete(perspectiveId, accountId);
