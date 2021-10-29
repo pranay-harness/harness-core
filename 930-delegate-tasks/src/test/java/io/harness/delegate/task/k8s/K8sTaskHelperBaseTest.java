@@ -1042,7 +1042,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
+  @Owner(developers = {YOGESH, ACASIAN})
   @Category(UnitTests.class)
   public void readManifests() throws IOException {
     final List<KubernetesResource> resources =
@@ -1055,6 +1055,19 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         .containsExactly("ConfigMap", "Deployment", "DeploymentConfig");
     assertThatExceptionOfType(KubernetesYamlException.class)
         .isThrownBy(() -> k8sTaskHelperBase.readManifests(prepareSomeInCorrectManifestFiles(), executionLogCallback));
+
+    assertThatThrownBy(
+        () -> k8sTaskHelperBase.readManifests(prepareSomeInCorrectManifestFiles(), executionLogCallback, true))
+        .matches(throwable -> {
+          HintException hint = ExceptionUtils.cause(HintException.class, throwable);
+          ExplanationException explanation = ExceptionUtils.cause(ExplanationException.class, throwable);
+          KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
+          assertThat(hint).hasMessageContaining(KubernetesExceptionHints.READ_MANIFEST_FAILED);
+          assertThat(explanation).hasMessageContaining(throwable.getCause().getMessage());
+          assertThat(taskException)
+              .hasMessageContaining(format(KubernetesExceptionMessages.READ_MANIFEST_FAILED, "manifest.yaml"));
+          return true;
+        });
   }
 
   private List<FileData> prepareSomeCorrectManifestFiles() throws IOException {
