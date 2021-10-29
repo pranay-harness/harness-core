@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
@@ -16,6 +17,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "PermissionDTOKeys")
 @ApiModel(value = PermissionDTO.MODEL_NAME)
+@Schema(name = PermissionDTO.MODEL_NAME)
 public class PermissionDTO {
   public static final String MODEL_NAME = "Permission";
 
