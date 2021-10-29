@@ -2,6 +2,7 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.sm.StateType.K8S_DELETE;
@@ -13,12 +14,14 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
@@ -79,6 +82,7 @@ public class K8sDelete extends AbstractK8sState {
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   public static final String K8S_DELETE_COMMAND_NAME = "Delete";
 
@@ -120,15 +124,19 @@ public class K8sDelete extends AbstractK8sState {
 
       Activity activity = createActivity(context);
 
-      K8sTaskParameters k8sTaskParameters = K8sDeleteTaskParameters.builder()
-                                                .activityId(activity.getUuid())
-                                                .releaseName(fetchReleaseName(context, infraMapping))
-                                                .commandName(K8S_DELETE_COMMAND_NAME)
-                                                .k8sTaskType(K8sTaskType.DELETE)
-                                                .resources(context.renderExpression(this.resources))
-                                                .deleteNamespacesForRelease(deleteNamespacesForRelease)
-                                                .timeoutIntervalInMin(10)
-                                                .build();
+      K8sTaskParameters k8sTaskParameters =
+          K8sDeleteTaskParameters.builder()
+              .activityId(activity.getUuid())
+              .releaseName(fetchReleaseName(context, infraMapping))
+              .commandName(K8S_DELETE_COMMAND_NAME)
+              .k8sTaskType(K8sTaskType.DELETE)
+              .resources(context.renderExpression(this.resources))
+              .deleteNamespacesForRelease(deleteNamespacesForRelease)
+              .timeoutIntervalInMin(10)
+              .useLatestKustomizeVersion(
+                  featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
+              .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
+              .build();
 
       return queueK8sDelegateTask(context, k8sTaskParameters, null);
     } catch (WingsException e) {
@@ -202,6 +210,8 @@ public class K8sDelete extends AbstractK8sState {
                             .k8sDelegateManifestConfig(
                                 createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
                             .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
+                            .useLatestKustomizeVersion(featureFlagService.isEnabled(
+                                FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
                             .build();
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);
   }

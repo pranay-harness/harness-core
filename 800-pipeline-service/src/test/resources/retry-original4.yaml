@@ -1,0 +1,45 @@
+a:
+  b: 12
+  c: 22
+  d:
+    - stage:
+        identifier: id1
+        name: name1
+        f: harness
+        g: default
+        h:
+          execution:
+            - step:
+                type: Barrier
+                name: barr1
+                identifier: barr1
+    - stage:
+        identifier: id2
+        name: name1
+        f: harness
+        g: default
+        h:
+          execution:
+            - step:
+                type: Barrier
+                name: barr1
+                identifier: barr1
+    - stage:
+        identifier: id3
+        name: name1
+        f: harness
+        g: default
+        h:
+          execution:
+            - step:
+                type: Barrier
+                name: barr1
+                identifier: barr1
+            - step:
+                type: Http
+                name: Http
+                identifier: http
+
+
+
+

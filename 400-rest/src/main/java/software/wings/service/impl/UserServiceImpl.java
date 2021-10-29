@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -81,6 +80,7 @@ import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
 import io.harness.exception.UnauthorizedException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
@@ -103,6 +103,7 @@ import io.harness.ng.core.switchaccount.LdapIdentificationInfo;
 import io.harness.ng.core.switchaccount.OauthIdentificationInfo;
 import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
 import io.harness.ng.core.switchaccount.SamlIdentificationInfo;
+import io.harness.ng.core.user.NGRemoveUserFilter;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.UserInfo;
@@ -246,6 +247,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.cache.Cache;
@@ -488,9 +490,52 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    if (!featureFlagService.isGlobalEnabled(GTM_CD_ENABLED) && "CD".equalsIgnoreCase(userInvite.getIntent())) {
-      account.setDefaultExperience(DefaultExperience.CG);
+    Account createdAccount = accountService.save(account, false);
+
+    if (!featureFlagService.isEnabled(FeatureName.CDNG_ENABLED, createdAccount.getUuid())
+        && "CD".equalsIgnoreCase(userInvite.getIntent())) {
+      createdAccount.setDefaultExperience(DefaultExperience.CG);
+
+      accountService.update(createdAccount);
     }
+
+    // create user
+    User user = User.Builder.anUser()
+                    .email(userInvite.getEmail())
+                    .name(createdAccount.getAccountName())
+                    .passwordHash(userInvite.getPasswordHash())
+                    .accountName(createdAccount.getAccountName())
+                    .companyName(createdAccount.getCompanyName())
+                    .accounts(Lists.newArrayList(createdAccount))
+                    .emailVerified(true)
+                    .defaultAccountId(createdAccount.getUuid())
+                    .utmInfo(userInvite.getUtmInfo())
+                    .build();
+    completeUserInviteForSignup(userInvite, createdAccount.getUuid());
+    return createNewUserAndSignIn(user, createdAccount.getUuid());
+  }
+
+  @Override
+  public User completeCommunitySignup(UserInvite userInvite) {
+    User existingUser = getUserByEmail(userInvite.getEmail());
+    if (existingUser != null) {
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
+    }
+
+    // create account
+    String username = userInvite.getEmail().split("@")[0];
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(username)
+                          .withCompanyName(username)
+                          .withDefaultExperience(DefaultExperience.NG)
+                          .withCreatedFromNG(true)
+                          .withAppId(GLOBAL_APP_ID)
+                          .build();
+    account.setLicenseInfo(LicenseInfo.builder()
+                               .accountType(AccountType.COMMUNITY)
+                               .accountStatus(AccountStatus.ACTIVE)
+                               .licenseUnits(50)
+                               .build());
 
     Account createdAccount = accountService.save(account, false);
 
@@ -723,6 +768,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setPasswordExpired(user.isPasswordExpired());
     userSummary.setImported(user.isImported());
     userSummary.setDisabled(user.isDisabled());
+    userSummary.setExternalUserId(user.getExternalUserId());
     return userSummary;
   }
 
@@ -781,25 +827,6 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.accounts, newAccounts);
     updateUser(user.getUuid(), updateOperations);
-  }
-
-  @Override
-  public boolean safeDeleteUser(String userId, String accountId) {
-    User user = wingsPersistence.get(User.class, userId);
-    if (user == null || isBlank(accountId)) {
-      return false;
-    }
-    if (!user.getAccountIds().contains(accountId)) {
-      return true;
-    }
-    List<UserGroup> userGroups = userGroupService.listByAccountId(accountId, user, false);
-    if (!userGroups.isEmpty()) {
-      return false;
-    }
-    log.info(
-        "removing user {} from account {} because it is not part of any usergroup in the account", userId, accountId);
-    delete(accountId, userId);
-    return true;
   }
 
   @Override
@@ -933,6 +960,23 @@ public class UserServiceImpl implements UserService {
     User user = null;
     if (isNotEmpty(email)) {
       user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase()).get();
+      loadSupportAccounts(user);
+      if (user != null && isEmpty(user.getAccounts())) {
+        user.setAccounts(newArrayList());
+      }
+      if (user != null && isEmpty(user.getPendingAccounts())) {
+        user.setPendingAccounts(newArrayList());
+      }
+    }
+
+    return user;
+  }
+
+  @Override
+  public User getUserByUserId(String userId) {
+    User user = null;
+    if (isNotEmpty(userId)) {
+      user = wingsPersistence.createQuery(User.class).filter(UserKeys.externalUserId, userId).get();
       loadSupportAccounts(user);
       if (user != null && isEmpty(user.getAccounts())) {
         user.setAccounts(newArrayList());
@@ -1250,6 +1294,10 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(accountId);
 
     User user = getUserByEmail(userInvite.getEmail());
+    if (user == null) {
+      user = getUserByUserId(userInvite.getExternalUserId());
+    }
+
     boolean createNewUser = user == null;
     if (createNewUser) {
       user = anUser().build();
@@ -1285,6 +1333,7 @@ public class UserServiceImpl implements UserService {
     }
     user.setAppId(GLOBAL_APP_ID);
     user.setImported(userInvite.getImportedByScim());
+    user.setExternalUserId(userInvite.getExternalUserId());
 
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
@@ -2632,10 +2681,11 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public void delete(String accountId, String userId) {
-    deleteInternal(accountId, userId, true);
+    deleteInternal(accountId, userId, true, NGRemoveUserFilter.ACCOUNT_LAST_ADMIN_CHECK);
   }
 
-  private void deleteInternal(String accountId, String userId, boolean updateUsergroup) {
+  private void deleteInternal(
+      String accountId, String userId, boolean updateUsergroup, NGRemoveUserFilter removeUserFilter) {
     User user = get(userId);
     if (user.getAccounts() == null && user.getPendingAccounts() == null) {
       return;
@@ -2646,19 +2696,20 @@ public class UserServiceImpl implements UserService {
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new io.harness.limits.Action(accountId, ActionType.CREATE_USER));
 
+    AtomicBoolean isUserPartOfAccountInNG = new AtomicBoolean(false);
+
     LimitEnforcementUtils.withCounterDecrement(checker, () -> {
       List<Account> updatedActiveAccounts = new ArrayList<>();
       if (isNotEmpty(user.getAccounts())) {
         for (Account account : user.getAccounts()) {
           if (account.getUuid().equals(accountId)) {
             if (accountService.isNextGenEnabled(accountId)) {
-              Boolean isUserPartOfAccountInNG =
+              Boolean userMembershipCheck =
                   NGRestUtils.getResponse(userMembershipClient.isUserInScope(userId, accountId, null, null));
               log.info("User {} is {} of nextgen in account {}", userId,
-                  Boolean.TRUE.equals(isUserPartOfAccountInNG) ? "" : "not", accountId);
-              if (Boolean.TRUE.equals(isUserPartOfAccountInNG)) {
-                throw new InvalidRequestException(
-                    "User cannot be deleted because user is part of Harness NextGen as well. Please remove the user from NextGen first.");
+                  Boolean.TRUE.equals(userMembershipCheck) ? "" : "not", accountId);
+              if (Boolean.TRUE.equals(userMembershipCheck)) {
+                isUserPartOfAccountInNG.set(true);
               }
             }
           } else {
@@ -2673,6 +2724,15 @@ public class UserServiceImpl implements UserService {
           if (!account.getUuid().equals(accountId)) {
             updatedPendingAccounts.add(account);
           }
+        }
+      }
+
+      if (isUserPartOfAccountInNG.get()) {
+        Boolean deletedFromNG = NGRestUtils.getResponse(
+            userMembershipClient.removeUserInternal(userId, accountId, null, null, removeUserFilter));
+        if (!Boolean.TRUE.equals(deletedFromNG)) {
+          throw new UnexpectedException(
+              "User could not be removed from NG. User might be the last account admin in NG.");
         }
       }
 
@@ -3297,7 +3357,7 @@ public class UserServiceImpl implements UserService {
         query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
     List<User> users = query.asList();
     for (User user : users) {
-      deleteInternal(accountId, user.getUuid(), false);
+      deleteInternal(accountId, user.getUuid(), false, NGRemoveUserFilter.STRICTLY_FORCE_REMOVE_USER);
     }
   }
 

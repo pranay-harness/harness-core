@@ -9,11 +9,13 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STABLE;
+import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STOPPED;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.WingsException;
@@ -133,11 +135,13 @@ public class BuildSourceCallback implements OldNotifyCallback {
     // NOTE: buildSourceResponse is not null at this point.
     try {
       boolean isUnstable = UNSTABLE.name().equals(artifactStream.getCollectionStatus());
-      if (isUnstable && buildSourceResponse.isStable()) {
+      boolean isStopped = STOPPED.name().equals(artifactStream.getCollectionStatus());
+      if ((isUnstable || isStopped || artifactStream.getCollectionStatus() == null) && buildSourceResponse.isStable()) {
         // If the artifact stream is unstable and buildSourceResponse has stable as true, mark this artifact
         // stream as stable.
         artifactStreamService.updateCollectionStatus(accountId, artifactStreamId, STABLE.name());
       }
+
       List<Artifact> artifacts = processBuilds(artifactStream);
 
       if (artifacts.size() > MAX_ARTIFACTS_COLLECTION_FOR_WARN) {
@@ -197,13 +201,16 @@ public class BuildSourceCallback implements OldNotifyCallback {
   private void updatePermit(ArtifactStream artifactStream, boolean failed) {
     if (failed) {
       int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
-      artifactStreamService.updateFailedCronAttempts(
-          artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
+      artifactStreamService.updateFailedCronAttemptsAndLastIteration(
+          artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts, false);
       log.warn(
           "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds totalFailedAttempt:[{}] artifactStreamId:[{}]",
           failedCronAttempts, artifactStreamId);
       if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
         String appId = artifactStream.fetchAppId();
+        if (featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, accountId)) {
+          artifactStreamService.updateCollectionStatus(accountId, artifactStreamId, STOPPED.name());
+        }
         if (!GLOBAL_APP_ID.equals(appId)) {
           alertService.openAlert(accountId, null, AlertType.ARTIFACT_COLLECTION_FAILED,
               ArtifactCollectionFailedAlert.builder()
@@ -218,15 +225,23 @@ public class BuildSourceCallback implements OldNotifyCallback {
                   .artifactStreamId(artifactStreamId)
                   .build());
         }
+      } else {
+        if (featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, accountId)
+            && !UNSTABLE.name().equals(artifactStream.getCollectionStatus())) {
+          artifactStreamService.updateCollectionStatus(accountId, artifactStreamId, UNSTABLE.name());
+        }
       }
     } else {
       if (artifactStream.getFailedCronAttempts() != 0) {
         log.warn("ASYNC_ARTIFACT_COLLECTION: successfully fetched builds after [{}] failures for artifactStream[{}]",
             artifactStream.getFailedCronAttempts(), artifactStreamId);
-        artifactStreamService.updateFailedCronAttempts(artifactStream.getAccountId(), artifactStream.getUuid(), 0);
+        artifactStreamService.updateFailedCronAttemptsAndLastIteration(
+            artifactStream.getAccountId(), artifactStream.getUuid(), 0, false);
         permitService.releasePermitByKey(artifactStream.getUuid());
         alertService.closeAlert(accountId, null, AlertType.ARTIFACT_COLLECTION_FAILED,
             ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStreamId).build());
+      } else {
+        artifactStreamService.updateLastIterationFields(accountId, artifactStreamId, true);
       }
     }
   }

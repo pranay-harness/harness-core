@@ -418,7 +418,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
       timeSeriesMetricDataDTO.getMetricDataList().forEach(
-          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.HEALTHY); });
     });
   }
 
@@ -702,7 +702,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
       timeSeriesMetricDataDTO.getMetricDataList().forEach(
-          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.HEALTHY); });
     });
   }
 
@@ -732,7 +732,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
       timeSeriesMetricDataDTO.getMetricDataList().forEach(
-          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.HEALTHY); });
     });
   }
 
@@ -769,7 +769,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
       assertThat(timeSeriesMetricDataDTO.getMetricType()).isNotNull();
       timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW);
+        assertThat(metricData.getRisk()).isNotEqualTo(Risk.HEALTHY);
         if (TimeSeriesMetricType.ERROR.equals(timeSeriesMetricDataDTO.getMetricType())) {
           assertThat(metricData.getValue()).isGreaterThan(0.0);
         }

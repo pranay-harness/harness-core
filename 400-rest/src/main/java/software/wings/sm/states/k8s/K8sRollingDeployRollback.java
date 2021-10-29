@@ -3,6 +3,7 @@ package software.wings.sm.states.k8s;
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
 
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
@@ -14,6 +15,7 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
@@ -28,6 +30,7 @@ import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -104,6 +107,7 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
+      ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
 
       if (k8sContextElement == null) {
         return ExecutionResponse.builder()
@@ -130,6 +134,9 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
                       ? emptyList()
                       : k8sContextElement.getPrunedResourcesIds())
               .isPruningEnabled(featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, context.getAccountId()))
+              .useLatestKustomizeVersion(
+                  featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
+              .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
               .build();
 
       return queueK8sDelegateTask(context, k8sTaskParameters, null);

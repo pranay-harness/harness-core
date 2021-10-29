@@ -4,23 +4,21 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 @OwnedBy(PIPELINE)
-@Value
+@Data
 @Builder
 public class DeploymentStatsSummary {
-  long count;
-  double countChangeRate;
-  long failureCount;
-  double failureChangeRate;
-  double failureRate;
-  double failureRateChangeRate;
-  double deploymentRate;
-  double deploymentRateChangeRate;
-  long runningCount;
-  long pendingApprovalsCount;
-  long manualInterventionsCount;
-  long failed24HoursCount;
+  long totalCount;
+  @Builder.Default double totalCountChangeRate = DashboardHelper.MAX_VALUE;
+  @Builder.Default double failureRate = DashboardHelper.MAX_VALUE;
+  @Builder.Default double failureRateChangeRate = DashboardHelper.MAX_VALUE;
+  @Builder.Default double deploymentRate = DashboardHelper.MAX_VALUE;
+  @Builder.Default double deploymentRateChangeRate = DashboardHelper.MAX_VALUE;
+
+  @Builder.Default List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList = new ArrayList<>();
 }

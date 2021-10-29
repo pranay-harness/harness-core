@@ -1,5 +1,8 @@
 package io.harness.migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.Migration;
 
 import software.wings.beans.AuthToken;
@@ -13,6 +16,7 @@ import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PL)
 public class AuthTokenTtlMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Override

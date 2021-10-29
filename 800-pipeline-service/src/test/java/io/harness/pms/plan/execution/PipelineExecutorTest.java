@@ -2,6 +2,7 @@ package io.harness.pms.plan.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -15,6 +16,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.executions.retry.RetryExecutionParameters;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
@@ -53,8 +55,11 @@ public class PipelineExecutorTest extends CategoryTest {
       + "    type: String\n"
       + "    value: c";
   List<String> stageIdentifiers = Arrays.asList("a1", "a2", "s1");
-  RunStageRequestDTO runStageRequestDTO =
-      RunStageRequestDTO.builder().runtimeInputYaml(runtimeInputYaml).stageIdentifiers(stageIdentifiers).build();
+  RunStageRequestDTO runStageRequestDTO = RunStageRequestDTO.builder()
+                                              .runtimeInputYaml(runtimeInputYaml)
+                                              .stageIdentifiers(stageIdentifiers)
+                                              .expressionValues(Collections.emptyMap())
+                                              .build();
   String originalExecutionId = "originalExecutionId";
   boolean useV2 = false;
   List<String> inputSetReferences = Arrays.asList("i1", "i2", "i3");
@@ -77,7 +82,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunPipelineWithInputSetPipelineYaml() {
-    doReturnStatementsForFreshRun(null, false, null, null);
+    doReturnStatementsForFreshRun(null, false, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runPipelineWithInputSetPipelineYaml(
         accountId, orgId, projectId, pipelineId, moduleType, runtimeInputYaml, useV2);
@@ -91,7 +96,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunPipelineWithInputSetReferencesList() {
-    doReturnStatementsForFreshRun(null, true, null, null);
+    doReturnStatementsForFreshRun(null, true, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runPipelineWithInputSetReferencesList(
         accountId, orgId, projectId, pipelineId, moduleType, inputSetReferences, pipelineBranch, pipelineRepoId);
@@ -100,7 +105,7 @@ public class PipelineExecutorTest extends CategoryTest {
 
     verify(validateAndMergeHelper, times(1))
         .getMergeInputSetFromPipelineTemplate(
-            accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId);
+            accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId, null);
     verifyStatementsForFreshRun(null, true, null);
   }
 
@@ -108,7 +113,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunStagesWithRuntimeInputYaml() {
-    doReturnStatementsForFreshRun(null, false, stageIdentifiers, null);
+    doReturnStatementsForFreshRun(null, false, stageIdentifiers);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runStagesWithRuntimeInputYaml(
         accountId, orgId, projectId, pipelineId, moduleType, runStageRequestDTO, useV2);
@@ -121,8 +126,22 @@ public class PipelineExecutorTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  public void testRerunStagesWithRuntimeInputYaml() {
+    doReturnStatementsForFreshRun(originalExecutionId, false, stageIdentifiers);
+
+    PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.rerunStagesWithRuntimeInputYaml(
+        accountId, orgId, projectId, pipelineId, moduleType, originalExecutionId, runStageRequestDTO, useV2);
+    assertThat(planExecutionResponse.getPlanExecution()).isEqualTo(planExecution);
+    assertThat(planExecutionResponse.getGitDetails()).isEqualTo(EntityGitDetails.builder().build());
+
+    verifyStatementsForFreshRun(originalExecutionId, false, stageIdentifiers);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
   public void testRerunPipelineWithInputSetPipelineYaml() {
-    doReturnStatementsForFreshRun(originalExecutionId, false, null, null);
+    doReturnStatementsForFreshRun(originalExecutionId, false, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.rerunPipelineWithInputSetPipelineYaml(
         accountId, orgId, projectId, pipelineId, moduleType, originalExecutionId, runtimeInputYaml, useV2);
@@ -136,7 +155,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRerunPipelineWithInputSetReferencesList() {
-    doReturnStatementsForFreshRun(originalExecutionId, true, null, null);
+    doReturnStatementsForFreshRun(originalExecutionId, true, null);
 
     PlanExecutionResponseDto planExecutionResponse =
         pipelineExecutor.rerunPipelineWithInputSetReferencesList(accountId, orgId, projectId, pipelineId, moduleType,
@@ -147,27 +166,28 @@ public class PipelineExecutorTest extends CategoryTest {
     verifyStatementsForFreshRun(originalExecutionId, true, null);
   }
 
-  private void doReturnStatementsForFreshRun(String originalExecutionId, boolean addValidateAndMergeHelperDoReturn,
-      List<String> stageIdentifiers, List<String> identifierOfSkipStagess) {
+  private void doReturnStatementsForFreshRun(
+      String originalExecutionId, boolean addValidateAndMergeHelperDoReturn, List<String> stageIdentifiers) {
     if (addValidateAndMergeHelperDoReturn) {
       doReturn(runtimeInputYaml)
           .when(validateAndMergeHelper)
           .getMergeInputSetFromPipelineTemplate(
-              accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId);
+              accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId, null);
     }
 
+    RetryExecutionParameters retryExecutionParameters = RetryExecutionParameters.builder().isRetry(false).build();
     doReturn(pipelineEntity).when(executionHelper).fetchPipelineEntity(accountId, orgId, projectId, pipelineId);
     doReturn(executionTriggerInfo).when(executionHelper).buildTriggerInfo(originalExecutionId);
     if (EmptyPredicate.isEmpty(stageIdentifiers)) {
       doReturn(execArgs)
           .when(executionHelper)
           .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, Collections.emptyList(),
-              executionTriggerInfo, originalExecutionId, false, null, null, null);
+              Collections.emptyMap(), executionTriggerInfo, originalExecutionId, retryExecutionParameters);
     } else {
       doReturn(execArgs)
           .when(executionHelper)
-          .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, executionTriggerInfo,
-              originalExecutionId, false, null, null, null);
+          .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, Collections.emptyMap(),
+              executionTriggerInfo, originalExecutionId, retryExecutionParameters);
     }
 
     doReturn(planExecution)
@@ -180,23 +200,44 @@ public class PipelineExecutorTest extends CategoryTest {
     if (verifyValidateAndMergeHelper) {
       verify(validateAndMergeHelper, times(1))
           .getMergeInputSetFromPipelineTemplate(
-              accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId);
+              accountId, orgId, projectId, pipelineId, inputSetReferences, pipelineBranch, pipelineRepoId, null);
     }
 
+    RetryExecutionParameters retryExecutionParameters = RetryExecutionParameters.builder().isRetry(false).build();
     verify(executionHelper, times(1)).fetchPipelineEntity(accountId, orgId, projectId, pipelineId);
     verify(executionHelper, times(1)).buildTriggerInfo(originalExecutionId);
     if (EmptyPredicate.isEmpty(stageIdentifiers)) {
       verify(executionHelper, times(1))
           .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, Collections.emptyList(),
-              executionTriggerInfo, originalExecutionId, false, null, null, null);
+              Collections.emptyMap(), executionTriggerInfo, originalExecutionId, retryExecutionParameters);
     } else {
       verify(executionHelper, times(1))
-          .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, executionTriggerInfo,
-              originalExecutionId, false, null, null, null);
+          .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, Collections.emptyMap(),
+              executionTriggerInfo, originalExecutionId, retryExecutionParameters);
     }
     verify(executionHelper, times(1))
         .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null, null);
     verify(executionHelper, times(0))
         .startExecutionV2(anyString(), anyString(), anyString(), any(), any(), anyBoolean(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testBuildRetryExecutionParameters() {
+    // isRetry: false
+    RetryExecutionParameters retryExecutionParameters =
+        pipelineExecutor.buildRetryExecutionParameters(false, null, null, null);
+    assertThat(retryExecutionParameters.isRetry()).isEqualTo(false);
+
+    String processedYaml = "This is a processed Yaml";
+    List<String> stagesIdentifier = Arrays.asList("stage1", "stage2");
+    List<String> identifierOfSkippedStages = Collections.singletonList("stage1");
+    retryExecutionParameters = pipelineExecutor.buildRetryExecutionParameters(
+        true, processedYaml, stagesIdentifier, identifierOfSkippedStages);
+    assertThat(retryExecutionParameters.isRetry()).isEqualTo(true);
+    assertThat(retryExecutionParameters.getRetryStagesIdentifier()).isEqualTo(stagesIdentifier);
+    assertThat(retryExecutionParameters.getIdentifierOfSkipStages()).isEqualTo(identifierOfSkippedStages);
+    assertThat(retryExecutionParameters.getPreviousProcessedYaml()).isEqualTo(processedYaml);
   }
 }

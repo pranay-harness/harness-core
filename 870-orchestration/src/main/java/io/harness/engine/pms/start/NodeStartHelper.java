@@ -7,7 +7,6 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.data.structure.HarnessStringUtils;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
@@ -72,16 +71,14 @@ public class NodeStartHelper {
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
     PlanNode planNode = nodeExecution.getNode();
     String serviceName = planNode.getServiceName();
-    NodeStartEvent nodeStartEvent =
-        NodeStartEvent.newBuilder()
-            .setAmbiance(nodeExecution.getAmbiance())
-            .addAllResolvedInput(transputHelper.resolveInputs(
-                nodeExecution.getAmbiance(), ((PlanNode) nodeExecution.getNode()).getRefObjects()))
-            .setFacilitatorPassThoroughData(passThroughData)
-            .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
-                RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))))
-            .setMode(nodeExecution.getMode())
-            .build();
+    NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
+                                        .setAmbiance(nodeExecution.getAmbiance())
+        .addAllResolvedInput(transputHelper.resolveInputs(
+            nodeExecution.getAmbiance(), planNode.getRefObjects()))
+                                        .setFacilitatorPassThoroughData(passThroughData)
+                                        .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+                                        .setMode(nodeExecution.getMode())
+                                        .build();
     eventSender.sendEvent(
         nodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, true);
   }

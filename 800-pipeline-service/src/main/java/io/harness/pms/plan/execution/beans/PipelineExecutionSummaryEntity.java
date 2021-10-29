@@ -7,6 +7,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.dto.FailureInfoDTO;
+import io.harness.engine.executions.retry.RetryExecutionMetadata;
+import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -32,6 +34,7 @@ import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -91,6 +94,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @Builder.Default Map<String, org.bson.Document> moduleInfo = new HashMap<>();
   @Builder.Default Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();
   List<String> modules;
+  Set<String> executedModules;
   String startingNodeId;
 
   ExecutionTriggerInfo executionTriggerInfo;
@@ -99,10 +103,31 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   EntityGitDetails entityGitDetails;
   FailureInfoDTO failureInfo;
   GovernanceMetadata governanceMetadata;
+  StagesExecutionMetadata stagesExecutionMetadata;
 
   Long startTs;
   Long endTs;
 
+  // TODO: removing these getters after 6 months (13/10/21)
+  public Boolean isLatestExecution() {
+    if (isLatestExecution == null) {
+      return true;
+    }
+    return isLatestExecution;
+  }
+
+  public RetryExecutionMetadata getRetryExecutionMetadata() {
+    if (retryExecutionMetadata == null) {
+      return RetryExecutionMetadata.builder()
+          .parentExecutionId(planExecutionId)
+          .rootExecutionId(planExecutionId)
+          .build();
+    }
+    return retryExecutionMetadata;
+  }
+
+  RetryExecutionMetadata retryExecutionMetadata;
+  Boolean isLatestExecution;
   @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
   @Setter @NonFinal @Version Long version;
@@ -148,7 +173,20 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .field(PlanExecutionSummaryKeys.accountId)
                  .field(PlanExecutionSummaryKeys.createdAt)
                  .build())
-
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_executed_modules_startTs_idx")
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.executedModules)
+                 .field(PlanExecutionSummaryKeys.startTs)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_createdAt_modules_idx")
+                 .field(PlanExecutionSummaryKeys.modules)
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.createdAt)
+                 .build())
         .build();
   }
 
@@ -158,5 +196,9 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
         + "triggerType";
     public String triggeredBy = PlanExecutionSummaryKeys.executionTriggerInfo + "."
         + "triggeredBy";
+    public String rootExecutionId = PlanExecutionSummaryKeys.retryExecutionMetadata + "."
+        + "rootExecutionId";
+    public String parentExecutionId = PlanExecutionSummaryKeys.retryExecutionMetadata + "."
+        + "parentExecutionId";
   }
 }

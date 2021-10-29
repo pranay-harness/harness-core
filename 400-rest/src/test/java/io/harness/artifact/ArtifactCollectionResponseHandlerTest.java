@@ -1,6 +1,7 @@
 package io.harness.artifact;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -33,6 +34,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamCollectionStatus;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
@@ -109,6 +111,7 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(ARTIFACT_STREAM_UNSTABLE);
     when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_STREAM_REFACTOR), any())).thenReturn(false);
     when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_PERPETUAL_TASK), any())).thenReturn(true);
+    when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE), any())).thenReturn(true);
   }
 
   @Test
@@ -166,7 +169,8 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
     ARTIFACT_STREAM.setFailedCronAttempts(10);
     artifactCollectionResponseHandler.processArtifactCollectionResult(
         ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
-    verify(artifactStreamService, times(1)).updateFailedCronAttempts(ACCOUNT_ID, ARTIFACT_STREAM_ID, 0);
+    verify(artifactStreamService, times(1))
+        .updateFailedCronAttemptsAndLastIteration(ACCOUNT_ID, ARTIFACT_STREAM_ID, 0, true);
   }
 
   @Test
@@ -211,6 +215,63 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
     when(artifactService.deleteArtifactsByUniqueKey(any(), any(), any())).thenReturn(true);
     artifactCollectionResponseHandler.handleResponseInternal(ARTIFACT_STREAM_UNSTABLE, buildSourceExecutionResponse);
     verify(artifactService).deleteArtifactsByUniqueKey(eq(ARTIFACT_STREAM_UNSTABLE), any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdateStatusWhenSuccess() {
+    BuildSourceExecutionResponse buildSourceExecutionResponse = constructBuildSourceExecutionResponse(false, true);
+
+    when(artifactCollectionUtils.processBuilds(ARTIFACT_STREAM_UNSTABLE, asList(BUILD_DETAILS_1, BUILD_DETAILS_2)))
+        .thenReturn(asList(ARTIFACT_1, ARTIFACT_2));
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(ARTIFACT_STREAM_UNSTABLE);
+
+    artifactCollectionResponseHandler.processArtifactCollectionResult(
+        ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
+
+    verify(artifactCollectionUtils).processBuilds(ARTIFACT_STREAM_UNSTABLE, asList(BUILD_DETAILS_1, BUILD_DETAILS_2));
+    verify(artifactStreamService).updateLastIterationFields(ACCOUNT_ID, ARTIFACT_STREAM_UNSTABLE.getUuid(), true);
+    verify(artifactStreamService)
+        .updateCollectionStatus(
+            ACCOUNT_ID, ARTIFACT_STREAM_UNSTABLE.getUuid(), ArtifactStreamCollectionStatus.STABLE.name());
+    verify(triggerService)
+        .triggerExecutionPostArtifactCollectionAsync(
+            ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID_2, asList(ARTIFACT_1, ARTIFACT_2));
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdateStatusWhenFailureMaxAttempts() {
+    BuildSourceExecutionResponse buildSourceExecutionResponse =
+        BuildSourceExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+            .artifactStreamId(ARTIFACT_STREAM_ID)
+            .build();
+    ARTIFACT_STREAM.setFailedCronAttempts(3499);
+    artifactCollectionResponseHandler.processArtifactCollectionResult(
+        ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
+    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID, null);
+    verify(alertService, times(1)).openAlert(eq(ACCOUNT_ID), any(), eq(AlertType.ARTIFACT_COLLECTION_FAILED), any());
+    verify(artifactStreamService, times(1))
+        .updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID, ArtifactStreamCollectionStatus.STOPPED.name());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdateStatusWhenFailure() {
+    BuildSourceExecutionResponse buildSourceExecutionResponse =
+        BuildSourceExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+            .artifactStreamId(ARTIFACT_STREAM_ID)
+            .build();
+
+    artifactCollectionResponseHandler.processArtifactCollectionResult(
+        ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
+    verify(artifactStreamService, times(1)).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID, UNSTABLE.name());
+    verify(artifactStreamService).updateFailedCronAttemptsAndLastIteration(ACCOUNT_ID, ARTIFACT_STREAM_ID, 1, false);
   }
 
   private BuildSourceExecutionResponse constructBuildSourceExecutionResponse(boolean cleanup, boolean stable) {

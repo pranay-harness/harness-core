@@ -40,6 +40,7 @@ import com.codahale.metrics.InstrumentedExecutorService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
@@ -77,6 +78,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
+            .filterExpander(query -> query.field(ArtifactStreamKeys.collectionEnabled).in(Arrays.asList(true, null)))
             .redistribute(true));
 
     if (iterator != null) {

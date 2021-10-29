@@ -12,6 +12,8 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
+import io.harness.plan.IdentityPlanNode;
+import io.harness.plan.NodeType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
@@ -86,6 +88,10 @@ public class GraphStatusUpdateHelper {
 
   // Todo: Update only properties that will be changed. No need to construct full
   public GraphVertex convertFromNodeExecution(GraphVertex prevValue, NodeExecution nodeExecution) {
+    String stepType = nodeExecution.getNode().getStepType().getType();
+    if (nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+      stepType = ((IdentityPlanNode) nodeExecution.getNode()).getOriginalStepType().getType();
+    }
     return prevValue.toBuilder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
@@ -96,7 +102,7 @@ public class GraphStatusUpdateHelper {
         .endTs(nodeExecution.getEndTs())
         .initialWaitDuration(nodeExecution.getInitialWaitDuration())
         .lastUpdatedAt(nodeExecution.getLastUpdatedAt())
-        .stepType(nodeExecution.getNode().getStepType().getType())
+        .stepType(stepType)
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())

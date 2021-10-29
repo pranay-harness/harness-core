@@ -24,6 +24,7 @@ for MODULE in `find . -iname build.bazel | cut -f 2 -d "/" | sort | uniq | grep 
   	  done
   	if [ "$n" = 0 ]; then
   	  echo "$MODULE not in dependency of microservice interface tool"
-  	  # exit 1
+  	  exit 1
   	fi
   done
+exit 0

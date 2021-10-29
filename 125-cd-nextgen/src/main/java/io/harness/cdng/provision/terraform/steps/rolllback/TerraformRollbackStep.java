@@ -26,6 +26,7 @@ import io.harness.persistence.HIterator;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepCategory;
@@ -172,9 +173,23 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseDataSupplier) throws Exception {
     log.info("Handling Task Result With Security Context for the Rollback Step");
+    StepResponse stepResponse = null;
+
+    try {
+      stepResponse = generateStepResponse(ambiance, stepParameters, responseDataSupplier);
+    } finally {
+      stepHelper.sendRollbackTelemetryEvent(ambiance, stepResponse == null ? Status.FAILED : stepResponse.getStatus());
+    }
+
+    return stepResponse;
+  }
+
+  private StepResponse generateStepResponse(Ambiance ambiance, StepElementParameters stepParameters,
+      ThrowingSupplier<TerraformTaskNGResponse> responseDataSupplier) throws Exception {
     TerraformRollbackStepParameters stepParametersSpec = (TerraformRollbackStepParameters) stepParameters.getSpec();
     TerraformTaskNGResponse taskResponse = responseDataSupplier.get();
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
+
     List<UnitProgress> unitProgresses = taskResponse.getUnitProgressData() == null
         ? Collections.emptyList()
         : taskResponse.getUnitProgressData().getUnitProgresses();
@@ -198,6 +213,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
         terraformConfigDAL.clearTerraformConfig(ambiance, rollbackConfig.getEntityId());
       }
     }
+
     return stepResponseBuilder.build();
   }
 

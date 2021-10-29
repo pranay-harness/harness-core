@@ -8,11 +8,7 @@ features:
     description: The restriction on number of builds
     restrictions:
       FREE:
-        restrictionType: RATE_LIMIT
-        limit: 100
-        timeUnit:
-          unit: MONTHS
-          numberOfUnits: 1
+        restrictionType: CUSTOM
         clientName: pipelineService
       TEAM:
         restrictionType: AVAILABILITY

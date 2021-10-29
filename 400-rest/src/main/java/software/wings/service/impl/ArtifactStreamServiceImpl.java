@@ -39,6 +39,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -405,7 +406,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream get(String artifactStreamId) {
-    return wingsPersistence.get(ArtifactStream.class, artifactStreamId);
+    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, artifactStreamId);
+    if (artifactStream != null) {
+      artifactStream.setMaxAttempts(ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS);
+    }
+    return artifactStream;
   }
 
   @Override
@@ -531,6 +536,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void validateIfNexus2AndParameterized(ArtifactStream artifactStream, String accountId) {
     if (artifactStream != null) {
       if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+        if (Boolean.TRUE.equals(artifactStream.getCollectionEnabled())) {
+          throw new InvalidRequestException(
+              "Auto artifact collection cannot be enabled for parameterized artifact sources");
+        }
         SettingValue settingValue = settingsService.getSettingValueById(accountId, artifactStream.getSettingId());
         if (settingValue instanceof NexusConfig) {
           NexusConfig nexusConfig = (NexusConfig) settingValue;
@@ -573,7 +582,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private void createPerpetualTask(ArtifactStream artifactStream) {
-    if (artifactStream == null) {
+    if (artifactStream == null || Boolean.FALSE.equals(artifactStream.getCollectionEnabled())) {
       return;
     }
 
@@ -717,6 +726,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     addAcrHostNameIfNeeded(artifactStream);
 
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, artifactStream.getAccountId())) {
+      resetArtifactCollectionStatusAndFailedAttempts(artifactStream, existingArtifactStream);
+    }
+
     // Add keywords.
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
 
@@ -738,14 +751,31 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     yamlPushService.pushYamlChangeSet(artifactStream.getAccountId(), existingArtifactStream, finalArtifactStream,
         Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
 
-    if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)
-        || shouldDeleteArtifactsOnServerChanged(existingArtifactStream)) {
-      deleteArtifacts(accountId, finalArtifactStream);
+    if (Boolean.FALSE.equals(artifactStream.getCollectionEnabled())) {
+      deletePerpetualTask(artifactStream);
     } else {
-      resetPerpetualTask(finalArtifactStream);
+      if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)
+          || shouldDeleteArtifactsOnServerChanged(existingArtifactStream)) {
+        deleteArtifacts(accountId, finalArtifactStream);
+      } else {
+        resetPerpetualTask(finalArtifactStream);
+      }
     }
 
     return finalArtifactStream;
+  }
+
+  private void resetArtifactCollectionStatusAndFailedAttempts(
+      ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
+    if (Boolean.FALSE.equals(artifactStream.getCollectionEnabled())) {
+      return;
+    }
+    if (existingArtifactStream.artifactServerChanged(artifactStream)
+        || existingArtifactStream.artifactSourceChanged(artifactStream)
+        || existingArtifactStream.artifactCollectionEnabledFromDisabled(artifactStream)) {
+      artifactStream.setCollectionStatus(ArtifactStreamCollectionStatus.UNSTABLE.name());
+      artifactStream.setFailedCronAttempts(0);
+    }
   }
 
   @Override
@@ -777,6 +807,59 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } else {
       throw new InvalidRequestException(
           "The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
+    }
+  }
+
+  @Override
+  public boolean updateLastIterationFields(String accountId, String uuid, boolean success) {
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
+                                      .filter(ArtifactStreamKeys.accountId, accountId)
+                                      .filter(ArtifactStreamKeys.uuid, uuid);
+    long currentTime = System.currentTimeMillis();
+    UpdateOperations<ArtifactStream> updateOperations = wingsPersistence.createUpdateOperations(ArtifactStream.class)
+                                                            .set(ArtifactStreamKeys.lastIteration, currentTime);
+    if (success) {
+      updateOperations.set(ArtifactStreamKeys.lastSuccessfulIteration, currentTime);
+    }
+    UpdateResults update = wingsPersistence.update(query, updateOperations);
+    return update.getUpdatedCount() == 1;
+  }
+
+  @Override
+  public ArtifactStream resetStoppedArtifactCollection(String appId, String artifactStreamId) {
+    Query<ArtifactStream> query =
+        wingsPersistence.createQuery(ArtifactStream.class)
+            .filter(ArtifactStreamKeys.appId, appId)
+            .filter(ArtifactStreamKeys.uuid, artifactStreamId)
+            .filter(ArtifactStreamKeys.collectionStatus, ArtifactStreamCollectionStatus.STOPPED);
+    UpdateOperations<ArtifactStream> updateOperations =
+        wingsPersistence.createUpdateOperations(ArtifactStream.class)
+            .set(ArtifactStreamKeys.collectionStatus, ArtifactStreamCollectionStatus.UNSTABLE)
+            .set(ArtifactStreamKeys.failedCronAttempts, 0);
+
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+    if (updateResults.getUpdatedCount() == 0) {
+      throw new InvalidRequestException(format(
+          "No valid artifact source available to reset with id %s and artifact collection STOPPED", artifactStreamId));
+    }
+    alertService.deleteByArtifactStream(appId, artifactStreamId);
+    ArtifactStream artifactStream = get(artifactStreamId);
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, artifactStream.getAccountId())) {
+      resetPerpetualTask(artifactStream);
+    }
+    return artifactStream;
+  }
+
+  @Override
+  public void updateCollectionEnabled(ArtifactStream artifactStream, boolean collectionEnabled) {
+    wingsPersistence.updateField(
+        ArtifactStream.class, artifactStream.getUuid(), ArtifactStreamKeys.collectionEnabled, collectionEnabled);
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE, artifactStream.getAccountId())) {
+      if (collectionEnabled && artifactStream.getPerpetualTaskId() != null) {
+        createPerpetualTask(artifactStream);
+      } else {
+        deletePerpetualTask(artifactStream);
+      }
     }
   }
 
@@ -1170,8 +1253,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String artifactStreamId) {
-    List<OwnedByArtifactStream> services =
-        ServiceClassLocator.descendingServices(this, ArtifactStreamServiceImpl.class, OwnedByArtifactStream.class);
+    List<OwnedByArtifactStream> services = software.wings.service.impl.ServiceClassLocator.descendingServices(
+        this, ArtifactStreamServiceImpl.class, OwnedByArtifactStream.class);
     PruneEntityListener.pruneDescendingEntities(
         services, descending -> descending.pruneByArtifactStream(appId, artifactStreamId));
   }
@@ -1340,12 +1423,19 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public boolean updateFailedCronAttempts(String accountId, String artifactStreamId, int counter) {
+  public boolean updateFailedCronAttemptsAndLastIteration(
+      String accountId, String artifactStreamId, int counter, boolean success) {
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
                                       .filter(ArtifactStreamKeys.accountId, accountId)
                                       .filter(ArtifactStreamKeys.uuid, artifactStreamId);
     UpdateOperations<ArtifactStream> updateOperations = wingsPersistence.createUpdateOperations(ArtifactStream.class)
                                                             .set(ArtifactStreamKeys.failedCronAttempts, counter);
+    long currentTime = System.currentTimeMillis();
+    updateOperations.set(ArtifactStreamKeys.lastIteration, currentTime);
+    if (success) {
+      updateOperations.set(ArtifactStreamKeys.lastSuccessfulIteration, currentTime);
+    }
+
     UpdateResults update = wingsPersistence.update(query, updateOperations);
     return update.getUpdatedCount() == 1;
   }

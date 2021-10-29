@@ -70,8 +70,19 @@ mongo:
   aliasDBName: ng-harness
   traceMode: DISABLED
 
+licenseConfig:
+  deployVariant: "SAAS"
+
 accountConfig:
   deploymentClusterName: ""
+
+ngIteratorsConfig:
+  ngVaultSecretManagerRenewalIteratorConfig:
+    threadPoolSize: ${NG_VAULT_ITERATOR_THREAD_POOL_SIZE:-5}
+  webhookEventProcessingServiceIteratorConfig:
+    threadPoolSize: ${WEBHOOK_EVENT_PROCESSING_SERVICE_THREAD_SIZE:-5}
+  gitFullSyncEntityIteratorConfig:
+    threadPoolSize: ${GIT_FULLSYNC_ENTITY_ITERATOR_THREAD_POOL_SIZE:-5}
 
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
@@ -107,6 +118,11 @@ pipelineServiceClientConfig:
 
 auditClientConfig:
   baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+ceNextGenClientConfig:
+  baseUrl: http://localhost:7340/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
@@ -187,7 +203,7 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: true
+shouldConfigureWithPMS: false
 
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
@@ -264,6 +280,9 @@ accessControlAdminClient:
   mockAccessControlService: true
 
 gitGrpcClientConfigs:
+  cf:
+    target: localhost:11001
+    authority: localhost
   pms:
     target: localhost:14001
     authority: localhost

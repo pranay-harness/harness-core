@@ -54,7 +54,15 @@
                             ce_recommendations |
                             billing_data |
                             node_pool_aggregated |
-                            is_alive | time_bucket | anomalies </includes>
+                            is_alive |
+                            time_bucket |
+                            anomalies |
+                            service_infra_info |
+                            services |
+                            pipeline_execution_summary_cd|
+                            environments|
+                            pipelines |
+                            ng_instance_stats</includes>
                             <excludes />
                             <inputSchema>public</inputSchema>
                         </database>

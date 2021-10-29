@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.encryption.Scope;
@@ -65,7 +66,7 @@ public class TemplateEntity
   @NotEmpty String accountId;
   @Wither @Trimmed String orgIdentifier;
   @Wither @Trimmed String projectIdentifier;
-  @NotEmpty String identifier;
+  @NotEmpty @EntityIdentifier String identifier;
 
   @Wither @EntityName String name;
   @Wither @Size(max = 1024) String description;
@@ -96,6 +97,8 @@ public class TemplateEntity
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
+  @Setter @NonFinal String invalidYamlString;
+  @NonFinal Boolean isEntityInvalid;
 
   @Override
   public String getAccountIdentifier() {
@@ -172,5 +175,15 @@ public class TemplateEntity
                  .descSortField(TemplateEntityKeys.createdAt)
                  .build())
         .build();
+  }
+
+  @Override
+  public boolean isEntityInvalid() {
+    return Boolean.TRUE.equals(isEntityInvalid);
+  }
+
+  @Override
+  public void setEntityInvalid(boolean isEntityInvalid) {
+    this.isEntityInvalid = isEntityInvalid;
   }
 }

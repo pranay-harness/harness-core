@@ -53,8 +53,10 @@ applications {"name": "appId_1", "background": true} {"appId": 1}
 applications {"name": "createdAt_1", "background": true} {"createdAt": 1}
 applications {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
 approvalPollingJob {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
+artifactStream {"name": "accountId_1", "background": true} {"accountId": 1}
 artifactStream {"name": "appId_1", "background": true} {"appId": 1}
 artifactStream {"name": "artifactStream_cleanup", "background": true} {"artifactStreamType": 1, "nextCleanupIteration": 1}
+artifactStream {"name": "artifactStream_collection", "background": true} {"collectionEnabled": 1, "nextIteration": 1}
 artifactStream {"name": "createdAt_1", "background": true} {"createdAt": 1}
 artifactStream {"name": "nextCleanupIteration_1", "background": true} {"nextCleanupIteration": 1}
 artifactStream {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
@@ -203,7 +205,7 @@ delegates {"name": "accountId_1", "background": true} {"accountId": 1}
 delegates {"name": "byAcctNgGroupIdOwner", "background": true} {"accountId": 1, "ng": 1, "delegateGroupId": 1, "owner": 1}
 delegates {"name": "capabilitiesCheckNextIteration_1", "background": true} {"capabilitiesCheckNextIteration": 1}
 delegates {"name": "createdAt_1", "background": true} {"createdAt": 1}
-delegates {"name": "sessionIdentifier_1", "background": true} {"sessionIdentifier": 1}
+delegates {"name": "taskExpiryCheckNextIteration_1", "background": true} {"taskExpiryCheckNextIteration": 1}
 delegates {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 deletedEntities {"name": "entityId_1", "unique": true} {"entityId": 1}
 deletedEntities {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
@@ -525,6 +527,7 @@ permits {"name": "expireAt_1", "background": true, "expireAfterSeconds": 0} {"ex
 permits {"name": "key_1", "unique": true} {"key": 1}
 perpetualTask {"name": "accountId_1", "background": true} {"accountId": 1}
 perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignAfterMs": 1, "assignerIterations": 1}
+perpetualTask {"name": "assignerIterator_1", "background": true} {"state": 1, "assignerIterations": 1}
 perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
 perpetualTask {"name": "rebalanceIterator", "background": true} {"state": 1, "rebalanceIteration": 1}
 perpetualTaskScheduleConfig {"name": "unique_perpetualTaskScheduleConfig_index1", "unique": true} {"accountId": 1, "perpetualTaskType": 1}
@@ -777,6 +780,7 @@ users {"name": "accountsIdx", "background": true} {"accounts": 1}
 users {"name": "appId_1", "background": true} {"appId": 1}
 users {"name": "createdAt_1", "background": true} {"createdAt": 1}
 users {"name": "email_1", "unique": true} {"email": 1}
+users {"name": "externalUserId_1", "background": true} {"externalUserId": 1}
 users {"name": "name_1", "background": true} {"name": 1}
 users {"name": "pendingAccountsIdx", "background": true} {"pendingAccounts": 1}
 verificationServiceConfigurations {"name": "accountId_1", "background": true} {"accountId": 1}

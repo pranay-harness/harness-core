@@ -1,5 +1,9 @@
 package io.harness.cvng.cdng.services.impl;
 
+import static io.harness.cvng.cdng.services.impl.CVNGStepUtils.SERVICE_CONFIG_KEY;
+import static io.harness.cvng.cdng.services.impl.CVNGStepUtils.SPEC_KEY;
+import static io.harness.cvng.cdng.services.impl.CVNGStepUtils.STAGE_KEY;
+import static io.harness.cvng.cdng.services.impl.CVNGStepUtils.USE_FROM_STAGE_KEY;
 import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
 import io.harness.common.NGExpressionUtils;
@@ -24,7 +28,8 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
   @Inject private MonitoredServiceService monitoredServiceService;
   @Override
@@ -44,7 +49,7 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     // This is handling the case when the monitoring service is defined. Runtime case needs to be handled separately
     // https://harness.atlassian.net/browse/CDNG-10512
     YamlNode stageLevelYamlNode = getStageSpecYamlNode(filterCreationContext.getCurrentField().getNode());
-    String serviceIdentifier = CVNGStepUtils.getServiceRefNode(stageLevelYamlNode).asText();
+    String serviceIdentifier = parseServiceIdentifier(stageLevelYamlNode);
     String envIdentifier = CVNGStepUtils.getEnvRefNode(stageLevelYamlNode).asText();
 
     ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
@@ -76,12 +81,45 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     return FilterCreationResponse.builder().referredEntities(result).build();
   }
 
+  private String parseServiceIdentifier(YamlNode stageLevelYamlNode) {
+    // Service can be either selected from existing stage or directly provided.
+    // propagating service from multiple unknown stages is not supported yet.
+    if (CVNGStepUtils.hasServiceIdentifier(stageLevelYamlNode)) {
+      return CVNGStepUtils.getServiceRefNode(stageLevelYamlNode).asText();
+    } else {
+      String useFromStageIdentifier = stageLevelYamlNode.getField(SPEC_KEY)
+                                          .getNode()
+                                          .getField(SERVICE_CONFIG_KEY)
+                                          .getNode()
+                                          .getField(USE_FROM_STAGE_KEY)
+                                          .getNode()
+                                          .getField(STAGE_KEY)
+                                          .getNode()
+                                          .asText();
+      YamlNode propagateFromStage = findStageByIdentifier(stageLevelYamlNode, useFromStageIdentifier);
+      return CVNGStepUtils.getServiceRefNode(propagateFromStage).asText();
+    }
+  }
+
   private YamlNode getStageSpecYamlNode(YamlNode yamlNode) {
     Preconditions.checkNotNull(yamlNode, "Invalid yaml. Can't find stage spec.");
     if (yamlNode.getField(CVNGStepUtils.STAGE_KEY) != null) {
       return yamlNode.getField(CVNGStepUtils.STAGE_KEY).getNode();
     } else {
       return getStageSpecYamlNode(yamlNode.getParentNode());
+    }
+  }
+  private YamlNode findStageByIdentifier(YamlNode yamlNode, String identifier) {
+    Preconditions.checkNotNull(yamlNode, "Invalid yaml. Can't find stage spec.");
+    if (yamlNode.getField(CVNGStepUtils.STAGES_KEY) != null) {
+      for (YamlNode stageNode : yamlNode.getField(CVNGStepUtils.STAGES_KEY).getNode().asArray()) {
+        if (identifier.equals(stageNode.getField(CVNGStepUtils.STAGE_KEY).getNode().getIdentifier())) {
+          return stageNode.getField(CVNGStepUtils.STAGE_KEY).getNode();
+        }
+      }
+      throw new IllegalStateException("Could not find stage with identifier: " + identifier);
+    } else {
+      return findStageByIdentifier(yamlNode.getParentNode(), identifier);
     }
   }
 }

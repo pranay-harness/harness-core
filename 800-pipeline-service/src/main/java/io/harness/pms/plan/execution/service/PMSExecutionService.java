@@ -40,7 +40,9 @@ public interface PMSExecutionService {
   Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
       String searchTerm, List<ExecutionStatus> statusList, boolean myDeployments, boolean pipelineDeleted,
-      ByteString gitEntityBasicInfo);
+      ByteString gitEntityBasicInfo, boolean isLatest);
 
   void deleteExecutionsOnPipelineDeletion(PipelineEntity pipelineEntity);
+
+  long getCountOfExecutions(Criteria criteria);
 }

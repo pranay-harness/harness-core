@@ -18,6 +18,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STOPPED;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -55,6 +56,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -131,6 +133,7 @@ import software.wings.utils.RepositoryType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.mongodb.WriteResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -142,10 +145,13 @@ import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(CDC)
@@ -4349,5 +4355,143 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactStream artifactStream1 =
         artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "artifactSource (serviceName)");
     assertThat(artifactStream1.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdateLastIterationFailed() {
+    WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+    Query<ArtifactStream> query = mock(Query.class);
+    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
+    ArtifactStream stream = DockerArtifactStream.builder().appId(APP_ID).uuid(UUID).build();
+    stream.setSyncFromGit(false);
+    when(query.asList()).thenReturn(Collections.singletonList(stream));
+
+    UpdateOperations<ArtifactStream> updateOperations = mock(UpdateOperations.class);
+    when(wingsPersistence.createUpdateOperations(ArtifactStream.class)).thenReturn(updateOperations);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+    when(wingsPersistence.update(query, updateOperations))
+        .thenReturn(new UpdateResults(new WriteResult(1, true, null)));
+    Reflect.on(artifactStreamService).set("wingsPersistence", wingsPersistence);
+    assertThat(artifactStreamService.updateLastIterationFields(ACCOUNT_ID, ARTIFACT_STREAM_ID, false)).isTrue();
+    verify(updateOperations, times(1)).set(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdateLastIterationSuccess() {
+    WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+    Query<ArtifactStream> query = mock(Query.class);
+    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
+    ArtifactStream stream = DockerArtifactStream.builder().appId(APP_ID).uuid(UUID).build();
+    stream.setSyncFromGit(false);
+    when(query.asList()).thenReturn(Collections.singletonList(stream));
+
+    UpdateOperations<ArtifactStream> updateOperations = mock(UpdateOperations.class);
+    when(wingsPersistence.createUpdateOperations(ArtifactStream.class)).thenReturn(updateOperations);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+    when(wingsPersistence.update(query, updateOperations))
+        .thenReturn(new UpdateResults(new WriteResult(1, true, null)));
+    Reflect.on(artifactStreamService).set("wingsPersistence", wingsPersistence);
+    assertThat(artifactStreamService.updateLastIterationFields(ACCOUNT_ID, ARTIFACT_STREAM_ID, true)).isTrue();
+    verify(updateOperations, times(2)).set(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResetArtifactCollection() {
+    WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+    Query<ArtifactStream> query = mock(Query.class);
+    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(query);
+    ArgumentCaptor<String> fieldsCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Object> valuesCaptor = ArgumentCaptor.forClass(Object.class);
+    when(query.filter(fieldsCaptor.capture(), valuesCaptor.capture())).thenReturn(query);
+    ArtifactStream stream = DockerArtifactStream.builder().appId(APP_ID).uuid(UUID).build();
+    stream.setFailedCronAttempts(3501);
+    stream.setCollectionStatus(STOPPED.name());
+    stream.setSyncFromGit(false);
+    when(query.asList()).thenReturn(Collections.singletonList(stream));
+
+    UpdateOperations<ArtifactStream> updateOperations = mock(UpdateOperations.class);
+    when(wingsPersistence.createUpdateOperations(ArtifactStream.class)).thenReturn(updateOperations);
+    when(updateOperations.set(fieldsCaptor.capture(), valuesCaptor.capture())).thenReturn(updateOperations);
+    when(wingsPersistence.update(query, updateOperations))
+        .thenReturn(new UpdateResults(new WriteResult(1, true, null)));
+    when(wingsPersistence.get(ArtifactStream.class, ARTIFACT_STREAM_ID)).thenReturn(stream);
+    Reflect.on(artifactStreamService).set("wingsPersistence", wingsPersistence);
+    assertThat(artifactStreamService.resetStoppedArtifactCollection(APP_ID, ARTIFACT_STREAM_ID)).isNotNull();
+    assertThat(fieldsCaptor.getAllValues())
+        .containsExactly(ArtifactStreamKeys.appId, ArtifactStreamKeys.uuid, ArtifactStreamKeys.collectionStatus,
+            ArtifactStreamKeys.collectionStatus, ArtifactStreamKeys.failedCronAttempts);
+    assertThat(valuesCaptor.getAllValues()).containsExactly(APP_ID, ARTIFACT_STREAM_ID, STOPPED, UNSTABLE, 0);
+    verify(query, times(3)).filter(any(), any());
+    verify(updateOperations, times(2)).set(any(), any());
+    verify(alertService, times(1)).deleteByArtifactStream(APP_ID, ARTIFACT_STREAM_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotCreatePerpetualTaskWhenCollectionDisabled() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+
+    dockerArtifactStream.setCollectionEnabled(false);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, ACCOUNT_ID)).thenReturn(true);
+    ArtifactStream savedArtifactStream = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactStream).isNotNull();
+    verify(subject, never()).fireInform(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotDeletePerpetualTaskWhenCollectionDisabled() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+
+    dockerArtifactStream.setCollectionEnabled(false);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, ACCOUNT_ID)).thenReturn(true);
+    ArtifactStream savedArtifactStream = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactStream).isNotNull();
+    verify(subject, never()).fireInform(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldDeletePerpetualTaskWhenCollectionUpdatedToDisabled() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .uuid(ARTIFACT_STREAM_ID)
+                                                    .build();
+
+    dockerArtifactStream.setCollectionEnabled(false);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, ACCOUNT_ID)).thenReturn(true);
+    createArtifactStream(dockerArtifactStream);
+    artifactStreamService.update(dockerArtifactStream, false);
+    verify(subject).fireInform(any(), eq(dockerArtifactStream));
   }
 }

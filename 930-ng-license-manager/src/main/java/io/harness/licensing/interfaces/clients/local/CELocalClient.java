@@ -9,7 +9,6 @@ import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO.CEModuleLicenseDTOBuilder;
-import io.harness.licensing.beans.stats.CERuntimeUsageDTO;
 import io.harness.licensing.interfaces.clients.CEModuleLicenseClient;
 
 import java.time.Instant;
@@ -36,10 +35,5 @@ public class CELocalClient implements CEModuleLicenseClient {
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }
-  }
-
-  @Override
-  public CERuntimeUsageDTO getRuntimeUsage(String accountId) {
-    return null;
   }
 }

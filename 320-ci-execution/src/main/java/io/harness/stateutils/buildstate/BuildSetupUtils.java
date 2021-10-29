@@ -5,8 +5,8 @@ import static io.harness.govern.Switch.unhandled;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
-import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
-import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.beans.steps.stepinfo.InitializeStepInfo;
+import io.harness.delegate.beans.ci.CIInitializeTaskParams;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.inject.Inject;
@@ -21,24 +21,23 @@ import lombok.extern.slf4j.Slf4j;
 public class BuildSetupUtils {
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
 
-  public CIBuildSetupTaskParams getBuildSetupTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      Ambiance ambiance, Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
-    switch (liteEngineTaskStepInfo.getBuildJobEnvInfo().getType()) {
+  public CIInitializeTaskParams getBuildSetupTaskParams(InitializeStepInfo initializeStepInfo, Ambiance ambiance,
+      Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
+    switch (initializeStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
-        return k8BuildSetupUtils.getCIk8BuildTaskParams(
-            liteEngineTaskStepInfo, ambiance, taskIds, logPrefix, stepLogKeys);
+        return k8BuildSetupUtils.getCIk8BuildTaskParams(initializeStepInfo, ambiance, taskIds, logPrefix, stepLogKeys);
       default:
-        unhandled(liteEngineTaskStepInfo.getBuildJobEnvInfo().getType());
+        unhandled(initializeStepInfo.getBuildJobEnvInfo().getType());
     }
     return null;
   }
 
-  public List<ContainerDefinitionInfo> getBuildServiceContainers(LiteEngineTaskStepInfo liteEngineTaskStepInfo) {
-    switch (liteEngineTaskStepInfo.getBuildJobEnvInfo().getType()) {
+  public List<ContainerDefinitionInfo> getBuildServiceContainers(InitializeStepInfo initializeStepInfo) {
+    switch (initializeStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
-        return k8BuildSetupUtils.getCIk8BuildServiceContainers(liteEngineTaskStepInfo);
+        return k8BuildSetupUtils.getCIk8BuildServiceContainers(initializeStepInfo);
       default:
-        unhandled(liteEngineTaskStepInfo.getBuildJobEnvInfo().getType());
+        unhandled(initializeStepInfo.getBuildJobEnvInfo().getType());
     }
     return null;
   }

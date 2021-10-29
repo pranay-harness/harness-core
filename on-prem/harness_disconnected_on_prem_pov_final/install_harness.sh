@@ -471,7 +471,7 @@ function setupClientUtils() {
   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect oc and scm"
 
   for platform in linux darwin; do
-    for kubectlversion in v1.13.2; do
+    for kubectlversion in v1.13.2 v1.19.2; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
       cp images/kubectl/${platform}/$kubectlversion/kubectl ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
     done
@@ -491,7 +491,7 @@ function setupClientUtils() {
       cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
     done
 
-    for chartmuseumversion in v0.8.2; do
+    for chartmuseumversion in v0.8.2 v0.13.0; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
       cp images/chartmuseum/${platform}/$chartmuseumversion/chartmuseum ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
     done
@@ -506,12 +506,12 @@ function setupClientUtils() {
       cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
     done
 
-    for scmVersion in 87448d72; do
+    for scmVersion in 90882846; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
       cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
     done
 
-    for kustomizeVersion in v3.5.4; do
+    for kustomizeVersion in v3.5.4 v4.0.0; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeVersion/bin/${platform}/amd64/
       cp images/kustomize/${platform}/$kustomizeVersion/kustomize ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeVersion/bin/${platform}/amd64/
     done

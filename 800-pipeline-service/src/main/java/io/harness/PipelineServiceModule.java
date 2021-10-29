@@ -2,6 +2,7 @@ package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
+import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
@@ -51,6 +52,8 @@ import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.Dashboard.PMSLandingDashboardService;
+import io.harness.pms.Dashboard.PMSLandingDashboardServiceImpl;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
 import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
@@ -86,6 +89,8 @@ import io.harness.pms.plan.creation.NodeTypeLookupServiceImpl;
 import io.harness.pms.plan.execution.mapper.PipelineExecutionFilterPropertiesMapper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
+import io.harness.pms.plan.execution.service.PmsExecutionSummaryService;
+import io.harness.pms.plan.execution.service.PmsExecutionSummaryServiceImpl;
 import io.harness.pms.preflight.service.PreflightService;
 import io.harness.pms.preflight.service.PreflightServiceImpl;
 import io.harness.pms.rbac.validator.PipelineRbacService;
@@ -113,11 +118,14 @@ import io.harness.steps.shellscript.ShellScriptHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
+import io.harness.template.TemplateResourceClientModule;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.JooqModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.token.TokenClientModule;
 import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
@@ -154,6 +162,7 @@ import javax.cache.Cache;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.ExecuteListener;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
@@ -222,12 +231,15 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new TemplateResourceClientModule(configuration.getTemplateServiceClientConfig(),
+        configuration.getTemplateServiceSecret(), TEMPLATE_SERVICE.toString()));
     install(NGTriggersModule.getInstance(configuration.getTriggerConfig(),
         configuration.getPipelineServiceClientConfig(), configuration.getPipelineServiceSecret()));
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
     install(YamlSdkModule.getInstance());
+    install(JooqModule.getInstance());
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), PIPELINE_SERVICE.getServiceId()));
     install(new PollResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
@@ -267,6 +279,8 @@ public class PipelineServiceModule extends AbstractModule {
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
+    bind(PmsExecutionSummaryService.class).to(PmsExecutionSummaryServiceImpl.class);
+
     bind(PreflightService.class).to(PreflightServiceImpl.class);
     bind(PipelineRbacService.class).to(PipelineRbacServiceImpl.class);
     bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
@@ -301,6 +315,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
     bind(JiraStepHelperService.class).to(JiraStepHelperServiceImpl.class);
     bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
+    bind(PMSLandingDashboardService.class).to(PMSLandingDashboardServiceImpl.class);
     bind(LogStreamingServiceRestClient.class)
         .toProvider(NGLogStreamingClientFactory.builder()
                         .logStreamingServiceBaseUrl(configuration.getLogStreamingServiceConfig().getBaseUrl())
@@ -388,6 +403,13 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("PSQLExecuteListener")
+  ExecuteListener executeListener() {
+    return HExecuteListener.getInstance();
+  }
+
+  @Provides
+  @Singleton
   public MongoConfig mongoConfig(PipelineServiceConfiguration configuration) {
     return configuration.getMongoConfig();
   }
@@ -427,14 +449,15 @@ public class PipelineServiceModule extends AbstractModule {
   @Provides
   @Singleton
   DistributedLockImplementation distributedLockImplementation() {
-    return MONGO;
+    return configuration.getDistributedLockImplementation() == null ? MONGO
+                                                                    : configuration.getDistributedLockImplementation();
   }
 
   @Provides
   @Named("lock")
   @Singleton
   RedisConfig redisConfig() {
-    return RedisConfig.builder().build();
+    return configuration.getRedisLockConfig();
   }
 
   @Provides

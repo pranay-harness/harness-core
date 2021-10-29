@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
@@ -15,14 +14,12 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -91,7 +88,6 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .getDelegateSequenceConfig(anyString(), anyString(), anyInt());
     on(delegateService).set("featureFlagService", featureFlagService);
     on(delegateService).set("mainConfiguration", mainConfiguration);
-    when(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, eq(anyString()))).thenReturn(false);
     doReturn(false).when(featureFlagService).isEnabled(any(), any());
     JreConfig oracleJreConfig = JreConfig.builder().version("1.8.0_191").build();
     HashMap<String, JreConfig> jreConfigMap = new HashMap<>();

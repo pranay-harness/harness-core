@@ -1,0 +1,33 @@
+pipeline:
+  name: P2
+  identifier: pipeline
+  projectIdentifier: proj
+  orgIdentifier: org
+  tags: {}
+  stages:
+    - stage:
+        name: dev
+        identifier: dev
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceRef: s1
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                manifests:
+                  - manifest:
+                      identifier: man1
+                      type: HelmChart
+                      spec:
+                        store:
+                          type: S3
+                          spec:
+                            connectorRef: conn
+                            bucketName: bucket
+                            folderPath: path
+                            region: us-east-1
+                        chartName: chart
+                        chartVersion: <+input>
+                        helmVersion: V2
+                        skipResourceVersioning: false

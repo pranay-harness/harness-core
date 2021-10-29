@@ -10,4 +10,7 @@ import java.util.Map;
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface NodeResumeEventPublisher {
   void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError);
+
+  void publishEventForIdentityNode(
+      NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError, String serviceName);
 }

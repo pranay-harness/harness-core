@@ -18,6 +18,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.observer.Subject;
+import io.harness.opaclient.model.OpaConstants;
 import io.harness.plan.Node;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -26,6 +27,7 @@ import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.springdata.TransactionHelper;
 
 import com.google.inject.Inject;
@@ -52,8 +54,9 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
 
   @Override
   public PlanExecution triggerNode(Ambiance ambiance, Plan plan, PlanExecutionMetadata metadata) {
-    GovernanceMetadata governanceMetadata = governanceService.evaluateGovernancePolicies(
-        ambiance.getMetadata(), metadata, ambiance.getSetupAbstractionsMap());
+    GovernanceMetadata governanceMetadata = governanceService.evaluateGovernancePolicies(metadata.getYaml(),
+        ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.accountId),
+        OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_RUN, ambiance.getPlanExecutionId());
     PlanExecution planExecution = createPlanExecution(ambiance, metadata, governanceMetadata);
     eventEmitter.emitEvent(
         OrchestrationEvent.newBuilder()

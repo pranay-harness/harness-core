@@ -168,6 +168,8 @@ public class UserGroupPermissionsController {
         return AUDIT_VIEWER;
       case MANAGE_TAGS:
         return PermissionType.MANAGE_TAGS;
+      case MANAGE_ACCOUNT_DEFAULTS:
+        return PermissionType.MANAGE_ACCOUNT_DEFAULTS;
       case ADMINISTER_CE:
         return CE_ADMIN;
       case VIEW_CE:
@@ -518,6 +520,8 @@ public class UserGroupPermissionsController {
       case TAG_MANAGEMENT:
       case MANAGE_TAGS:
         return QLAccountPermissionType.MANAGE_TAGS;
+      case MANAGE_ACCOUNT_DEFAULTS:
+        return QLAccountPermissionType.MANAGE_ACCOUNT_DEFAULTS;
       case CE_ADMIN:
         return ADMINISTER_CE;
       case CE_VIEWER:

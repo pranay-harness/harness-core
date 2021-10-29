@@ -24,6 +24,7 @@ import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
+import io.harness.beans.sweepingoutputs.Build;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput.CodeBaseCommit;
 import io.harness.delegate.beans.TaskData;
@@ -129,9 +130,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       ManualExecutionSource manualExecutionSource = (ManualExecutionSource) stepParameters.getExecutionSource();
       String prNumber = manualExecutionSource.getPrNumber();
       if (scmGitRefTaskResponseData == null && isNotEmpty(prNumber)) {
-        throw new CIStageExecutionException(
-            "Exception: Validate codebase connector api token is correct and PR number: " + prNumber
-            + " exists in codebase repo ");
+        throw new CIStageExecutionException("Failed to retrieve PrNumber: " + prNumber + " details");
       }
       log.error("Failed to retrieve codebase info from returned delegate response");
     }
@@ -247,9 +246,16 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     if (listCommitsResponse.getCommit() == null || isEmpty(listCommitsResponse.getCommit().getSha())) {
       return null;
     }
+
+    Build build = new Build("branch");
+    if (isNotEmpty(tag)) {
+      build = new Build("tag");
+    }
+
     return CodebaseSweepingOutput.builder()
         .branch(scmGitRefTaskResponseData.getBranch())
         .tag(tag)
+        .build(build)
         .commits(asList(CodeBaseCommit.builder()
                             .id(listCommitsResponse.getCommit().getSha())
                             .link(listCommitsResponse.getCommit().getLink())
@@ -286,11 +292,13 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
 
       return CodebaseSweepingOutput.builder()
           .commits(codeBaseCommits)
+          .state(getState(prWebhookEvent))
           .branch(prWebhookEvent.getTargetBranch())
           .targetBranch(prWebhookEvent.getTargetBranch())
           .sourceBranch(prWebhookEvent.getSourceBranch())
           .prNumber(String.valueOf(prWebhookEvent.getPullRequestId()))
           .prTitle(prWebhookEvent.getTitle())
+          .build(new Build("PR"))
           .commitSha(prWebhookEvent.getBaseAttributes().getAfter())
           .baseCommitSha(prWebhookEvent.getBaseAttributes().getBefore())
           .repoUrl(prWebhookEvent.getRepository().getLink())
@@ -320,6 +328,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       return CodebaseSweepingOutput.builder()
           .branch(branchWebhookEvent.getBranchName())
           .commits(codeBaseCommits)
+          .build(new Build("branch"))
           .targetBranch(branchWebhookEvent.getBranchName())
           .commitSha(branchWebhookEvent.getBaseAttributes().getAfter())
           .repoUrl(branchWebhookEvent.getRepository().getLink())
@@ -334,7 +343,12 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
 
   @VisibleForTesting
   CodebaseSweepingOutput buildManualCodebaseSweepingOutput(ManualExecutionSource manualExecutionSource) {
+    Build build = new Build("branch");
+    if (isNotEmpty(manualExecutionSource.getTag())) {
+      build = new Build("tag");
+    }
     return CodebaseSweepingOutput.builder()
+        .build(build)
         .branch(manualExecutionSource.getBranch())
         .tag(manualExecutionSource.getTag())
         .commitSha(manualExecutionSource.getCommitSha())
@@ -378,6 +392,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
                                  .prNumber(String.valueOf(pr.getNumber()))
                                  .prTitle(pr.getTitle())
                                  .commitSha(pr.getSha())
+                                 .build(new Build("PR"))
                                  .baseCommitSha(pr.getBase().getSha())
                                  .commitRef(pr.getRef())
                                  .repoUrl(repoUrl) // Add repo url to scm.PullRequest and get it from there
@@ -411,6 +426,17 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     if (pr.getClosed()) {
       state = "closed";
     } else if (pr.getMerged()) {
+      state = "merged";
+    }
+    return state;
+  }
+
+  @NotNull
+  private String getState(PRWebhookEvent pr) {
+    String state = "open";
+    if (pr.isClosed()) {
+      state = "closed";
+    } else if (pr.isMerged()) {
       state = "merged";
     }
     return state;

@@ -136,7 +136,8 @@ public class ArtifactResource {
     artifact.setDisplayName(artifactStream.fetchArtifactDisplayName(artifact.getBuildNo()));
     Artifact savedArtifact = artifactService.create(artifact);
     if (artifactStream.getFailedCronAttempts() != 0) {
-      artifactStreamService.updateFailedCronAttempts(artifactStream.getAccountId(), artifact.getArtifactStreamId(), 0);
+      artifactStreamService.updateFailedCronAttemptsAndLastIteration(
+          artifactStream.getAccountId(), artifact.getArtifactStreamId(), 0, false);
       permitService.releasePermitByKey(artifactStream.getUuid());
       alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
           ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStream.getUuid()).build());

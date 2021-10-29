@@ -6,6 +6,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -21,7 +22,9 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hazelcast.util.Preconditions;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +41,7 @@ public class NextGenServiceImpl implements NextGenService {
 
   private LoadingCache<EntityKey, EnvironmentResponseDTO> environmentCache =
       CacheBuilder.newBuilder()
-          .maximumSize(100000)
+          .maximumSize(1000)
           .expireAfterWrite(4, TimeUnit.HOURS)
           .build(new CacheLoader<EntityKey, EnvironmentResponseDTO>() {
             @Override
@@ -55,7 +58,7 @@ public class NextGenServiceImpl implements NextGenService {
 
   private LoadingCache<EntityKey, ServiceResponseDTO> serviceCache =
       CacheBuilder.newBuilder()
-          .maximumSize(100000)
+          .maximumSize(5000)
           .expireAfterWrite(4, TimeUnit.HOURS)
           .build(new CacheLoader<EntityKey, ServiceResponseDTO>() {
             @Override
@@ -72,7 +75,7 @@ public class NextGenServiceImpl implements NextGenService {
 
   private LoadingCache<EntityKey, ProjectDTO> projectCache =
       CacheBuilder.newBuilder()
-          .maximumSize(10000)
+          .maximumSize(1000)
           .expireAfterWrite(4, TimeUnit.HOURS)
           .build(new CacheLoader<EntityKey, ProjectDTO>() {
             @Override
@@ -87,7 +90,7 @@ public class NextGenServiceImpl implements NextGenService {
 
   private LoadingCache<EntityKey, OrganizationDTO> orgCache =
       CacheBuilder.newBuilder()
-          .maximumSize(10000)
+          .maximumSize(100)
           .expireAfterWrite(4, TimeUnit.HOURS)
           .build(new CacheLoader<EntityKey, OrganizationDTO>() {
             @Override
@@ -222,6 +225,28 @@ public class NextGenServiceImpl implements NextGenService {
             nextGenClient.listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null, null))
         .getData()
         .getTotalItems();
+  }
+
+  @Override
+  public Map<String, String> getServiceIdNameMap(ProjectParams projectParams, List<String> serviceIdentifiers) {
+    Map<String, String> serviceIdNameMap = new HashMap<>();
+    listService(projectParams.getAccountIdentifier(), projectParams.getOrgIdentifier(),
+        projectParams.getProjectIdentifier(), serviceIdentifiers)
+        .forEach(serviceResponse
+            -> serviceIdNameMap.put(
+                serviceResponse.getService().getIdentifier(), serviceResponse.getService().getName()));
+    return serviceIdNameMap;
+  }
+
+  @Override
+  public Map<String, String> getEnvironmentIdNameMap(ProjectParams projectParams, List<String> environmentIdentifiers) {
+    Map<String, String> environmentIdNameMap = new HashMap<>();
+    listEnvironment(projectParams.getAccountIdentifier(), projectParams.getOrgIdentifier(),
+        projectParams.getProjectIdentifier(), environmentIdentifiers)
+        .forEach(environmentResponse
+            -> environmentIdNameMap.put(
+                environmentResponse.getEnvironment().getIdentifier(), environmentResponse.getEnvironment().getName()));
+    return environmentIdNameMap;
   }
 
   @Value

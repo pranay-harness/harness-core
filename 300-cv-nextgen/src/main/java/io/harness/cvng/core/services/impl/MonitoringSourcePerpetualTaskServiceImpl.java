@@ -11,13 +11,15 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.VerificationType;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
+import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.encryption.Scope;
 import io.harness.persistence.HPersistence;
 
 import com.google.api.client.util.Charsets;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
@@ -29,42 +31,54 @@ public class MonitoringSourcePerpetualTaskServiceImpl
   private static final String WORKER_ID_SEPARATOR = ":";
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
+  @Inject private CVNGDemoPerpetualTaskService cvngDemoPerpetualTaskService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void createPerpetualTask(MonitoringSourcePerpetualTask monitoringSourcePerpetualTask) {
     String dataCollectionWorkerId = getWorkerId(monitoringSourcePerpetualTask);
-    String perpetualTaskId =
-        verificationManagerService.createDataCollectionTask(monitoringSourcePerpetualTask.getAccountId(),
-            monitoringSourcePerpetualTask.getOrgIdentifier(), monitoringSourcePerpetualTask.getProjectIdentifier(),
-            DataCollectionConnectorBundle.builder()
-                .sourceIdentifier(monitoringSourcePerpetualTask.getMonitoringSourceIdentifier())
-                .connectorIdentifier(monitoringSourcePerpetualTask.getConnectorIdentifier())
-                .dataCollectionWorkerId(dataCollectionWorkerId)
-                .dataCollectionType(DataCollectionType.CV)
-                .build());
+    String perpetualTaskId;
+    if (monitoringSourcePerpetualTask.isDemo()) {
+      perpetualTaskId = cvngDemoPerpetualTaskService.createCVNGDemoPerpetualTask(
+          monitoringSourcePerpetualTask.getAccountId(), dataCollectionWorkerId);
+    } else {
+      perpetualTaskId =
+          verificationManagerService.createDataCollectionTask(monitoringSourcePerpetualTask.getAccountId(),
+              monitoringSourcePerpetualTask.getOrgIdentifier(), monitoringSourcePerpetualTask.getProjectIdentifier(),
+              DataCollectionConnectorBundle.builder()
+                  .sourceIdentifier(monitoringSourcePerpetualTask.getMonitoringSourceIdentifier())
+                  .connectorIdentifier(monitoringSourcePerpetualTask.getConnectorIdentifier())
+                  .dataCollectionWorkerId(dataCollectionWorkerId)
+                  .dataCollectionType(DataCollectionType.CV)
+                  .build());
+    }
     setCollectionTaskIds(monitoringSourcePerpetualTask.getUuid(), perpetualTaskId, dataCollectionWorkerId);
   }
 
   @Override
   public void createTask(String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier,
-      String monitoringSourceIdentifier) {
-    hPersistence.saveIgnoringDuplicateKeys(
-        Lists.newArrayList(MonitoringSourcePerpetualTask.builder()
-                               .accountId(accountId)
-                               .orgIdentifier(orgIdentifier)
-                               .projectIdentifier(projectIdentifier)
-                               .connectorIdentifier(connectorIdentifier)
-                               .monitoringSourceIdentifier(monitoringSourceIdentifier)
-                               .verificationType(VerificationType.LIVE_MONITORING)
-                               .build(),
-            MonitoringSourcePerpetualTask.builder()
-                .accountId(accountId)
-                .orgIdentifier(orgIdentifier)
-                .projectIdentifier(projectIdentifier)
-                .connectorIdentifier(connectorIdentifier)
-                .monitoringSourceIdentifier(monitoringSourceIdentifier)
-                .verificationType(VerificationType.DEPLOYMENT)
-                .build()));
+      String monitoringSourceIdentifier, boolean isDemo) {
+    List<MonitoringSourcePerpetualTask> monitoringSourcePerpetualTasks = new ArrayList<>();
+    monitoringSourcePerpetualTasks.add(MonitoringSourcePerpetualTask.builder()
+                                           .accountId(accountId)
+                                           .orgIdentifier(orgIdentifier)
+                                           .projectIdentifier(projectIdentifier)
+                                           .connectorIdentifier(connectorIdentifier)
+                                           .monitoringSourceIdentifier(monitoringSourceIdentifier)
+                                           .verificationType(VerificationType.LIVE_MONITORING)
+                                           .isDemo(isDemo)
+                                           .build());
+    monitoringSourcePerpetualTasks.add(MonitoringSourcePerpetualTask.builder()
+                                           .accountId(accountId)
+                                           .orgIdentifier(orgIdentifier)
+                                           .projectIdentifier(projectIdentifier)
+                                           .connectorIdentifier(connectorIdentifier)
+                                           .monitoringSourceIdentifier(monitoringSourceIdentifier)
+                                           .verificationType(VerificationType.DEPLOYMENT)
+                                           .isDemo(isDemo)
+                                           .build());
+
+    hPersistence.saveIgnoringDuplicateKeys(monitoringSourcePerpetualTasks);
   }
 
   @Override
@@ -80,7 +94,8 @@ public class MonitoringSourcePerpetualTaskServiceImpl
 
     monitoringSourcePerpetualTasks.forEach(monitoringSourcePerpetualTask -> {
       if (isNotEmpty(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
-        deletePerpetualTasks(accountId, monitoringSourcePerpetualTask.getPerpetualTaskId());
+        deletePerpetualTasks(
+            accountId, monitoringSourcePerpetualTask.getPerpetualTaskId(), monitoringSourcePerpetualTask.isDemo());
       }
       hPersistence.delete(monitoringSourcePerpetualTask);
     });
@@ -118,6 +133,7 @@ public class MonitoringSourcePerpetualTaskServiceImpl
             .connectorIdentifier(monitoringSourcePerpetualTask.getConnectorIdentifier())
             .sourceIdentifier(monitoringSourcePerpetualTask.getMonitoringSourceIdentifier())
             .dataCollectionType(DataCollectionType.CV)
+            .dataCollectionWorkerId(getWorkerId(monitoringSourcePerpetualTask))
             .build());
   }
 
@@ -200,7 +216,11 @@ public class MonitoringSourcePerpetualTaskServiceImpl
     deleteByProjectIdentifier(clazz, accountId, null, null);
   }
 
-  private void deletePerpetualTasks(String accountId, String perpetualTaskId) {
-    verificationManagerService.deletePerpetualTask(accountId, perpetualTaskId);
+  private void deletePerpetualTasks(String accountId, String perpetualTaskId, boolean isDemo) {
+    if (isDemo) {
+      cvngDemoPerpetualTaskService.deletePerpetualTask(accountId, perpetualTaskId);
+    } else {
+      verificationManagerService.deletePerpetualTask(accountId, perpetualTaskId);
+    }
   }
 }

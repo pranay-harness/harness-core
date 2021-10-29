@@ -71,7 +71,8 @@ public interface ArtifactStreamService extends OwnedByService {
 
   List<String> fetchArtifactStreamIdsForService(String appId, String serviceId);
 
-  boolean updateFailedCronAttempts(String accountId, String artifactStreamId, int counter);
+  boolean updateFailedCronAttemptsAndLastIteration(
+      String accountId, String artifactStreamId, int counter, boolean success);
 
   boolean updateCollectionStatus(String accountId, String artifactStreamId, String collectionStatus);
 
@@ -102,4 +103,10 @@ public interface ArtifactStreamService extends OwnedByService {
   void deleteArtifacts(String accountId, ArtifactStream artifactStream);
 
   ArtifactStream fetchByArtifactSourceVariableValue(String appId, String variableValue);
+
+  boolean updateLastIterationFields(String accountId, String uuid, boolean success);
+
+  ArtifactStream resetStoppedArtifactCollection(String appId, String artifactStreamId);
+
+  void updateCollectionEnabled(ArtifactStream artifactStream, boolean collectionEnabled);
 }

@@ -42,6 +42,7 @@ io.harness.beans.steps.stepinfo.TestStepInfo
 io.harness.advisers.rollback.OnFailRollbackOutput
 io.harness.steps.shellscript.ShellScriptInlineSource
 io.harness.beans.sweepingoutputs.K8PodDetails
+io.harness.beans.sweepingoutputs.StageDetails
 io.harness.beans.steps.stepinfo.RunTestsStepInfo
 io.harness.ngpipeline.artifact.bean.SidecarsOutcome
 io.harness.steps.jira.update.JiraUpdateSpecParameters
@@ -94,7 +95,7 @@ io.harness.beans.steps.stepinfo.CleanupStepInfo
 io.harness.steps.approval.step.harness.HarnessApprovalOutcome
 io.harness.beans.sweepingoutputs.ContainerPortDetails
 io.harness.steps.common.steps.stepgroup.StepGroupStepParameters
-io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo
+io.harness.beans.steps.stepinfo.InitializeStepInfo
 io.harness.steps.approval.step.jira.beans.JexlCriteriaSpec
 io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters
 io.harness.pms.yaml.ParameterFieldValueWrapper

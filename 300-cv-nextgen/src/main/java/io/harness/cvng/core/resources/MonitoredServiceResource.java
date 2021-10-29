@@ -15,6 +15,7 @@ import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
@@ -30,13 +31,13 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.sun.istack.internal.NotNull;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -145,6 +146,30 @@ public class MonitoredServiceResource {
   @GET
   @Timed
   @ExceptionMetered
+  @Path("overall-health-score")
+  @ApiOperation(value = "get monitored service overall health score data using service and environment identifiers",
+      nickname = "getMonitoredServiceOverAllHealthScoreWithServiceAndEnv")
+  public ResponseDTO<HistoricalTrend>
+  getOverAllHealthScore(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @QueryParam("duration") DurationDTO durationDTO, @NotNull @QueryParam("endTime") Long endTime) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .build();
+    return ResponseDTO.newResponse(monitoredServiceService.getOverAllHealthScore(
+        serviceEnvironmentParams, durationDTO, Instant.ofEpochMilli(endTime)));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
   @ApiOperation(value = "list monitored service data ", nickname = "listMonitoredService")
   public ResponseDTO<PageResponse<MonitoredServiceListItemDTO>> list(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
@@ -194,6 +219,24 @@ public class MonitoredServiceResource {
   @GET
   @Timed
   @ExceptionMetered
+  @Path("/all/time-series-health-sources")
+  @ApiOperation(value = "get all of monitored service data with time series health sources ",
+      nickname = "getAllMonitoredServicesWithTimeSeriesHealthSources")
+  public ResponseDTO<List<MonitoredServiceWithHealthSources>>
+  getAllMonitoredServicesWithHealthSources(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(monitoredServiceService.getAllWithTimeSeriesHealthSources(projectParams));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
   @Path("/service-environment")
   @ApiOperation(value = "get monitored service data from service and env ref",
       nickname = "getMonitoredServiceFromServiceAndEnvironment")
@@ -232,7 +275,8 @@ public class MonitoredServiceResource {
                                                             .serviceIdentifier(serviceIdentifier)
                                                             .environmentIdentifier(environmentIdentifier)
                                                             .build();
-    return ResponseDTO.newResponse(monitoredServiceService.getCurrentScore(serviceEnvironmentParams));
+    return ResponseDTO.newResponse(
+        monitoredServiceService.getCurrentAndDependentServicesScore(serviceEnvironmentParams));
   }
 
   @DELETE

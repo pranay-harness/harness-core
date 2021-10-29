@@ -50,10 +50,17 @@ public class PipelineExecutionSummaryDTO {
   Long endTs;
   Long createdAt;
 
+  boolean canRetry;
+  boolean showRetryHistory;
+
   int runSequence;
   long successfulStagesCount;
   long runningStagesCount;
   long failedStagesCount;
   long totalStagesCount;
   EntityGitDetails gitDetails;
+
+  boolean isStagesExecution;
+  List<String> stagesExecuted;
+  Map<String, String> stagesExecutedNames;
 }

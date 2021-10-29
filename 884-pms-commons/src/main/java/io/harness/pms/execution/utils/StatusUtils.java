@@ -68,8 +68,14 @@ public class StatusUtils {
   private final EnumSet<Status> RETRYABLE_STATUSES =
       EnumSet.of(INTERVENTION_WAITING, FAILED, ERRORED, EXPIRED, APPROVAL_REJECTED);
 
+  private final EnumSet<Status> RETRYABLE_FAILED_STATUSES = EnumSet.of(FAILED, EXPIRED, APPROVAL_REJECTED, ABORTED);
+
   public EnumSet<Status> finalizableStatuses() {
     return FINALIZABLE_STATUSES;
+  }
+
+  public EnumSet<Status> getRetryableFailedStatuses() {
+    return RETRYABLE_FAILED_STATUSES;
   }
 
   public EnumSet<Status> positiveStatuses() {
@@ -142,7 +148,7 @@ public class StatusUtils {
       case APPROVAL_REJECTED:
         return FINALIZABLE_STATUSES;
       case SUCCEEDED:
-        return EnumSet.of(INTERVENTION_WAITING, RUNNING);
+        return EnumSet.of(INTERVENTION_WAITING, RUNNING, QUEUED);
       case IGNORE_FAILED:
         return EnumSet.of(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING);
       default:

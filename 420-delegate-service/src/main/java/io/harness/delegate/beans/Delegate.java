@@ -61,10 +61,6 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
   @NotEmpty @FdIndex private String accountId;
 
-  // Will be used for NG to uniquely identify the delegate during the installation process, together with the accountId.
-  // It will be populated by the backend and will be available as a property in the delegate installation files.
-  @FdIndex private String sessionIdentifier;
-
   // Will be used for NG to hold delegate size details
   private DelegateSizeDetails sizeDetails;
   // Will be used for NG to hold information about delegate if it is owned at Org / Project
@@ -115,10 +111,18 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
 
   @SchemaIgnore private List<String> keywords;
 
+  @FdIndex Long taskExpiryCheckNextIteration;
+
+  Long lastExpiredEventHeartbeatTime;
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (DelegateKeys.capabilitiesCheckNextIteration.equals(fieldName)) {
       this.capabilitiesCheckNextIteration = nextIteration;
+      return;
+    }
+    if (DelegateKeys.taskExpiryCheckNextIteration.equals(fieldName)) {
+      this.taskExpiryCheckNextIteration = nextIteration;
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -128,6 +132,9 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   public Long obtainNextIteration(String fieldName) {
     if (DelegateKeys.capabilitiesCheckNextIteration.equals(fieldName)) {
       return this.capabilitiesCheckNextIteration;
+    }
+    if (DelegateKeys.taskExpiryCheckNextIteration.equals(fieldName)) {
+      return this.taskExpiryCheckNextIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }

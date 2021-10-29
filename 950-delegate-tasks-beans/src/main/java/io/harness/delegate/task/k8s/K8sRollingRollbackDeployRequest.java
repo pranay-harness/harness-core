@@ -19,4 +19,6 @@ public class K8sRollingRollbackDeployRequest implements K8sDeployRequest {
   K8sInfraDelegateConfig k8sInfraDelegateConfig;
   ManifestDelegateConfig manifestDelegateConfig;
   CommandUnitsProgress commandUnitsProgress;
+  boolean useLatestKustomizeVersion;
+  boolean useNewKubectlVersion;
 }

@@ -5,8 +5,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.engine.pms.data.PmsTransputHelper;
+import io.harness.engine.pms.execution.strategy.identity.IdentityStep;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.PlanNode;
+import io.harness.plan.Node;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
@@ -32,14 +33,33 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
 
   @Override
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
-    PlanNode planNode = nodeExecution.getNode();
+    Node planNode = nodeExecution.getNode();
     String serviceName = planNode.getServiceName();
+    NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
+                                                     .setAmbiance(nodeExecution.getAmbiance())
+                                                     .setExecutionMode(nodeExecution.getMode())
+                                                     .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+        .addAllResolvedInput(transputHelper.resolveInputs(nodeExecution.getAmbiance(), planNode.getRefObjects()))
+                                                     .setAsyncError(isError)
+                                                     .putAllResponse(responseMap);
+
+    ChainDetails chainDetails = buildChainDetails(nodeExecution);
+    if (chainDetails != null) {
+      resumeEventBuilder.setChainDetails(chainDetails);
+    }
+
+    eventSender.sendEvent(resumeEventBuilder.getAmbiance(), resumeEventBuilder.build().toByteString(),
+        PmsEventCategory.NODE_RESUME, serviceName, true);
+  }
+
+  @Override
+  public void publishEventForIdentityNode(
+      NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError, String serviceName) {
     NodeResumeEvent.Builder resumeEventBuilder =
         NodeResumeEvent.newBuilder()
-            .setAmbiance(nodeExecution.getAmbiance())
+            .setAmbiance(IdentityStep.modifyAmbiance(nodeExecution.getAmbiance()))
             .setExecutionMode(nodeExecution.getMode())
             .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-            .addAllResolvedInput(transputHelper.resolveInputs(nodeExecution.getAmbiance(), planNode.getRefObjects()))
             .setAsyncError(isError)
             .putAllResponse(responseMap);
 
@@ -48,7 +68,7 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
       resumeEventBuilder.setChainDetails(chainDetails);
     }
 
-    eventSender.sendEvent(nodeExecution.getAmbiance(), resumeEventBuilder.build().toByteString(),
+    eventSender.sendEvent(resumeEventBuilder.getAmbiance(), resumeEventBuilder.build().toByteString(),
         PmsEventCategory.NODE_RESUME, serviceName, true);
   }
 

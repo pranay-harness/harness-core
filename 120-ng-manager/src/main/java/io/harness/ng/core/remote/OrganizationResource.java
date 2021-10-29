@@ -47,6 +47,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -111,7 +112,8 @@ public class OrganizationResource {
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = CREATE_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse>
   create(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @Valid OrganizationRequest organizationDTO) {
+      @RequestBody(required = true, description = "Details of the Organization to be created") @NotNull
+      @Valid OrganizationRequest organizationDTO) {
     if (DEFAULT_ORG_IDENTIFIER.equals(organizationDTO.getOrganization().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as org identifier", DEFAULT_ORG_IDENTIFIER), USER);
@@ -127,7 +129,7 @@ public class OrganizationResource {
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
-            description = "Returns the organization with the requested accountIdentifier and orgIdentifier")
+            description = "Returns the organization with the passed accountIdentifier and orgIdentifier")
       })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse>
@@ -152,7 +154,8 @@ public class OrganizationResource {
       })
   public ResponseDTO<PageResponse<OrganizationResponse>>
   list(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @Parameter(description = "list of projectIdentifiers to filter results by") @QueryParam(
+          NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
@@ -175,7 +178,8 @@ public class OrganizationResource {
   @InternalApi
   public ResponseDTO<PageResponse<OrganizationResponse>> listAllOrganizations(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @Parameter(description = "list of projectIdentifiers to filter results by") @QueryParam(
+          NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();

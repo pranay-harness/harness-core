@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
-import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -50,6 +50,7 @@ import static org.atteo.evo.inflector.English.plural;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -215,7 +216,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(_870_CG_ORCHESTRATION)
-@OwnedBy(CDP)
+@OwnedBy(CDC)
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
@@ -1022,9 +1023,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     ContainerServiceParams containerServiceParams = getGcpContainerServiceParams(infraMapping);
 
     SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
-
+    boolean useNewKubectlVersion =
+        featureFlagService.isEnabled(FeatureName.NEW_KUBECTL_VERSION, infraMapping.getAccountId());
     try {
-      delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
+      delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+          .validate(containerServiceParams, useNewKubectlVersion);
     } catch (InvalidRequestException ex) {
       throw ex;
     } catch (Exception e) {
@@ -1077,9 +1080,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     ContainerServiceParams containerServiceParams = getAzureContainerServiceParams(infraMapping);
     SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
-
+    boolean useNewKubectlVersion =
+        featureFlagService.isEnabled(FeatureName.NEW_KUBECTL_VERSION, infraMapping.getAccountId());
     try {
-      delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
+      delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+          .validate(containerServiceParams, useNewKubectlVersion);
     } catch (Exception e) {
       log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
@@ -1135,8 +1140,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         .encryptionDetails(encryptionDetails)
                                                         .namespace(namespace)
                                                         .build();
+    boolean useNewKubectlVersion =
+        featureFlagService.isEnabled(FeatureName.NEW_KUBECTL_VERSION, infraMapping.getAccountId());
     try {
-      delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
+      delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+          .validate(containerServiceParams, useNewKubectlVersion);
     } catch (Exception e) {
       log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);

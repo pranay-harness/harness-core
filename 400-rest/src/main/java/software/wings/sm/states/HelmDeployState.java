@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.FeatureName.CUSTOM_MANIFEST;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
+import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
 import static io.harness.beans.FeatureName.OVERRIDE_VALUES_YAML_FROM_HELM_CHART;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -226,7 +227,7 @@ public class HelmDeployState extends State {
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
-  // This field is in fact representing helmReleaseName. We will change it later on
+  // This field is in fact representing helmReleaseName. We will change iGIT_HOST_CONNECTIVITYt later on
   @Getter @Setter private String helmReleaseNamePrefix;
   @Getter @Setter private GitFileConfig gitFileConfig;
   @Getter @Setter private String commandFlags;
@@ -477,7 +478,10 @@ public class HelmDeployState extends State {
             .mergeCapabilities(
                 featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
             .isGitHostConnectivityCheck(
-                featureFlagService.isEnabled(FeatureName.GIT_HOST_CONNECTIVITY, context.getAccountId()));
+                featureFlagService.isEnabled(FeatureName.GIT_HOST_CONNECTIVITY, context.getAccountId()))
+            .optimizedFilesFetch(featureFlagService.isEnabled(OPTIMIZED_GIT_FETCH_FILES, context.getAccountId()))
+            .useNewKubectlVersion(
+                featureFlagService.isEnabled(FeatureName.NEW_KUBECTL_VERSION, context.getAccountId()));
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -535,21 +539,24 @@ public class HelmDeployState extends State {
                                                       .expressionFunctorToken(expressionFunctorToken)
                                                       .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .data(TaskData.builder()
-                                              .async(false)
-                                              .taskType(HELM_COMMAND_TASK.name())
-                                              .parameters(new Object[] {helmReleaseHistoryCommandRequest})
-                                              .expressionFunctorToken(expressionFunctorToken)
-                                              .timeout(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS * 2)
-                                              .build())
-                                    .accountId(app.getAccountId())
-                                    .description("Helm Release History")
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
-                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
-                                        serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
-                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder()
+                      .async(false)
+                      .taskType(HELM_COMMAND_TASK.name())
+                      .parameters(new Object[] {helmReleaseHistoryCommandRequest})
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .timeout(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS * 2)
+                      .build())
+            .accountId(app.getAccountId())
+            .description("Helm Release History")
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
+                serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
@@ -1219,6 +1226,8 @@ public class HelmDeployState extends State {
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
+    fetchFilesTaskParams.setOptimizedFilesFetch(
+        featureFlagService.isEnabled(OPTIMIZED_GIT_FETCH_FILES, context.getAccountId()));
     fetchFilesTaskParams.setActivityId(activityId);
     fetchFilesTaskParams.setFinalState(true);
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);

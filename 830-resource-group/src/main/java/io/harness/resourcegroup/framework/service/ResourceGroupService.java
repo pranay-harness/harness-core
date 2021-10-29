@@ -20,8 +20,6 @@ import org.springframework.data.domain.Page;
 public interface ResourceGroupService {
   ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO, boolean harnessManaged);
 
-  void createManagedResourceGroup(Scope scope);
-
   Optional<ResourceGroupResponse> get(
       @NotNull Scope scope, @NotEmpty String identifier, @NotNull ManagedFilter managedFilter);
 
@@ -33,7 +31,7 @@ public interface ResourceGroupService {
   Optional<ResourceGroupResponse> update(
       ResourceGroupDTO resourceGroupDTO, boolean sanitizeResourceSelectors, boolean harnessManaged);
 
-  void delete(Scope scope, String identifier);
+  boolean delete(Scope scope, String identifier);
 
   void deleteManaged(@NotEmpty String identifier);
 

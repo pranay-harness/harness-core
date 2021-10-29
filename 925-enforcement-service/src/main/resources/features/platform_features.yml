@@ -9,6 +9,9 @@ clients:
   - name: accesscontrol
     clientConfig: accessControlClientConfiguration.accessControlServiceConfig
     secretConfig: accessControlClientConfiguration.accessControlServiceSecret
+  - name: resourceGroup
+    clientConfig: resourceGroupClientConfig.serviceConfig
+    secretConfig: resourceGroupClientConfig.secret
 features:
   # Feature availability example
   # TEST1 feature
@@ -16,6 +19,9 @@ features:
   - name: MULTIPLE_ORGANIZATIONS
     description: Allow creating multiple organizations within a account
     restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       FREE:
         restrictionType: STATIC_LIMIT
         limit: 1
@@ -33,6 +39,9 @@ features:
   - name: MULTIPLE_PROJECTS
     description: Allow creating multiple projects within a organization
     restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       FREE:
         restrictionType: AVAILABILITY
         enabled: true
@@ -45,6 +54,9 @@ features:
   - name: SECRET_MANAGERS
     description: Allow creating secret managers
     restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       FREE:
         restrictionType: AVAILABILITY
         enabled: false
@@ -58,6 +70,9 @@ features:
   - name: SAML_SUPPORT
     description: Allow configuring SAML Providers
     restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       FREE:
         restrictionType: AVAILABILITY
         enabled: true
@@ -71,6 +86,9 @@ features:
   - name: OAUTH_SUPPORT
     description: Allow configuring OAUTH providers
     restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       FREE:
         restrictionType: AVAILABILITY
         enabled: true
@@ -84,6 +102,9 @@ features:
   - name: TWO_FACTOR_AUTH_SUPPORT
     description: Allow two factor authentication
     restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       FREE:
         restrictionType: AVAILABILITY
         enabled: true
@@ -97,6 +118,9 @@ features:
   - name: LDAP_SUPPORT
     description: Allow LDAP provider configuration
     restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       FREE:
         restrictionType: AVAILABILITY
         enabled: false
@@ -110,6 +134,25 @@ features:
   - name: CUSTOM_ROLES
     description: Allow creating custom roles
     restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+
+  - name: CUSTOM_RESOURCE_GROUPS
+    description: Allow creating custom resource groups
+    restrictions:
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       FREE:
         restrictionType: AVAILABILITY
         enabled: false

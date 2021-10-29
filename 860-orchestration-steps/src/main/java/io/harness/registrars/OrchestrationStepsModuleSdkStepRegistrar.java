@@ -3,6 +3,7 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.pms.execution.strategy.identity.IdentityStep;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.steps.NGSpecStep;
@@ -33,6 +34,9 @@ public class OrchestrationStepsModuleSdkStepRegistrar {
     engineSteps.put(NGExecutionStep.STEP_TYPE, NGExecutionStep.class);
     engineSteps.put(NGSpecStep.STEP_TYPE, NGSpecStep.class);
     engineSteps.put(StagesStep.STEP_TYPE, StagesStep.class);
+
+    // IdentityStep
+    engineSteps.put(IdentityStep.STEP_TYPE, IdentityStep.class);
 
     return engineSteps;
   }

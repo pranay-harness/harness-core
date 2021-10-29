@@ -1,13 +1,16 @@
 package software.wings.service.impl.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sGlobalConfigServiceUnsupported implements K8sGlobalConfigService {
   private static final String UNSUPPORTED_OPERATION_MSG = "K8sGlobalConfigService not available in manager";
 
   @Override
-  public String getKubectlPath() {
+  public String getKubectlPath(boolean useNewKubectlVersion) {
     throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
   }
 
@@ -32,7 +35,7 @@ public class K8sGlobalConfigServiceUnsupported implements K8sGlobalConfigService
   }
 
   @Override
-  public String getKustomizePath() {
+  public String getKustomizePath(boolean useLatestVersion) {
     throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
   }
 

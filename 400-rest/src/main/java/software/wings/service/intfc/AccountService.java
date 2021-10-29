@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessModule._945_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.account.ProvisionStep;
@@ -42,7 +42,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
  * Created by peeyushaggarwal on 10/11/16.
  */
 @OwnedBy(PL)
-@TargetModule(_955_ACCOUNT_MGMT)
+@TargetModule(_945_ACCOUNT_MGMT)
 public interface AccountService {
   @ValidationGroups(Create.class) Account save(@Valid Account account, boolean fromDataGen);
 
@@ -108,6 +108,8 @@ public interface AccountService {
   List<Account> listAccounts(Set<String> excludedAccountIds);
 
   DelegateConfiguration getDelegateConfiguration(String accountId);
+
+  String getAccountPrimaryDelegateVersion(String accountId);
 
   List<Account> listAllAccounts();
 

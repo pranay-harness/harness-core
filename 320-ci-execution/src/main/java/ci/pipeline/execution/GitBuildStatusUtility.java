@@ -16,6 +16,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
+import io.harness.beans.sweepingoutputs.ContextElement;
+import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
@@ -29,6 +31,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -37,6 +40,8 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.service.DelegateGrpcClientWrapper;
+import io.harness.states.codebase.CodeBaseTaskStep;
+import io.harness.states.codebase.CodeBaseTaskStepParameters;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 
 import com.google.inject.Inject;
@@ -71,10 +76,15 @@ public class GitBuildStatusUtility {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject @Named("ngBaseUrl") private String ngBaseUrl;
   @Inject private PipelineUtils pipelineUtils;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
 
   public boolean shouldSendStatus(StepCategory stepCategory) {
     return stepCategory == StepCategory.STAGE;
+  }
+
+  public boolean isCodeBaseStepSucceeded(Level level, Status status) {
+    return (level.getStepType().getType().equals(CodeBaseTaskStep.STEP_TYPE.getType())) && status == Status.SUCCEEDED;
   }
 
   /**
@@ -84,13 +94,6 @@ public class GitBuildStatusUtility {
    * @param accountId
    */
   public void sendStatusToGit(Status status, StepParameters stepParameters, Ambiance ambiance, String accountId) {
-    StageElementParameters stageElementParameters = (StageElementParameters) stepParameters;
-
-    IntegrationStageStepParametersPMS integrationStageStepParameters =
-        (IntegrationStageStepParametersPMS) stageElementParameters.getSpecConfig();
-    BuildStatusUpdateParameter buildStatusUpdateParameter =
-        integrationStageStepParameters.getBuildStatusUpdateParameter();
-
     String commitSha = null;
     OptionalSweepingOutput optionalSweepingOutput =
         executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
@@ -101,8 +104,17 @@ public class GitBuildStatusUtility {
         commitSha = codebaseSweepingOutput.getCommitSha();
       }
     }
+    BuildStatusUpdateParameter buildStatusUpdateParameter = fetchBuildStatusUpdateParameter(stepParameters, ambiance);
 
-    if (buildStatusUpdateParameter != null && optionalSweepingOutput.isFound() && isNotEmpty(commitSha)) {
+    if (commitSha == null && buildStatusUpdateParameter != null) {
+      /* This will be used only in case of sending running state of stage build
+
+      Running state status will not work for manual executed builds
+       */
+      commitSha = buildStatusUpdateParameter.getSha();
+    }
+
+    if (buildStatusUpdateParameter != null && isNotEmpty(commitSha)) {
       CIBuildStatusPushParameters ciBuildStatusPushParameters =
           getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, status, commitSha);
 
@@ -304,6 +316,24 @@ public class GitBuildStatusUtility {
     }
 
     return UNSUPPORTED;
+  }
+
+  private BuildStatusUpdateParameter fetchBuildStatusUpdateParameter(StepParameters stepParameters, Ambiance ambiance) {
+    if (stepParameters instanceof StageElementParameters) {
+      StageElementParameters stageElementParameters = (StageElementParameters) stepParameters;
+      IntegrationStageStepParametersPMS integrationStageStepParameters =
+          (IntegrationStageStepParametersPMS) stageElementParameters.getSpecConfig();
+      return integrationStageStepParameters.getBuildStatusUpdateParameter();
+    } else if (stepParameters instanceof CodeBaseTaskStepParameters) {
+      OptionalSweepingOutput optionalSweepingOutputStageDetails = executionSweepingOutputResolver.resolveOptional(
+          ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.stageDetails));
+      if (optionalSweepingOutputStageDetails.isFound()) {
+        StageDetails stageDetails = (StageDetails) optionalSweepingOutputStageDetails.getOutput();
+        return stageDetails.getBuildStatusUpdateParameter();
+      }
+    }
+
+    return null;
   }
 
   private ConnectorDetails getGitConnector(NGAccess ngAccess, String connectorRef) {

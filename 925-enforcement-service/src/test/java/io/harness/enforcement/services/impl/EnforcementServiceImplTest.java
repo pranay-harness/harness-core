@@ -13,9 +13,11 @@ import io.harness.ModuleType;
 import io.harness.category.element.UnitTests;
 import io.harness.enforcement.bases.AvailabilityRestriction;
 import io.harness.enforcement.bases.FeatureRestriction;
+import io.harness.enforcement.bases.RateLimitRestriction;
 import io.harness.enforcement.bases.Restriction;
 import io.harness.enforcement.bases.StaticLimitRestriction;
 import io.harness.enforcement.beans.FeatureRestrictionUsageDTO;
+import io.harness.enforcement.beans.TimeUnit;
 import io.harness.enforcement.beans.details.AvailabilityRestrictionDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
 import io.harness.enforcement.beans.metadata.FeatureRestrictionMetadataDTO;
@@ -37,6 +39,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,12 +52,14 @@ public class EnforcementServiceImplTest extends CategoryTest {
   private LicenseService licenseService;
   private RestrictionHandlerFactory restrictionHandlerFactory;
   FeatureRestriction featureRestriction;
-  FeatureRestriction featureNotEnabled;
+  FeatureRestriction featureStaticLimit;
+  FeatureRestriction featureRateLimit;
   FeatureRestriction ciFeatureRestriction;
   EnforcementSdkClient enforcementSdkClient;
   private static final FeatureRestrictionName FEATURE_NAME = FeatureRestrictionName.TEST1;
   private static final FeatureRestrictionName FEATURE_NAME_STATIC = FeatureRestrictionName.TEST2;
   private static final FeatureRestrictionName CI_FEATURE_NAME = FeatureRestrictionName.TEST3;
+  private static final FeatureRestrictionName FEATURE_NAME_RATE = FeatureRestrictionName.TEST4;
   private static final String ACCOUNT_ID = "1";
 
   @Before
@@ -75,18 +80,27 @@ public class EnforcementServiceImplTest extends CategoryTest {
         ImmutableMap.<Edition, Restriction>builder()
             .put(Edition.FREE, new AvailabilityRestriction(RestrictionType.AVAILABILITY, true))
             .build());
-    featureNotEnabled = new FeatureRestriction(FEATURE_NAME_STATIC, "description", ModuleType.CD,
+    featureStaticLimit = new FeatureRestriction(FEATURE_NAME_STATIC, "description", ModuleType.CD,
         ImmutableMap.<Edition, Restriction>builder()
-            .put(Edition.FREE, new StaticLimitRestriction(RestrictionType.STATIC_LIMIT, 2, enforcementSdkClient))
+            .put(
+                Edition.FREE, new StaticLimitRestriction(RestrictionType.STATIC_LIMIT, 10, false, enforcementSdkClient))
             .put(Edition.TEAM, new AvailabilityRestriction(RestrictionType.AVAILABILITY, false))
             .put(Edition.ENTERPRISE, new AvailabilityRestriction(RestrictionType.AVAILABILITY, true))
+            .build());
+
+    TimeUnit timeUnit = new TimeUnit(ChronoUnit.DAYS, 1);
+    featureRateLimit = new FeatureRestriction(FEATURE_NAME_RATE, "description", ModuleType.CD,
+        ImmutableMap.<Edition, Restriction>builder()
+            .put(Edition.FREE,
+                new RateLimitRestriction(RestrictionType.RATE_LIMIT, 10, timeUnit, true, enforcementSdkClient))
             .build());
     ciFeatureRestriction = new FeatureRestriction(CI_FEATURE_NAME, "description", ModuleType.CI,
         ImmutableMap.<Edition, Restriction>builder()
             .put(Edition.FREE, new AvailabilityRestriction(RestrictionType.AVAILABILITY, false))
             .build());
     enforcementService.registerFeature(FEATURE_NAME, featureRestriction);
-    enforcementService.registerFeature(FEATURE_NAME_STATIC, featureNotEnabled);
+    enforcementService.registerFeature(FEATURE_NAME_STATIC, featureStaticLimit);
+    enforcementService.registerFeature(FEATURE_NAME_RATE, featureRateLimit);
     enforcementService.registerFeature(CI_FEATURE_NAME, ciFeatureRestriction);
 
     when(licenseService.getLicenseSummary(any(), eq(ModuleType.CD)))
@@ -108,6 +122,22 @@ public class EnforcementServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testIsFeatureAvailable() {
     boolean result = enforcementService.isFeatureAvailable(FEATURE_NAME, ACCOUNT_ID);
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testIsFeatureAvailableWithStaticExceed() {
+    boolean result = enforcementService.isFeatureAvailable(FEATURE_NAME_STATIC, ACCOUNT_ID);
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testIsFeatureAvailableWithRateNotExceed() {
+    boolean result = enforcementService.isFeatureAvailable(FEATURE_NAME_RATE, ACCOUNT_ID);
     assertThat(result).isTrue();
   }
 
@@ -154,6 +184,6 @@ public class EnforcementServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testAllFeatureRestrictionMetadata() {
     List<FeatureRestrictionMetadataDTO> result = enforcementService.getAllFeatureRestrictionMetadata();
-    assertThat(result.size()).isEqualTo(3);
+    assertThat(result.size()).isEqualTo(4);
   }
 }

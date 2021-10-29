@@ -27,7 +27,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._957_CG_BEANS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @Data
 @Builder(toBuilder = true)
 @ToString(exclude = {"serverSetting", "artifactServerEncryptedDataDetails", "enhancedGcrConnectivityCheckEnabled"})

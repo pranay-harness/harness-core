@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -63,6 +64,7 @@ import org.mongodb.morphia.annotations.Transient;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ArtifactStreamKeys")
 @Entity(value = "artifactStream")
+@BreakDependencyOn("io.harness.ff.FeatureFlagService")
 @HarnessEntity(exportable = true)
 public abstract class ArtifactStream
     extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware,
@@ -80,6 +82,11 @@ public abstract class ArtifactStream
                  .name("artifactStream_cleanup")
                  .field(ArtifactStreamKeys.artifactStreamType)
                  .field(ArtifactStreamKeys.nextCleanupIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("artifactStream_collection")
+                 .field(ArtifactStreamKeys.collectionEnabled)
+                 .field(ArtifactStreamKeys.nextIteration)
                  .build())
         .build();
   }
@@ -106,7 +113,7 @@ public abstract class ArtifactStream
   @FdIndex private String templateUuid;
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();
-  private String accountId;
+  @FdIndex private String accountId;
   @SchemaIgnore private Set<String> keywords;
   @Transient private long artifactCount;
   @Transient private List<ArtifactSummary> artifacts;
@@ -123,6 +130,11 @@ public abstract class ArtifactStream
   private String collectionStatus;
 
   private boolean artifactStreamParameterized;
+
+  private Boolean collectionEnabled;
+  private long lastIteration;
+  private long lastSuccessfulIteration;
+  private long maxAttempts;
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
@@ -168,6 +180,10 @@ public abstract class ArtifactStream
 
   public boolean artifactSourceChanged(ArtifactStream artifactStream) {
     return !this.sourceName.equals(artifactStream.getSourceName());
+  }
+
+  public boolean artifactCollectionEnabledFromDisabled(ArtifactStream artifactStream) {
+    return Boolean.FALSE.equals(collectionEnabled) && !Boolean.FALSE.equals(artifactStream.getCollectionEnabled());
   }
 
   public boolean artifactServerChanged(ArtifactStream artifactStream) {
@@ -230,8 +246,14 @@ public abstract class ArtifactStream
 
   @JsonIgnore
   @Override
-  public NGMigrationEntityType getType() {
+  public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.ARTIFACT_STREAM;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
   }
 
   @Data
@@ -240,6 +262,7 @@ public abstract class ArtifactStream
   public abstract static class Yaml extends BaseEntityYaml {
     private String serverName;
     private String templateUri;
+    private Boolean collectionEnabled;
     private List<NameValuePair> templateVariables;
 
     public Yaml(String type, String harnessApiVersion, String serverName) {
@@ -252,11 +275,12 @@ public abstract class ArtifactStream
     }
 
     public Yaml(String type, String harnessApiVersion, String serverName, boolean metadataOnly, String templateUri,
-        List<NameValuePair> templateVariables) {
+        List<NameValuePair> templateVariables, Boolean collectionEnabled) {
       super(type, harnessApiVersion);
       this.serverName = serverName;
       this.templateUri = templateUri;
       this.templateVariables = templateVariables;
+      this.collectionEnabled = collectionEnabled;
     }
   }
 

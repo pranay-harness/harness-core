@@ -11,8 +11,6 @@ import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.LogColor.White;
@@ -28,12 +26,11 @@ import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
-import io.harness.delegate.task.k8s.K8sCanaryDeployResponse.K8sCanaryDeployResponseBuilder;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
-import io.harness.delegate.task.k8s.K8sNGTaskResponse;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
-import io.harness.exception.ExceptionUtils;
+import io.harness.delegate.task.k8s.data.K8sCanaryDataException;
+import io.harness.delegate.task.k8s.data.K8sCanaryDataException.K8sCanaryDataExceptionBuilder;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
@@ -46,7 +43,6 @@ import io.harness.logging.LogCallback;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +58,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
 
   private final K8sCanaryHandlerConfig k8sCanaryHandlerConfig = new K8sCanaryHandlerConfig();
   private boolean canaryWorkloadDeployed;
+  private boolean saveReleaseHistory;
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
@@ -78,82 +75,82 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
         Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString());
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sCanaryDeployRequest.getTimeoutIntervalInMin());
 
-    boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
-        k8sCanaryDeployRequest.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(),
+    k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(k8sCanaryDeployRequest.getManifestDelegateConfig(),
+        k8sCanaryHandlerConfig.getManifestFilesDirectory(),
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
             k8sCanaryDeployRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         timeoutInMillis, k8sCanaryDeployRequest.getAccountId());
-    if (!success) {
-      return getGenericFailureResponse(getTaskResponseOnFailure());
-    }
 
-    success = init(k8sCanaryDeployRequest, k8sDelegateTaskParams,
+    init(k8sCanaryDeployRequest, k8sDelegateTaskParams,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
-    if (!success) {
-      return getGenericFailureResponse(getTaskResponseOnFailure());
-    }
 
-    success = prepareForCanary(k8sCanaryDeployRequest, k8sDelegateTaskParams,
+    prepareForCanary(k8sCanaryDeployRequest, k8sDelegateTaskParams,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress));
-    if (!success) {
-      return getGenericFailureResponse(getTaskResponseOnFailure());
-    }
 
-    success = k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(),
-        k8sCanaryHandlerConfig.getResources(), k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
-    if (!success) {
-      k8sCanaryBaseHandler.failAndSaveKubernetesRelease(
-          k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName());
-      return getGenericFailureResponse(getTaskResponseOnFailure());
-    }
+    k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(),
+        k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true, true);
 
     // At this point we're sure that manifest has been applied successfully and canary workload is deployed
     this.canaryWorkloadDeployed = true;
+    this.saveReleaseHistory = true;
+
     LogCallback steadyStateLogCallback =
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress);
     KubernetesResource canaryWorkload = k8sCanaryHandlerConfig.getCanaryWorkload();
-    success = k8sTaskHelperBase.doStatusCheck(k8sCanaryHandlerConfig.getClient(), canaryWorkload.getResourceId(),
-        k8sDelegateTaskParams, steadyStateLogCallback);
-    if (!success) {
-      k8sCanaryBaseHandler.failAndSaveKubernetesRelease(
-          k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName());
-      return getGenericFailureResponse(getTaskResponseOnFailure());
-    }
+    k8sTaskHelperBase.doStatusCheck(k8sCanaryHandlerConfig.getClient(), canaryWorkload.getResourceId(),
+        k8sDelegateTaskParams, steadyStateLogCallback, true);
 
     LogCallback wrapUpLogCallback =
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress);
-    try {
-      List<K8sPod> allPods = k8sCanaryBaseHandler.getAllPods(
-          k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName(), timeoutInMillis);
-      k8sCanaryBaseHandler.wrapUp(k8sCanaryHandlerConfig.getClient(), k8sDelegateTaskParams, wrapUpLogCallback);
 
-      ReleaseHistory releaseHistory = k8sCanaryHandlerConfig.getReleaseHistory();
-      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(k8sCanaryHandlerConfig.getKubernetesConfig(),
-          k8sCanaryDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
-      wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    List<K8sPod> allPods = k8sCanaryBaseHandler.getAllPods(
+        k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName(), timeoutInMillis);
+    k8sCanaryBaseHandler.wrapUp(k8sCanaryHandlerConfig.getClient(), k8sDelegateTaskParams, wrapUpLogCallback);
 
-      return K8sDeployResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-          .k8sNGTaskResponse(K8sCanaryDeployResponse.builder()
-                                 .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
-                                 .k8sPodList(allPods)
-                                 .releaseNumber(k8sCanaryHandlerConfig.getCurrentRelease().getNumber())
-                                 .currentInstances(k8sCanaryHandlerConfig.getTargetInstances())
-                                 .canaryWorkloadDeployed(this.canaryWorkloadDeployed)
-                                 .build())
-          .build();
-    } catch (Exception e) {
-      wrapUpLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+    ReleaseHistory releaseHistory = k8sCanaryHandlerConfig.getReleaseHistory();
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(k8sCanaryHandlerConfig.getKubernetesConfig(),
+        k8sCanaryDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
+    wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+    return K8sDeployResponse.builder()
+        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+        .k8sNGTaskResponse(K8sCanaryDeployResponse.builder()
+                               .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
+                               .k8sPodList(allPods)
+                               .releaseNumber(k8sCanaryHandlerConfig.getCurrentRelease().getNumber())
+                               .currentInstances(k8sCanaryHandlerConfig.getTargetInstances())
+                               .canaryWorkloadDeployed(this.canaryWorkloadDeployed)
+                               .build())
+        .build();
+  }
+
+  @Override
+  public boolean isErrorFrameworkSupported() {
+    return true;
+  }
+
+  @Override
+  protected void handleTaskFailure(K8sDeployRequest request, Exception exception) throws Exception {
+    if (saveReleaseHistory) {
+      K8sCanaryDeployRequest k8sCanaryDeployRequest = (K8sCanaryDeployRequest) request;
       k8sCanaryBaseHandler.failAndSaveKubernetesRelease(
           k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName());
-      throw e;
     }
+
+    K8sCanaryDataExceptionBuilder k8sCanaryDataBuilder =
+        K8sCanaryDataException.dataBuilder().canaryWorkloadDeployed(canaryWorkloadDeployed).cause(exception);
+    KubernetesResource canaryWorkload = k8sCanaryHandlerConfig.getCanaryWorkload();
+    if (canaryWorkload != null && canaryWorkload.getResourceId() != null) {
+      k8sCanaryDataBuilder.canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef());
+    }
+
+    throw k8sCanaryDataBuilder.build();
   }
 
   @VisibleForTesting
-  boolean init(K8sCanaryDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback)
-      throws IOException {
+  void init(K8sCanaryDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback)
+      throws Exception {
     logCallback.saveExecutionLog("Initializing..\n");
     logCallback.saveExecutionLog(color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
     k8sCanaryHandlerConfig.setKubernetesConfig(
@@ -168,31 +165,24 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
         ? ReleaseHistory.createNew()
         : ReleaseHistory.createFromData(releaseHistoryData);
     k8sCanaryHandlerConfig.setReleaseHistory(releaseHistory);
-    try {
-      k8sTaskHelperBase.deleteSkippedManifestFiles(k8sCanaryHandlerConfig.getManifestFilesDirectory(), logCallback);
-      List<String> manifestHelperFiles =
-          isEmpty(request.getValuesYamlList()) ? request.getOpenshiftParamList() : request.getValuesYamlList();
-      List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplate(k8sDelegateTaskParams,
-          request.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(), manifestHelperFiles,
-          request.getReleaseName(), k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace(), logCallback,
-          request.getTimeoutIntervalInMin());
 
-      List<KubernetesResource> resources = k8sTaskHelperBase.readManifests(manifestFiles, logCallback);
-      k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
-          resources, k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace());
+    k8sTaskHelperBase.deleteSkippedManifestFiles(k8sCanaryHandlerConfig.getManifestFilesDirectory(), logCallback);
+    List<String> manifestHelperFiles =
+        isEmpty(request.getValuesYamlList()) ? request.getOpenshiftParamList() : request.getValuesYamlList();
+    List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplate(k8sDelegateTaskParams,
+        request.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(), manifestHelperFiles,
+        request.getReleaseName(), k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace(), logCallback,
+        request.getTimeoutIntervalInMin());
 
-      k8sCanaryBaseHandler.updateDestinationRuleManifestFilesWithSubsets(
-          resources, k8sCanaryHandlerConfig.getKubernetesConfig(), logCallback);
-      k8sCanaryBaseHandler.updateVirtualServiceManifestFilesWithRoutes(
-          resources, k8sCanaryHandlerConfig.getKubernetesConfig(), logCallback);
-      k8sCanaryHandlerConfig.setResources(resources);
+    List<KubernetesResource> resources = k8sTaskHelperBase.readManifests(manifestFiles, logCallback);
+    k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
+        resources, k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace());
 
-    } catch (Exception e) {
-      log.error("Exception:", e);
-      logCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
-      logCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
-      return false;
-    }
+    k8sCanaryBaseHandler.updateDestinationRuleManifestFilesWithSubsets(
+        resources, k8sCanaryHandlerConfig.getKubernetesConfig(), logCallback);
+    k8sCanaryBaseHandler.updateVirtualServiceManifestFilesWithRoutes(
+        resources, k8sCanaryHandlerConfig.getKubernetesConfig(), logCallback);
+    k8sCanaryHandlerConfig.setResources(resources);
 
     logCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
     logCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(k8sCanaryHandlerConfig.getResources()));
@@ -200,70 +190,45 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     if (request.isSkipDryRun()) {
       logCallback.saveExecutionLog(color("\nSkipping Dry Run", Yellow, Bold), INFO);
       logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-      return true;
+      return;
     }
 
-    return k8sTaskHelperBase.dryRunManifests(
-        k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(), k8sDelegateTaskParams, logCallback);
+    k8sTaskHelperBase.dryRunManifests(k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(),
+        k8sDelegateTaskParams, logCallback, true, request.isUseNewKubectlVersion());
   }
 
   @VisibleForTesting
-  boolean prepareForCanary(K8sCanaryDeployRequest k8sCanaryDeployRequest, K8sDelegateTaskParams k8sDelegateTaskParams,
-      LogCallback logCallback) {
-    try {
-      boolean success = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, k8sDelegateTaskParams,
-          k8sCanaryDeployRequest.isSkipResourceVersioning(), logCallback);
-      if (!success) {
-        return false;
-      }
+  void prepareForCanary(K8sCanaryDeployRequest k8sCanaryDeployRequest, K8sDelegateTaskParams k8sDelegateTaskParams,
+      LogCallback logCallback) throws Exception {
+    k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, k8sDelegateTaskParams,
+        k8sCanaryDeployRequest.isSkipResourceVersioning(), logCallback, true);
+    Integer currentInstances =
+        k8sCanaryBaseHandler.getCurrentInstances(k8sCanaryHandlerConfig, k8sDelegateTaskParams, logCallback);
+    Integer targetInstances = currentInstances;
 
-      Integer currentInstances =
-          k8sCanaryBaseHandler.getCurrentInstances(k8sCanaryHandlerConfig, k8sDelegateTaskParams, logCallback);
-      Integer targetInstances = currentInstances;
+    switch (k8sCanaryDeployRequest.getInstanceUnitType()) {
+      case COUNT:
+        targetInstances = k8sCanaryDeployRequest.getInstances();
+        break;
 
-      switch (k8sCanaryDeployRequest.getInstanceUnitType()) {
-        case COUNT:
-          targetInstances = k8sCanaryDeployRequest.getInstances();
-          break;
+      case PERCENTAGE:
+        Integer maxInstances;
+        if (k8sCanaryDeployRequest.getMaxInstances() != null) {
+          maxInstances = k8sCanaryDeployRequest.getMaxInstances();
+        } else {
+          maxInstances = currentInstances;
+        }
+        targetInstances = k8sTaskHelperBase.getTargetInstancesForCanary(
+            k8sCanaryDeployRequest.getInstances(), maxInstances, logCallback);
+        break;
 
-        case PERCENTAGE:
-          Integer maxInstances;
-          if (k8sCanaryDeployRequest.getMaxInstances() != null) {
-            maxInstances = k8sCanaryDeployRequest.getMaxInstances();
-          } else {
-            maxInstances = currentInstances;
-          }
-          targetInstances = k8sTaskHelperBase.getTargetInstancesForCanary(
-              k8sCanaryDeployRequest.getInstances(), maxInstances, logCallback);
-          break;
-
-        default:
-          unhandled(k8sCanaryDeployRequest.getInstanceUnitType());
-      }
-
-      k8sCanaryBaseHandler.updateTargetInstances(k8sCanaryHandlerConfig, targetInstances, logCallback);
-    } catch (Exception e) {
-      logCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      log.error("Exception:", e);
-      return false;
+      default:
+        unhandled(k8sCanaryDeployRequest.getInstanceUnitType());
     }
+
+    k8sCanaryBaseHandler.updateTargetInstances(k8sCanaryHandlerConfig, targetInstances, logCallback);
 
     logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-    return true;
-  }
-
-  @Override
-  protected K8sNGTaskResponse getTaskResponseOnFailure() {
-    K8sCanaryDeployResponseBuilder k8sCanaryDeployResponseBuilder = K8sCanaryDeployResponse.builder();
-    KubernetesResource canaryWorkload = k8sCanaryHandlerConfig.getCanaryWorkload();
-
-    if (canaryWorkload != null && canaryWorkload.getResourceId() != null) {
-      k8sCanaryDeployResponseBuilder.canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef());
-    }
-
-    k8sCanaryDeployResponseBuilder.canaryWorkloadDeployed(this.canaryWorkloadDeployed);
-
-    return k8sCanaryDeployResponseBuilder.build();
   }
 
   @VisibleForTesting

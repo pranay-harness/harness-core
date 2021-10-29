@@ -104,6 +104,11 @@ public interface UserService extends OwnedByAccount {
    */
   User completeNewSignupInvite(UserInvite userInvite);
 
+  /**
+   * Used for NG community edition to finish provisioning of account, user etc.
+   */
+  User completeCommunitySignup(UserInvite userInvite);
+
   UserInvite createUserInviteForMarketPlace();
 
   boolean hasPermission(String accountId, PermissionType permissionType);
@@ -252,6 +257,8 @@ public interface UserService extends OwnedByAccount {
    * @return
    */
   User getUserByEmail(String email);
+
+  User getUserByUserId(String userId);
 
   List<User> getUsersByEmail(List<String> emailIds, String accountId);
 
@@ -622,8 +629,6 @@ public interface UserService extends OwnedByAccount {
   List<UserGroup> getUserGroupsOfUserAudit(String accountId, String userId);
 
   void addUserToAccount(String userId, String accountId);
-
-  boolean safeDeleteUser(String userId, String accountId);
 
   void setUserEmailVerified(String userId);
 

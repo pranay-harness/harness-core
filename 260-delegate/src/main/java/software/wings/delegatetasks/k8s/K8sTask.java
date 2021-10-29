@@ -91,13 +91,14 @@ public class K8sTask extends AbstractDelegateRunnableTask {
 
         K8sDelegateTaskParams k8SDelegateTaskParams =
             K8sDelegateTaskParams.builder()
-                .kubectlPath(k8sGlobalConfigService.getKubectlPath())
+                .kubectlPath(k8sGlobalConfigService.getKubectlPath(k8sTaskParameters.isUseNewKubectlVersion()))
                 .kubeconfigPath(K8sConstants.KUBECONFIG_FILENAME)
                 .workingDirectory(workingDirectory)
                 .goTemplateClientPath(k8sGlobalConfigService.getGoTemplateClientPath())
                 .helmPath(k8sGlobalConfigService.getHelmPath(k8sTaskParameters.getHelmVersion()))
                 .ocPath(k8sGlobalConfigService.getOcPath())
-                .kustomizeBinaryPath(k8sGlobalConfigService.getKustomizePath())
+                .kustomizeBinaryPath(
+                    k8sGlobalConfigService.getKustomizePath(k8sTaskParameters.isUseLatestKustomizeVersion()))
                 .build();
 
         logK8sVersion(k8sTaskParameters, k8SDelegateTaskParams);

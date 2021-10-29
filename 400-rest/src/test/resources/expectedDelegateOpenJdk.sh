@@ -43,9 +43,9 @@ case "$OSTYPE" in
     ;;
 esac
 
-JVM_URL=http://localhost:8888/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+JVM_URL=http://localhost:9500/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
 
-ALPN_BOOT_JAR_URL=http://localhost:8888/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+ALPN_BOOT_JAR_URL=http://localhost:9500/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -166,7 +166,7 @@ export DEPLOY_MODE=KUBERNETES
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=http://localhost:8888
+  DELEGATE_STORAGE_URL=http://localhost:9500
   REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/delegateci.txt)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
@@ -238,9 +238,9 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
 fi
 
 if ! `grep useCdn config-delegate.yml > /dev/null`; then
-  echo "useCdn: false" >> config-delegate.yml
+  echo "useCdn: true" >> config-delegate.yml
 else
-  sed -i.bak "s|^useCdn:.*$|useCdn: false|" config-delegate.yml
+  sed -i.bak "s|^useCdn:.*$|useCdn: true|" config-delegate.yml
 fi
 if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
   echo "cdnUrl: http://localhost:9500" >> config-delegate.yml
@@ -275,6 +275,10 @@ if ! `grep installClientToolsInBackground config-delegate.yml > /dev/null`; then
   echo "installClientToolsInBackground: $INSTALL_CLIENT_TOOLS_IN_BACKGROUND" >> config-delegate.yml
 fi
 
+if ! `grep versionCheckDisabled config-delegate.yml > /dev/null`; then
+  echo "versionCheckDisabled: $VERSION_CHECK_DISABLED" >> config-delegate.yml
+fi
+
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
   echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
 fi
@@ -304,6 +308,8 @@ export SCM_VERSION=542f4642
 export DELEGATE_NAME=harness-delegate
 export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
 export DELEGATE_TYPE=SHELL_SCRIPT
+export VERSION_CHECK_DISABLED=false
+
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

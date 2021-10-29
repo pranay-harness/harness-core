@@ -603,7 +603,7 @@ public class YamlGitServiceImpl implements YamlGitService {
          AppLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR);
          YamlProcessingLogContext ignore3 =
              YamlProcessingLogContext.builder().changeSetId(yamlChangeSetId).build(OVERRIDE_ERROR)) {
-      log.info(GIT_YAML_LOG_PREFIX + "Started handling harness -> git changeset");
+      log.info(GIT_YAML_LOG_PREFIX + "Started handling harness -> git change set");
 
       List<GitFileChange> gitFileChanges = yamlChangeSet.getGitFileChanges();
       YamlGitConfig yamlGitConfig = getYamlGitConfigForHarnessToGitChangeSet(yamlChangeSet);
@@ -620,8 +620,6 @@ public class YamlGitServiceImpl implements YamlGitService {
       ensureValidNameSyntax(gitFileChanges);
 
       gitConfigHelperService.convertToRepoGitConfig(gitConfig, yamlGitConfig.getRepositoryName());
-
-      log.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for entity");
 
       String lastProcessedGitCommitId =
           Optional
@@ -660,8 +658,8 @@ public class YamlGitServiceImpl implements YamlGitService {
           waitId);
       final String taskId = delegateService.queueTask(delegateTask);
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        log.info(
-            GIT_YAML_LOG_PREFIX + "Successfully queued harness->git changeset for processing with delegate taskId=[{}]",
+        log.info(GIT_YAML_LOG_PREFIX
+                + "Successfully queued harness->git change set for processing with delegate taskId=[{}]",
             taskId);
       }
     }
@@ -929,7 +927,7 @@ public class YamlGitServiceImpl implements YamlGitService {
          YamlProcessingLogContext ignore3 =
              getYamlProcessingLogContext(gitConnectorId, branchName, null, yamlChangeSet.getUuid())) {
       log.info(
-          GIT_YAML_LOG_PREFIX + "Started handling Git -> harness changeset with headCommit Id =[{}]", headCommitId);
+          GIT_YAML_LOG_PREFIX + "Started handling Git -> harness change set with headCommit Id =[{}]", headCommitId);
 
       if (isNotEmpty(headCommitId) && isCommitAlreadyProcessed(accountId, headCommitId)) {
         log.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
@@ -979,13 +977,13 @@ public class YamlGitServiceImpl implements YamlGitService {
           waitId);
       final String taskId = delegateService.queueTask(delegateTask);
       try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        log.info(
-            GIT_YAML_LOG_PREFIX + "Successfully queued git->harness changeset for processing with delegate taskId=[{}]",
+        log.info(GIT_YAML_LOG_PREFIX
+                + "Successfully queued git->harness change set for processing with delegate taskId=[{}]",
             taskId);
       }
 
     } catch (Exception ex) {
-      log.error(format(GIT_YAML_LOG_PREFIX + "Unexpected error while processing git->harness changeset [%s]",
+      log.error(format(GIT_YAML_LOG_PREFIX + "Unexpected error while processing git->harness change set [%s]",
                     yamlChangeSet.getUuid()),
           ex);
       yamlChangeSetService.updateStatus(accountId, yamlChangeSet.getUuid(), Status.SKIPPED);

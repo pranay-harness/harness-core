@@ -38,6 +38,7 @@ import static java.time.Duration.ofHours;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
@@ -459,9 +460,6 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
-    featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
-    featureFlagService.enableAccount(FeatureName.DISABLE_WINRM_ENV_VARIABLES, account.getUuid());
-
     if (fromDataGen) {
       updateNextGenEnabled(account.getUuid(), true);
       featureFlagService.enableAccount(FeatureName.CDNG_ENABLED, account.getUuid());
@@ -950,6 +948,25 @@ public class AccountServiceImpl implements AccountService {
     }
 
     return account.getDelegateConfiguration();
+  }
+
+  @Override
+  public String getAccountPrimaryDelegateVersion(String accountId) {
+    if (licenseService.isAccountDeleted(accountId)) {
+      throw new InvalidRequestException("Deleted AccountId: " + accountId);
+    }
+    Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                          .filter(AccountKeys.uuid, accountId)
+                          .project("delegateConfiguration", true)
+                          .get();
+    if (account.getDelegateConfiguration() == null) {
+      return null;
+    }
+    return account.getDelegateConfiguration()
+        .getDelegateVersions()
+        .stream()
+        .reduce((first, last) -> last)
+        .orElse(EMPTY);
   }
 
   @Override

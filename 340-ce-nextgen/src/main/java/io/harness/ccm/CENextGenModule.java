@@ -24,18 +24,18 @@ import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
 import io.harness.ccm.commons.service.intf.ClusterRecordService;
 import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
+import io.harness.ccm.graphql.core.budget.BudgetService;
+import io.harness.ccm.graphql.core.budget.BudgetServiceImpl;
 import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClientModule;
 import io.harness.ccm.service.impl.AWSBucketPolicyHelperServiceImpl;
 import io.harness.ccm.service.impl.AWSOrganizationHelperServiceImpl;
 import io.harness.ccm.service.impl.AwsEntityChangeEventServiceImpl;
-import io.harness.ccm.service.impl.BudgetServiceImpl;
 import io.harness.ccm.service.impl.CEYamlServiceImpl;
 import io.harness.ccm.service.impl.GCPEntityChangeEventServiceImpl;
 import io.harness.ccm.service.impl.LicenseUsageInterfaceImpl;
 import io.harness.ccm.service.intf.AWSBucketPolicyHelperService;
 import io.harness.ccm.service.intf.AWSOrganizationHelperService;
 import io.harness.ccm.service.intf.AwsEntityChangeEventService;
-import io.harness.ccm.service.intf.BudgetService;
 import io.harness.ccm.service.intf.CEYamlService;
 import io.harness.ccm.service.intf.GCPEntityChangeEventService;
 import io.harness.ccm.serviceAccount.CEGcpServiceAccountService;
@@ -44,6 +44,8 @@ import io.harness.ccm.serviceAccount.GcpResourceManagerService;
 import io.harness.ccm.serviceAccount.GcpResourceManagerServiceImpl;
 import io.harness.ccm.serviceAccount.GcpServiceAccountService;
 import io.harness.ccm.serviceAccount.GcpServiceAccountServiceImpl;
+import io.harness.ccm.utils.AccountIdentifierLogInterceptor;
+import io.harness.ccm.utils.LogAccountIdentifier;
 import io.harness.ccm.views.businessMapping.service.impl.BusinessMappingServiceImpl;
 import io.harness.ccm.views.businessMapping.service.intf.BusinessMappingService;
 import io.harness.ccm.views.service.CEReportScheduleService;
@@ -58,6 +60,7 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ProviderModule;
@@ -209,6 +212,9 @@ public class CENextGenModule extends AbstractModule {
         configuration.getManagerClientConfig(), configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(new TokenClientModule(configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(),
         CE_NEXT_GEN.getServiceId()));
+    install(EnforcementClientModule.getInstance(configuration.getNgManagerClientConfig(),
+        configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId(),
+        configuration.getEnforcementClientConfiguration()));
 
     install(new SecretNGManagerClientModule(configuration.getNgManagerClientConfig(),
         configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
@@ -241,7 +247,16 @@ public class CENextGenModule extends AbstractModule {
 
     bindRetryOnExceptionInterceptor();
 
+    bindAccountLogContextInterceptor();
+
     registerDelegateTaskService();
+  }
+
+  private void bindAccountLogContextInterceptor() {
+    AccountIdentifierLogInterceptor accountIdentifierLogInterceptor = new AccountIdentifierLogInterceptor();
+    requestInjection(accountIdentifierLogInterceptor);
+    bindInterceptor(
+        Matchers.any(), Matchers.annotatedWith(LogAccountIdentifier.class), accountIdentifierLogInterceptor);
   }
 
   private void registerDelegateTaskService() {

@@ -68,6 +68,8 @@ input FreezeWindowInput {
   appFilter: AppFilterType
   #Select the Environment Type to which the freeze window is to be applied. CUSTOM 'envTypeFilter' is applicable only when 'appFilter' is selected as 'CUSTOM' with a single application.
   envTypeFilter: EnvironmentTypeFilterInput!
+  #Select the Service Type to which the freeze window is to be applied. CUSTOM 'serviceTypeFilter' is applicable only when 'appFilter' is selected as 'CUSTOM' with a single application.
+  serviceTypeFilter: ServiceTypeFilterInput!
   #Input Environment Ids when 'envTypeFilter' is selected as 'CUSTOM'.
   envIds: [String]
   freezeForAllServices: Boolean
@@ -78,6 +80,11 @@ enum EnvironmentTypeFilterInput {
   ALL
   ALL_PROD
   ALL_NON_PROD
+  CUSTOM
+}
+
+enum ServiceTypeFilterInput {
+  ALL
   CUSTOM
 }
 
@@ -120,7 +127,7 @@ type FreezeWindow {
   appFilter: AppFilterType
   envFilterType: EnvironmentFilterType
   envIds: [String]
-  servFilter: ServiceFilterType
+  servFilterType: ServiceFilterType
   servIds: [String]
 }
 

@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,10 +22,12 @@ import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.k8s.data.K8sCanaryDataException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -214,7 +217,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testFinalizeExecutionException() {
+  public void testFinalizeExecutionExceptionDelegateException() throws Exception {
     final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
     final Exception thrownException = new GeneralException("Something went wrong");
     final K8sExecutionPassThroughData executionPassThroughData = K8sExecutionPassThroughData.builder().build();
@@ -228,6 +231,32 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(response).isEqualTo(stepResponse);
 
     verify(k8sStepHelper, times(1)).handleTaskException(ambiance, executionPassThroughData, thrownException);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFinalizeExecutionExceptionTaskException() throws Exception {
+    final String canaryWorkload = "deployment/deployment-canary";
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
+    final K8sExecutionPassThroughData executionPassThroughData = K8sExecutionPassThroughData.builder().build();
+    final Exception cause = new RuntimeException("Error while executing task");
+    final Exception taskException = new TaskNGDataException(
+        UnitProgressData.builder().build(), new K8sCanaryDataException(canaryWorkload, true, cause));
+
+    doThrow(taskException).when(k8sStepHelper).handleTaskException(ambiance, executionPassThroughData, taskException);
+
+    assertThatThrownBy(()
+                           -> k8sCanaryStep.finalizeExecutionWithSecurityContext(ambiance, stepElementParameters,
+                               executionPassThroughData, () -> { throw taskException; }))
+        .isSameAs(taskException);
+    ArgumentCaptor<K8sCanaryOutcome> canaryOutcomeCaptor = ArgumentCaptor.forClass(K8sCanaryOutcome.class);
+    verify(executionSweepingOutputService, times(1))
+        .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_CANARY_OUTCOME), canaryOutcomeCaptor.capture(),
+            eq(StepOutcomeGroup.STEP.name()));
+    K8sCanaryOutcome canaryOutcome = canaryOutcomeCaptor.getValue();
+    assertThat(canaryOutcome.getCanaryWorkload()).isEqualTo(canaryWorkload);
+    assertThat(canaryOutcome.isCanaryWorkloadDeployed()).isTrue();
   }
 
   @Override

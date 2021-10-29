@@ -241,9 +241,16 @@ public class SettingAttribute
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
+  @JsonIgnore
   @Override
-  public NGMigrationEntityType getType() {
+  public NGMigrationEntityType getMigrationEntityType() {
     return NGMigrationEntityType.CONNECTOR;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getMigrationEntityName() {
+    return getName();
   }
 
   public enum SettingCategory {

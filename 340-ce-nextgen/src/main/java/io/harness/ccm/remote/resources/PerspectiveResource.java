@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.utils.BigQueryHelper;
@@ -60,7 +61,9 @@ public class PerspectiveResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create perspective", nickname = "createPerspective")
-  public RestResponse<CEView> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  //  @FeatureRestrictionCheck(FeatureRestrictionName.PERSPECTIVES)
+  public RestResponse<CEView> create(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam("clone") boolean clone, @Valid @RequestBody CEView ceView) {
     ceView.setAccountId(accountId);
     if (clone) {

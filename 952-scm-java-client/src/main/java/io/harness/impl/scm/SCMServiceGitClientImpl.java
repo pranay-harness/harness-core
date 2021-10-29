@@ -16,6 +16,7 @@ import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
 import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
@@ -162,5 +163,10 @@ public class SCMServiceGitClientImpl implements ScmClient {
   public CompareCommitsResponse compareCommits(
       ScmConnector scmConnector, String initialCommitId, String finalCommitId) {
     return scmServiceClient.compareCommits(scmConnector, initialCommitId, finalCommitId, scmBlockingStub);
+  }
+
+  @Override
+  public FindCommitResponse findCommit(ScmConnector scmConnector, String commitId) {
+    return scmServiceClient.findCommit(scmConnector, commitId, scmBlockingStub);
   }
 }

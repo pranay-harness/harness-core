@@ -514,8 +514,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     checkDeploymentPermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.appPermissions, appPermissions);
-    setUnset(operations, UserGroupKeys.accountPermissions,
-        addDefaultCePermissions(Optional.ofNullable(accountPermissions).orElse(AccountPermissions.builder().build())));
+    AccountPermissions accountPermissionsUpdate =
+        addDefaultCePermissions(Optional.ofNullable(accountPermissions).orElse(AccountPermissions.builder().build()));
+    setUnset(operations, UserGroupKeys.accountPermissions, accountPermissionsUpdate);
     UserGroup updatedUserGroup = update(userGroup, operations);
     evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
     if (!ccmSettingService.isCloudCostEnabled(updatedUserGroup.getAccountId())) {
@@ -617,7 +618,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     checkDeploymentPermissions(userGroup);
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
-    userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));
+    accountPermissions = addDefaultCePermissions(accountPermissions);
+    userGroup.setAccountPermissions(accountPermissions);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.appPermissions, userGroup.getAppPermissions());
     setUnset(operations, UserGroupKeys.accountPermissions, userGroup.getAccountPermissions());

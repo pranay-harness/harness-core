@@ -176,7 +176,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
         .thenReturn(cv);
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", null, accountId);
     String expected =
-        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD, disabled=false)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])])";
+        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD, disabled=false, featureRestrictionName=null)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false, featureRestrictionName=null)], stepCategories=[])])])])";
     assertThat(stepCategory.toString()).isEqualTo(expected);
   }
 
@@ -224,7 +224,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform", accountId);
     String expected =
-        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false)], stepCategories=[])])])])";
+        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV, disabled=false, featureRestrictionName=null)], stepCategories=[])])])])";
     assertThat(stepCategory.toString()).isEqualTo(expected);
   }
 
@@ -240,6 +240,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     assertThat(form.getCriteriaObject().get("projectIdentifier").toString().contentEquals(PROJ_IDENTIFIER))
         .isEqualTo(true);
     assertThat(form.getCriteriaObject().containsKey("status")).isEqualTo(false);
+    assertThat(form.getCriteriaObject().get("deleted")).isEqualTo(false);
   }
 
   @Test

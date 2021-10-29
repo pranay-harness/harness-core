@@ -11,10 +11,15 @@ import java.util.EnumSet;
 
 @OwnedBy(HarnessTeam.DX)
 public class HintException extends WingsException {
-  public static final String HINT_AWS_IRSA_CHECK = "Check IRSA role on delegate";
-  public static final String HINT_EMPTY_ACCESS_KEY = "Check if access key is empty";
-  public static final String HINT_EMPTY_SECRET_KEY = "Check if secret key is empty";
-  public static final String HINT_AWS_IAM_ROLE_CHECK = "Check IAM role on delegate ec2";
+  public static final String HINT_AWS_IRSA_CHECK = "Check IRSA role on delegate.";
+  public static final String HINT_EMPTY_ACCESS_KEY = "Check if Access Key is empty";
+  public static final String HINT_EMPTY_SECRET_KEY = "Check if Secret Key is empty";
+  public static final String HINT_EMPTY_CROSS_ACCOUNT_ROLE_ARN_KEY = "Check if Cross account role ARN is empty";
+  public static final String HINT_INCORRECT_ACCESS_KEY_SECRET_KEY_PERMISSIONS_KEY =
+      "Check if access key, secret key are valid. Check if user has required permissions to perform the activity.";
+  public static final String HINT_INVALID_CROSS_ACCOUNT_ROLE_ARN_EXTERNAL_ID_PERMISSIONS_KEY =
+      "Check if Cross account role ARN, External Id are valid. Check if User / IAM Role on delegate / IRSA role has permission to perform sts:AssumeRole. Check if assumed Cross account role has permissions to perform the activity.";
+  public static final String HINT_AWS_IAM_ROLE_CHECK = "Check IAM role on delegate ec2.";
   public static final String HINT_AWS_CLIENT_UNKNOWN_ISSUE = "Check AWS client on delegate";
   public static final String HINT_ECR_IMAGE_NAME = "Check if given ECR image is available in specified region";
   public static final String HINT_AWS_ACCESS_DENIED = "Please ensure AWS credentials are valid";
@@ -55,6 +60,11 @@ public class HintException extends WingsException {
   public static final String HINT_MALFORMED_GIT_SSH_KEY = "Please provide valid git ssh private key in PEM format.";
   public static final String HINT_INVALID_GIT_SSH_KEY =
       "Please provide correct git ssh private key with 'git' username.";
+
+  public static final String HINT_MISSING_BRANCH = "Please provide valid git branch";
+  public static final String HINT_MISSING_REFERENCE = "Please provide valid git commit id or git tag";
+  public static final String HINT_GIT_FILE_NOT_FOUND =
+      "Please ensure that provided file path exists in git repository or in reference %s";
 
   public static final String HINT_CHECK_URL_DETAILS = "Please Check URL/Account details.";
   public static final String HINT_CHECK_AUTHORIZATION_DETAILS = "Check Authorization credentials.";

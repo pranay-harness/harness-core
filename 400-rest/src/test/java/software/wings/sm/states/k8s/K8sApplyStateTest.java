@@ -24,6 +24,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -35,9 +36,11 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.rule.Owner;
@@ -89,6 +92,7 @@ public class K8sApplyStateTest extends CategoryTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private AppService appService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private ActivityService activityService;
   @InjectMocks K8sApplyState k8sApplyState = spy(new K8sApplyState(K8S_APPLY.name()));
 
@@ -117,6 +121,7 @@ public class K8sApplyStateTest extends CategoryTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
 
+    when(featureFlagService.isEnabled(eq(FeatureName.NEW_KUBECTL_VERSION), any())).thenReturn(false);
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
     when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
@@ -143,6 +148,7 @@ public class K8sApplyStateTest extends CategoryTest {
     assertThat(taskParams.isSkipDryRun()).isTrue();
     assertThat(taskParams.isSkipRendering()).isTrue();
     assertThat(taskParams.getFilePaths()).isEqualTo(FILE_PATHS);
+    assertThat(taskParams.isUseNewKubectlVersion()).isFalse();
   }
 
   @Test

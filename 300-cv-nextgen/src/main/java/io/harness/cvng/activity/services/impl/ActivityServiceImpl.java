@@ -27,6 +27,7 @@ import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
@@ -40,6 +41,8 @@ import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.cdng.entities.CVNGStepTask;
+import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
@@ -57,6 +60,8 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Verifica
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
@@ -106,6 +111,10 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private Injector injector;
   @Inject private Map<ActivityType, ActivityUpdatableEntity> activityUpdatableEntityMap;
+  @Inject private Map<ActivityType, ActivityUpdateHandler> activityUpdateHandlerMap;
+  // TODO: remove the dependency once UI moves to new APIs
+  @Inject private CVNGStepTaskService cvngStepTaskService;
+  @Inject private PersistentLocker persistentLocker;
 
   @Override
   public Activity get(String activityId) {
@@ -153,6 +162,9 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public void updateActivityStatus(Activity activity) {
+    if (CollectionUtils.isEmpty(activity.getVerificationJobInstanceIds())) {
+      return;
+    }
     ActivityVerificationSummary summary = verificationJobInstanceService.getActivityVerificationSummary(
         verificationJobInstanceService.get(activity.getVerificationJobInstanceIds()));
     if (!summary.getAggregatedStatus().equals(ActivityVerificationStatus.IN_PROGRESS)
@@ -164,7 +176,6 @@ public class ActivityServiceImpl implements ActivityService {
               .set(ActivityKeys.analysisStatus, summary.getAggregatedStatus())
               .set(ActivityKeys.verificationSummary, summary);
       hPersistence.update(activityQuery, activityUpdateOperations);
-
       log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
     }
 
@@ -262,6 +273,10 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public DeploymentActivitySummaryDTO getDeploymentSummary(String activityId) {
+    CVNGStepTask cvngStepTask = cvngStepTaskService.getByCallBackId(activityId);
+    if (cvngStepTask != null && StringUtils.isNotEmpty(cvngStepTask.getVerificationJobInstanceId())) {
+      return cvngStepTaskService.getDeploymentSummary(activityId);
+    }
     DeploymentActivity activity = (DeploymentActivity) get(activityId);
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         getDeploymentVerificationJobInstanceSummary(activity);
@@ -714,9 +729,14 @@ public class ActivityServiceImpl implements ActivityService {
 
   private List<String> getVerificationJobInstanceId(String activityId) {
     Preconditions.checkNotNull(activityId);
-    Activity activity = get(activityId);
-    Preconditions.checkNotNull(activity, String.format("Activity does not exists with activityID %s", activityId));
-    return activity.getVerificationJobInstanceIds();
+    CVNGStepTask cvngStepTask = cvngStepTaskService.getByCallBackId(activityId);
+    if (cvngStepTask != null && StringUtils.isBlank(cvngStepTask.getVerificationJobInstanceId())) {
+      Activity activity = get(activityId);
+      Preconditions.checkNotNull(activity, String.format("Activity does not exists with activityID %s", activityId));
+      return activity.getVerificationJobInstanceIds();
+    } else {
+      return Arrays.asList(cvngStepTask.getVerificationJobInstanceId());
+    }
   }
 
   private void validateJob(VerificationJob verificationJob) {
@@ -756,17 +776,31 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public void upsert(Activity activity) {
+  public String upsert(Activity activity) {
+    ActivityUpdateHandler handler = activityUpdateHandlerMap.get(activity.getType());
     ActivityUpdatableEntity activityUpdatableEntity = activityUpdatableEntityMap.get(activity.getType());
-    Optional<Activity> optionalFromDb =
-        StringUtils.isEmpty(activity.getUuid()) ? getFromDb(activity) : Optional.ofNullable(get(activity.getUuid()));
-    if (optionalFromDb.isPresent()) {
-      UpdateOperations<Activity> updateOperations =
-          hPersistence.createUpdateOperations(activityUpdatableEntity.getEntityClass());
-      activityUpdatableEntity.setUpdateOperations(updateOperations, activity);
-      hPersistence.update(optionalFromDb.get(), updateOperations);
-    } else {
-      register(activity);
+    try (AcquiredLock acquiredLock = persistentLocker.waitToAcquireLock(Activity.class,
+             activityUpdatableEntity.getEntityKeyString(activity), Duration.ofSeconds(6), Duration.ofSeconds(4))) {
+      Optional<Activity> optionalFromDb =
+          StringUtils.isEmpty(activity.getUuid()) ? getFromDb(activity) : Optional.ofNullable(get(activity.getUuid()));
+      if (optionalFromDb.isPresent()) {
+        UpdateOperations<Activity> updateOperations =
+            hPersistence.createUpdateOperations(activityUpdatableEntity.getEntityClass());
+        activityUpdatableEntity.setUpdateOperations(updateOperations, activity);
+        if (handler != null) {
+          handler.handleUpdate(optionalFromDb.get(), activity);
+        }
+        hPersistence.update(optionalFromDb.get(), updateOperations);
+        return optionalFromDb.get().getUuid();
+      } else {
+        if (handler != null) {
+          handler.handleCreate(activity);
+        }
+        hPersistence.save(activity);
+      }
+      log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(),
+          activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
+      return activity.getUuid();
     }
   }
 

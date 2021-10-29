@@ -59,6 +59,7 @@ import io.harness.capability.service.CapabilityService;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateInstanceStatus;
+import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -95,6 +96,7 @@ import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
 import io.harness.environment.SystemEnvironment;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.DelegateNotAvailableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import io.harness.exception.InvalidArgumentsException;
@@ -203,15 +205,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
-@BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
 @BreakDependencyOn("software.wings.app.MainConfiguration")
 @BreakDependencyOn("software.wings.app.PortalConfig")
 @BreakDependencyOn("software.wings.beans.Application")
 @BreakDependencyOn("io.harness.event.handler.impl.EventPublishHelper")
-@BreakDependencyOn("software.wings.beans.ExecutionCredential")
-@BreakDependencyOn("software.wings.beans.GitConfig")
 @BreakDependencyOn("software.wings.expression.NgSecretManagerFunctor")
-@BreakDependencyOn("software.wings.beans.GitValidationParameters")
 @OwnedBy(DEL)
 public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassic {
   private static final String ASYNC = "async";
@@ -1733,5 +1731,31 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   public boolean checkDelegateConnected(String accountId, String delegateId) {
     return delegateConnectionDao.checkDelegateConnected(
         accountId, delegateId, versionInfoManager.getVersionInfo().getVersion());
+  }
+
+  @Override
+  public void markAllTasksFailedForDelegate(String accountId, String delegateId) {
+    final List<DelegateTask> delegateTasks = persistence.createQuery(DelegateTask.class)
+                                                 .filter(DelegateTaskKeys.accountId, accountId)
+                                                 .filter(DelegateTaskKeys.delegateId, delegateId)
+                                                 .field(DelegateTaskKeys.status)
+                                                 .in(runningStatuses())
+                                                 .asList();
+    log.info("Marking delegate tasks {} failed since delegate went down before completion.",
+        delegateTasks.stream().map(DelegateTask::getUuid).collect(Collectors.toList()));
+    final String errorMessage = "Delegate disconnected while executing the task";
+    final DelegateTaskResponse delegateTaskResponse =
+        DelegateTaskResponse.builder()
+            .responseCode(ResponseCode.FAILED)
+            .accountId(accountId)
+            .response(ErrorNotifyResponseData.builder()
+                          .errorMessage(errorMessage)
+                          .exception(new DelegateNotAvailableException(errorMessage))
+                          .delegateMetaInfo(DelegateMetaInfo.builder().id(delegateId).build())
+                          .build())
+            .build();
+    delegateTasks.forEach(delegateTask -> {
+      delegateTaskService.processDelegateResponse(accountId, delegateId, delegateTask.getUuid(), delegateTaskResponse);
+    });
   }
 }

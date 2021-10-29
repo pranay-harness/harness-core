@@ -14,6 +14,7 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.StagesExecutionMetadata;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
@@ -54,7 +55,9 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -79,7 +82,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
       String searchTerm, List<ExecutionStatus> statusList, boolean myDeployments, boolean pipelineDeleted,
-      ByteString gitSyncBranchContext) {
+      ByteString gitSyncBranchContext, boolean isLatest) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
       criteria.and(PlanExecutionSummaryKeys.accountId).is(accountId);
@@ -96,7 +99,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     if (EmptyPredicate.isNotEmpty(statusList)) {
       criteria.and(PlanExecutionSummaryKeys.status).in(statusList);
     }
-    criteria.and(PlanExecutionSummaryKeys.pipelineDeleted).ne(!pipelineDeleted);
+
+    criteria.and(PlanExecutionSummaryKeys.isLatestExecution).ne(!isLatest);
 
     Criteria filterCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
@@ -121,8 +125,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
           // This is here just for backward compatibility should be removed
           Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.singletonList(INTERNAL_SERVICE_NAME)),
           Criteria.where(PlanExecutionSummaryKeys.modules).in(ModuleType.PMS.name().toLowerCase()),
-          Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
-          Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
+          Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName));
     }
 
     Criteria searchCriteria = new Criteria();
@@ -194,24 +197,32 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
             .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
                 accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
-      String yaml = pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
-      String template = pipelineExecutionSummaryEntityOptional.get().getPipelineTemplate();
+      PipelineExecutionSummaryEntity executionSummaryEntity = pipelineExecutionSummaryEntityOptional.get();
+      String latestTemplate = validateAndMergeHelper.getPipelineTemplate(
+          accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), null);
+      String yaml = executionSummaryEntity.getInputSetYaml();
+      String template = executionSummaryEntity.getPipelineTemplate();
       if (resolveExpressions && EmptyPredicate.isNotEmpty(yaml)) {
         yaml = yamlExpressionResolveHelper.resolveExpressionsInYaml(yaml, planExecutionId);
       }
       if (EmptyPredicate.isEmpty(template) && EmptyPredicate.isNotEmpty(yaml)) {
-        EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(
-            pipelineExecutionSummaryEntityOptional.get().getGitSyncBranchContext());
+        EntityGitDetails entityGitDetails =
+            pmsGitSyncHelper.getEntityGitDetailsFromBytes(executionSummaryEntity.getGitSyncBranchContext());
         if (entityGitDetails != null) {
           template = validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId,
-              pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), entityGitDetails.getBranch(),
-              entityGitDetails.getRepoIdentifier());
+              executionSummaryEntity.getPipelineIdentifier(), entityGitDetails.getBranch(),
+              entityGitDetails.getRepoIdentifier(), null);
         } else {
-          template = validateAndMergeHelper.getPipelineTemplate(
-              accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier());
+          template = latestTemplate;
         }
       }
-      return InputSetYamlWithTemplateDTO.builder().inputSetTemplateYaml(template).inputSetYaml(yaml).build();
+      StagesExecutionMetadata stagesExecutionMetadata = executionSummaryEntity.getStagesExecutionMetadata();
+      return InputSetYamlWithTemplateDTO.builder()
+          .inputSetTemplateYaml(template)
+          .inputSetYaml(yaml)
+          .latestTemplateYaml(latestTemplate)
+          .expressionValues(stagesExecutionMetadata != null ? stagesExecutionMetadata.getExpressionValues() : null)
+          .build();
     }
     throw new InvalidRequestException(
         "Invalid request : Input Set did not exist or pipeline execution has been deleted");
@@ -309,5 +320,11 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
           "Executions for Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.",
           pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
     }
+  }
+
+  @Override
+  public long getCountOfExecutions(Criteria criteria) {
+    Pageable pageRequest = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, PlanExecutionSummaryKeys.startTs));
+    return pmsExecutionSummaryRespository.findAll(criteria, pageRequest).getTotalElements();
   }
 }

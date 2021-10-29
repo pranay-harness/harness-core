@@ -12,7 +12,7 @@ import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
-import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.serializer.KryoRegistrar;
 
@@ -109,7 +109,6 @@ import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
-import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
@@ -247,6 +246,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactSummary;
+import software.wings.beans.artifact.ArtifactoryCollectionTaskParameters;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -772,6 +772,7 @@ import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
 import com.google.gson.internal.LinkedTreeMap;
+import com.google.protobuf.Duration;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
@@ -810,7 +811,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerRollbackRequestElement.class, 4010);
     kryo.register(ContainerServiceElement.class, 5095);
     kryo.register(DeploymentType.class, 5096);
-    kryo.register(EcsBGSetupData.class, 5611);
     kryo.register(EcsSetupElement.class, 5671);
     kryo.register(EcsListenerUpdateExecutionSummary.class, 5612);
     kryo.register(EcsListenerUpdateStateExecutionData.class, 5614);
@@ -1591,7 +1591,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(BatchCapabilityCheckTaskParameters.class, 8200);
     kryo.register(BatchCapabilityCheckTaskResponse.class, 8201);
-    kryo.register(CapabilityCheckDetails.class, 8202);
+    kryo.register(ArtifactoryCollectionTaskParameters.class, 8203);
 
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
 
@@ -1638,5 +1638,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sGitConfigMapInfo.class, 40023);
     kryo.register(K8sApplicationManifestSourceInfo.class, 40024);
     kryo.register(LinkedTreeMap.class, 40025);
+    kryo.register(PerpetualTaskSchedule.class, 40028);
+    kryo.register(Duration.class, 40029);
   }
 }

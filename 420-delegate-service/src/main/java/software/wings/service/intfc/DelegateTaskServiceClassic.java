@@ -65,4 +65,6 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 
   boolean checkDelegateConnected(String accountId, String delegateId);
+
+  void markAllTasksFailedForDelegate(String accountId, String delegateId);
 }

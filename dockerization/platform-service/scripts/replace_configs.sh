@@ -225,6 +225,8 @@ replace_key_value resourceGroupServiceConfig.redisLockConfig.userName "$LOCK_CON
 
 replace_key_value resourceGroupServiceConfig.redisLockConfig.password "$LOCK_CONFIG_REDIS_PASSWORD"
 
+replace_key_value resourceGroupServiceConfig.redisLockConfig.nettyThreads "$REDIS_NETTY_THREADS"
+
 replace_key_value resourceGroupServiceConfig.distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
 
 replace_key_value resourceGroupServiceConfig.auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
@@ -256,6 +258,8 @@ replace_key_value resourceGroupServiceConfig.resourceClients.resourceGroup.baseU
 replace_key_value resourceGroupServiceConfig.resourceClients.resourceGroup.secret "$RESOURCE_GROUP_SECRET"
 
 replace_key_value resourceGroupServiceConfig.mongo.uri "${RESOURCE_GROUP_MONGO_URI//\\&/&}"
+
+replace_key_value resourceGroupServiceConfig.redis.nettyThreads "$EVENTS_FRAMEWORK_NETTY_THREADS"
 
 replace_key_value resourceGroupServiceConfig.redis.sslConfig.enabled "$EVENTS_FRAMEWORK_REDIS_SSL_ENABLED"
 

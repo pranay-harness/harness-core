@@ -25,22 +25,6 @@ JRE_LINUX_2=jre-8u191-linux-x64.tar.gz
 ALPN_BOOT_JAR_URL=https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017
 ALPN_BOOT_JAR=alpn-boot-8.1.13.v20181017.jar
 
-KUBECTL_VERSION=v1.13.2
-
-KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$KUBECTL_VERSION/"
-KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$KUBECTL_VERSION/"
-
-KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/linux/amd64/kubectl
-KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/darwin/amd64/kubectl
-
-KUSTOMIZE_VERSION=v3.5.4
-
-KUSTOMIZE_LINUX_DIR="${IMAGES_DIR}/kustomize/linux/$KUSTOMIZE_VERSION/"
-KUSTOMIZE_MAC_DIR="${IMAGES_DIR}/kustomize/darwin/$KUSTOMIZE_VERSION/"
-
-KUSTOMIZE_LINUX_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$KUSTOMIZE_VERSION"/bin/linux/amd64/kustomize
-KUSTOMIZE_MAC_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$KUSTOMIZE_VERSION"/bin/darwin/amd64/kustomize
-
 OC_VERSION=v4.2.16
 OC_LINUX_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/linux/amd64/oc
 OC_MAC_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/darwin/amd64/oc
@@ -63,18 +47,6 @@ curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" >"${JRE_LINUX_2}"
 
 curl "${ALPN_BOOT_JAR_URL}/${ALPN_BOOT_JAR}" >"${ALPN_BOOT_JAR}"
 
-mkdir -p $KUBECTL_LINUX_DIR
-mkdir -p $KUBECTL_MAC_DIR
-
-curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
-curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
-
-mkdir -p $KUSTOMIZE_LINUX_DIR
-mkdir -p $KUSTOMIZE_MAC_DIR
-
-curl -L -o "${KUSTOMIZE_MAC_DIR}kustomize" "${KUSTOMIZE_MAC_URL}"
-curl -L -o "${KUSTOMIZE_LINUX_DIR}kustomize" "${KUSTOMIZE_LINUX_URL}"
-
 mkdir -p $OC_LINUX_DIR
 mkdir -p $OC_MAC_DIR
 
@@ -90,6 +62,26 @@ mv "${JRE_MACOSX_2}" "${IMAGES_DIR}/"
 mv "${JRE_LINUX_2}" "${IMAGES_DIR}/"
 
 mv "${ALPN_BOOT_JAR}" "${IMAGES_DIR}/"
+
+for kubectlVersion in v1.13.2 v1.19.2; do
+  echo "Adding kubectl $kubectlVersion"
+
+  KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$kubectlVersion/"
+  KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$kubectlVersion/"
+
+  KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$kubectlVersion"/bin/linux/amd64/kubectl
+  KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$kubectlVersion"/bin/darwin/amd64/kubectl
+
+  echo "$KUBECTL_MAC_DIR"
+  echo "$KUBECTL_LINUX_DIR"
+
+  mkdir -p $KUBECTL_LINUX_DIR
+  mkdir -p $KUBECTL_MAC_DIR
+
+  curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
+  curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
+
+done
 
 for goversion in v0.2 v0.3 v0.4; do
   echo "Adding goversion $goversion"
@@ -145,7 +137,7 @@ for helmversion in v2.13.1 v3.0.2 v3.1.2; do
   curl -L -o "${HELM_MAC_DIR}helm" "${HELM_MAC_URL}"
 done
 
-for chartmuseumversion in v0.8.2; do
+for chartmuseumversion in v0.8.2 v0.13.0; do
   echo "Adding chartmuseumversion $chartmuseumversion"
   CHARTMUSEUM_LINUX_DIR="${IMAGES_DIR}/chartmuseum/linux/$chartmuseumversion/"
   CHARTMUSEUM_MAC_DIR="${IMAGES_DIR}/chartmuseum/darwin/$chartmuseumversion/"
@@ -162,6 +154,25 @@ for chartmuseumversion in v0.8.2; do
   curl -L -o "${CHARTMUSEUM_LINUX_DIR}chartmuseum" "${CHARTMUSEUM_LINUX_URL}"
   curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
 done
+
+for kustomizeVersion in v3.5.4 v4.0.0; do
+  echo "Adding kustomizeversion $kustomizeVersion"
+  KUSTOMIZE_LINUX_DIR="${IMAGES_DIR}/kustomize/linux/$kustomizeVersion/"
+  KUSTOMIZE_MAC_DIR="${IMAGES_DIR}/kustomize/darwin/$kustomizeVersion/"
+
+  KUSTOMIZE_LINUX_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$kustomizeVersion"/bin/linux/amd64/kustomize
+  KUSTOMIZE_MAC_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$kustomizeVersion"/bin/darwin/amd64/kustomize
+
+  echo $KUSTOMIZE_LINUX_DIR
+  echo $KUSTOMIZE_MAC_DIR
+
+  mkdir -p $KUSTOMIZE_LINUX_DIR
+  mkdir -p $KUSTOMIZE_MAC_DIR
+
+  curl -L -o "${KUSTOMIZE_MAC_DIR}kustomize" "${KUSTOMIZE_MAC_URL}"
+  curl -L -o "${KUSTOMIZE_LINUX_DIR}kustomize" "${KUSTOMIZE_LINUX_URL}"
+done
+
 
 for tfConfigInspectVersion in v1.0 v1.1; do
   echo "Adding terraform-config-inspect" $tfConfigInspectVersion
@@ -183,7 +194,7 @@ for tfConfigInspectVersion in v1.0 v1.1; do
 
 done
 
-for scmVersion in 87448d72; do
+for scmVersion in 72f01538; do
   echo "Adding scm" $scmVersion
 
   SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"
@@ -239,12 +250,12 @@ function setupClientUtils() {
   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect oc kustomize and scm"
 
   for platform in linux darwin; do
-    for kubectlversion in v1.13.2; do
+    for kubectlversion in v1.13.2 v1.19.2; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
       cp images/kubectl/${platform}/$kubectlversion/kubectl ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
     done
 
-    for kustomizeversion in v3.5.4; do
+    for kustomizeversion in v3.5.4 v4.0.0; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeversion/bin/${platform}/amd64/
       cp images/kustomize/${platform}/$kustomizeversion/kustomize ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeversion/bin/${platform}/amd64/
     done
@@ -264,7 +275,7 @@ function setupClientUtils() {
       cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
     done
 
-    for chartmuseumversion in v0.8.2; do
+    for chartmuseumversion in v0.8.2 v0.13.0; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
       cp images/chartmuseum/${platform}/$chartmuseumversion/chartmuseum ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
     done
@@ -279,7 +290,7 @@ function setupClientUtils() {
       cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
     done
 
-    for scmVersion in 87448d72; do
+    for scmVersion in 72f01538; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
       cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
     done

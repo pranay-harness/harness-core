@@ -1,6 +1,8 @@
 package io.harness.template.helpers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetFormatYamlToOriginYaml;
 import static io.harness.pms.yaml.validation.RuntimeInputValuesValidator.validateStaticValues;
 
@@ -8,16 +10,22 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.NGExpressionUtils;
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.NGTemplateException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ngexception.NGTemplateException;
+import io.harness.ng.core.Status;
 import io.harness.ng.core.template.TemplateInputsErrorDTO;
 import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
-import io.harness.ng.core.template.TemplateMergeResponse;
+import io.harness.ng.core.template.TemplateMergeResponseDTO;
+import io.harness.ng.core.template.TemplateReferenceSummary;
+import io.harness.ng.core.template.exception.NGTemplateResolveException;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.merger.fqn.FQNNode;
+import io.harness.pms.merger.fqn.FQNNode.NodeType;
 import io.harness.pms.merger.helpers.RuntimeInputFormHelper;
 import io.harness.pms.merger.helpers.YamlSubMapExtractor;
 import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.JsonUtils;
 import io.harness.template.beans.yaml.NGTemplateConfig;
@@ -28,7 +36,6 @@ import io.harness.utils.YamlPipelineUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -53,6 +60,7 @@ public class TemplateMergeHelper {
   private static final String TEMPLATE_VERSION_LABEL = "versionLabel";
   private static final String TEMPLATE_INPUTS = "templateInputs";
   private static final String DUMMY_NODE = "dummy";
+  private static final String SPEC = "spec";
 
   private NGTemplateService templateService;
 
@@ -63,7 +71,7 @@ public class TemplateMergeHelper {
     if (!optionalTemplateEntity.isPresent()) {
       throw new NGTemplateException("Template to fetch template inputs does not exist.");
     }
-    return createTemplateInputs(accountId, orgIdentifier, projectIdentifier, optionalTemplateEntity.get().getYaml());
+    return createTemplateInputsFromTemplate(optionalTemplateEntity.get().getYaml());
   }
 
   /**
@@ -91,18 +99,18 @@ public class TemplateMergeHelper {
    * @return template inputs yaml
    */
   @VisibleForTesting
-  String createTemplateInputs(String accountId, String orgId, String projectId, String yaml) {
+  String createTemplateInputsFromTemplate(String yaml) {
     try {
       if (isEmpty(yaml)) {
         throw new NGTemplateException("Template yaml to create template inputs cannot be empty");
       }
-      YamlField templateYamlField = YamlUtils.readTree(yaml).getNode().getField("template");
+      YamlField templateYamlField = YamlUtils.readTree(yaml).getNode().getField(TEMPLATE);
       if (templateYamlField == null) {
         log.error("Yaml provided is not a template yaml. Yaml:\n" + yaml);
         throw new NGTemplateException("Yaml provided is not a template yaml.");
       }
       ObjectNode templateNode = (ObjectNode) templateYamlField.getNode().getCurrJsonNode();
-      String templateSpec = templateNode.retain("spec").toString();
+      String templateSpec = templateNode.retain(SPEC).toString();
       if (isEmpty(templateSpec)) {
         log.error("Template yaml provided does not have spec in it.");
         throw new NGTemplateException("Template yaml provided does not have spec in it.");
@@ -112,12 +120,16 @@ public class TemplateMergeHelper {
         return templateInputsYamlWithSpec;
       }
       JsonNode templateInputsYaml =
-          YamlUtils.readTree(templateInputsYamlWithSpec).getNode().getCurrJsonNode().get("spec");
-      return YamlUtils.write(templateInputsYaml).replace("---\n", "");
+          YamlUtils.readTree(templateInputsYamlWithSpec).getNode().getCurrJsonNode().get(SPEC);
+      return convertToYaml(templateInputsYaml);
     } catch (IOException e) {
       log.error("Error occurred while creating template inputs " + e);
       throw new NGTemplateException("Error occurred while creating template inputs ", e);
     }
+  }
+
+  private String convertToYaml(Object object) {
+    return YamlUtils.write(object).replace("---\n", "");
   }
 
   /**
@@ -130,61 +142,126 @@ public class TemplateMergeHelper {
    * @param pipelineYaml - pipeline yaml
    * @return final pipeline yaml with all template occurrences replaced with actual template information.
    */
-  public TemplateMergeResponse mergeTemplateSpecToPipelineYaml(
+  public TemplateMergeResponseDTO mergeTemplateSpecToPipelineYaml(
       String accountId, String orgId, String projectId, String pipelineYaml) {
     if (isEmpty(pipelineYaml)) {
       throw new NGTemplateException("Pipeline yaml cannot be empty.");
     }
-    JsonNode pipelineJsonNode;
+    YamlNode pipelineYamlNode;
     try {
-      pipelineJsonNode = YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode();
+      pipelineYamlNode = YamlUtils.readTree(pipelineYaml).getNode();
     } catch (IOException e) {
       log.error("Could not convert yaml to JsonNode. Yaml:\n" + pipelineYaml, e);
       throw new NGTemplateException("Could not convert yaml to JsonNode: " + e.getMessage());
     }
 
     TemplateInputsErrorResponseDTO errorResponse =
-        validateLinkedTemplateInputsInYaml(accountId, orgId, projectId, pipelineJsonNode);
-    Map<String, Object> resMap = generateMergedYamlMap(accountId, orgId, projectId, pipelineJsonNode);
-    return TemplateMergeResponse.builder()
-        .mergedPipelineYaml(YamlUtils.write(resMap).replace("---\n", ""))
-        .isValid(errorResponse == null)
-        .errorResponse(errorResponse)
+        validateLinkedTemplateInputsInYaml(accountId, orgId, projectId, pipelineYamlNode);
+    if (errorResponse != null) {
+      throw new NGTemplateResolveException("Exception in resolving template refs in given yaml.", USER, errorResponse);
+    }
+    Map<String, Object> resMap = mergeTemplateInputsInObject(accountId, orgId, projectId, pipelineYamlNode);
+    List<TemplateReferenceSummary> templateReferenceSummaries =
+        getTemplateReferenceSummaries(accountId, orgId, projectId, pipelineYaml);
+    return TemplateMergeResponseDTO.builder()
+        .mergedPipelineYaml(convertToYaml(resMap))
+        .templateReferenceSummaries(templateReferenceSummaries)
         .build();
+  }
+
+  private List<TemplateReferenceSummary> getTemplateReferenceSummaries(
+      String accountId, String orgId, String projectId, String pipelineYaml) {
+    YamlConfig yamlConfig = new YamlConfig(pipelineYaml);
+    Map<FQN, Object> fqnToValueMap = yamlConfig.getFqnToValueMap();
+    Set<FQN> fqnSet = new LinkedHashSet<>(yamlConfig.getFqnToValueMap().keySet());
+    List<TemplateReferenceSummary> templateReferenceSummaries = new ArrayList<>();
+    fqnSet.forEach(key -> {
+      if (key.getFqnList().size() >= 2) {
+        List<FQNNode> fqnList = new ArrayList<>(key.getFqnList());
+        FQNNode lastNode = fqnList.get(fqnList.size() - 1);
+        FQNNode secondLastNode = fqnList.get(fqnList.size() - 2);
+        if (lastNode.getKey().equals(TEMPLATE_REF) && secondLastNode.getKey().equals(TEMPLATE)) {
+          String identifier = ((JsonNode) fqnToValueMap.get(key)).asText();
+          IdentifierRef templateIdentifierRef =
+              IdentifierRefHelper.getIdentifierRef(identifier, accountId, orgId, projectId);
+
+          // remove templateRef from FQN and add versionLabel to FQN to fetch corresponding template version.
+          fqnList.remove(fqnList.size() - 1);
+          fqnList.add(FQNNode.builder().nodeType(NodeType.KEY).key(TEMPLATE_VERSION_LABEL).build());
+          JsonNode versionLabelNode = (JsonNode) fqnToValueMap.get(FQN.builder().fqnList(fqnList).build());
+          String versionLabel = "";
+          if (versionLabelNode == null) {
+            Optional<TemplateEntity> templateEntity = templateService.get(templateIdentifierRef.getAccountIdentifier(),
+                templateIdentifierRef.getOrgIdentifier(), templateIdentifierRef.getProjectIdentifier(),
+                templateIdentifierRef.getIdentifier(), versionLabel, false);
+            if (templateEntity.isPresent()) {
+              versionLabel = templateEntity.get().getVersionLabel();
+            }
+          } else {
+            versionLabel = versionLabelNode.asText();
+          }
+
+          // remove template and versionLabel from FQN to construct base FQN.
+          fqnList.remove(fqnList.size() - 1);
+          fqnList.remove(fqnList.size() - 1);
+          TemplateReferenceSummary templateReferenceSummary =
+              TemplateReferenceSummary.builder()
+                  .fqn(FQN.builder().fqnList(fqnList).build().getExpressionFqn())
+                  .templateIdentifier(templateIdentifierRef.getIdentifier())
+                  .versionLabel(versionLabel)
+                  .scope(templateIdentifierRef.getScope())
+                  .build();
+          templateReferenceSummaries.add(templateReferenceSummary);
+        }
+      }
+    });
+    return templateReferenceSummaries;
   }
 
   /**
    * This method iterates recursively on pipeline yaml. Whenever we find a key with "template" we call
    * replaceTemplateOccurrenceWithTemplateSpecYaml() to get the actual template.spec in template yaml.
    */
-  private Map<String, Object> generateMergedYamlMap(String accountId, String orgId, String projectId, JsonNode yaml) {
-    Map<String, Object> result = new LinkedHashMap<>();
-    Set<String> fieldNames = new LinkedHashSet<>();
-    yaml.fieldNames().forEachRemaining(fieldNames::add);
-
-    for (String key : fieldNames) {
-      JsonNode value = yaml.get(key);
-      if (TEMPLATE.equals(key)) {
+  private Map<String, Object> mergeTemplateInputsInObject(
+      String accountId, String orgId, String projectId, YamlNode yamlNode) {
+    Map<String, Object> resMap = new LinkedHashMap<>();
+    for (YamlField childYamlField : yamlNode.fields()) {
+      String fieldName = childYamlField.getName();
+      JsonNode value = childYamlField.getNode().getCurrJsonNode();
+      if (TEMPLATE.equals(fieldName)) {
         value = replaceTemplateOccurrenceWithTemplateSpecYaml(accountId, orgId, projectId, value);
       }
-      if (value.getNodeType() == JsonNodeType.ARRAY) {
-        Object listProcessResult = generateMergedYamlMapFromList(accountId, orgId, projectId, (ArrayNode) value);
-        result.put(key, listProcessResult);
-      } else if (value.getNodeType() == JsonNodeType.OBJECT) {
-        Map<String, Object> temp = generateMergedYamlMap(accountId, orgId, projectId, value);
+      if (value.isValueNode() || YamlUtils.checkIfNodeIsArrayWithPrimitiveTypes(value)) {
+        resMap.put(fieldName, value);
+      } else if (value.isArray()) {
+        resMap.put(fieldName, mergeTemplateInputsInArray(accountId, orgId, projectId, childYamlField.getNode()));
+      } else {
         // If it was template key in yaml, we have replace it with the fields in template.spec in template yaml.
         // Hence, we directly put all the keys returned in map, after iterating over them.
-        if (TEMPLATE.equals(key)) {
-          result.putAll(temp);
+        if (TEMPLATE.equals(fieldName)) {
+          Map<String, Object> temp = mergeTemplateInputsInObject(
+              accountId, orgId, projectId, new YamlNode(fieldName, value, childYamlField.getNode().getParentNode()));
+          resMap.putAll(temp);
         } else {
-          result.put(key, temp);
+          resMap.put(fieldName, mergeTemplateInputsInObject(accountId, orgId, projectId, childYamlField.getNode()));
         }
-      } else {
-        result.put(key, value);
       }
     }
+    return resMap;
+  }
 
-    return result;
+  private List<Object> mergeTemplateInputsInArray(String accountId, String orgId, String projectId, YamlNode yamlNode) {
+    List<Object> arrayList = new ArrayList<>();
+    for (YamlNode arrayElement : yamlNode.asArray()) {
+      if (yamlNode.getCurrJsonNode().isValueNode()) {
+        arrayList.add(arrayElement);
+      } else if (arrayElement.isArray()) {
+        arrayList.add(mergeTemplateInputsInArray(accountId, orgId, projectId, yamlNode));
+      } else {
+        arrayList.add(mergeTemplateInputsInObject(accountId, orgId, projectId, arrayElement));
+      }
+    }
+    return arrayList;
   }
 
   /**
@@ -209,10 +286,6 @@ public class TemplateMergeHelper {
       throw new NGTemplateException("Could not read template yaml: " + e.getMessage());
     }
 
-    if (templateInputs == null) {
-      return templateSpec;
-    }
-
     return mergeTemplateInputsToTemplateSpecInTemplateYaml(templateInputs, templateSpec);
   }
 
@@ -228,10 +301,10 @@ public class TemplateMergeHelper {
 
     Map<String, JsonNode> dummyTemplateInputsMap = new LinkedHashMap<>();
     dummyTemplateInputsMap.put(DUMMY_NODE, templateInputs);
-    String dummyTemplateInputsYaml = YamlUtils.write(dummyTemplateInputsMap).replace("---\n", "");
+    String dummyTemplateInputsYaml = convertToYaml(dummyTemplateInputsMap);
 
-    String mergedYaml = mergeInputSetFormatYamlToOriginYaml(
-        YamlUtils.write(dummyTemplateSpecMap).replace("---\n", ""), dummyTemplateInputsYaml);
+    String mergedYaml =
+        mergeInputSetFormatYamlToOriginYaml(convertToYaml(dummyTemplateSpecMap), dummyTemplateInputsYaml);
 
     try {
       String finalMergedYaml = removeOmittedRuntimeInputsFromMergedYaml(mergedYaml, dummyTemplateInputsYaml);
@@ -268,24 +341,6 @@ public class TemplateMergeHelper {
   }
 
   /**
-   * This method iterates over lists in yaml.
-   */
-  private Object generateMergedYamlMapFromList(String accountId, String orgId, String projectId, ArrayNode list) {
-    if (list == null || list.get(0) == null) {
-      return list;
-    }
-
-    JsonNode firstNode = list.get(0);
-    if (firstNode.getNodeType() != JsonNodeType.OBJECT) {
-      return list;
-    }
-
-    List<Object> finalList = new ArrayList<>();
-    list.forEach(element -> finalList.add(generateMergedYamlMap(accountId, orgId, projectId, element)));
-    return finalList;
-  }
-
-  /**
    * This method validates the template inputs in linked templates in yaml
    * @param accountId
    * @param orgId
@@ -294,15 +349,58 @@ public class TemplateMergeHelper {
    * @return
    */
   public TemplateInputsErrorResponseDTO validateLinkedTemplateInputsInYaml(
-      String accountId, String orgId, String projectId, JsonNode yaml) {
-    Map<String, TemplateInputsErrorDTO> errorMap = new LinkedHashMap<>();
-    Map<String, Object> errorYamlMap = generateErrorYamlMap(accountId, orgId, projectId, yaml, errorMap);
-    if (isEmpty(errorYamlMap)) {
+      String accountId, String orgId, String projectId, YamlNode yamlNode) {
+    Map<String, TemplateInputsErrorDTO> templateInputsErrorMap = new LinkedHashMap<>();
+    Map<String, Object> errorYamlMap =
+        validateTemplateInputsInObject(accountId, orgId, projectId, yamlNode, templateInputsErrorMap);
+    if (isEmpty(templateInputsErrorMap)) {
       return null;
     }
-    String errorYaml = YamlUtils.write(errorYamlMap).replace("---\n", "");
-    String errorTemplateYaml = convertUuidErrorMapToFqnErrorMap(errorYaml, errorMap);
-    return TemplateInputsErrorResponseDTO.builder().errorYaml(errorTemplateYaml).errorMap(errorMap).build();
+    String errorYaml = convertToYaml(errorYamlMap);
+    String errorTemplateYaml = convertUuidErrorMapToFqnErrorMap(errorYaml, templateInputsErrorMap);
+    return new TemplateInputsErrorResponseDTO(Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION,
+        "Template resolve failed in given yaml.", null, errorTemplateYaml, templateInputsErrorMap);
+  }
+
+  private Map<String, Object> validateTemplateInputsInObject(String accountId, String orgId, String projectId,
+      YamlNode yamlNode, Map<String, TemplateInputsErrorDTO> templateInputsErrorMap) {
+    Map<String, Object> resMap = new LinkedHashMap<>();
+    for (YamlField childYamlField : yamlNode.fields()) {
+      String fieldName = childYamlField.getName();
+      JsonNode value = childYamlField.getNode().getCurrJsonNode();
+      if (TEMPLATE.equals(fieldName)) {
+        resMap.put(fieldName, validateTemplateInputs(accountId, orgId, projectId, value, templateInputsErrorMap));
+        continue;
+      }
+      if (value.isValueNode() || YamlUtils.checkIfNodeIsArrayWithPrimitiveTypes(value)) {
+        resMap.put(fieldName, value);
+      } else if (value.isArray()) {
+        resMap.put(fieldName,
+            validateTemplateInputsInArray(
+                accountId, orgId, projectId, childYamlField.getNode(), templateInputsErrorMap));
+      } else {
+        resMap.put(fieldName,
+            validateTemplateInputsInObject(
+                accountId, orgId, projectId, childYamlField.getNode(), templateInputsErrorMap));
+      }
+    }
+    return resMap;
+  }
+
+  private Object validateTemplateInputsInArray(String accountId, String orgId, String projectId, YamlNode yamlNode,
+      Map<String, TemplateInputsErrorDTO> templateInputsErrorMap) {
+    List<Object> arrayList = new ArrayList<>();
+    for (YamlNode arrayElement : yamlNode.asArray()) {
+      if (yamlNode.getCurrJsonNode().isValueNode()) {
+        arrayList.add(arrayElement);
+      } else if (arrayElement.isObject()) {
+        arrayList.add(
+            validateTemplateInputsInObject(accountId, orgId, projectId, arrayElement, templateInputsErrorMap));
+      } else {
+        arrayList.add(validateTemplateInputsInArray(accountId, orgId, projectId, arrayElement, templateInputsErrorMap));
+      }
+    }
+    return arrayList;
   }
 
   private String convertUuidErrorMapToFqnErrorMap(
@@ -325,75 +423,37 @@ public class TemplateMergeHelper {
     return (new YamlConfig(templateMap, yamlConfig.getYamlMap())).getYaml();
   }
 
-  private Map<String, Object> generateErrorYamlMap(
-      String accountId, String orgId, String projectId, JsonNode yaml, Map<String, TemplateInputsErrorDTO> errorMap) {
-    Map<String, Object> result = new LinkedHashMap<>();
-    Set<String> fieldNames = new LinkedHashSet<>();
-    yaml.fieldNames().forEachRemaining(fieldNames::add);
-
-    for (String key : fieldNames) {
-      JsonNode value = yaml.get(key);
-      if (TEMPLATE.equals(key)) {
-        value = validateTemplateInputs(accountId, orgId, projectId, value, errorMap);
-        result.put(key, value);
-        continue;
-      }
-      if (value.getNodeType() == JsonNodeType.ARRAY) {
-        Object listProcessResult =
-            generateErrorYamlMapFromList(accountId, orgId, projectId, (ArrayNode) value, errorMap);
-        result.put(key, listProcessResult);
-      } else if (value.getNodeType() == JsonNodeType.OBJECT) {
-        result.put(key, generateErrorYamlMap(accountId, orgId, projectId, value, errorMap));
-      } else {
-        result.put(key, value);
-      }
-    }
-
-    return result;
-  }
-
-  private Object generateErrorYamlMapFromList(
-      String accountId, String orgId, String projectId, ArrayNode list, Map<String, TemplateInputsErrorDTO> errorMap) {
-    if (list == null || list.get(0) == null) {
-      return list;
-    }
-
-    JsonNode firstNode = list.get(0);
-    if (firstNode.getNodeType() != JsonNodeType.OBJECT) {
-      return list;
-    }
-
-    List<Object> finalList = new ArrayList<>();
-    list.forEach(element -> finalList.add(generateErrorYamlMap(accountId, orgId, projectId, element, errorMap)));
-    return finalList;
-  }
-
   private JsonNode validateTemplateInputs(String accountId, String orgId, String projectId, JsonNode linkedTemplate,
       Map<String, TemplateInputsErrorDTO> errorMap) {
+    String identifier = linkedTemplate.get(TEMPLATE_REF).asText();
+    TemplateEntity templateEntity = getLinkedTemplateEntity(accountId, orgId, projectId, linkedTemplate);
     JsonNode linkedTemplateInputs = linkedTemplate.get(TEMPLATE_INPUTS);
     if (linkedTemplateInputs == null) {
       return linkedTemplate;
     }
 
-    String identifier = linkedTemplate.get(TEMPLATE_REF).asText();
-    TemplateEntity templateEntity = getLinkedTemplateEntity(accountId, orgId, projectId, linkedTemplate);
     String templateYaml = templateEntity.getYaml();
-    String templateSpecInputSetFormatYaml = createTemplateInputs(accountId, orgId, projectId, templateYaml);
+    String templateSpecInputSetFormatYaml = createTemplateInputsFromTemplate(templateYaml);
 
-    JsonNode templateSpecInputSetFormatNode;
     try {
-      templateSpecInputSetFormatNode = YamlUtils.readTree(templateSpecInputSetFormatYaml).getNode().getCurrJsonNode();
-
-      Map<String, JsonNode> dummyTemplateSpecMap = new LinkedHashMap<>();
-      dummyTemplateSpecMap.put(DUMMY_NODE, templateSpecInputSetFormatNode);
-
       Map<String, JsonNode> dummyLinkedTemplateInputsMap = new LinkedHashMap<>();
       dummyLinkedTemplateInputsMap.put(DUMMY_NODE, linkedTemplateInputs);
+      String dummyLinkedTemplateInputsYaml = convertToYaml(dummyLinkedTemplateInputsMap);
 
       Map<String, TemplateInputsErrorDTO> uuidToErrorMessageMap = new LinkedHashMap<>();
-      String invalidLinkedTemplateInputsYaml =
-          getInvalidInputValuesYaml(YamlUtils.write(dummyTemplateSpecMap).replace("---\n", ""),
-              YamlUtils.write(dummyLinkedTemplateInputsMap).replace("---\n", ""), uuidToErrorMessageMap, identifier);
+      String invalidLinkedTemplateInputsYaml;
+      if (isNotEmpty(templateSpecInputSetFormatYaml)) {
+        JsonNode templateSpecInputSetFormatNode =
+            YamlUtils.readTree(templateSpecInputSetFormatYaml).getNode().getCurrJsonNode();
+        Map<String, JsonNode> dummyTemplateSpecMap = new LinkedHashMap<>();
+        dummyTemplateSpecMap.put(DUMMY_NODE, templateSpecInputSetFormatNode);
+        invalidLinkedTemplateInputsYaml = getInvalidInputValuesYaml(
+            convertToYaml(dummyTemplateSpecMap), dummyLinkedTemplateInputsYaml, uuidToErrorMessageMap, identifier);
+      } else {
+        invalidLinkedTemplateInputsYaml = getInvalidInputValuesYaml(
+            templateSpecInputSetFormatYaml, dummyLinkedTemplateInputsYaml, uuidToErrorMessageMap, identifier);
+      }
+
       if (isEmpty(uuidToErrorMessageMap)) {
         return linkedTemplate;
       }
@@ -403,7 +463,7 @@ public class TemplateMergeHelper {
 
       Map<String, Object> originalTemplateMap = JsonUtils.jsonNodeToMap(linkedTemplate);
       originalTemplateMap.put(TEMPLATE_INPUTS, invalidLinkedTemplateInputsNode);
-      return YamlUtils.readTree(YamlUtils.write(originalTemplateMap).replace("---\n", "")).getNode().getCurrJsonNode();
+      return YamlUtils.readTree(convertToYaml(originalTemplateMap)).getNode().getCurrJsonNode();
     } catch (IOException e) {
       log.error("Error while validating template inputs yaml ", e);
       throw new NGTemplateException("Error while validating template inputs yaml: " + e.getMessage());
@@ -414,19 +474,9 @@ public class TemplateMergeHelper {
       Map<String, TemplateInputsErrorDTO> uuidToErrorMessageMap, String templateRef) {
     YamlConfig linkedTemplateInputsConfig = new YamlConfig(linkedTemplateInputsYaml);
     Set<FQN> linkedTemplateInputsFQNs = new LinkedHashSet<>(linkedTemplateInputsConfig.getFqnToValueMap().keySet());
-    if (EmptyPredicate.isEmpty(templateSpecInputSetFormatYaml)) {
-      for (FQN fqn : linkedTemplateInputsFQNs) {
-        String randomUuid = UUID.randomUUID().toString();
-        TemplateInputsErrorDTO errorDTO = TemplateInputsErrorDTO.builder()
-                                              .fieldName(randomUuid)
-                                              .message("Template no longer contains any runtime input")
-                                              .identifierOfErrorSource(templateRef)
-                                              .build();
-        uuidToErrorMessageMap.put(randomUuid, errorDTO);
-        linkedTemplateInputsConfig.getFqnToValueMap().put(fqn, randomUuid);
-      }
-      return new YamlConfig(linkedTemplateInputsConfig.getFqnToValueMap(), linkedTemplateInputsConfig.getYamlMap())
-          .getYaml();
+    if (isEmpty(templateSpecInputSetFormatYaml)) {
+      return markAllRuntimeInputsInvalid(uuidToErrorMessageMap, templateRef, linkedTemplateInputsConfig,
+          linkedTemplateInputsFQNs, "Template no longer contains any runtime input");
     }
 
     YamlConfig templateSpecInputSetFormatConfig = new YamlConfig(templateSpecInputSetFormatYaml);
@@ -450,7 +500,7 @@ public class TemplateMergeHelper {
           }
         } else {
           String error = validateStaticValues(templateValue, linkedTemplateInputValue);
-          if (EmptyPredicate.isNotEmpty(error)) {
+          if (isNotEmpty(error)) {
             String randomUuid = UUID.randomUUID().toString();
             linkedTemplateInputsConfig.getFqnToValueMap().put(key, randomUuid);
             TemplateInputsErrorDTO errorDTO = TemplateInputsErrorDTO.builder()
@@ -469,11 +519,18 @@ public class TemplateMergeHelper {
         subMap.keySet().forEach(linkedTemplateInputsFQNs::remove);
       }
     });
+    return markAllRuntimeInputsInvalid(uuidToErrorMessageMap, templateRef, linkedTemplateInputsConfig,
+        linkedTemplateInputsFQNs, "Field either not present in template or not a runtime input");
+  }
+
+  private String markAllRuntimeInputsInvalid(Map<String, TemplateInputsErrorDTO> uuidToErrorMessageMap,
+      String templateRef, YamlConfig linkedTemplateInputsConfig, Set<FQN> linkedTemplateInputsFQNs,
+      String errorMessage) {
     for (FQN fqn : linkedTemplateInputsFQNs) {
       String randomUuid = UUID.randomUUID().toString();
       TemplateInputsErrorDTO errorDTO = TemplateInputsErrorDTO.builder()
                                             .fieldName(randomUuid)
-                                            .message("Field either not present in template or not a runtime input")
+                                            .message(errorMessage)
                                             .identifierOfErrorSource(templateRef)
                                             .build();
       uuidToErrorMessageMap.put(randomUuid, errorDTO);
@@ -485,7 +542,10 @@ public class TemplateMergeHelper {
 
   private TemplateEntity getLinkedTemplateEntity(String accountId, String orgId, String projectId, JsonNode yaml) {
     String identifier = yaml.get(TEMPLATE_REF).asText();
-    String versionLabel = yaml.get(TEMPLATE_VERSION_LABEL).asText();
+    String versionLabel = "";
+    if (yaml.get(TEMPLATE_VERSION_LABEL) != null) {
+      versionLabel = yaml.get(TEMPLATE_VERSION_LABEL).asText();
+    }
 
     IdentifierRef templateIdentifierRef = IdentifierRefHelper.getIdentifierRef(identifier, accountId, orgId, projectId);
     Optional<TemplateEntity> templateEntity =

@@ -360,7 +360,7 @@ public class EnvStateTest extends WingsBaseTest {
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
         .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
-            ACCOUNT_ID, deploymentFreezeIds, "", false));
+            ACCOUNT_ID, deploymentFreezeIds, "", false, false));
     when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
              WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
         .thenReturn(WorkflowExecution.builder().build());
@@ -390,7 +390,7 @@ public class EnvStateTest extends WingsBaseTest {
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
         .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
-            ACCOUNT_ID, Collections.emptyList(), "", true));
+            ACCOUNT_ID, Collections.emptyList(), "", true, false));
     when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
              WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
         .thenReturn(WorkflowExecution.builder().build());

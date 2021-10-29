@@ -23,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @RecasterAlias("io.harness.beans.outcomes.LiteEnginePodDetailsOutcome")
 public class LiteEnginePodDetailsOutcome implements Outcome {
   String ipAddress;
+  String namespace;
   public static final String POD_DETAILS_OUTCOME = "podDetailsOutcome";
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 }

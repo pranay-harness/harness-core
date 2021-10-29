@@ -44,9 +44,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -59,6 +61,7 @@ import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamCollectionStatus;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
@@ -85,6 +88,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -99,6 +103,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private Query<Artifact> artifactQuery;
   @Mock private MorphiaIterator<Artifact, Artifact> artifactIterator;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private ArtifactCollectionUtils artifactCollectionUtils;
   private static final String SCRIPT_STRING = "echo Hello World!! and echo ${secrets.getValue(My Secret)}";
@@ -109,6 +114,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     when(artifactQuery.fetch()).thenReturn(artifactIterator);
     when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
     when(artifactIterator.next()).thenReturn(anArtifact().build());
+    when(featureFlagService.isEnabled(Matchers.eq(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE), any()))
+        .thenReturn(true);
   }
 
   @Test
@@ -119,6 +126,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     artifactStream.setFailedCronAttempts(ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS + 1);
 
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isTrue();
+    verify(artifactStreamService)
+        .updateCollectionStatus(ACCOUNT_ID, null, ArtifactStreamCollectionStatus.STOPPED.name());
   }
 
   @Test(expected = InvalidRequestException.class)

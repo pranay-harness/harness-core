@@ -5,10 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 @OwnedBy(PIPELINE)
-@Value
+@Data
 @Builder
 public class ServiceDashboardInfo {
   String name;
@@ -20,8 +20,8 @@ public class ServiceDashboardInfo {
   long totalDeploymentsCount;
   long successDeploymentsCount;
   long failureDeploymentsCount;
-  double totalDeploymentsChangeRate;
+  @Builder.Default double totalDeploymentsChangeRate = DashboardHelper.MAX_VALUE;
 
   long instancesCount;
-  double instancesCountChangeRate;
+  @Builder.Default double instancesCountChangeRate = DashboardHelper.MAX_VALUE;
 }

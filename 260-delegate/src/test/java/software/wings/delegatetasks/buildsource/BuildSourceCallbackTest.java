@@ -2,10 +2,12 @@ package software.wings.delegatetasks.buildsource;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STABLE;
+import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STOPPED;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -19,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.util.Maps.newHashMap;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -26,6 +29,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.artifact.ArtifactCollectionResponseHandler;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.ff.FeatureFlagService;
@@ -91,6 +96,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     ARTIFACT_STREAM_UNSTABLE.setCollectionStatus(UNSTABLE.name());
+    ARTIFACT_STREAM.setCollectionStatus(STABLE.name());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(ARTIFACT_STREAM);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(ARTIFACT_STREAM_UNSTABLE);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
@@ -101,6 +107,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     when(artifactService.create(ARTIFACT_2)).thenReturn(ARTIFACT_2);
     buildSourceCallback.setAccountId(ACCOUNT_ID);
     buildSourceCallback.setSettingId(SETTING_ID);
+    when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_COLLECTION_CONFIGURABLE), any())).thenReturn(true);
   }
 
   @Test
@@ -129,6 +136,30 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateCollectionStatus() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_2);
+    buildSourceCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM_UNSTABLE);
+
+    verify(artifactStreamService).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_2, STABLE.name());
+    verify(triggerService, never())
+        .triggerExecutionPostArtifactCollectionAsync(
+            ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID_2, asList(ARTIFACT_1, ARTIFACT_2));
+    verify(artifactStreamService).updateLastIterationFields(ACCOUNT_ID, ARTIFACT_STREAM_ID_2, true);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdateStoppedCollectionStatusToSuccess() {
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_2);
+    ArtifactStream artifactStreamStopped = DockerArtifactStream.builder()
+                                               .uuid(ARTIFACT_STREAM_ID_2)
+                                               .sourceName(ARTIFACT_STREAM_NAME)
+                                               .appId(APP_ID)
+                                               .settingId(SETTING_ID)
+                                               .serviceId(SERVICE_ID)
+                                               .imageName("image_name")
+                                               .build();
+    artifactStreamStopped.setCollectionStatus(STOPPED.name());
     buildSourceCallback.handleResponseForSuccessInternal(
         prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM_UNSTABLE);
 
@@ -191,7 +222,8 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     buildSourceCallback.notify(newHashMap("", buildSourceExecutionResponse));
     verify(executorService, never()).submit(any(Runnable.class));
     verify(artifactStreamService, times(1)).get(any());
-    verify(artifactStreamService, times(1)).updateFailedCronAttempts(any(), any(), anyInt());
+    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt(), eq(false));
+    verify(artifactStreamService, times(1)).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_1, UNSTABLE.name());
   }
 
   @Test
@@ -202,7 +234,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     buildSourceCallback.notify(newHashMap("", ErrorNotifyResponseData.builder().build()));
     verify(executorService, never()).submit(any(Runnable.class));
     verify(artifactStreamService, times(2)).get(any());
-    verify(artifactStreamService, times(1)).updateFailedCronAttempts(any(), any(), anyInt());
+    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt(), eq(false));
   }
 
   @Test
@@ -238,6 +270,33 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(null);
     assertThatThrownBy(() -> buildSourceCallback.notifyError(newHashMap("", prepareBuildSourceExecutionResponse(true))))
         .isInstanceOf(ArtifactStreamNotFound.class);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testNotifyOnFailedResponseMax() {
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    ArtifactStream artifactStreamStopped = DockerArtifactStream.builder()
+                                               .uuid(ARTIFACT_STREAM_ID_1)
+                                               .sourceName(ARTIFACT_STREAM_NAME)
+                                               .appId(APP_ID)
+                                               .settingId(SETTING_ID)
+                                               .serviceId(SERVICE_ID)
+                                               .imageName("image_name")
+                                               .build();
+    artifactStreamStopped.setFailedCronAttempts(ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS - 1);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(artifactStreamStopped);
+    BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
+    buildSourceExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(null);
+
+    buildSourceCallback.notify(newHashMap("", buildSourceExecutionResponse));
+    verify(executorService, never()).submit(any(Runnable.class));
+
+    verify(artifactStreamService, times(1)).get(any());
+    verify(artifactStreamService, times(1)).updateFailedCronAttemptsAndLastIteration(any(), any(), anyInt(), eq(false));
+    verify(artifactStreamService, times(1)).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_1, STOPPED.name());
   }
 
   private BuildSourceExecutionResponse prepareBuildSourceExecutionResponse(boolean stable) {

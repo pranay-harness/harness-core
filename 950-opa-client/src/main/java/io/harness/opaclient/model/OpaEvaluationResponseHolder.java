@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,8 +14,13 @@ import lombok.Data;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OpaEvaluationResponseHolder {
   String id;
-  OpaEvaluationResponse summary;
+  String status;
+  List<OpaPolicySetEvaluationResponse> details;
   String account_id;
   String org_id;
   String project_id;
+  String entity;
+  String type;
+  String action;
+  long created;
 }
