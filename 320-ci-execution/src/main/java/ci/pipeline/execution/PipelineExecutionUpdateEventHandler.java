@@ -12,7 +12,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.encryption.Scope;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
@@ -45,7 +44,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
   @Override
   public void handleEvent(OrchestrationEvent event) {
     Ambiance ambiance = event.getAmbiance();
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
     Status status = event.getStatus();
 
