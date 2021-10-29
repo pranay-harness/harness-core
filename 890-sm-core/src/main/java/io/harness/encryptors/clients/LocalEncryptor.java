@@ -50,19 +50,18 @@ public class LocalEncryptor implements KmsEncryptor {
 
   @Override
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
-    SecretKey secretKey = secretKeyService.createSecretKey();
-    final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
     if (featureFlagService.isEnabled(FeatureName.LOCAL_MULTI_CRYPTO_MODE, accountId)) {
-      return EncryptedRecordData.builder().encryptionKey(accountId).encryptedValue(awsEncryptedSecret).build();
-    }
+      SecretKey secretKey = secretKeyService.createSecretKey();
+      final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
+      final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
 
-    char[] encryptedChars = new SimpleEncryption(accountId).encryptChars(value.toCharArray());
-    return EncryptedRecordData.builder()
-        .encryptionKey(accountId)
-        .encryptedValue(awsEncryptedSecret)
-        .backupEncryptedValue(encryptedChars)
-        .additionalMetadata(AdditionalMetadata.builder().value(AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP, true).build())
-        .build();
+      return EncryptedRecordData.builder()
+          .encryptionKey(accountId)
+          .encryptedValue(localJavaEncryptedSecret)
+          .additionalMetadata(
+              AdditionalMetadata.builder().value(AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP, true).build())
+          .build();
+    }
   }
 
   @Override
@@ -129,5 +128,9 @@ public class LocalEncryptor implements KmsEncryptor {
       // throw exception
     }
     return Arrays.toString(decryptResult.getResult());
+  }
+
+  private char[] getLocalJavaEncryptedSecret(String accountId, String value) {
+    return new SimpleEncryption(accountId).encryptChars(value.toCharArray());
   }
 }
