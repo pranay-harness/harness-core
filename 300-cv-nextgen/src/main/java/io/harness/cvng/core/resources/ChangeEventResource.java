@@ -81,11 +81,12 @@ public class ChangeEventResource {
       @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
       @ApiParam(required = true) @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
       @ApiParam(required = true) @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
+      @QueryParam("searchText") String searchText,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime, @BeanParam PageRequest pageRequest) {
-    return new RestResponse<>(
-        changeEventService.getChangeEvents(projectParams, serviceIdentifiers, envIdentifiers, changeCategories,
-            changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pageRequest));
+    return new RestResponse<>(changeEventService.getChangeEvents(projectParams, serviceIdentifiers, envIdentifiers,
+        searchText, changeCategories, changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime),
+        pageRequest));
   }
 
   @GET
@@ -127,11 +128,12 @@ public class ChangeEventResource {
       @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
       @ApiParam(required = true) @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
       @ApiParam(required = true) @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
+      @QueryParam("searchText") String searchText,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime,
       @ApiParam @QueryParam("pointCount") @DefaultValue("48") Integer pointCount) {
     return new RestResponse<>(
-        changeEventService.getTimeline(projectParams, serviceIdentifiers, envIdentifiers, changeCategories,
+        changeEventService.getTimeline(projectParams, serviceIdentifiers, envIdentifiers, searchText, changeCategories,
             changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pointCount));
   }
 }
