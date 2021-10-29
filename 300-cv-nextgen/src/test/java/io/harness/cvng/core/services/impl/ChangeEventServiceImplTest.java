@@ -232,6 +232,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testCreateTextSearchQuery() {
+    // testing query as our test MongoServer doesnt support text search: https://github.com/bwaldvogel/mongo-java-server
     Query<Activity> activityQuery = changeEventService.createTextSearchQuery(ProjectParams.builder()
                                                                                  .accountIdentifier("accountId")
                                                                                  .orgIdentifier("orgIdentifier")
