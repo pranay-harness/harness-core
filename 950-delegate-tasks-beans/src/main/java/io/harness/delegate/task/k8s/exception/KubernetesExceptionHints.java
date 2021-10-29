@@ -48,6 +48,8 @@ public class KubernetesExceptionHints {
   public final String BG_MULTIPLE_PRIMARY_SERVICE = "Mark primary and stage service with "
       + HarnessAnnotations.primaryService + " and " + HarnessAnnotations.stageService + " annotations";
   public final String BG_CONFLICTING_SERVICE = "Delete existing service [%s] to proceed";
+  public final String BG_SWAP_SERVICES_SERVICE_NOT_FOUND =
+      "Swap services requires primary and stage services to be present.";
 
   public final String SCALE_CLI_FAILED = "Check if resource %s exists";
   public final String ROLLBACK_CLI_FAILED = "Check if resource %s exists";
