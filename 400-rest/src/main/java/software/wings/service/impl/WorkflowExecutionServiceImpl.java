@@ -541,8 +541,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
     }
-    for (WorkflowExecution workflowExecution : res) {
-      if (withFailureDetails) {
+    if (withFailureDetails) {
+      for (WorkflowExecution workflowExecution : res) {
         try {
           populateFailureDetails(workflowExecution);
         } catch (Exception e) {
