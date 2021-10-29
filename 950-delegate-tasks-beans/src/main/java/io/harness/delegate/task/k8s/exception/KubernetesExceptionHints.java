@@ -56,4 +56,6 @@ public class KubernetesExceptionHints {
 
   public final String FAILED_TO_READ_FILE = "Failed to read file at path [%s].";
   public final String CHECK_IF_FILE_EXIST = "Check if file [%s] exists.";
+  public final String INVALID_RESOURCE_KIND_NAME_FORMAT =
+      "Provide resource name in kind/name or namespace/kind/name format, e.x. 'Deployment/%s' instead of '%s'";
 }
