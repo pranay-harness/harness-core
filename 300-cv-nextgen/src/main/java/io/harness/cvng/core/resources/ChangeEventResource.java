@@ -6,7 +6,9 @@ import static io.harness.cvng.core.services.CVNextGenConstants.CHANGE_EVENT_RESO
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.change.ChangeTimeline;
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -75,12 +77,16 @@ public class ChangeEventResource {
   @Path(CHANGE_EVENT_PATH)
   @ApiOperation(value = "get ChangeEvent List", nickname = "changeEventList")
   public RestResponse<PageResponse<ChangeEventDTO>> get(@BeanParam ProjectParams projectParams,
-      @ApiParam(required = true) @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
-      @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
+      @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
+      @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
+      @QueryParam("searchText") String searchText,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime, @BeanParam PageRequest pageRequest) {
     return new RestResponse<>(changeEventService.getChangeEvents(projectParams, serviceIdentifiers, envIdentifiers,
-        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pageRequest));
+        searchText, changeCategories, changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime),
+        pageRequest));
   }
 
   @GET
@@ -90,12 +96,14 @@ public class ChangeEventResource {
   @ExceptionMetered
   @ApiOperation(value = "get ChangeEvent summary", nickname = "changeEventSummary")
   public RestResponse<ChangeSummaryDTO> get(@BeanParam ProjectParams projectParams,
-      @ApiParam(required = true) @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
-      @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
+      @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
+      @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime) {
     return new RestResponse<>(changeEventService.getChangeSummary(projectParams, serviceIdentifiers, envIdentifiers,
-        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+        changeCategories, changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @GET
@@ -116,12 +124,16 @@ public class ChangeEventResource {
   @ExceptionMetered
   @ApiOperation(value = "get ChangeEvent timeline", nickname = "changeEventTimeline")
   public RestResponse<ChangeTimeline> get(@BeanParam ProjectParams projectParams,
-      @ApiParam(required = true) @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
-      @ApiParam(required = true) @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers,
+      @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
+      @QueryParam("changeSourceTypes") List<ChangeSourceType> changeSourceTypes,
+      @QueryParam("searchText") String searchText,
       @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime,
       @ApiParam @QueryParam("pointCount") @DefaultValue("48") Integer pointCount) {
-    return new RestResponse<>(changeEventService.getTimeline(projectParams, serviceIdentifiers, envIdentifiers,
-        Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pointCount));
+    return new RestResponse<>(
+        changeEventService.getTimeline(projectParams, serviceIdentifiers, envIdentifiers, searchText, changeCategories,
+            changeSourceTypes, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), pointCount));
   }
 }

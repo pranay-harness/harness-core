@@ -69,6 +69,7 @@ public class User extends Base implements Principal {
   public static final String ROLES_KEY = "roles";
 
   @NotEmpty @FdIndex private String name;
+  @FdIndex private String externalUserId;
 
   private String givenName;
 
@@ -269,6 +270,14 @@ public class User extends Base implements Principal {
    */
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public String getExternalUserId() {
+    return externalUserId;
+  }
+
+  public void setExternalUserId(String externalUserId) {
+    this.externalUserId = externalUserId;
   }
 
   /**
@@ -754,6 +763,7 @@ public class User extends Base implements Principal {
     private boolean imported;
     private UtmInfo utmInfo;
     private UserRequestContext userRequestContext;
+    private String externalUserId;
 
     private Builder() {}
 
@@ -773,6 +783,11 @@ public class User extends Base implements Principal {
 
     public Builder name(String name) {
       this.name = name;
+      return this;
+    }
+
+    public Builder externalUserId(String externalUserId) {
+      this.externalUserId = externalUserId;
       return this;
     }
 
@@ -940,6 +955,7 @@ public class User extends Base implements Principal {
       return anUser()
           .name(name)
           .email(email)
+          .externalUserId(externalUserId)
           .passwordHash(passwordHash)
           .companyName(companyName)
           .roles(roles)
@@ -975,6 +991,7 @@ public class User extends Base implements Principal {
       User user = new User();
       user.setName(name);
       user.setEmail(email);
+      user.setExternalUserId(externalUserId);
       user.setPasswordHash(passwordHash);
       user.setCompanyName(companyName);
       user.setAccountName(accountName);

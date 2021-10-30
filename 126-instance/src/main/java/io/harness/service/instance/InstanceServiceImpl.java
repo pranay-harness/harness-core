@@ -150,6 +150,13 @@ public class InstanceServiceImpl implements InstanceService {
         accountIdentifier, orgIdentifier, projectIdentifier, infrastructureMappingId, timestampInMs));
   }
 
+  @Override
+  public List<InstanceDTO> getActiveInstancesByInstanceInfo(
+      String accountIdentifier, String instanceInfoNamespace, String instanceInfoPodName) {
+    return InstanceMapper.toDTO(instanceRepository.getActiveInstancesByInstanceInfo(
+        accountIdentifier, instanceInfoNamespace, instanceInfoPodName));
+  }
+
   /*
     Returns aggregated result containing unique environment and build ids with instance count
   */

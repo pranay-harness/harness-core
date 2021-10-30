@@ -24,6 +24,7 @@ import io.harness.rule.Owner;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -235,5 +236,39 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     assertThatThrownBy(() -> validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId, pipelineId, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Could not find pipeline");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeInputSetForInvalidInputSets() {
+    String pipelineYaml = "pipeline:\n"
+        + "  stages:\n"
+        + "  - stage:\n"
+        + "      identifier: s1\n"
+        + "      description: <+input>\n"
+        + "  - stage:\n"
+        + "      identifier: s2\n"
+        + "      description: <+input>\n";
+    PipelineEntity pipelineEntity = PipelineEntity.builder().yaml(pipelineYaml).build();
+    doReturn(Optional.of(pipelineEntity)).when(pmsPipelineService).get(accountId, orgId, projectId, pipelineId, false);
+
+    String invalidIdentifier = "invalidIdentifier";
+    InputSetEntity invalidEntity = InputSetEntity.builder().isInvalid(true).identifier(invalidIdentifier).build();
+    doReturn(Optional.of(invalidEntity))
+        .when(pmsInputSetService)
+        .get(accountId, orgId, projectId, pipelineId, invalidIdentifier, false);
+
+    String validIdentifier = "validIdentifier";
+    InputSetEntity validEntity = InputSetEntity.builder().isInvalid(false).identifier(validIdentifier).build();
+    doReturn(Optional.of(validEntity))
+        .when(pmsInputSetService)
+        .get(accountId, orgId, projectId, pipelineId, validIdentifier, false);
+
+    assertThatThrownBy(()
+                           -> validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId, orgId, projectId,
+                               pipelineId, Arrays.asList(invalidIdentifier, validIdentifier), branch, repoId, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("invalidIdentifier is invalid. Pipeline update has made this input set outdated");
   }
 }

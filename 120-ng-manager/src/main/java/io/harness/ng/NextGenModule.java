@@ -78,6 +78,8 @@ import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.licensing.AbstractLicenseModule;
+import io.harness.licensing.LicenseConfig;
 import io.harness.licensing.LicenseModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
@@ -577,6 +579,13 @@ public class NextGenModule extends AbstractModule {
       @Override
       public AccountConfig accountConfiguration() {
         return appConfig.getAccountConfig();
+      }
+    });
+
+    install(new AbstractLicenseModule() {
+      @Override
+      public LicenseConfig licenseConfiguration() {
+        return appConfig.getLicenseConfig();
       }
     });
     install(LicenseModule.getInstance());

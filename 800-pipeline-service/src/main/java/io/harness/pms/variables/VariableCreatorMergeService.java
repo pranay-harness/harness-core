@@ -82,21 +82,22 @@ public class VariableCreatorMergeService {
       return responseBuilder.build();
     }
 
+    // This map is for storing those dependencies which cannot be resolved by anyone.
+    // We don't want to return early, thus we are storing unresolved dependencies so that variable resolution keeps on
+    // working for other entities.
+    Map<String, YamlFieldBlob> unresolvedDependenciesMap = new HashMap<>();
     for (int i = 0; i < MAX_DEPTH && isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
       VariablesCreationBlobResponse variablesCreationBlobResponse =
           obtainVariablesPerIteration(services, responseBuilder.getDependenciesMap(), metadata);
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
-      if (isNotEmpty(responseBuilder.getDependenciesMap())) {
-        VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
-        VariableCreationBlobResponseUtils.mergeYamlOutputProperties(responseBuilder, variablesCreationBlobResponse);
-        VariableCreationBlobResponseUtils.mergeErrorResponses(responseBuilder, variablesCreationBlobResponse);
-        return responseBuilder.build();
-      }
+      unresolvedDependenciesMap.putAll(responseBuilder.getDependenciesMap());
+      responseBuilder.clearDependencies();
       VariableCreationBlobResponseUtils.mergeDependencies(responseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlOutputProperties(responseBuilder, variablesCreationBlobResponse);
     }
 
+    responseBuilder.putAllDependencies(unresolvedDependenciesMap);
     return responseBuilder.build();
   }
 

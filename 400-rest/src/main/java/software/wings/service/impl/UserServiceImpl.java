@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -491,9 +490,52 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    if (!featureFlagService.isGlobalEnabled(GTM_CD_ENABLED) && "CD".equalsIgnoreCase(userInvite.getIntent())) {
-      account.setDefaultExperience(DefaultExperience.CG);
+    Account createdAccount = accountService.save(account, false);
+
+    if (!featureFlagService.isEnabled(FeatureName.CDNG_ENABLED, createdAccount.getUuid())
+        && "CD".equalsIgnoreCase(userInvite.getIntent())) {
+      createdAccount.setDefaultExperience(DefaultExperience.CG);
+
+      accountService.update(createdAccount);
     }
+
+    // create user
+    User user = User.Builder.anUser()
+                    .email(userInvite.getEmail())
+                    .name(createdAccount.getAccountName())
+                    .passwordHash(userInvite.getPasswordHash())
+                    .accountName(createdAccount.getAccountName())
+                    .companyName(createdAccount.getCompanyName())
+                    .accounts(Lists.newArrayList(createdAccount))
+                    .emailVerified(true)
+                    .defaultAccountId(createdAccount.getUuid())
+                    .utmInfo(userInvite.getUtmInfo())
+                    .build();
+    completeUserInviteForSignup(userInvite, createdAccount.getUuid());
+    return createNewUserAndSignIn(user, createdAccount.getUuid());
+  }
+
+  @Override
+  public User completeCommunitySignup(UserInvite userInvite) {
+    User existingUser = getUserByEmail(userInvite.getEmail());
+    if (existingUser != null) {
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
+    }
+
+    // create account
+    String username = userInvite.getEmail().split("@")[0];
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(username)
+                          .withCompanyName(username)
+                          .withDefaultExperience(DefaultExperience.NG)
+                          .withCreatedFromNG(true)
+                          .withAppId(GLOBAL_APP_ID)
+                          .build();
+    account.setLicenseInfo(LicenseInfo.builder()
+                               .accountType(AccountType.COMMUNITY)
+                               .accountStatus(AccountStatus.ACTIVE)
+                               .licenseUnits(50)
+                               .build());
 
     Account createdAccount = accountService.save(account, false);
 
@@ -726,6 +768,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setPasswordExpired(user.isPasswordExpired());
     userSummary.setImported(user.isImported());
     userSummary.setDisabled(user.isDisabled());
+    userSummary.setExternalUserId(user.getExternalUserId());
     return userSummary;
   }
 
@@ -917,6 +960,23 @@ public class UserServiceImpl implements UserService {
     User user = null;
     if (isNotEmpty(email)) {
       user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase()).get();
+      loadSupportAccounts(user);
+      if (user != null && isEmpty(user.getAccounts())) {
+        user.setAccounts(newArrayList());
+      }
+      if (user != null && isEmpty(user.getPendingAccounts())) {
+        user.setPendingAccounts(newArrayList());
+      }
+    }
+
+    return user;
+  }
+
+  @Override
+  public User getUserByUserId(String userId) {
+    User user = null;
+    if (isNotEmpty(userId)) {
+      user = wingsPersistence.createQuery(User.class).filter(UserKeys.externalUserId, userId).get();
       loadSupportAccounts(user);
       if (user != null && isEmpty(user.getAccounts())) {
         user.setAccounts(newArrayList());
@@ -1234,6 +1294,10 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(accountId);
 
     User user = getUserByEmail(userInvite.getEmail());
+    if (user == null) {
+      user = getUserByUserId(userInvite.getExternalUserId());
+    }
+
     boolean createNewUser = user == null;
     if (createNewUser) {
       user = anUser().build();
@@ -1269,6 +1333,7 @@ public class UserServiceImpl implements UserService {
     }
     user.setAppId(GLOBAL_APP_ID);
     user.setImported(userInvite.getImportedByScim());
+    user.setExternalUserId(userInvite.getExternalUserId());
 
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);

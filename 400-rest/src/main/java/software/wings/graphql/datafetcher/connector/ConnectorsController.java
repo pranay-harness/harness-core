@@ -7,6 +7,8 @@ import io.harness.exception.WingsException;
 
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.JiraConfig;
+import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.datafetcher.user.UserController;
@@ -70,9 +72,11 @@ public class ConnectorsController {
     final SettingVariableTypes settingType = settingAttribute.getValue().getSettingType();
     switch (settingType) {
       case JIRA:
-        return QLJiraConnector.builder();
+        JiraConfig jiraConfig = (JiraConfig) settingAttribute.getValue();
+        return QLJiraConnector.builder().delegateSelectors(jiraConfig.getDelegateSelectors());
       case SERVICENOW:
-        return QLServiceNowConnector.builder();
+        ServiceNowConfig serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
+        return QLServiceNowConnector.builder().delegateSelectors(serviceNowConfig.getDelegateSelectors());
       case SMTP:
         return QLSmtpConnector.builder();
       case SLACK:

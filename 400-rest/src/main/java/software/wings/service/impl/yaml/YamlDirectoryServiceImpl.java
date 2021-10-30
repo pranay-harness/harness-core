@@ -284,6 +284,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   public void getGitFileChange(DirectoryNode dn, String path, String accountId, boolean includeFiles,
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
       boolean gitSyncPath) {
+    if (dn == null) {
+      log.error("Directory node is null");
+      return;
+    }
+
     log.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
 
     boolean addToFileChangeList = true;
@@ -693,11 +698,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
     List<SettingAttribute> settingAttributes;
 
-    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
-      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-    } else {
-      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
-    }
+    settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
 
     if (settingAttributes != null) {
       // iterate over providers
@@ -935,7 +936,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     appFolder.addChild(map.get(WORKFLOWS_FOLDER));
     appFolder.addChild(map.get(PIPELINES_FOLDER));
     appFolder.addChild(map.get(PROVISIONERS_FOLDER));
-    appFolder.addChild(map.get(CG_EVENT_CONFIG_FOLDER));
+    if (isAppTelemetryEnabled(accountId)) {
+      appFolder.addChild(map.get(CG_EVENT_CONFIG_FOLDER));
+    }
     if (isTriggerYamlEnabled(accountId)) {
       appFolder.addChild(map.get(TRIGGER_FOLDER));
     }
@@ -2161,11 +2164,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private void doCloudProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
     List<SettingAttribute> settingAttributes;
-    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
-      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-    } else {
-      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
-    }
+    settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       if (settingAttributes != null) {
         // iterate over providers
@@ -2251,11 +2250,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private void doArtifactServerType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
     List<SettingAttribute> settingAttributes;
-    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
-      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-    } else {
-      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
-    }
+    settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       if (settingAttributes != null) {
         // iterate over providers
@@ -2319,11 +2314,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private void doCollaborationProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
     List<SettingAttribute> settingAttributes;
-    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
-      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-    } else {
-      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
-    }
+    settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
 
     if (settingAttributes != null) {
       // iterate over providers
@@ -2346,10 +2337,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     // create notification groups
     FolderNode notificationGroupsFolder = new FolderNode(
         accountId, NOTIFICATION_GROUPS_FOLDER, NotificationGroup.class, directoryPath.add(NOTIFICATION_GROUPS_FOLDER));
-    if (featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
-      if (!userHasNotificationPermissions(accountId, UserThreadLocal.get())) {
-        return notificationGroupsFolder;
-      }
+    if (!userHasNotificationPermissions(accountId, UserThreadLocal.get())) {
+      return notificationGroupsFolder;
     }
 
     List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId);
@@ -2404,11 +2393,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private void doVerificationProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
     List<SettingAttribute> settingAttributes;
-    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
-      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-    } else {
-      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
-    }
+    settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
 
     if (settingAttributes != null) {
       // iterate over providers

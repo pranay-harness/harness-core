@@ -36,6 +36,8 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @OwnedBy(DEL)
 public class InstallUtils {
   private static final String defaultKubectlVersion = "v1.13.2";
+  private static final String newKubectlVersion = "v1.19.2";
+  private static final List<String> kubectlVersions = Arrays.asList(defaultKubectlVersion, newKubectlVersion);
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
 
   private static final String goTemplateClientVersion = "v0.4";
@@ -67,7 +69,7 @@ public class InstallUtils {
   private static final String ocVersion = "v4.2.16";
   private static final String ocBaseDir = "./client-tools/oc/";
 
-  private static String kubectlPath = "kubectl";
+  private static Map<String, String> kubectlPaths = new HashMap<>();
 
   private static String kustomizeBaseDir = "./client-tools/kustomize/";
   private static String kustomizeVersionOld = "v3.5.4";
@@ -84,6 +86,8 @@ public class InstallUtils {
   static {
     helmPaths.put(helm2Version, "helm");
     helmPaths.put(helm3Version, "helm");
+    kubectlPaths.put(defaultKubectlVersion, "kubectl");
+    kubectlPaths.put(newKubectlVersion, "kubectl");
   }
 
   private static String chartMuseumPath = "chartmuseum";
@@ -143,8 +147,12 @@ public class InstallUtils {
     return join("/", scmBaseDir, version, getOsPath(), "amd64");
   }
 
-  public static String getKubectlPath() {
-    return kubectlPath;
+  public static String getDefaultKubectlPath() {
+    return kubectlPaths.get(defaultKubectlVersion);
+  }
+
+  public static String getNewKubectlPath() {
+    return kubectlPaths.get(newKubectlVersion);
   }
 
   public static String getGoTemplateToolPath() {
@@ -193,10 +201,19 @@ public class InstallUtils {
   }
 
   public static boolean installKubectl(DelegateConfiguration configuration) {
+    boolean kubectlInstalled = true;
+    for (String version : kubectlVersions) {
+      kubectlInstalled = kubectlInstalled && installKubectl(configuration, version);
+    }
+    return kubectlInstalled;
+  }
+
+  public static boolean installKubectl(DelegateConfiguration configuration, String kubectlVersion) {
     try {
-      if (StringUtils.isNotEmpty(configuration.getKubectlPath())) {
-        kubectlPath = configuration.getKubectlPath();
-        log.info("Found user configured kubectl at {}. Skipping Install.", kubectlPath);
+      if (isNotEmpty(configuration.getKubectlPath())) {
+        String kubectlPathFromConfig = configuration.getKubectlPath();
+        kubectlPaths.put(kubectlVersion, kubectlPathFromConfig);
+        log.info("Found user configured kubectl at {}. Skipping Install.", kubectlPathFromConfig);
         return true;
       }
 
@@ -208,14 +225,15 @@ public class InstallUtils {
       String version = System.getenv().get("KUBECTL_VERSION");
 
       if (StringUtils.isEmpty(version)) {
-        version = defaultKubectlVersion;
-        log.info("No version configured. Using default kubectl version", version);
+        version = kubectlVersion;
+        log.info("No version configured. Using kubectl version", version);
       }
 
       String kubectlDirectory = kubectlBaseDir + version;
 
       if (validateKubectlExists(kubectlDirectory)) {
-        kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
+        String kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
+        kubectlPaths.put(version, kubectlPath);
         log.info("kubectl version {} already installed", version);
         return true;
       }
@@ -240,7 +258,8 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
+        String kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
+        kubectlPaths.put(version, kubectlPath);
         log.info(result.outputUTF8());
         if (validateKubectlExists(kubectlDirectory)) {
           log.info("kubectl path: {}", kubectlPath);

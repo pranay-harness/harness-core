@@ -36,6 +36,9 @@ public class EnforcementServiceImpl implements EnforcementService {
   private final io.harness.enforcement.handlers.RestrictionHandlerFactory restrictionHandlerFactory;
   private final LicenseService licenseService;
 
+  private static final AvailabilityRestriction DISABLED_RESTRICTION =
+      new AvailabilityRestriction(RestrictionType.AVAILABILITY, false);
+
   @Inject
   public EnforcementServiceImpl(LicenseService licenseService, RestrictionHandlerFactory restrictionHandlerFactory) {
     featureRestrictionMap = new HashMap<>();
@@ -141,7 +144,7 @@ public class EnforcementServiceImpl implements EnforcementService {
 
       for (FeatureRestriction featureRestriction : featureRestrictionMap.values()) {
         if (featureRestriction.getModuleType().equals(moduleType)) {
-          Restriction restriction = featureRestriction.getRestrictions().get(edition);
+          Restriction restriction = getRestriction(featureRestriction, edition);
           if (isEnabledFeature(restriction)) {
             result.add(toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition));
           }
@@ -222,7 +225,7 @@ public class EnforcementServiceImpl implements EnforcementService {
   private Restriction getRestriction(FeatureRestriction feature, Edition edition) {
     Restriction restriction = feature.getRestrictions().get(edition);
     if (restriction == null) {
-      throw new FeatureNotSupportedException("Invalid feature definition");
+      return DISABLED_RESTRICTION;
     }
     return restriction;
   }

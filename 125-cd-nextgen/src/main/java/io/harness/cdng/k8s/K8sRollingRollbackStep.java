@@ -27,6 +27,7 @@ import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -35,6 +36,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.steps.StepHelper;
 import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
@@ -51,6 +53,7 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
   @Inject private OutcomeService outcomeService;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private InstanceInfoService instanceInfoService;
+  @Inject private StepHelper stepHelper;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -108,6 +111,7 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
         .timeoutIntervalInMin(
             NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
         .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
+        .useNewKubectlVersion(k8sStepHelper.isUseNewKubectlVersion(AmbianceUtils.getAccountId(ambiance)))
         .build();
 
     return k8sStepHelper
@@ -120,23 +124,40 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
       StepElementParameters stepElementParameters, ThrowingSupplier<K8sDeployResponse> responseSupplier)
       throws Exception {
-    K8sDeployResponse executionResponse = responseSupplier.get();
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
+    StepResponse stepResponse = null;
+    try {
+      K8sDeployResponse executionResponse = responseSupplier.get();
+      StepResponseBuilder stepResponseBuilder =
+          StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
 
-    if (executionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return stepResponseBuilder.status(Status.FAILED)
-          .failureInfo(
-              FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
-          .build();
+      stepResponse = generateStepResponse(ambiance, executionResponse, stepResponseBuilder);
+    } finally {
+      stepHelper.sendRollbackTelemetryEvent(ambiance, stepResponse == null ? Status.FAILED : stepResponse.getStatus());
     }
 
-    final K8sRollingDeployRollbackResponse response =
-        (K8sRollingDeployRollbackResponse) executionResponse.getK8sNGTaskResponse();
+    return stepResponse;
+  }
 
-    StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(
-        ambiance, K8sPodToServiceInstanceInfoMapper.toServerInstanceInfoList(response.getK8sPodList()));
+  private StepResponse generateStepResponse(
+      Ambiance ambiance, K8sDeployResponse executionResponse, StepResponseBuilder stepResponseBuilder) {
+    StepResponse stepResponse = null;
 
-    return stepResponseBuilder.status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
+    if (executionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      stepResponse =
+          stepResponseBuilder.status(Status.FAILED)
+              .failureInfo(
+                  FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
+              .build();
+    } else {
+      final K8sRollingDeployRollbackResponse response =
+          (K8sRollingDeployRollbackResponse) executionResponse.getK8sNGTaskResponse();
+
+      StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(
+          ambiance, K8sPodToServiceInstanceInfoMapper.toServerInstanceInfoList(response.getK8sPodList()));
+
+      stepResponse = stepResponseBuilder.status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
+    }
+
+    return stepResponse;
   }
 }

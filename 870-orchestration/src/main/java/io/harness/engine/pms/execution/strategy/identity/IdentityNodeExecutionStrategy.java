@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
@@ -59,6 +60,24 @@ public class IdentityNodeExecutionStrategy
   @Inject private TransactionHelper transactionHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
+  private String SERVICE_NAME_IDENTITY = ModuleType.PMS.name().toLowerCase();
+
+  private void setNodeExecutionParameters(Update update, NodeExecution originalExecution) {
+    setUnset(update, NodeExecutionKeys.resolvedStepParameters, originalExecution.getResolvedStepParameters());
+    setUnset(update, NodeExecutionKeys.resolvedInputs, originalExecution.getResolvedInputs());
+    setUnset(update, NodeExecutionKeys.mode, originalExecution.getMode());
+    setUnset(update, NodeExecutionKeys.nodeRunInfo, originalExecution.getNodeRunInfo());
+    setUnset(update, NodeExecutionKeys.skipInfo, originalExecution.getSkipInfo());
+    setUnset(update, NodeExecutionKeys.failureInfo, originalExecution.getFailureInfo());
+    setUnset(update, NodeExecutionKeys.progressData, originalExecution.getProgressData());
+    setUnset(update, NodeExecutionKeys.adviserResponse, originalExecution.getAdviserResponse());
+    setUnset(update, NodeExecutionKeys.timeoutInstanceIds, originalExecution.getTimeoutInstanceIds());
+    setUnset(update, NodeExecutionKeys.timeoutDetails, originalExecution.getTimeoutDetails());
+    setUnset(update, NodeExecutionKeys.adviserTimeoutInstanceIds, originalExecution.getAdviserTimeoutInstanceIds());
+    setUnset(update, NodeExecutionKeys.adviserTimeoutDetails, originalExecution.getAdviserTimeoutDetails());
+    setUnset(update, NodeExecutionKeys.interruptHistories, originalExecution.getInterruptHistories());
+  }
+
   @Override
   public NodeExecution triggerNode(Ambiance ambiance, IdentityPlanNode node, IdentityNodeExecutionMetadata metadata) {
     String uuid = generateUuid();
@@ -94,20 +113,9 @@ public class IdentityNodeExecutionStrategy
     IdentityPlanNode node = newNodeExecution.getNode();
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       NodeExecution originalExecution = nodeExecutionService.get(node.getOriginalNodeExecutionId());
+
       Update update = new Update();
-      setUnset(update, NodeExecutionKeys.resolvedStepParameters, originalExecution.getResolvedStepParameters());
-      setUnset(update, NodeExecutionKeys.resolvedInputs, originalExecution.getResolvedInputs());
-      setUnset(update, NodeExecutionKeys.mode, originalExecution.getMode());
-      setUnset(update, NodeExecutionKeys.nodeRunInfo, originalExecution.getNodeRunInfo());
-      setUnset(update, NodeExecutionKeys.skipInfo, originalExecution.getSkipInfo());
-      setUnset(update, NodeExecutionKeys.failureInfo, originalExecution.getFailureInfo());
-      setUnset(update, NodeExecutionKeys.progressData, originalExecution.getProgressData());
-      setUnset(update, NodeExecutionKeys.adviserResponse, originalExecution.getAdviserResponse());
-      setUnset(update, NodeExecutionKeys.timeoutInstanceIds, originalExecution.getTimeoutInstanceIds());
-      setUnset(update, NodeExecutionKeys.timeoutDetails, originalExecution.getTimeoutDetails());
-      setUnset(update, NodeExecutionKeys.adviserTimeoutInstanceIds, originalExecution.getAdviserTimeoutInstanceIds());
-      setUnset(update, NodeExecutionKeys.adviserTimeoutDetails, originalExecution.getAdviserTimeoutDetails());
-      setUnset(update, NodeExecutionKeys.interruptHistories, originalExecution.getInterruptHistories());
+      setNodeExecutionParameters(update, originalExecution);
 
       // If Node is skipped then call the adviser response handler straight away
       if (originalExecution.getStatus() == Status.SKIPPED) {
@@ -120,16 +128,7 @@ public class IdentityNodeExecutionStrategy
       // If this is one of the leaf modes then just clone and copy everything and we should be good
       // This is an optimization/hack to not do any actual work
       if (ExecutionModeUtils.isLeafMode(originalExecution.getMode())) {
-        newNodeExecution = transactionHelper.performTransaction(() -> {
-          // Copy outcomes
-          pmsOutcomeService.cloneForRetryExecution(ambiance, originalExecution.getUuid());
-          // Copy outputs
-          pmsSweepingOutputService.cloneForRetryExecution(ambiance, originalExecution.getUuid());
-          return nodeExecutionService.updateStatusWithUpdate(
-              newNodeExecutionId, originalExecution.getStatus(), update, EnumSet.noneOf(Status.class));
-        });
-
-        processAdviserResponse(ambiance, newNodeExecution.getAdviserResponse());
+        handleLeafNodes(ambiance, originalExecution, update, newNodeExecutionId);
         return;
       }
 
@@ -137,18 +136,35 @@ public class IdentityNodeExecutionStrategy
           newNodeExecutionId, Status.RUNNING, update, EnumSet.noneOf(Status.class));
 
       // If not leaf node then we need to call the identity step
+      Ambiance modifyAmbiance = IdentityStep.modifyAmbiance(ambiance);
       NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
-                                          .setAmbiance(newNodeExecution.getAmbiance())
+                                          .setAmbiance(modifyAmbiance)
                                           .setStepParameters(newNodeExecution.getResolvedStepParametersBytes())
                                           .setMode(newNodeExecution.getMode())
                                           .build();
-      eventSender.sendEvent(newNodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START,
-          node.getServiceName(), true);
+      // hard code of service name to PMS
+      eventSender.sendEvent(
+          modifyAmbiance, nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, SERVICE_NAME_IDENTITY, true);
     } catch (Exception exception) {
       log.error("Exception Occurred in facilitateAndStartStep NodeExecutionId : {}, PlanExecutionId: {}",
           AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), exception);
       handleError(ambiance, exception);
     }
+  }
+
+  private void handleLeafNodes(
+      Ambiance ambiance, NodeExecution originalExecution, Update update, String newNodeExecutionId) {
+    NodeExecution newNodeExecution = transactionHelper.performTransaction(() -> {
+      // Copy outcomes
+      pmsOutcomeService.cloneForRetryExecution(ambiance, originalExecution.getUuid());
+      // Copy outputs
+      pmsSweepingOutputService.cloneForRetryExecution(ambiance, originalExecution.getUuid());
+
+      return nodeExecutionService.updateStatusWithUpdate(
+          newNodeExecutionId, originalExecution.getStatus(), update, EnumSet.noneOf(Status.class));
+    });
+
+    processAdviserResponse(ambiance, newNodeExecution.getAdviserResponse());
   }
 
   @Override
@@ -197,7 +213,7 @@ public class IdentityNodeExecutionStrategy
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
-      identityNodeResumeHelper.resume(nodeExecution, response, asyncError);
+      identityNodeResumeHelper.resume(nodeExecution, response, asyncError, SERVICE_NAME_IDENTITY);
     } catch (Exception exception) {
       log.error("Exception Occurred in handling resume with nodeExecutionId {} planExecutionId {}", nodeExecutionId,
           ambiance.getPlanExecutionId(), exception);

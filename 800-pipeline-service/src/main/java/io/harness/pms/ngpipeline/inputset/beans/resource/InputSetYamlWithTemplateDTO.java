@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -23,4 +24,5 @@ public class InputSetYamlWithTemplateDTO {
   String inputSetTemplateYaml;
   String inputSetYaml;
   String latestTemplateYaml;
+  Map<String, String> expressionValues;
 }
