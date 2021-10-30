@@ -367,3 +367,5 @@ ldapSyncJobConfig:
   defaultCronExpression: "0 0/15 * 1/1 * ? *"
 
 fileStorageMode: MONGO
+
+disableDelegateMgmtInManager: true
