@@ -8,10 +8,9 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretKey;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptor;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.secretkey.SecretKeyConstants;
 import io.harness.secretkey.SecretKeyService;
-import io.harness.secretkey.SecretKeyType;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedMech;
@@ -44,8 +43,8 @@ public class LocalEncryptor implements KmsEncryptor {
   private SecretKeyService secretKeyService;
   private FeatureFlagService featureFlagService;
 
-  public LocalEncryptor(
-      @Named(SecretKeyType.AES_SECRET_KEY) SecretKeyService secretKeyService, FeatureFlagService featureFlagService) {
+  public LocalEncryptor(@Named(SecretKeyConstants.AES_SECRET_KEY) SecretKeyService secretKeyService,
+      FeatureFlagService featureFlagService) {
     this.secretKeyService = secretKeyService;
     this.featureFlagService = featureFlagService;
   }

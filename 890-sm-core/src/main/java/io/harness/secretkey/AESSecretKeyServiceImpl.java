@@ -7,6 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 public class AESSecretKeyServiceImpl extends AbstractSecretKeyServiceImpl {
   @Override
   protected String getAlgorithm() {
-    return "AES";
+    return SecretKeyConstants.AES_ENCRYPTION_ALGORITHM;
   }
 }
