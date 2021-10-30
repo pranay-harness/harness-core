@@ -24,8 +24,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretkey.AESSecretKeyServiceImpl;
+import io.harness.secretkey.SecretKeyConstants;
 import io.harness.secretkey.SecretKeyService;
-import io.harness.secretkey.SecretKeyType;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secrets.SecretsAuditService;
@@ -200,7 +200,7 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
 
         binder()
             .bind(SecretKeyService.class)
-            .annotatedWith(Names.named(SecretKeyType.AES_SECRET_KEY))
+            .annotatedWith(Names.named(SecretKeyConstants.AES_SECRET_KEY))
             .to(AESSecretKeyServiceImpl.class);
       }
     });
