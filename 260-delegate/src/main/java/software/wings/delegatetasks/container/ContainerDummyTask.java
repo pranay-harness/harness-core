@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.container;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -15,6 +17,7 @@ import java.util.function.Consumer;
  delegate Proxy Factory and sync tasks which cannot be supported as validation tasks in the perpetual task framework.
  All we want is the validation to run and the task being assigned to some valid delegate.
  */
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ContainerDummyTask extends AbstractDelegateRunnableTask {
   public ContainerDummyTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
