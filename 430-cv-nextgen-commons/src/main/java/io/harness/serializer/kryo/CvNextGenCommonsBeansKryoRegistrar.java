@@ -3,31 +3,9 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
-import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.CVDataCollectionInfo;
-import io.harness.cvng.beans.CVMonitoringCategory;
-import io.harness.cvng.beans.DataCollectionConnectorBundle;
-import io.harness.cvng.beans.DataCollectionRequest;
-import io.harness.cvng.beans.DataCollectionRequestType;
-import io.harness.cvng.beans.DataCollectionType;
-import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
-import io.harness.cvng.beans.MetricPackDTO;
+import io.harness.cvng.beans.*;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
-import io.harness.cvng.beans.SplunkSavedSearch;
-import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
-import io.harness.cvng.beans.StackdriverDataCollectionInfo;
-import io.harness.cvng.beans.StackdriverLogDataCollectionInfo;
-import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
-import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
-import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.beans.TimeSeriesThresholdActionType;
-import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
-import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
-import io.harness.cvng.beans.TimeSeriesThresholdDTO;
-import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
@@ -136,6 +114,8 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogActiveMetricsRequest.class, 9067);
     kryo.register(DatadogMetricTagsRequest.class, 9068);
     kryo.register(DatadogTimeSeriesPointsRequest.class, 9069);
+    kryo.register(DatadogLogSampleDataRequest.class, 9070);
+    kryo.register(DatadogLogDataCollectionInfo.class, 9071);
 
   }
 }

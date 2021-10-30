@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.datadog.*;
+import io.harness.cvng.beans.stackdriver.StackdriverLogSampleDataRequest;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
@@ -14,19 +15,23 @@ import io.harness.cvng.core.beans.datadog.DatadogDashboardDetail;
 import io.harness.cvng.core.services.api.DatadogService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.exception.OnboardingException;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoField;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
+@Slf4j
 public class DatadogServiceImpl implements DatadogService {
 
     @Inject
@@ -136,6 +141,28 @@ public class DatadogServiceImpl implements DatadogService {
                 projectIdentifier);
     }
 
+    @Override
+    public List<LinkedHashMap> getSampleLogData(String accountId, String connectorIdentifier, String orgIdentifier,
+                                                String projectIdentifier, String query, String tracingId) {
+        try {
+            Instant now = DateTimeUtils.roundDownTo1MinBoundary(Instant.now());
+
+            DataCollectionRequest<DatadogConnectorDTO> request = DatadogLogSampleDataRequest.builder()
+                    .type(DataCollectionRequestType.DATADOG_LOG_SAMPLE_DATA)
+                    .from(now.minus(Duration.ofMinutes(1000)).toEpochMilli())
+                    .to(now.toEpochMilli())
+                    .limit(1000L)
+                    .build();
+
+            Type type = new TypeToken<List<LinkedHashMap>>() {}.getType();
+            return performRequestAndGetDataResult(request, type, accountId, connectorIdentifier, orgIdentifier, tracingId, projectIdentifier);
+        } catch (Exception ex) {
+            String msg = "Exception while trying to fetch sample data. Please ensure that the query is valid.";
+            log.error(msg, ex);
+            throw new OnboardingException(msg);
+        }
+    }
+
     private <T> T performRequestAndGetDataResult(DataCollectionRequest<DatadogConnectorDTO> dataCollectionRequest,
                                                  Type type,
                                                  String accountId,
@@ -155,5 +182,4 @@ public class DatadogServiceImpl implements DatadogService {
         OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
         return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
     }
-
 }

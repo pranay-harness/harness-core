@@ -5,13 +5,14 @@ import io.harness.delegate.beans.cvng.datadog.DatadogUtils;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Data
 @Builder
-public class DatadogDataCollectionInfo extends TimeSeriesDataCollectionInfo<DatadogConnectorDTO>{
+public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionInfo<DatadogConnectorDTO>{
     private List<MetricCollectionInfo> metricDefinitions;
 
     @Override
@@ -35,7 +36,7 @@ public class DatadogDataCollectionInfo extends TimeSeriesDataCollectionInfo<Data
 
     @Override
     public Map<String, String> collectionParams(DatadogConnectorDTO connectorConfigDTO) {
-      return DatadogUtils.collectionHeaders(connectorConfigDTO);
+      return Collections.emptyMap();
     }
 
     @Data

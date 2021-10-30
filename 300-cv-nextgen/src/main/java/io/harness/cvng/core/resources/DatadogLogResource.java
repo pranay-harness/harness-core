@@ -44,7 +44,9 @@ public class DatadogLogResource {
                                                                      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
                                                                      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
                                                                      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-                                                                     @NotNull @QueryParam("tracingId") String tracingId, @Body LogSampleRequestDTO logSampleRequestDTO) {
-        return null;
+                                                                     @NotNull @QueryParam("tracingId") String tracingId,
+                                                                     @Body LogSampleRequestDTO logSampleRequestDTO) {
+        return ResponseDTO.newResponse(datadogMetricsService.getSampleLogData(
+                accountId, connectorIdentifier, orgIdentifier, projectIdentifier, logSampleRequestDTO.getQuery(), tracingId));
     }
 }

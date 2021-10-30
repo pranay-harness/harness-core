@@ -2,8 +2,8 @@ Var logsSearchUrl = concat(Env:baseUrl, "v2/logs/events/search")
 
 Var body = {}
 Var filter = {}
-Var:filter.put("from", Env:from)
-Var:filter.put("to", Env:to)
+Var:filter.put("from", Env:startTimeMillis)
+Var:filter.put("to", Env:endTimeMillis)
 Var:filter.put("query", Env:query)
 Var:body.put("filter", Var:filter)
 
@@ -13,6 +13,7 @@ Var:body.put("page", Var:page)
 
 Var logsResponse = sync-call(url=Var:logsSearchUrl, header=Env:commonHeaders, body=Var:body)
 Var logsData = extract(Var:logsResponse, $.data)
+
 Var nullObject = null
 Var responseList = []
 foreach logData in Var:logsData {
