@@ -22,7 +22,7 @@ ARG watcher_version
 
 RUN mkdir -p ./client-tools/go-template/v0.4
 RUN curl -s -L -o client-tools/go-template/v0.4/go-template https://app.harness.io/storage/harness-download/snapshot-go-template/release/v0.4/bin/darwin/go-template
-RUN chmod +x /opt/harness-delegate/client-tools/go-template/v0.4/go-template/.go-template
+RUN chmod +x /opt/harness-delegate/client-tools/go-template/v0.4/*
 RUN /opt/harness-delegate/client-tools/go-template/v0.4/go-template/.go-template -v
 
 RUN mkdir -p client-tools/harness-pywinrm/v0.4-dev
