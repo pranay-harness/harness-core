@@ -59,7 +59,7 @@ public class DatadogServiceImpl implements DatadogService {
         List<DatadogDashboardDTO> filteredList = dashboardList;
         if (isNotEmpty(filter)) {
             filteredList = dashboardList.stream()
-                    .filter(dashboardDto -> dashboardDto.getTitle().toLowerCase().contains(filter.toLowerCase()))
+                    .filter(dashboardDto -> dashboardDto.getName().toLowerCase().contains(filter.toLowerCase()))
                     .collect(Collectors.toList());
         }
         return PageUtils.offsetAndLimit(filteredList, offset, pageSize);

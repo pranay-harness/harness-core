@@ -14,11 +14,6 @@ public class DatadogDashboardDetail {
     @Data
     @Builder
     public static class DataSet {
-        private List<DatadogQuery> queries;
-    }
-    @Data
-    @Builder
-    public static class DatadogQuery {
         String name;
         String query;
     }
