@@ -35,8 +35,4 @@ public interface PerpetualTaskService {
   void appointDelegate(String accountId, String taskId, String delegateId, long lastContextUpdated);
 
   void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason, int assignTryCount);
-
-  String createPerpetualTaskInternal(String perpetualTaskType, String accountId,
-      PerpetualTaskClientContext clientContext, PerpetualTaskSchedule schedule, boolean allowDuplicate,
-      String taskDescription);
 }
