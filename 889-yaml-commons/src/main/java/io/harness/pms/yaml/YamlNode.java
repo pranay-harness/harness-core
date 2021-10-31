@@ -324,4 +324,11 @@ public class YamlNode implements Visitable {
     }
     return visitableChildren;
   }
+
+  public List<String> fetchKeys() {
+    List<String> keys = new ArrayList<>();
+    Iterator<String> keysIterator = currJsonNode.fieldNames();
+    keysIterator.forEachRemaining(keys::add);
+    return keys;
+  }
 }

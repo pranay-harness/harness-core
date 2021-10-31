@@ -115,9 +115,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .handler(this::assign)
             .filterExpander(query
                 -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
-                       .or(query.criteria(PerpetualTaskRecordKeys.assignAfterMs).doesNotExist(),
-                           query.criteria(PerpetualTaskRecordKeys.assignAfterMs)
-                               .lessThanOrEq(System.currentTimeMillis())))
+                       .field(PerpetualTaskRecordKeys.assignAfterMs)
+                       .lessThanOrEq(System.currentTimeMillis()))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)

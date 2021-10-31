@@ -336,9 +336,10 @@ public class ProjectServiceImpl implements ProjectService {
                                         .lt(endInterval)
                                         .andOperator(Criteria.where(ProjectKeys.deleted).is(false));
     Criteria deletedTrueCriteria =
-        Criteria.where(ProjectKeys.deleted)
-            .is(true)
-            .andOperator(Criteria.where(ProjectKeys.lastModifiedAt).gt(startInterval).lt(endInterval));
+        Criteria.where(ProjectKeys.createdAt)
+            .lt(startInterval)
+            .andOperator(new Criteria().andOperator(Criteria.where(ProjectKeys.deleted).is(true)),
+                Criteria.where(ProjectKeys.lastModifiedAt).gt(startInterval).lt(endInterval));
     return ActiveProjectsCountDTO.builder()
         .count(projectRepository.findAll(new Criteria().andOperator(accessibleProjectCriteria, deletedFalseCriteria))
                    .size()

@@ -476,4 +476,13 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     assertThat(templateEntities.getContent().size()).isEqualTo(1);
     assertThat(templateEntities.getContent().get(0).getIdentifier()).isEqualTo("DifferentIdentifier");
   }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testGetActualComments() {
+    // Testing comments if git sync is not enabled.
+    String comments = templateService.getActualComments(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "COMMENTS");
+    assertThat(comments).isEqualTo("COMMENTS");
+  }
 }

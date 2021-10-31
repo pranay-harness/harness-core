@@ -42,6 +42,7 @@ io.harness.beans.steps.stepinfo.TestStepInfo
 io.harness.advisers.rollback.OnFailRollbackOutput
 io.harness.steps.shellscript.ShellScriptInlineSource
 io.harness.beans.sweepingoutputs.K8PodDetails
+io.harness.beans.sweepingoutputs.StageDetails
 io.harness.beans.steps.stepinfo.RunTestsStepInfo
 io.harness.ngpipeline.artifact.bean.SidecarsOutcome
 io.harness.steps.jira.update.JiraUpdateSpecParameters

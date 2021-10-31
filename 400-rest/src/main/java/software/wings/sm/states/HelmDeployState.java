@@ -539,21 +539,24 @@ public class HelmDeployState extends State {
                                                       .expressionFunctorToken(expressionFunctorToken)
                                                       .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .data(TaskData.builder()
-                                              .async(false)
-                                              .taskType(HELM_COMMAND_TASK.name())
-                                              .parameters(new Object[] {helmReleaseHistoryCommandRequest})
-                                              .expressionFunctorToken(expressionFunctorToken)
-                                              .timeout(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS * 2)
-                                              .build())
-                                    .accountId(app.getAccountId())
-                                    .description("Helm Release History")
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
-                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
-                                        serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
-                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder()
+                      .async(false)
+                      .taskType(HELM_COMMAND_TASK.name())
+                      .parameters(new Object[] {helmReleaseHistoryCommandRequest})
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .timeout(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS * 2)
+                      .build())
+            .accountId(app.getAccountId())
+            .description("Helm Release History")
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
+                serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();

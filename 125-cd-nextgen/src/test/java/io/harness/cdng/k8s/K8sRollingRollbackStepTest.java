@@ -29,9 +29,11 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -40,6 +42,8 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.steps.StepHelper;
+import io.harness.telemetry.TelemetryReporter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +57,9 @@ import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDP)
 public class K8sRollingRollbackStepTest extends CategoryTest {
-  private final Ambiance ambiance = Ambiance.newBuilder().build();
+  private final Level level =
+      Level.newBuilder().setIdentifier("TestRollbackStep").setGroup(StepOutcomeGroup.STEP.name()).build();
+  private final Ambiance ambiance = Ambiance.newBuilder().addLevels(level).build();
   private final StepInputPackage stepInputPackage = StepInputPackage.builder().build();
 
   @Mock private OutcomeService outcomeService;
@@ -61,6 +67,8 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
   @Mock private K8sStepHelper k8sStepHelper;
   @Mock private InstanceInfoService instanceInfoService;
   @InjectMocks private K8sRollingRollbackStep k8sRollingRollbackStep;
+  @Mock private StepHelper stepHelper;
+  @Mock private TelemetryReporter telemetryReporter;
 
   @Before
   public void setUp() {
@@ -86,6 +94,7 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
     assertThat(taskRequest).isNotNull();
     assertThat(taskRequest.getSkipTaskRequest().getMessage())
         .isEqualTo("K8s Rollout Deploy step was not executed. Skipping rollback.");
+    verify(stepHelper, times(0)).sendRollbackTelemetryEvent(any(), any());
   }
 
   @Test
@@ -130,6 +139,7 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
               .build();
         });
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
+    verify(stepHelper, times(1)).sendRollbackTelemetryEvent(any(), any());
 
     List<K8sPod> k8sPodList = new ArrayList<>();
     k8sPodList.add(K8sPod.builder().name("Pod").namespace("default").build());
@@ -146,6 +156,7 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
         });
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(stepResponse.getStepOutcomes().contains(StepResponse.StepOutcome.builder().name("abc").build()));
+    verify(stepHelper, times(2)).sendRollbackTelemetryEvent(any(), any());
   }
 
   private void testRollback(OptionalSweepingOutput releaseOutput, OptionalSweepingOutput deploymentOutput,
@@ -183,5 +194,6 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
     K8sRollingRollbackDeployRequest request = (K8sRollingRollbackDeployRequest) requestArgumentCaptor.getValue();
     assertThat(request.getReleaseName()).isEqualTo(expectedReleaseName);
     assertThat(request.getReleaseNumber()).isEqualTo(expectedReleaseNumber);
+    verify(stepHelper, times(0)).sendRollbackTelemetryEvent(any(), any());
   }
 }

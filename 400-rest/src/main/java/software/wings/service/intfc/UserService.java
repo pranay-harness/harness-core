@@ -104,6 +104,11 @@ public interface UserService extends OwnedByAccount {
    */
   User completeNewSignupInvite(UserInvite userInvite);
 
+  /**
+   * Used for NG community edition to finish provisioning of account, user etc.
+   */
+  User completeCommunitySignup(UserInvite userInvite);
+
   UserInvite createUserInviteForMarketPlace();
 
   boolean hasPermission(String accountId, PermissionType permissionType);

@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
@@ -59,11 +60,14 @@ import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
+import io.harness.persistence.HPersistence;
+import io.harness.persistence.Store;
 import io.harness.plan.consumers.PartialPlanResponseRedisConsumer;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
@@ -309,6 +313,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     modules.add(PipelineServiceUtilityModule.getInstance());
 
     Injector injector = Guice.createInjector(modules);
+    registerStores(appConfig, injector);
     registerEventListeners(injector);
     registerWaitEnginePublishers(injector);
     registerScheduledJobs(injector, appConfig);
@@ -358,6 +363,13 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     OpenApiResource openApiResource = injector.getInstance(OpenApiResource.class);
     openApiResource.setOpenApiConfiguration(getOasConfig(appConfig));
     environment.jersey().register(openApiResource);
+  }
+
+  private void registerStores(PipelineServiceConfiguration configuration, Injector injector) {
+    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    if (isNotEmpty(configuration.getMongoConfig().getUri())) {
+      persistence.register(Store.builder().name(DbAliases.PMS).build(), configuration.getMongoConfig().getUri());
+    }
   }
 
   private OpenAPIConfiguration getOasConfig(PipelineServiceConfiguration appConfig) {
