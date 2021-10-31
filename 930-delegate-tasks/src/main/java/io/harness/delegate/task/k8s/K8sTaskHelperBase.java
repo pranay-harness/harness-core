@@ -56,6 +56,7 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
+import io.harness.connector.service.git.NGGitService;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.CEFeatures;
@@ -73,7 +74,6 @@ import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
-import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
@@ -93,6 +93,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesTaskException;
 import io.harness.exception.KubernetesValuesException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.UrlNotProvidedException;
 import io.harness.exception.UrlNotReachableException;
@@ -1612,6 +1613,11 @@ public class K8sTaskHelperBase {
   }
 
   public List<KubernetesResource> readManifests(List<FileData> manifestFiles, LogCallback executionLogCallback) {
+    return readManifests(manifestFiles, executionLogCallback, false);
+  }
+
+  public List<KubernetesResource> readManifests(
+      List<FileData> manifestFiles, LogCallback executionLogCallback, boolean isErrorFrameworkSupported) {
     List<KubernetesResource> result = new ArrayList<>();
 
     for (FileData manifestFile : manifestFiles) {
@@ -1620,12 +1626,25 @@ public class K8sTaskHelperBase {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
+          if (isErrorFrameworkSupported) {
+            throwReadManifestExceptionWithHintAndExplanation(e, manifestFile.getFileName());
+          }
           throw e;
         }
       }
     }
 
     return result.stream().sorted(new KubernetesResourceComparer()).collect(toList());
+  }
+
+  private void throwReadManifestExceptionWithHintAndExplanation(Exception e, String manifestFileName) {
+    String explanation = e.getMessage();
+    if (e instanceof KubernetesYamlException) {
+      explanation += ":" + ((KubernetesYamlException) e).getParams().get("reason");
+    }
+
+    throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.READ_MANIFEST_FAILED, explanation,
+        new KubernetesTaskException(format(KubernetesExceptionMessages.READ_MANIFEST_FAILED, manifestFileName)));
   }
 
   public List<FileData> readManifestFilesFromDirectory(String manifestFilesDirectory) {
@@ -1669,10 +1688,15 @@ public class K8sTaskHelperBase {
 
   public List<KubernetesResource> readManifestAndOverrideLocalSecrets(
       List<FileData> manifestFiles, LogCallback executionLogCallback, boolean overrideLocalSecrets) {
+    return readManifestAndOverrideLocalSecrets(manifestFiles, executionLogCallback, overrideLocalSecrets, false);
+  }
+
+  public List<KubernetesResource> readManifestAndOverrideLocalSecrets(List<FileData> manifestFiles,
+      LogCallback executionLogCallback, boolean overrideLocalSecrets, boolean isErrorFrameworkSupported) {
     if (overrideLocalSecrets) {
       manifestFiles = replaceManifestPlaceholdersWithLocalDelegateSecrets(manifestFiles);
     }
-    return readManifests(manifestFiles, executionLogCallback);
+    return readManifests(manifestFiles, executionLogCallback, isErrorFrameworkSupported);
   }
 
   public String writeValuesToFile(String directoryPath, List<String> valuesFiles) throws Exception {

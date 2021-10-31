@@ -6,6 +6,7 @@ import static io.harness.beans.NGInstanceUnitType.PERCENTAGE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -29,6 +30,7 @@ import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
@@ -328,7 +330,7 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
     K8sScaleRequest scaleRequest = K8sScaleRequest.builder()
                                        .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
                                        .instanceUnitType(COUNT)
-                                       .workload("Deployment")
+                                       .workload("test-deployment")
                                        .instances(2)
                                        .releaseName(releaseName)
                                        .skipSteadyStateCheck(false)
@@ -351,7 +353,8 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
     assertThatThrownBy(()
                            -> k8sScaleRequestHandler.executeTaskInternal(
                                scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
-        .hasMessageContaining("Invalid Kubernetes resource name Deployment. Should be in format Kind/Name");
+        .hasMessageContaining(
+            format(KubernetesExceptionHints.INVALID_RESOURCE_KIND_NAME_FORMAT, "test-deployment", "test-deployment"));
 
     verify(k8sTaskHelperBase, times(0)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(0))

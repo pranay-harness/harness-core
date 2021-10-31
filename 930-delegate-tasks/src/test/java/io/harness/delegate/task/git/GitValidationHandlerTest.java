@@ -18,6 +18,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.task.git.GitCommandTaskHandler;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
