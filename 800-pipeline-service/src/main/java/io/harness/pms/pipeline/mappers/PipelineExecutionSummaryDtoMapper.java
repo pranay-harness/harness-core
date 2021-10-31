@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
 import io.harness.execution.StagesExecutionMetadata;
 import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.sdk.EntityGitDetails;
@@ -23,8 +22,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PIPELINE)
+@Slf4j
 public class PipelineExecutionSummaryDtoMapper {
   @Inject PMSPipelineService pipelineService;
 
@@ -79,12 +80,12 @@ public class PipelineExecutionSummaryDtoMapper {
 
   private Map<String, String> getStageNames(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, List<String> stageIdentifiers) {
+    Map<String, String> identifierToNames = new LinkedHashMap<>();
     Optional<PipelineEntity> pipelineEntity =
         pipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (pipelineEntity.isPresent()) {
       List<BasicStageInfo> stageInfoList =
           StageExecutionSelectorHelper.getStageInfoList(pipelineEntity.get().getYaml());
-      Map<String, String> identifierToNames = new LinkedHashMap<>();
       stageInfoList.forEach(stageInfo -> {
         String identifier = stageInfo.getIdentifier();
         if (stageIdentifiers.contains(identifier)) {
@@ -93,8 +94,9 @@ public class PipelineExecutionSummaryDtoMapper {
       });
       return identifierToNames;
     }
-    throw new InvalidRequestException(
-        String.format("Pipeline with the given ID: %s does not exist or has been deleted", pipelineIdentifier));
+    log.warn(String.format("Pipeline with the given ID: %s does not exist or has been deleted", pipelineIdentifier));
+    stageIdentifiers.forEach(id -> identifierToNames.put(id, id));
+    return identifierToNames;
   }
 
   public int getStagesCount(

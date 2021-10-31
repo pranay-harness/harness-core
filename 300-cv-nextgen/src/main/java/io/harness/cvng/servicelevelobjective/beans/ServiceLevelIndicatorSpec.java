@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 @Builder
 public class ServiceLevelIndicatorSpec {
-  @NotNull @JsonProperty(SLI_METRIC_TYPE) SLIMetricType type;
+  @JsonProperty(SLI_METRIC_TYPE) SLIMetricType type;
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = SLI_METRIC_TYPE, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
       visible = true)
   @Valid

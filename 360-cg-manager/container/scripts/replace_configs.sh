@@ -904,3 +904,7 @@ fi
 if [[ "" != "$LDAP_GROUP_SYNC_DEFAULT_CRON" ]]; then
   yq write -i $CONFIG_FILE ldapSyncJobConfig.defaultCronExpression "$LDAP_GROUP_SYNC_DEFAULT_CRON"
 fi
+
+if [[ "" != "$USE_GLOBAL_KMS_AS_BASE_ALGO" ]]; then
+  yq write -i $CONFIG_FILE useGlobalKMSAsBaseAlgo "$USE_GLOBAL_KMS_AS_BASE_ALGO"
+fi

@@ -363,7 +363,7 @@ def ingest_data_to_costagg(jsonData):
                INSERT INTO `%s` (day, cost, cloudProvider, accountId) 
                 SELECT TIMESTAMP_TRUNC(startTime, DAY) AS day, SUM(cost) AS cost, "AWS" AS cloudProvider, '%s' as accountId 
                 FROM `%s`  
-                WHERE DATE(startTime) >= '%s' AND DATE(day) <= '%s' AND cloudProvider = "AWS" 
+                WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s' AND cloudProvider = "AWS" 
                 GROUP BY day;
      """ % (table_name, date_start, date_end, jsonData.get("accountId"),
             table_name,

@@ -206,7 +206,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
         kubernetesConfig.getNamespace(), executionLogCallback, request.getTimeoutIntervalInMin());
 
     resources = k8sTaskHelperBase.readManifestAndOverrideLocalSecrets(
-        manifestFiles, executionLogCallback, request.isLocalOverrideFeatureFlag());
+        manifestFiles, executionLogCallback, request.isLocalOverrideFeatureFlag(), isErrorFrameworkSupported());
     k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
     if (request.isInCanaryWorkflow()) {

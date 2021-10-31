@@ -2,6 +2,7 @@ package io.harness.ccm.commons.entities.billing;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.BudgetPeriod;
 import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.budget.BudgetType;
 import io.harness.mongo.index.FdIndex;
@@ -34,6 +35,8 @@ public final class Budget implements PersistentEntity, UuidAware, AccountAccess,
   @NotBlank BudgetScope scope; // referred to as "Applies to" in the UI
   @NotBlank BudgetType type;
   @NotBlank Double budgetAmount;
+  @NotBlank BudgetPeriod period;
+  Double growthRate;
   Double actualCost;
   Double forecastCost;
   Double lastMonthCost;
@@ -41,6 +44,8 @@ public final class Budget implements PersistentEntity, UuidAware, AccountAccess,
   String[] emailAddresses;
   String[] userGroupIds; // reference
   boolean notifyOnSlack;
+  long startTime;
+  long endTime;
   long createdAt;
   long lastUpdatedAt;
 }

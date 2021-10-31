@@ -1,5 +1,7 @@
 package io.harness.notification.bean;
 
+import io.harness.pms.yaml.ParameterField;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
@@ -15,5 +17,5 @@ public class NotificationRules {
 
   List<PipelineEvent> pipelineEvents;
 
-  @JsonProperty("notificationMethod") NotificationChannelWrapper notificationChannelWrapper;
+  @JsonProperty("notificationMethod") ParameterField<NotificationChannelWrapper> notificationChannelWrapper;
 }

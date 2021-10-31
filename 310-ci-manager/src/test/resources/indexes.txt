@@ -83,6 +83,7 @@ secretUsageLogs {"name": "appId_1", "background": true} {"appId": 1}
 secretUsageLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretUsageLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 serviceSecrets {"name": "serviceType_1", "unique": true} {"serviceType": 1}
+stageDetails {"name": "accountId_1", "background": true} {"accountId": 1}
 taskSelectorMaps {"name": "createdAt_1", "background": true} {"createdAt": 1}
 taskSelectorMaps {"name": "uniqueGroup", "unique": true} {"accountId": 1, "taskGroup": 1}
 timeoutInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}

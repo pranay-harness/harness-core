@@ -7,6 +7,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.OwnedBy;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
@@ -14,6 +15,7 @@ import lombok.Value;
 @Value
 @Builder
 @ApiModel(value = "RoleAssignmentFilter")
+@Schema(name = "RoleAssignmentFilter")
 @OwnedBy(PL)
 public class RoleAssignmentFilterDTO {
   Set<String> resourceGroupFilter;

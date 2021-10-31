@@ -476,7 +476,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
             .build();
 
     // set up mocks
-    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.AWS.name()))
+    when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.AWS.name()))
         .thenReturn(Arrays.asList(awsCp, gcpCp));
     final FolderNode cloudProviderFolderNode = yamlDirectoryService.doCloudProviders(ACCOUNT_ID, directoryPath);
     List<DirectoryNode> cloudProviderDirectoryNode = getNodesOfClass(cloudProviderFolderNode, SettingAttribute.class);
@@ -523,9 +523,9 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
                                                         .build())
                                          .build();
     // mock stuff
-    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.JIRA.name()))
+    when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.JIRA.name()))
         .thenReturn(Arrays.asList(jiraConnector));
-    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SERVICENOW.name()))
+    when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SERVICENOW.name()))
         .thenReturn(Arrays.asList(snowConnector));
 
     final FolderNode collabFolderNode = yamlDirectoryService.doCollaborationProviders(ACCOUNT_ID, directoryPath);
@@ -553,13 +553,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
     // mock stuff
 
-    if (featureFlagService.isEnabled(FeatureName.YAML_RBAC, ACCOUNT_ID)) {
-      when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.GIT.name()))
-          .thenReturn(Arrays.asList(gitConnector));
-    } else {
-      when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.GIT.name()))
-          .thenReturn(Arrays.asList(gitConnector));
-    }
+    when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.GIT.name()))
+        .thenReturn(Arrays.asList(gitConnector));
 
     final FolderNode sourceRepoFolderNode = yamlDirectoryService.doSourceRepoProviders(ACCOUNT_ID, directoryPath);
     List<DirectoryNode> sourceRepoDirNode = getNodesOfClass(sourceRepoFolderNode, SettingAttribute.class);
@@ -593,9 +588,9 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
                                                         .build())
                                          .build();
     // mock stuff
-    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.JENKINS.name()))
+    when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.JENKINS.name()))
         .thenReturn(Arrays.asList(jenkinsProvider));
-    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
+    when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
         .thenReturn(Arrays.asList(appdConnector));
 
     final FolderNode verificationFolderNode = yamlDirectoryService.doVerificationProviders(ACCOUNT_ID, directoryPath);
@@ -632,9 +627,9 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
                                               .build();
 
     // do mocking
-    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, DOCKER.name()))
+    when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, DOCKER.name()))
         .thenReturn(Arrays.asList(dockerConnector));
-    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, AMAZON_S3_HELM_REPO.name()))
+    when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, AMAZON_S3_HELM_REPO.name()))
         .thenReturn(Arrays.asList(awsS3HelmConnector));
 
     FolderNode artifactServerFolderNode = yamlDirectoryService.doArtifactServers(ACCOUNT_ID, directoryPath);

@@ -41,7 +41,7 @@ public class NextGenServiceImpl implements NextGenService {
 
   private LoadingCache<EntityKey, EnvironmentResponseDTO> environmentCache =
       CacheBuilder.newBuilder()
-          .maximumSize(100000)
+          .maximumSize(1000)
           .expireAfterWrite(4, TimeUnit.HOURS)
           .build(new CacheLoader<EntityKey, EnvironmentResponseDTO>() {
             @Override
@@ -58,7 +58,7 @@ public class NextGenServiceImpl implements NextGenService {
 
   private LoadingCache<EntityKey, ServiceResponseDTO> serviceCache =
       CacheBuilder.newBuilder()
-          .maximumSize(100000)
+          .maximumSize(5000)
           .expireAfterWrite(4, TimeUnit.HOURS)
           .build(new CacheLoader<EntityKey, ServiceResponseDTO>() {
             @Override
@@ -75,7 +75,7 @@ public class NextGenServiceImpl implements NextGenService {
 
   private LoadingCache<EntityKey, ProjectDTO> projectCache =
       CacheBuilder.newBuilder()
-          .maximumSize(10000)
+          .maximumSize(1000)
           .expireAfterWrite(4, TimeUnit.HOURS)
           .build(new CacheLoader<EntityKey, ProjectDTO>() {
             @Override
@@ -90,7 +90,7 @@ public class NextGenServiceImpl implements NextGenService {
 
   private LoadingCache<EntityKey, OrganizationDTO> orgCache =
       CacheBuilder.newBuilder()
-          .maximumSize(10000)
+          .maximumSize(100)
           .expireAfterWrite(4, TimeUnit.HOURS)
           .build(new CacheLoader<EntityKey, OrganizationDTO>() {
             @Override

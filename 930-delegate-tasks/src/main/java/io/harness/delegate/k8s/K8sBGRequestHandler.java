@@ -207,7 +207,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
         request.getManifestDelegateConfig(), manifestFilesDirectory, manifestHelperFiles, releaseName,
         kubernetesConfig.getNamespace(), executionLogCallback, request.getTimeoutIntervalInMin());
 
-    resources = k8sTaskHelperBase.readManifests(manifestFiles, executionLogCallback);
+    resources = k8sTaskHelperBase.readManifests(manifestFiles, executionLogCallback, isErrorFrameworkSupported());
     k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
     executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));

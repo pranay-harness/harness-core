@@ -54,4 +54,8 @@ public class NGCommonEntityConstants {
   public static final String IS_EVENTS_ENABLED = "eventsEnabled";
   public static final String IS_OPTIMIZATION_ENABLED = "optimizationEnabled";
   public static final String IS_CUR_ENABLED = "curEnabled";
+
+  public static final String ACCOUNT_PARAM_MESSAGE = "Account Identifier for the entity";
+  public static final String ORG_PARAM_MESSAGE = "Organization Identifier for the entity";
+  public static final String PROJECT_PARAM_MESSAGE = "Project Identifier for the entity";
 }

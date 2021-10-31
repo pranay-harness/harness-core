@@ -21,15 +21,16 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.persistence.HIterator;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
@@ -124,7 +125,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
 
       TerraformTaskNGParametersBuilder builder =
           TerraformTaskNGParameters.builder()
-              .accountId(AmbianceHelper.getAccountId(ambiance))
+              .accountId(AmbianceUtils.getAccountId(ambiance))
               .currentStateFileId(terraformStepHelper.getLatestFileId(entityId))
               .taskType(tfTaskType)
               .terraformCommandUnit(TerraformCommandUnit.Rollback)
@@ -172,9 +173,23 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseDataSupplier) throws Exception {
     log.info("Handling Task Result With Security Context for the Rollback Step");
+    StepResponse stepResponse = null;
+
+    try {
+      stepResponse = generateStepResponse(ambiance, stepParameters, responseDataSupplier);
+    } finally {
+      stepHelper.sendRollbackTelemetryEvent(ambiance, stepResponse == null ? Status.FAILED : stepResponse.getStatus());
+    }
+
+    return stepResponse;
+  }
+
+  private StepResponse generateStepResponse(Ambiance ambiance, StepElementParameters stepParameters,
+      ThrowingSupplier<TerraformTaskNGResponse> responseDataSupplier) throws Exception {
     TerraformRollbackStepParameters stepParametersSpec = (TerraformRollbackStepParameters) stepParameters.getSpec();
     TerraformTaskNGResponse taskResponse = responseDataSupplier.get();
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
+
     List<UnitProgress> unitProgresses = taskResponse.getUnitProgressData() == null
         ? Collections.emptyList()
         : taskResponse.getUnitProgressData().getUnitProgresses();
@@ -198,6 +213,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
         terraformConfigDAL.clearTerraformConfig(ambiance, rollbackConfig.getEntityId());
       }
     }
+
     return stepResponseBuilder.build();
   }
 
