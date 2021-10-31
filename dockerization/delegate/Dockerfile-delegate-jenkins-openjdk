@@ -20,10 +20,28 @@ WORKDIR /opt/harness-delegate
 
 ARG watcher_version
 
-RUN mkdir -p ./client-tools/go-template/v0.4
+RUN mkdir -p /client-tools/go-template/v0.4
 RUN curl -s -L -o client-tools/go-template/v0.4/go-template https://app.harness.io/storage/harness-download/snapshot-go-template/release/v0.4/bin/darwin/go-template
 WORKDIR /opt/harness-delegate/client-tools/go-template/v0.4
 RUN chmod +x ./go-template
+
+WORKDIR /opt/harness-delegate
+RUN mkdir -p client-tools/harness-pywinrm/v0.4-dev
+WORKDIR /opt/harness-delegate/client-tools/harness-pywinrm/v0.4-dev
+RUN curl -s -L -o harness-pywinrm https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/v0.4-dev/bin/darwin/amd64/harness-pywinrm
+RUN chmod +x ./harness-pywinrm
+
+WORKDIR /opt/harness-delegate
+RUN mkdir -p client-tools/helm/v2.13.1
+WORKDIR /opt/harness-delegate/client-tools/helm/v2.13.1
+RUN curl -s -L -o helm https://app.harness.io/storage/harness-download/harness-helm/release/v2.13.1/bin/darwin/amd64/helm
+RUN chmod +x ./helm
+
+WORKDIR /opt/harness-delegate
+RUN mkdir -p client-tools/chartmuseum/v0.13.0
+WORKDIR /opt/harness-delegate/client-tools/chartmuseum/v0.13.0
+RUN curl -s -L -o chartmuseum https://app.harness.io/storage/harness-download/harness-chartmuseum/release/v0.13.0/bin/darwin/amd64/chartmuseum /bin/bash -c
+RUN chmod +x ./chartmuseum
 
 RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz
 RUN curl -#k https://app.harness.io/public/shared/watchers/builds/openjdk-8u242/$watcher_version/watcher.jar -o watcher.jar
