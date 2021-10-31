@@ -52,7 +52,7 @@ RUN chmod +x ./kustomize
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/scm/72f01538/darwin/amd64 && cd $_
-RUN curl -s -L -o client-tools/scm/72f01538/darwin/amd64/scm https://app.harness.io/storage/harness-download/harness-scm/release/87448d72/bin/darwin/amd64/scm
+RUN curl -s -L -o scm https://app.harness.io/storage/harness-download/harness-scm/release/87448d72/bin/darwin/amd64/scm
 RUN chmod +x ./scm
 
 WORKDIR /opt/harness-delegate
