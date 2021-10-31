@@ -43,6 +43,10 @@ WORKDIR /opt/harness-delegate/client-tools/chartmuseum/v0.13.0
 RUN curl -s -L -o chartmuseum https://app.harness.io/storage/harness-download/harness-chartmuseum/release/v0.13.0/bin/darwin/amd64/chartmuseum
 RUN chmod +x ./chartmuseum
 
+
+
+WORKDIR /opt/harness-delegate
+
 RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz
 RUN curl -#k https://app.harness.io/public/shared/watchers/builds/openjdk-8u242/$watcher_version/watcher.jar -o watcher.jar
 CMD ./entrypoint.sh && bash -c ' \
