@@ -20,7 +20,7 @@ WORKDIR /opt/harness-delegate
 
 ARG watcher_version
 
-RUN mkdir -p /client-tools/go-template/v0.4
+RUN mkdir -p client-tools/go-template/v0.4
 RUN curl -s -L -o client-tools/go-template/v0.4/go-template https://app.harness.io/storage/harness-download/snapshot-go-template/release/v0.4/bin/darwin/go-template
 WORKDIR /opt/harness-delegate/client-tools/go-template/v0.4
 RUN chmod +x ./go-template
