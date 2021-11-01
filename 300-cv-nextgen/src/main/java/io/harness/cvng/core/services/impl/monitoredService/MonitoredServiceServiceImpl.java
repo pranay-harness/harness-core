@@ -66,7 +66,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -623,23 +622,27 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   private List<Pair<String, String>> getDependentServiceEnvIdentifiers(
-      Map<ServiceEnvKey, List<String>> monitoredServiceToDependentServicesMap) {
+      ProjectParams projectParams, Map<ServiceEnvKey, List<String>> monitoredServiceToDependentServicesMap) {
     List<Pair<String, String>> serviceEnvironmentIdentifiers = new ArrayList<>();
     for (ServiceEnvKey monitoredServiceEnvKey : monitoredServiceToDependentServicesMap.keySet()) {
       List<String> dependentServices = monitoredServiceToDependentServicesMap.get(monitoredServiceEnvKey);
-      dependentServices.forEach(dependentService
-          -> serviceEnvironmentIdentifiers.add(Pair.of(dependentService, monitoredServiceEnvKey.getEnvIdentifier())));
+      dependentServices.forEach(dependentService -> {
+        MonitoredService dependentMonitoredService = getMonitoredService(projectParams, dependentService);
+        serviceEnvironmentIdentifiers.add(Pair.of(
+            dependentMonitoredService.getServiceIdentifier(), dependentMonitoredService.getEnvironmentIdentifier()));
+      });
     }
     return serviceEnvironmentIdentifiers;
   }
 
-  private List<RiskData> getDependentServiceRiskScoreList(List<String> dependentServices, ServiceEnvKey serviceEnvKey,
+  private List<RiskData> getDependentServiceRiskScoreList(ProjectParams projectParams, List<String> dependentServices,
       Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap) {
     List<RiskData> dependentServiceRiskScores = new ArrayList<>();
     dependentServices.forEach(dependentService -> {
+      MonitoredService dependentMonitoredService = getMonitoredService(projectParams, dependentService);
       ServiceEnvKey dependentServiceEnvKey = ServiceEnvKey.builder()
-                                                 .serviceIdentifier(dependentService)
-                                                 .envIdentifier(serviceEnvKey.getEnvIdentifier())
+                                                 .serviceIdentifier(dependentMonitoredService.getServiceIdentifier())
+                                                 .envIdentifier(dependentMonitoredService.getEnvironmentIdentifier())
                                                  .build();
       dependentServiceRiskScores.add(latestRiskScoreByServiceMap.get(dependentServiceEnvKey));
     });
@@ -705,7 +708,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);
 
     List<Pair<String, String>> dependentServiceEnvIdentifiers =
-        getDependentServiceEnvIdentifiers(monitoredServiceToDependentServicesMap);
+        getDependentServiceEnvIdentifiers(projectParams, monitoredServiceToDependentServicesMap);
     Set<Pair<String, String>> allServiceEnvIdentifiers = new HashSet<>();
     allServiceEnvIdentifiers.addAll(serviceEnvironmentIdentifiers);
     allServiceEnvIdentifiers.addAll(dependentServiceEnvIdentifiers);
@@ -725,7 +728,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       HistoricalTrend historicalTrend = historicalTrendList.get(index);
       RiskData monitoredServiceRiskScore = latestRiskScoreByServiceMap.get(serviceEnvKey);
       List<RiskData> dependentServiceRiskScoreList = getDependentServiceRiskScoreList(
-          monitoredServiceToDependentServicesMap.get(serviceEnvKey), serviceEnvKey, latestRiskScoreByServiceMap);
+          projectParams, monitoredServiceToDependentServicesMap.get(serviceEnvKey), latestRiskScoreByServiceMap);
       index++;
       ServiceEnvironmentParams serviceEnvironmentParams =
           ServiceEnvironmentParams.builder()
@@ -911,26 +914,28 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     List<Pair<String, String>> serviceEnvIdentifiers = new ArrayList<>(Arrays.asList(
         Pair.of(serviceEnvironmentParams.getServiceIdentifier(), serviceEnvironmentParams.getEnvironmentIdentifier())));
     MonitoredService monitoredService = getMonitoredService(serviceEnvironmentParams);
-    Set<ServiceDependencyDTO> serviceDependencyDTOS = serviceDependencyService.getDependentServicesForMonitoredService(
+    Set<ServiceDependencyDTO> dependentServiceDTOS = serviceDependencyService.getDependentServicesForMonitoredService(
         serviceEnvironmentParams, monitoredService.getIdentifier());
-    serviceDependencyDTOS.forEach(serviceDependencyDTO
-        -> serviceEnvIdentifiers.add(Pair.of(serviceDependencyDTO.getMonitoredServiceIdentifier(),
-            serviceEnvironmentParams.getEnvironmentIdentifier())));
-    List<RiskData> currentAndDependentRiskScoreList = heatMapService.getLatestRiskScoreForAllServicesList(
+    dependentServiceDTOS.forEach(dependentServiceDTO -> {
+      MonitoredService dependentMonitoredService =
+          getMonitoredService(serviceEnvironmentParams, dependentServiceDTO.getMonitoredServiceIdentifier());
+      serviceEnvIdentifiers.add(Pair.of(
+          dependentMonitoredService.getServiceIdentifier(), dependentMonitoredService.getEnvironmentIdentifier()));
+    });
+    List<RiskData> allServiceRiskScoreList = heatMapService.getLatestRiskScoreForAllServicesList(
         serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getOrgIdentifier(),
         serviceEnvironmentParams.getProjectIdentifier(), serviceEnvIdentifiers);
-    List<RiskData> dependentRiskScoreList =
-        currentAndDependentRiskScoreList.subList(1, currentAndDependentRiskScoreList.size())
-            .stream()
-            .filter(r -> r.getHealthScore() != null && r.getHealthScore() >= 0)
-            .collect(Collectors.toList());
-    RiskData minimumDependentRiskScore = dependentRiskScoreList.isEmpty()
+    List<RiskData> dependentRiskScoreList = allServiceRiskScoreList.subList(1, allServiceRiskScoreList.size())
+                                                .stream()
+                                                .filter(r -> r.getHealthScore() != null && r.getHealthScore() >= 0)
+                                                .collect(Collectors.toList());
+    RiskData minDependentRiskScore = dependentRiskScoreList.isEmpty()
         ? RiskData.builder().riskStatus(Risk.NO_DATA).build()
-        : Collections.min(dependentRiskScoreList, Comparator.comparingInt(RiskData::getHealthScore));
+        : Collections.min(dependentRiskScoreList);
 
     return HealthScoreDTO.builder()
-        .currentHealthScore(currentAndDependentRiskScoreList.get(0))
-        .dependentHealthScore(minimumDependentRiskScore)
+        .currentHealthScore(allServiceRiskScoreList.get(0))
+        .dependentHealthScore(minDependentRiskScore)
         .build();
   }
 

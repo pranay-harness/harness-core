@@ -110,7 +110,7 @@ public class K8sRollingRequestHandlerTest extends CategoryTest {
 
     doReturn(singletonList(deployment()))
         .when(taskHelperBase)
-        .readManifestAndOverrideLocalSecrets(anyListOf(FileData.class), eq(logCallback), anyBoolean());
+        .readManifestAndOverrideLocalSecrets(anyListOf(FileData.class), eq(logCallback), anyBoolean(), anyBoolean());
 
     doReturn(emptyList())
         .when(baseHandler)

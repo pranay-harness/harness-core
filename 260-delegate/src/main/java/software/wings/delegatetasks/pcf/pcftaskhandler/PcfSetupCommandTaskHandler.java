@@ -293,9 +293,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
   private String getExistingAppNamingStrategy(
       List<ApplicationSummary> previousReleases, CfCommandSetupRequest setupRequest) {
-    if (!setupRequest.isNonVersioningInactiveRollbackEnabled()) {
-      return AppNamingStrategy.VERSIONING.name();
-    }
     return isNonVersionReleaseExist(previousReleases, setupRequest.getReleaseNamePrefix())
         ? AppNamingStrategy.APP_NAME_WITH_VERSIONING.name()
         : AppNamingStrategy.VERSIONING.name();

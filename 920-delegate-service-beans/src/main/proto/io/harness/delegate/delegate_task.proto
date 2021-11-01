@@ -10,7 +10,6 @@ service DelegateTask {
   rpc ExecuteTask(DelegateClassicTaskRequest) returns (ExecuteTaskResponse);
   rpc AbortTask(AbortExpireTaskRequest) returns (AbortTaskResponse);
   rpc ExpireTask(AbortExpireTaskRequest) returns (ExpireTaskResponse);
-  rpc CreatePerpetualTaskClassic(CreatePerpetualTaskRequestClassic) returns (CreatePerpetualTaskResponseClassic);
 }
 
 message DelegateClassicTaskRequest {
@@ -20,15 +19,6 @@ message DelegateClassicTaskRequest {
 message AbortExpireTaskRequest {
   string account_id = 1;
   string delegate_task_id = 2;
-}
-
-message CreatePerpetualTaskRequestClassic {
-  string perpetual_task_type = 1;
-  string account_id = 2;
-  bytes client_context_kryo = 3;
-  bytes perpetual_task_schedule_kryo = 4;
-  bool allowDuplicate = 5;
-  string task_description = 6;
 }
 
 message QueueTaskResponse {
@@ -44,9 +34,5 @@ message AbortTaskResponse {
 }
 
 message ExpireTaskResponse {
-  string message = 1;
-}
-
-message CreatePerpetualTaskResponseClassic {
   string message = 1;
 }

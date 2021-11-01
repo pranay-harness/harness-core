@@ -8,6 +8,7 @@ HarnessTeam = "GTM"
 shared_dependencies = [
     "//:lombok",
     "//930-ng-core-clients:module",
+    "//930-ng-license-manager:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
     "//945-account-mgmt:module",

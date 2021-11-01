@@ -150,9 +150,11 @@ public class BudgetUtils {
   public static List<Double> getAlertThresholdsForBudget(Budget budget, AlertThresholdBase basedOn) {
     AlertThreshold[] alertThresholds = budget.getAlertThresholds();
     List<Double> costAlertsPercentage = new ArrayList<>();
-    for (AlertThreshold alertThreshold : alertThresholds) {
-      if (alertThreshold.getBasedOn() == basedOn) {
-        costAlertsPercentage.add(alertThreshold.getPercentage());
+    if (alertThresholds != null) {
+      for (AlertThreshold alertThreshold : alertThresholds) {
+        if (alertThreshold.getBasedOn() == basedOn) {
+          costAlertsPercentage.add(alertThreshold.getPercentage());
+        }
       }
     }
     return costAlertsPercentage;

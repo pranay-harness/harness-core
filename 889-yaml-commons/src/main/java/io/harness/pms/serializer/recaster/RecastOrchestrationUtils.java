@@ -11,6 +11,7 @@ import io.harness.packages.HarnessPackages;
 import io.harness.pms.yaml.ParameterDocumentField;
 import io.harness.pms.yaml.ParameterDocumentFieldMapper;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.serializer.HarnessReflections;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.recaster.JsonObjectRecastTransformer;
 import io.harness.serializer.recaster.ParameterFieldRecastTransformer;
@@ -18,6 +19,7 @@ import io.harness.serializer.recaster.proto.ProtoEnumRecastTransformer;
 import io.harness.serializer.recaster.proto.ProtoRecastTransformer;
 import io.harness.utils.RecastReflectionUtils;
 
+import com.google.common.collect.Sets;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -41,7 +43,9 @@ public class RecastOrchestrationUtils {
       new Recast(new Recaster(RecasterOptions.builder().workWithMaps(true).build()), new HashSet<>());
 
   static {
-    recast.registerAliases(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
+    recast.registerAliases(
+        HarnessReflections.getReflections(Sets.newHashSet(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS)),
+        HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
     recast.addTransformer(new JsonObjectRecastTransformer());
     recast.addTransformer(new ProtoRecastTransformer());
     recast.addTransformer(new ProtoEnumRecastTransformer());

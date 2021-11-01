@@ -15,7 +15,9 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.exception.ExceptionUtils;
+import io.harness.expression.ExpressionReflectionUtils;
 
 import software.wings.api.EmailStateExecutionData;
 import software.wings.beans.User;
@@ -28,7 +30,9 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
+import software.wings.utils.EmailParams;
 
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.base.Splitter;
@@ -109,11 +113,27 @@ public class EmailState extends State {
         executionResponseBuilder.errorMessage(String.format(EMAIL_NOT_SENT_MESSAGE, unregisteredAddress));
       }
 
+      int expressionFunctorToken = HashGenerator.generateIntegerHash();
       if (StringUtils.isNotBlank(toAddress) || StringUtils.isNotBlank(ccAddress)) {
-        emailStateExecutionData.setSubject(expressionEvaluator.substitute(subject, Collections.emptyMap()));
-        emailStateExecutionData.setBody(expressionEvaluator.substitute(body, Collections.emptyMap()));
         String evaluatedSubject = context.renderExpression(subject);
         String evaluatedBody = context.renderExpression(body);
+
+        EmailParams emailParams = EmailParams.builder().body(body).subject(subject).build();
+
+        context.resetPreparedCache();
+
+        ExpressionReflectionUtils.applyExpression(emailParams,
+            (secretMode, value)
+                -> context.renderExpression(value,
+                    StateExecutionContext.builder()
+                        .stateExecutionData(emailStateExecutionData)
+                        .adoptDelegateDecryption(true)
+                        .expressionFunctorToken(expressionFunctorToken)
+                        .build()));
+
+        emailStateExecutionData.setSubject(
+            expressionEvaluator.substitute(emailParams.getSubject(), Collections.emptyMap()));
+        emailStateExecutionData.setBody(expressionEvaluator.substitute(emailParams.getBody(), Collections.emptyMap()));
         log.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
 
         if (StringUtils.isNotBlank(toAddress)) {

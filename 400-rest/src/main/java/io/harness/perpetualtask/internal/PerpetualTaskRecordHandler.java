@@ -54,6 +54,7 @@ import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
 import com.google.inject.Inject;
@@ -85,6 +86,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private DelegateService delegateService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
@@ -115,9 +117,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .handler(this::assign)
             .filterExpander(query
                 -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
-                       .or(query.criteria(PerpetualTaskRecordKeys.assignAfterMs).doesNotExist(),
-                           query.criteria(PerpetualTaskRecordKeys.assignAfterMs)
-                               .lessThanOrEq(System.currentTimeMillis())))
+                       .field(PerpetualTaskRecordKeys.assignAfterMs)
+                       .lessThanOrEq(System.currentTimeMillis()))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)
@@ -151,7 +152,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
       DelegateTask validationTask = getValidationTask(taskRecord);
 
       try {
-        DelegateResponseData response = delegateService.executeTask(validationTask);
+        DelegateResponseData response = delegateTaskServiceClassic.executeTask(validationTask);
 
         if (response instanceof DelegateTaskNotifyResponseData) {
           if (response instanceof PerpetualTaskCapabilityCheckResponse) {

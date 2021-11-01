@@ -144,7 +144,7 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
         .getPrimaryColor(any(KubernetesResource.class), eq(kubernetesConfig), eq(logCallback));
     doReturn(new ArrayList<>(asList(deployment(), service())))
         .when(k8sTaskHelperBase)
-        .readManifests(anyListOf(FileData.class), eq(logCallback));
+        .readManifests(anyListOf(FileData.class), eq(logCallback), eq(true));
     doReturn(deployedPods)
         .when(k8sBGBaseHandler)
         .getAllPods(anyLong(), eq(kubernetesConfig), any(KubernetesResource.class), eq(HarnessLabelValues.colorBlue),
@@ -253,7 +253,7 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
         .getPrimaryColor(any(KubernetesResource.class), eq(kubernetesConfig), eq(logCallback));
     doReturn(new ArrayList<>(asList(deployment(), service())))
         .when(k8sTaskHelperBase)
-        .readManifests(anyListOf(FileData.class), eq(logCallback));
+        .readManifests(anyListOf(FileData.class), eq(logCallback), eq(true));
 
     doThrow(exception)
         .when(k8sTaskHelperBase)
@@ -288,7 +288,7 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
         .getPrimaryColor(any(KubernetesResource.class), eq(kubernetesConfig), eq(logCallback));
     doReturn(new ArrayList<>(asList(deployment(), service())))
         .when(k8sTaskHelperBase)
-        .readManifests(anyListOf(FileData.class), eq(logCallback));
+        .readManifests(anyListOf(FileData.class), eq(logCallback), eq(true));
 
     doReturn(true)
         .when(k8sTaskHelperBase)
@@ -360,9 +360,9 @@ public class K8sBGRequestHandlerTest extends CategoryTest {
             anyString(), eq("default"), eq(logCallback), eq(10));
 
     if (throwException) {
-      doThrow(thrownException).when(k8sTaskHelperBase).readManifests(renderedFiles, logCallback);
+      doThrow(thrownException).when(k8sTaskHelperBase).readManifests(renderedFiles, logCallback, true);
     } else {
-      doReturn(resources).when(k8sTaskHelperBase).readManifests(renderedFiles, logCallback);
+      doReturn(resources).when(k8sTaskHelperBase).readManifests(renderedFiles, logCallback, true);
     }
 
     if (throwException) {
