@@ -24,12 +24,4 @@ enum Action {
 
 enum EntityType { ACCOUNT = 0; }
 
-message AccountCreateData {
-  string account_id = 1;
-}
-
-message AccountDeleteData {
-  string account_id = 1;
-}
-
 message CrudEventResponse {}
