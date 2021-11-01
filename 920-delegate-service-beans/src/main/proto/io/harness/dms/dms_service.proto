@@ -4,6 +4,7 @@ package io.harness.dms;
 
 option java_multiple_files = true;
 option go_package = "920_delegate_service_beans";
+import "google/protobuf/wrappers.proto";
 
 service DmsService {
   rpc CrudEvent(CrudEventRequest) returns (CrudEventResponse);
@@ -12,7 +13,7 @@ service DmsService {
 message CrudEventRequest {
   Action action = 1;
   EntityType entity_type = 2;
-  Data data = 3;
+  string entity_id = 3;
 }
 
 enum Action {
@@ -22,13 +23,6 @@ enum Action {
 }
 
 enum EntityType { ACCOUNT = 0; }
-
-message Data {
-  oneof data {
-    AccountCreateData account_create_data = 1;
-    AccountDeleteData account_delete_data = 2;
-  }
-}
 
 message AccountCreateData {
   string account_id = 1;
