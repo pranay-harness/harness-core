@@ -165,7 +165,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     Set<Class<?>> classSet = basePackageClasses.getTypesAnnotatedWith(Path.class);
     Reflections pipelinePackageClasses = new Reflections(NG_PIPELINE_PACKAGE);
     classSet.addAll(pipelinePackageClasses.getTypesAnnotatedWith(Path.class));
-    Reflections enforcementClientPackageClasses = new Reflections(NG_PIPELINE_PACKAGE);
+    Reflections enforcementClientPackageClasses = new Reflections(ENFORCEMENT_CLIENT_PACKAGE);
     classSet.addAll(enforcementClientPackageClasses.getTypesAnnotatedWith(Path.class));
 
     return classSet;
