@@ -8,9 +8,9 @@ harness_grpc_library(
         "//920-delegate-service-beans/src/main/proto/io/harness/delegate:920_delegate_service_beans_proto",
         "//920-delegate-service-beans/src/main/proto/io/harness/delegatedetails:920_delegate_service_beans_proto",
         "//920-delegate-service-beans/src/main/proto/io/harness/delegateprofile:920_delegate_service_beans_proto",
+        "//920-delegate-service-beans/src/main/proto/io/harness/dms:920_delegate_service_beans_proto",
         "//920-delegate-service-beans/src/main/proto/io/harness/owner:920_delegate_service_beans_proto",
         "//920-delegate-service-beans/src/main/proto/io/harness/paging:920_delegate_service_beans_proto",
         "//920-delegate-service-beans/src/main/proto/io/harness/pingpong:920_delegate_service_beans_proto",
-        "//920-delegate-service-beans/src/main/proto/io/harness/dms:920_delegate_service_beans_proto",
     ],
 )

@@ -17,8 +17,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.DEL)
-@Slf4j
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class DmsServiceGrpcImpl extends DmsServiceGrpc.DmsServiceImplBase {
   Set<DmsRequestHandler> dmsRequestHandlers;
 

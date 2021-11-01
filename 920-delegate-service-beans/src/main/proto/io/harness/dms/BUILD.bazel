@@ -7,10 +7,10 @@ proto_library(
     srcs = [
         "dms_service.proto",
     ],
-    deps=[
-        "@com_google_protobuf//:wrappers_proto"
-    ],
     visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_protobuf//:wrappers_proto",
+    ],
 )
 
 go_proto_library(
