@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 @Builder
 public class SLOTarget {
-  @NotNull @JsonProperty(SLO_TARGET_TYPE) SLOTargetType type;
+  @JsonProperty(SLO_TARGET_TYPE) SLOTargetType type;
   @NotNull Double sloTargetPercentage;
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = SLO_TARGET_TYPE, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
       visible = true)

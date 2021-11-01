@@ -110,6 +110,41 @@ public class Http {
             }
           });
 
+  LoadingCache<String, Integer> responseCodeForValidationWithoutFollowingRedirect =
+      CacheBuilder.newBuilder()
+          .maximumSize(1000)
+          .expireAfterWrite(1, TimeUnit.MINUTES)
+          .build(new CacheLoader<String, Integer>() {
+            @Override
+            public Integer load(String url) throws IOException {
+              log.info("Testing connectivity");
+
+              // Create a trust manager that does not validate certificate chains
+              // Install the all-trusting trust manager
+              HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+              // Create all-trusting host name verifier
+              HostnameVerifier allHostsValid = (s, sslSession) -> true;
+              // Install the all-trusting host verifier
+              HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+              HttpURLConnection connection = getHttpsURLConnection(url);
+              try {
+                // Changed to GET as some providers like artifactory SAAS is not
+                // accepting HEAD requests
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(15000);
+                connection.setInstanceFollowRedirects(false);
+                int responseCode = connection.getResponseCode();
+                log.info("Returned code {}", responseCode);
+                return responseCode;
+              } finally {
+                if (connection != null) {
+                  connection.disconnect();
+                }
+              }
+            }
+          });
+
   LoadingCache<HttpURLHeaderInfo, Integer> responseCodeForValidationWithHeaders =
       CacheBuilder.newBuilder()
           .maximumSize(1000)
@@ -187,6 +222,17 @@ public class Http {
     try (UrlLogContext ignore = new UrlLogContext(url, OVERRIDE_ERROR)) {
       try {
         return checkResponseCode(responseCodeForValidation.get(url));
+      } catch (Exception e) {
+        log.info("Could not connect: {}", e.getMessage());
+      }
+    }
+    return false;
+  }
+
+  public static boolean connectableHttpUrlWithoutFollowingRedirect(String url) {
+    try (UrlLogContext ignore = new UrlLogContext(url, OVERRIDE_ERROR)) {
+      try {
+        return checkResponseCode(responseCodeForValidationWithoutFollowingRedirect.get(url));
       } catch (Exception e) {
         log.info("Could not connect: {}", e.getMessage());
       }

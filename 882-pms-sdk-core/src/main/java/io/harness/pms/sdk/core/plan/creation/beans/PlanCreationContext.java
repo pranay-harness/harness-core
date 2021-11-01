@@ -48,6 +48,10 @@ public class PlanCreationContext implements AsyncCreatorContext {
 
   @Override
   public ByteString getGitSyncBranchContext() {
-    return null;
+    PlanCreationContextValue value = getMetadata();
+    if (value == null) {
+      return null;
+    }
+    return getMetadata().getMetadata().getGitSyncBranchContext();
   }
 }

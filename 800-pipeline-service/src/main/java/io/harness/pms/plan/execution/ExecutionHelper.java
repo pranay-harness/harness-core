@@ -28,7 +28,10 @@ import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.helpers.TriggeredByHelper;
+import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.InputSetMergeHelper;
+import io.harness.pms.merger.helpers.InputSetTemplateHelper;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -43,6 +46,7 @@ import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.threading.Morpheus;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -53,6 +57,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -133,6 +138,7 @@ public class ExecutionHelper {
     StagesExecutionInfo stagesExecutionInfo =
         StagesExecutionInfo.builder().isStagesExecution(false).pipelineYamlToRun(pipelineYaml).build();
     if (EmptyPredicate.isNotEmpty(stagesToRun)) {
+      StagesExecutionHelper.throwErrorIfAllStagesAreDeleted(pipelineYaml, stagesToRun);
       pipelineYaml = StagesExpressionExtractor.replaceExpressions(pipelineYaml, expressionValues);
       stagesExecutionInfo = StagesExecutionHelper.getStagesExecutionInfo(pipelineYaml, stagesToRun, expressionValues);
     }
@@ -161,11 +167,22 @@ public class ExecutionHelper {
     return builder.build();
   }
 
-  private String getPipelineYamlAndValidate(String mergedRuntimeInputYaml, PipelineEntity pipelineEntity) {
+  @VisibleForTesting
+  String getPipelineYamlAndValidate(String mergedRuntimeInputYaml, PipelineEntity pipelineEntity) {
     String pipelineYaml;
     if (isEmpty(mergedRuntimeInputYaml)) {
       pipelineYaml = pipelineEntity.getYaml();
     } else {
+      Map<FQN, String> invalidFQNsInInputSet = InputSetErrorsHelper.getInvalidFQNsInInputSet(
+          InputSetTemplateHelper.createTemplateFromPipeline(pipelineEntity.getYaml()), mergedRuntimeInputYaml);
+      if (EmptyPredicate.isNotEmpty(invalidFQNsInInputSet)) {
+        throw new InvalidRequestException("Some fields are not valid: "
+            + invalidFQNsInInputSet.keySet()
+                  .stream()
+                  .map(FQN::getExpressionFqn)
+                  .collect(Collectors.toList())
+                  .toString());
+      }
       pipelineYaml =
           InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), mergedRuntimeInputYaml, true);
     }

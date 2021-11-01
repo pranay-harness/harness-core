@@ -16,6 +16,8 @@ import io.harness.app.beans.entities.RepositoryInfo;
 import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
 import io.harness.ng.core.dashboard.AuthorInfo;
+import io.harness.ng.core.dashboard.GitInfo;
+import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -36,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardService {
   @Inject TimeScaleDBService timeScaleDBService;
-
+  private String tableNameServiceAndInfra = "service_infra_info";
   private String tableName = "pipeline_execution_summary_ci";
   private String staticQuery = "select * from " + tableName + " where ";
   private final long HR_IN_MS = 60 * 60 * 1000;
@@ -78,7 +80,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private String queryBuilderFailedStatusOrderBy(String accountId, String orgId, String projectId, long limit) {
     String selectStatusQuery =
-        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, endts, status  from "
+        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_event, moduleinfo_repository, planexecutionid, source_branch, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, trigger_type, endts, status, id  from "
         + tableName + " where ";
 
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
@@ -109,7 +111,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private String queryBuilderActiveStatusOrderBy(String accountId, String orgId, String projectId, long limit) {
     String selectStatusQuery =
-        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, status  from "
+        "select name, pipelineidentifier, moduleinfo_branch_name, planexecutionid, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, source_branch, moduleinfo_author_id, author_avatar, moduleinfo_event, moduleinfo_repository, startts, status, trigger_type, id   from "
         + tableName + " where ";
 
     StringBuilder totalBuildSqlBuilder = new StringBuilder(1024);
@@ -134,6 +136,17 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
 
     totalBuildSqlBuilder.append(") ORDER BY startts DESC LIMIT " + limit + ";");
+
+    return totalBuildSqlBuilder.toString();
+  }
+
+  public String queryBuilderServiceTag(String queryIdCdTable) {
+    String selectStatusQuery =
+        "select service_name,tag,pipeline_execution_summary_cd_id from " + tableNameServiceAndInfra + " where ";
+    StringBuilder totalBuildSqlBuilder = new StringBuilder(20480);
+
+    totalBuildSqlBuilder.append(String.format(
+        selectStatusQuery + "pipeline_execution_summary_cd_id in (%s) and service_name is not null;", queryIdCdTable));
 
     return totalBuildSqlBuilder.toString();
   }
@@ -188,6 +201,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         }
         successfulOperation = true;
       } catch (SQLException ex) {
+        log.error(ex.getMessage());
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
@@ -197,13 +211,18 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   public BuildFailureInfo getBuildFailureInfo(String name, String identifier, String branch_name, String commit,
-      String commit_id, long startTs, long endTs, AuthorInfo author, String status) {
+      String commit_id, long startTs, long endTs, AuthorInfo author, String status, String planExecutionId,
+      String triggerType, GitInfo gitInfo, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
     return BuildFailureInfo.builder()
         .piplineName(name)
         .pipelineIdentifier(identifier)
         .branch(branch_name)
+        .triggerType(triggerType)
         .commit(commit)
+        .planExecutionId(planExecutionId)
         .commitID(commit_id)
+        .gitInfo(gitInfo)
+        .serviceInfoList(serviceDeploymentInfos)
         .startTs(startTs)
         .endTs(endTs == -1L ? null : endTs)
         .author(author)
@@ -212,14 +231,19 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   public BuildActiveInfo getBuildActiveInfo(String name, String identifier, String branch_name, String commit,
-      String commit_id, AuthorInfo author, long startTs, String status, long endTs) {
+      String commit_id, AuthorInfo author, long startTs, String status, String planExecutionId, long endTs,
+      String triggerType, GitInfo gitInfo, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
     return BuildActiveInfo.builder()
         .piplineName(name)
         .pipelineIdentifier(identifier)
         .branch(branch_name)
         .commit(commit)
         .commitID(commit_id)
+        .planExecutionId(planExecutionId)
+        .triggerType(triggerType)
+        .gitInfo(gitInfo)
         .author(author)
+        .serviceInfoList(serviceDeploymentInfos)
         .startTs(startTs)
         .status(status)
         .endTs(endTs == -1 ? null : endTs)
@@ -324,6 +348,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
     int totalTries = 0;
     boolean successfulOperation = false;
+
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -338,18 +363,36 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           if (resultSet.getString("endts") != null) {
             endTime = Long.parseLong(resultSet.getString("endts"));
           }
+
+          List<ServiceDeploymentInfo> serviceDeploymentInfoList = new ArrayList<>();
+          GitInfo gitInfo = GitInfo.builder()
+                                .targetBranch(resultSet.getString("moduleinfo_branch_name"))
+                                .sourceBranch(resultSet.getString("source_branch"))
+                                .repoName(resultSet.getString("moduleinfo_repository"))
+                                .commit(resultSet.getString("moduleinfo_branch_commit_message"))
+                                .commitID(resultSet.getString("moduleinfo_branch_commit_id"))
+                                .eventType(resultSet.getString("moduleinfo_event"))
+                                .build();
+
           AuthorInfo author = AuthorInfo.builder()
                                   .name(resultSet.getString("moduleinfo_author_id"))
                                   .url(resultSet.getString("author_avatar"))
                                   .build();
+
+          String id = resultSet.getString("id");
+          String queryServiceTag = queryBuilderServiceTag(String.format("'%s'", id));
+          serviceDeploymentInfoList = queryCalculatorServiceTag(queryServiceTag);
           String status = resultSet.getString("status");
           String pipelineIdentifier = resultSet.getString("pipelineidentifier");
           buildFailureInfos.add(getBuildFailureInfo(resultSet.getString("name"), pipelineIdentifier,
               resultSet.getString("moduleinfo_branch_name"), resultSet.getString("moduleinfo_branch_commit_message"),
-              resultSet.getString("moduleinfo_branch_commit_id"), startTime, endTime, author, status));
+              resultSet.getString("moduleinfo_branch_commit_id"), startTime, endTime, author, status,
+              resultSet.getString("planexecutionid"), resultSet.getString("trigger_type"), gitInfo,
+              serviceDeploymentInfoList));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
+        log.error(ex.getMessage());
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
@@ -358,9 +401,48 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return buildFailureInfos;
   }
 
+  public List<ServiceDeploymentInfo> queryCalculatorServiceTag(String queryServiceTag) {
+    List<ServiceDeploymentInfo> serviceTags = new ArrayList<>();
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(queryServiceTag)) {
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          String service_name = resultSet.getString("service_name");
+          String tag = resultSet.getString("tag");
+          serviceTags.add(getServiceDeployment(service_name, tag));
+        }
+
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        log.error(ex.getMessage());
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return serviceTags;
+  }
+
+  private ServiceDeploymentInfo getServiceDeployment(String service_name, String tag) {
+    if (service_name != null) {
+      if (tag != null) {
+        return ServiceDeploymentInfo.builder().serviceName(service_name).serviceTag(tag).build();
+      } else {
+        return ServiceDeploymentInfo.builder().serviceName(service_name).build();
+      }
+    }
+    return ServiceDeploymentInfo.builder().build();
+  }
+
   public List<BuildActiveInfo> queryCalculatorBuildActiveInfo(String query) {
     List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
     int totalTries = 0;
+    List<GitInfo> gitInfoList = new ArrayList<>();
     boolean successfulOperation = false;
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
@@ -372,6 +454,22 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           if (resultSet.getString("startts") != null) {
             startTime = Long.parseLong(resultSet.getString("startts"));
           }
+
+          List<ServiceDeploymentInfo> serviceDeploymentInfoList = new ArrayList<>();
+          // GitInfo
+          GitInfo gitInfo = GitInfo.builder()
+                                .targetBranch(resultSet.getString("moduleinfo_branch_name"))
+                                .sourceBranch(resultSet.getString("source_branch"))
+                                .repoName(resultSet.getString("moduleinfo_repository"))
+                                .commit(resultSet.getString("moduleinfo_branch_commit_message"))
+                                .commitID(resultSet.getString("moduleinfo_branch_commit_id"))
+                                .eventType(resultSet.getString("moduleinfo_event"))
+                                .build();
+
+          String id = resultSet.getString("id");
+          String queryServiceTag = queryBuilderServiceTag(String.format("'%s'", id));
+          serviceDeploymentInfoList = queryCalculatorServiceTag(queryServiceTag);
+
           AuthorInfo author = AuthorInfo.builder()
                                   .name(resultSet.getString("moduleinfo_author_id"))
                                   .url(resultSet.getString("author_avatar"))
@@ -380,10 +478,12 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           buildActiveInfos.add(getBuildActiveInfo(resultSet.getString("name"), pipelineIdentifier,
               resultSet.getString("moduleinfo_branch_name"), resultSet.getString("moduleinfo_branch_commit_message"),
               resultSet.getString("moduleinfo_branch_commit_id"), author, startTime, resultSet.getString("status"),
-              -1L));
+              resultSet.getString("planexecutionid"), -1L, resultSet.getString("trigger_type"), gitInfo,
+              serviceDeploymentInfoList));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
+        log.error(ex.getMessage());
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
@@ -440,6 +540,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         }
         successfulOperation = true;
       } catch (SQLException ex) {
+        log.error(ex.getMessage());
         totalTries++;
       } finally {
         DBUtils.close(resultSet);

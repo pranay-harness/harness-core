@@ -8,6 +8,7 @@ import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import java.util.Map;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -18,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 public class InstanceMetaDataUtils {
   private static final String AWS_SPOT_INSTANCE = "spot";
   private static final String AZURE_SPOT_INSTANCE = "spot";
+
+  private static final String BANCO_INTER_ACCOUNTID = "aYXZz76ETU-_3LLQSzBt1Q";
 
   public static String getValueForKeyFromInstanceMetaData(@NotNull String metaDataKey, InstanceData instanceData) {
     return getValueForKeyFromInstanceMetaData(metaDataKey, instanceData.getMetaData());
@@ -73,7 +76,7 @@ public class InstanceMetaDataUtils {
 
   @NotNull
   public static InstanceCategory getInstanceCategory(
-      @NonNull CloudProvider k8SCloudProvider, @NonNull Map<String, String> labelsMap) {
+      @NonNull CloudProvider k8SCloudProvider, @NonNull Map<String, String> labelsMap, @Nullable String accountId) {
     InstanceCategory instanceCategory = InstanceCategory.ON_DEMAND;
 
     switch (k8SCloudProvider) {
@@ -91,6 +94,10 @@ public class InstanceMetaDataUtils {
                                          -> key.contains(K8sCCMConstants.AWS_LIFECYCLE_KEY)
                                              || key.contains(K8sCCMConstants.AWS_CAPACITY_TYPE_KEY))
                                      .anyMatch(key -> labelsMap.get(key).toLowerCase().contains(AWS_SPOT_INSTANCE));
+
+        if (!isPreemptiable && BANCO_INTER_ACCOUNTID.equals(accountId) && labelsMap.containsKey("node-pool-name")) {
+          isPreemptiable = labelsMap.get("node-pool-name").contains(AWS_SPOT_INSTANCE);
+        }
 
         if (isPreemptiable) {
           instanceCategory = InstanceCategory.SPOT;
