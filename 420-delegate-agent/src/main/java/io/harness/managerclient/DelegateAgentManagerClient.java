@@ -25,40 +25,42 @@ import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.DEL)
 public interface DelegateAgentManagerClient {
+  String BASE_URL = "manager/agent/";
+
   @Multipart
-  @POST("agent/delegateFiles/{delegateId}/tasks/{taskId}")
+  @POST(BASE_URL + "delegateFiles/{delegateId}/tasks/{taskId}")
   Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
 
-  @GET("agent/delegateFiles/fileId")
+  @GET(BASE_URL + "delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
       @Query("fileBucket") FileBucket fileBucket, @Query("version") int version, @Query("accountId") String accountId);
 
-  @GET("agent/delegateFiles/download")
+  @GET(BASE_URL + "delegateFiles/download")
   Call<ResponseBody> downloadFile(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
-  @GET("agent/delegateFiles/downloadConfig")
+  @GET(BASE_URL + "delegateFiles/downloadConfig")
   Call<ResponseBody> downloadFile(@Query("fileId") String fileId, @Query("accountId") String accountId,
       @Query("appId") String appId, @Query("activityId") String activityId);
 
-  @GET("agent/delegateFiles/metainfo")
+  @GET(BASE_URL + "delegateFiles/metainfo")
   Call<RestResponse<DelegateFile>> getMetaInfo(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
-  @GET("agent/dms/delegates/delegateScripts")
+  @GET(BASE_URL + "dms/delegates/delegateScripts")
   Call<RestResponse<DelegateScripts>> getDelegateScripts(@Query("accountId") String accountId,
       @Query("delegateVersion") String delegateVersion, @Query("delegateName") String delegateName);
 
   // todo(abhinav): discuss with raghu
-  @GET("agent/infra-download/delegate-auth/delegate/logging-token")
+  @GET(BASE_URL + "infra-download/delegate-auth/delegate/logging-token")
   Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 
-  @POST("agent/delegates/instance-sync/{perpetualTaskId}")
+  @POST(BASE_URL + "delegates/instance-sync/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body DelegateResponseData responseData);
 
-  @POST("agent/delegates/instance-sync-ng/{perpetualTaskId}")
+  @POST(BASE_URL + "delegates/instance-sync-ng/{perpetualTaskId}")
   Call<RestResponse<Boolean>> processInstanceSyncNGResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body InstanceSyncPerpetualTaskResponse responseData);
 
@@ -66,23 +68,23 @@ public interface DelegateAgentManagerClient {
   Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
       @Query("accountId") String accountId, @Body RequestBody logObject);
 
-  @POST("agent/delegates/{delegateId}/state-executions")
+  @POST(BASE_URL + "delegates/{delegateId}/state-executions")
   Call<RestResponse> saveApiCallLogs(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body RequestBody logObject);
 
-  @POST("agent/delegates/manifest-collection/{perpetualTaskId}")
+  @POST(BASE_URL + "delegates/manifest-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishManifestCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body RequestBody manifestCollectionExecutionResponse);
 
-  @POST("agent/delegates/connectors/{perpetualTaskId}")
+  @POST(BASE_URL + "delegates/connectors/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishConnectorHeartbeatResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body ConnectorHeartbeatDelegateResponse responseData);
 
-  @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
+  @POST(BASE_URL + "delegates/artifact-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body RequestBody buildSourceExecutionResponse);
 
-  @POST("agent/delegates/polling/{perpetualTaskId}")
+  @POST(BASE_URL + "delegates/polling/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishPollingResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body RequestBody buildSourceExecutionResponse);
 

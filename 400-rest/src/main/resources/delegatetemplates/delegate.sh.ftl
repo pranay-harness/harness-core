@@ -213,11 +213,11 @@ if ! `grep installClientToolsInBackground config-delegate.yml > /dev/null`; then
 fi
 
 if ! `grep versionCheckDisabled config-delegate.yml > /dev/null`; then
-  echo "versionCheckDisabled: $VERSION_CHECK_DISABLED" >> config-delegate.yml
+echo "versionCheckDisabled: $VERSION_CHECK_DISABLED" >> config-delegate.yml
 fi
 
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
-  echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
+echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
 fi
 
 if [ ! -z "$OC_PATH" ] && ! `grep ocPath config-delegate.yml > /dev/null` ; then
@@ -236,13 +236,13 @@ if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/nul
 echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
 fi
 
-rm -f -- *.bak
-
 if ! `grep dmsUrl config-delegate.yml > /dev/null`; then
 echo "dmsUrl: ${managerHostAndPort}/dms/api/" >> config-delegate.yml
 else
 sed -i.bak "s|^dmsUrl:.*$|dmsUrl: ${managerHostAndPort}/dms/api/|" config-delegate.yml
 fi
+
+rm -f -- *.bak
 
 export KUBECTL_VERSION=${kubectlVersion}
 

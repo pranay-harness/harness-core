@@ -68,8 +68,8 @@ import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("/agent/delegates")
-@Path("/agent/delegates")
+@Api("manager/agent/delegates")
+@Path("manager/agent/delegates")
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
