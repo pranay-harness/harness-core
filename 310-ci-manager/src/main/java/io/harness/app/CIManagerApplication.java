@@ -150,6 +150,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private static final String APP_NAME = "CI Manager Service Application";
   public static final String BASE_PACKAGE = "io.harness.app.resources";
   public static final String NG_PIPELINE_PACKAGE = "io.harness.ngpipeline";
+  public static final String ENFORCEMENT_CLIENT_PACKAGE = "io.harness.enforcement.client.resources";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -164,6 +165,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     Set<Class<?>> classSet = basePackageClasses.getTypesAnnotatedWith(Path.class);
     Reflections pipelinePackageClasses = new Reflections(NG_PIPELINE_PACKAGE);
     classSet.addAll(pipelinePackageClasses.getTypesAnnotatedWith(Path.class));
+    Reflections enforcementClientPackageClasses = new Reflections(NG_PIPELINE_PACKAGE);
+    classSet.addAll(enforcementClientPackageClasses.getTypesAnnotatedWith(Path.class));
+
     return classSet;
   }
 
