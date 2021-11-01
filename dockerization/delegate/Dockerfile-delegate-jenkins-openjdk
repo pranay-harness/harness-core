@@ -25,7 +25,7 @@ WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/harness-pywinrm/v0.4-dev && cd $_
 RUN curl -s -L -o harness-pywinrm https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/v0.4-dev/bin/darwin/amd64/harness-pywinrm
 RUN chmod +x ./harness-pywinrm
-RUN ./harness-pywinrm
+RUN bash -c ./harness-pywinrm
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/helm/v2.13.1 && cd $_
