@@ -3,6 +3,7 @@ package io.harness.enforcement.executions;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.core.ci.services.CIOverviewDashboardService;
 import io.harness.enforcement.beans.CustomRestrictionEvaluationDTO;
 import io.harness.enforcement.client.custom.CustomRestrictionInterface;
 import io.harness.licensing.Edition;
@@ -20,6 +21,7 @@ import java.util.Optional;
 public class BuildRestrictionUsageImpl implements CustomRestrictionInterface {
   private static String moduleName = ModuleType.CI.name().toLowerCase();
   @Inject AccountExecutionMetadataRepository accountExecutionMetadataRepository;
+  @Inject CIOverviewDashboardService ciOverviewDashboardService;
 
   @Override
   public boolean evaluateCustomRestriction(CustomRestrictionEvaluationDTO customFeatureEvaluationDTO) {
