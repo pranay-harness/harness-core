@@ -1,6 +1,8 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
+import io.harness.batch.processing.svcmetrics.BatchStepExecutionListener;
 import io.harness.batch.processing.tasklet.K8SSyncEventTasklet;
 import io.harness.batch.processing.tasklet.K8sNodeEventTasklet;
 import io.harness.batch.processing.tasklet.K8sNodeInfoTasklet;
@@ -25,6 +27,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class K8sBatchConfiguration {
   @Autowired private StepBuilderFactory stepBuilderFactory;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
+  @Autowired private BatchStepExecutionListener stepExecutionListener;
 
   @Bean
   public Tasklet k8sNodeInfoTasklet() {
@@ -63,37 +67,55 @@ public class K8sBatchConfiguration {
 
   @Bean
   public Step k8sSyncEventStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("k8sSyncEventStep").tasklet(k8SSyncEventTasklet()).build();
+    return stepBuilderFactory.get("k8sSyncEventStep")
+        .listener(stepExecutionListener)
+        .tasklet(k8SSyncEventTasklet())
+        .build();
   }
 
   @Bean
   public Step k8sNodeInfoStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("k8sNodeInfoStep").tasklet(k8sNodeInfoTasklet()).build();
+    return stepBuilderFactory.get("k8sNodeInfoStep")
+        .listener(stepExecutionListener)
+        .tasklet(k8sNodeInfoTasklet())
+        .build();
   }
 
   @Bean
   public Step k8sNodeEventStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("k8sNodeEventStep").tasklet(k8sNodeEventTasklet()).build();
+    return stepBuilderFactory.get("k8sNodeEventStep")
+        .listener(stepExecutionListener)
+        .tasklet(k8sNodeEventTasklet())
+        .build();
   }
 
   @Bean
   public Step k8sPodInfoStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("k8sPodInfoStep").tasklet(k8sPodInfoTasklet()).build();
+    return stepBuilderFactory.get("k8sPodInfoStep")
+        .listener(stepExecutionListener)
+        .tasklet(k8sPodInfoTasklet())
+        .build();
   }
 
   @Bean
   public Step k8sPodEventStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("k8sPodEventStep").tasklet(k8sPodEventTasklet()).build();
+    return stepBuilderFactory.get("k8sPodEventStep")
+        .listener(stepExecutionListener)
+        .tasklet(k8sPodEventTasklet())
+        .build();
   }
 
   @Bean
   public Step k8sPVInfoStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("k8sPVInfoStep").tasklet(k8sPVInfoTasklet()).build();
+    return stepBuilderFactory.get("k8sPVInfoStep").listener(stepExecutionListener).tasklet(k8sPVInfoTasklet()).build();
   }
 
   @Bean
   public Step k8sPVEventStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("k8sPVEventStep").tasklet(k8sPVEventTasklet()).build();
+    return stepBuilderFactory.get("k8sPVEventStep")
+        .listener(stepExecutionListener)
+        .tasklet(k8sPVEventTasklet())
+        .build();
   }
 
   @Bean
@@ -103,6 +125,7 @@ public class K8sBatchConfiguration {
       Step k8sPodInfoStep, Step k8sPodEventStep, Step k8sPVInfoStep, Step k8sPVEventStep, Step k8sSyncEventStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_EVENT.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(k8sNodeInfoStep)
         .next(k8sNodeEventStep)
         .next(k8sPodInfoStep)

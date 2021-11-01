@@ -1,0 +1,9 @@
+name: Step Metrics
+identifier: StepMetrics
+metricGroup: step_metrics_group
+metrics:
+  - metricName: batchproc_stepExecutionTimeInSec
+    metricDefinition: Amount of time (in seconds) taken by a step to complete
+    unit: s
+    type: Distribution
+    distribution: [30, 60, 120, 180, 240, 300, 600, 1200, 1800, 2400, 3000, 3600]

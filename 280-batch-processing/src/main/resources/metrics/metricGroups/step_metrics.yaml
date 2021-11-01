@@ -1,0 +1,5 @@
+name: StepMetricsGroup
+identifier: step_metrics_group
+labels:
+  - accountId
+  - stepName
