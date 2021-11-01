@@ -6,7 +6,7 @@ proto_library(
     name = "920_delegate_service_beans_proto",
     srcs = [
         "dms_service.proto",
-                "@com_google_protobuf//:wrappers_proto",
+        "@com_google_protobuf//:wrappers_proto",
     ],
     visibility = ["//visibility:public"],
 )
