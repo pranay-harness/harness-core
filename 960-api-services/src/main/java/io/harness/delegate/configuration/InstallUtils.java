@@ -316,6 +316,7 @@ public class InstallUtils {
   }
 
   public static boolean installGoTemplateTool(DelegateConfiguration configuration) {
+    log.info("Starting installGoTemplateTool");
     try {
       if (SystemUtils.IS_OS_WINDOWS) {
         log.info("Skipping go-template install on Windows");
@@ -323,6 +324,7 @@ public class InstallUtils {
       }
 
       String goTemplateClientDirectory = goTemplateClientBaseDir + goTemplateClientVersion;
+      log.info("Starting installGoTemplateTool " + goTemplateClientDirectory);
 
       if (validateGoTemplateClientExists(goTemplateClientDirectory)) {
         goTemplateToolPath =
