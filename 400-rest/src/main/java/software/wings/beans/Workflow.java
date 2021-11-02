@@ -80,7 +80,7 @@ public class Workflow
   public static final String NAME_KEY = "name";
   public static final String ORCHESTRATION_KEY = "orchestration";
 
-  @NotNull @EntityName private String name;
+  @NotNull @EntityName @FdIndex private String name;
 
   private String description;
 
