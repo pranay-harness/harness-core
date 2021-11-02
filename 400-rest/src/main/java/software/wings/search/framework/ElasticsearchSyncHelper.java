@@ -27,12 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class ElasticsearchSyncHelper {
   @Inject private Set<SearchEntity<?>> searchEntities;
+  @Inject private Set<TimeScaleEntity<?>> timeScaleEntities;
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named("Search") private ChangeTracker changeTracker;
 
   void startChangeListeners(ChangeSubscriber changeSubscriber) {
     Set<Class<? extends PersistentEntity>> subscribedClasses = new HashSet<>();
     searchEntities.forEach(searchEntity -> subscribedClasses.addAll(searchEntity.getSubscriptionEntities()));
+    timeScaleEntities.forEach(timeScaleEntity -> subscribedClasses.add(timeScaleEntity.getSourceEntityClass()));
 
     Set<ChangeTrackingInfo<?>> changeTrackingInfos = new HashSet<>();
 
