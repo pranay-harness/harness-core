@@ -127,10 +127,17 @@ public class CIStepGroupUtils {
   }
 
   private ParameterField<Timeout> getTimeout(Infrastructure infrastructure) {
-    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+    if (infrastructure == null) {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
 
+    if (infrastructure.getType() != Infrastructure.Type.KUBERNETES_DIRECT) {
+      return ParameterField.createValueField(Timeout.fromString("10m"));
+    }
+
+    if (((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
     ParameterField<String> timeout = ((K8sDirectInfraYaml) infrastructure).getSpec().getInitTimeout();
 
     if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {

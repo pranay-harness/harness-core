@@ -1,11 +1,14 @@
 package io.harness.serializer.morphia;
 
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
+import io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.K8StageInfraDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.sweepingoutputs.StageDetails;
+import io.harness.beans.sweepingoutputs.StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.CIBuild;
@@ -27,9 +30,11 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(BuildStandardVariables.class);
     set.add(GitVariables.class);
     set.add(ContextElement.class);
-    set.add(PodCleanupDetails.class);
+    set.add(K8StageInfraDetails.class);
+    set.add(AwsVmStageInfraDetails.class);
     set.add(ContainerPortDetails.class);
     set.add(LiteEnginePodDetailsOutcome.class);
+    set.add(StageInfraDetails.class);
   }
 
   @Override
@@ -37,5 +42,8 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sweepingoutputs.K8PodDetails", K8PodDetails.class);
     w.put("sweepingoutputs.StageDetails", StageDetails.class);
     w.put("sweepingoutputs.PodCleanupDetails", PodCleanupDetails.class);
+    w.put("sweepingoutputs.StageInfraDetails", StageInfraDetails.class);
+    w.put("sweepingoutputs.K8StageInfraDetails", K8StageInfraDetails.class);
+    w.put("sweepingoutputs.AwsVmStageInfraDetails", AwsVmStageInfraDetails.class);
   }
 }
