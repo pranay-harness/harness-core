@@ -389,6 +389,8 @@ public class InstallUtils {
             Paths.get(harnessPywinrmClientDirectory + "/harness-pywinrm").toAbsolutePath().normalize().toString();
         log.info("harness-pywinrm version {} already installed", harnessPywinrmVersion);
         return true;
+      }else{
+        log.info("harness-pywinrm version {} already installed" +  harnessPywinrmClientDirectory);
       }
 
       log.info("Installing harness-pywinrm");
@@ -433,7 +435,10 @@ public class InstallUtils {
   private static boolean validateHarnessPywinrmExists(String harnessPywinrmClientDirectory) {
     try {
       if (!Files.exists(Paths.get(harnessPywinrmClientDirectory + "/harness-pywinrm"))) {
+        log.info("harness-pywinrm not exist" + harnessPywinrmClientDirectory + "/harness-pywinrm");
         return false;
+      } else{
+        log.info("harness-pywinrm " + harnessPywinrmClientDirectory + "/harness-pywinrm");
       }
 
       String script = "./harness-pywinrm -v\n";
