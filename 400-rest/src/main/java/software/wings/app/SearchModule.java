@@ -11,14 +11,20 @@ import io.harness.mongo.changestreams.ChangeTracker;
 import software.wings.search.ElasticsearchServiceImpl;
 import software.wings.search.SearchService;
 import software.wings.search.entities.application.ApplicationSearchEntity;
+import software.wings.search.entities.application.ApplicationTimeScaleEntity;
 import software.wings.search.entities.deployment.DeploymentSearchEntity;
 import software.wings.search.entities.environment.EnvironmentSearchEntity;
 import software.wings.search.entities.pipeline.PipelineSearchEntity;
+import software.wings.search.entities.pipeline.PipelineTimeScaleEntity;
 import software.wings.search.entities.service.ServiceSearchEntity;
+import software.wings.search.entities.service.ServiceTimeScaleEntity;
+import software.wings.search.entities.tags.TagLinksTimeScaleEntity;
 import software.wings.search.entities.workflow.WorkflowSearchEntity;
+import software.wings.search.entities.workflow.WorkflowTimeScaleEntity;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntity;
 import software.wings.search.framework.SynchronousElasticsearchDao;
+import software.wings.search.framework.TimeScaleEntity;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -65,6 +71,7 @@ public class SearchModule extends AbstractModule {
     bind(SearchService.class).to(ElasticsearchServiceImpl.class);
     bind(SearchDao.class).to(SynchronousElasticsearchDao.class);
     bindEntities();
+    bindTimeScaleEntities();
   }
 
   private void bindEntities() {
@@ -76,6 +83,16 @@ public class SearchModule extends AbstractModule {
     searchEntityMultibinder.addBinding().to(ServiceSearchEntity.class);
     searchEntityMultibinder.addBinding().to(EnvironmentSearchEntity.class);
     searchEntityMultibinder.addBinding().to(DeploymentSearchEntity.class);
+  }
+
+  private void bindTimeScaleEntities() {
+    Multibinder<TimeScaleEntity<?>> timeScaleEntityMultibinder =
+        Multibinder.newSetBinder(binder(), new TypeLiteral<TimeScaleEntity<?>>() {});
+    timeScaleEntityMultibinder.addBinding().to(ApplicationTimeScaleEntity.class);
+    timeScaleEntityMultibinder.addBinding().to(TagLinksTimeScaleEntity.class);
+    timeScaleEntityMultibinder.addBinding().to(ServiceTimeScaleEntity.class);
+    timeScaleEntityMultibinder.addBinding().to(WorkflowTimeScaleEntity.class);
+    timeScaleEntityMultibinder.addBinding().to(PipelineTimeScaleEntity.class);
   }
 
   @Provides
