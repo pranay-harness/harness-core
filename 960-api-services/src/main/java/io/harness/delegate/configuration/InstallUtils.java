@@ -336,7 +336,7 @@ public class InstallUtils {
 
       log.info("Installing go-template");
 
-      createDirectoryIfDoesNotExist(goTemplateClientDirectory);
+      createDirectoryIfDoesNotExist(goTemplateCxlientDirectory);
 
       String downloadUrl = getGoTemplateDownloadUrl(configuration, goTemplateClientVersion);
 
@@ -459,6 +459,8 @@ public class InstallUtils {
 
   private static boolean validateGoTemplateClientExists(String goTemplateClientDirectory) {
     try {
+      log.info("CT GO Template path " + goTemplateClientDirectory + "/go-template");
+      log.info("CT GO Template path exists " + Files.exists(Paths.get(goTemplateClientDirectory + "/go-template")));
       if (!Files.exists(Paths.get(goTemplateClientDirectory + "/go-template"))) {
         return false;
       }
