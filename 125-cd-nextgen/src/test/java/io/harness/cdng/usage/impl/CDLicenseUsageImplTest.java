@@ -71,7 +71,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
 
     verify(instanceService, times(1))
         .getInstancesModifiedInInterval(eq(accountIdentifier),
-            eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
+            eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
 
     assertActiveInstanceUsageDTOOutput(cdServiceUsageDTO);
     assertActiveServiceDTOOutput(cdServiceUsageDTO);
@@ -115,7 +115,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
 
     verify(instanceService, times(1))
         .getInstancesModifiedInInterval(eq(accountIdentifier),
-            eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
+            eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
 
     assertThat(cdServiceInstanceUsageDTO.getActiveServiceInstances()).isNotNull();
     List<ReferenceDTO> activeServiceInstanceReferences =
@@ -150,7 +150,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
 
     verify(instanceService, times(1))
         .getInstancesModifiedInInterval(eq(accountIdentifier),
-            eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
+            eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
     verify(serviceEntityService, times(0)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
     assertThat(serviceTypeLicenseUsage.getActiveServices().getCount()).isZero();
