@@ -1,5 +1,6 @@
 package io.harness.app.CIDashboard;
 
+import static io.harness.rule.OwnerRule.JAMIE;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,7 @@ import io.harness.app.beans.entities.BuildFailureInfo;
 import io.harness.app.beans.entities.BuildHealth;
 import io.harness.app.beans.entities.BuildInfo;
 import io.harness.app.beans.entities.BuildRepositoryCount;
+import io.harness.app.beans.entities.CIUsageResult;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
@@ -23,6 +25,8 @@ import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
 import io.harness.category.element.UnitTests;
 import io.harness.core.ci.services.CIOverviewDashboardServiceImpl;
+import io.harness.licensing.usage.beans.ReferenceDTO;
+import io.harness.licensing.usage.beans.UsageDataDTO;
 import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.rule.Owner;
@@ -521,5 +525,47 @@ public class CIDashboardsApisTest extends CategoryTest {
     assertThat(activeInfo)
         .isEqualTo(ciOverviewDashboardServiceImpl.getBuildActiveInfo("pip2", "pip2", "branch2", "commit2", "id2", null,
             10, ExecutionStatus.RUNNING.name(), "plan", 13, "Webhook", null, null));
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetCIUsage() {
+    String accountId = "accountIdentifier";
+    long timestamp = 1635814085000L;
+    UsageDataDTO monthlyBuildDTO = UsageDataDTO.builder().count(3).displayName("Monthly Builds count").build();
+    UsageDataDTO totalBuildDTO = UsageDataDTO.builder().count(5).displayName("Total Builds count").build();
+    List<ReferenceDTO> referenceDTO = new ArrayList<>();
+    referenceDTO.add(ReferenceDTO.builder()
+                         .identifier("identifier1")
+                         .projectIdentifier("projectIdentifier1")
+                         .orgIdentifier("orgIdentifier1")
+                         .build());
+    referenceDTO.add(ReferenceDTO.builder()
+                         .identifier("identifier2")
+                         .projectIdentifier("projectIdentifier2")
+                         .orgIdentifier("orgIdentifier2")
+                         .build());
+    UsageDataDTO activeCommitters =
+        UsageDataDTO.builder().count(2).displayName("Last 30 Days").references(referenceDTO).build();
+    doReturn(monthlyBuildDTO).when(ciOverviewDashboardServiceImpl).getMonthlyBuild(accountId, timestamp);
+    doReturn(totalBuildDTO).when(ciOverviewDashboardServiceImpl).getTotalBuild(accountId);
+    doReturn(activeCommitters).when(ciOverviewDashboardServiceImpl).getActiveCommitter(accountId, timestamp);
+    CIUsageResult usageResult = CIUsageResult.builder()
+                                    .accountIdentifier(accountId)
+                                    .timestamp(timestamp)
+                                    .module("CI")
+                                    .activeCommitters(activeCommitters)
+                                    .monthlyBuilds(monthlyBuildDTO)
+                                    .totalBuilds(totalBuildDTO)
+                                    .build();
+    assertThat(usageResult).isEqualTo(ciOverviewDashboardServiceImpl.getCIUsageResult(accountId, timestamp));
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testStartOfTheMonth() {
+    assertThat(1635811200000L).isEqualTo(ciOverviewDashboardServiceImpl.getStartofTheMonth(1635814085023L));
   }
 }

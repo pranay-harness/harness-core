@@ -342,15 +342,15 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
 
   private boolean isPrivateRepo(String urlString) {
     try {
-      log.error("====" + urlString);
       URL url = new URL(urlString);
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod("GET");
+      connection.setConnectTimeout(5000);
       connection.connect();
       int code = connection.getResponseCode();
       return !Response.Status.Family.familyOf(code).equals(Response.Status.Family.SUCCESSFUL);
     } catch (IOException e) {
-      log.warn("Failed to get repo info, assuming private. url");
+      log.warn("Failed to get repo info, assuming private. url", e);
       return true;
     }
   }

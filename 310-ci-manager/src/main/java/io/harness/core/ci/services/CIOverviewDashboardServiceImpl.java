@@ -213,7 +213,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
             .references(usageReferences)
             .build();
       } catch (SQLException ex) {
-        log.error(query, ex);
+        log.error(ex.getMessage());
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
@@ -228,7 +228,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     String query = "select count(*) as total from " + tableName
         + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private = TRUE and startts<=? and startts>=?;";
 
-    UsageDataDTO usageDataDTO = UsageDataDTO.builder().count(0).displayName("Total Builds count").build();
+    UsageDataDTO usageDataDTO = UsageDataDTO.builder().count(0).displayName("Monthly Builds count").build();
     while (totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -242,7 +242,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           return usageDataDTO;
         }
       } catch (SQLException ex) {
-        log.error(query, ex);
+        log.error(ex.getMessage());
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
@@ -251,7 +251,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return usageDataDTO;
   }
 
-  private long getStartofTheMonth(long timestamp) {
+  public long getStartofTheMonth(long timestamp) {
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(timestamp);
     cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -280,7 +280,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           return usageDataDTO;
         }
       } catch (SQLException ex) {
-        log.error(query, ex);
+        log.error(ex.getMessage());
         totalTries++;
       } finally {
         DBUtils.close(resultSet);
