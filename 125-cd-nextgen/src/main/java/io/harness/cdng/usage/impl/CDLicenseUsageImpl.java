@@ -207,6 +207,6 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
   }
 
   private long getEpochMilliNDaysAgo(long timestamp, int days) {
-    return Instant.ofEpochSecond(timestamp).minus(Period.ofDays(days)).toEpochMilli();
+    return Instant.ofEpochMilli(timestamp).minus(Period.ofDays(days)).toEpochMilli();
   }
 }
