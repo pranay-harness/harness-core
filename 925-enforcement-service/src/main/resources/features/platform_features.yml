@@ -24,11 +24,11 @@ features:
         enabled: false
       FREE:
         restrictionType: STATIC_LIMIT
-        limit: 1
+        limit: 1000
         clientName: ngmanager
       TEAM:
         restrictionType: STATIC_LIMIT
-        limit: 1
+        limit: 1000
         clientName: ngmanager
       ENTERPRISE:
         restrictionType: AVAILABILITY
