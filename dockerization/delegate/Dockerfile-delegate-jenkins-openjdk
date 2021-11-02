@@ -21,49 +21,56 @@ RUN mkdir -p client-tools/go-template/v0.4
 WORKDIR /opt/harness-delegate/client-tools/go-template/v0.4
 RUN curl -s -L -o go-template https://app.harness.io/storage/harness-download/snapshot-go-template/release/v0.4/bin/darwin/amd64/go-template
 RUN chmod +x ./go-template
-CMD ./go-template && bash -c '
+CMD ./go-template -v
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/harness-pywinrm/v0.4-dev
 WORKDIR /opt/harness-delegate/client-tools/harness-pywinrm/v0.4-dev
 RUN curl -s -L -o harness-pywinrm https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/v0.4-dev/bin/darwin/amd64/harness-pywinrm
 RUN chmod +x ./harness-pywinrm
+CMD ./harness-pywinrm -v
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/helm/v2.13.1
 WORKDIR /opt/harness-delegate/client-tools/helm/v2.13.1
 RUN curl -s -L -o helm https://app.harness.io/storage/harness-download/harness-helm/release/v2.13.1/bin/darwin/amd64/helm
 RUN chmod +x ./helm
+CMD ./helm -v
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/chartmuseum/v0.13.0
 WORKDIR /opt/harness-delegate/client-tools/chartmuseum/v0.13.0
 RUN curl -s -L -o chartmuseum https://app.harness.io/storage/harness-download/harness-chartmuseum/release/v0.13.0/bin/darwin/amd64/chartmuseum
 RUN chmod +x ./chartmuseum
+CMD ./chartmuseum -v
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/tf-config-inspect/v1.1/darwin/amd64
 WORKDIR /opt/harness-delegate/client-tools/tf-config-inspect/v1.1/darwin/amd64
 RUN curl -s -L -o terraform-config-inspect https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.1/darwin/amd64/terraform-config-inspect
 RUN chmod +x ./terraform-config-inspect
+CMD ./terraform-config-inspect -v
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/oc/v4.2.16
 WORKDIR /opt/harness-delegate/client-tools/oc/v4.2.16
 RUN curl -s -L -o oc https://app.harness.io/storage/harness-download/harness-oc/release/v4.2.16/bin/darwin/amd64/oc
 RUN chmod +x ./oc
+CMD ./oc -v
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/kustomize/v3.5.4
 WORKDIR /opt/harness-delegate/client-tools/kustomize/v3.5.4
 RUN curl -s -L -o kustomize https://app.harness.io/storage/harness-download/harness-kustomize/release/v3.5.4/bin/darwin/amd64/kustomize
 RUN chmod +x ./kustomize
+CMD ./kustomize -v
 
 WORKDIR /opt/harness-delegate
 RUN mkdir -p client-tools/scm/72f01538/darwin/amd64
 WORKDIR client-tools/scm/72f01538/darwin/amd64/opt/harness-delegate
 RUN curl -s -L -o scm https://app.harness.io/storage/harness-download/harness-scm/release/87448d72/bin/darwin/amd64/scm
 RUN chmod +x ./scm
+CMD ./scm -v
 
 WORKDIR /opt/harness-delegate
 
