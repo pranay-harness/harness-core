@@ -9,7 +9,7 @@ features:
     restrictions:
       FREE:
         restrictionType: RATE_LIMIT
-        limit: 100
+        limit: 10
         timeUnit:
           unit: MONTHS
           numberOfUnits: 1
@@ -25,7 +25,7 @@ features:
     restrictions:
       FREE:
         restrictionType: STATIC_LIMIT
-        limit: 2500
+        limit: 20
         clientName: cimanager
       TEAM:
         restrictionType: AVAILABILITY
