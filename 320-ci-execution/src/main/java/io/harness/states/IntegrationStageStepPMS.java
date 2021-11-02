@@ -72,6 +72,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
     StageDetails stageDetails =
         StageDetails.builder()
             .stageID(stepParameters.getIdentifier())
+            .stageRuntimeID(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
             .buildStatusUpdateParameter(integrationStageStepParametersPMS.getBuildStatusUpdateParameter())
             .accountId(AmbianceUtils.getAccountId(ambiance))
             .build();

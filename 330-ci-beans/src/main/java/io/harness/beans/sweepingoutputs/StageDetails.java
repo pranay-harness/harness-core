@@ -33,6 +33,7 @@ import org.springframework.data.annotation.TypeAlias;
 @RecasterAlias("io.harness.beans.sweepingoutputs.StageDetails")
 public class StageDetails implements PersistentEntity, UuidAware, ContextElement, AccountAccess {
   private String stageID;
+  private String stageRuntimeID;
   private BuildStatusUpdateParameter buildStatusUpdateParameter;
   private long lastUpdatedAt;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
