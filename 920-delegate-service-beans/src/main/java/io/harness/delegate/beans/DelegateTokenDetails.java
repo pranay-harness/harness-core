@@ -18,4 +18,6 @@ public class DelegateTokenDetails {
   private long createdAt;
   private DelegateTokenStatus status;
   private String value;
+  private DelegateEntityOwner owner;
+  private String identifier;
 }
