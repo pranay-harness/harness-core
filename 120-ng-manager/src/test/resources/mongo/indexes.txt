@@ -48,6 +48,7 @@ applicationManifests {"name": "appManifestIdx2", "background": true} {"appId": 1
 applicationManifests {"name": "createdAt_1", "background": true} {"createdAt": 1}
 applications {"name": "appId_1", "background": true} {"appId": 1}
 applications {"name": "createdAt_1", "background": true} {"createdAt": 1}
+applications {"name": "name_1", "background": true} {"name": 1}
 applications {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
 approvalPollingJob {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 artifactSourceNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -290,6 +291,7 @@ environments {"name": "accountIdCreatedAt", "background": true} {"accountId": 1,
 environments {"name": "accountId_1", "background": true} {"accountId": 1}
 environments {"name": "appId_1", "background": true} {"appId": 1}
 environments {"name": "createdAt_1", "background": true} {"createdAt": 1}
+environments {"name": "name_1", "background": true} {"name": 1}
 environments {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 environmentsNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 events {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -607,6 +609,7 @@ pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "c
 pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
+pipelines {"name": "name_1", "background": true} {"name": 1}
 pollingDocuments {"name": "accountId", "background": true} {"accountId": 1}
 pollingDocuments {"name": "accountId_organizationIdentifier_projectIdentifier_pollingType_pollingItem", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "pollingType": 1, "pollingInfo": 1, "signatures": 1}
 preferences {"name": "appId_1", "background": true} {"appId": 1}
@@ -709,6 +712,7 @@ services {"name": "account_deploymentTypeIndex", "background": true} {"accountId
 services {"name": "appId_1", "background": true} {"appId": 1}
 services {"name": "artifactStreamIds_1", "background": true} {"artifactStreamIds": 1}
 services {"name": "createdAt_1", "background": true} {"createdAt": 1}
+services {"name": "name_1", "background": true} {"name": 1}
 services {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 servicesNG {"name": "index_accountId_orgId_projectId_createdAt_deleted_deletedAt", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "createdAt": 1, "deleted": 1, "deletedAt": 1}
 servicesNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_serviceIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
@@ -969,6 +973,7 @@ workflows {"name": "appId_1", "background": true} {"appId": 1}
 workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}
 workflows {"name": "linkedArtifactStreamIds_1", "background": true} {"linkedArtifactStreamIds": 1}
 workflows {"name": "linkedTemplateUuids_1", "background": true} {"linkedTemplateUuids": 1}
+workflows {"name": "name_1", "background": true} {"name": 1}
 yamlChangeSet {"name": "accountId_createdAt_index", "background": true} {"accountId": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_queuekey_status_createdAt_index", "background": true} {"accountId": 1, "queueKey": 1, "status": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_status_gitToHarness_createdAt_index", "background": true} {"accountId": 1, "status": 1, "gitToHarness": 1, "createdAt": 1}

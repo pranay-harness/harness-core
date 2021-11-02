@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.LogKeyUtils;
@@ -69,7 +70,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     return LOG_KEY_FOR_ID;
   }
 
-  @NotEmpty private String name;
+  @NotEmpty @FdIndex private String name;
   private String description;
 
   @NotEmpty private String accountId;

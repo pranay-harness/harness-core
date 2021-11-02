@@ -91,7 +91,7 @@ public class Service extends Base
   public static final String APP_ID = "appId";
   public static final String ID = "_id";
 
-  @Trimmed(message = "should not contain leading and trailing spaces") @EntityName @NotEmpty private String name;
+  @Trimmed(message = "should not contain leading and trailing spaces") @EntityName @NotEmpty @FdIndex private String name;
   private String description;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;

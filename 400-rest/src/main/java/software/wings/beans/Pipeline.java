@@ -82,7 +82,7 @@ public class Pipeline
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";
 
-  @NotNull @EntityName private String name;
+  @NotNull @EntityName @FdIndex private String name;
   private String description;
   @Valid private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
