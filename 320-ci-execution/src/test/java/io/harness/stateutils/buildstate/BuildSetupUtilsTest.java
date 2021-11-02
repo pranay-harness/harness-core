@@ -95,7 +95,7 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
     when(tiServiceUtils.getTIServiceToken(any())).thenReturn("token");
     when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
+        .thenReturn(K8PodDetails.builder().stageID("stage").build());
 
     CIInitializeTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance, taskIds, "test",
@@ -141,7 +141,7 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
     when(tiServiceUtils.getTIServiceToken(any())).thenReturn("token");
     when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
+        .thenReturn(K8PodDetails.builder().stageID("stage").build());
 
     CIInitializeTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet(), ambiance,

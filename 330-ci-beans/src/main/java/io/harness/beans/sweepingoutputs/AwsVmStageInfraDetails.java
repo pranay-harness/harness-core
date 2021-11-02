@@ -4,13 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
-import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
@@ -19,15 +16,18 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("podCleanupDetails")
-@JsonTypeName("podCleanupDetails")
+@TypeAlias("awsVmStageInfraDetails")
+@JsonTypeName("awsVmStageInfraDetails")
 @OwnedBy(CI)
-@RecasterAlias("io.harness.beans.sweepingoutputs.PodCleanupDetails")
-@Deprecated
-public class PodCleanupDetails implements ExecutionSweepingOutput {
-  List<String> cleanUpContainerNames;
-  Infrastructure infrastructure;
-  String podName;
-  public static final String CLEANUP_DETAILS = "podCleanupDetails";
+@RecasterAlias("io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails")
+public class AwsVmStageInfraDetails implements StageInfraDetails {
+  String poolId;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+
+  @Builder.Default @NotNull private Type type = Type.AWS_VM;
+
+  @Override
+  public StageInfraDetails.Type getType() {
+    return type;
+  }
 }
