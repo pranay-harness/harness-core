@@ -66,4 +66,19 @@ public class KubernetesActivityResource {
     return ResponseDTO.newResponse(kubernetesActivitySourceService.getKubernetesWorkloads(
         accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace, offset, pageSize, filter));
   }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @NextGenManagerAuth
+  @Path("/validate")
+  @ApiOperation(value = "validate permissions of a k8s connector for events", nickname = "validateK8sConnectivity")
+  public ResponseDTO<Boolean> validateConnectivity(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
+      @QueryParam("tracingId") @NotNull String tracingId) {
+    return ResponseDTO.newResponse(kubernetesActivitySourceService.checkConnectivity(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, tracingId));
+  }
 }
