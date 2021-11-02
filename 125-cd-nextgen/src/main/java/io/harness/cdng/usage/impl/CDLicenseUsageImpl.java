@@ -24,9 +24,9 @@ import io.harness.licensing.usage.beans.ReferenceDTO;
 import io.harness.licensing.usage.beans.UsageDataDTO;
 import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
 import io.harness.licensing.usage.params.CDUsageRequestParams;
-import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.service.instance.InstanceService;
+import io.harness.timescaledb.tables.pojos.Services;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.Record3;
+import org.jooq.Table;
 
 @OwnedBy(HarnessTeam.CDP)
 @Singleton
@@ -58,9 +60,9 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
             accountIdentifier, PERCENTILE, startInterval, timestamp);
 
     UsageDataDTO activeServices = getActiveServicesUsageDTO(activeServicesUsageInfo, accountIdentifier);
-    UsageDataDTO serviceLicenseUsed =
-        getServiceLicenseUsedDTO(accountIdentifier, usageRequest, activeServicesUsageInfo);
-    UsageDataDTO activeServiceInstances = getActiveServiceInstancesDTO(accountIdentifier, timestamp, startInterval);
+    UsageDataDTO serviceLicenseUsed = getServiceLicenseUsedDTO(usageRequest, activeServicesUsageInfo);
+    UsageDataDTO activeServiceInstances =
+        getActiveServiceInstancesDTO(accountIdentifier, activeServicesUsageInfo, startInterval, timestamp);
 
     switch (usageRequest.getCdLicenseType()) {
       case SERVICES:
@@ -87,25 +89,33 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
 
   @Nullable
   private UsageDataDTO getServiceLicenseUsedDTO(
-      String accountIdentifier, CDUsageRequestParams usageRequest, List<AggregateServiceUsageInfo> activeServicesInfo) {
+      CDUsageRequestParams usageRequest, List<AggregateServiceUsageInfo> activeServicesInfo) {
     UsageDataDTO serviceLicenseUsed = null;
     if (usageRequest.getCdLicenseType().equals(SERVICES)) {
       long cumulativeLicenseCount = getCumulativeLicenseCount(activeServicesInfo);
-      serviceLicenseUsed = getServiceLicenseUseDTO(activeServicesInfo, accountIdentifier, cumulativeLicenseCount);
+      serviceLicenseUsed = getServiceLicenseUseDTO(activeServicesInfo, cumulativeLicenseCount);
     }
     return serviceLicenseUsed;
   }
 
-  private UsageDataDTO getActiveServiceInstancesDTO(String accountIdentifier, long timestamp, long startInterval) {
-    long aggregatedPercentileInstanceCount = cdLicenseUsageHelper.getAggregatedPercentileInstanceCount(
-        accountIdentifier, PERCENTILE, startInterval, timestamp);
+  private UsageDataDTO getActiveServiceInstancesDTO(String accountIdentifier,
+      List<AggregateServiceUsageInfo> activeServicesUsageInfo, long startInterval, long timestamp) {
+    long aggregatedPercentileInstanceCount = getAggregatedServiceInstanceCount(activeServicesUsageInfo);
+
     List<InstanceDTO> activeInstancesByAccount =
-        instanceService.getInstancesDeployedAfter(accountIdentifier, startInterval, timestamp);
+        instanceService.getInstancesModifiedInInterval(accountIdentifier, startInterval, timestamp);
     return createActiveServiceInstancesUsageDTO(activeInstancesByAccount, aggregatedPercentileInstanceCount);
   }
 
-  private UsageDataDTO getServiceLicenseUseDTO(List<AggregateServiceUsageInfo> activeServiceUsageInfoList,
-      String accountIdentifier, long cumulativeLicenseCount) {
+  private long getAggregatedServiceInstanceCount(List<AggregateServiceUsageInfo> activeServicesUsageInfo) {
+    if (isEmpty(activeServicesUsageInfo)) {
+      return 0;
+    }
+    return activeServicesUsageInfo.stream().mapToLong(AggregateServiceUsageInfo::getActiveInstanceCount).sum();
+  }
+
+  private UsageDataDTO getServiceLicenseUseDTO(
+      List<AggregateServiceUsageInfo> activeServiceUsageInfoList, long cumulativeLicenseCount) {
     if (isEmpty(activeServiceUsageInfoList)) {
       return UsageDataDTO.builder().count(0).displayName(CDLicenseUsageConstants.DISPLAY_NAME).build();
     }
@@ -135,10 +145,12 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
           .build();
     }
 
+    Table<Record3<String, String, String>> orgProjectServiceTable =
+        cdLicenseUsageHelper.getOrgProjectServiceTable(activeServiceUsageInfoList);
+    List<Services> services = cdLicenseUsageHelper.getServiceEntities(accountIdentifier, orgProjectServiceTable);
     List<ReferenceDTO> activeServiceReferenceDTOList =
-        activeServiceUsageInfoList.stream()
-            .map(serviceUsageInfo
-                -> createActiveServiceReferenceDTOFromServiceUsageInfo(serviceUsageInfo, accountIdentifier))
+        services.stream()
+            .map(service -> createReferenceDTOFromService(accountIdentifier, service))
             .collect(Collectors.toList());
 
     return UsageDataDTO.builder()
@@ -148,23 +160,16 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
         .build();
   }
 
-  private ReferenceDTO createActiveServiceReferenceDTOFromServiceUsageInfo(
-      AggregateServiceUsageInfo serviceUsageInfo, String accountIdentifier) {
-    ServiceEntity serviceEntity = serviceEntityService.find(accountIdentifier, serviceUsageInfo.getOrgidentifier(),
-        serviceUsageInfo.getProjectidentifier(), serviceUsageInfo.getServiceId(), false);
-    return createReferenceDTOFromServiceEntity(serviceEntity);
-  }
-
-  private ReferenceDTO createReferenceDTOFromServiceEntity(ServiceEntity serviceEntity) {
-    if (null == serviceEntity) {
+  private ReferenceDTO createReferenceDTOFromService(String accountIdentifier, Services service) {
+    if (null == service) {
       return ReferenceDTO.builder().build();
     }
     return ReferenceDTO.builder()
-        .identifier(serviceEntity.getIdentifier())
-        .name(serviceEntity.getName())
-        .accountIdentifier(serviceEntity.getAccountId())
-        .orgIdentifier(serviceEntity.getOrgIdentifier())
-        .projectIdentifier(serviceEntity.getProjectIdentifier())
+        .identifier(service.getIdentifier())
+        .name(service.getName())
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(service.getOrgIdentifier())
+        .projectIdentifier(service.getProjectIdentifier())
         .build();
   }
 
