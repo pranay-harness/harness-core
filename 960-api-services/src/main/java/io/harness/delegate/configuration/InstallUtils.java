@@ -329,6 +329,9 @@ public class InstallUtils {
             Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
         log.info("go-template version {} already installed", goTemplateClientVersion);
         return true;
+      }else{
+        log.info("CT go-template path dire" + goTemplateClientDirectory);
+        log.info("CT  go-template tool path " + goTemplateToolPath);
       }
 
       log.info("Installing go-template");
