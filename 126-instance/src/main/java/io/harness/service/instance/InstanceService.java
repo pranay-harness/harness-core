@@ -29,7 +29,7 @@ public interface InstanceService {
 
   List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
-  List<InstanceDTO> getInstancesDeployedAfter(String accountIdentifier, long startTimestamp, long endTimeStamp);
+  List<InstanceDTO> getInstancesModifiedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
 
   List<InstanceDTO> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
@@ -42,9 +42,6 @@ public interface InstanceService {
 
   List<InstanceDTO> getActiveInstancesByInfrastructureMappingId(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String infrastructureMappingId, long timestampInMs);
-
-  List<InstanceDTO> getActiveInstancesByInstanceInfo(
-      String accountIdentifier, String instanceInfoNamespace, String instanceInfoPodName);
 
   AggregationResults<EnvBuildInstanceCount> getEnvBuildInstanceCountByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
