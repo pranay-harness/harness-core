@@ -168,7 +168,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
         .thenReturn(testServiceUsageInfoData);
     when(instanceService.getInstancesModifiedInInterval(anyString(), anyLong(), anyLong()))
         .thenReturn(testInstanceDTOData);
-    when(cdLicenseUsageHelper.getNamesForServiceIds(any(), any())).thenReturn(testServiceData);
+    when(cdLicenseUsageHelper.getServiceEntities(any(), any())).thenReturn(testServiceData);
   }
 
   private ReferenceDTO getExpectedActiveServiceReference() {

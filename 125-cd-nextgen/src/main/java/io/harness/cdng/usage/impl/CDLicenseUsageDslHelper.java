@@ -42,7 +42,7 @@ public class CDLicenseUsageDslHelper {
         .fetchInto(AggregateServiceUsageInfo.class);
   }
 
-  public List<Services> getNamesForServiceIds(
+  public List<Services> getServiceEntities(
       String accountIdentifier, Table<Record3<String, String, String>> orgProjectServiceTable) {
     return dsl.select(SERVICES.ORG_IDENTIFIER, SERVICES.PROJECT_IDENTIFIER, SERVICES.IDENTIFIER, SERVICES.NAME)
         .from(SERVICES)

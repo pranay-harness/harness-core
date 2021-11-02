@@ -147,7 +147,7 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
 
     Table<Record3<String, String, String>> orgProjectServiceTable =
         cdLicenseUsageHelper.getOrgProjectServiceTable(activeServiceUsageInfoList);
-    List<Services> services = cdLicenseUsageHelper.getNamesForServiceIds(accountIdentifier, orgProjectServiceTable);
+    List<Services> services = cdLicenseUsageHelper.getServiceEntities(accountIdentifier, orgProjectServiceTable);
     List<ReferenceDTO> activeServiceReferenceDTOList =
         services.stream()
             .map(service -> createReferenceDTOFromService(accountIdentifier, service))
