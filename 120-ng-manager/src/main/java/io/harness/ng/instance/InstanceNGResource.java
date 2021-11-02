@@ -15,6 +15,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -53,8 +55,8 @@ public class InstanceNGResource {
       @NotNull @QueryParam(INSTANCE_INFO_POD_NAME) String instanceInfoPodName,
       @NotNull @QueryParam(INSTANCE_INFO_NAMESPACE) String instanceInfoNamespace) {
     log.info("Received instance NG request");
-    List<InstanceDTO> instanceList =
-        instanceService.getActiveInstancesByInstanceInfo(accountIdentifier, instanceInfoNamespace, instanceInfoPodName);
+    List<InstanceDTO> instanceList = new ArrayList<>();
+//        instanceService.getActiveInstancesByInstanceInfo(accountIdentifier, instanceInfoNamespace, instanceInfoPodName);
     log.info("instanceList: {}", instanceList);
     if (!instanceList.isEmpty()) {
       InstanceDTO instanceDTO = instanceList.get(0);

@@ -24,7 +24,9 @@ import io.harness.licensing.usage.beans.ReferenceDTO;
 import io.harness.licensing.usage.beans.UsageDataDTO;
 import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
 import io.harness.licensing.usage.params.CDUsageRequestParams;
+import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
+import io.harness.repositories.service.spring.ServiceRepository;
 import io.harness.service.instance.InstanceService;
 import io.harness.timescaledb.tables.pojos.Services;
 
@@ -35,6 +37,7 @@ import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Record3;
@@ -46,6 +49,7 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
   @Inject CDLicenseUsageDslHelper cdLicenseUsageHelper;
   @Inject InstanceService instanceService;
   @Inject ServiceEntityService serviceEntityService;
+  @Inject ServiceRepository serviceRepository;
 
   @Override
   public CDLicenseUsageDTO getLicenseUsage(
@@ -147,7 +151,8 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
 
     Table<Record3<String, String, String>> orgProjectServiceTable =
         cdLicenseUsageHelper.getOrgProjectServiceTable(activeServiceUsageInfoList);
-    List<Services> services = cdLicenseUsageHelper.getServiceEntities(accountIdentifier, orgProjectServiceTable);
+    List<Services> services = getServicesTemp(accountIdentifier, activeServiceUsageInfoList);
+//    List<Services> services = cdLicenseUsageHelper.getServiceEntities(accountIdentifier, orgProjectServiceTable);
     List<ReferenceDTO> activeServiceReferenceDTOList =
         services.stream()
             .map(service -> createReferenceDTOFromService(accountIdentifier, service))
@@ -158,6 +163,24 @@ public class CDLicenseUsageImpl implements LicenseUsageInterface<CDLicenseUsageD
         .displayName(CDLicenseUsageConstants.DISPLAY_NAME)
         .references(activeServiceReferenceDTOList)
         .build();
+  }
+
+  private List<Services> getServicesTemp(String accountId, List<AggregateServiceUsageInfo> activeServiceUsageInfoList) {
+    List<Services> services = new ArrayList<>();
+    activeServiceUsageInfoList.forEach(s -> {
+      Optional<ServiceEntity> serviceEntity = serviceRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(accountId, s.getOrgidentifier(), s.getProjectidentifier(),
+              s.getServiceId(), true);
+      if(serviceEntity.isPresent()){
+        Services newS = new Services();
+        newS.setAccountId(accountId);
+        newS.setOrgIdentifier(s.getOrgidentifier());
+        newS.setIdentifier(s.getServiceId());
+        newS.setProjectIdentifier(s.getProjectidentifier());
+        newS.setName(serviceEntity.get().getName());
+        services.add(newS);
+      }
+    });
+    return services;
   }
 
   private ReferenceDTO createReferenceDTOFromService(String accountIdentifier, Services service) {
