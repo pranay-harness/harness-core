@@ -55,8 +55,8 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("agent/delegateFiles")
-@Path("agent/delegateFiles")
+@Api("manager/agent/delegateFiles")
+@Path("manager/agent/delegateFiles")
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j

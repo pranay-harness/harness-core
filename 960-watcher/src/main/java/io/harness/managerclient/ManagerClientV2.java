@@ -12,28 +12,30 @@ import retrofit2.http.Query;
 
 // todo(abhinav): discuss with raghu on this.
 public interface ManagerClientV2 {
-  @GET("agent/delegates/delegateScripts")
+  String BASE_URL = "agent";
+
+  @GET(BASE_URL + "/delegates/delegateScripts")
   Call<RestResponse<DelegateScripts>> getDelegateScripts(@Query("accountId") String accountId,
       @Query("delegateVersion") String delegateVersion, @Query("patchVersion") String patchVersion);
 
-  @GET("agent/delegates/delegateScriptsNg")
+  @GET(BASE_URL + "/delegates/delegateScriptsNg")
   Call<RestResponse<DelegateScripts>> getDelegateScriptsNg(@Query("accountId") String accountId,
       @Query("delegateVersion") String delegateVersion, @Query("patchVersion") String patchVersion);
 
-  @GET("agent/delegates/configuration")
+  @GET(BASE_URL + "/delegates/configuration")
   Call<RestResponse<DelegateConfiguration>> getDelegateConfiguration(@Query("accountId") String accountId);
 
-  @GET("agent/infra-download/delegate-auth/delegate/{version}")
+  @GET(BASE_URL + "/infra-download/delegate-auth/delegate/{version}")
   Call<RestResponse<String>> getDelegateDownloadUrl(
       @Path("version") String version, @Query("accountId") String accountId);
 
-  @GET("agent/infra-download/delegate-auth/watcher/{version}")
+  @GET(BASE_URL + "/infra-download/delegate-auth/watcher/{version}")
   Call<RestResponse<String>> getWatcherDownloadUrl(
       @Path("version") String version, @Query("accountId") String accountId);
 
   // todo(abhinav): need to see this in DMS phase 2/3
   @GET("account/{accountId}/status") Call<RestResponse<String>> getAccountStatus(@Path("accountId") String accountId);
 
-  @GET("agent/infra-download/delegate-auth/delegate/logging-token")
+  @GET(BASE_URL + "/infra-download/delegate-auth/delegate/logging-token")
   Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 }

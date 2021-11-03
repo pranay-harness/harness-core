@@ -4,11 +4,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
-import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 
 import okhttp3.MultipartBody;
@@ -47,14 +45,6 @@ public interface DelegateAgentManagerClient {
   @GET(BASE_URL + "delegateFiles/metainfo")
   Call<RestResponse<DelegateFile>> getMetaInfo(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
-
-  @GET(BASE_URL + "dms/delegates/delegateScripts")
-  Call<RestResponse<DelegateScripts>> getDelegateScripts(@Query("accountId") String accountId,
-      @Query("delegateVersion") String delegateVersion, @Query("delegateName") String delegateName);
-
-  // todo(abhinav): discuss with raghu
-  @GET(BASE_URL + "infra-download/delegate-auth/delegate/logging-token")
-  Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 
   @POST(BASE_URL + "delegates/instance-sync/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,

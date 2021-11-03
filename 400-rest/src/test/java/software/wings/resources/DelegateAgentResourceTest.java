@@ -148,10 +148,10 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence, subdomainUrlHelper,
+          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
               artifactCollectionResponseHandler, instanceSyncResponseHandler, manifestCollectionResponseHandler,
-              connectorHearbeatPublisher, kryoSerializer, configurationController, featureFlagService,
-              delegateTaskServiceClassic, pollResourceClient, instanceSyncResponsePublisher))
+              connectorHearbeatPublisher, kryoSerializer, featureFlagService, delegateTaskServiceClassic,
+              pollResourceClient, instanceSyncResponsePublisher))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {

@@ -1,25 +1,30 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.AccountPreference;
@@ -34,7 +39,9 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 
 import software.wings.beans.Account;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AccountService;
@@ -47,16 +54,20 @@ import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.swagger.annotations.Api;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -65,8 +76,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(HarnessTeam.DEL)
-@Api("/agent/dms")
-@Path("/agent/dms")
+@Api("/agent")
+@Path("/agent")
 @Produces("application/json")
 @Scope(DELEGATE)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -76,6 +87,8 @@ public class DelegateAgentDmsResource {
   private final AccountService accountService;
   private final DelegateRequestRateLimiter delegateRequestRateLimiter;
   private final DelegateTaskServiceClassic delegateTaskServiceClassic;
+  private final ConfigurationController configurationController;
+  private final SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @DelegateAuth
   @POST
@@ -255,6 +268,84 @@ public class DelegateAgentDmsResource {
          AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       delegateTaskServiceClassic.failIfAllDelegatesFailed(accountId, delegateId, taskId, areClientToolsInstalled);
     }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("configuration")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateConfiguration> getDelegateConfiguration(
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      DelegateConfiguration configuration = accountService.getDelegateConfiguration(accountId);
+      String primaryDelegateVersion = configurationController.getPrimaryVersion();
+      // Adding primary delegate to the last element of delegate versions.
+      if (isNotEmpty(configuration.getDelegateVersions())
+          && configuration.getDelegateVersions().remove(primaryDelegateVersion)) {
+        configuration.getDelegateVersions().add(primaryDelegateVersion);
+      }
+      return new RestResponse<>(configuration);
+    } catch (InvalidRequestException ex) {
+      if (isNotBlank(ex.getMessage()) && ex.getMessage().startsWith("Deleted AccountId")) {
+        return new RestResponse<>(
+            DelegateConfiguration.builder().action(DelegateConfiguration.Action.SELF_DESTRUCT).build());
+      }
+
+      return null;
+    }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("delegateScriptsNg")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("patchVersion") String patchVersion)
+      throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(
+          accountId, fullVersion, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+    }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("delegateScripts")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("patchVersion") String patchVersion,
+      @QueryParam("delegateName") String delegateName) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, fullVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateName));
+    }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("{delegateId}/upgrade")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
+      @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName)
+      throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, version,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateName));
+    }
+  }
+
+  private String getVerificationUrl(HttpServletRequest request) {
+    return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
   }
 
   @NotNull
