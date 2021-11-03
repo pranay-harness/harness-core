@@ -38,6 +38,6 @@ public class DelegateManagerClientModule extends AbstractModule {
     bind(VerificationServiceClient.class)
         .toProvider(new VerificationServiceClientFactory(verificationServiceBaseUrl, tokenGenerator));
     bind(CVNextGenServiceClient.class).toProvider(new CVNextGenServiceClientFactory(cvNextGenUrl, tokenGenerator));
-    bind(DelegateAgentDmsClient.class).toProvider(new DelegateAgentDmsClientFactory(managerBaseUrl, tokenGenerator));
+    bind(DelegateAgentDmsClient.class).toProvider(new DelegateAgentDmsClientFactory(dmsUrl, tokenGenerator));
   }
 }

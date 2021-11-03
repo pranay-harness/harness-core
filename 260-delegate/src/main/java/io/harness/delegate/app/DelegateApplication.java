@@ -165,8 +165,8 @@ public class DelegateApplication {
       }
     });
     modules.add(new DelegateManagerClientModule(configuration.getManagerUrl(),
-        configuration.getVerificationServiceUrl(), configuration.getCvNextGenUrl(), configuration.getAccountId(),
-        configuration.getAccountSecret(), configuration.getDmsUrl()));
+        configuration.getVerificationServiceUrl(), configuration.getCvNextGenUrl(), configuration.getDmsUrl(),
+        configuration.getAccountId(), configuration.getAccountSecret()));
     modules.add(new LogStreamingModule(configuration.getLogStreamingServiceBaseUrl()));
     modules.add(new AbstractManagerGrpcClientModule() {
       @Override
