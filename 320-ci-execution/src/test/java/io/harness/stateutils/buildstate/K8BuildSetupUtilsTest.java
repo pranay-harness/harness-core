@@ -161,7 +161,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
 
     NGAccess ngAccess =
         BaseNGAccess.builder().accountIdentifier(accountID).orgIdentifier(orgID).projectIdentifier(projectID).build();
-    K8PodDetails k8PodDetails = K8PodDetails.builder().namespace(namespace).stageID(stageID).build();
+    K8PodDetails k8PodDetails = K8PodDetails.builder().stageID(stageID).build();
 
     CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), true, null, true,
@@ -247,7 +247,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
 
     NGAccess ngAccess =
         BaseNGAccess.builder().accountIdentifier(accountID).orgIdentifier(orgID).projectIdentifier(projectID).build();
-    K8PodDetails k8PodDetails = K8PodDetails.builder().namespace(namespace).stageID(stageID).build();
+    K8PodDetails k8PodDetails = K8PodDetails.builder().stageID(stageID).build();
     //
     //    assertThatThrownBy(()
     //                           -> k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,

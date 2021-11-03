@@ -83,18 +83,16 @@ import io.harness.pms.instrumentaion.InstrumentNodeStatusUpdateHandler;
 import io.harness.pms.instrumentaion.InstrumentationPipelineEndEventHandler;
 import io.harness.pms.migration.PipelineCoreMigrationProvider;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
-import io.harness.pms.ngpipeline.inputset.observers.InputSetValidationObserver;
-import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
+import io.harness.pms.ngpipeline.inputset.observers.InputSetPipelineObserver;
 import io.harness.pms.notification.orchestration.handlers.NotificationInformHandler;
 import io.harness.pms.notification.orchestration.handlers.PipelineStartNotificationHandler;
 import io.harness.pms.notification.orchestration.handlers.StageStartNotificationHandler;
 import io.harness.pms.notification.orchestration.handlers.StageStatusUpdateNotificationEventHandler;
+import io.harness.pms.outbox.PipelineOutboxEventHandler;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.gitsync.PipelineEntityGitSyncHelper;
-import io.harness.pms.pipeline.service.PMSPipelineService;
-import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
@@ -103,7 +101,6 @@ import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
-import io.harness.pms.plan.execution.observers.PipelineExecutionSummaryDeleteObserver;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -403,15 +400,15 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pmsGraphStepDetailsService.getStepDetailsUpdateObserverSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
-    // Register Pipeline Observers
-    PMSPipelineServiceImpl pmsPipelineService =
-        (PMSPipelineServiceImpl) injector.getInstance(Key.get(PMSPipelineService.class));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineSetupUsageHelper.class)));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineEntityCrudObserver.class)));
-    pmsPipelineService.getPipelineSubject().register(
-        injector.getInstance(Key.get(PipelineExecutionSummaryDeleteObserver.class)));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetsDeleteObserver.class)));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetValidationObserver.class)));
+    // Register Pipeline Outbox Observers
+    PipelineOutboxEventHandler pipelineOutboxEventHandler =
+        (PipelineOutboxEventHandler) injector.getInstance(Key.get(PipelineOutboxEventHandler.class));
+    pipelineOutboxEventHandler.getPipelineActionObserverSubject().register(
+        injector.getInstance(Key.get(PipelineSetupUsageHelper.class)));
+    pipelineOutboxEventHandler.getPipelineActionObserverSubject().register(
+        injector.getInstance(Key.get(PipelineEntityCrudObserver.class)));
+    pipelineOutboxEventHandler.getPipelineActionObserverSubject().register(
+        injector.getInstance(Key.get(InputSetPipelineObserver.class)));
 
     NodeExecutionServiceImpl nodeExecutionService =
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));

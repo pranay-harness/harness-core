@@ -268,6 +268,26 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = OwnerRule.UTSAV)
+  @Category(UnitTests.class)
+  public void testGetBillingAmountOfPodForNodeWithZeroResource() {
+    PricingData pricingData = new PricingData(0, 10, 0, 0, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
+    Resource instanceResource = getInstanceResource(256, 512);
+
+    Map<String, String> metaData = new HashMap<>();
+    addParentResource(metaData, 0.0, 0.0);
+
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP, InstanceType.K8S_POD);
+
+    BillingAmountBreakup billingAmountForResource =
+        billingCalculationService.getBillingAmountBreakupForResource(instanceData, BigDecimal.valueOf(200),
+            instanceResource.getCpuUnits(), instanceResource.getMemoryMb(), 0, 0, pricingData);
+
+    Assertions.assertThat(billingAmountForResource.getBillingAmount()).isEqualTo(new BigDecimal("0.0"));
+  }
+
+  @Test
   @Owner(developers = OwnerRule.SHUBHANSHU)
   @Category(UnitTests.class)
   public void testGetIdleCostForResource() {

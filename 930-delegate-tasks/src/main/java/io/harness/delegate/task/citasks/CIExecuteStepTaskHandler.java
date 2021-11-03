@@ -4,7 +4,7 @@ import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.CITaskExecutionResponse;
 
 public interface CIExecuteStepTaskHandler {
-  enum Type { K8 }
+  enum Type { K8, AWS_VM }
 
   CIExecuteStepTaskHandler.Type getType();
 

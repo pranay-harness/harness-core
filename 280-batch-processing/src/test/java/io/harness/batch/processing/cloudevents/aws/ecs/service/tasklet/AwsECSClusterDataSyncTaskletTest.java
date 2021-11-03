@@ -2,6 +2,7 @@ package io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet;
 
 import static io.harness.rule.OwnerRule.HITESH;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -21,6 +22,7 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.intfc.AwsECSClust
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.EcsMetricClient;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.ng.NGConnectorHelper;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
@@ -94,6 +96,7 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
   @Mock protected InstanceResourceService instanceResourceService;
   @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Mock private AwsECSClusterService awsECSClusterService;
+  @Mock private NGConnectorHelper ngConnectorHelper;
   @Mock private LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
 
   private final String REGION = "us-east-1";
@@ -224,6 +227,8 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
     Mockito.doReturn(Arrays.asList(settingAttribute))
         .when(cloudToHarnessMappingService)
         .listSettingAttributesCreatedInDuration(any(), any(), any());
+
+    Mockito.doReturn(emptyList()).when(ngConnectorHelper).getNextGenConnectors(any());
 
     RepeatStatus execute = awsECSClusterDataSyncTasklet.execute(null, chunkContext);
     assertThat(execute).isNull();

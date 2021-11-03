@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.perpetualtask.PerpetualTaskScheduleConfig;
+import io.harness.grpc.DelegateServiceClassicGrpcClient;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
@@ -16,6 +17,7 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.service.intfc.PerpetualTaskStateObserver;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
@@ -50,6 +52,9 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   private PerpetualTaskServiceClientRegistry clientRegistry;
   private final BroadcasterFactory broadcasterFactory;
   private final PerpetualTaskScheduleService perpetualTaskScheduleService;
+
+  @Inject private MainConfiguration mainConfiguration;
+  @Inject private DelegateServiceClassicGrpcClient delegateServiceClassicGrpcClient;
 
   @Inject
   public PerpetualTaskServiceImpl(PerpetualTaskRecordDao perpetualTaskRecordDao,
@@ -91,6 +96,18 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   @Override
   public String createTask(String perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
       PerpetualTaskSchedule schedule, boolean allowDuplicate, String taskDescription) {
+    if (mainConfiguration.isDisableDelegateMgmtInManager()) {
+      return delegateServiceClassicGrpcClient.createPerpetualTask(
+          perpetualTaskType, accountId, clientContext, schedule, allowDuplicate, taskDescription);
+    }
+    return createPerpetualTaskInternal(
+        perpetualTaskType, accountId, clientContext, schedule, allowDuplicate, taskDescription);
+  }
+
+  @Override
+  public String createPerpetualTaskInternal(String perpetualTaskType, String accountId,
+      PerpetualTaskClientContext clientContext, PerpetualTaskSchedule schedule, boolean allowDuplicate,
+      String taskDescription) {
     try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (!allowDuplicate) {
         Optional<PerpetualTaskRecord> perpetualTaskMaybe =
