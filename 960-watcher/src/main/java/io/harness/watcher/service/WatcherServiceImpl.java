@@ -1135,7 +1135,7 @@ public class WatcherServiceImpl implements WatcherService {
       try {
         newDelegate =
             new ProcessExecutor()
-                .command("nohup", versionFolder + File.separator + DELEGATE_SCRIPT, watcherProcess, versionFolder)
+                .command(versionFolder + File.separator + DELEGATE_SCRIPT, watcherProcess, versionFolder)
                 .redirectError(Slf4jStream.of(scriptName).asError())
                 .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                 .start();
