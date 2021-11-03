@@ -338,7 +338,7 @@ public class InstallUtils {
 
       log.info("Installing go-template");
 
-      createDirectoryIfDoesNotExist(goTemplateCxlientDirectory);
+      createDirectoryIfDoesNotExist(goTemplateClientDirectory);
 
       String downloadUrl = getGoTemplateDownloadUrl(configuration, goTemplateClientVersion);
 
