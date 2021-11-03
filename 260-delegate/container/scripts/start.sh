@@ -308,8 +308,8 @@ if [ ! -z "$GRPC_SERVICE_CONNECTOR_PORT" ] && ! `grep grpcServiceConnectorPort c
   echo "grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT" >> config-delegate.yml
 fi
 
-if ! $(grep dmsUrl config-delegate.yml >/dev/null); then
-  echo "dmsUrl: $MANAGER_HOST_AND_PORT/dms/api/" >>config-delegate.yml
+if ! `grep dmsUrl config-delegate.yml > /dev/null`; then
+  echo "dmsUrl: $MANAGER_HOST_AND_PORT/api/" >> config-delegate.yml
 fi
 
 rm -f -- *.bak

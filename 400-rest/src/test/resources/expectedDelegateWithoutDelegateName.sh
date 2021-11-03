@@ -292,9 +292,9 @@ if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/nul
 fi
 
 if ! $(grep dmsUrl config-delegate.yml >/dev/null); then
-echo "dmsUrl: https://localhost:9090/dms/api/" >>config-delegate.yml
+echo "dmsUrl: https://localhost:9090/api/" >>config-delegate.yml
 else
-sed -i.bak "s|^dmsUrl:.*$|dmsUrl: https://localhost:9090/dms/api/|" config-delegate.yml
+sed -i.bak "s|^dmsUrl:.*$|dmsUrl: https://localhost:9090/api/|" config-delegate.yml
 fi
 
 rm -f -- *.bak

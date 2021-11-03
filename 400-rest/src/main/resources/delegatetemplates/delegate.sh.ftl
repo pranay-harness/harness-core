@@ -237,9 +237,9 @@ echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
 fi
 
 if ! `grep dmsUrl config-delegate.yml > /dev/null`; then
-echo "dmsUrl: ${managerHostAndPort}/dms/api/" >> config-delegate.yml
+echo "dmsUrl: ${managerHostAndPort}/api/" >> config-delegate.yml
 else
-sed -i.bak "s|^dmsUrl:.*$|dmsUrl: ${managerHostAndPort}/dms/api/|" config-delegate.yml
+sed -i.bak "s|^dmsUrl:.*$|dmsUrl: ${managerHostAndPort}/api/|" config-delegate.yml
 fi
 
 rm -f -- *.bak
