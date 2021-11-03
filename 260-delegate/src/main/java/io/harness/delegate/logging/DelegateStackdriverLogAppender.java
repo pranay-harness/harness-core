@@ -9,9 +9,9 @@ import static org.apache.commons.lang3.StringUtils.substringBetween;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.dmsclient.DelegateAgentDmsClient;
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.RemoteStackdriverLogAppender;
-import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rest.RestResponse;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -25,7 +25,7 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
   private static final String APP_NAME = "delegate";
 
   private static TimeLimiter timeLimiter;
-  private static DelegateAgentManagerClient delegateAgentManagerClient;
+  private static DelegateAgentDmsClient delegateAgentManagerClient;
   private static String delegateId;
 
   private String accountId = "";
@@ -82,7 +82,7 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
     DelegateStackdriverLogAppender.timeLimiter = timeLimiter;
   }
 
-  public static void setManagerClient(DelegateAgentManagerClient delegateAgentManagerClient) {
+  public static void setManagerClient(DelegateAgentDmsClient delegateAgentManagerClient) {
     DelegateStackdriverLogAppender.delegateAgentManagerClient = delegateAgentManagerClient;
   }
 

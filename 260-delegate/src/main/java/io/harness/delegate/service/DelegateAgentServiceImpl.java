@@ -1304,9 +1304,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.info("Checking for upgrade");
         String delegateName = System.getenv().get("DELEGATE_NAME");
         try {
-          RestResponse<DelegateScripts> restResponse = HTimeLimiter.callInterruptible21(timeLimiter,
-              Duration.ofMinutes(1),
-              () -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version, delegateName)));
+          RestResponse<DelegateScripts> restResponse =
+              HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1),
+                  () -> delegateExecute(delegateAgentDmsClient.getDelegateScripts(accountId, version, delegateName)));
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
