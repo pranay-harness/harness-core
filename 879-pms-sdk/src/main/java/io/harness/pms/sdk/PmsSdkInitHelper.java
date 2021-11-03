@@ -28,6 +28,7 @@ import io.harness.pms.contracts.steps.SdkStep;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
+import io.harness.pms.sdk.core.PmsSdkGrpcNamesUtil;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -107,7 +108,8 @@ public class PmsSdkInitHelper {
   private static void registerSdk(Injector injector, PmsSdkConfiguration sdkConfiguration) {
     try {
       PmsServiceGrpc.PmsServiceBlockingStub pmsClient =
-          injector.getInstance(PmsServiceGrpc.PmsServiceBlockingStub.class);
+          injector.getInstance(Key.get(PmsServiceGrpc.PmsServiceBlockingStub.class,
+              Names.named(PmsSdkGrpcNamesUtil.getPmsClientStubAnnotation(sdkConfiguration.getServiceName()))));
       pmsClient.initializeSdk(buildInitializeSdkRequest(injector, sdkConfiguration));
       log.info("Sdk Initialized for module {} Successfully", sdkConfiguration.getModuleType());
     } catch (StatusRuntimeException ex) {

@@ -13,28 +13,37 @@ import io.harness.pms.contracts.service.SweepingOutputListResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.PmsSdkGrpcNamesUtil;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.utils.PmsGrpcClientUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import java.util.ArrayList;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutputService {
-  private final SweepingOutputServiceBlockingStub sweepingOutputServiceBlockingStub;
+  private final Injector injector;
 
   @Inject
-  public ExecutionSweepingGrpcOutputService(SweepingOutputServiceBlockingStub sweepingOutputServiceBlockingStub) {
-    this.sweepingOutputServiceBlockingStub = sweepingOutputServiceBlockingStub;
+  public ExecutionSweepingGrpcOutputService(Injector injector) {
+    this.injector = injector;
   }
 
   @Override
   public ExecutionSweepingOutput resolve(Ambiance ambiance, RefObject refObject) {
+    SweepingOutputServiceBlockingStub sweepingOutputServiceBlockingStub =
+        injector.getInstance(Key.get(SweepingOutputServiceBlockingStub.class,
+            Names.named(PmsSdkGrpcNamesUtil.getPmsClientStubAnnotation(
+                AmbianceUtils.obtainCurrentLevel(ambiance).getServiceName()))));
     SweepingOutputResolveBlobResponse resolve =
         PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolve,
             SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
@@ -43,6 +52,11 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
 
   @Override
   public String consume(Ambiance ambiance, String name, ExecutionSweepingOutput value, String groupName) {
+    SweepingOutputServiceBlockingStub sweepingOutputServiceBlockingStub =
+        injector.getInstance(Key.get(SweepingOutputServiceBlockingStub.class,
+            Names.named(PmsSdkGrpcNamesUtil.getPmsClientStubAnnotation(
+                AmbianceUtils.obtainCurrentLevel(ambiance).getServiceName()))));
+
     SweepingOutputConsumeBlobRequest.Builder builder =
         SweepingOutputConsumeBlobRequest.newBuilder().setAmbiance(ambiance).setName(name).setValue(
             RecastOrchestrationUtils.toJson(value));
@@ -57,6 +71,11 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
 
   @Override
   public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
+    SweepingOutputServiceBlockingStub sweepingOutputServiceBlockingStub =
+        injector.getInstance(Key.get(SweepingOutputServiceBlockingStub.class,
+            Names.named(PmsSdkGrpcNamesUtil.getPmsClientStubAnnotation(
+                AmbianceUtils.obtainCurrentLevel(ambiance).getServiceName()))));
+
     OptionalSweepingOutputResolveBlobResponse resolve =
         PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolveOptional,
             SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
@@ -69,6 +88,10 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
   @Override
   public List<OptionalSweepingOutput> listOutputsWithGivenNameAndSetupIds(
       Ambiance ambiance, String name, List<String> nodeIds) {
+    SweepingOutputServiceBlockingStub sweepingOutputServiceBlockingStub =
+        injector.getInstance(Key.get(SweepingOutputServiceBlockingStub.class,
+            Names.named(PmsSdkGrpcNamesUtil.getPmsClientStubAnnotation(
+                AmbianceUtils.obtainCurrentLevel(ambiance).getServiceName()))));
     SweepingOutputListResponse resolve =
         PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::listOutputsUsingNodeIds,
             SweepingOutputListRequest.newBuilder().setAmbiance(ambiance).setName(name).addAllNodeIds(nodeIds).build());

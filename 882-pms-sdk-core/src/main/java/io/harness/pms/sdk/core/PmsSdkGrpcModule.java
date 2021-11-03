@@ -63,24 +63,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class, Names.named("pmsServices"));
-    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-sdk-grpc-service")));
-  }
-
-  @Provides
-  @Singleton
-  @Named("pms-sdk-grpc-service")
-  public Service pmsSdkGrpcService(HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService,
-      RemoteFunctorService remoteFunctorService) {
-    Set<BindableService> cdServices = new HashSet<>();
-    cdServices.add(healthStatusManager.getHealthService());
-    cdServices.add(planCreatorService);
-    cdServices.add(remoteFunctorService);
-    if (config.getSdkDeployMode() == SdkDeployMode.REMOTE_IN_PROCESS) {
-      return new GrpcInProcessServer("pmsSdkInternal", cdServices, Collections.emptySet(), healthStatusManager);
-    }
-    return new GrpcServer(
-        config.getGrpcServerConfig().getConnectors().get(0), cdServices, Collections.emptySet(), healthStatusManager);
+    install(new PmsSdkGrpcClientStubModule(config));
   }
 
   private String computeAuthority(String authority, VersionInfo versionInfo) {
@@ -114,75 +97,5 @@ public class PmsSdkGrpcModule extends AbstractModule {
       return false;
     }
     return true;
-  }
-
-  private Channel getChannel() throws SSLException {
-    if (config.getSdkDeployMode() == SdkDeployMode.REMOTE_IN_PROCESS) {
-      return InProcessChannelBuilder.forName(ModuleType.PMS.name().toLowerCase()).build();
-    }
-
-    GrpcClientConfig clientConfig = config.getGrpcClientConfig();
-    String authorityToUse = clientConfig.getAuthority();
-    Channel channel;
-
-    if ("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode)) {
-      channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
-                    .overrideAuthority(authorityToUse)
-                    .usePlaintext()
-                    .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE)
-                    .build();
-    } else {
-      SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-      channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
-                    .overrideAuthority(authorityToUse)
-                    .sslContext(sslContext)
-                    .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE)
-                    .build();
-    }
-
-    return channel;
-  }
-
-  @Provides
-  @Singleton
-  public PmsServiceBlockingStub pmsGrpcClient() throws SSLException {
-    return PmsServiceGrpc.newBlockingStub(getChannel());
-  }
-
-  @Provides
-  @Singleton
-  public SweepingOutputServiceBlockingStub sweepingOutputGrpcClient() throws SSLException {
-    return SweepingOutputServiceGrpc.newBlockingStub(getChannel());
-  }
-
-  @Provides
-  @Singleton
-  public InterruptProtoServiceBlockingStub interruptProtoGrpcClient() throws SSLException {
-    return InterruptProtoServiceGrpc.newBlockingStub(getChannel());
-  }
-
-  @Provides
-  @Singleton
-  public OutcomeProtoServiceBlockingStub outcomeGrpcClient() throws SSLException {
-    return OutcomeProtoServiceGrpc.newBlockingStub(getChannel());
-  }
-
-  @Provides
-  @Singleton
-  public PmsExecutionServiceBlockingStub executionServiceGrpcClient() throws SSLException {
-    return PmsExecutionServiceGrpc.newBlockingStub(getChannel());
-  }
-
-  @Provides
-  @Singleton
-  public EngineExpressionProtoServiceBlockingStub engineExpressionGrpcClient() throws SSLException {
-    return EngineExpressionProtoServiceGrpc.newBlockingStub(getChannel());
-  }
-
-  @Provides
-  @Singleton
-  @Named("pmsSDKServiceManager")
-  public ServiceManager serviceManager(@Named("pmsServices") Set<Service> services) {
-    return new ServiceManager(services);
   }
 }
