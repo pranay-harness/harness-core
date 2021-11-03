@@ -1,6 +1,9 @@
 package io.harness.signup.resources;
 
-import com.google.inject.Inject;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
+
+import static java.lang.Boolean.TRUE;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -12,25 +15,21 @@ import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.services.SignupService;
+
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
-import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import static io.harness.annotations.dev.HarnessTeam.GTM;
-import static java.lang.Boolean.TRUE;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 @Api("signup")
 @Path("signup")
@@ -44,7 +43,7 @@ import static java.lang.Boolean.TRUE;
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @OwnedBy(GTM)
 public class SignupResource {
-  private SignupService signupService;
+  private final SignupService signupService;
   private static final String X_FORWARDED_FOR = "X-Forwarded-For";
 
   private String acquireIpAddress(HttpServletRequest request) {
@@ -55,12 +54,14 @@ public class SignupResource {
   /**
    * Follows the "free trial sign up" path
    * Module type can be optional but by default we will always redirect to NG
+   *
    * @param dto
    * @return
    */
   @POST
   @PublicApi
-  public RestResponse<Void> signup(SignupDTO dto, @QueryParam("captchaToken") @Nullable String captchaToken, @Context HttpServletRequest request) {
+  public RestResponse<Void> signup(
+      SignupDTO dto, @QueryParam("captchaToken") @Nullable String captchaToken, @Context HttpServletRequest request) {
     String ipAddress = acquireIpAddress(request);
     signupService.createSignupInvite(dto, captchaToken, ipAddress);
     return new RestResponse<>();
@@ -69,6 +70,7 @@ public class SignupResource {
   /**
    * Follows the "free trial sign up" path
    * Module type can be optional but by default we will always redirect to NG
+   *
    * @param dto
    * @return
    */
@@ -82,7 +84,8 @@ public class SignupResource {
   @PUT
   @Path("/complete/{token}")
   @PublicApi
-  public RestResponse<UserInfo> completeSignupInvite(@PathParam("token") String token, @Context HttpServletRequest request) {
+  public RestResponse<UserInfo> completeSignupInvite(
+      @PathParam("token") String token, @Context HttpServletRequest request) {
     String ipAddress = acquireIpAddress(request);
     return new RestResponse<>(signupService.completeSignupInvite(token, ipAddress));
   }
@@ -98,13 +101,14 @@ public class SignupResource {
   @PublicApi
   public RestResponse<UserInfo> signupOAuth(OAuthSignupDTO dto, @Context HttpServletRequest request) {
     String ipAddress = acquireIpAddress(request);
-    return new RestResponse<>(signupService.oAuthSignup(dto,ipAddress));
+    return new RestResponse<>(signupService.oAuthSignup(dto, ipAddress));
   }
 
   @POST
   @Path("/verify/{token}")
   @PublicApi
-  public RestResponse<VerifyTokenResponseDTO> verifyToken(@PathParam("token") String token, @Context HttpServletRequest request) {
+  public RestResponse<VerifyTokenResponseDTO> verifyToken(
+      @PathParam("token") String token, @Context HttpServletRequest request) {
     String ipAddress = acquireIpAddress(request);
     return new RestResponse<>(signupService.verifyToken(token, ipAddress));
   }

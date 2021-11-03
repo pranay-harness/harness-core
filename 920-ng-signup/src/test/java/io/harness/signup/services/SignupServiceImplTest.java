@@ -127,7 +127,7 @@ public class SignupServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(SignupInviteDTO.builder().build())));
     when(userClient.createNewSignupInvite(any(SignupInviteDTO.class))).thenReturn(createNewSignupInviteCall);
 
-    boolean result = signupServiceImpl.createSignupInvite(signupDTO, null);
+    boolean result = signupServiceImpl.createSignupInvite(signupDTO, null, "");
 
     verify(reCaptchaVerifier, times(1)).verifyInvisibleCaptcha(anyString());
     verify(telemetryReporter, times(1)).sendIdentifyEvent(eq(EMAIL), any(), any());

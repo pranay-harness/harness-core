@@ -1,11 +1,13 @@
 package io.harness.signup.services.impl;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
+
+import static java.lang.Boolean.FALSE;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
+
 import io.harness.ModuleType;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
@@ -38,13 +40,13 @@ import io.harness.telemetry.Category;
 import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetryReporter;
 import io.harness.user.remote.UserClient;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.utils.URIBuilder;
-import org.mindrot.jbcrypt.BCrypt;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -55,13 +57,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static io.harness.annotations.dev.HarnessTeam.GTM;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.remote.client.RestClientUtils.getResponse;
-import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
-import static java.lang.Boolean.FALSE;
-import static org.mindrot.jbcrypt.BCrypt.hashpw;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
+import org.mindrot.jbcrypt.BCrypt;
 
 @Slf4j
 @Singleton
@@ -113,15 +114,15 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException {
-    verifyReCaptcha(dto, captchaToken,"");
-    verifySignupDTO(dto,"");
+    verifyReCaptcha(dto, captchaToken, "");
+    verifySignupDTO(dto, "");
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
-    AccountDTO account = createAccount(dto,"");
-    UserInfo user = createUser(dto, account,"");
+    AccountDTO account = createAccount(dto, "");
+    UserInfo user = createUser(dto, account, "");
     sendSucceedTelemetryEvent(
-        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW,"");
+        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW, "");
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(user.getEmail());
       try {
@@ -150,7 +151,7 @@ public class SignupServiceImpl implements SignupService {
       throw new InvalidRequestException("Community edition not found", ErrorCode.COMMNITY_EDITION_NOT_FOUND, USER);
     }
 
-    verifySignupDTO(dto,"");
+    verifySignupDTO(dto, "");
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
@@ -208,14 +209,14 @@ public class SignupServiceImpl implements SignupService {
     try {
       getResponse(userClient.createNewSignupInvite(signupRequest));
     } catch (InvalidRequestException e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Create Signup Invite",ipAddress);
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Create Signup Invite", ipAddress);
       if (e.getMessage().contains("User with this email is already registered")) {
         throw new InvalidRequestException("Email is already signed up", ErrorCode.USER_ALREADY_REGISTERED, USER);
       }
       throw e;
     }
 
-    sendSucceedInvite(dto.getEmail(), dto.getUtmInfo(),ipAddress);
+    sendSucceedInvite(dto.getEmail(), dto.getUtmInfo(), ipAddress);
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(dto.getEmail());
       try {
@@ -262,7 +263,7 @@ public class SignupServiceImpl implements SignupService {
       verificationTokenRepository.delete(verificationToken);
 
       sendSucceedTelemetryEvent(userInfo.getEmail(), userInfo.getUtmInfo(), userInfo.getDefaultAccountId(), userInfo,
-          SignupType.SIGNUP_FORM_FLOW,ipAddress);
+          SignupType.SIGNUP_FORM_FLOW, ipAddress);
       UserInfo finalUserInfo = userInfo;
       executorService.submit(() -> {
         try {
@@ -279,7 +280,7 @@ public class SignupServiceImpl implements SignupService {
       return userInfo;
     } catch (Exception e) {
       sendFailedTelemetryEvent(verificationToken.getEmail(), userInfo != null ? userInfo.getUtmInfo() : null, e, null,
-          "Complete Signup Invite",ipAddress);
+          "Complete Signup Invite", ipAddress);
       throw e;
     }
   }
@@ -322,7 +323,7 @@ public class SignupServiceImpl implements SignupService {
     try {
       return accountService.createAccount(dto);
     } catch (Exception e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Account creation",ipAddress);
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Account creation", ipAddress);
       throw e;
     }
   }
@@ -384,7 +385,7 @@ public class SignupServiceImpl implements SignupService {
     try {
       signupValidator.validateEmail(dto.getEmail());
     } catch (SignupException | UserAlreadyPresentException e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Email validation",ipAddress);
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Email validation", ipAddress);
       throw e;
     }
 
