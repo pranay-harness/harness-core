@@ -432,7 +432,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
       startTime = clock.millis();
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
-      DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
+      DelegateStackdriverLogAppender.setManagerClient(delegateAgentDmsClient);
 
       logProxyConfiguration();
       if (delegateConfiguration.isVersionCheckDisabled()) {
