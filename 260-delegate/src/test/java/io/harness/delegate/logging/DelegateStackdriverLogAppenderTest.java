@@ -15,8 +15,8 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.dmsclient.DelegateAgentDmsClient;
 import io.harness.logging.AccessTokenBean;
-import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -48,7 +48,7 @@ import retrofit2.Response;
 public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
+  @Mock private DelegateAgentDmsClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<AccessTokenBean>> callAccessTokenBean;
 
   private DelegateStackdriverLogAppender appender = new DelegateStackdriverLogAppender();
