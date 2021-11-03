@@ -2,14 +2,20 @@ package io.harness.pms.ngpipeline.inputset.observers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.BRIJESH;
+import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.events.PipelineDeleteEvent;
+import io.harness.pms.events.PipelineUpdateEvent;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
@@ -27,11 +33,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(PIPELINE)
-public class InputSetValidationObserverTest extends PipelineServiceTestBase {
+public class InputSetPipelineObserverTest extends PipelineServiceTestBase {
   @Mock PMSInputSetRepository inputSetRepository;
   @Mock PMSInputSetService inputSetService;
   @Mock ValidateAndMergeHelper validateAndMergeHelper;
-  @InjectMocks InputSetValidationObserver inputSetValidationObserver;
+  @InjectMocks InputSetPipelineObserver inputSetPipelineObserver;
 
   private static final String ACCOUNT_ID = "accountId";
   private static final String PROJECT_ID = "projectId";
@@ -90,6 +96,18 @@ public class InputSetValidationObserverTest extends PipelineServiceTestBase {
     inputSetList.add(InputSetEntity.builder().yaml(inputSetYaml).isInvalid(true).build());
     inputSetList.add(InputSetEntity.builder().yaml(inputSetYaml1).build());
     when(inputSetRepository.findAll(any())).thenReturn(inputSetList);
-    assertThatCode(() -> inputSetValidationObserver.onUpdate(pipelineEntity)).doesNotThrowAnyException();
+    assertThatCode(()
+                       -> inputSetPipelineObserver.onUpdate(
+                           new PipelineUpdateEvent(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineEntity, pipelineEntity)))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testOnDelete() {
+    doNothing().when(inputSetService).deleteInputSetsOnPipelineDeletion(pipelineEntity);
+    inputSetPipelineObserver.onDelete(new PipelineDeleteEvent(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineEntity));
+    verify(inputSetService, times(1)).deleteInputSetsOnPipelineDeletion(pipelineEntity);
   }
 }
