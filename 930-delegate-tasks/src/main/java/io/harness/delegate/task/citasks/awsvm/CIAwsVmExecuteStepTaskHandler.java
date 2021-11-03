@@ -1,7 +1,5 @@
 package io.harness.delegate.task.citasks.awsvm;
 
-import static io.harness.delegate.task.citasks.awsvm.helper.CIAwsVmConstants.RUNNER_EXECUTE_STEP_URL;
-
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -9,18 +7,17 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.awsvm.CIAWSVmExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.awsvm.runner.ExecuteStepResponse;
 import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
 import io.harness.delegate.task.citasks.awsvm.helper.HttpHelper;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Response;
-import org.json.JSONObject;
+import retrofit2.Response;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
@@ -52,29 +49,26 @@ public class CIAwsVmExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     params.put("log_stream_account_id", taskParams.getAccountId());
     params.put("log_stream_token", taskParams.getLogToken());
 
-    JSONObject obj = new JSONObject(params);
-    String body = obj.toString();
-
     try {
-      Response response = httpHelper.post(RUNNER_EXECUTE_STEP_URL, body, 14400);
-      if (response == null || !response.isSuccessful()) {
+      Response<ExecuteStepResponse> response = httpHelper.executeStepWithRetries(params);
+      if (!response.isSuccessful()) {
         return AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
       }
 
-      JSONObject responseObj = new JSONObject(response.body().string());
-      Integer exitCode = responseObj.getInt("ExitCode");
-      if (exitCode == 0) {
+      if (response.body().getExitCode() == 0) {
         return AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
       } else {
         return AwsVmTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(format("Exit code: %d", exitCode))
+            .errorMessage(format("Exit code: %d", response.body().getExitCode()))
             .build();
       }
-
-    } catch (IOException e) {
+    } catch (Exception e) {
       log.error("Failed to execute step in runner", e);
-      return AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+      return AwsVmTaskExecutionResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .errorMessage(e.getMessage())
+          .build();
     }
   }
 }
