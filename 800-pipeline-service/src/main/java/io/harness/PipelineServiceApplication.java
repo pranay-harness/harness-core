@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
@@ -59,11 +60,14 @@ import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.template.exception.NGTemplateResolveExceptionMapper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
+import io.harness.persistence.HPersistence;
+import io.harness.persistence.Store;
 import io.harness.plan.consumers.PartialPlanResponseRedisConsumer;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
@@ -79,18 +83,16 @@ import io.harness.pms.instrumentaion.InstrumentNodeStatusUpdateHandler;
 import io.harness.pms.instrumentaion.InstrumentationPipelineEndEventHandler;
 import io.harness.pms.migration.PipelineCoreMigrationProvider;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
-import io.harness.pms.ngpipeline.inputset.observers.InputSetValidationObserver;
-import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
+import io.harness.pms.ngpipeline.inputset.observers.InputSetPipelineObserver;
 import io.harness.pms.notification.orchestration.handlers.NotificationInformHandler;
 import io.harness.pms.notification.orchestration.handlers.PipelineStartNotificationHandler;
 import io.harness.pms.notification.orchestration.handlers.StageStartNotificationHandler;
 import io.harness.pms.notification.orchestration.handlers.StageStatusUpdateNotificationEventHandler;
+import io.harness.pms.outbox.PipelineOutboxEventHandler;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.gitsync.PipelineEntityGitSyncHelper;
-import io.harness.pms.pipeline.service.PMSPipelineService;
-import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
@@ -99,7 +101,6 @@ import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
-import io.harness.pms.plan.execution.observers.PipelineExecutionSummaryDeleteObserver;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -309,6 +310,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     modules.add(PipelineServiceUtilityModule.getInstance());
 
     Injector injector = Guice.createInjector(modules);
+    registerStores(appConfig, injector);
     registerEventListeners(injector);
     registerWaitEnginePublishers(injector);
     registerScheduledJobs(injector, appConfig);
@@ -360,6 +362,13 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.jersey().register(openApiResource);
   }
 
+  private void registerStores(PipelineServiceConfiguration configuration, Injector injector) {
+    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    if (isNotEmpty(configuration.getMongoConfig().getUri())) {
+      persistence.register(Store.builder().name(DbAliases.PMS).build(), configuration.getMongoConfig().getUri());
+    }
+  }
+
   private OpenAPIConfiguration getOasConfig(PipelineServiceConfiguration appConfig) {
     OpenAPI oas = new OpenAPI();
     Info info =
@@ -391,15 +400,15 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pmsGraphStepDetailsService.getStepDetailsUpdateObserverSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
-    // Register Pipeline Observers
-    PMSPipelineServiceImpl pmsPipelineService =
-        (PMSPipelineServiceImpl) injector.getInstance(Key.get(PMSPipelineService.class));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineSetupUsageHelper.class)));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineEntityCrudObserver.class)));
-    pmsPipelineService.getPipelineSubject().register(
-        injector.getInstance(Key.get(PipelineExecutionSummaryDeleteObserver.class)));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetsDeleteObserver.class)));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetValidationObserver.class)));
+    // Register Pipeline Outbox Observers
+    PipelineOutboxEventHandler pipelineOutboxEventHandler =
+        (PipelineOutboxEventHandler) injector.getInstance(Key.get(PipelineOutboxEventHandler.class));
+    pipelineOutboxEventHandler.getPipelineActionObserverSubject().register(
+        injector.getInstance(Key.get(PipelineSetupUsageHelper.class)));
+    pipelineOutboxEventHandler.getPipelineActionObserverSubject().register(
+        injector.getInstance(Key.get(PipelineEntityCrudObserver.class)));
+    pipelineOutboxEventHandler.getPipelineActionObserverSubject().register(
+        injector.getInstance(Key.get(InputSetPipelineObserver.class)));
 
     NodeExecutionServiceImpl nodeExecutionService =
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));

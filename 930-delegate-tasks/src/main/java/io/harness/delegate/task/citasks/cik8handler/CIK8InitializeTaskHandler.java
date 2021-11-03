@@ -46,7 +46,6 @@ import io.harness.logging.CommandExecutionStatus;
 
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -67,7 +66,6 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Singleton
 @OwnedBy(HarnessTeam.CI)
 public class CIK8InitializeTaskHandler implements CIInitializeTaskHandler {
   @Inject private CIK8JavaClientHandler cik8JavaClientHandler;

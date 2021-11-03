@@ -23,6 +23,7 @@ import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreat
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
+import io.harness.pms.events.PipelineDeleteEvent;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.pms.yaml.YamlUtils;
@@ -183,9 +184,9 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
   }
 
   @Override
-  public void onDelete(PipelineEntity pipelineEntity) {
+  public void onDelete(PipelineDeleteEvent pipelineDeleteEvent) {
     try {
-      deleteSetupUsagesForGivenPipeline(pipelineEntity);
+      deleteSetupUsagesForGivenPipeline(pipelineDeleteEvent.getPipeline());
     } catch (EventsFrameworkDownException ex) {
       log.error("Redis Producer shutdown", ex);
     }

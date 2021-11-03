@@ -33,6 +33,7 @@ import io.harness.migrations.timescaledb.ChangeToTimeStampTZ;
 import io.harness.migrations.timescaledb.CreateAccountTables;
 import io.harness.migrations.timescaledb.CreateAggregatedBillingTable;
 import io.harness.migrations.timescaledb.CreateAnomaliesData;
+import io.harness.migrations.timescaledb.CreateApplicationTable;
 import io.harness.migrations.timescaledb.CreateBillingData;
 import io.harness.migrations.timescaledb.CreateBillingDataHourly;
 import io.harness.migrations.timescaledb.CreateBudgetAlerts;
@@ -45,10 +46,14 @@ import io.harness.migrations.timescaledb.CreateInstanceStatsHourTable;
 import io.harness.migrations.timescaledb.CreateKubernetesUtilizationData;
 import io.harness.migrations.timescaledb.CreateNewInstanceV2Migration;
 import io.harness.migrations.timescaledb.CreateNodeInfoTableAndIsAliveFunction;
+import io.harness.migrations.timescaledb.CreatePipelineTable;
 import io.harness.migrations.timescaledb.CreatePreAggHourlyTable;
+import io.harness.migrations.timescaledb.CreateServiceTable;
 import io.harness.migrations.timescaledb.CreateServicesEnvPipelinesIndex;
 import io.harness.migrations.timescaledb.CreateServicesEnvPipelinesTable;
+import io.harness.migrations.timescaledb.CreateTaglinksTables;
 import io.harness.migrations.timescaledb.CreateUtilizationData;
+import io.harness.migrations.timescaledb.CreateWorkflowTable;
 import io.harness.migrations.timescaledb.DeploymentAdditionalColumns;
 import io.harness.migrations.timescaledb.InitSchemaMigration;
 import io.harness.migrations.timescaledb.InitTriggerFunctions;
@@ -129,6 +134,11 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(56, CreateServicesEnvPipelinesTable.class))
         .add(Pair.of(57, CreateServicesEnvPipelinesIndex.class))
         .add(Pair.of(58, AddCDNGEntitiesColumns.class))
+        .add(Pair.of(59, CreateApplicationTable.class))
+        .add(Pair.of(60, CreateServiceTable.class))
+        .add(Pair.of(61, CreatePipelineTable.class))
+        .add(Pair.of(62, CreateWorkflowTable.class))
+        .add(Pair.of(63, CreateTaglinksTables.class))
         .build();
   }
 }

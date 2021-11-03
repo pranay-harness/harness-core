@@ -11,6 +11,10 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.filters.GenericStageFilterJsonCreator;
+import io.harness.ng.core.environment.beans.Environment;
+import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter.CdFilterBuilder;
@@ -18,19 +22,25 @@ import io.harness.pms.exception.runtime.InvalidYamlRuntimeException;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(HarnessTeam.CDC)
 public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCreator {
+  @Inject ServiceEntityService serviceEntityService;
+  @Inject EnvironmentService environmentService;
+
   @Override
   public Set<String> getSupportedStageTypes() {
     return Collections.singleton("Deployment");
@@ -54,6 +64,14 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
       cdFilter.serviceName(service.getName());
     }
 
+    ParameterField<String> serviceRef = deploymentStageConfig.getServiceConfig().getServiceRef();
+    if (serviceRef != null && !serviceRef.isExpression()) {
+      Optional<ServiceEntity> serviceEntityOptional = serviceEntityService.get(
+          filterCreationContext.getSetupMetadata().getAccountId(), filterCreationContext.getSetupMetadata().getOrgId(),
+          filterCreationContext.getSetupMetadata().getProjectId(), serviceRef.getValue(), false);
+      serviceEntityOptional.ifPresent(serviceEntity -> cdFilter.serviceName(serviceEntity.getName()));
+    }
+
     ServiceDefinition serviceDefinition = deploymentStageConfig.getServiceConfig().getServiceDefinition();
     if (serviceDefinition != null && serviceDefinition.getType() != null) {
       cdFilter.deploymentType(serviceDefinition.getType().getYamlName());
@@ -75,6 +93,14 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
 
     if (infrastructure.getEnvironment() != null && isNotEmpty(infrastructure.getEnvironment().getName())) {
       cdFilter.environmentName(infrastructure.getEnvironment().getName());
+    }
+
+    ParameterField<String> environmentRef = deploymentStageConfig.getInfrastructure().getEnvironmentRef();
+    if (environmentRef != null && !environmentRef.isExpression()) {
+      Optional<Environment> environmentEntityOptional = environmentService.get(
+          filterCreationContext.getSetupMetadata().getAccountId(), filterCreationContext.getSetupMetadata().getOrgId(),
+          filterCreationContext.getSetupMetadata().getProjectId(), serviceRef.getValue(), false);
+      environmentEntityOptional.ifPresent(environment -> cdFilter.environmentName(environment.getName()));
     }
 
     if (infrastructure.getInfrastructureDefinition() != null

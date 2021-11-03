@@ -16,6 +16,7 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.EcsMetricClient;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.ng.NGConnectorHelper;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
@@ -35,6 +36,9 @@ import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.commons.entities.billing.CECluster;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.ccm.setup.CECloudAccountDao;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.api.ContainerDeploymentInfoWithNames;
@@ -65,7 +69,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +93,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   @Autowired private EcsMetricClient ecsMetricClient;
   @Autowired private InstanceDataDao instanceDataDao;
   @Autowired private CECloudAccountDao ceCloudAccountDao;
+  @Autowired private NGConnectorHelper ngConnectorHelper;
   @Autowired private AwsECSHelperService awsECSHelperService;
   @Autowired private AwsEC2HelperService awsEC2HelperService;
   @Autowired private InstanceDataService instanceDataService;
@@ -553,19 +557,33 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   private Map<String, AwsCrossAccountAttributes> getCrossAccountAttributes(String accountId) {
     List<SettingAttribute> ceConnectorsList =
         cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId, CE_CONNECTOR, CE_AWS);
+    Map<String, AwsCrossAccountAttributes> crossAccountAttributesMap = new HashMap<>();
     if (!CollectionUtils.isEmpty(ceConnectorsList)) {
       List<CECloudAccount> ceCloudAccountList =
           ceCloudAccountDao.getBySettingId(accountId, ceConnectorsList.get(0).getUuid());
-      Map<String, AwsCrossAccountAttributes> crossAccountAttributesMap = ceCloudAccountList.stream().collect(
-          Collectors.toMap(CECloudAccount::getInfraAccountId, CECloudAccount::getAwsCrossAccountAttributes));
+      ceCloudAccountList.forEach(ceCloudAccount
+          -> crossAccountAttributesMap.put(
+              ceCloudAccount.getInfraAccountId(), ceCloudAccount.getAwsCrossAccountAttributes()));
       List<SettingAttribute> ceConnectorList =
           cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId, CE_CONNECTOR, CE_AWS);
       ceConnectorList.forEach(ceConnector -> {
         CEAwsConfig ceAwsConfig = (CEAwsConfig) ceConnector.getValue();
         crossAccountAttributesMap.put(ceAwsConfig.getAwsMasterAccountId(), ceAwsConfig.getAwsCrossAccountAttributes());
       });
-      return crossAccountAttributesMap;
     }
-    return Collections.emptyMap();
+    List<ConnectorResponseDTO> nextGenConnectors = ngConnectorHelper.getNextGenConnectors(accountId);
+    for (ConnectorResponseDTO connector : nextGenConnectors) {
+      ConnectorInfoDTO connectorInfo = connector.getConnector();
+      CEAwsConnectorDTO ceAwsConnectorDTO = (CEAwsConnectorDTO) connectorInfo.getConnectorConfig();
+      if (ceAwsConnectorDTO != null && ceAwsConnectorDTO.getCrossAccountAccess() != null) {
+        AwsCrossAccountAttributes crossAccountAttributes =
+            AwsCrossAccountAttributes.builder()
+                .crossAccountRoleArn(ceAwsConnectorDTO.getCrossAccountAccess().getCrossAccountRoleArn())
+                .externalId(ceAwsConnectorDTO.getCrossAccountAccess().getExternalId())
+                .build();
+        crossAccountAttributesMap.put(ceAwsConnectorDTO.getAwsAccountId(), crossAccountAttributes);
+      }
+    }
+    return crossAccountAttributesMap;
   }
 }

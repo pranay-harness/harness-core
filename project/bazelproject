@@ -7,6 +7,7 @@ import_run_configurations:
   project/run-configurations/AccessControlMicroservice.xml
   project/run-configurations/Analyser_Service.xml
   project/run-configurations/BatchProcessinngApp.xml
+  project/run-configurations/CEEventService.xml
   project/run-configurations/CENextGenApp.xml
   project/run-configurations/CIManagerApplication.xml
   project/run-configurations/ChangeDataCaptureApp.xml

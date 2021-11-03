@@ -113,6 +113,8 @@ public interface AccountService {
 
   List<Account> listAllAccounts();
 
+  List<Account> listAllAccountsWithoutTheGlobalAccount();
+
   List<Account> listAllActiveAccounts();
 
   List<Account> listAllAccountWithDefaultsWithoutLicenseInfo();

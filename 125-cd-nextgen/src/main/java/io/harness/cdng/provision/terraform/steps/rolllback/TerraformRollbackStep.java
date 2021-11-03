@@ -21,7 +21,6 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.persistence.HIterator;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
@@ -31,6 +30,7 @@ import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
@@ -125,7 +125,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
 
       TerraformTaskNGParametersBuilder builder =
           TerraformTaskNGParameters.builder()
-              .accountId(AmbianceHelper.getAccountId(ambiance))
+              .accountId(AmbianceUtils.getAccountId(ambiance))
               .currentStateFileId(terraformStepHelper.getLatestFileId(entityId))
               .taskType(tfTaskType)
               .terraformCommandUnit(TerraformCommandUnit.Rollback)

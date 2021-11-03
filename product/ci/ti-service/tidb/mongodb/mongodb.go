@@ -202,7 +202,9 @@ func (mdb *MongoDb) queryHelper(ctx context.Context, targetBranch, repo string, 
 	mResources := make(map[string]struct{})
 	allowedPairs := []interface{}{}
 	for _, n := range fn {
-		if n.Type == utils.NodeType_SOURCE {
+		// It's possible test files might also have source methods. We should get tests
+		// which are dependent on those as well.
+		if n.Type == utils.NodeType_SOURCE || n.Type == utils.NodeType_TEST {
 			allowedPairs = append(allowedPairs,
 				bson.M{"type": "source", "package": n.Pkg, "class": n.Class,
 					"vcs_info.repo":   repo,

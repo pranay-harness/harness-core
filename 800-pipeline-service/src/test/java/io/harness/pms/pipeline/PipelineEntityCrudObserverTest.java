@@ -10,6 +10,7 @@ import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
+import io.harness.pms.events.PipelineDeleteEvent;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +41,7 @@ public class PipelineEntityCrudObserverTest extends PipelineServiceTestBase {
                                         .projectIdentifier(PROJECT_ID)
                                         .identifier(PIPELINE_ID)
                                         .build();
-    pipelineRBACObserver.onDelete(pipelineEntity);
+    pipelineRBACObserver.onDelete(new PipelineDeleteEvent(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineEntity));
     EntityChangeDTO.Builder pipelineEntityChangeDTOBuilder =
         EntityChangeDTO.newBuilder()
             .setAccountIdentifier(StringValue.of(pipelineEntity.getAccountId()))

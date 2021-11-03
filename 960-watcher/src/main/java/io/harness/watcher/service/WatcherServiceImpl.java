@@ -1228,7 +1228,8 @@ public class WatcherServiceImpl implements WatcherService {
       try {
         sleep(ofSeconds(5));
         log.info("Send kill -3 to delegateProcess {}", delegateProcess);
-        new ProcessExecutor().command("kill", "-3", delegateProcess).start();
+        final String killCmd = "kill -3 " + delegateProcess;
+        new ProcessExecutor().command("/bin/bash", "-c", killCmd).start();
         sleep(ofSeconds(15));
         ProcessControl.ensureKilled(delegateProcess, Duration.ofSeconds(120));
       } catch (Exception e) {

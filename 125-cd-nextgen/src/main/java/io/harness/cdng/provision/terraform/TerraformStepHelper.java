@@ -46,7 +46,6 @@ import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -126,8 +125,8 @@ public class TerraformStepHelper {
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
     if (Pattern.matches(NGRegexValidatorConstants.IDENTIFIER_PATTERN, provisionerIdentifier)) {
-      return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),
-          AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance),
+      return String.format("%s/%s/%s/%s", AmbianceUtils.getAccountId(ambiance),
+          AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance),
           provisionerIdentifier);
     } else {
       throw new InvalidRequestException(String.format(
@@ -168,8 +167,8 @@ public class TerraformStepHelper {
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
     NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
     SSHKeySpecDTO sshKeySpecDTO =
-        gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceHelper.getAccountId(ambiance),
-            AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
+        gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceUtils.getAccountId(ambiance),
+            AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
     String repoName = gitStoreConfig.getRepoName() != null ? gitStoreConfig.getRepoName().getValue() : null;
@@ -254,8 +253,8 @@ public class TerraformStepHelper {
   public EncryptionConfig getEncryptionConfig(Ambiance ambiance, TerraformPlanStepParameters planStepParameters) {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
         ParameterFieldHelper.getParameterFieldValue(planStepParameters.getConfiguration().getSecretManagerRef()),
-        AmbianceHelper.getAccountId(ambiance), AmbianceHelper.getOrgIdentifier(ambiance),
-        AmbianceHelper.getProjectIdentifier(ambiance));
+        AmbianceUtils.getAccountId(ambiance), AmbianceUtils.getOrgIdentifier(ambiance),
+        AmbianceUtils.getProjectIdentifier(ambiance));
 
     return SecretManagerConfigMapper.fromDTO(secretManagerClientService.getSecretManager(
         identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(),
@@ -317,9 +316,9 @@ public class TerraformStepHelper {
 
     TerraformConfig terraformConfig =
         TerraformConfig.builder()
-            .accountId(AmbianceHelper.getAccountId(ambiance))
-            .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
-            .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
+            .accountId(AmbianceUtils.getAccountId(ambiance))
+            .orgId(AmbianceUtils.getOrgIdentifier(ambiance))
+            .projectId(AmbianceUtils.getProjectIdentifier(ambiance))
             .entityId(
                 generateFullIdentifier(getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
             .pipelineExecutionId(ambiance.getPlanExecutionId())
@@ -380,9 +379,9 @@ public class TerraformStepHelper {
     TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformConfigBuilder builder =
         TerraformConfig.builder()
-            .accountId(AmbianceHelper.getAccountId(ambiance))
-            .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
-            .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
+            .accountId(AmbianceUtils.getAccountId(ambiance))
+            .orgId(AmbianceUtils.getOrgIdentifier(ambiance))
+            .projectId(AmbianceUtils.getProjectIdentifier(ambiance))
             .entityId(generateFullIdentifier(
                 ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
             .pipelineExecutionId(ambiance.getPlanExecutionId());
@@ -417,9 +416,9 @@ public class TerraformStepHelper {
         ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);
     Query<TerraformConfig> query =
         persistence.createQuery(TerraformConfig.class)
-            .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
-            .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
-            .filter(TerraformConfigKeys.projectId, AmbianceHelper.getProjectIdentifier(ambiance))
+            .filter(TerraformConfigKeys.accountId, AmbianceUtils.getAccountId(ambiance))
+            .filter(TerraformConfigKeys.orgId, AmbianceUtils.getOrgIdentifier(ambiance))
+            .filter(TerraformConfigKeys.projectId, AmbianceUtils.getProjectIdentifier(ambiance))
             .filter(TerraformConfigKeys.entityId, entityId)
             .order(Sort.descending(TerraformConfigKeys.createdAt));
     TerraformConfig terraformConfig = terraformConfigDAL.getTerraformConfig(query, ambiance);
@@ -457,9 +456,9 @@ public class TerraformStepHelper {
 
   public void saveTerraformConfig(TerraformConfig rollbackConfig, Ambiance ambiance) {
     TerraformConfig terraformConfig = TerraformConfig.builder()
-                                          .accountId(AmbianceHelper.getAccountId(ambiance))
-                                          .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
-                                          .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
+                                          .accountId(AmbianceUtils.getAccountId(ambiance))
+                                          .orgId(AmbianceUtils.getOrgIdentifier(ambiance))
+                                          .projectId(AmbianceUtils.getProjectIdentifier(ambiance))
                                           .entityId(rollbackConfig.getEntityId())
                                           .pipelineExecutionId(ambiance.getPlanExecutionId())
                                           .configFiles(rollbackConfig.getConfigFiles())
