@@ -12,6 +12,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.sdk.PmsSdkModuleUtils.CORE_EXECUTOR_NAME;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_CONSUMER;
 
 import static com.google.common.collect.ImmutableMap.of;
 
@@ -49,6 +51,7 @@ import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.services.FeatureRestrictionLoader;
+import io.harness.eventsframework.api.Consumer;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.gitsync.AbstractGitSyncModule;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
@@ -108,11 +111,13 @@ import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.pms.sdk.core.execution.events.node.start.NodeStartEventHandler;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventMessageListener;
 import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
@@ -121,6 +126,7 @@ import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.polling.service.impl.PollingPerpetualTaskManager;
 import io.harness.polling.service.impl.PollingServiceImpl;
 import io.harness.polling.service.intfc.PollingService;
+import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
@@ -198,10 +204,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -481,13 +489,26 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private void registerPmsSdkEvents(Injector injector) {
-    log.info("Initializing sdk redis abstract consumers...");
+    log.info("Initializing pms sdk redis abstract consumers...");
     PipelineEventConsumerController pipelineEventConsumerController =
         injector.getInstance(PipelineEventConsumerController.class);
+    Cache<String, Integer> cache = injector.getInstance(Key.get(Cache.class, Names.named("sdkEventsCache")));
+    QueueController queueController = injector.getInstance(QueueController.class);
+    ExecutorService executorService =
+        injector.getInstance(Key.get(ExecutorService.class, Names.named(CORE_EXECUTOR_NAME)));
+
+    Consumer nodeStartRedisConsumer =
+        injector.getInstance(Key.get(Consumer.class, Names.named(PT_NODE_START_CONSUMER)));
+    NodeStartEventHandler nodeStartEventHandler = injector.getInstance(NodeStartEventHandler.class);
+    NodeStartEventMessageListener messageListener = NodeStartEventMessageListener.getInstance(
+        ModuleType.PMS.name().toLowerCase(), nodeStartEventHandler, executorService);
+    NodeStartEventRedisConsumer nodeStartEventRedisConsumer =
+        NodeStartEventRedisConsumer.getInstance(nodeStartRedisConsumer, messageListener, cache, queueController);
+    pipelineEventConsumerController.register(nodeStartEventRedisConsumer, 2);
+
     pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);

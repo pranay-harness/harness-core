@@ -12,14 +12,20 @@ import io.harness.pms.sdk.core.execution.events.node.start.NodeStartEventHandler
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import io.kubernetes.client.Exec;
 import java.util.concurrent.ExecutorService;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class NodeStartEventMessageListener extends PmsAbstractMessageListener<NodeStartEvent, NodeStartEventHandler> {
+  public static NodeStartEventMessageListener getInstance(
+      String serviceName, NodeStartEventHandler nodeStartEventHandler, ExecutorService executorService) {
+    return new NodeStartEventMessageListener(serviceName, nodeStartEventHandler, executorService);
+  }
+
   @Inject
-  public NodeStartEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      NodeStartEventHandler nodeStartEventHandler, @Named(CORE_EXECUTOR_NAME) ExecutorService executorService) {
+  public NodeStartEventMessageListener(
+      String serviceName, NodeStartEventHandler nodeStartEventHandler, ExecutorService executorService) {
     super(serviceName, NodeStartEvent.class, nodeStartEventHandler, executorService);
   }
 }

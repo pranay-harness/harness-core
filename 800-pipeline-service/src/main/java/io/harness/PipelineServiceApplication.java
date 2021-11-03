@@ -6,6 +6,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
+import static io.harness.pms.sdk.PmsSdkModuleUtils.CORE_EXECUTOR_NAME;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_CONSUMER;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -37,6 +39,7 @@ import io.harness.engine.timeouts.TimeoutInstanceRemover;
 import io.harness.event.OrchestrationEndGraphHandler;
 import io.harness.event.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationStartEventHandler;
+import io.harness.eventsframework.api.Consumer;
 import io.harness.exception.GeneralException;
 import io.harness.execution.consumers.SdkResponseEventRedisConsumer;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
@@ -108,10 +111,12 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.core.execution.events.node.start.NodeStartEventHandler;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventMessageListener;
 import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
@@ -119,6 +124,7 @@ import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
+import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
@@ -172,6 +178,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -205,6 +212,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -580,14 +588,28 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     log.info("Initializing pms sdk redis abstract consumers...");
     PipelineEventConsumerController pipelineEventConsumerController =
         injector.getInstance(PipelineEventConsumerController.class);
+    Cache<String, Integer> cache = injector.getInstance(Key.get(Cache.class, Names.named("sdkEventsCache")));
+    QueueController queueController = injector.getInstance(QueueController.class);
+    ExecutorService executorService =
+        injector.getInstance(Key.get(ExecutorService.class, Names.named(CORE_EXECUTOR_NAME)));
+
+    Consumer nodeStartRedisConsumer =
+        injector.getInstance(Key.get(Consumer.class, Names.named(PT_NODE_START_CONSUMER)));
+    NodeStartEventHandler nodeStartEventHandler = injector.getInstance(NodeStartEventHandler.class);
+    NodeStartEventMessageListener messageListener = NodeStartEventMessageListener.getInstance(
+        ModuleType.PMS.name().toLowerCase(), nodeStartEventHandler, executorService);
+    NodeStartEventRedisConsumer nodeStartEventRedisConsumer =
+        NodeStartEventRedisConsumer.getInstance(nodeStartRedisConsumer, messageListener, cache, queueController);
+    pipelineEventConsumerController.register(
+        nodeStartEventRedisConsumer, pipelineServiceConsumersConfig.getNodeStart().getThreads());
+
     pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class),
         pipelineServiceConsumersConfig.getInterrupt().getThreads());
     pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class),
         pipelineServiceConsumersConfig.getOrchestrationEvent().getThreads());
     pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class),
         pipelineServiceConsumersConfig.getFacilitatorEvent().getThreads());
-    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class),
-        pipelineServiceConsumersConfig.getNodeStart().getThreads());
+
     pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class),
         pipelineServiceConsumersConfig.getProgress().getThreads());
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class),

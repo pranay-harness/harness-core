@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 public class PmsSdkEventFrameworkConstants {
   public static final String PT_INTERRUPT_CONSUMER = "INTERRUPT_CONSUMER";
   public static final String PT_FACILITATOR_CONSUMER = "FACILITATOR_CONSUMER";
-  public static final String PT_NODE_START_CONSUMER = "NODE_START_CONSUMER";
+  public static final String PT_NODE_START_CONSUMER = "NODE_START_CONSUMER_%s";
   public static final String PT_PROGRESS_CONSUMER = "PROGRESS_CONSUMER";
   public static final String PT_NODE_ADVISE_CONSUMER = "NODE_ADVISE_CONSUMER";
   public static final String PT_NODE_RESUME_CONSUMER = "NODE_RESUME_CONSUMER";

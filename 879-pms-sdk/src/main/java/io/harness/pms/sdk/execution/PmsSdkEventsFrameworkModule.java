@@ -34,12 +34,22 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisUtils;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventMessageListener;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
+import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
+import javax.cache.Cache;
 import org.redisson.api.RedissonClient;
+
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkEventsFrameworkModule extends AbstractModule {
   private static PmsSdkEventsFrameworkModule instance;
@@ -79,7 +89,7 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
 
       bind(Consumer.class)
-          .annotatedWith(Names.named(PT_NODE_START_CONSUMER))
+          .annotatedWith(Names.named(String.format(PT_NODE_START_CONSUMER, serviceName)))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
 
