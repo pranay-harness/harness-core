@@ -151,13 +151,14 @@ public class BillingCalculationService {
       Double parentInstanceMemory =
           Double.valueOf(instanceMetaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY));
 
-      BigDecimal instanceUsage =
-          BigDecimal.valueOf(((instanceCpu / parentInstanceCpu) + (instanceMemory / parentInstanceMemory)) * 0.5);
+      double cpuFraction = parentInstanceCpu == 0 ? 0 : (instanceCpu / parentInstanceCpu);
+      double memoryFraction = parentInstanceMemory == 0 ? 0 : (instanceMemory / parentInstanceMemory);
+
+      BigDecimal instanceUsage = BigDecimal.valueOf((cpuFraction + memoryFraction) * 0.5);
       return BillingAmountBreakup.builder()
           .billingAmount(instanceUsage.multiply(billingAmount))
-          .cpuBillingAmount(billingAmount.multiply(BigDecimal.valueOf((instanceCpu / parentInstanceCpu) * 0.5)))
-          .memoryBillingAmount(
-              billingAmount.multiply(BigDecimal.valueOf((instanceMemory / parentInstanceMemory) * 0.5)))
+          .cpuBillingAmount(billingAmount.multiply(BigDecimal.valueOf(cpuFraction * 0.5)))
+          .memoryBillingAmount(billingAmount.multiply(BigDecimal.valueOf(memoryFraction * 0.5)))
           .storageBillingAmount(BigDecimal.ZERO)
           .build();
     }
