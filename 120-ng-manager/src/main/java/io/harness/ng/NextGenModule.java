@@ -1,5 +1,6 @@
 package io.harness.ng;
 
+import static io.harness.AuthorizationServiceHeader.CE_NEXT_GEN;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.audit.ResourceTypeConstants.API_KEY;
 import static io.harness.audit.ResourceTypeConstants.CONNECTOR;
@@ -47,6 +48,7 @@ import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
 import io.harness.ccm.license.remote.CeLicenseClientModule;
+import io.harness.ccm.manager.CENextGenResourceClientModule;
 import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
@@ -520,6 +522,8 @@ public class NextGenModule extends AbstractModule {
         appConfig.getEnforcementClientConfiguration()));
     install(new AuthenticationSettingsModule(
         this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new CENextGenResourceClientModule(this.appConfig.getCeNextGenClientConfig(),
+        this.appConfig.getNextGenConfig().getCeNextGenServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(new ProviderModule() {
       @Provides
       @Singleton
