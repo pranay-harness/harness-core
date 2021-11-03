@@ -1,0 +1,5 @@
+name: ClusterGroup
+identifier: cluster_group
+labels:
+  - accountId
+  - clusterId

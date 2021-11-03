@@ -13,6 +13,7 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
+import io.harness.configuration.DeployMode;
 import io.harness.configuration.DeployVariant;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.*;
@@ -140,9 +141,9 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo communitySignup(SignupDTO dto) throws WingsException {
-    String deployMode = System.getenv().get("DEPLOY_MODE");
+    String deployMode = System.getenv().get(DEPLOY_MODE);
 
-    if (!"ONPREM".equals(deployMode) || !"KUBERNETES_ONPREM".equals(deployMode)) {
+    if (!DeployMode.isOnPrem(deployMode)) {
       throw new InvalidRequestException("Deploy mode is not on prem", ErrorCode.DEPLOY_MODE_IS_NOT_ON_PREM, USER);
     }
 

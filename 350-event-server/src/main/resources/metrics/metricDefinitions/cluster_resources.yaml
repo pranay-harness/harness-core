@@ -1,0 +1,19 @@
+name: Cluster Resources Metrics
+identifier: clusterResources
+metricGroup: cluster_group
+metrics:
+
+  - metricName: evsvc_podCount
+    metricDefinition: Number of pods in the cluster
+    unit: "1"
+    type: LastValue
+
+  - metricName: evsvc_nodeCount
+    metricDefinition: Number of nodes in the cluster
+    unit: "1"
+    type: LastValue
+
+  - metricName: evsvc_pvCount
+    metricDefinition: Number of PersistentVolumes in the cluster
+    unit: "1"
+    type: LastValue

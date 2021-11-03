@@ -1064,6 +1064,18 @@ public class WingsApplication extends Application<MainConfiguration> {
         (CapabilityServiceImpl) injector.getInstance(Key.get(CapabilityService.class));
     capabilityService.getCapSubjectPermissionTaskCrudSubject().register(
         injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
+
+    ClusterRecordHandler clusterRecordHandler = injector.getInstance(Key.get(ClusterRecordHandler.class));
+    SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
+    settingsService.getSubject().register(clusterRecordHandler);
+
+    KubernetesClusterHandler kubernetesClusterHandler = injector.getInstance(Key.get(KubernetesClusterHandler.class));
+    delegateServiceImpl.getSubject().register(kubernetesClusterHandler);
+
+    CEPerpetualTaskHandler cePerpetualTaskHandler = injector.getInstance(Key.get(CEPerpetualTaskHandler.class));
+    ClusterRecordServiceImpl clusterRecordService =
+        (ClusterRecordServiceImpl) injector.getInstance(Key.get(ClusterRecordService.class));
+    clusterRecordService.getSubject().register(cePerpetualTaskHandler);
   }
 
   /**
@@ -1084,9 +1096,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     settingsService.getSubject().register(clusterRecordHandler);
     settingsService.getArtifactStreamSubject().register(
         injector.getInstance(Key.get(ArtifactStreamSettingAttributePTaskManager.class)));
-
-    KubernetesClusterHandler kubernetesClusterHandler = injector.getInstance(Key.get(KubernetesClusterHandler.class));
-    delegateServiceImpl.getSubject().register(kubernetesClusterHandler);
 
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
         (InfrastructureDefinitionServiceImpl) injector.getInstance(Key.get(InfrastructureDefinitionService.class));

@@ -13,13 +13,14 @@ import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
-import io.harness.ng.core.ProjectScope;
+import io.harness.observer.Subject;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pms.events.PipelineCreateEvent;
 import io.harness.pms.events.PipelineDeleteEvent;
 import io.harness.pms.events.PipelineOutboxEvents;
 import io.harness.pms.events.PipelineUpdateEvent;
+import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServicePrincipal;
@@ -27,15 +28,22 @@ import io.harness.utils.NGObjectMapperHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
+@Singleton
 public class PipelineOutboxEventHandler implements OutboxEventHandler {
   private ObjectMapper objectMapper;
   private final AuditClientService auditClientService;
   private final InputSetEventHandler inputSetEventHandler;
+
+  @Getter private final Subject<PipelineActionObserver> pipelineActionObserverSubject = new Subject<>();
+  ;
+
   @Inject
   PipelineOutboxEventHandler(AuditClientService auditClientService, InputSetEventHandler inputSetEventHandler) {
     this.objectMapper = NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER;
@@ -45,7 +53,6 @@ public class PipelineOutboxEventHandler implements OutboxEventHandler {
 
   private boolean handlePipelineCreateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     PipelineCreateEvent event = objectMapper.readValue(outboxEvent.getEventData(), PipelineCreateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.CREATE)
@@ -62,11 +69,12 @@ public class PipelineOutboxEventHandler implements OutboxEventHandler {
     } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
       principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
     }
+    pipelineActionObserverSubject.fireInform(PipelineActionObxxxxxxxx:onCreate, event);
     return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
   }
+
   private boolean handlePipelineUpdateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     PipelineUpdateEvent event = objectMapper.readValue(outboxEvent.getEventData(), PipelineUpdateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.UPDATE)
@@ -84,12 +92,12 @@ public class PipelineOutboxEventHandler implements OutboxEventHandler {
     } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
       principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
     }
+    pipelineActionObserverSubject.fireInform(PipelineActionObxxxxxxxx:onUpdate, event);
     return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
   }
 
   private boolean handlePipelineDeleteEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     PipelineDeleteEvent event = objectMapper.readValue(outboxEvent.getEventData(), PipelineDeleteEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.DELETE)
@@ -106,8 +114,10 @@ public class PipelineOutboxEventHandler implements OutboxEventHandler {
     } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
       principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
     }
+    pipelineActionObserverSubject.fireInform(PipelineActionObxxxxxxxx:onDelete, event);
     return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
   }
+
   @Override
   public boolean handle(OutboxEvent outboxEvent) {
     try {
