@@ -249,6 +249,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     Instant finish = Instant.now();
     long timeElapsed = Duration.between(start, finish).toMillis();
     log.info("Initializing logging started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
+    System.out.println("Initializing logging started at " + start + "took " + timeElapsed
+        + " milliseconds and ended at " + finish + ".");
 
     bootstrap.addCommand(new InspectCommand<>(this));
     bootstrap.addCommand(new ScanClasspathMetadataCommand());
@@ -261,6 +263,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     timeElapsed = Duration.between(start, finish).toMillis();
     log.info(
         "Configure object mapper started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
+    System.out.println("Configure object mapper started at " + start + "took " + timeElapsed
+        + " milliseconds and ended at " + finish + ".");
 
     start = Instant.now();
     bootstrap.addBundle(new SwaggerBundle<NextGenConfiguration>() {
@@ -271,6 +275,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     });
     finish = Instant.now();
     timeElapsed = Duration.between(start, finish).toMillis();
+    System.out.println("Configure swagger bundle started at " + start + "took " + timeElapsed
+        + " milliseconds and ended at " + finish + ".");
     log.info(
         "Configure swagger bundle started at {}, took {} milliseconds and ended at {}.", start, timeElapsed, finish);
 
