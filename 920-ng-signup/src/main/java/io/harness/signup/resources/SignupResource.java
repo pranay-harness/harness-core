@@ -1,9 +1,6 @@
 package io.harness.signup.resources;
 
-import static io.harness.annotations.dev.HarnessTeam.GTM;
-
-import static java.lang.Boolean.TRUE;
-
+import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -15,24 +12,25 @@ import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.services.SignupService;
-
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.*;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
+import static io.harness.annotations.dev.HarnessTeam.GTM;
+import static java.lang.Boolean.TRUE;
 
 @Api("signup")
 @Path("signup")
@@ -47,6 +45,12 @@ import lombok.AllArgsConstructor;
 @OwnedBy(GTM)
 public class SignupResource {
   private SignupService signupService;
+  private static final String X_FORWARDED_FOR = "X-Forwarded-For";
+
+  private String acquireIpAddress(HttpServletRequest request) {
+    String forwardedFor = request.getHeader(X_FORWARDED_FOR);
+    return StringUtils.isNotBlank(forwardedFor) ? forwardedFor : request.getRemoteHost();
+  }
 
   /**
    * Follows the "free trial sign up" path
@@ -56,8 +60,9 @@ public class SignupResource {
    */
   @POST
   @PublicApi
-  public RestResponse<Void> signup(SignupDTO dto, @QueryParam("captchaToken") @Nullable String captchaToken) {
-    signupService.createSignupInvite(dto, captchaToken);
+  public RestResponse<Void> signup(SignupDTO dto, @QueryParam("captchaToken") @Nullable String captchaToken, @Context HttpServletRequest request) {
+    String ipAddress = acquireIpAddress(request);
+    signupService.createSignupInvite(dto, captchaToken, ipAddress);
     return new RestResponse<>();
   }
 
@@ -77,8 +82,9 @@ public class SignupResource {
   @PUT
   @Path("/complete/{token}")
   @PublicApi
-  public RestResponse<UserInfo> completeSignupInvite(@PathParam("token") String token) {
-    return new RestResponse<>(signupService.completeSignupInvite(token));
+  public RestResponse<UserInfo> completeSignupInvite(@PathParam("token") String token, @Context HttpServletRequest request) {
+    String ipAddress = acquireIpAddress(request);
+    return new RestResponse<>(signupService.completeSignupInvite(token, ipAddress));
   }
 
   /**
@@ -90,15 +96,17 @@ public class SignupResource {
   @POST
   @Path("/oauth")
   @PublicApi
-  public RestResponse<UserInfo> signupOAuth(OAuthSignupDTO dto) {
-    return new RestResponse<>(signupService.oAuthSignup(dto));
+  public RestResponse<UserInfo> signupOAuth(OAuthSignupDTO dto, @Context HttpServletRequest request) {
+    String ipAddress = acquireIpAddress(request);
+    return new RestResponse<>(signupService.oAuthSignup(dto,ipAddress));
   }
 
   @POST
   @Path("/verify/{token}")
   @PublicApi
-  public RestResponse<VerifyTokenResponseDTO> verifyToken(@PathParam("token") String token) {
-    return new RestResponse<>(signupService.verifyToken(token));
+  public RestResponse<VerifyTokenResponseDTO> verifyToken(@PathParam("token") String token, @Context HttpServletRequest request) {
+    String ipAddress = acquireIpAddress(request);
+    return new RestResponse<>(signupService.verifyToken(token, ipAddress));
   }
 
   @POST

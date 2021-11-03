@@ -1,13 +1,11 @@
 package io.harness.signup.services.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.GTM;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.remote.client.RestClientUtils.getResponse;
-import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
-
-import static java.lang.Boolean.FALSE;
-import static org.mindrot.jbcrypt.BCrypt.hashpw;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import io.harness.ModuleType;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
@@ -17,11 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
 import io.harness.configuration.DeployVariant;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.SignupException;
-import io.harness.exception.UserAlreadyPresentException;
-import io.harness.exception.WeakPasswordException;
-import io.harness.exception.WingsException;
+import io.harness.exception.*;
 import io.harness.licensing.LicenseConfig;
 import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.AccountDTO;
@@ -44,30 +38,30 @@ import io.harness.telemetry.Category;
 import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetryReporter;
 import io.harness.user.remote.UserClient;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
+import org.mindrot.jbcrypt.BCrypt;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
-import org.mindrot.jbcrypt.BCrypt;
+
+import static io.harness.annotations.dev.HarnessTeam.GTM;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
+import static java.lang.Boolean.FALSE;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
 @Slf4j
 @Singleton
@@ -119,15 +113,15 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException {
-    verifyReCaptcha(dto, captchaToken);
-    verifySignupDTO(dto);
+    verifyReCaptcha(dto, captchaToken,"");
+    verifySignupDTO(dto,"");
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
-    AccountDTO account = createAccount(dto);
-    UserInfo user = createUser(dto, account);
+    AccountDTO account = createAccount(dto,"");
+    UserInfo user = createUser(dto, account,"");
     sendSucceedTelemetryEvent(
-        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW);
+        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW,"");
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(user.getEmail());
       try {
@@ -156,7 +150,7 @@ public class SignupServiceImpl implements SignupService {
       throw new InvalidRequestException("Community edition not found", ErrorCode.COMMNITY_EDITION_NOT_FOUND, USER);
     }
 
-    verifySignupDTO(dto);
+    verifySignupDTO(dto,"");
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
@@ -191,13 +185,13 @@ public class SignupServiceImpl implements SignupService {
    * Signup Invite in email verification blocking flow
    */
   @Override
-  public boolean createSignupInvite(SignupDTO dto, String captchaToken) {
+  public boolean createSignupInvite(SignupDTO dto, String captchaToken, String ipAddress) {
     if (DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
       throw new InvalidRequestException("You are not allowed to create a signup invite with community edition");
     }
 
-    verifyReCaptcha(dto, captchaToken);
-    verifySignupDTO(dto);
+    verifyReCaptcha(dto, captchaToken, ipAddress);
+    verifySignupDTO(dto, ipAddress);
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
@@ -214,14 +208,14 @@ public class SignupServiceImpl implements SignupService {
     try {
       getResponse(userClient.createNewSignupInvite(signupRequest));
     } catch (InvalidRequestException e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Create Signup Invite");
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Create Signup Invite",ipAddress);
       if (e.getMessage().contains("User with this email is already registered")) {
         throw new InvalidRequestException("Email is already signed up", ErrorCode.USER_ALREADY_REGISTERED, USER);
       }
       throw e;
     }
 
-    sendSucceedInvite(dto.getEmail(), dto.getUtmInfo());
+    sendSucceedInvite(dto.getEmail(), dto.getUtmInfo(),ipAddress);
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(dto.getEmail());
       try {
@@ -241,7 +235,7 @@ public class SignupServiceImpl implements SignupService {
    * Complete Signup in email verification blocking flow
    */
   @Override
-  public UserInfo completeSignupInvite(String token) {
+  public UserInfo completeSignupInvite(String token, String ipAddress) {
     if (DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
       throw new InvalidRequestException("You are not allowed to complete a signup invite with community edition");
     }
@@ -268,7 +262,7 @@ public class SignupServiceImpl implements SignupService {
       verificationTokenRepository.delete(verificationToken);
 
       sendSucceedTelemetryEvent(userInfo.getEmail(), userInfo.getUtmInfo(), userInfo.getDefaultAccountId(), userInfo,
-          SignupType.SIGNUP_FORM_FLOW);
+          SignupType.SIGNUP_FORM_FLOW,ipAddress);
       UserInfo finalUserInfo = userInfo;
       executorService.submit(() -> {
         try {
@@ -285,7 +279,7 @@ public class SignupServiceImpl implements SignupService {
       return userInfo;
     } catch (Exception e) {
       sendFailedTelemetryEvent(verificationToken.getEmail(), userInfo != null ? userInfo.getUtmInfo() : null, e, null,
-          "Complete Signup Invite");
+          "Complete Signup Invite",ipAddress);
       throw e;
     }
   }
@@ -324,32 +318,32 @@ public class SignupServiceImpl implements SignupService {
         .get();
   }
 
-  private AccountDTO createAccount(SignupDTO dto) {
+  private AccountDTO createAccount(SignupDTO dto, String ipAddress) {
     try {
       return accountService.createAccount(dto);
     } catch (Exception e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Account creation");
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Account creation",ipAddress);
       throw e;
     }
   }
 
-  private void verifyReCaptcha(SignupDTO dto, String captchaToken) {
+  private void verifyReCaptcha(SignupDTO dto, String captchaToken, String ipAddress) {
     try {
       reCaptchaVerifier.verifyInvisibleCaptcha(captchaToken);
     } catch (Exception e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "ReCaptcha verification");
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "ReCaptcha verification", ipAddress);
       throw e;
     }
   }
 
-  private void verifySignupDTO(SignupDTO dto) {
+  private void verifySignupDTO(SignupDTO dto, String ipAddress) {
     try {
       signupValidator.validateSignup(dto);
     } catch (SignupException | UserAlreadyPresentException e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Email validation");
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Email validation", ipAddress);
       throw e;
     } catch (WeakPasswordException we) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), we, null, "Password validation");
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), we, null, "Password validation", ipAddress);
       throw we;
     }
   }
@@ -386,20 +380,20 @@ public class SignupServiceImpl implements SignupService {
   }
 
   @Override
-  public UserInfo oAuthSignup(OAuthSignupDTO dto) {
+  public UserInfo oAuthSignup(OAuthSignupDTO dto, String ipAddress) {
     try {
       signupValidator.validateEmail(dto.getEmail());
     } catch (SignupException | UserAlreadyPresentException e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Email validation");
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Email validation",ipAddress);
       throw e;
     }
 
     SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
-    AccountDTO account = createAccount(signupDTO);
-    UserInfo oAuthUser = createOAuthUser(dto, account);
+    AccountDTO account = createAccount(signupDTO, ipAddress);
+    UserInfo oAuthUser = createOAuthUser(dto, account, ipAddress);
 
     sendSucceedTelemetryEvent(
-        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), oAuthUser, SignupType.OAUTH_FLOW);
+        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), oAuthUser, SignupType.OAUTH_FLOW, ipAddress);
 
     executorService.submit(() -> {
       try {
@@ -418,10 +412,11 @@ public class SignupServiceImpl implements SignupService {
   /**
    * Verify token in non email verification blocking flow
    * @param token
+   * @param ipAddress
    * @return
    */
   @Override
-  public VerifyTokenResponseDTO verifyToken(String token) {
+  public VerifyTokenResponseDTO verifyToken(String token, String ipAddress) {
     Optional<SignupVerificationToken> verificationTokenOptional = verificationTokenRepository.findByToken(token);
 
     if (!verificationTokenOptional.isPresent()) {
@@ -478,7 +473,7 @@ public class SignupServiceImpl implements SignupService {
     log.info("Resend verification email for {}", email);
   }
 
-  private UserInfo createUser(SignupDTO signupDTO, AccountDTO account) {
+  private UserInfo createUser(SignupDTO signupDTO, AccountDTO account, String ipAddress) {
     try {
       String passwordHash = hashpw(signupDTO.getPassword(), BCrypt.gensalt());
       List<AccountDTO> accountList = new ArrayList<>();
@@ -498,16 +493,17 @@ public class SignupServiceImpl implements SignupService {
                                        .build();
       return getResponse(userClient.createNewUser(userRequest));
     } catch (Exception e) {
-      sendFailedTelemetryEvent(signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "User creation");
+      sendFailedTelemetryEvent(signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "User creation", ipAddress);
       throw e;
     }
   }
 
   private void sendFailedTelemetryEvent(
-      String email, UtmInfo utmInfo, Exception e, AccountDTO accountDTO, String failedAt) {
+      String email, UtmInfo utmInfo, Exception e, AccountDTO accountDTO, String failedAt, String ip) {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("reason", e.getMessage());
     properties.put("failedAt", failedAt);
+    properties.put("ip", ip);
     addUtmInfoToProperties(utmInfo, properties);
 
     if (accountDTO != null) {
@@ -521,7 +517,7 @@ public class SignupServiceImpl implements SignupService {
   }
 
   private void sendSucceedTelemetryEvent(
-      String email, UtmInfo utmInfo, String accountId, UserInfo userInfo, String source) {
+      String email, UtmInfo utmInfo, String accountId, UserInfo userInfo, String source, String ip) {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("email", userInfo.getEmail());
     properties.put("name", userInfo.getName());
@@ -529,6 +525,7 @@ public class SignupServiceImpl implements SignupService {
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
     properties.put("accountId", accountId);
     properties.put("source", source);
+    properties.put("ip", ip);
 
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(userInfo.getEmail(), properties,
@@ -545,7 +542,7 @@ public class SignupServiceImpl implements SignupService {
     log.info("Signup telemetry sent");
   }
 
-  private void sendSucceedInvite(String email, UtmInfo utmInfo) {
+  private void sendSucceedInvite(String email, UtmInfo utmInfo, String ip) {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("email", email);
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
@@ -553,7 +550,7 @@ public class SignupServiceImpl implements SignupService {
     telemetryReporter.sendIdentifyEvent(
         email, properties, ImmutableMap.<Destination, Boolean>builder().put(Destination.MARKETO, true).build());
     telemetryReporter.flush();
-
+    properties.put("ip", ip);
     ScheduledExecutorService tempExecutor = Executors.newSingleThreadScheduledExecutor();
     tempExecutor.schedule(
         ()
@@ -573,7 +570,7 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
-  private UserInfo createOAuthUser(OAuthSignupDTO oAuthSignupDTO, AccountDTO account) {
+  private UserInfo createOAuthUser(OAuthSignupDTO oAuthSignupDTO, AccountDTO account, String ipAddress) {
     try {
       UserRequestDTO userRequest = UserRequestDTO.builder()
                                        .email(oAuthSignupDTO.getEmail())
@@ -588,7 +585,7 @@ public class SignupServiceImpl implements SignupService {
       return getResponse(userClient.createNewOAuthUser(userRequest));
     } catch (Exception e) {
       sendFailedTelemetryEvent(
-          oAuthSignupDTO.getEmail(), oAuthSignupDTO.getUtmInfo(), e, account, "OAuth user creation");
+          oAuthSignupDTO.getEmail(), oAuthSignupDTO.getUtmInfo(), e, account, "OAuth user creation", ipAddress);
       throw e;
     }
   }

@@ -149,7 +149,7 @@ public class SignupServiceImplTest extends CategoryTest {
         SignupVerificationToken.builder().email(EMAIL).validUntil(Long.MAX_VALUE).build();
     when(verificationTokenRepository.findByToken("token")).thenReturn(Optional.of(verificationToken));
     when(accessControlClient.hasAccess(any(), any(), any())).thenReturn(true);
-    UserInfo userInfo = signupServiceImpl.completeSignupInvite("token");
+    UserInfo userInfo = signupServiceImpl.completeSignupInvite("token", "127.0.0.1");
 
     verify(telemetryReporter, times(1)).sendIdentifyEvent(eq(EMAIL), any(), any());
     verify(executorService, times(1));
@@ -163,7 +163,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCompleteSignupInviteWithInvalidToken() throws IOException {
     when(verificationTokenRepository.findByToken("token")).thenReturn(Optional.ofNullable(null));
-    signupServiceImpl.completeSignupInvite("token");
+    signupServiceImpl.completeSignupInvite("token", "127.0.0.1");
   }
 
   @Test
@@ -187,7 +187,7 @@ public class SignupServiceImplTest extends CategoryTest {
     when(userClient.getUserById(any())).thenReturn(getUserByIdCall);
     when(accessControlClient.hasAccess(any(), any(), any())).thenReturn(true);
 
-    UserInfo returnedUser = signupServiceImpl.oAuthSignup(oAuthSignupDTO);
+    UserInfo returnedUser = signupServiceImpl.oAuthSignup(oAuthSignupDTO, "127.0.0.1");
 
     verify(telemetryReporter, times(1)).sendIdentifyEvent(eq(EMAIL), any(), any());
     verify(executorService, times(1));
@@ -237,7 +237,7 @@ public class SignupServiceImplTest extends CategoryTest {
         .when(signupValidator)
         .validateEmail(oAuthSignupDTO.getEmail());
     try {
-      signupServiceImpl.oAuthSignup(oAuthSignupDTO);
+      signupServiceImpl.oAuthSignup(oAuthSignupDTO, "127.0.0.1");
     } catch (SignupException e) {
       verify(telemetryReporter, times(1))
           .sendTrackEvent(
@@ -283,7 +283,7 @@ public class SignupServiceImplTest extends CategoryTest {
                                     .userId("1")
                                     .token("2")
                                     .build()));
-    VerifyTokenResponseDTO verifyTokenResponseDTO = signupServiceImpl.verifyToken("2");
+    VerifyTokenResponseDTO verifyTokenResponseDTO = signupServiceImpl.verifyToken("2", "127.0.0.1");
     assertThat(verifyTokenResponseDTO.getAccountIdentifier()).isEqualTo(ACCOUNT_ID);
   }
 }
