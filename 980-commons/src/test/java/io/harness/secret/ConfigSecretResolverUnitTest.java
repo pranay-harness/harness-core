@@ -118,8 +118,22 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
         .hasMessageContaining("doesn't contain any fields annotated with 'ConfigSecret'");
   }
 
+  @Test
+  @Owner(developers = FILIP)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForNonExistentSecret() throws IOException {
+    assertThatThrownBy(() -> {
+      // Given
+      NonExistentConfig configuration = new NonExistentConfig();
+
+      // When
+      configSecretResolver.resolveSecret(configuration);
+    })
+        .isInstanceOf(ConfigSecretException.class)
+        .hasMessageContaining("not found");
+  }
+
   // TODO:
-  // not found in secret storage
   // fix for final fields
 
   public static class WorkingConfiguration {
@@ -181,6 +195,14 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
 
     public String getNotAnnotated() {
       return notAnnotated;
+    }
+  }
+
+  private static class NonExistentConfig {
+    @ConfigSecret private String nonExistent = "reference-for-non-existent-secret";
+
+    public String getNonExistent() {
+      return nonExistent;
     }
   }
 }
