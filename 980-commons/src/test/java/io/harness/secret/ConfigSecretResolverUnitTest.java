@@ -57,9 +57,27 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
     assertThat(configuration.getToBeResolved()).isEqualTo("secret-from-secret-manager");
   }
 
+  @Test
+  @Owner(developers = FILIP)
+  @Category(UnitTests.class)
+  public void shouldHandleInnerObjects() throws IOException {
+    // Given
+    DummyConfiguration configuration = new DummyConfiguration();
+
+    when(secretStorage.getSecretBy("some-inner-secret-reference")).thenReturn("inner-secret");
+
+    // When
+    configSecretResolver.resolveSecret(configuration);
+
+    // Then
+    assertThat(configuration.getInner().getInnerSecret()).isEqualTo("inner-secret");
+    assertThat(configuration.getInner().getInnerRegular()).isEqualTo("regular-value");
+  }
+
   public static class DummyConfiguration {
     @ConfigSecret private String toBeResolved = "some-secret-reference";
     private String shouldNotBeResolved = "should-not-resolve";
+    @ConfigSecret private InnerDummyConfiguration inner = new InnerDummyConfiguration();
 
     public String getToBeResolved() {
       return toBeResolved;
@@ -67,6 +85,23 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
 
     public String getShouldNotBeResolved() {
       return shouldNotBeResolved;
+    }
+
+    public InnerDummyConfiguration getInner() {
+      return inner;
+    }
+  }
+
+  public static class InnerDummyConfiguration {
+    @ConfigSecret private String innerSecret = "some-inner-secret-reference";
+    private String innerRegular = "regular-value";
+
+    public String getInnerSecret() {
+      return innerSecret;
+    }
+
+    public String getInnerRegular() {
+      return innerRegular;
     }
   }
 }
