@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.IllegalArgumentException;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -60,6 +61,21 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
   @Test
   @Owner(developers = FILIP)
   @Category(UnitTests.class)
+  public void shouldThrowExceptionForFinalFields() throws IOException {
+    assertThatThrownBy(() -> {
+      // Given
+      FinalConfiguration configuration = new FinalConfiguration();
+
+      // When
+      configSecretResolver.resolveSecret(configuration);
+    })
+        .isInstanceOf(ConfigSecretException.class)
+        .hasMessageContaining(ConfigSecret.class.getSimpleName() + " can't be used on final fields");
+  }
+
+  @Test
+  @Owner(developers = FILIP)
+  @Category(UnitTests.class)
   public void shouldHandleInnerObjects() throws IOException {
     // Given
     DummyConfiguration configuration = new DummyConfiguration();
@@ -102,6 +118,14 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
 
     public String getInnerRegular() {
       return innerRegular;
+    }
+  }
+
+  private static class FinalConfiguration {
+    @ConfigSecret private final String finalFieldToBeResolved = "some-secret-reference";
+
+    public String getFinalFieldToBeResolved() {
+      return finalFieldToBeResolved;
     }
   }
 }

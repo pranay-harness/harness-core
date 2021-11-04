@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 
 @Slf4j
 public class ConfigSecretResolver {
@@ -20,6 +22,10 @@ public class ConfigSecretResolver {
       for (Field f : c.getDeclaredFields()) {
         ConfigSecret annotation = f.getAnnotation(ConfigSecret.class);
         if (annotation != null) {
+          if (Modifier.isFinal(f.getModifiers())) {
+            throw new ConfigSecretException(ConfigSecret.class.getSimpleName() + " can't be used on final fields");
+          }
+
           boolean isAccessible = f.isAccessible();
           f.setAccessible(true);
           try {
@@ -27,6 +33,7 @@ public class ConfigSecretResolver {
             if (object != null) {
               if (object instanceof String && isNotEmpty(object.toString())) {
                 String value = secretStorage.getSecretBy(object.toString());
+                FieldUtils.writeField(f, o, value, true);
                 f.set(o, value);
               } else if (object instanceof char[] && ((char[]) object).length > 0) {
                 String value = secretStorage.getSecretBy(String.copyValueOf((char[]) object));
