@@ -109,7 +109,7 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
   public void shouldThrowExceptionForConfigurationWithoutAnnotations() throws IOException {
     assertThatThrownBy(() -> {
       // Given
-      NotWorkingConfiguration configuration = new NotWorkingConfiguration();
+      EmptyConfiguration configuration = new EmptyConfiguration();
 
       // When
       configSecretResolver.resolveSecret(configuration);
@@ -118,11 +118,17 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
         .hasMessageContaining("doesn't contain any fields annotated with 'ConfigSecret'");
   }
 
+  // TODO:
+  // not found in secret storage
+  // fix for final fields
+
   public static class WorkingConfiguration {
     @ConfigSecret private String secret1String = "secret-reference-1";
     @ConfigSecret private char[] secret2CharArray = "secret-reference-2".toCharArray();
     private String regularValue = "regular-value";
     @ConfigSecret private InnerWorkingConfiguration inner = new InnerWorkingConfiguration();
+    @ConfigSecret private String nullString = null;
+    @ConfigSecret private String emptyString = "";
 
     public String secret1String() {
       return secret1String;
@@ -162,15 +168,15 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
     }
   }
 
-  private static class NotWorkingConfiguration {
-    @ConfigSecret private EmptyConfig emptyConfig = new EmptyConfig();
+  private static class EmptyConfiguration {
+    @ConfigSecret private NotAnnotatedConfig notAnnotatedConfig = new NotAnnotatedConfig();
 
-    public EmptyConfig getEmptyConfig() {
-      return emptyConfig;
+    public NotAnnotatedConfig getNotAnnotatedConfig() {
+      return notAnnotatedConfig;
     }
   }
 
-  private static class EmptyConfig {
+  private static class NotAnnotatedConfig {
     private String notAnnotated = "dummy";
 
     public String getNotAnnotated() {
