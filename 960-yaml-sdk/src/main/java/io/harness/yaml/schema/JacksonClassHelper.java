@@ -112,16 +112,20 @@ public class JacksonClassHelper {
         processNonEmptyFields(nonEmptyFields, declaredField);
       }
       // One of mappings
-      final Set<OneOfMapping> oneOfMappingForClasses = getOneOfMappingsForClass(clazz);
+      final Set<OneOfMapping> oneOfMappingForClass = getOneOfMappingsForClass(clazz);
       // One of set mappings
-      final OneOfSetMapping oneOfSetMappingForClasses = getOneOfSetMappingsForClass(clazz);
+      final OneOfSetMapping oneOfSetMappingForClass = getOneOfSetMappingsForClass(clazz);
+      if (isNotEmpty(oneOfMappingForClass) && oneOfSetMappingForClass != null) {
+        throw new InvalidRequestException(
+            String.format("Class %s cannot have both OneOfField and OneOfSet annotation", swaggerClassName));
+      }
       checkIfSubTypeDataListIsNotUnique(fieldSubtypeDataList);
       final SwaggerDefinitionsMetaInfo definitionsMetaInfo = SwaggerDefinitionsMetaInfo.builder()
-                                                                 .oneOfMappings(oneOfMappingForClasses)
+                                                                 .oneOfMappings(oneOfMappingForClass)
                                                                  .subtypeClassMap(fieldSubtypeDataList)
                                                                  .fieldPossibleTypes(possibleFieldTypesSet)
                                                                  .notEmptyStringFields(nonEmptyFields)
-                                                                 .oneOfSetMapping(oneOfSetMappingForClasses)
+                                                                 .oneOfSetMapping(oneOfSetMappingForClass)
                                                                  .build();
       swaggerDefinitionsMetaInfoMap.put(swaggerClassName, definitionsMetaInfo);
     }
