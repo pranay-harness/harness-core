@@ -140,6 +140,7 @@ public class OwnerRule implements TestRule {
   public static final String ROHIT_KUMAR = "rohit.kumar";
   public static final String ROHITKARELIA = "rohit.karelia";
   public static final String RUSHABH = "rushabh.shah";
+  public static final String SAGNIK = "sagnik.de";
   public static final String SAMARTH = "samarth.singhal";
   public static final String SANDESH = "sandesh.katta";
   public static final String SANJA = "sanja.jokic";
