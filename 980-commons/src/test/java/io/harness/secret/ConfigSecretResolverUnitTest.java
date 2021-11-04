@@ -23,35 +23,50 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
   private ConfigSecretResolver configSecretResolver;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     configSecretResolver = new ConfigSecretResolver(secretStorage);
   }
 
   @Test
   @Owner(developers = FILIP)
   @Category(UnitTests.class)
-  public void shouldReplaceSecretReferenceWithValueFromSecretStorage() throws IOException {
+  public void shouldNotResolveFieldsWhichAreNotAnnotated() throws IOException {
     // Given
     DummyConfiguration configuration = new DummyConfiguration();
-
-    when(secretStorage.getSecretBy("dummy-secret-reference")).thenReturn("secret-from-secret-manager");
 
     // When
     configSecretResolver.resolveSecret(configuration);
 
     // Then
-    assertThat(configuration.getSecret()).isEqualTo("secret-from-secret-manager");
+    assertThat(configuration.getShouldNotBeResolved()).isEqualTo("should-not-resolve");
+  }
+
+  @Test
+  @Owner(developers = FILIP)
+  @Category(UnitTests.class)
+  public void shouldResolveSecretReferenceWithValueFromSecretStorage() throws IOException {
+    // Given
+    DummyConfiguration configuration = new DummyConfiguration();
+
+    when(secretStorage.getSecretBy("some-secret-reference")).thenReturn("secret-from-secret-manager");
+
+    // When
+    configSecretResolver.resolveSecret(configuration);
+
+    // Then
+    assertThat(configuration.getToBeResolved()).isEqualTo("secret-from-secret-manager");
   }
 
   public static class DummyConfiguration {
-    @ConfigSecret private final String secret;
+    @ConfigSecret private String toBeResolved = "some-secret-reference";
+    private String shouldNotBeResolved = "should-not-resolve";
 
-    public DummyConfiguration() {
-      secret = "dummy-secret-reference";
+    public String getToBeResolved() {
+      return toBeResolved;
     }
 
-    public String getSecret() {
-      return secret;
+    public String getShouldNotBeResolved() {
+      return shouldNotBeResolved;
     }
   }
 }
