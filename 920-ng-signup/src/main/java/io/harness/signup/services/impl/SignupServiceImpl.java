@@ -59,10 +59,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -70,10 +67,10 @@ import org.mindrot.jbcrypt.BCrypt;
 @Singleton
 @OwnedBy(GTM)
 public class SignupServiceImpl implements SignupService {
-  private AccountService accountService;
-  private UserClient userClient;
-  private SignupValidator signupValidator;
-  private ReCaptchaVerifier reCaptchaVerifier;
+  private final AccountService accountService;
+  private final UserClient userClient;
+  private final SignupValidator signupValidator;
+  private final ReCaptchaVerifier reCaptchaVerifier;
   private final TelemetryReporter telemetryReporter;
   private final SignupNotificationHelper signupNotificationHelper;
   private final SignupVerificationTokenRepository verificationTokenRepository;
@@ -414,6 +411,7 @@ public class SignupServiceImpl implements SignupService {
 
   /**
    * Verify token in non email verification blocking flow
+   *
    * @param token
    * @param ipAddress
    * @return
