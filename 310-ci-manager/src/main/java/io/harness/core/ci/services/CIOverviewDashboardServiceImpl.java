@@ -434,18 +434,23 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     long startDateCopy = startInterval;
     long endDateCopy = endInterval;
     while (startDateCopy < endDateCopy) {
-      long total = 0, success = 0, failed = 0;
+      long total = 0, success = 0, failed = 0, expired = 0, aborted = 0;
       for (int i = 0; i < time.size(); i++) {
         if (startDateCopy == getStartingDateEpochValue(time.get(i))) {
           total++;
           if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
             success++;
+          } else if (status.get(i).contentEquals(ExecutionStatus.EXPIRED.name())) {
+            expired++;
+          } else if (status.get(i).contentEquals(ExecutionStatus.ABORTED.name())) {
+            aborted++;
           } else if (failedList.contains(status.get(i))) {
             failed++;
           }
         }
       }
-      BuildCount buildCount = BuildCount.builder().total(total).success(success).failed(failed).build();
+      BuildCount buildCount =
+          BuildCount.builder().total(total).success(success).expired(expired).aborted(aborted).failed(failed).build();
       buildExecutionInfoList.add(BuildExecutionInfo.builder().time(startDateCopy).builds(buildCount).build());
       startDateCopy = startDateCopy + DAY_IN_MS;
     }

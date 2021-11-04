@@ -23,6 +23,7 @@ import io.harness.event.payloads.Lifecycle;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -58,6 +59,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
   @Mock private StreamObserver<PublishResponse> observer;
   @Mock private LastReceivedPublishedMessageRepository lastReceivedPublishedMessageRepository;
   @Mock private MessageProcessorRegistry messageProcessorRegistry;
+  @Mock private MetricService metricService;
 
   @InjectMocks private EventPublisherServerImpl publisherServer;
 

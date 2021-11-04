@@ -373,3 +373,4 @@ enforcementClientConfiguration:
 
 opaServerConfig:
   baseUrl: http://localhost:3000
+  secret: secret

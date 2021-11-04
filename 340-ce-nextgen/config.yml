@@ -74,7 +74,7 @@ eventsFramework:
   redis:
     sentinel: false
     masterName: "test"
-    redisUrl: "redis://localhost:6379"
+    redisUrl: "dummyRedisUrl" # "redis://localhost:6379"
     sentinelUrls:
       - "redis://redis1:26379"
       - "redis://redis2:26379"

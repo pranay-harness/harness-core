@@ -3,6 +3,8 @@ package io.harness.pms.ngpipeline.inputset.observers;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.events.PipelineDeleteEvent;
+import io.harness.pms.events.PipelineUpdateEvent;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetListTypePMS;
@@ -24,13 +26,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @Slf4j
 @OwnedBy(PIPELINE)
-public class InputSetValidationObserver implements PipelineActionObserver {
+public class InputSetPipelineObserver implements PipelineActionObserver {
   @Inject PMSInputSetRepository inputSetRepository;
   @Inject PMSInputSetService inputSetService;
   @Inject ValidateAndMergeHelper validateAndMergeHelper;
 
   @Override
-  public void onUpdate(PipelineEntity pipelineEntity) {
+  public void onUpdate(PipelineUpdateEvent pipelineUpdateEvent) {
+    PipelineEntity pipelineEntity = pipelineUpdateEvent.getNewPipeline();
     Criteria criteria = PMSInputSetFilterHelper.createCriteriaForGetListForBranchAndRepo(pipelineEntity.getAccountId(),
         pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(),
         InputSetListTypePMS.INPUT_SET);
@@ -90,5 +93,12 @@ public class InputSetValidationObserver implements PipelineActionObserver {
         log.info("Marked input set " + inputSetId + " for pipeline " + pipelineId + " as valid.");
       }
     }
+  }
+
+  @Override
+  public void onDelete(PipelineDeleteEvent pipelineDeleteEvent) {
+    PipelineEntity pipelineEntity = pipelineDeleteEvent.getPipeline();
+    inputSetService.deleteInputSetsOnPipelineDeletion(pipelineEntity);
+    log.info("All inputSets of pipeline {} deleted", pipelineEntity.getIdentifier());
   }
 }

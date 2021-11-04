@@ -10,6 +10,7 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.events.PipelineDeleteEvent;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 
 import com.google.common.collect.ImmutableMap;
@@ -24,7 +25,8 @@ public class PipelineEntityCrudObserver implements PipelineActionObserver {
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Override
-  public void onDelete(PipelineEntity pipelineEntity) {
+  public void onDelete(PipelineDeleteEvent pipelineDeleteEvent) {
+    PipelineEntity pipelineEntity = pipelineDeleteEvent.getPipeline();
     EntityChangeDTO.Builder pipelineEntityChangeDTOBuilder =
         EntityChangeDTO.newBuilder()
             .setAccountIdentifier(StringValue.of(pipelineEntity.getAccountId()))

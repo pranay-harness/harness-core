@@ -11,8 +11,10 @@ import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.ngexception.CIStageExecutionException;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +22,8 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class CICleanupTask extends AbstractDelegateRunnableTask {
-  @Inject private CICleanupTaskHandler ciCleanupTaskHandler;
+  @Inject @Named(CITaskConstants.CLEANUP_AWS_VM) private CICleanupTaskHandler ciAwsVmCleanupTaskHandler;
+  @Inject @Named(CITaskConstants.CLEANUP_K8) private CICleanupTaskHandler ciK8CleanupTaskHandler;
 
   public CICleanupTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -35,6 +38,13 @@ public class CICleanupTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     CICleanupTaskParams ciCleanupTaskParams = (CICleanupTaskParams) parameters;
-    return ciCleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
+    if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.GCP_K8) {
+      return ciK8CleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
+    } else if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.AWS_VM) {
+      return ciAwsVmCleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
+    } else {
+      throw new CIStageExecutionException(
+          String.format("Invalid infra type for cleanup step", ciCleanupTaskParams.getType()));
+    }
   }
 }

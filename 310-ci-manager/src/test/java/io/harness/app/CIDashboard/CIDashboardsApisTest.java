@@ -173,7 +173,7 @@ public class CIDashboardsApisTest extends CategoryTest {
     List<BuildExecutionInfo> buildExecutionInfoList = new ArrayList<>();
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
                                    .time(1619308800000L)
-                                   .builds(BuildCount.builder().total(4).success(3).failed(1).build())
+                                   .builds(BuildCount.builder().total(4).success(3).aborted(1).failed(0).build())
                                    .build());
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
                                    .time(1619395200000L)
@@ -181,7 +181,7 @@ public class CIDashboardsApisTest extends CategoryTest {
                                    .build());
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
                                    .time(1619481600000L)
-                                   .builds(BuildCount.builder().total(1).success(0).failed(1).build())
+                                   .builds(BuildCount.builder().total(1).success(0).failed(0).expired(1).build())
                                    .build());
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
                                    .time(1619568000000L)

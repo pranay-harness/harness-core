@@ -29,6 +29,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -91,9 +92,10 @@ public class LicenseResource {
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   @Deprecated
   public ResponseDTO<ModuleLicenseDTO>
-  getModuleLicense(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
+  getModuleLicense(@Parameter(description = "Account id to get a module license.") @NotNull @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
+          MODULE_TYPE_KEY) ModuleType moduleType) {
     validateModuleType(moduleType);
     return ResponseDTO.newResponse(licenseService.getModuleLicense(accountIdentifier, moduleType));
   }
@@ -111,9 +113,10 @@ public class LicenseResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<List<ModuleLicenseDTO>>
-  getModuleLicenses(
-      @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
+  getModuleLicenses(@Parameter(description = "Account id to get a module license.") @NotNull @PathParam(
+                        NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
+          MODULE_TYPE_KEY) ModuleType moduleType) {
     validateModuleType(moduleType);
     return ResponseDTO.newResponse(licenseService.getModuleLicenses(accountIdentifier, moduleType));
   }
@@ -131,9 +134,10 @@ public class LicenseResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<LicensesWithSummaryDTO>
-  getLicensesWithSummary(
-      @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
+  getLicensesWithSummary(@Parameter(description = "Account id to get a module license with summary.") @NotNull
+                         @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
+          MODULE_TYPE_KEY) ModuleType moduleType) {
     validateModuleType(moduleType);
     return ResponseDTO.newResponse(licenseService.getLicenseSummary(accountIdentifier, moduleType));
   }
@@ -149,7 +153,8 @@ public class LicenseResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<AccountLicenseDTO>
-  getAccountLicensesDTO(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+  getAccountLicensesDTO(@Parameter(description = "Accouunt id to get all module licenses.") @QueryParam(
+      NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     AccountLicenseDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
     return ResponseDTO.newResponse(accountLicenses);
   }
@@ -165,8 +170,10 @@ public class LicenseResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO>
-  get(@PathParam("identifier") String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+  get(@Parameter(description = "The module license identifier") @PathParam("identifier") String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @Parameter(
+          description = "Account id to get a module license from an account.")
+      @AccountIdentifier String accountIdentifier) {
     ModuleLicenseDTO moduleLicense = licenseService.getModuleLicenseById(identifier);
     return ResponseDTO.newResponse(moduleLicense);
   }
@@ -182,9 +189,10 @@ public class LicenseResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO>
-  startFreeLicense(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
+  startFreeLicense(@Parameter(description = "Account id to start a free license") @NotNull @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
+          NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
     return ResponseDTO.newResponse(licenseService.startFreeLicense(accountIdentifier, moduleType));
   }
 
@@ -209,8 +217,8 @@ public class LicenseResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO>
-  startTrialLicense(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+  startTrialLicense(@Parameter(description = "Account id to start a trial license") @NotNull @QueryParam(
+                        NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialDTO startTrialRequestDTO) {
     return ResponseDTO.newResponse(licenseService.startTrialLicense(accountIdentifier, startTrialRequestDTO));
   }
@@ -226,8 +234,8 @@ public class LicenseResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO>
-  extendTrialLicense(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+  extendTrialLicense(@Parameter(description = "Account id to extend a trial") @NotNull @QueryParam(
+                         NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialDTO startTrialRequestDTO) {
     return ResponseDTO.newResponse(licenseService.extendTrialLicense(accountIdentifier, startTrialRequestDTO));
   }
@@ -243,9 +251,10 @@ public class LicenseResource {
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<Map<Edition, Set<EditionActionDTO>>>
-  getEditionActions(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
+  getEditionActions(@Parameter(description = "Account id to get the allowed actions.") @NotNull @QueryParam(
+                        NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
+          NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
     return ResponseDTO.newResponse(licenseService.getEditionActions(accountIdentifier, moduleType));
   }
 

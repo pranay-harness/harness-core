@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -66,9 +67,10 @@ public class LicenseUsageResource {
       })
   @NGAccessControlCheck(resourceType = "LICENSE", permission = "core_license_view")
   public ResponseDTO<LicenseUsageDTO>
-  getLicenseUsage(@QueryParam("accountIdentifier") @AccountIdentifier String accountIdentifier,
-      @PathParam("module") String module, @QueryParam("timestamp") long timestamp,
-      @QueryParam("CDLicenseType") String cdLicenseType) {
+  getLicenseUsage(@Parameter(description = "Account id to get the license usage.") @QueryParam(
+                      "accountIdentifier") @AccountIdentifier String accountIdentifier,
+      @Parameter(description = "A Harness platform module.") @PathParam("module") String module,
+      @QueryParam("timestamp") long timestamp, @QueryParam("CDLicenseType") String cdLicenseType) {
     try {
       ModuleType moduleType = ModuleType.fromString(module);
       if (ModuleType.CD.equals(moduleType)) {
