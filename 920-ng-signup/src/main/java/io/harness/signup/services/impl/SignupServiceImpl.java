@@ -1,6 +1,7 @@
 package io.harness.signup.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.GTM;
+import static io.harness.configuration.DeployMode.DEPLOY_MODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
