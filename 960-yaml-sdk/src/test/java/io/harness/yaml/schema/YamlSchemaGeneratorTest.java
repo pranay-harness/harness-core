@@ -1,6 +1,7 @@
 package io.harness.yaml.schema;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -136,5 +137,33 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
     ObjectWriter jsonWriter = yamlSchemaGenerator.getObjectWriter();
     final String s = jsonWriter.writeValueAsString(entityTypeJsonNodeMap.get(EntityType.CONNECTORS));
     assertThat(s).isEqualTo(expectedOutput);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGenerateYamlSchemaWithOneOfSetAnnotation() throws IOException {
+    setup(TestClass.ClassWithOneOfSetAnnotation.class);
+    final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
+    assertThat(entityTypeJsonNodeMap.size()).isEqualTo(1);
+    final String expectedOutput = IOUtils.resourceToString(
+        "testSchema/testOneOfSetSchema.json", StandardCharsets.UTF_8, this.getClass().getClassLoader());
+    final Object result = entityTypeJsonNodeMap.get(EntityType.CONNECTORS);
+    ObjectMapper mapper = new ObjectMapper();
+    assertThat(mapper.readTree(result.toString())).isEqualTo(mapper.readTree(expectedOutput));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGenerateYamlSchemaWithOneOfSetAnnotation_WithInternalValues() throws IOException {
+    setup(TestClass.ClassWhichContainsInterfaceWithInternalAndOneOfSetAnnotation.class);
+    final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
+    assertThat(entityTypeJsonNodeMap.size()).isEqualTo(1);
+    final String expectedOutput = IOUtils.resourceToString("testSchema/testOneOfSetSchemaWithInternalProperty.json",
+        StandardCharsets.UTF_8, this.getClass().getClassLoader());
+    final Object result = entityTypeJsonNodeMap.get(EntityType.CONNECTORS);
+    ObjectMapper mapper = new ObjectMapper();
+    assertThat(mapper.readTree(result.toString())).isEqualTo(mapper.readTree(expectedOutput));
   }
 }

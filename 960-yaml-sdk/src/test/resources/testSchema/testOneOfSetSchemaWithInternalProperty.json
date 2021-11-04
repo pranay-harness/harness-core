@@ -1,0 +1,179 @@
+{
+  "type": "object",
+  "required": [],
+  "properties": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "a"
+      ],
+      "properties": {
+        "a": {
+          "type": "string"
+        },
+        "mnop": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "testInterface": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/testName"
+            },
+            {
+              "$ref": "#/definitions/ClassWithoutApiModelOverride"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "ClassWhichContainsInterfaceWithInternalAndOneOfSetAnnotation": {
+      "type": "object",
+      "required": [],
+      "properties": {},
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "a"
+          ],
+          "properties": {
+            "a": {
+              "type": "string"
+            },
+            "mnop": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "testInterface": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/testName"
+                },
+                {
+                  "$ref": "#/definitions/ClassWithoutApiModelOverride"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ClassWithoutApiModelOverride": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TestInterface"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "testString": {
+              "type": "string"
+            },
+            "x": {
+              "type": "string"
+            },
+            "y": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "x"
+              ]
+            },
+            {
+              "required": [
+                "y"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TestInterface": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "testName": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TestInterface"
+        },
+        {
+          "type": "object",
+          "required": [
+            "testString"
+          ],
+          "properties": {
+            "a": {
+              "type": "string"
+            },
+            "apimodelproperty": {
+              "type": "string"
+            },
+            "b": {
+              "type": "string"
+            },
+            "jsontypeinfo": {
+              "type": "string"
+            },
+            "testString": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "apimodelproperty"
+              ]
+            },
+            {
+              "required": [
+                "jsontypeinfo"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "a"
+              ]
+            },
+            {
+              "required": [
+                "b"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}
