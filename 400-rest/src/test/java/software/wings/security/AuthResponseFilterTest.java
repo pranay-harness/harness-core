@@ -73,7 +73,7 @@ public class AuthResponseFilterTest extends CategoryTest {
       when(requestContext.getMethod()).thenReturn(httpMethod);
 
       AuthToken authToken = new AuthToken(ACCOUNT_ID, "testUser", 0L);
-      authToken.setUser(mock(User.class));
+      authToken.setUser(User.Builder.anUser().build());
       when(authService.validateToken(anyString())).thenReturn(authToken);
 
       authResponseFilter.filter(requestContext, responseContext);

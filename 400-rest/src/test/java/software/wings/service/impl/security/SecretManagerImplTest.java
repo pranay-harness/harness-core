@@ -18,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -180,17 +179,14 @@ public class SecretManagerImplTest extends WingsBaseTest {
     encryptedData.setUsageRestrictions(usageRestrictions2);
     String encryptedDataId2 = wingsPersistence.save(encryptedData);
 
-    Environment environment1 = mock(Environment.class);
-    when(environment1.getUuid()).thenReturn(envId1);
-    Environment environment2 = mock(Environment.class);
-    when(environment2.getUuid()).thenReturn(envId2);
-    Environment environment3 = mock(Environment.class);
-    when(environment3.getUuid()).thenReturn(envId3);
+    Environment environment1 = Environment.Builder.anEnvironment().uuid(envId1).build();
+    Environment environment2 = Environment.Builder.anEnvironment().uuid(envId2).build();
+    Environment environment3 = Environment.Builder.anEnvironment().uuid(envId3).build();
 
     Map<String, List<Base>> appIdEnvMapForAccount = new HashMap<>();
     appIdEnvMapForAccount.put(appId1, Collections.singletonList(environment1));
-    appIdEnvMapForAccount.put(appId2, Collections.singletonList(environment1));
-    appIdEnvMapForAccount.put(appId3, Collections.singletonList(environment1));
+    appIdEnvMapForAccount.put(appId2, Collections.singletonList(environment2));
+    appIdEnvMapForAccount.put(appId3, Collections.singletonList(environment3));
 
     when(appService.getAppIdsByAccountId(account.getUuid())).thenReturn(Arrays.asList(appId1, appId2, appId3));
     when(environmentService.getAppIdEnvMap(any())).thenReturn(appIdEnvMapForAccount);

@@ -70,6 +70,7 @@ import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
@@ -934,7 +935,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
-    Workflow workflow = Workflow.WorkflowBuilder.aWorkflow().orchestrationWorkflow(canaryOrchestrationWorkflow).build();
+    Workflow workflow = WorkflowBuilder.aWorkflow().orchestrationWorkflow(canaryOrchestrationWorkflow).build();
 
     when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
@@ -1155,8 +1156,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void testUpdateExecutionInstanceWhenWaitingForIntervention() {
-    Workflow workflow =
-        Workflow.WorkflowBuilder.aWorkflow().orchestrationWorkflow(new CanaryOrchestrationWorkflow()).build();
+    Workflow workflow = WorkflowBuilder.aWorkflow().orchestrationWorkflow(new CanaryOrchestrationWorkflow()).build();
     when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(alertService.openAlert(any(), any(), any(), any())).thenReturn(null);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);

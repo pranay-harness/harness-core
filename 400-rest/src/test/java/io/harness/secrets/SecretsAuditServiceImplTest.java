@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.HarnessSecret;
@@ -38,10 +37,11 @@ public class SecretsAuditServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    User user = mock(User.class);
-    when(user.getUuid()).thenReturn(UUIDGenerator.generateUuid());
-    when(user.getEmail()).thenReturn(UUIDGenerator.generateUuid());
-    when(user.getName()).thenReturn(UUIDGenerator.generateUuid());
+    User user = User.Builder.anUser()
+                    .uuid(UUIDGenerator.generateUuid())
+                    .email(UUIDGenerator.generateUuid())
+                    .name(UUIDGenerator.generateUuid())
+                    .build();
     UserThreadLocal.set(user);
     auditServiceHelper = mock(AuditServiceHelper.class);
     secretsAuditService = new SecretsAuditServiceImpl(auditServiceHelper, wingsPersistence);

@@ -416,8 +416,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   public void testHarnessLocalLoginNgAdmin() throws IOException {
     String accountId = "AccountId1";
     Account account = anAccount().withUuid(accountId).withDefaultExperience(NG).build();
-    User mockUser = mock(User.class);
-    User authenticatedUser = mock(User.class);
+    User mockUser = User.Builder.anUser().build();
+    User authenticatedUser = User.Builder.anUser().build();
     String basicToken = Base64.encodeBase64String(("UserName"
         + ":password")
                                                       .getBytes());
@@ -444,8 +444,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   public void testHarnessLocalLoginNgNotAdmin() throws IOException {
     String accountId = "AccountId1";
     Account account = anAccount().withUuid(accountId).withDefaultExperience(NG).build();
-    User mockUser = mock(User.class);
-    User authenticatedUser = mock(User.class);
+    User mockUser = User.Builder.anUser().build();
+    User authenticatedUser = User.Builder.anUser().build();
     String basicToken = Base64.encodeBase64String(("UserName"
         + ":password")
                                                       .getBytes());
@@ -472,8 +472,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   public void testHarnessLocalLoginCgAdmin() {
     String accountId = "AccountId1";
     Account account = anAccount().withUuid(accountId).withDefaultExperience(CG).build();
-    User mockUser = mock(User.class);
-    User authenticatedUser = mock(User.class);
+    User mockUser = User.Builder.anUser().build();
+    User authenticatedUser = User.Builder.anUser().build();
     String basicToken = Base64.encodeBase64String(("UserName"
         + ":password")
                                                       .getBytes());
@@ -495,8 +495,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   public void testHarnessLocalLoginCgNonAdmin() {
     String accountId = "AccountId1";
     Account account = anAccount().withUuid(accountId).withDefaultExperience(CG).build();
-    User mockUser = mock(User.class);
-    User authenticatedUser = mock(User.class);
+    User mockUser = User.Builder.anUser().build();
+    User authenticatedUser = User.Builder.anUser().build();
     String basicToken = Base64.encodeBase64String(("UserName"
         + ":password")
                                                       .getBytes());

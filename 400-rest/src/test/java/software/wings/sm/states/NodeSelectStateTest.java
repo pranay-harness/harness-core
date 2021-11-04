@@ -117,7 +117,6 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private ContextElement contextElement;
   @Mock private ServiceInstanceArtifactParam serviceInstanceArtifactParam;
-  @Mock private Artifact artifact;
   @Mock private ArtifactService artifactService;
   @Mock private InstanceService instanceService;
   @Mock private WorkflowStandardParams workflowStandardParams;
@@ -132,6 +131,8 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
   @InjectMocks private NodeSelectState nodeSelectState = new DcNodeSelectState("DC_NODE_SELECT");
   private static final String INSTANCE_COUNT_EXPRESSION = "${workflow.variables.count}";
+
+  private Artifact artifact = Artifact.Builder.anArtifact().build();
 
   StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
   AwsInfrastructureMapping awsInfrastructureMapping =

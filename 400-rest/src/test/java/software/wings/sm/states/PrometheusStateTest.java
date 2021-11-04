@@ -82,7 +82,7 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testRenderURLExpression() throws IllegalAccessException {
-    AnalysisContext analysisContext = mock(AnalysisContext.class);
+    AnalysisContext analysisContext = AnalysisContext.builder().build();
     VerificationStateAnalysisExecutionData executionData = mock(VerificationStateAnalysisExecutionData.class);
     Map<String, String> hosts = new HashMap<>();
     hosts.put("prometheus.host", "default");
@@ -117,7 +117,7 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testTriggerAnalysisDataCollection_renderConnectorId() throws IllegalAccessException {
-    AnalysisContext analysisContext = mock(AnalysisContext.class);
+    AnalysisContext analysisContext = AnalysisContext.builder().build();
     VerificationStateAnalysisExecutionData executionData = mock(VerificationStateAnalysisExecutionData.class);
     Map<String, String> hosts = new HashMap<>();
     hosts.put("prometheus.host", "default");

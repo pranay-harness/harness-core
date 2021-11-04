@@ -449,8 +449,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private AccountService accountService;
   @Mock private NotificationSetupService notificationSetupService;
-  @Mock private Application application;
-  @Mock private Account account;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private PipelineService pipelineService;
   @Mock private EntityUpdateService entityUpdateService;
@@ -483,6 +481,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowService workflowService;
   @Mock private FieldEnd fieldEnd;
 
+  private Account account = Account.Builder.anAccount().build();
+  private Application application = Application.Builder.anApplication().build();
   private Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactType(WAR).build();
   private User user = User.Builder.anUser().uuid("invalid").email("invalid@abcd.com").build();
 

@@ -17,7 +17,6 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,6 +36,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
@@ -290,7 +290,7 @@ public class TriggerControllerTest extends CategoryTest {
 
     when(workflowService.readWorkflow(
              qlCreateOrUpdateTriggerInput.getApplicationId(), qlCreateOrUpdateTriggerInput.getAction().getEntityId()))
-        .thenReturn(mock(Workflow.class));
+        .thenReturn(WorkflowBuilder.aWorkflow().build());
     doNothing().when(triggerController).validateWorkflow(anyString(), anyString(), any(Workflow.class));
     when(workflowExecutionController.resolveEnvId(any(Workflow.class), anyList())).thenReturn("envId");
     doNothing().when(deploymentAuthHandler).authorizeWorkflowExecution(anyString(), anyString());
@@ -393,7 +393,7 @@ public class TriggerControllerTest extends CategoryTest {
                                                             .build();
 
     doNothing().when(triggerController).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
-    when(pipelineService.readPipeline(anyString(), anyString(), anyBoolean())).thenReturn(mock(Pipeline.class));
+    when(pipelineService.readPipeline(anyString(), anyString(), anyBoolean())).thenReturn(Pipeline.builder().build());
     doNothing().when(triggerController).validatePipeline(anyString(), anyString(), any(Pipeline.class));
     when(pipelineExecutionController.resolveEnvId(any(Pipeline.class), anyList())).thenReturn("envId");
     doNothing().when(deploymentAuthHandler).authorizePipelineExecution(anyString(), anyString());
@@ -498,7 +498,7 @@ public class TriggerControllerTest extends CategoryTest {
                                                     .build();
 
     doNothing().when(triggerController).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
-    when(pipelineService.readPipeline(anyString(), anyString(), anyBoolean())).thenReturn(mock(Pipeline.class));
+    when(pipelineService.readPipeline(anyString(), anyString(), anyBoolean())).thenReturn(Pipeline.builder().build());
     doNothing().when(triggerController).validatePipeline(anyString(), anyString(), any(Pipeline.class));
     when(pipelineExecutionController.resolveEnvId(any(Pipeline.class), anyList())).thenReturn("envId");
     doNothing().when(deploymentAuthHandler).authorizePipelineExecution(anyString(), anyString());
@@ -556,7 +556,7 @@ public class TriggerControllerTest extends CategoryTest {
 
     when(workflowService.readWorkflow(
              createOrUpdateTriggerInput.getApplicationId(), createOrUpdateTriggerInput.getAction().getEntityId()))
-        .thenReturn(mock(Workflow.class));
+        .thenReturn(WorkflowBuilder.aWorkflow().build());
     doNothing().when(triggerController).validateWorkflow(anyString(), anyString(), any(Workflow.class));
     when(workflowExecutionController.resolveEnvId(any(Workflow.class), anyList())).thenReturn("envId");
     doNothing().when(deploymentAuthHandler).authorizeWorkflowExecution(anyString(), anyString());

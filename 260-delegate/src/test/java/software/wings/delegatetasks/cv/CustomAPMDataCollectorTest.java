@@ -64,7 +64,7 @@ public class CustomAPMDataCollectorTest extends WingsBaseTest {
 
     when(dataCollectionExecutionContext.getActivityLogger())
         .thenReturn(mock(DelegateCVActivityLogService.Logger.class));
-    ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
+    ThirdPartyApiCallLog thirdPartyApiCallLog = ThirdPartyApiCallLog.builder().build();
     when(dataCollectionExecutionContext.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
     when(dataCollectionExecutionContext.executeRequest(any(), any(), any())).then(invocation -> {
       String title = invocation.getArgumentAt(0, String.class);

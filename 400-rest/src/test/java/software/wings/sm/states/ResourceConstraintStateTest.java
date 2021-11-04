@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -100,7 +99,7 @@ public class ResourceConstraintStateTest extends WingsBaseTest {
         .when(resourceConstraintService)
         .createAbstraction(any(ResourceConstraint.class));
 
-    doReturn(mock(ResourceConstraint.class)).when(resourceConstraintService).get(anyString(), anyString());
+    doReturn(ResourceConstraint.builder().build()).when(resourceConstraintService).get(anyString(), anyString());
     doReturn(2).when(state).alreadyAcquiredPermits(any(), any());
 
     state.setAcquireMode(AcquireMode.ENSURE);

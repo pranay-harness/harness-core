@@ -219,7 +219,7 @@ public class AuthenticationFilterTest extends CategoryTest {
     doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
     doReturn(true).when(authenticationFilter).isAuthenticatedByIdentitySvc(any(ContainerRequestContext.class));
     doReturn(true).when(authenticationFilter).isIdentityServiceOriginatedRequest(any(ContainerRequestContext.class));
-    User user = mock(User.class);
+    User user = User.Builder.anUser().build();
     doReturn(user).when(userService).getUserFromCacheOrDB("userId");
     authenticationFilter.filter(context);
     assertThat(UserThreadLocal.get()).isNotNull();
@@ -374,7 +374,7 @@ public class AuthenticationFilterTest extends CategoryTest {
       doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
       doReturn(false).when(authenticationFilter).isInternalRequest(any(ResourceInfo.class));
       AuthToken authToken = new AuthToken(ACCOUNT_ID, "testUser", 0L);
-      authToken.setUser(mock(User.class));
+      authToken.setUser(User.Builder.anUser().build());
       when(authService.validateToken(anyString())).thenReturn(authToken);
       authenticationFilter.filter(context);
     } catch (WingsException e) {
