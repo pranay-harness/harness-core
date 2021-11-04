@@ -17,39 +17,31 @@ public class ConfigSecretResolver {
   }
 
   public void resolveSecret(Object o) throws IOException {
-    Class<?> c = o.getClass();
-    while (c.getSuperclass() != null) {
-      for (Field f : c.getDeclaredFields()) {
-        ConfigSecret annotation = f.getAnnotation(ConfigSecret.class);
-        if (annotation != null) {
-          if (Modifier.isFinal(f.getModifiers())) {
-            throw new ConfigSecretException(ConfigSecret.class.getSimpleName() + " can't be used on final fields");
-          }
-
-          boolean isAccessible = f.isAccessible();
-          f.setAccessible(true);
-          try {
-            Object object = f.get(o);
-            if (object != null) {
-              if (object instanceof String && isNotEmpty(object.toString())) {
-                String value = secretStorage.getSecretBy(object.toString());
-                FieldUtils.writeField(f, o, value, true);
-                f.set(o, value);
-              } else if (object instanceof char[] && ((char[]) object).length > 0) {
-                String value = secretStorage.getSecretBy(String.copyValueOf((char[]) object));
-                f.set(o, value.toCharArray());
-              } else {
-                resolveSecret(object);
-              }
-            }
-            f.setAccessible(isAccessible);
-          } catch (IllegalAccessException e) {
-            log.error("Field [{}] is not accessible ", f.getName());
-          }
-          f.setAccessible(isAccessible);
-        }
+    for (Field field : FieldUtils.getFieldsListWithAnnotation(o.getClass(), ConfigSecret.class)) {
+      if (Modifier.isFinal(field.getModifiers())) {
+        throw new ConfigSecretException(ConfigSecret.class.getSimpleName() + " can't be used on final fields");
       }
-      c = c.getSuperclass();
+
+      boolean isAccessible = field.isAccessible();
+      field.setAccessible(true);
+      try {
+        Object object = field.get(o);
+        if (object != null) {
+          if (object instanceof String && isNotEmpty(object.toString())) {
+            String value = secretStorage.getSecretBy(object.toString());
+            FieldUtils.writeField(field, o, value, true);
+          } else if (object instanceof char[] && ((char[]) object).length > 0) {
+            String value = secretStorage.getSecretBy(String.copyValueOf((char[]) object));
+            FieldUtils.writeField(field, o, value.toCharArray(), true);
+          } else {
+            resolveSecret(object);
+          }
+        }
+        field.setAccessible(isAccessible);
+      } catch (IllegalAccessException e) {
+        log.error("Field [{}] is not accessible ", field.getName());
+      }
+      field.setAccessible(isAccessible);
     }
   }
 }
