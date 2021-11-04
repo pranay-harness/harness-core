@@ -14,7 +14,7 @@ public class ConfigSecretResolver {
     this.secretStorage = secretStorage;
   }
 
-  public void resolveSecret(Object o, String secretManagerProject) throws IOException {
+  public void resolveSecret(Object o) throws IOException {
     Class<?> c = o.getClass();
     while (c.getSuperclass() != null) {
       for (Field f : c.getDeclaredFields()) {
@@ -26,13 +26,13 @@ public class ConfigSecretResolver {
             Object object = f.get(o);
             if (object != null) {
               if (object instanceof String && isNotEmpty(object.toString())) {
-                String value = secretStorage.fetchSecret(secretManagerProject, object.toString());
+                String value = secretStorage.getSecretBy(object.toString());
                 f.set(o, value);
               } else if (object instanceof char[] && ((char[]) object).length > 0) {
-                String value = secretStorage.fetchSecret(secretManagerProject, String.copyValueOf((char[]) object));
+                String value = secretStorage.getSecretBy(String.copyValueOf((char[]) object));
                 f.set(o, value.toCharArray());
               } else {
-                resolveSecret(object, secretManagerProject);
+                resolveSecret(object);
               }
             }
             f.setAccessible(isAccessible);

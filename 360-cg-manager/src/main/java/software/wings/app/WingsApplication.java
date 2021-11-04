@@ -399,7 +399,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     MaintenanceController.forceMaintenance(true);
 
     if (configuration.isPullSecrets()) {
-      new ConfigSecretResolver(null).resolveSecret(configuration, configuration.getSmProject());
+      new ConfigSecretResolver(null).resolveSecret(configuration);
     }
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(

@@ -3,6 +3,7 @@ package io.harness.secret;
 import static io.harness.rule.OwnerRule.FILIP;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -14,7 +15,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -34,10 +34,10 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
     // Given
     DummyConfiguration configuration = new DummyConfiguration();
 
-    Mockito.when(secretStorage.fetchSecret("dummy", "dummy-secret-reference")).thenReturn("secret-from-secret-manager");
+    when(secretStorage.getSecretBy("dummy-secret-reference")).thenReturn("secret-from-secret-manager");
 
     // When
-    configSecretResolver.resolveSecret(configuration, "dummy");
+    configSecretResolver.resolveSecret(configuration);
 
     // Then
     assertThat(configuration.getSecret()).isEqualTo("secret-from-secret-manager");
