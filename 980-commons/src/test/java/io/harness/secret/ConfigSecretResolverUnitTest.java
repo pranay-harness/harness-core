@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.IllegalArgumentException;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -25,6 +24,10 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
 
   @Before
   public void setUp() throws IOException {
+    when(secretStorage.getSecretBy("secret-reference-1")).thenReturn("secret-1");
+    when(secretStorage.getSecretBy("secret-reference-2")).thenReturn("secret-2");
+    when(secretStorage.getSecretBy("inner-secret-reference-1")).thenReturn("inner-secret-1");
+
     configSecretResolver = new ConfigSecretResolver(secretStorage);
   }
 
@@ -33,13 +36,13 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotResolveFieldsWhichAreNotAnnotated() throws IOException {
     // Given
-    DummyConfiguration configuration = new DummyConfiguration();
+    WorkingConfiguration configuration = new WorkingConfiguration();
 
     // When
     configSecretResolver.resolveSecret(configuration);
 
     // Then
-    assertThat(configuration.getShouldNotBeResolved()).isEqualTo("should-not-resolve");
+    assertThat(configuration.regularValue()).isEqualTo("regular-value");
   }
 
   @Test
@@ -47,15 +50,27 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldResolveSecretReferenceWithValueFromSecretStorage() throws IOException {
     // Given
-    DummyConfiguration configuration = new DummyConfiguration();
-
-    when(secretStorage.getSecretBy("some-secret-reference")).thenReturn("secret-from-secret-manager");
+    WorkingConfiguration configuration = new WorkingConfiguration();
 
     // When
     configSecretResolver.resolveSecret(configuration);
 
     // Then
-    assertThat(configuration.getToBeResolved()).isEqualTo("secret-from-secret-manager");
+    assertThat(configuration.secret1String()).isEqualTo("secret-1");
+  }
+
+  @Test
+  @Owner(developers = FILIP)
+  @Category(UnitTests.class)
+  public void shouldResolveSecretReferenceWithValueFromSecretStorageForCharArrayField() throws IOException {
+    // Given
+    WorkingConfiguration configuration = new WorkingConfiguration();
+
+    // When
+    configSecretResolver.resolveSecret(configuration);
+
+    // Then
+    assertThat(String.valueOf(configuration.secret2CharArray())).isEqualTo("secret-2");
   }
 
   @Test
@@ -70,7 +85,7 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
       configSecretResolver.resolveSecret(configuration);
     })
         .isInstanceOf(ConfigSecretException.class)
-        .hasMessageContaining(ConfigSecret.class.getSimpleName() + " can't be used on final fields");
+        .hasMessageContaining(ConfigSecret.class.getSimpleName() + "' can't be used on final fields");
   }
 
   @Test
@@ -78,42 +93,60 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldHandleInnerObjects() throws IOException {
     // Given
-    DummyConfiguration configuration = new DummyConfiguration();
-
-    when(secretStorage.getSecretBy("some-inner-secret-reference")).thenReturn("inner-secret");
+    WorkingConfiguration configuration = new WorkingConfiguration();
 
     // When
     configSecretResolver.resolveSecret(configuration);
 
     // Then
-    assertThat(configuration.getInner().getInnerSecret()).isEqualTo("inner-secret");
-    assertThat(configuration.getInner().getInnerRegular()).isEqualTo("regular-value");
+    assertThat(configuration.getInner().getInnerSecret1()).isEqualTo("inner-secret-1");
+    assertThat(configuration.getInner().getInnerRegular()).isEqualTo("inner-regular-value");
   }
 
-  public static class DummyConfiguration {
-    @ConfigSecret private String toBeResolved = "some-secret-reference";
-    private String shouldNotBeResolved = "should-not-resolve";
-    @ConfigSecret private InnerDummyConfiguration inner = new InnerDummyConfiguration();
+  @Test
+  @Owner(developers = FILIP)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForConfigurationWithoutAnnotations() throws IOException {
+    assertThatThrownBy(() -> {
+      // Given
+      NotWorkingConfiguration configuration = new NotWorkingConfiguration();
 
-    public String getToBeResolved() {
-      return toBeResolved;
+      // When
+      configSecretResolver.resolveSecret(configuration);
+    })
+        .isInstanceOf(ConfigSecretException.class)
+        .hasMessageContaining("doesn't contain any fields annotated with 'ConfigSecret'");
+  }
+
+  public static class WorkingConfiguration {
+    @ConfigSecret private String secret1String = "secret-reference-1";
+    @ConfigSecret private char[] secret2CharArray = "secret-reference-2".toCharArray();
+    private String regularValue = "regular-value";
+    @ConfigSecret private InnerWorkingConfiguration inner = new InnerWorkingConfiguration();
+
+    public String secret1String() {
+      return secret1String;
     }
 
-    public String getShouldNotBeResolved() {
-      return shouldNotBeResolved;
+    public String regularValue() {
+      return regularValue;
     }
 
-    public InnerDummyConfiguration getInner() {
+    public InnerWorkingConfiguration getInner() {
       return inner;
     }
+
+    public char[] secret2CharArray() {
+      return secret2CharArray;
+    }
   }
 
-  public static class InnerDummyConfiguration {
-    @ConfigSecret private String innerSecret = "some-inner-secret-reference";
-    private String innerRegular = "regular-value";
+  public static class InnerWorkingConfiguration {
+    @ConfigSecret private String innerSecret1 = "inner-secret-reference-1";
+    private String innerRegular = "inner-regular-value";
 
-    public String getInnerSecret() {
-      return innerSecret;
+    public String getInnerSecret1() {
+      return innerSecret1;
     }
 
     public String getInnerRegular() {
@@ -126,6 +159,22 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
 
     public String getFinalFieldToBeResolved() {
       return finalFieldToBeResolved;
+    }
+  }
+
+  private static class NotWorkingConfiguration {
+    @ConfigSecret private EmptyConfig emptyConfig = new EmptyConfig();
+
+    public EmptyConfig getEmptyConfig() {
+      return emptyConfig;
+    }
+  }
+
+  private static class EmptyConfig {
+    private String notAnnotated = "dummy";
+
+    public String getNotAnnotated() {
+      return notAnnotated;
     }
   }
 }
