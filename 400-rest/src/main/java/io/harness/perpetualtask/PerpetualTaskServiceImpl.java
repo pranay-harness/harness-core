@@ -97,7 +97,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   public String createTask(String perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
       PerpetualTaskSchedule schedule, boolean allowDuplicate, String taskDescription) {
     if (mainConfiguration.isDisableDelegateMgmtInManager()) {
-      delegateServiceClassicGrpcClient.createPerpetualTask(
+      return delegateServiceClassicGrpcClient.createPerpetualTask(
           perpetualTaskType, accountId, clientContext, schedule, allowDuplicate, taskDescription);
     }
     return createPerpetualTaskInternal(

@@ -261,7 +261,8 @@ public class PipelineServiceModule extends AbstractModule {
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
-    install(new OpaClientModule(configuration.getOpaServerConfig().getBaseUrl(), configuration.getJwtAuthSecret()));
+    install(new OpaClientModule(
+        configuration.getOpaServerConfig().getBaseUrl(), configuration.getOpaServerConfig().getSecret()));
     install(
         new AuditClientModule(this.configuration.getAuditClientConfig(), this.configuration.getManagerServiceSecret(),
             PIPELINE_SERVICE.getServiceId(), this.configuration.isEnableAudit()));

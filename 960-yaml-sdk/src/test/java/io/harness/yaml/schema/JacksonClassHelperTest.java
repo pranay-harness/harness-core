@@ -4,11 +4,13 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
 import io.harness.yaml.schema.beans.OneOfMapping;
@@ -73,8 +75,21 @@ public class JacksonClassHelperTest extends CategoryTest {
     assertThat(oneOfSetMappingsForClass).isNotNull();
     assertThat(oneOfSetMappingsForClass.getOneOfSets()).hasSize(3);
     assertThat(oneOfSetMappingsForClass.getOneOfSets())
-        .containsExactlyInAnyOrder(new HashSet<>(Arrays.asList("a", "jsontypeinfo")),
+        .containsExactlyInAnyOrder(new HashSet<>(Arrays.asList("type", "spec")),
             new HashSet<>(Arrays.asList("b", "apimodelproperty")),
             new HashSet<>(Collections.singletonList("testString")));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testOneOfSetAnnotationWithOneOfFieldAnnotationForClass() {
+    assertThatThrownBy(
+        ()
+            -> jacksonSubtypeHelper.getRequiredMappings(
+                io.harness.yaml.TestClass.ClassWithBothOneOfSetAndOneOfFieldAnnotation.class, new HashMap<>()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Class ClassWithBothOneOfSetAndOneOfFieldAnnotation cannot have both OneOfField and OneOfSet annotation");
   }
 }

@@ -61,7 +61,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class CIK8BuildTaskHandlerTest extends CategoryTest {
+public class CIK8InitializeTaskHandlerTest extends CategoryTest {
   @Mock private PodSpecBuilder podSpecBuilder;
   @Mock private K8sConnectorHelper k8sConnectorHelper;
   @Mock private SecretSpecBuilder secretSpecBuilder;

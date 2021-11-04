@@ -763,6 +763,7 @@ import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupExecutionDa
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupState;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwapRoutesExecutionData;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwitchRoutesState;
+import software.wings.timescale.framework.TimeScaleEntityIndexState;
 import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -1025,6 +1026,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TerragruntConfig.class);
     set.add(TerragruntInfrastructureProvisioner.class);
     set.add(ThirdPartyApiCallLog.class);
+    set.add(TimeScaleEntityIndexState.class);
     set.add(TimeSeriesDataRecord.class);
     set.add(TimeSeriesKeyTransactions.class);
     set.add(TimeSeriesMetricGroup.class);
