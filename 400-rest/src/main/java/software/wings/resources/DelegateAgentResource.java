@@ -10,10 +10,8 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
-import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.ff.FeatureFlagService;
@@ -45,7 +43,6 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.List;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -104,21 +101,6 @@ public class DelegateAgentResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       delegate.setAccountId(accountId);
       return new RestResponse<>(delegateService.add(delegate));
-    }
-  }
-
-  @DelegateAuth
-  @GET
-  @Path("{delegateId}/task-events")
-  @Timed
-  @ExceptionMetered
-  public DelegateTaskEventsResponse getDelegateTaskEvents(@PathParam("delegateId") @NotEmpty String delegateId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("syncOnly") boolean syncOnly) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      List<DelegateTaskEvent> delegateTaskEvents =
-          delegateTaskServiceClassic.getDelegateTaskEvents(accountId, delegateId, syncOnly);
-      return DelegateTaskEventsResponse.builder().delegateTaskEvents(delegateTaskEvents).build();
     }
   }
 

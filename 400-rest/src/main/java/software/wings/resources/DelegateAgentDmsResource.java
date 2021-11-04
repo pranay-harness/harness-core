@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -19,6 +20,7 @@ import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
@@ -103,6 +105,21 @@ public class DelegateAgentDmsResource {
           delegateService.register(delegateParams.toBuilder().accountId(accountId).build());
       log.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
       return new RestResponse<>(registerResponse);
+    }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("delegates/{delegateId}/task-events")
+  @Timed
+  @ExceptionMetered
+  public DelegateTaskEventsResponse getDelegateTaskEvents(@PathParam("delegateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("syncOnly") boolean syncOnly) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+      List<DelegateTaskEvent> delegateTaskEvents =
+          delegateTaskServiceClassic.getDelegateTaskEvents(accountId, delegateId, syncOnly);
+      return DelegateTaskEventsResponse.builder().delegateTaskEvents(delegateTaskEvents).build();
     }
   }
 
