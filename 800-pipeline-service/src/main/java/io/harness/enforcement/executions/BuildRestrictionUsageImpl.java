@@ -18,7 +18,7 @@ import java.util.Optional;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class BuildRestrictionUsageImpl implements CustomRestrictionInterface {
-  private static String moduleName = ModuleType.CI.name().toLowerCase();
+  private static String moduleName = "ci_private_build";
   @Inject AccountExecutionMetadataRepository accountExecutionMetadataRepository;
 
   @Override

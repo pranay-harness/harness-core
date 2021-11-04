@@ -22,6 +22,8 @@ import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.ng.core.dashboard.GitInfo;
 import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.plan.execution.AccountExecutionMetadata;
+import io.harness.repositories.executions.AccountExecutionMetadataRepository;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -31,17 +33,23 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
 public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardService {
   @Inject TimeScaleDBService timeScaleDBService;
+  @Inject AccountExecutionMetadataRepository accountExecutionMetadataRepository;
+  private static String moduleName = "ci_private_build";
   private String tableNameServiceAndInfra = "service_infra_info";
   private String tableName = "pipeline_execution_summary_ci";
   private String staticQuery = "select * from " + tableName + " where ";
@@ -224,68 +232,26 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   @Override
   public UsageDataDTO getMonthlyBuild(String accountId, long timestamp) {
-    long totalTries = 0;
-    String query = "select count(*) as total from " + tableName
-        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private = TRUE and startts<=? and startts>=?;";
-
     UsageDataDTO usageDataDTO = UsageDataDTO.builder().count(0).displayName("Monthly Builds count").build();
-    while (totalTries <= MAX_RETRY_COUNT) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(query)) {
-        statement.setString(1, accountId);
-        statement.setLong(2, timestamp);
-        statement.setLong(3, getStartofTheMonth(timestamp));
-        resultSet = statement.executeQuery();
-        if (resultSet != null && resultSet.next()) {
-          usageDataDTO.setCount(resultSet.getInt("total"));
-          return usageDataDTO;
-        }
-      } catch (SQLException ex) {
-        log.error(ex.getMessage());
-        totalTries++;
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    }
+    Optional<AccountExecutionMetadata> accountExecutionMetadata =
+        accountExecutionMetadataRepository.findByAccountId(accountId);
+    LocalDate startDate = Instant.ofEpochSecond(timestamp / 1000).atZone(ZoneId.systemDefault()).toLocalDate();
+    YearMonth yearMonth = YearMonth.of(startDate.getYear(), startDate.getMonth());
+    accountExecutionMetadata.ifPresent(executionMetadata
+        -> usageDataDTO.setCount(executionMetadata.getModuleToExecutionInfoMap()
+                                     .get(moduleName)
+                                     .getCountPerMonth()
+                                     .getOrDefault(yearMonth.toString(), 0L)));
     return usageDataDTO;
-  }
-
-  public long getStartofTheMonth(long timestamp) {
-    Calendar cal = Calendar.getInstance();
-    cal.setTimeInMillis(timestamp);
-    cal.set(Calendar.HOUR_OF_DAY, 0);
-    cal.clear(Calendar.MINUTE);
-    cal.clear(Calendar.SECOND);
-    cal.clear(Calendar.MILLISECOND);
-
-    return cal.getTimeInMillis();
   }
 
   @Override
   public UsageDataDTO getTotalBuild(String accountId) {
-    long totalTries = 0;
-    String query = "select count(*) as total from " + tableName
-        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_is_private = TRUE;";
-
     UsageDataDTO usageDataDTO = UsageDataDTO.builder().count(0).displayName("Total Builds count").build();
-    while (totalTries <= MAX_RETRY_COUNT) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(query)) {
-        statement.setString(1, accountId);
-        resultSet = statement.executeQuery();
-        if (resultSet != null && resultSet.next()) {
-          usageDataDTO.setCount(resultSet.getInt("total"));
-          return usageDataDTO;
-        }
-      } catch (SQLException ex) {
-        log.error(ex.getMessage());
-        totalTries++;
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    }
+    Optional<AccountExecutionMetadata> accountExecutionMetadata =
+        accountExecutionMetadataRepository.findByAccountId(accountId);
+    accountExecutionMetadata.ifPresent(
+        executionMetadata -> usageDataDTO.setCount(executionMetadata.getModuleToExecutionCount().get(moduleName)));
     return usageDataDTO;
   }
 

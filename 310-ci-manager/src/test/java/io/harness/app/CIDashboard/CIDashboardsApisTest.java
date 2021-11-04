@@ -561,11 +561,4 @@ public class CIDashboardsApisTest extends CategoryTest {
                                     .build();
     assertThat(usageResult).isEqualTo(ciOverviewDashboardServiceImpl.getCIUsageResult(accountId, timestamp));
   }
-
-  @Test
-  @Owner(developers = JAMIE)
-  @Category(UnitTests.class)
-  public void testStartOfTheMonth() {
-    assertThat(1635811200000L).isEqualTo(ciOverviewDashboardServiceImpl.getStartofTheMonth(1635814085023L));
-  }
 }
