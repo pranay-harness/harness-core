@@ -133,9 +133,6 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
         .hasMessageContaining("not found");
   }
 
-  // TODO:
-  // fix for final fields
-
   public static class WorkingConfiguration {
     @ConfigSecret private String secret1String = "secret-reference-1";
     @ConfigSecret private char[] secret2CharArray = "secret-reference-2".toCharArray();
