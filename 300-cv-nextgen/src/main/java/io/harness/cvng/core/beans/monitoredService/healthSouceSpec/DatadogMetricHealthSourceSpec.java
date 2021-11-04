@@ -118,8 +118,6 @@ public class DatadogMetricHealthSourceSpec extends HealthSourceSpec {
                 .build();
     }
 
-
-    // TODO slobodanpavic check key values
     @Value
     @Builder
     private static class Key {

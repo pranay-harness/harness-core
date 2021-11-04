@@ -101,11 +101,11 @@ public class DatadogMetricsResource {
     }
 
     @GET
-    @Path("/timeseries-points")
+    @Path("/sample-data")
     @Timed
     @ExceptionMetered
-    @ApiOperation(value = "get datadog timeseries points", nickname = "getDatadogTimeSeriesPoints")
-    public ResponseDTO<List<TimeSeriesSampleDTO>> getDatadogTimeSeriesPoints(
+    @ApiOperation(value = "get datadog sample data", nickname = "getDatadogSampleData")
+    public ResponseDTO<List<TimeSeriesSampleDTO>> getDatadogSampleData(
             @NotNull @QueryParam("accountId") String accountId,
             @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
             @QueryParam("orgIdentifier") @NotNull String orgIdentifier,

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,7 +18,7 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
 
     @Override
     public Map<String, Object> getDslEnvVariables(DatadogConnectorDTO connectorConfigDTO) {
-        Map<String, Object> dslEnvVariables = DatadogUtils.getCommonEnvVariables(connectorConfigDTO);
+        Map<String, Object> dslEnvVariables = new HashMap<>();
         List<String> queries = metricDefinitions.stream().map(metricCollectionInfo -> metricCollectionInfo.query)
                 .collect(Collectors.toList());
         dslEnvVariables.put("queries", queries);

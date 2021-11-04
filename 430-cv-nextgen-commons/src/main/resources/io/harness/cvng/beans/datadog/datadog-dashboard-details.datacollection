@@ -24,6 +24,10 @@ foreach widget in Var:widgets {
                Var dataSetMap = {}
                Var queryName = extract(Var:requestQuery, $.name)
                Var queryValue = extract(Var:requestQuery, $.query)
+
+               if Var:queryName == Var:nullObject {
+                 Var:queryName = Var:queryValue
+               }
                Var:dataSetMap.put("name", Var:queryName)
                Var:dataSetMap.put("query", Var:queryValue)
                Var:dataSets.append(Var:dataSetMap)
@@ -33,6 +37,7 @@ foreach widget in Var:widgets {
        Var qValue = extract(Var:widgetRequest, $.q)
        if Var:qValue != Var:nullObject {
            Var queryMap = {}
+           Var:queryMap.put("name", Var:qValue)
            Var:queryMap.put("query", Var:qValue)
            Var:dataSets.append(Var:queryMap)
        }

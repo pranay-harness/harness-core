@@ -95,8 +95,8 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
     public static class DatadogMetricCVConfigUpdatableEntity
             extends MetricCVConfigUpdatableEntity<DatadogMetricCVConfig, DatadogMetricCVConfig> {
         @Override
-        public void setUpdateOperations(
-                UpdateOperations<DatadogMetricCVConfig> updateOperations, DatadogMetricCVConfig stackdriverCVConfig) {
+        public void setUpdateOperations(UpdateOperations<DatadogMetricCVConfig> updateOperations,
+                                        DatadogMetricCVConfig stackdriverCVConfig) {
             setCommonOperations(updateOperations, stackdriverCVConfig);
             updateOperations.set(DatadogCVConfigKeys.metricInfoList, stackdriverCVConfig.getMetricInfoList());
             updateOperations.set(DatadogCVConfigKeys.dashboardName, stackdriverCVConfig.getDashboardName());

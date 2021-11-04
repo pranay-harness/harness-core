@@ -15,7 +15,8 @@ public class DatadogMetricHealthSourceSpecTransformer implements CVConfigToHealt
     public DatadogMetricHealthSourceSpec transformToHealthSourceConfig(List<DatadogMetricCVConfig> cvConfigs) {
         Preconditions.checkNotNull(cvConfigs);
         Preconditions.checkArgument(
-                cvConfigs.stream().map(DatadogMetricCVConfig::getConnectorIdentifier).distinct().count() == 1,
+                cvConfigs.stream()
+                        .map(DatadogMetricCVConfig::getConnectorIdentifier).distinct().count() == 1,
                 "ConnectorRef should be same for all the configs in the list.");
         List<DatadogMetricHealthDefinition> metricDefinitions = new ArrayList<>();
         cvConfigs.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
@@ -26,7 +27,6 @@ public class DatadogMetricHealthSourceSpecTransformer implements CVConfigToHealt
                             .serviceInstanceTag(metricInfo.getServiceInstanceField())
                             .query(metricInfo.getQuery())
                             .isManualQuery(metricInfo.isManualQuery())
-
                             .riskProfile(
                                     RiskProfile.builder()
                                             .category(cvConfig.getMetricPack().getCategory())

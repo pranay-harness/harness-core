@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.datadog.*;
-import io.harness.cvng.beans.stackdriver.StackdriverLogSampleDataRequest;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
@@ -25,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoField;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,9 +34,6 @@ public class DatadogServiceImpl implements DatadogService {
 
     @Inject
     private OnboardingService onboardingService;
-
-    // TODO should inject this
-    private Gson gson = new Gson();
 
     @Override
     public PageResponse<DatadogDashboardDTO> getAllDashboards(String accountId, String connectorIdentifier, String orgIdentifier,
@@ -59,7 +54,8 @@ public class DatadogServiceImpl implements DatadogService {
         List<DatadogDashboardDTO> filteredList = dashboardList;
         if (isNotEmpty(filter)) {
             filteredList = dashboardList.stream()
-                    .filter(dashboardDto -> dashboardDto.getName().toLowerCase().contains(filter.toLowerCase()))
+                    .filter(dashboardDto -> dashboardDto.getName() != null
+                            && dashboardDto.getName().toLowerCase().contains(filter.toLowerCase()))
                     .collect(Collectors.toList());
         }
         return PageUtils.offsetAndLimit(filteredList, offset, pageSize);
@@ -180,6 +176,6 @@ public class DatadogServiceImpl implements DatadogService {
                 .build();
 
         OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
-        return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+        return new Gson().fromJson(JsonUtils.asJson(response.getResult()), type);
     }
 }

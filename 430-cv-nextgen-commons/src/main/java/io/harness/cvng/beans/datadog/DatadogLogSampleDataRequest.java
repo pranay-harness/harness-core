@@ -6,11 +6,13 @@ import io.harness.cvng.beans.stackdriver.StackdriverLogRequest;
 import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.cvng.datadog.DatadogUtils;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +21,7 @@ import static io.harness.cvng.utils.StackdriverUtils.Scope.LOG_SCOPE;
 
 @JsonTypeName("DATADOG_LOG_SAMPLE_DATA")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
 @FieldNameConstants(innerTypeName = "DatadogLogSampleDataRequestKeys")
@@ -41,7 +44,7 @@ public class DatadogLogSampleDataRequest extends DatadogRequest {
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    Map<String, Object> dslEnvVariables = DatadogUtils.getCommonEnvVariables(getConnectorConfigDTO());
+    Map<String, Object> dslEnvVariables = new HashMap<>();
 
     dslEnvVariables.put(DatadogLogSampleDataRequestKeys.query, query);
 

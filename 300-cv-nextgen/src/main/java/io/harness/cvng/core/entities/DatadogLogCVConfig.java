@@ -33,8 +33,8 @@ public class DatadogLogCVConfig extends LogCVConfig {
 
     @Override
     protected void validateParams() {
-        checkNotNull(
-                serviceInstanceIdentifier, generateErrorMessageFromParam(SplunkCVConfig.SplunkCVConfigKeys.serviceInstanceIdentifier));
+        checkNotNull(serviceInstanceIdentifier, generateErrorMessageFromParam(
+                DatadogLogCVConfig.DatadogLogCVConfigKeys.serviceInstanceIdentifier));
     }
 
     @Override
@@ -49,7 +49,6 @@ public class DatadogLogCVConfig extends LogCVConfig {
 
     @Override
     public String getHostCollectionDSL() {
-        //  TODO slobodanpavic - should this be implemented???
         throw new RuntimeException("Not implemented");
     }
 

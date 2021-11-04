@@ -8,22 +8,24 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DatadogLogDataCollectionInfo extends LogDataCollectionInfo<DatadogConnectorDTO> {
+  private static final int LOG_MAX_LIMIT = 1000;
   DatadogLogDefinition logDefinition;
 
   @Override
   public Map<String, Object> getDslEnvVariables(DatadogConnectorDTO connectorConfigDTO) {
-    Map<String, Object> dslEnvVariables = DatadogUtils.getCommonEnvVariables(connectorConfigDTO);
+    Map<String, Object> dslEnvVariables = new HashMap<>();
     dslEnvVariables.put("query", logDefinition.getQuery());
-    // TODO slobodanpavic - map to string
-    dslEnvVariables.put("indexes", logDefinition.getIndexes());
-    dslEnvVariables.put("limit", 1000);
-
+    String indexesParam = String.join(",", logDefinition.getIndexes());
+    dslEnvVariables.put("indexes", indexesParam);
+    dslEnvVariables.put("limit", LOG_MAX_LIMIT);
     return dslEnvVariables;
   }
 
