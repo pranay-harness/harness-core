@@ -1,4 +1,4 @@
-package io.harness.expression;
+package io.harness.secret;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,4 +8,3 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ConfigSecret {}
-

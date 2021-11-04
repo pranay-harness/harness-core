@@ -27,7 +27,6 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
-import io.harness.expression.ConfigSecret;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -37,6 +36,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.secret.ConfigSecret;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.timescaledb.TimeScaleDBConfig;
 

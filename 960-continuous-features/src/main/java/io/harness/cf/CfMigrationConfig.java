@@ -2,7 +2,7 @@ package io.harness.cf;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.expression.ConfigSecret;
+import io.harness.secret.ConfigSecret;
 
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;

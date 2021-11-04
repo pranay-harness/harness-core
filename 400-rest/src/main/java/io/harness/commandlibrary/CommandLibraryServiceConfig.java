@@ -1,6 +1,6 @@
 package io.harness.commandlibrary;
 
-import io.harness.expression.ConfigSecret;
+import io.harness.secret.ConfigSecret;
 
 import lombok.AccessLevel;
 import lombok.Builder;

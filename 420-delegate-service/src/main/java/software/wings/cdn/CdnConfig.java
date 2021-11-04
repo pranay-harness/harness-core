@@ -1,6 +1,6 @@
 package software.wings.cdn;
 
-import io.harness.expression.ConfigSecret;
+import io.harness.secret.ConfigSecret;
 
 import java.util.Map;
 import lombok.AccessLevel;

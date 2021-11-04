@@ -1,6 +1,6 @@
 package io.harness.timescaledb;
 
-import io.harness.expression.ConfigSecret;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

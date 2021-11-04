@@ -3,8 +3,8 @@ package io.harness.eventsframework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.expression.ConfigSecret;
 import io.harness.redis.RedisConfig;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

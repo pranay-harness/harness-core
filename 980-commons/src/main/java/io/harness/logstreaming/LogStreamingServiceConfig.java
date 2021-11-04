@@ -1,6 +1,6 @@
 package io.harness.logstreaming;
 
-import io.harness.expression.ConfigSecret;
+import io.harness.secret.ConfigSecret;
 
 import lombok.Builder;
 import lombok.Value;

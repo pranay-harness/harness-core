@@ -68,7 +68,6 @@ import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
-import io.harness.expression.ConfigSecretReflectionUtils;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
@@ -122,6 +121,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.secret.ConfigSecretResolver;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.CurrentGenRegistrars;
@@ -399,7 +399,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     MaintenanceController.forceMaintenance(true);
 
     if (configuration.isPullSecrets()) {
-      ConfigSecretReflectionUtils.resolveSecret(configuration, configuration.getSmProject());
+      new ConfigSecretResolver(null).resolveSecret(configuration, configuration.getSmProject());
     }
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(

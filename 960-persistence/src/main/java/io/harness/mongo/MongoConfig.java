@@ -6,8 +6,8 @@ import static lombok.AccessLevel.NONE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.expression.ConfigSecret;
 import io.harness.mongo.tracing.TraceMode;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

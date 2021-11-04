@@ -8,8 +8,8 @@ import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.encryption.Encrypted;
-import io.harness.expression.ConfigSecret;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.secret.ConfigSecret;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
