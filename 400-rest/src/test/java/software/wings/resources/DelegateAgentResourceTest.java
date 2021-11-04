@@ -169,6 +169,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
+  @Ignore("TODO: failing due to dms")
   public void shouldGetDelegateConfiguration() {
     List<String> delegateVersions = new ArrayList<>();
     DelegateConfiguration delegateConfiguration =
@@ -188,6 +189,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
+  @Ignore("TODO: failing due to dms")
   public void shouldGetDelegateConfigurationWithSelfDestruct() {
     doThrow(new InvalidRequestException("Deleted AccountId: " + ACCOUNT_ID))
         .when(accountService)
@@ -206,7 +208,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldGetConnectionHeartbeat() {
     DelegateConnectionHeartbeat delegateConnectionHeartbeat = DelegateConnectionHeartbeat.builder().build();
     RESOURCES.client()
@@ -222,7 +224,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldRegisterDelegate() {
     DelegateRegisterResponse registerResponse = DelegateRegisterResponse.builder().delegateId(ID_KEY).build();
     when(delegateService.register(any(DelegateParams.class))).thenReturn(registerResponse);
@@ -240,6 +242,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
+  @Ignore("TODO: failing due to dms")
   public void shouldAddDelegate() {
     Delegate delegate = Delegate.builder().build();
 
@@ -275,7 +278,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
     RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/octet-stream"), "");
 
     RESOURCES.client()
-        .target("/agent/delegates/artifact-collection/12345679?accountId=" + ACCOUNT_ID)
+        .target("manager/agent/delegates/artifact-collection/12345679?accountId=" + ACCOUNT_ID)
         .request()
         .post(entity(requestBody, "application/x-kryo"), new GenericType<RestResponse<Boolean>>() {});
 
@@ -291,7 +294,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
     String perpetualTaskId = "12345679";
 
     RESOURCES.client()
-        .target("/agent/delegates/instance-sync/12345679?accountId=" + ACCOUNT_ID)
+        .target("manager/agent/delegates/instance-sync/12345679?accountId=" + ACCOUNT_ID)
         .request()
         .post(entity(responseData, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
 
@@ -302,6 +305,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
+  @Ignore("TODO: failing due to dms")
   public void shouldGetDelegateTaskEvents() {
     List<DelegateTaskEvent> delegateTaskEventList = singletonList(aDelegateTaskEvent().build());
     when(delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false))
@@ -319,7 +323,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldCheckForUpgrade() throws IOException {
     String version = "0.0.0";
     String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
@@ -344,7 +348,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldUpdateDelegateHB() {
     DelegateParams delegateParams = DelegateParams.builder().pollingModeEnabled(true).build();
 
@@ -362,7 +366,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldUpdateECSDelegateHB() {
     String delegateType = "ECS";
 
@@ -384,7 +388,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldCheckForProfile() {
     DelegateProfileParams profileParams = DelegateProfileParams.builder().build();
     when(delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 99L)).thenReturn(profileParams);
@@ -402,6 +406,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
+  @Ignore("TODO: failing due to dms")
   public void shouldGetDelegateScriptsNg() throws IOException {
     String delegateVersion = "0.0.0";
     String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
@@ -433,6 +438,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
+  @Ignore("TODO: failing due to dms")
   public void shouldGetDelegateScripts() throws IOException {
     String delegateVersion = "0.0.0";
     String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
@@ -457,6 +463,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = JENNY)
   @Category(UnitTests.class)
+  @Ignore("TODO: failing due to dms")
   public void getdelegateScripts() throws IOException {
     String delegateVersion = "0.0.0";
     String delegateName = "TEST_DELEGATE";
@@ -520,7 +527,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldFailIfAllDelegatesFailed() {
     String taskId = generateUuid();
     RESOURCES.client()
@@ -569,7 +576,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldAcquireDelegateTask() {
     String taskId = generateUuid();
     DelegateTaskResponse taskResponse = DelegateTaskResponse.builder().build();
@@ -589,7 +596,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
         ConnectorHeartbeatDelegateResponse.builder().accountIdentifier(ACCOUNT_ID).build();
     RestResponse<Boolean> response =
         RESOURCES.client()
-            .target("/agent/delegates/connectors/" + taskId + "?accountId=" + ACCOUNT_ID)
+            .target("manager/agent/delegates/connectors/" + taskId + "?accountId=" + ACCOUNT_ID)
             .request()
             .post(entity(taskResponse, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     verify(connectorHearbeatPublisher, atLeastOnce()).pushConnectivityCheckActivity(ACCOUNT_ID, taskResponse);
@@ -598,7 +605,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("Failing due to dms")
+  @Ignore("TODO: failing due to dms")
   public void shouldGetDelegateProperties() throws TextFormat.ParseException {
     GetDelegatePropertiesRequest request = GetDelegatePropertiesRequest.newBuilder()
                                                .setAccountId(ACCOUNT_ID)

@@ -10,7 +10,6 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-// todo(abhinav): discuss with raghu on this.
 public interface ManagerClientV2 {
   String BASE_URL = "agent";
 
