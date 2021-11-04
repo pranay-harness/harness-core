@@ -1,14 +1,11 @@
 package io.harness.signup.services.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.GTM;
-import static io.harness.configuration.DeployMode.DEPLOY_MODE;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.remote.client.RestClientUtils.getResponse;
-import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
-
-import static java.lang.Boolean.FALSE;
-import static org.mindrot.jbcrypt.BCrypt.hashpw;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import io.harness.ModuleType;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
@@ -42,13 +39,10 @@ import io.harness.telemetry.Category;
 import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetryReporter;
 import io.harness.user.remote.UserClient;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
+import org.mindrot.jbcrypt.BCrypt;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -59,9 +53,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
-import org.mindrot.jbcrypt.BCrypt;
+
+import static io.harness.annotations.dev.HarnessTeam.GTM;
+import static io.harness.configuration.DeployMode.DEPLOY_MODE;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
+import static java.lang.Boolean.FALSE;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
 @Slf4j
 @Singleton

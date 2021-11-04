@@ -1,9 +1,6 @@
 package io.harness.signup.resources;
 
-import static io.harness.annotations.dev.HarnessTeam.GTM;
-
-import static java.lang.Boolean.TRUE;
-
+import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -15,21 +12,23 @@ import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.services.SignupService;
-
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
+
+import static io.harness.annotations.dev.HarnessTeam.GTM;
+import static java.lang.Boolean.TRUE;
 
 @Api("signup")
 @Path("signup")
