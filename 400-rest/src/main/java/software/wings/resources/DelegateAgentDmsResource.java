@@ -272,7 +272,7 @@ public class DelegateAgentDmsResource {
 
   @DelegateAuth
   @GET
-  @Path("configuration")
+  @Path("delegates/configuration")
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateConfiguration> getDelegateConfiguration(
@@ -298,7 +298,7 @@ public class DelegateAgentDmsResource {
 
   @DelegateAuth
   @GET
-  @Path("delegateScriptsNg")
+  @Path("delegates/delegateScriptsNg")
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
@@ -314,7 +314,7 @@ public class DelegateAgentDmsResource {
 
   @DelegateAuth
   @GET
-  @Path("delegateScripts")
+  @Path("delegates/delegateScripts")
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
