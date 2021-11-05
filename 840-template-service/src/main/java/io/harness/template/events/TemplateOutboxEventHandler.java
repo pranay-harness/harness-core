@@ -28,6 +28,7 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServicePrincipal;
+import io.harness.template.entity.TemplateEntity;
 import io.harness.utils.NGObjectMapperHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,9 +76,34 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
   private boolean handleTemplateUpdateEvent(OutboxEvent outboxEvent) throws IOException {
     TemplateUpdateEvent templateUpdateEvent =
         objectMapper.readValue(outboxEvent.getEventData(), TemplateUpdateEvent.class);
-    boolean publishedToRedis = publishEvent(outboxEvent, EventsFrameworkMetadataConstants.UPDATE_ACTION);
+
+    boolean publishedToRedis = false;
+    if (templateUpdateEvent.getTemplateUpdateEventType() == TemplateUpdateEventType.TEMPLATE_CHANGE_SCOPE_EVENT) {
+      TemplateEntity oldTemplate = templateUpdateEvent.getOldTemplateEntity();
+      EntityChangeDTO.Builder entityBuilder =
+          EntityChangeDTO.newBuilder()
+              .setIdentifier(StringValue.of(outboxEvent.getResource().getIdentifier()))
+              .setAccountIdentifier(StringValue.of(oldTemplate.getAccountIdentifier()));
+
+      if (oldTemplate.getOrgIdentifier() != null) {
+        entityBuilder.setOrgIdentifier(StringValue.of(oldTemplate.getOrgIdentifier()));
+      }
+
+      if (oldTemplate.getProjectIdentifier() != null) {
+        entityBuilder.setOrgIdentifier(StringValue.of(oldTemplate.getProjectIdentifier()));
+      }
+
+      publishedToRedis = publishEvent(EventsFrameworkMetadataConstants.DELETE_ACTION,
+          oldTemplate.getAccountIdentifier(), outboxEvent.getResource().getIdentifier(), entityBuilder.build());
+
+      publishedToRedis = publishedToRedis && publishEvent(outboxEvent, EventsFrameworkMetadataConstants.CREATE_ACTION);
+    } else {
+      publishedToRedis = publishEvent(outboxEvent, EventsFrameworkMetadataConstants.UPDATE_ACTION);
+    }
+
     TemplateEventData templateEventData = new TemplateEventData(
         templateUpdateEvent.getComments(), templateUpdateEvent.getTemplateUpdateEventType().fetchYamlType());
+
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.UPDATE)
                                 .module(ModuleType.TEMPLATESERVICE)
@@ -139,40 +165,40 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
     }
   }
 
-  private boolean publishEvent(OutboxEvent outboxEvent, String action) {
+  boolean publishEvent(OutboxEvent outboxEvent, String action) {
+    EntityChangeDTO.Builder entityBuilder =
+        EntityChangeDTO.newBuilder().setIdentifier(StringValue.of(outboxEvent.getResource().getIdentifier()));
+
+    String accountIdentifier;
+    if (outboxEvent.getResourceScope() instanceof AccountScope) {
+      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+      entityBuilder.setAccountIdentifier(StringValue.of(accountIdentifier));
+    } else if (outboxEvent.getResourceScope() instanceof OrgScope) {
+      OrgScope resourceScope = (OrgScope) outboxEvent.getResourceScope();
+      accountIdentifier = resourceScope.getAccountIdentifier();
+      entityBuilder.setAccountIdentifier(StringValue.of(accountIdentifier));
+      entityBuilder.setOrgIdentifier(StringValue.of(resourceScope.getOrgIdentifier()));
+    } else {
+      ProjectScope resourceScope = (ProjectScope) outboxEvent.getResourceScope();
+      accountIdentifier = resourceScope.getAccountIdentifier();
+      entityBuilder.setAccountIdentifier(StringValue.of(accountIdentifier));
+      entityBuilder.setOrgIdentifier(StringValue.of(resourceScope.getOrgIdentifier()));
+      entityBuilder.setProjectIdentifier(StringValue.of(resourceScope.getProjectIdentifier()));
+    }
+    return publishEvent(action, accountIdentifier, outboxEvent.getResource().getIdentifier(), entityBuilder.build());
+  }
+
+  boolean publishEvent(String action, String accountIdentifier, String identifier, EntityChangeDTO entityChangeDTO) {
     try {
-      EntityChangeDTO.Builder builder =
-          EntityChangeDTO.newBuilder().setIdentifier(StringValue.of(outboxEvent.getResource().getIdentifier()));
-
-      String accountIdentifier;
-      if (outboxEvent.getResourceScope() instanceof AccountScope) {
-        accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-        builder.setAccountIdentifier(StringValue.of(accountIdentifier));
-      } else if (outboxEvent.getResourceScope() instanceof OrgScope) {
-        OrgScope resourceScope = (OrgScope) outboxEvent.getResourceScope();
-        accountIdentifier = resourceScope.getAccountIdentifier();
-        builder.setAccountIdentifier(StringValue.of(accountIdentifier));
-        builder.setOrgIdentifier(StringValue.of(resourceScope.getOrgIdentifier()));
-      } else {
-        ProjectScope resourceScope = (ProjectScope) outboxEvent.getResourceScope();
-        accountIdentifier = resourceScope.getAccountIdentifier();
-        builder.setAccountIdentifier(StringValue.of(accountIdentifier));
-        builder.setOrgIdentifier(StringValue.of(resourceScope.getOrgIdentifier()));
-        builder.setProjectIdentifier(StringValue.of(resourceScope.getProjectIdentifier()));
-      }
-
-      eventProducer.send(
-          Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.TEMPLATE_ENTITY,
-                  EventsFrameworkMetadataConstants.ACTION, action))
-              .setData(builder.build().toByteString())
-              .build());
+      eventProducer.send(Message.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
+                                 EventsFrameworkMetadataConstants.ENTITY_TYPE, "TEMPLATE",
+                                 EventsFrameworkMetadataConstants.ACTION, action))
+                             .setData(entityChangeDTO.toByteString())
+                             .build());
       return true;
     } catch (EventsFrameworkDownException e) {
-      log.error(
-          "Failed to send event to events framework templateIdentifier: " + outboxEvent.getResource().getIdentifier(),
-          e);
+      log.error("Failed to send event to events framework templateIdentifier: " + identifier, e);
       return false;
     }
   }
