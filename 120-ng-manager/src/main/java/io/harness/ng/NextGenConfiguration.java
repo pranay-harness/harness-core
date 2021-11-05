@@ -109,7 +109,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty(value = "ngIteratorsConfig") private NgIteratorsConfig ngIteratorsConfig;
-  @JsonProperty("ceAwsSetupConfig") private CEAwsSetupConfig ceAwsSetupConfig;
+  @JsonProperty("ceAwsSetupConfig") @Deprecated private CEAwsSetupConfig ceAwsSetupConfig;
   @JsonProperty("ceAzureSetupConfig") private CEAzureSetupConfig ceAzureSetupConfig;
   @JsonProperty("ceGcpSetupConfig") private CEGcpSetupConfig ceGcpSetupConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;

@@ -422,13 +422,14 @@ public class ConnectorResource {
   // TODO(UTSAV): will be moved to 340-ce-nextgen
   @POST
   @Path("/getceawstemplateurl")
-  @ApiOperation(value = "Get CE Aws Connector Template URL Environment Wise", nickname = "getCEAwsTemplate")
-  @Operation(operationId = "getCEAwsTemplate", summary = "Get the Template URL of connector",
+  @ApiOperation(value = "Get CCM Aws Connector Template URL Environment Wise", nickname = "getCEAwsTemplate")
+  @Operation(deprecated = true, operationId = "getCEAwsTemplate", summary = "Get the Template URL of connector",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns the template URL of connector")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the cloud formation template URL to configure the Cloud Cost AWS Connector")
       })
+  @Deprecated
   public ResponseDTO<String>
   getCEAwsTemplate(@QueryParam(NGCommonEntityConstants.IS_EVENTS_ENABLED) Boolean eventsEnabled,
       @QueryParam(NGCommonEntityConstants.IS_CUR_ENABLED) Boolean curEnabled,
