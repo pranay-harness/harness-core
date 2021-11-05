@@ -63,4 +63,16 @@ features:
         restrictionType: STATIC_LIMIT
         limit: 200
         clientName: cimanager
+  - name: BUILDS
+    description: The restriction on number of builds
+    restrictions:
+      FREE:
+        restrictionType: CUSTOM
+        clientName: pipelineService
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
 
