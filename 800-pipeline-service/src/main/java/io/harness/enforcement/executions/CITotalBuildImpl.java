@@ -16,7 +16,7 @@ public class CITotalBuildImpl implements RestrictionUsageInterface<StaticLimitRe
     Optional<AccountExecutionMetadata> accountExecutionMetadata =
         accountExecutionMetadataRepository.findByAccountId(accountIdentifier);
     if (accountExecutionMetadata.isPresent()) {
-      return accountExecutionMetadata.get().getModuleToExecutionCount().get(moduleName);
+      return accountExecutionMetadata.get().getModuleToExecutionCount().getOrDefault(moduleName, 0L);
     } else {
       return 0;
     }

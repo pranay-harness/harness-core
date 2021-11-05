@@ -23,11 +23,13 @@ public class CIMonthlyBuildImpl implements RestrictionUsageInterface<RateLimitRe
     if (accountExecutionMetadata.isPresent()) {
       LocalDate startDate = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate();
       YearMonth yearMonth = YearMonth.of(startDate.getYear(), startDate.getMonth());
-      return accountExecutionMetadata.get()
-          .getModuleToExecutionInfoMap()
-          .get(moduleName)
-          .getCountPerMonth()
-          .getOrDefault(yearMonth.toString(), 0L);
+      if (accountExecutionMetadata.get().getModuleToExecutionInfoMap().get(moduleName) != null) {
+        return accountExecutionMetadata.get()
+            .getModuleToExecutionInfoMap()
+            .get(moduleName)
+            .getCountPerMonth()
+            .getOrDefault(yearMonth.toString(), 0L);
+      }
     }
     return 0;
   }
