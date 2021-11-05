@@ -5,11 +5,11 @@ import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 
 import com.google.inject.Inject;
 
-public class CIMonthlyBuildImpl implements RestrictionUsageInterface<RateLimitRestrictionMetadataDTO> {
+public class CIActiveCommitterUsageImpl implements RestrictionUsageInterface<RateLimitRestrictionMetadataDTO> {
   @Inject CIOverviewDashboardService ciOverviewDashboardService;
 
   @Override
   public long getCurrentValue(String accountIdentifier, RateLimitRestrictionMetadataDTO restrictionMetadataDTO) {
-    return ciOverviewDashboardService.getMonthlyBuild(accountIdentifier, System.currentTimeMillis()).getCount();
+    return ciOverviewDashboardService.getActiveCommitter(accountIdentifier, System.currentTimeMillis()).getCount();
   }
 }

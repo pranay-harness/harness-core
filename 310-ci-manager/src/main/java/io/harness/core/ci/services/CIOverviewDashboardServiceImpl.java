@@ -22,8 +22,6 @@ import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.ng.core.dashboard.GitInfo;
 import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.plan.execution.AccountExecutionMetadata;
-import io.harness.repositories.executions.AccountExecutionMetadataRepository;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -33,23 +31,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
 public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardService {
   @Inject TimeScaleDBService timeScaleDBService;
-  @Inject AccountExecutionMetadataRepository accountExecutionMetadataRepository;
-  private static String moduleName = "ci_private_build";
   private String tableNameServiceAndInfra = "service_infra_info";
   private String tableName = "pipeline_execution_summary_ci";
   private String staticQuery = "select * from " + tableName + " where ";
@@ -228,31 +219,6 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       }
     }
     return null;
-  }
-
-  @Override
-  public UsageDataDTO getMonthlyBuild(String accountId, long timestamp) {
-    UsageDataDTO usageDataDTO = UsageDataDTO.builder().count(0).displayName("Monthly Builds count").build();
-    Optional<AccountExecutionMetadata> accountExecutionMetadata =
-        accountExecutionMetadataRepository.findByAccountId(accountId);
-    LocalDate startDate = Instant.ofEpochSecond(timestamp / 1000).atZone(ZoneId.systemDefault()).toLocalDate();
-    YearMonth yearMonth = YearMonth.of(startDate.getYear(), startDate.getMonth());
-    accountExecutionMetadata.ifPresent(executionMetadata
-        -> usageDataDTO.setCount(executionMetadata.getModuleToExecutionInfoMap()
-                                     .get(moduleName)
-                                     .getCountPerMonth()
-                                     .getOrDefault(yearMonth.toString(), 0L)));
-    return usageDataDTO;
-  }
-
-  @Override
-  public UsageDataDTO getTotalBuild(String accountId) {
-    UsageDataDTO usageDataDTO = UsageDataDTO.builder().count(0).displayName("Total Builds count").build();
-    Optional<AccountExecutionMetadata> accountExecutionMetadata =
-        accountExecutionMetadataRepository.findByAccountId(accountId);
-    accountExecutionMetadata.ifPresent(
-        executionMetadata -> usageDataDTO.setCount(executionMetadata.getModuleToExecutionCount().get(moduleName)));
-    return usageDataDTO;
   }
 
   public StatusAndTime queryCalculatorForStatusAndTime(String query) {
@@ -757,8 +723,6 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .timestamp(timestamp)
         .module("CI")
         .activeCommitters(getActiveCommitter(accountId, timestamp))
-        .monthlyBuilds(getMonthlyBuild(accountId, timestamp))
-        .totalBuilds(getTotalBuild(accountId))
         .build();
   }
 

@@ -29,9 +29,5 @@ public interface CIOverviewDashboardService {
 
   UsageDataDTO getActiveCommitter(String accountId, long timestamp);
 
-  UsageDataDTO getMonthlyBuild(String accountId, long timestamp);
-
-  UsageDataDTO getTotalBuild(String accountId);
-
   CIUsageResult getCIUsageResult(String accountId, long timestamp);
 }

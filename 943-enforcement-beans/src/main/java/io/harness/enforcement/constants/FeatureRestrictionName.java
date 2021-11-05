@@ -32,6 +32,7 @@ public enum FeatureRestrictionName {
   CUSTOM_RESOURCE_GROUPS,
   MAX_TOTAL_BUILDS,
   MAX_BUILDS_PER_MONTH,
+  ACTIVE_COMMITTERS,
   TEST_INTELLIGENCE,
 
   // CD Step Palette

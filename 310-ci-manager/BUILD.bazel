@@ -10,7 +10,6 @@ shared_dependencies = [
 ] + [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
-    "//800-pipeline-service:module",
     "//870-cg-orchestration:module",
     "//940-primary-version-manager:module",
     "//942-enforcement-sdk:module",

@@ -533,8 +533,6 @@ public class CIDashboardsApisTest extends CategoryTest {
   public void testGetCIUsage() {
     String accountId = "accountIdentifier";
     long timestamp = 1635814085000L;
-    UsageDataDTO monthlyBuildDTO = UsageDataDTO.builder().count(3).displayName("Monthly Builds count").build();
-    UsageDataDTO totalBuildDTO = UsageDataDTO.builder().count(5).displayName("Total Builds count").build();
     List<ReferenceDTO> referenceDTO = new ArrayList<>();
     referenceDTO.add(ReferenceDTO.builder()
                          .identifier("identifier1")
@@ -548,16 +546,12 @@ public class CIDashboardsApisTest extends CategoryTest {
                          .build());
     UsageDataDTO activeCommitters =
         UsageDataDTO.builder().count(2).displayName("Last 30 Days").references(referenceDTO).build();
-    doReturn(monthlyBuildDTO).when(ciOverviewDashboardServiceImpl).getMonthlyBuild(accountId, timestamp);
-    doReturn(totalBuildDTO).when(ciOverviewDashboardServiceImpl).getTotalBuild(accountId);
     doReturn(activeCommitters).when(ciOverviewDashboardServiceImpl).getActiveCommitter(accountId, timestamp);
     CIUsageResult usageResult = CIUsageResult.builder()
                                     .accountIdentifier(accountId)
                                     .timestamp(timestamp)
                                     .module("CI")
                                     .activeCommitters(activeCommitters)
-                                    .monthlyBuilds(monthlyBuildDTO)
-                                    .totalBuilds(totalBuildDTO)
                                     .build();
     assertThat(usageResult).isEqualTo(ciOverviewDashboardServiceImpl.getCIUsageResult(accountId, timestamp));
   }

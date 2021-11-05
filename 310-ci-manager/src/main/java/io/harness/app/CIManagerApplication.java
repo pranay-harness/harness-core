@@ -17,8 +17,7 @@ import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
 import io.harness.controller.PrimaryVersionChangeScheduler;
-import io.harness.core.ci.services.CIMonthlyBuildImpl;
-import io.harness.core.ci.services.CITotalBuildImpl;
+import io.harness.core.ci.services.CIActiveCommitterUsageImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -501,8 +500,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         RestrictionUsageRegisterConfiguration.builder()
             .restrictionNameClassMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.MAX_TOTAL_BUILDS, CITotalBuildImpl.class)
-                    .put(FeatureRestrictionName.MAX_BUILDS_PER_MONTH, CIMonthlyBuildImpl.class)
+                    .put(FeatureRestrictionName.ACTIVE_COMMITTERS, CIActiveCommitterUsageImpl.class)
                     .build())
             .build();
     injector.getInstance(EnforcementSdkRegisterService.class)

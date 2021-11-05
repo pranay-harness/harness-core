@@ -28,6 +28,4 @@ public class CIUsageResult {
   private String module;
   private long timestamp;
   private UsageDataDTO activeCommitters;
-  private UsageDataDTO monthlyBuilds;
-  private UsageDataDTO totalBuilds;
 }
