@@ -37,6 +37,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secret.ConfigSecret;
+import io.harness.secret.SecretsConfiguration;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
@@ -201,8 +202,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @ConfigSecret @JsonProperty("dmsSecret") private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
-  @JsonProperty(value = "pullSecrets", defaultValue = "false") private boolean pullSecrets;
-  @JsonProperty(value = "smProject") private String smProject;
+  @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
   @ConfigSecret @JsonProperty(value = "captchaSecret") private String captchaSecret;
   @ConfigSecret @JsonProperty(value = "verificationServiceSecretKey") private String verificationServiceSecretKey;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;

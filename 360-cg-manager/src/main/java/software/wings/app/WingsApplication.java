@@ -121,9 +121,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
-import io.harness.secret.ConfigSecretResolver;
 import io.harness.secret.ConfigSecretUtil;
-import io.harness.secret.GcpSecretManager;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.CurrentGenRegistrars;
@@ -400,7 +398,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    ConfigSecretUtil.resolveSecrets(configuration.isPullSecrets(), configuration.getSmProject(), configuration);
+    ConfigSecretUtil.resolveSecrets(configuration.getSecretsConfiguration(), configuration);
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));

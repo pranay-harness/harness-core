@@ -662,9 +662,9 @@ iteratorsConfig:
 
 disableDelegateMgmtInManager: false
 
-pullSecrets: false
-
-smProject: harness-playground
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: harness-playground
 
 captchaSecret: ""
 

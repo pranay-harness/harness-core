@@ -893,12 +893,12 @@ if [[ "" != "$DISABLE_DELEGATE_MGMT_IN_MANAGER" ]]; then
   yq write -i $CONFIG_FILE disableDelegateMgmtInManager "$DISABLE_DELEGATE_MGMT_IN_MANAGER"
 fi
 
-if [[ "" != "$SM_PROJECT" ]]; then
-  yq write -i $CONFIG_FILE smProject "$SM_PROJECT"
+if [[ "" != "$GCP_SECRET_MANAGER_PROJECT" ]]; then
+  yq write -i $CONFIG_FILE secretConfiguration.gcpSecretManagerProject "$GCP_SECRET_MANAGER_PROJECT"
 fi
 
-if [[ "" != "$PULL_SECRETS" ]]; then
-  yq write -i $CONFIG_FILE pullSecrets "$PULL_SECRETS"
+if [[ "" != "$RESOLVE_SECRETS" ]]; then
+  yq write -i $CONFIG_FILE secretConfiguration.secretResolutionEnabled "$RESOLVE_SECRETS"
 fi
 
 if [[ "" != "$RECAPTCHA_SECRET" ]]; then

@@ -65,6 +65,7 @@ public class ConfigSecretResolver {
                                              String.format("Secret with reference '%s' not found", secretReference)));
 
     FieldUtils.writeField(field, config, secretValue, true);
+    log.info("Secret written in field {} successfully", field);
   }
 
   private static boolean doesNotContainAnnotatedFields(Object object) {
