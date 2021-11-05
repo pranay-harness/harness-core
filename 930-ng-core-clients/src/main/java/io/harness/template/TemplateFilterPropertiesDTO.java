@@ -1,4 +1,4 @@
-package io.harness.template.beans;
+package io.harness.template;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.filter.FilterConstants.TEMPLATE_FILTER;
