@@ -14,6 +14,7 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.StagesExecutionMetadata;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
@@ -196,29 +197,31 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
             .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
                 accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
+      PipelineExecutionSummaryEntity executionSummaryEntity = pipelineExecutionSummaryEntityOptional.get();
       String latestTemplate = validateAndMergeHelper.getPipelineTemplate(
-          accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), null);
-      String yaml = pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
-      String template = pipelineExecutionSummaryEntityOptional.get().getPipelineTemplate();
+          accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), null);
+      String yaml = executionSummaryEntity.getInputSetYaml();
+      String template = executionSummaryEntity.getPipelineTemplate();
       if (resolveExpressions && EmptyPredicate.isNotEmpty(yaml)) {
         yaml = yamlExpressionResolveHelper.resolveExpressionsInYaml(yaml, planExecutionId);
       }
       if (EmptyPredicate.isEmpty(template) && EmptyPredicate.isNotEmpty(yaml)) {
-        EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(
-            pipelineExecutionSummaryEntityOptional.get().getGitSyncBranchContext());
+        EntityGitDetails entityGitDetails =
+            pmsGitSyncHelper.getEntityGitDetailsFromBytes(executionSummaryEntity.getGitSyncBranchContext());
         if (entityGitDetails != null) {
           template = validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId,
-              pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), entityGitDetails.getBranch(),
+              executionSummaryEntity.getPipelineIdentifier(), entityGitDetails.getBranch(),
               entityGitDetails.getRepoIdentifier(), null);
         } else {
-          template = validateAndMergeHelper.getPipelineTemplate(
-              accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), null);
+          template = latestTemplate;
         }
       }
+      StagesExecutionMetadata stagesExecutionMetadata = executionSummaryEntity.getStagesExecutionMetadata();
       return InputSetYamlWithTemplateDTO.builder()
           .inputSetTemplateYaml(template)
           .inputSetYaml(yaml)
           .latestTemplateYaml(latestTemplate)
+          .expressionValues(stagesExecutionMetadata != null ? stagesExecutionMetadata.getExpressionValues() : null)
           .build();
     }
     throw new InvalidRequestException(

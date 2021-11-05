@@ -313,6 +313,10 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void setUp() throws IllegalAccessException {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
+    Map<String, String> jreTarPaths = new HashMap<>();
+    jreTarPaths.put("openjdk8u242", getOpenjdkJreConfig().getJreTarPath());
+    cdnConfig.setCdnJreTarPaths(jreTarPaths);
+    cdnConfig.setAlpnJarPath(getOpenjdkJreConfig().getAlpnJarPath());
     when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any()))
         .thenReturn("http://localhost:" + port + "/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
@@ -346,6 +350,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
         .thenReturn("http://localhost:" + port + "/builds/9/delegate.jar");
     when(infraDownloadService.getCdnWatcherBaseUrl()).thenReturn("http://localhost:9500/builds");
+    when(infraDownloadService.getCdnWatcherMetaDataFileUrl()).thenReturn("http://localhost:" + port + "/watcherci.txt");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -3405,6 +3410,44 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateRegisterResponse registerResponse = delegateService.register(params);
     assertThat(registerResponse.getAction()).isEqualTo(Action.SELF_DESTRUCT);
     assertThat(registerResponse.getDelegateId()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void shouldRegisterParamsWithNoDelegateGroup() {
+    DelegateParams params = DelegateParams.builder()
+                                .accountId(ACCOUNT_ID)
+                                .hostName(HOST_NAME)
+                                .description(DESCRIPTION)
+                                .delegateType(KUBERNETES_DELEGATE)
+                                .ip("127.0.0.1")
+                                .delegateName(DELEGATE_NAME)
+                                .ng(true)
+                                .version(VERSION)
+                                .proxy(true)
+                                .pollingModeEnabled(true)
+                                .sampleDelegate(true)
+                                .build();
+
+    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
+
+    DelegateRegisterResponse registerResponse = delegateService.register(params);
+    Delegate delegateFromDb = delegateCache.get(ACCOUNT_ID, registerResponse.getDelegateId(), true);
+    DelegateGroup delegateGroupFromDb = delegateCache.getDelegateGroup(ACCOUNT_ID, delegateFromDb.getDelegateGroupId());
+
+    assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
+    assertThat(delegateFromDb.isNg()).isTrue();
+    assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
+    assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
+    assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
+    assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
+    assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(delegateGroupFromDb.getName());
+    assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
+    assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
+    assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateGroupFromDb.getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 
   private CapabilityRequirement buildCapabilityRequirement() {

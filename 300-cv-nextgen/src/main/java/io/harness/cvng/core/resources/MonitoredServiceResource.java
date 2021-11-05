@@ -15,6 +15,7 @@ import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
@@ -213,6 +214,24 @@ public class MonitoredServiceResource {
                                       .build();
     return ResponseDTO.newResponse(
         monitoredServiceService.getList(projectParams, environmentIdentifier, offset, pageSize, filter));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/all/time-series-health-sources")
+  @ApiOperation(value = "get all of monitored service data with time series health sources ",
+      nickname = "getAllMonitoredServicesWithTimeSeriesHealthSources")
+  public ResponseDTO<List<MonitoredServiceWithHealthSources>>
+  getAllMonitoredServicesWithHealthSources(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(monitoredServiceService.getAllWithTimeSeriesHealthSources(projectParams));
   }
 
   @GET

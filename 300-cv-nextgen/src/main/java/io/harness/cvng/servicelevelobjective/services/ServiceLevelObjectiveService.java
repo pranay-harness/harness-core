@@ -16,4 +16,6 @@ public interface ServiceLevelObjectiveService {
 
   PageResponse<ServiceLevelObjectiveResponse> get(ProjectParams projectParams, Integer offset, Integer pageSize,
       ServiceLevelObjectiveFilter serviceLevelObjectiveFilter);
+
+  ServiceLevelObjectiveResponse get(ProjectParams projectParams, String identifier);
 }

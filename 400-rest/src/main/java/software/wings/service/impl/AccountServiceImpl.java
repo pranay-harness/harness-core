@@ -1033,6 +1033,16 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public List<Account> listAllAccountsWithoutTheGlobalAccount() {
+    Query<Account> query =
+        wingsPersistence.createQuery(Account.class, excludeAuthorityCount).filter(ApplicationKeys.appId, GLOBAL_APP_ID);
+
+    query.and(query.criteria(ApplicationKeys.uuid).notEqual(GLOBAL_ACCOUNT_ID));
+
+    return query.asList();
+  }
+
+  @Override
   public List<Account> listAllActiveAccounts() {
     List<Account> accountList = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
                                     .filter(ApplicationKeys.appId, GLOBAL_APP_ID)

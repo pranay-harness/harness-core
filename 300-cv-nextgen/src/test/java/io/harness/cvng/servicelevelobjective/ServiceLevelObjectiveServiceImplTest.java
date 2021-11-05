@@ -12,18 +12,24 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
-import io.harness.cvng.servicelevelobjective.beans.SLIType;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
-import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +47,9 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   String projectIdentifier;
   String identifier;
   String name;
-  List<ServiceLevelIndicator> serviceLevelIndicators;
+  List<ServiceLevelIndicatorDTO> serviceLevelIndicators;
   SLOTarget sloTarget;
+  SLOTarget calendarSloTarget;
   String userJourneyIdentifier;
   String description;
   String monitoredServiceIdentifier;
@@ -52,7 +59,7 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   private BuilderFactory builderFactory;
 
   @Before
-  public void setup() throws IllegalAccessException {
+  public void setup() throws IllegalAccessException, ParseException {
     builderFactory = BuilderFactory.getDefault();
     accountId = builderFactory.getContext().getAccountId();
     orgIdentifier = builderFactory.getContext().getOrgIdentifier();
@@ -66,25 +73,35 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     tags.put("tag1", "value1");
     tags.put("tag2", "value2");
 
-    serviceLevelIndicators =
-        Collections.singletonList(ServiceLevelIndicator.builder()
-                                      .identifier("sliIndicator")
-                                      .name("sliName")
-                                      .type(SLIType.LATENCY)
-                                      .spec(ServiceLevelIndicator.SLISpec.builder()
-                                                .type(SLIMetricType.THRESHOLD)
-                                                .spec(ServiceLevelIndicator.SLISpec.SLIMetricSpec.builder()
-                                                          .eventType("eventName")
-                                                          .metric1("metric1")
-                                                          .metric2("metric2")
-                                                          .build())
-                                                .build())
-                                      .build());
+    serviceLevelIndicators = Collections.singletonList(ServiceLevelIndicatorDTO.builder()
+                                                           .identifier("sliIndicator")
+                                                           .name("sliName")
+                                                           .type(ServiceLevelIndicatorType.LATENCY)
+                                                           .spec(ServiceLevelIndicatorSpec.builder()
+                                                                     .type(SLIMetricType.RATIO)
+                                                                     .spec(RatioSLIMetricSpec.builder()
+                                                                               .eventType("eventName")
+                                                                               .metric1("metric1")
+                                                                               .metric2("metric2")
+                                                                               .build())
+                                                                     .build())
+                                                           .build());
+
     sloTarget = SLOTarget.builder()
                     .type(SLOTargetType.ROLLING)
                     .sloTargetPercentage(80.0)
                     .spec(RollingSLOTargetSpec.builder().periodLength("30D").build())
                     .build();
+
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    calendarSloTarget = SLOTarget.builder()
+                            .type(SLOTargetType.ROLLING)
+                            .sloTargetPercentage(80.0)
+                            .spec(CalenderSLOTargetSpec.builder()
+                                      .startDate(sdf.parse("2021-12-01"))
+                                      .endDate(sdf.parse("2021-12-31"))
+                                      .build())
+                            .build();
     userJourneyIdentifier = "userJourney";
 
     projectParams = ProjectParams.builder()
@@ -99,6 +116,30 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testCreate_Success() {
     ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testCreate_WithoutTagsSuccess() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    sloDTO.setTags(new HashMap<>());
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testCreate_CalendarSLOTargetSuccess() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    sloDTO.setTarget(calendarSloTarget);
     createMonitoredService();
     ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
         serviceLevelObjectiveService.create(projectParams, sloDTO);
@@ -162,6 +203,33 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
+  public void testUpdate_SLIUpdateSuccess() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+    ServiceLevelIndicatorDTO serviceLevelIndicatorDTO1 = sloDTO.getServiceLevelIndicators().get(0);
+    serviceLevelIndicatorDTO1.setType(ServiceLevelIndicatorType.AVAILABILITY);
+    ServiceLevelIndicatorDTO serviceLevelIndicatorDTO2 = builderFactory.getServiceLevelIndicatorDTOBuilder();
+    serviceLevelIndicatorDTO2.setSpec(
+        ServiceLevelIndicatorSpec.builder()
+            .type(SLIMetricType.RATIO)
+            .spec(RatioSLIMetricSpec.builder().eventType("Bad").metric1("metric4").metric2("metric5").build())
+            .build());
+    List<ServiceLevelIndicatorDTO> serviceLevelIndicatorDTOList = new ArrayList<>();
+    serviceLevelIndicatorDTOList.add(serviceLevelIndicatorDTO1);
+    serviceLevelIndicatorDTOList.add(serviceLevelIndicatorDTO2);
+    sloDTO.setServiceLevelIndicators(serviceLevelIndicatorDTOList);
+    ServiceLevelObjectiveResponse updateServiceLevelObjectiveResponse =
+        serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
+    assertThat(updateServiceLevelObjectiveResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators())
+        .isEqualTo(serviceLevelIndicatorDTOList);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
   public void testUpdate_FailedWithEntityNotPresent() {
     ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
     createMonitoredService();
@@ -176,6 +244,18 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
             "SLO  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
             sloDTO.getIdentifier(), projectParams.getAccountIdentifier(), projectParams.getOrgIdentifier(),
             projectParams.getProjectIdentifier()));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testGet_IdentifierBasedQuery() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    serviceLevelObjectiveService.create(projectParams, sloDTO);
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.get(projectParams, sloDTO.getIdentifier());
+    assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
   }
 
   private ServiceLevelObjectiveDTO createSLOBuilder() {

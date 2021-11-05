@@ -152,14 +152,15 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
              openshiftParamList, releaseName, namespace, logCallback, timeoutIntervalInMin))
         .thenReturn(manifestFiles);
 
-    when(k8sTaskHelperBase.readManifests(manifestFiles, logCallback)).thenReturn(kubernetesResources);
+    when(k8sTaskHelperBase.readManifests(manifestFiles, logCallback, true)).thenReturn(kubernetesResources);
     when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig, releaseName)).thenReturn(null);
     doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(null, logCallback);
 
     k8sCanaryRequestHandler.init(k8sCanaryDeployRequest, delegateTaskParams, logCallback);
     int wantedDryRunInvocations = skipDryRun ? 0 : 1;
-    verify(k8sTaskHelperBase, times(wantedDryRunInvocations)).dryRunManifests(any(), any(), any(), any(), eq(true));
-    verify(k8sTaskHelperBase, times(1)).readManifests(manifestFiles, logCallback);
+    verify(k8sTaskHelperBase, times(wantedDryRunInvocations))
+        .dryRunManifests(any(), any(), any(), any(), eq(true), anyBoolean());
+    verify(k8sTaskHelperBase, times(1)).readManifests(manifestFiles, logCallback, true);
     verify(k8sTaskHelperBase, times(1))
         .renderTemplate(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, openshiftParamList,
             releaseName, namespace, logCallback, timeoutIntervalInMin);
@@ -253,7 +254,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .renderTemplate(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, valuesYamlList, releaseName,
             namespace, logCallback, timeoutIntervalInMin);
-    doReturn(deployment).when(k8sTaskHelperBase).readManifests(manifestFiles, logCallback);
+    doReturn(deployment).when(k8sTaskHelperBase).readManifests(manifestFiles, logCallback, true);
     k8sCanaryRequestHandler.init(canaryDeployRequest, delegateTaskParams, logCallback);
 
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(manifestFileDirectory, logCallback);

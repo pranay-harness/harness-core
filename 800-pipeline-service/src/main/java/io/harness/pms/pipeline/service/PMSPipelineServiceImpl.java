@@ -22,7 +22,6 @@ import io.harness.exception.ScmException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
-import io.harness.observer.Subject;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
@@ -34,7 +33,6 @@ import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.pipeline.StepPalleteModuleInfo;
 import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
-import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
@@ -47,7 +45,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
@@ -68,7 +65,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PMSPipelineServiceHelper pmsPipelineServiceHelper;
   @Inject private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Inject private GitSyncSdkService gitSyncSdkService;
-  @Inject @Getter private final Subject<PipelineActionObserver> pipelineSubject = new Subject<>();
   @Inject private CommonStepInfo commonStepInfo;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
@@ -159,8 +155,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
 
-      pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onUpdate, updatedResult);
-
       return updatedResult;
     } catch (EventsFrameworkDownException ex) {
       log.error("Events framework is down for Pipeline Service.", ex);
@@ -222,7 +216,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       PipelineEntity deletedEntity =
           pmsPipelineRepository.deletePipeline(withDeleted, PipelineYamlDtoMapper.toDto(withDeleted));
       if (deletedEntity.getDeleted()) {
-        pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onDelete, deletedEntity);
         return true;
       } else {
         throw new InvalidRequestException(

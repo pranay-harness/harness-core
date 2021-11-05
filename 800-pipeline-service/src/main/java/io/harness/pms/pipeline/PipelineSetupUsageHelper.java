@@ -4,9 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.remote.client.NGRestUtils.getResponseWithRetry;
 
 import io.harness.EntityType;
+import io.harness.PipelineSetupUsageUtils;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.IdentifierRef;
-import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -21,26 +20,20 @@ import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetup
 import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO.EntityReferredByPipelineDetailProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO.PipelineDetailType;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
-import io.harness.pms.merger.fqn.FQN;
-import io.harness.pms.merger.helpers.FQNMapGenerator;
+import io.harness.pms.events.PipelineDeleteEvent;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
-import io.harness.utils.IdentifierRefHelper;
 
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,49 +69,14 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
    */
   public List<EntityDetail> getReferencesOfPipeline(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String pipelineId, String pipelineYaml, EntityType entityType) {
-    Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
-    try {
-      Map<FQN, Object> fqnObjectMap =
-          FQNMapGenerator.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
-      fqnObjectMap.keySet().forEach(fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
-    } catch (IOException e) {
-      throw new InvalidRequestException("Invalid merged pipeline yaml");
-    }
-
     List<EntitySetupUsageDTO> allReferredUsages =
         getResponseWithRetry(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
                                  FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
                                      accountIdentifier, orgIdentifier, projectIdentifier, pipelineId),
                                  entityType, null),
             "Could not extract setup usage of pipeline with id " + pipelineId + " after {} attempts.");
-    List<EntityDetail> entityDetails = new ArrayList<>();
-    for (EntitySetupUsageDTO referredUsage : allReferredUsages) {
-      IdentifierRef ref = (IdentifierRef) referredUsage.getReferredEntity().getEntityRef();
-      Map<String, String> metadata = ref.getMetadata();
-      if (metadata == null) {
-        continue;
-      }
-      String fqn = metadata.get(PreFlightCheckMetadata.FQN);
-
-      if (!metadata.containsKey(PreFlightCheckMetadata.EXPRESSION)) {
-        entityDetails.add(referredUsage.getReferredEntity());
-      } else if (fqnToObjectMapMergedYaml.containsKey(fqn)) {
-        String finalValue = ((TextNode) fqnToObjectMapMergedYaml.get(fqn)).asText();
-        if (NGExpressionUtils.isRuntimeOrExpressionField(finalValue)) {
-          continue;
-        }
-        if (ParameterField.containsInputSetValidator(finalValue)) {
-          finalValue = ParameterField.getValueFromParameterFieldWithInputSetValidator(finalValue);
-        }
-        IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-            finalValue, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
-        entityDetails.add(EntityDetail.builder()
-                              .name(referredUsage.getReferredEntity().getName())
-                              .type(referredUsage.getReferredEntity().getType())
-                              .entityRef(identifierRef)
-                              .build());
-      }
-    }
+    List<EntityDetail> entityDetails = PipelineSetupUsageUtils.extractInputReferredEntityFromYaml(
+        accountIdentifier, orgIdentifier, projectIdentifier, pipelineYaml, allReferredUsages);
     entityDetails.addAll(internalReferredEntityExtractor.extractInternalEntities(accountIdentifier, entityDetails));
     return entityDetails;
   }
@@ -226,9 +184,9 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
   }
 
   @Override
-  public void onDelete(PipelineEntity pipelineEntity) {
+  public void onDelete(PipelineDeleteEvent pipelineDeleteEvent) {
     try {
-      deleteSetupUsagesForGivenPipeline(pipelineEntity);
+      deleteSetupUsagesForGivenPipeline(pipelineDeleteEvent.getPipeline());
     } catch (EventsFrameworkDownException ex) {
       log.error("Redis Producer shutdown", ex);
     }

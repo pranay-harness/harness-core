@@ -187,9 +187,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
         builder.setStepParameters(nodeExecution.getResolvedStepParametersBytes());
       }
       eventEmitter.emitEvent(builder.build());
+      NodeExecution nodeExecution1 = mongoTemplate.insert(nodeExecution);
       nodeExecutionStartSubject.fireInform(
           NodeExecutionStartObxxxxxxxx:onNodeStart, NodeStartInfo.builder().nodeExecution(nodeExecution).build());
-      return mongoTemplate.insert(nodeExecution);
+      return nodeExecution1;
     } else {
       return mongoTemplate.save(nodeExecution);
     }

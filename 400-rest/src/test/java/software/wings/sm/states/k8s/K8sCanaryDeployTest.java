@@ -43,6 +43,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.exception.InvalidRequestException;
@@ -130,6 +131,7 @@ public class K8sCanaryDeployTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() {
+    when(mockFeatureFlagService.isEnabled(eq(FeatureName.NEW_KUBECTL_VERSION), any())).thenReturn(false);
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
     when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
@@ -160,6 +162,7 @@ public class K8sCanaryDeployTest extends CategoryTest {
     assertThat(taskParams.getInstanceUnitType()).isEqualTo(InstanceUnitType.COUNT);
     assertThat(taskParams.getInstances()).isEqualTo(5);
     assertThat(taskParams.isSkipDryRun()).isTrue();
+    assertThat(taskParams.isUseNewKubectlVersion()).isFalse();
   }
 
   @Test

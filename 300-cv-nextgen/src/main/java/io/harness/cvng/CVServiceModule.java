@@ -188,8 +188,10 @@ import io.harness.cvng.dashboard.services.impl.ServiceDependencyGraphServiceImpl
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.migration.impl.CVNGMigrationServiceImpl;
 import io.harness.cvng.migration.service.CVNGMigrationService;
+import io.harness.cvng.servicelevelobjective.services.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.ServiceLevelObjectiveService;
 import io.harness.cvng.servicelevelobjective.services.UserJourneyService;
+import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelIndicatorServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.ServiceLevelObjectiveServiceImpl;
 import io.harness.cvng.servicelevelobjective.services.impl.UserJourneyServiceImpl;
 import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
@@ -426,7 +428,6 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
     dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
-    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.KUBERNETES).to(KubernetesActivitySourceService.class);
 
     MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
@@ -513,6 +514,7 @@ public class CVServiceModule extends AbstractModule {
 
     bind(ServiceLevelObjectiveService.class).to(ServiceLevelObjectiveServiceImpl.class);
     bind(UserJourneyService.class).to(UserJourneyServiceImpl.class);
+    bind(ServiceLevelIndicatorService.class).to(ServiceLevelIndicatorServiceImpl.class);
 
     bind(LearningEngineDevService.class).to(LearningEngineDevServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMapBinder =

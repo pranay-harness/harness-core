@@ -23,6 +23,8 @@ import io.harness.cf.client.dto.Target;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.PersistentEntity;
+import io.harness.serializer.JsonUtils;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
@@ -39,6 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -272,14 +275,29 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public Set<String> getAccountIds(@NonNull FeatureName featureName) {
-    FeatureFlag featureFlag = getFeatureFlag(featureName).orElse(null);
-    if (featureFlag == null || isEmpty(featureFlag.getAccountIds())) {
-      return new HashSet<>();
+    switch (featureFlagConfig.getFeatureFlagSystem()) {
+      case CF:
+        List<PersistentEntity> accounts =
+            persistence.createQueryForCollection("accounts").project("_id", true).asList();
+        if (isEmpty(accounts)) {
+          return new HashSet<>();
+        }
+        return accounts.stream()
+            .map(entity -> JsonUtils.convertValue(entity, Map.class))
+            .map(map -> map.get("uuid").toString())
+            .filter(accountId -> isEnabled(featureName, accountId))
+            .collect(Collectors.toSet());
+      case LOCAL:
+      default:
+        FeatureFlag featureFlag = getFeatureFlag(featureName).orElse(null);
+        if (featureFlag == null || isEmpty(featureFlag.getAccountIds())) {
+          return new HashSet<>();
+        }
+        if (featureName.getScope() == Scope.GLOBAL) {
+          log.warn("FeatureFlag {} is global, should not have accountIds", featureName.name(), new Exception(""));
+        }
+        return featureFlag.getAccountIds();
     }
-    if (featureName.getScope() == Scope.GLOBAL) {
-      log.warn("FeatureFlag {} is global, should not have accountIds", featureName.name(), new Exception(""));
-    }
-    return featureFlag.getAccountIds();
   }
 
   @Override

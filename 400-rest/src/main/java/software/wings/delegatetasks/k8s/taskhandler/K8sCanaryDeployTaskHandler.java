@@ -255,8 +255,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return true;
     }
 
-    return k8sTaskHelperBase.dryRunManifests(
-        client, canaryHandlerConfig.getResources(), k8sDelegateTaskParams, executionLogCallback);
+    return k8sTaskHelperBase.dryRunManifests(client, canaryHandlerConfig.getResources(), k8sDelegateTaskParams,
+        executionLogCallback, k8sCanaryDeployTaskParameters.isUseNewKubectlVersion());
   }
 
   @VisibleForTesting

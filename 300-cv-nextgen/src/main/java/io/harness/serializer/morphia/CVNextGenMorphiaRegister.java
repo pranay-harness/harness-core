@@ -68,6 +68,7 @@ import io.harness.cvng.core.entities.demo.CVNGDemoPerpetualTask;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.migration.beans.CVNGSchema;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.UserJourney;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
@@ -174,6 +175,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(UserJourney.class);
     set.add(CVNGDemoDataIndex.class);
     set.add(CVNGDemoPerpetualTask.class);
+    set.add(ServiceLevelIndicator.class);
   }
 
   @Override

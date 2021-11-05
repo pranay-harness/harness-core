@@ -10,9 +10,8 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.encryption.Scope;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
@@ -21,6 +20,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.service.DelegateGrpcClientWrapper;
+import io.harness.states.codebase.CodeBaseTaskStep;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -34,43 +34,35 @@ import net.jodah.failsafe.RetryPolicy;
 @OwnedBy(HarnessTeam.CI)
 public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHandler {
   @Inject private GitBuildStatusUtility gitBuildStatusUtility;
-  @Inject private PodCleanupUtility podCleanupUtility;
+  @Inject private StageCleanupUtility stageCleanupUtility;
 
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
 
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+
   @Override
   public void handleEvent(OrchestrationEvent event) {
     Ambiance ambiance = event.getAmbiance();
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
     Status status = event.getStatus();
-    try {
-      if (gitBuildStatusUtility.shouldSendStatus(level.getStepType().getStepCategory())) {
-        log.info("Received event with status {} to update git status for stage {}, planExecutionId {}", status,
-            level.getIdentifier(), ambiance.getPlanExecutionId());
-        if (isAutoAbortThroughTrigger(event)) {
-          log.info("Skipping updating Git status as execution was Auto aborted by trigger due to newer execution");
-        } else {
-          gitBuildStatusUtility.sendStatusToGit(status, event.getResolvedStepParameters(), ambiance, accountId);
-        }
-      }
-    } catch (Exception ex) {
-      log.error("Failed to send git status update task for node {}, planExecutionId {}", level.getRuntimeId(),
-          ambiance.getPlanExecutionId(), ex);
-    }
 
+    sendGitStatus(level, ambiance, status, event, accountId);
+    sendCleanupRequest(level, ambiance, status, accountId);
+  }
+
+  private void sendCleanupRequest(Level level, Ambiance ambiance, Status status, String accountId) {
     try {
       RetryPolicy<Object> retryPolicy = getRetryPolicy(format("[Retrying failed call to clean pod attempt: {}"),
           format("Failed to clean pod after retrying {} times"));
 
       Failsafe.with(retryPolicy).run(() -> {
         if (level.getStepType().getStepCategory() == StepCategory.STAGE && isFinalStatus(status)) {
-          CIK8CleanupTaskParams cik8CleanupTaskParams = podCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
+          CICleanupTaskParams ciCleanupTaskParams = stageCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
 
-          log.info("Received event with status {} to clean podName {}, planExecutionId {}, stage {}", status,
-              cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(), level.getIdentifier());
+          log.info("Received event with status {} to clean planExecutionId {}, stage {}", status,
+              ambiance.getPlanExecutionId(), level.getIdentifier());
 
           Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);
           DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
@@ -78,17 +70,42 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
                                                         .taskSetupAbstractions(abstractions)
                                                         .executionTimeout(java.time.Duration.ofSeconds(900))
                                                         .taskType("CI_CLEANUP")
-                                                        .taskParameters(cik8CleanupTaskParams)
+                                                        .taskParameters(ciCleanupTaskParams)
                                                         .taskDescription("CI cleanup pod task")
                                                         .build();
 
           String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
-          log.info("Submitted cleanup request with taskId {} for podName {}, planExecutionId {}, stage {}", taskId,
-              cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(), level.getIdentifier());
+          log.info("Submitted cleanup request with taskId {} for planExecutionId {}, stage {}", taskId,
+              ambiance.getPlanExecutionId(), level.getIdentifier());
         }
       });
     } catch (Exception ex) {
       log.error("Failed to send cleanup call for node {}", level.getRuntimeId(), ex);
+    }
+  }
+
+  private void sendGitStatus(
+      Level level, Ambiance ambiance, Status status, OrchestrationEvent event, String accountId) {
+    try {
+      if (gitBuildStatusUtility.shouldSendStatus(level.getStepType().getStepCategory())
+          || gitBuildStatusUtility.isCodeBaseStepSucceeded(level, status)) {
+        log.info("Received event with status {} to update git status for stage {}, planExecutionId {}", status,
+            level.getIdentifier(), ambiance.getPlanExecutionId());
+        if (isAutoAbortThroughTrigger(event)) {
+          log.info("Skipping updating Git status as execution was Auto aborted by trigger due to newer execution");
+        } else {
+          if (level.getStepType().getStepCategory() == StepCategory.STAGE) {
+            gitBuildStatusUtility.sendStatusToGit(status, event.getResolvedStepParameters(), ambiance, accountId);
+          } else if (level.getStepType().getType().equals(CodeBaseTaskStep.STEP_TYPE.getType())) {
+            // It sends Running if codebase step successfully fetched commit sha via api token
+            gitBuildStatusUtility.sendStatusToGit(
+                Status.RUNNING, event.getResolvedStepParameters(), ambiance, accountId);
+          }
+        }
+      }
+    } catch (Exception ex) {
+      log.error("Failed to send git status update task for node {}, planExecutionId {}", level.getRuntimeId(),
+          ambiance.getPlanExecutionId(), ex);
     }
   }
 

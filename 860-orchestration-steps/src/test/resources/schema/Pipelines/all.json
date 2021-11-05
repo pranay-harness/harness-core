@@ -307,6 +307,22 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "JsonNode": {
       "type": "object",
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -435,77 +451,14 @@
     "NotificationChannelWrapper": {
       "type": "object",
       "properties": {
+        "spec": {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
         "type": {
           "type": "string"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Email"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/PmsEmailChannel"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "MsTeams"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/PmsMSTeamChannel"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "PagerDuty"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/PmsPagerDutyChannel"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Slack"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/PmsSlackChannel"
-              }
-            }
-          }
-        }
-      ]
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "NotificationRules": {
       "type": "object",
@@ -517,7 +470,7 @@
           "type": "string"
         },
         "notificationMethod": {
-          "$ref": "#/definitions/NotificationChannelWrapper"
+          "$ref": "#/definitions/ParameterFieldNotificationChannelWrapper"
         },
         "pipelineEvents": {
           "type": "array",
@@ -727,6 +680,60 @@
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldNotificationChannelWrapper": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "$ref": "#/definitions/NotificationChannelWrapper"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

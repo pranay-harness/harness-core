@@ -206,7 +206,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
         kubernetesConfig.getNamespace(), executionLogCallback, request.getTimeoutIntervalInMin());
 
     resources = k8sTaskHelperBase.readManifestAndOverrideLocalSecrets(
-        manifestFiles, executionLogCallback, request.isLocalOverrideFeatureFlag());
+        manifestFiles, executionLogCallback, request.isLocalOverrideFeatureFlag(), isErrorFrameworkSupported());
     k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
     if (request.isInCanaryWorkflow()) {
@@ -224,7 +224,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       return;
     }
 
-    k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, true);
+    k8sTaskHelperBase.dryRunManifests(
+        client, resources, k8sDelegateTaskParams, executionLogCallback, true, request.isUseNewKubectlVersion());
   }
 
   private void prepareForRolling(K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,

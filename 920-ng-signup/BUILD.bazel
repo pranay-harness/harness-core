@@ -8,6 +8,7 @@ HarnessTeam = "GTM"
 shared_dependencies = [
     "//:lombok",
     "//930-ng-core-clients:module",
+    "//930-ng-license-manager:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
     "//945-account-mgmt:module",
@@ -18,6 +19,7 @@ shared_dependencies = [
     "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
     "//960-persistence:module",
     "//970-telemetry-beans:module",
+    "//980-commons:module",
     "@maven//:org_mindrot_jbcrypt",
 ]
 

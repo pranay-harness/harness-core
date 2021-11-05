@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory;
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ACCOUNT_DEFAULTS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
@@ -85,7 +85,7 @@ public class SettingAuthHandler {
 
   private void authorizeAccountDefaults() {
     List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
-    permissionAttributeList.add(new PermissionAttribute(ACCOUNT_MANAGEMENT));
+    permissionAttributeList.add(new PermissionAttribute(MANAGE_ACCOUNT_DEFAULTS));
     authorize(permissionAttributeList);
   }
 

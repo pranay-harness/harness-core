@@ -26,11 +26,11 @@ public class ServiceLevelObjectiveDTO implements YamlDTO {
   @ApiModelProperty(required = true) @NotNull @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) @NotNull @NGEntityName String name;
   String description;
-  @ApiModelProperty(required = true) @NotNull @Size(max = 128) Map<String, String> tags;
+  @Size(max = 128) Map<String, String> tags;
   @ApiModelProperty(required = true) @NotNull String userJourneyRef;
   @ApiModelProperty(required = true) @NotNull String monitoredServiceRef;
   @ApiModelProperty(required = true) @NotNull String healthSourceRef;
 
-  @Valid @NotNull List<ServiceLevelIndicator> serviceLevelIndicators;
+  @Valid @NotNull List<ServiceLevelIndicatorDTO> serviceLevelIndicators;
   @Valid @NotNull SLOTarget target;
 }

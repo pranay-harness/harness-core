@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
 import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
@@ -137,7 +138,6 @@ import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -440,7 +440,7 @@ public class K8sStepHelper {
     SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-    boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceHelper.getAccountId(ambiance));
+    boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceUtils.getAccountId(ambiance));
 
     if (optimizedFilesFetch) {
       scmConnector = (ScmConnector) connectorDTO.getConnectorConfig();
@@ -577,8 +577,8 @@ public class K8sStepHelper {
   }
 
   private SSHKeySpecDTO getSshKeySpecDTO(GitConfigDTO gitConfigDTO, Ambiance ambiance) {
-    return gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceHelper.getAccountId(ambiance),
-        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
+    return gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceUtils.getAccountId(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
   }
 
   public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
@@ -745,7 +745,7 @@ public class K8sStepHelper {
   private TaskChainResponse prepareHelmFetchValuesTaskChainResponse(Ambiance ambiance,
       StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
       ManifestOutcome k8sManifestOutcome, List<ValuesManifestOutcome> aggregatedValuesManifests) {
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     HelmChartManifestDelegateConfig helmManifest =
         (HelmChartManifestDelegateConfig) getManifestDelegateConfig(k8sManifestOutcome, ambiance);
     HelmValuesFetchRequest helmValuesFetchRequest = HelmValuesFetchRequest.builder()
@@ -785,7 +785,7 @@ public class K8sStepHelper {
   private TaskChainResponse getGitFetchFileTaskChainResponse(Ambiance ambiance,
       List<GitFetchFilesConfig> gitFetchFilesConfigs, StepElementParameters stepElementParameters,
       K8sStepPassThroughData k8sStepPassThroughData, boolean shouldOpenLogStream) {
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     GitFetchRequest gitFetchRequest = GitFetchRequest.builder()
                                           .gitFetchFilesConfigs(gitFetchFilesConfigs)
                                           .shouldOpenLogStream(shouldOpenLogStream)
@@ -1403,5 +1403,9 @@ public class K8sStepHelper {
   public boolean isUseLatestKustomizeVersion(String accountId) {
     return RestClientUtils.getResponse(
         accountClient.isFeatureFlagEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE.name(), accountId));
+  }
+
+  public boolean isUseNewKubectlVersion(String accountId) {
+    return featureFlagService.isEnabled(NEW_KUBECTL_VERSION, accountId);
   }
 }

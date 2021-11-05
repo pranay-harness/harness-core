@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
@@ -58,6 +59,8 @@ public class IdentityNodeExecutionStrategy
   @Inject private IdentityNodeResumeHelper identityNodeResumeHelper;
   @Inject private TransactionHelper transactionHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
+
+  private String SERVICE_NAME_IDENTITY = ModuleType.PMS.name().toLowerCase();
 
   private void setNodeExecutionParameters(Update update, NodeExecution originalExecution) {
     setUnset(update, NodeExecutionKeys.resolvedStepParameters, originalExecution.getResolvedStepParameters());
@@ -133,13 +136,15 @@ public class IdentityNodeExecutionStrategy
           newNodeExecutionId, Status.RUNNING, update, EnumSet.noneOf(Status.class));
 
       // If not leaf node then we need to call the identity step
+      Ambiance modifyAmbiance = IdentityStep.modifyAmbiance(ambiance);
       NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
-                                          .setAmbiance(newNodeExecution.getAmbiance())
+                                          .setAmbiance(modifyAmbiance)
                                           .setStepParameters(newNodeExecution.getResolvedStepParametersBytes())
                                           .setMode(newNodeExecution.getMode())
                                           .build();
-      eventSender.sendEvent(newNodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START,
-          node.getServiceName(), true);
+      // hard code of service name to PMS
+      eventSender.sendEvent(
+          modifyAmbiance, nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, SERVICE_NAME_IDENTITY, true);
     } catch (Exception exception) {
       log.error("Exception Occurred in facilitateAndStartStep NodeExecutionId : {}, PlanExecutionId: {}",
           AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), exception);
@@ -208,7 +213,7 @@ public class IdentityNodeExecutionStrategy
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
-      identityNodeResumeHelper.resume(nodeExecution, response, asyncError);
+      identityNodeResumeHelper.resume(nodeExecution, response, asyncError, SERVICE_NAME_IDENTITY);
     } catch (Exception exception) {
       log.error("Exception Occurred in handling resume with nodeExecutionId {} planExecutionId {}", nodeExecutionId,
           ambiance.getPlanExecutionId(), exception);

@@ -129,7 +129,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
   private EncryptedData getEncryptedDataForClientCertificateField(
       CyberArkConfig savedConfig, CyberArkConfig cyberArkConfig, String clientCertificate) {
     EncryptedData encryptedData = isNotEmpty(clientCertificate) && !Objects.equals(SECRET_MASK, clientCertificate)
-        ? encryptLocal(clientCertificate.toCharArray())
+        ? encryptUsingBaseAlgo(cyberArkConfig.getAccountId(), clientCertificate.toCharArray())
         : null;
 
     EncryptedData savedEncryptedData = null;
@@ -145,6 +145,8 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     if (savedEncryptedData != null && encryptedData != null) {
       savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
       savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+      savedEncryptedData.setEncryptionType(encryptedData.getEncryptionType());
+      savedEncryptedData.setKmsId(encryptedData.getKmsId());
       return savedEncryptedData;
     } else {
       return encryptedData;
@@ -217,7 +219,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
       if (maskSecret) {
         cyberArkConfig.maskSecrets();
       } else {
-        cyberArkConfig.setClientCertificate(String.valueOf(decryptLocal(encryptedClientCert)));
+        cyberArkConfig.setClientCertificate(String.valueOf(decryptUsingBaseAlgo(encryptedClientCert)));
       }
     }
   }

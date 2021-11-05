@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @OwnedBy(PL)
 public enum ModuleType {
   @JsonProperty("CD") CD("Continuous Deployment"),
-  @JsonProperty("CI") CI("Continuous Integeration"),
+  @JsonProperty("CI") CI("Continuous Integration"),
   @JsonProperty("CV") CV("Continuous Verification"),
   @JsonProperty("CF") CF("Continuous Features"),
   @JsonProperty("CE") CE("Continuous Efficiency"),

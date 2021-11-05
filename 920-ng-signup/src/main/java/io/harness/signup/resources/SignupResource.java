@@ -61,6 +61,19 @@ public class SignupResource {
     return new RestResponse<>();
   }
 
+  /**
+   * Follows the "free trial sign up" path
+   * Module type can be optional but by default we will always redirect to NG
+   * @param dto
+   * @return
+   */
+  @POST
+  @Path("/community")
+  @PublicApi
+  public RestResponse<UserInfo> communitySignup(SignupDTO dto) {
+    return new RestResponse<>(signupService.communitySignup(dto));
+  }
+
   @PUT
   @Path("/complete/{token}")
   @PublicApi

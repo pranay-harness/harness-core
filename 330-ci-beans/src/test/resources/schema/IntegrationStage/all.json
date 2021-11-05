@@ -13,6 +13,9 @@
     "infrastructure": {
       "oneOf": [
         {
+          "$ref": "#/definitions/AwsVmInfraYaml"
+        },
+        {
           "$ref": "#/definitions/K8sDirectInfraYaml"
         },
         {
@@ -62,6 +65,46 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsVmInfraYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Infrastructure"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/AwsVmInfraYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "KubernetesDirect",
+                "UseFromStage",
+                "AwsVm"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsVmInfraYamlSpec": {
+      "type": "object",
+      "required": [
+        "poolId"
+      ],
+      "properties": {
+        "poolId": {
+          "type": "string"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "CIServiceInfo": {
@@ -320,7 +363,8 @@
           "type": "string",
           "enum": [
             "KubernetesDirect",
-            "UseFromStage"
+            "UseFromStage",
+            "AwsVm"
           ]
         }
       },
@@ -340,6 +384,9 @@
         },
         "infrastructure": {
           "oneOf": [
+            {
+              "$ref": "#/definitions/AwsVmInfraYaml"
+            },
             {
               "$ref": "#/definitions/K8sDirectInfraYaml"
             },
@@ -393,7 +440,8 @@
               "type": "string",
               "enum": [
                 "KubernetesDirect",
-                "UseFromStage"
+                "UseFromStage",
+                "AwsVm"
               ]
             }
           }

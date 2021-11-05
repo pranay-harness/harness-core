@@ -425,8 +425,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void validate(KubernetesConfig kubernetesConfig) {
-    tryListControllersKubectl(kubernetesConfig);
+  public void validate(KubernetesConfig kubernetesConfig, boolean useNewKubectlVersion) {
+    tryListControllersKubectl(kubernetesConfig, useNewKubectlVersion);
   }
 
   @Override
@@ -442,14 +442,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void tryListControllersKubectl(final KubernetesConfig kubernetesConfig) {
+  public void tryListControllersKubectl(final KubernetesConfig kubernetesConfig, boolean useNewKubectlVersion) {
     ProcessResult result = null;
     final File kubeConfigDir = Files.createTempDir();
     try (ByteArrayOutputStream errStream = new ByteArrayOutputStream()) {
       final String kubeconfigFileContent = getConfigFileContent(kubernetesConfig);
       final String kubeconfigPath = Paths.get(kubeConfigDir.getPath(), K8sConstants.KUBECONFIG_FILENAME).toString();
       FileIo.writeUtf8StringToFile(kubeconfigPath, kubeconfigFileContent);
-      final Kubectl client = getKubectlClient();
+      final Kubectl client = getKubectlClient(useNewKubectlVersion);
       for (final String workloadType : Arrays.asList(
                Kind.ReplicaSet.name(), Kind.StatefulSet.name(), Kind.DaemonSet.name(), Kind.Deployment.name())) {
         errStream.reset();
@@ -477,8 +477,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @VisibleForTesting
-  Kubectl getKubectlClient() {
-    return Kubectl.client(k8sGlobalConfigService.getKubectlPath(), K8sConstants.KUBECONFIG_FILENAME);
+  Kubectl getKubectlClient(boolean useNewKubectlVersion) {
+    return Kubectl.client(
+        k8sGlobalConfigService.getKubectlPath(useNewKubectlVersion), K8sConstants.KUBECONFIG_FILENAME);
   }
 
   private void cleanupDir(File kubeConfigDir) {

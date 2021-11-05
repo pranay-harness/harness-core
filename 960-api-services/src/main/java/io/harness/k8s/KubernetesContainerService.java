@@ -43,7 +43,7 @@ public interface KubernetesContainerService {
   @SuppressWarnings("squid:S1452")
   List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
-  void validate(KubernetesConfig kubernetesConfig);
+  void validate(KubernetesConfig kubernetesConfig, boolean useNewKubectlVersion);
 
   void validateMasterUrl(KubernetesConfig kubernetesConfig);
 
@@ -158,7 +158,7 @@ public interface KubernetesContainerService {
 
   void validateCEPermissions(KubernetesConfig kubernetesConfig);
 
-  void tryListControllersKubectl(KubernetesConfig kubernetesConfig);
+  void tryListControllersKubectl(KubernetesConfig kubernetesConfig, boolean useNewKubectlVersion);
 
   String getConfigFileContent(KubernetesConfig config);
 

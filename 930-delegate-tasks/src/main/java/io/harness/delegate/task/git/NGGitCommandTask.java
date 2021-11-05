@@ -4,6 +4,8 @@ import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.service.git.NGGitService;
+import io.harness.connector.task.git.GitCommandTaskHandler;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -16,7 +18,6 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.git.model.CommitAndPushRequest;

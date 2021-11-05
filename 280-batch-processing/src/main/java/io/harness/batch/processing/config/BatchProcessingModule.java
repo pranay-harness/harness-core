@@ -9,7 +9,6 @@ import io.harness.batch.processing.metrics.CeCloudMetricsService;
 import io.harness.batch.processing.metrics.CeCloudMetricsServiceImpl;
 import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.metrics.ProductMetricsServiceImpl;
-import io.harness.batch.processing.svcmetrics.BatchProcessingMetricsPublisher;
 import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.batch.processing.tasklet.util.ClusterHelperImpl;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
@@ -34,10 +33,9 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagService;
 import io.harness.ff.FeatureFlagServiceImpl;
 import io.harness.govern.ProviderMethodInterceptor;
+import io.harness.instanceng.InstanceNGResourceClientModule;
 import io.harness.lock.PersistentLocker;
 import io.harness.lock.noop.PersistentNoopLocker;
-import io.harness.metrics.modules.MetricsModule;
-import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.pricing.client.CloudInfoPricingClientModule;
@@ -69,11 +67,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BatchProcessingModule extends AbstractModule {
   BatchMainConfig batchMainConfig;
-
   BatchProcessingModule(BatchMainConfig batchMainConfig) {
     this.batchMainConfig = batchMainConfig;
   }
-
   @Override
   protected void configure() {
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
@@ -93,13 +89,12 @@ public class BatchProcessingModule extends AbstractModule {
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
     install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
         batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId(), ClientMode.PRIVILEGED));
+    install(new InstanceNGResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
+        batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId(), ClientMode.PRIVILEGED));
     bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
     bind(RecommendationCrudService.class).to(RecommendationCrudServiceImpl.class);
     bind(ClusterHelper.class).to(ClusterHelperImpl.class);
-
-    install(new MetricsModule());
-    bind(MetricsPublisher.class).to(BatchProcessingMetricsPublisher.class).in(Scopes.SINGLETON);
 
     bindPricingServices();
 

@@ -98,10 +98,6 @@ public class BudgetAlertsServiceImpl {
     List<String> userGroupIds = Arrays.asList(Optional.ofNullable(budget.getUserGroupIds()).orElse(new String[0]));
     emailAddresses.addAll(getEmailsForUserGroup(budget.getAccountId(), userGroupIds));
     CESlackWebhook slackWebhook = ceSlackWebhookService.getByAccountId(budget.getAccountId());
-    if (slackWebhook == null && isEmpty(emailAddresses) && isEmpty(userGroupIds)) {
-      log.warn("The budget with id={} has no associated communication channels.", budget.getUuid());
-      return;
-    }
 
     String cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(
         mainConfiguration.getBillingDataPipelineConfig().getGcpProjectId(), budget.getAccountId(), unified);
@@ -127,6 +123,12 @@ public class BudgetAlertsServiceImpl {
       if (alertThreshold.getEmailAddresses() != null && alertThreshold.getEmailAddresses().length > 0) {
         emailAddresses.addAll(Arrays.asList(alertThreshold.getEmailAddresses()));
       }
+
+      if (slackWebhook == null && isEmpty(emailAddresses)) {
+        log.warn("The budget with id={} has no associated communication channels.", budget.getUuid());
+        return;
+      }
+
       BudgetAlertsData data = BudgetAlertsData.builder()
                                   .accountId(budget.getAccountId())
                                   .actualCost(cost)
