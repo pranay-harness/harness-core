@@ -2,7 +2,10 @@ package io.harness.secret;
 
 import static io.harness.rule.OwnerRule.FILIP;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -24,9 +27,10 @@ public class ConfigSecretResolverUnitTest extends CategoryTest {
 
   @Before
   public void setUp() throws IOException {
-    when(secretStorage.getSecretBy("secret-reference-1")).thenReturn("secret-1");
-    when(secretStorage.getSecretBy("secret-reference-2")).thenReturn("secret-2");
-    when(secretStorage.getSecretBy("inner-secret-reference-1")).thenReturn("inner-secret-1");
+    when(secretStorage.getSecretBy(anyString())).thenReturn(empty());
+    when(secretStorage.getSecretBy("secret-reference-1")).thenReturn(of("secret-1"));
+    when(secretStorage.getSecretBy("secret-reference-2")).thenReturn(of("secret-2"));
+    when(secretStorage.getSecretBy("inner-secret-reference-1")).thenReturn(of("inner-secret-1"));
 
     configSecretResolver = new ConfigSecretResolver(secretStorage);
   }
