@@ -23,7 +23,6 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.exception.NotificationExceptionMapper;
 import io.harness.platform.audit.AuditServiceModule;
 import io.harness.platform.audit.AuditServiceSetup;
@@ -104,7 +103,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     bootstrap.addBundle(new SwaggerBundle<PlatformConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(PlatformConfiguration appConfig) {
-        return getSwaggerConfiguration();
+        return getSwaggerConfiguration(appConfig);
       }
     });
     bootstrap.addCommand(new InspectCommand<>(this));
@@ -120,8 +119,9 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
 
   @Override
   public void run(PlatformConfiguration appConfig, Environment environment) {
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    int numProcessors = Math.max(1, Runtime.getRuntime().availableProcessors());
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(numProcessors, numProcessors * 2, 500L,
+        TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting Platform Application ...");
     MaintenanceController.forceMaintenance(true);
     GodInjector godInjector = new GodInjector();
@@ -165,8 +165,6 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     }
 
     MaintenanceController.forceMaintenance(false);
-
-    new Thread(godInjector.get(NOTIFICATION_SERVICE).getInstance(MessageConsumer.class)).start();
   }
 
   private void blockingMigrations(Injector injector) {
@@ -210,9 +208,9 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     environment.jersey().register(GenericExceptionMapperV2.class);
   }
 
-  public SwaggerBundleConfiguration getSwaggerConfiguration() {
+  public SwaggerBundleConfiguration getSwaggerConfiguration(PlatformConfiguration appConfig) {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getPlatformServiceCombinedResourceClasses()));
+    String resourcePackage = String.join(",", getUniquePackages(getPlatformServiceCombinedResourceClasses(appConfig)));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setVersion("1.0");
