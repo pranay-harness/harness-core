@@ -123,6 +123,11 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     if (batch == null || batch.getDelegateSelectionLogs().isEmpty()) {
       return;
     }
+    // skipping for anz conditionally.
+    if (batch.getTaskMetadata().getAccountId().equals("hS-HqMsFS-q-XMGo1MMOow")) {
+      log.info("Skipping selection save for ANZ", new Exception());
+      return;
+    }
 
     batch.getTaskMetadata().setSetupAbstractions(
         processSetupAbstractions(batch.getTaskMetadata().getSetupAbstractions()));
