@@ -52,17 +52,26 @@ features:
     description: Number of active committers
     restrictions:
       FREE:
-        restrictionType: STATIC_LIMIT
+        restrictionType: RATE_LIMIT
         limit: 200
         clientName: cimanager
+        timeUnit:
+          unit: DAYS
+          numberOfUnits: 30
       TEAM:
-        restrictionType: STATIC_LIMIT
+        restrictionType: RATE_LIMIT
         limit: 200
         clientName: cimanager
+        timeUnit:
+          unit: DAYS
+          numberOfUnits: 30
       ENTERPRISE:
-        restrictionType: STATIC_LIMIT
+        restrictionType: RATE_LIMIT
         limit: 200
         clientName: cimanager
+        timeUnit:
+          unit: DAYS
+          numberOfUnits: 30
   - name: BUILDS
     description: The restriction on number of builds
     restrictions:
