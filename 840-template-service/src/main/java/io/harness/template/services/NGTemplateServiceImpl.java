@@ -17,7 +17,7 @@ import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.springdata.TransactionHelper;
-import io.harness.template.beans.TemplateFilterPropertiesDTO;
+import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
@@ -119,13 +119,13 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       makePreviousLastUpdatedTemplateFalse(templateEntity.getAccountIdentifier(), templateEntity.getOrgIdentifier(),
           templateEntity.getProjectIdentifier(), templateEntity.getIdentifier());
       return updateTemplateHelper(templateEntity.getOrgIdentifier(), templateEntity.getProjectIdentifier(),
-          templateEntity, changeType, setDefaultTemplate, true, comments);
+          templateEntity, changeType, setDefaultTemplate, true, comments, null);
     });
   }
 
   private TemplateEntity updateTemplateHelper(String oldOrgIdentifier, String oldProjectIdentifier,
       TemplateEntity templateEntity, ChangeType changeType, boolean setDefaultTemplate,
-      boolean updateLastUpdatedTemplateFlag, String comments) {
+      boolean updateLastUpdatedTemplateFlag, String comments, TemplateUpdateEventType eventType) {
     try {
       NGTemplateServiceHelper.validatePresenceOfRequiredFields(
           templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
@@ -187,8 +187,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
         });
       }
 
-      return makeTemplateUpdateCall(
-          templateToUpdate, oldTemplateEntity, changeType, "", TemplateUpdateEventType.OTHERS_EVENT);
+      return makeTemplateUpdateCall(templateToUpdate, oldTemplateEntity, changeType, "",
+          eventType != null ? eventType : TemplateUpdateEventType.OTHERS_EVENT);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           format(DUP_KEY_EXP_FORMAT_STRING, templateEntity.getIdentifier(), templateEntity.getVersionLabel(),
@@ -447,8 +447,12 @@ public class NGTemplateServiceImpl implements NGTemplateService {
 
         // Updating the template
         boolean isLastEntity = i == templateEntities.size() - 1;
+
+        // TODO: @Archit: Check if scope change is possible by checking scope of child entities after referenced by is
+        // implemented
         updateTemplateHelper(orgIdBasedOnScope, projectIdBasedOnScope, updateEntity, ChangeType.MODIFY, false,
-            isLastEntity, "Changing scope from " + currentScope + " to new scope - " + updatedScope);
+            isLastEntity, "Changing scope from " + currentScope + " to new scope - " + updatedScope,
+            TemplateUpdateEventType.TEMPLATE_CHANGE_SCOPE_EVENT);
       }
     }
     TemplateEntity entity = updateStableTemplateVersion(
