@@ -49,18 +49,18 @@ features:
         restrictionType: AVAILABILITY
         enabled: true
   - name: ACTIVE_COMMITTERS
-      description: Number of active committers
-      restrictions:
-        FREE:
-          restrictionType: STATIC_LIMIT
-          limit: 200
-          clientName: cimanager
-        TEAM:
-          restrictionType: STATIC_LIMIT
-          limit: 200
-          clientName: cimanager
-        ENTERPRISE:
-          restrictionType: STATIC_LIMIT
-          limit: 200
-          clientName: cimanager
+    description: Number of active committers
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 200
+        clientName: cimanager
+      TEAM:
+        restrictionType: STATIC_LIMIT
+        limit: 200
+        clientName: cimanager
+      ENTERPRISE:
+        restrictionType: STATIC_LIMIT
+        limit: 200
+        clientName: cimanager
 
