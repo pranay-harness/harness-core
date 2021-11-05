@@ -58,4 +58,13 @@ public class NGCommonEntityConstants {
   public static final String ACCOUNT_PARAM_MESSAGE = "Account Identifier for the entity";
   public static final String ORG_PARAM_MESSAGE = "Organization Identifier for the entity";
   public static final String PROJECT_PARAM_MESSAGE = "Project Identifier for the entity";
+
+  public static final String PAGE_PARAM_MESSAGE = "The number of the page to fetch";
+  public static final String SIZE_PARAM_MESSAGE = "The number of the elements to fetch";
+  public static final String BAD_REQUEST_PARAM_MESSAGE = "Bad Request";
+  public static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal Server Error";
+  public static final String BAD_REQUEST_CODE = "400";
+  public static final String INTERNAL_SERVER_ERROR_CODE = "500";
+  public static final String APPLICATION_JSON_MEDIA_TYPE = "application/json";
+  public static final String APPLICATION_YAML_MEDIA_TYPE = "application/yaml";
 }
