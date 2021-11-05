@@ -29,13 +29,13 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateApplyRequestDTO;
 import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
+import io.harness.ng.core.template.TemplateListType;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.PermissionTypes;
 import io.harness.template.beans.TemplateDeleteListRequestDTO;
-import io.harness.template.beans.TemplateFilterPropertiesDTO;
-import io.harness.template.beans.TemplateListType;
 import io.harness.template.beans.TemplateResponseDTO;
 import io.harness.template.beans.TemplateWrapperResponseDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
@@ -301,8 +301,16 @@ public class NGTemplateResource {
       @QueryParam("currentScope") Scope currentScope, @QueryParam("updateScope") Scope updateScope,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("getDistinctFromBranches") Boolean getDistinctFromBranches) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
-        Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
+    if (updateScope != currentScope) {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(accountId, Scope.ACCOUNT.equals(currentScope) ? null : orgId,
+              Scope.PROJECT.equals(currentScope) ? projectId : null),
+          Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_DELETE_PERMISSION);
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(accountId, Scope.ACCOUNT.equals(updateScope) ? null : orgId,
+              Scope.PROJECT.equals(updateScope) ? projectId : null),
+          Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
+    }
     log.info(
         String.format("Updating Template Settings with identifier %s in project %s, org %s, account %s to scope %s",
             templateIdentifier, projectId, orgId, accountId, updateScope));

@@ -529,7 +529,7 @@ permissions:
   - identifier: core_template_view
     name: View Templates
     status: ACTIVE
-    includeInAllRoles: false
+    includeInAllRoles: true
     allowedScopeLevels:
     - account
     - organization
