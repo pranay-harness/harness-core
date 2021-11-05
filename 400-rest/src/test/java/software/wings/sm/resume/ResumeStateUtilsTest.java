@@ -71,11 +71,12 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
     String errMsg = "errMsg";
     LinkedList<ContextElement> contextElements = new LinkedList<>(asList(HostElement.builder().build(),
         ServiceArtifactElement.builder().build(), ServiceArtifactVariableElement.builder().build()));
-    StateExecutionInstance stateExecutionInstance = mock(StateExecutionInstance.class);
-    when(stateExecutionInstance.getStatus()).thenReturn(ExecutionStatus.SUCCESS);
-    when(stateExecutionInstance.getContextElements()).thenReturn(contextElements);
     StateExecutionData stateExecutionData = aStateExecutionData().withErrorMsg(errMsg).build();
-    when(stateExecutionInstance.fetchStateExecutionData()).thenReturn(stateExecutionData);
+    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
+                                                        .status(ExecutionStatus.SUCCESS)
+                                                        .contextElements(contextElements)
+                                                        .addStateExecutionData(stateExecutionData)
+                                                        .build();
     when(stateExecutionService.getStateExecutionData(eq(APP_ID), eq(prevStateExecutionId)))
         .thenReturn(stateExecutionInstance);
 

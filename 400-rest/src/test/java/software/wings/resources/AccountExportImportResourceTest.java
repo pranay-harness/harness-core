@@ -82,8 +82,8 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HPersistence persistence;
 
-  @Mock private Account account;
-  @Mock private User user;
+  private Account account = Account.Builder.anAccount().build();
+  private User user = User.Builder.anUser().uuid(UUIDGenerator.generateUuid()).build();
 
   private JsonArray users;
   private String userId;
@@ -119,7 +119,6 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
 
     when(wingsMongoPersistence.get(Account.class, accountId)).thenReturn(account);
     when(userService.getUserByEmail(email)).thenReturn(user);
-    when(user.getUuid()).thenReturn(UUIDGenerator.generateUuid());
   }
 
   @Test

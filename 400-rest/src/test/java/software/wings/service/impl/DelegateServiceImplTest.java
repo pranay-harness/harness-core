@@ -165,7 +165,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private DelegateCallbackRegistry delegateCallbackRegistry;
   @Mock private EmailNotificationService emailNotificationService;
   @Mock private AccountService accountService;
-  @Mock private Account account;
   @Mock private DelegateProfileService delegateProfileService;
   @Mock private DelegateCache delegateCache;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
@@ -478,14 +477,14 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testHandleDriverResponseWithNonExistingDriver() {
-    DelegateTask delegateTask = mock(DelegateTask.class);
+    DelegateTask delegateTask = DelegateTask.builder().build();
     DelegateTaskResponse delegateTaskResponse = mock(DelegateTaskResponse.class);
 
     when(delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId())).thenReturn(null);
 
     delegateTaskServiceClassic.handleDriverResponse(delegateTask, delegateTaskResponse);
 
-    verify(delegateTask, never()).getUuid();
+    verify(kryoSerializer, never()).asDeflatedBytes(any());
   }
 
   @Test
@@ -639,9 +638,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
             .to(Lists.newArrayList("support@harness.io"))
             .build();
 
+    Account account = Account.Builder.anAccount().withAccountName("testAccountName").withCompanyName("NCR").build();
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
-    when(account.getCompanyName()).thenReturn("NCR");
-    when(account.getAccountName()).thenReturn("testAccountName");
     when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(0);
 
     when(emailNotificationService.send(emailData)).thenReturn(true);

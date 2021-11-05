@@ -56,11 +56,11 @@ import org.mongodb.morphia.query.Query;
 public class InstanceServiceTest extends WingsBaseTest {
   @Inject private AccountService accountService;
   @Mock private AppService appService;
-  @Mock private Account account;
 
   @Inject private HPersistence persistence;
   @InjectMocks @Inject private InstanceService instanceService;
 
+  private Account account;
   private String instanceId = UUIDGenerator.generateUuid();
   private String containerId = "containerId";
   private String clusterName = "clusterName";

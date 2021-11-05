@@ -74,13 +74,10 @@ public class LdapGroupSyncJobTest extends CategoryTest {
   @Owner(developers = MOHIT)
   @Category(UnitTests.class)
   public void shouldSyncUserGroup() {
-    UserGroup userGroup = mock(UserGroup.class);
+    UserGroup userGroup = UserGroup.builder().name("userGroup123").accountId(UUIDGenerator.generateUuid()).build();
     Account account = new Account();
     String ssoId = UUIDGenerator.generateUuid();
     account.setUuid(UUIDGenerator.generateUuid());
-    when(userGroup.getName()).thenReturn("userGroup123");
-    when(userGroup.getAccountId()).thenReturn(UUIDGenerator.generateUuid());
-    userGroup.setAccountId(UUIDGenerator.generateUuid());
     doReturn(LdapGroupResponse.builder().selectable(true).build())
         .when(ldapGroupSyncJob)
         .fetchGroupDetails(any(), any(), any());
@@ -95,13 +92,10 @@ public class LdapGroupSyncJobTest extends CategoryTest {
   @Owner(developers = MOHIT)
   @Category(UnitTests.class)
   public void shouldNotThrowExceptionWhenSyncUserGroupFails() {
-    UserGroup userGroup = mock(UserGroup.class);
+    UserGroup userGroup = UserGroup.builder().name("userGroup123").accountId(UUIDGenerator.generateUuid()).build();
     Account account = new Account();
     String ssoId = UUIDGenerator.generateUuid();
     account.setUuid(UUIDGenerator.generateUuid());
-    when(userGroup.getName()).thenReturn("userGroup123");
-    when(userGroup.getAccountId()).thenReturn(UUIDGenerator.generateUuid());
-    userGroup.setAccountId(UUIDGenerator.generateUuid());
     LdapSettings ldapSettings = mock(LdapSettings.class);
     doReturn(LdapGroupResponse.builder().selectable(false).build())
         .when(ldapGroupSyncJob)

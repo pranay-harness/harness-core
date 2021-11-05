@@ -204,12 +204,12 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private HQuery<InfrastructureMapping> query;
   @Mock private UpdateOperations<InfrastructureMapping> updateOperations;
   @Mock private FieldEnd end;
-  @Mock private Application app;
-  @Mock private Environment env;
-  @Mock private Service service;
   @Mock private ContainerService containerService;
   @InjectMocks
   private InfrastructureMappingServiceImpl infrastructureMappingServiceImpl = new InfrastructureMappingServiceImpl();
+  private Application app = Application.Builder.anApplication().name(APP_NAME).build();
+  private Environment env = Environment.Builder.anEnvironment().name(ENV_NAME).build();
+  private Service service = Service.builder().name(SERVICE_NAME).deploymentType(DeploymentType.KUBERNETES).build();
 
   @Before
   public void setUp() throws Exception {
@@ -224,9 +224,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(app);
     when(envService.get(APP_ID, ENV_ID, false)).thenReturn(env);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
-    when(app.getName()).thenReturn(APP_NAME);
-    when(env.getName()).thenReturn(ENV_NAME);
-    when(service.getName()).thenReturn(SERVICE_NAME);
   }
 
   @Test
@@ -1091,7 +1088,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   public void testListInfraMappings() {
     InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
 
-    when(service.getDeploymentType()).thenReturn(DeploymentType.KUBERNETES);
     Map<DeploymentType, List<SettingVariableTypes>> result = serviceImpl.listInfraTypes(APP_ID, ENV_ID, SERVICE_ID);
 
     assertThat(result.size()).isEqualTo(1);

@@ -5,6 +5,8 @@ import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.model.EventType.USER_INVITE_ACCEPTED_FOR_TRIAL_ACCOUNT;
 import static io.harness.rule.OwnerRule.VIKAS;
 
+import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,8 +55,6 @@ public class SegmentHandlerTest extends WingsBaseTest {
 
   @Mock UserService userService;
 
-  @Mock UserInvite userInvite;
-
   private static final String SEGMENT_URL = "https://api.segment.io";
   private static final String TEST_ACCOUNT = "TEST_ACCOUNT_ID";
   private static final String EMAIL_ADDRESS = "admin@harness.io";
@@ -70,7 +70,8 @@ public class SegmentHandlerTest extends WingsBaseTest {
     user.setSegmentIdentity(user.getUuid());
     user.setReportedSegmentTracks(null);
     when(utils.getUser(any(Map.class))).thenReturn(user);
-    when(userService.getUserInviteByEmailAndAccount(any(String.class), any(String.class))).thenReturn(userInvite);
+    when(userService.getUserInviteByEmailAndAccount(any(String.class), any(String.class)))
+        .thenReturn(anUserInvite().build());
     when(utils.getUserInviteUrl(any(UserInvite.class), any(Account.class))).thenReturn(INVITE_URL);
     when(userService.getUserFromCacheOrDB(any(String.class))).thenReturn(user);
     when(userService.update(any(User.class))).thenReturn(user);

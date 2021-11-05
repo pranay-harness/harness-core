@@ -78,7 +78,7 @@ public class SplunkDataCollectorTest extends CategoryTest {
     Job job = mock(Job.class);
     doReturn(job).when(splunkDataCollector).createSearchJob(any(), any(), any(), any());
     when(job.getResults(any())).thenReturn(getSplunkJsonResponseInputStream());
-    ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
+    ThirdPartyApiCallLog thirdPartyApiCallLog = ThirdPartyApiCallLog.builder().build();
     when(dataCollectionExecutionContext.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
     List<LogElement> logElements = splunkDataCollector.fetchLogs();
     verify(splunkDataCollector)
@@ -107,7 +107,7 @@ public class SplunkDataCollectorTest extends CategoryTest {
     Job job = mock(Job.class);
     doReturn(job).when(splunkDataCollector).createSearchJob(any(), any(), any(), any());
     when(job.getResults(any())).thenReturn(getSplunkJsonResponseInputStream());
-    ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
+    ThirdPartyApiCallLog thirdPartyApiCallLog = ThirdPartyApiCallLog.builder().build();
     when(dataCollectionExecutionContext.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
     List<LogElement> logElements =
         splunkDataCollector.fetchLogs(Lists.newArrayList("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x",

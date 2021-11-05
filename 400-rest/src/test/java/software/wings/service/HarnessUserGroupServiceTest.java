@@ -44,10 +44,10 @@ import org.mockito.Mock;
 @TargetModule(_970_RBAC_CORE)
 public class HarnessUserGroupServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
-  @Mock private Account account;
 
   @InjectMocks @Inject private HarnessUserGroupService harnessUserGroupService;
 
+  private Account account = Account.Builder.anAccount().build();
   private String accountId1 = UUIDGenerator.generateUuid();
   private String accountId2 = UUIDGenerator.generateUuid();
   private String harnessUserGroupId1 = UUIDGenerator.generateUuid();
