@@ -803,7 +803,18 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void registerResources(Environment environment, Injector injector) {
     for (Class<?> resource : getResourceClasses()) {
       if (Resource.isAcceptable(resource)) {
-        environment.jersey().register(injector.getInstance(resource));
+        Instant start = Instant.now();
+        Object resourceObject = injector.getInstance(resource);
+        Instant finish = Instant.now();
+        long timeElapsed = Duration.between(start, finish).toMillis();
+        log.info("Injecting resource {} started at {}, took {} milliseconds and ended at {}.",
+            resourceObject.getClass(), start, timeElapsed, finish);
+        start = Instant.now();
+        environment.jersey().register(resourceObject);
+        finish = Instant.now();
+        timeElapsed = Duration.between(start, finish).toMillis();
+        log.info("Registering resource {} to jersey started at {}, took {} milliseconds and ended at {}.",
+            resourceObject.getClass(), start, timeElapsed, finish);
       }
     }
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
