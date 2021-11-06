@@ -17,7 +17,7 @@ import org.springframework.data.annotation.Id;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@FieldNameConstants(innerTypeName = "SecretKey")
+@FieldNameConstants(innerTypeName = "SecretKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "SecretKey", noClassnameStored = true)
 public class SecretKey {
