@@ -14,11 +14,13 @@ import io.harness.beans.ScopeLevel;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.ng.core.template.TemplateListType;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
+import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.remote.TemplateResourceClient;
 
 import com.google.inject.Inject;
@@ -46,10 +48,13 @@ public class TemplateResourceImpl implements Resource {
     if (isEmpty(resourceIds)) {
       return Collections.emptyList();
     }
+    TemplateFilterPropertiesDTO templateFilterPropertiesDTO =
+        TemplateFilterPropertiesDTO.builder().templateIdentifiers(resourceIds).build();
     List<TemplateSummaryResponseDTO> templates =
         NGRestUtils
             .getResponse(templateResourceClient.listTemplates(scope.getAccountIdentifier(), scope.getOrgIdentifier(),
-                scope.getProjectIdentifier(), resourceIds, 0, resourceIds.size()))
+                scope.getProjectIdentifier(), TemplateListType.STABLE_TEMPLATE_TYPE, 0, resourceIds.size(),
+                templateFilterPropertiesDTO))
             .getContent();
     Set<Object> validResourceIds =
         templates.stream().map(TemplateSummaryResponseDTO::getIdentifier).collect(Collectors.toSet());

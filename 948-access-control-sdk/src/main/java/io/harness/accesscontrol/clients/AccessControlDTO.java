@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "AccessControl")
 @JsonTypeName("AccessControl")
+@Schema(name = "AccessControl")
 @OwnedBy(HarnessTeam.PL)
 @JsonInclude(Include.NON_NULL)
 public class AccessControlDTO {

@@ -4,13 +4,16 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.plan.execution.beans.StagesExecutionInfo;
 import io.harness.rule.Owner;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,18 +22,30 @@ import org.junit.experimental.categories.Category;
 
 @OwnedBy(PIPELINE)
 public class StagesExecutionHelperTest extends CategoryTest {
+  String pipelineYaml = "pipeline:\n"
+      + "  stages:\n"
+      + "  - stage:\n"
+      + "      identifier: s1\n"
+      + "      description: desc>\n"
+      + "  - stage:\n"
+      + "      identifier: s2\n"
+      + "      description: desc\n";
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testThrowErrorIfAllStagesAreDeleted() {
+    StagesExecutionHelper.throwErrorIfAllStagesAreDeleted(pipelineYaml, Collections.singletonList("s2"));
+    StagesExecutionHelper.throwErrorIfAllStagesAreDeleted(pipelineYaml, Arrays.asList("s2", "s3", "s4"));
+    assertThatThrownBy(
+        () -> StagesExecutionHelper.throwErrorIfAllStagesAreDeleted(pipelineYaml, Collections.singletonList("s3")))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetStagesExecutionInfo() {
-    String pipelineYaml = "pipeline:\n"
-        + "  stages:\n"
-        + "  - stage:\n"
-        + "      identifier: s1\n"
-        + "      description: desc>\n"
-        + "  - stage:\n"
-        + "      identifier: s2\n"
-        + "      description: desc\n";
     String s2StageYaml = "pipeline:\n"
         + "  stages:\n"
         + "  - stage:\n"

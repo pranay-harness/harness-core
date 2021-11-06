@@ -1,7 +1,6 @@
 package io.harness.gitsync.common.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.GitSyncModule.SCM_ON_DELEGATE;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
@@ -11,7 +10,7 @@ import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.gitsync.common.impl.GitUtils;
-import io.harness.gitsync.common.service.ScmClientFacilitatorService;
+import io.harness.gitsync.common.service.ScmFacilitatorService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.OrgIdentifier;
@@ -23,7 +22,6 @@ import io.harness.ng.core.utils.URLDecoderUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -53,13 +51,13 @@ import org.hibernate.validator.constraints.NotBlank;
 @OwnedBy(DX)
 public class ScmFacilitatorResource {
   private final ScmOrchestratorService scmOrchestratorService;
-  private final ScmClientFacilitatorService scmClientFacilitatorService;
+  private final ScmFacilitatorService scmFacilitatorService;
 
   @Inject
-  public ScmFacilitatorResource(ScmOrchestratorService scmOrchestratorService,
-      @Named(SCM_ON_DELEGATE) ScmClientFacilitatorService scmClientFacilitatorService) {
+  public ScmFacilitatorResource(
+      ScmOrchestratorService scmOrchestratorService, ScmFacilitatorService scmFacilitatorService) {
     this.scmOrchestratorService = scmOrchestratorService;
-    this.scmClientFacilitatorService = scmClientFacilitatorService;
+    this.scmFacilitatorService = scmFacilitatorService;
   }
 
   @GET
@@ -74,8 +72,8 @@ public class ScmFacilitatorResource {
       @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
       @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue("50") int pageSize,
       @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
-    return ResponseDTO.newResponse(scmClientFacilitatorService.listBranchesForRepoByConnector(accountIdentifier,
-        orgIdentifier, projectIdentifier, connectorIdentifierRef, URLDecoderUtility.getDecodedString(repoURL),
+    return ResponseDTO.newResponse(scmFacilitatorService.listBranchesUsingConnector(accountIdentifier, orgIdentifier,
+        projectIdentifier, connectorIdentifierRef, URLDecoderUtility.getDecodedString(repoURL),
         PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
   }
 

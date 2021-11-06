@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.webhook.UpsertWebhookResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -20,9 +22,11 @@ import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookRegistrationStatus;
 import io.harness.ngtriggers.service.impl.NGTriggerWebhookRegistrationServiceImpl;
 import io.harness.rule.Owner;
+import io.harness.utils.ConnectorUtils;
 import io.harness.webhook.remote.WebhookEventClient;
 
 import java.io.IOException;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,6 +42,14 @@ public class NGTriggerWebhookRegistrationServiceTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock WebhookEventClient webhookEventClient;
   @InjectMocks NGTriggerWebhookRegistrationServiceImpl ngTriggerWebhookRegistrationService;
+  @Mock ConnectorUtils connectorUtils;
+
+  @Before
+  public void setUp() {
+    ConnectorDetails connectorDetails = ConnectorDetails.builder().connectorType(ConnectorType.GITHUB).build();
+    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(connectorDetails);
+    when(connectorUtils.retrieveURL(connectorDetails)).thenReturn("https://github.com/wings-software/jhttp/");
+  }
 
   @Test
   @Owner(developers = ALEKSANDAR)

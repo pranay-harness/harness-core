@@ -112,8 +112,10 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
           (PerpetualTaskSchedule) kryoSerializer.asInflatedObject(request.getPerpetualTaskScheduleKryo().toByteArray());
       boolean allowDuplicate = request.getAllowDuplicate();
       String taskDescription = request.getTaskDescription();
-      perpetualTaskService.createPerpetualTaskInternal(
+      String taskId = perpetualTaskService.createPerpetualTaskInternal(
           perpetualTaskType, accountId, clientContext, schedule, allowDuplicate, taskDescription);
+      responseObserver.onNext(CreatePerpetualTaskResponseClassic.newBuilder().setMessage(taskId).build());
+      responseObserver.onCompleted();
     } catch (Exception ex) {
       log.error("Unexpected error occurred while creating perpetual task classic request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());

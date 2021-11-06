@@ -57,7 +57,11 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
                                                .setType(OrchestrationStepTypes.FLAG_CONFIGURATION)
                                                .setStepCategory(StepCategory.STEP)
                                                .build();
+  public static final String STEP_NAME = "Flag Configuration";
+  public static final String STEP_CATEGORY = "FeatureFlag";
+
   private static final String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
+
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject @Named("cfPipelineAPI") private CFApi cfApi;
   @Inject OrchestrationStepConfig config;

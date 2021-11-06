@@ -221,6 +221,8 @@ public enum FeatureName {
   RESOLVE_DEPLOYMENT_TAGS_BEFORE_EXECUTION,
   LDAP_USER_ID_SYNC,
   NEW_KUBECTL_VERSION,
+  CUSTOM_DASHBOARD_V2, // To be used only by ui to control flow from cg dashbaords to ng
+  TIME_SCALE_CG_SYNC,
   LOCAL_MULTI_CRYPTO_MODE,
   LOCAL_AWS_ENCRYPTION_SDK_MODE;
   ;
