@@ -106,6 +106,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String FEEDBACK_PACKAGE = "io.harness.ng.feedback.resources";
   public static final String INSTANCE_SYNC_PACKAGE = "io.harness.ng.instancesync.resources";
   public static final String INSTANCE_NG_PACKAGE = "io.harness.ng.instance";
+  public static final Collection<Class<?>> HARNESS_RESOURCE_CLASSES = getResourceClasses();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -204,7 +205,7 @@ public class NextGenConfiguration extends Configuration {
             config.filterInputsBy(filter);
             config.setScanners(new ResourcesScanner(), new TypeAnnotationsScanner(), new SubTypesScanner());
 
-            Set<Class<?>> classes = new HashSet<>(getResourceClasses());
+            Set<Class<?>> classes = new HashSet<>(HARNESS_RESOURCE_CLASSES);
 
             /*
              * Find concrete types annotated with @Api, but with a supertype annotated with @Path.
@@ -263,7 +264,7 @@ public class NextGenConfiguration extends Configuration {
       }
     };
 
-    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    String resourcePackage = String.join(",", getUniquePackages(HARNESS_RESOURCE_CLASSES));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost(hostname);
@@ -297,6 +298,6 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Set<String> getUniquePackagesContainingResources() {
-    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+    return HARNESS_RESOURCE_CLASSES.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 }

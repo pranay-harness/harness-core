@@ -10,6 +10,7 @@ import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPat
 import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPublicApi;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.ng.NextGenConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
@@ -801,7 +802,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getResourceClasses()) {
+    for (Class<?> resource : HARNESS_RESOURCE_CLASSES) {
       if (Resource.isAcceptable(resource)) {
         Instant start = Instant.now();
         Object resourceObject = injector.getInstance(resource);
