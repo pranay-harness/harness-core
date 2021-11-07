@@ -16,7 +16,7 @@ import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.PL)
 public class AESSecretKeyServiceTest extends CategoryTest {
-  @Inject AESSecretKeyServiceImpl aesSecretKeyService;
+  @Inject SecretKeyService aesSecretKeyService;
 
   @Test
   @Owner(developers = MOHIT_GARG)

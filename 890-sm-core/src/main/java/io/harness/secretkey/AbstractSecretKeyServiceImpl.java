@@ -26,6 +26,4 @@ public abstract class AbstractSecretKeyServiceImpl implements SecretKeyService {
   public Optional<SecretKey> getSecretKey(String uuid) {
     return secretKeyRepository.findById(uuid);
   }
-
-  protected abstract String getAlgorithm();
 }

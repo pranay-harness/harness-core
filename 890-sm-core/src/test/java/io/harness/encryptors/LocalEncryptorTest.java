@@ -13,17 +13,17 @@ import io.harness.security.encryption.EncryptedRecord;
 
 import software.wings.beans.LocalEncryptionConfig;
 
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class LocalEncryptorTest extends CategoryTest {
-  private LocalEncryptor localEncryptor;
+  @Inject private LocalEncryptor localEncryptor;
   private LocalEncryptionConfig localEncryptionConfig;
 
   @Before
   public void setup() {
-    localEncryptor = new LocalEncryptor();
     localEncryptionConfig = LocalEncryptionConfig.builder().accountId(UUIDGenerator.generateUuid()).build();
   }
 
