@@ -14,6 +14,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -86,7 +87,9 @@ public class VMPricingServiceImpl implements VMPricingService {
     }
   }
 
-  String getVMCacheKey(String instanceType, String region, CloudProvider cloudProvider) {
-    return "id_" + md5Hex(("i_" + instanceType + "r_" + region + "c_" + cloudProvider).getBytes(UTF_8));
+  String getVMCacheKey(@NotNull String instanceType, @NotNull String region, @NotNull CloudProvider cloudProvider) {
+    return "id_"
+        + md5Hex(
+            ("i_" + instanceType.toLowerCase() + "r_" + region.toLowerCase() + "c_" + cloudProvider).getBytes(UTF_8));
   }
 }
