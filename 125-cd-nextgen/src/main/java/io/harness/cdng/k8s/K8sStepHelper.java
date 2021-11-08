@@ -31,11 +31,11 @@ import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.account.AccountClient;
+import io.harness.account.utils.CDFeatureFlagHelper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
-import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;

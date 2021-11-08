@@ -1,10 +1,10 @@
 package io.harness.cdng.provision.terraform;
 
 import io.harness.EntityType;
+import io.harness.account.utils.CDFeatureFlagHelper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.terraform.TFTaskType;

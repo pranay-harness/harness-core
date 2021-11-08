@@ -1,4 +1,4 @@
-package io.harness.cdng.featureFlag;
+package io.harness.account.utils;
 
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;

@@ -40,11 +40,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.account.utils.CDFeatureFlagHelper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;

@@ -11,11 +11,11 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import io.harness.CategoryTest;
+import io.harness.account.utils.CDFeatureFlagHelper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.GithubStoreDTO;
