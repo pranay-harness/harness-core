@@ -4236,381 +4236,410 @@
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StepElementConfig": {
-      "type": "object",
-      "required": [
-        "identifier",
-        "name",
-        "type"
-      ],
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "failureStrategies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FailureStrategyConfig"
-          }
-        },
-        "identifier": {
-          "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
-        },
-        "name": {
-          "type": "string",
-          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-        },
-        "template": {
-          "$ref": "#/definitions/TemplateLinkConfig"
-        },
-        "timeout": {
-          "type": "string",
-          "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
-        },
-        "type": {
-          "type": "string"
-        },
-        "when": {
-          "$ref": "#/definitions/StepWhenCondition"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "allOf": [
+      "oneOf": [
         {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Barrier"
+          "type": "object",
+          "required": [
+            "identifier",
+            "name",
+            "type"
+          ],
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "failureStrategies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FailureStrategyConfig"
               }
+            },
+            "identifier": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+            },
+            "spec": {
+              "$ref": "#/definitions/StepSpecType"
+            },
+            "timeout": {
+              "type": "string",
+              "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
+            },
+            "type": {
+              "type": "string"
+            },
+            "when": {
+              "$ref": "#/definitions/StepWhenCondition"
             }
           },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/BarrierStepInfo"
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "Barrier"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/BarrierStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "FlagConfiguration"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/FlagConfigurationStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "HarnessApproval"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/HarnessApprovalStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "Http"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/HttpStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "JiraApproval"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/JiraApprovalStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "JiraCreate"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/JiraCreateStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "JiraUpdate"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/JiraUpdateStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sApply"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sApplyStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sBGSwapServices"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sBGSwapServicesStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sBlueGreenDeploy"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sBlueGreenStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sCanaryDelete"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sCanaryDeleteStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sCanaryDeploy"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sCanaryStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sDelete"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sDeleteStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sRollingDeploy"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sRollingStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sRollingRollback"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sRollingRollbackStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "K8sScale"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/K8sScaleStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "ShellScript"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/ShellScriptStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "TerraformApply"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/TerraformApplyStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "TerraformDestroy"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/TerraformDestroyStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "TerraformPlan"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/TerraformPlanStepInfo"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "TerraformRollback"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "spec": {
+                    "$ref": "#/definitions/TerraformRollbackStepInfo"
+                  }
+                }
               }
             }
-          }
+          ]
         },
         {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "FlagConfiguration"
-              }
+          "type": "object",
+          "required": [
+            "identifier",
+            "name"
+          ],
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "identifier": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+            },
+            "template": {
+              "$ref": "#/definitions/TemplateLinkConfig"
             }
           },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/FlagConfigurationStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "HarnessApproval"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/HarnessApprovalStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Http"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/HttpStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "JiraApproval"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/JiraApprovalStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "JiraCreate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/JiraCreateStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "JiraUpdate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/JiraUpdateStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sApply"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sApplyStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sBGSwapServices"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sBGSwapServicesStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sBlueGreenDeploy"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sBlueGreenStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sCanaryDelete"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sCanaryDeleteStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sCanaryDeploy"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sCanaryStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sDelete"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sDeleteStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sRollingDeploy"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sRollingStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sRollingRollback"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sRollingRollbackStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sScale"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/K8sScaleStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "ShellScript"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/ShellScriptStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "TerraformApply"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/TerraformApplyStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "TerraformDestroy"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/TerraformDestroyStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "TerraformPlan"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/TerraformPlanStepInfo"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "TerraformRollback"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/TerraformRollbackStepInfo"
-              }
-            }
-          }
+          "additionalProperties": false
         }
       ]
     },
