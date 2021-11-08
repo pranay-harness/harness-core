@@ -87,7 +87,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   private boolean proxy;
   private boolean ceEnabled;
 
-  @Deprecated private List<String> supportedTaskTypes;
+  private List<String> supportedTaskTypes;
 
   @Transient private List<String> currentlyExecutingDelegateTasks;
 
