@@ -84,6 +84,11 @@
             </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
+                <artifactId>aws-encryption-sdk-java</artifactId>
+                <version>2.3.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-applicationautoscaling</artifactId>
                 <version>${aws.sdk.version}</version>
                 <exclusions>
@@ -1532,7 +1537,6 @@
                 <artifactId>org.eclipse.jgit.ssh.jsch</artifactId>
                 <version>${jgit.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.elasticsearch.client</groupId>
                 <artifactId>elasticsearch-rest-high-level-client</artifactId>
