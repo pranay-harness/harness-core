@@ -73,7 +73,7 @@ java_binary(
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_cache_cache_api",
         "@maven//:javax_servlet_javax_servlet_api",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_atmosphere_atmosphere_runtime",

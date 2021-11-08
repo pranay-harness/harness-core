@@ -173,6 +173,7 @@ import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.server.model.Resource;
+import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
@@ -182,6 +183,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
 public class VerificationApplication extends Application<VerificationConfiguration> {
+  private HibernateValidatorConfiguration hibernateValidatorConfiguration;
   private static String APPLICATION_NAME = "Verification NextGen Application";
 
   private final MetricRegistry metricRegistry = new MetricRegistry();

@@ -13,7 +13,7 @@ java_library(
         "//999-annotations:module",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:io_swagger_swagger_annotations",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:org_hibernate_validator_hibernate_validator",
     ],
 )

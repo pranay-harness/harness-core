@@ -59,7 +59,7 @@ java_library(
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_retrofit2_converter_jackson",
         "@maven//:com_squareup_retrofit2_retrofit",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_bouncycastle_bcprov_jdk15on",
         "@maven//:org_hibernate_validator_hibernate_validator",

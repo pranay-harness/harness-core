@@ -20,7 +20,7 @@ java_library(
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:commons_io_commons_io",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_hibernate_validator_hibernate_validator",
         "@maven//:org_mongodb_mongo_java_driver",

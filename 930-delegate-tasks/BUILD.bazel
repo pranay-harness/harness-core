@@ -82,7 +82,7 @@ java_library(
         "@maven//:io_netty_netty_all",
         "@maven//:io_netty_netty_transport",
         "@maven//:io_netty_netty_transport_native_epoll",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:me_snowdrop_istio_model",
         "@maven//:net_jodah_failsafe",
         "@maven//:net_rcarz_jira_client",

@@ -56,7 +56,7 @@ java_library(
         "@maven//:io_github_resilience4j_resilience4j_core",
         "@maven//:io_github_resilience4j_resilience4j_retry",
         "@maven//:io_swagger_swagger_annotations",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:joda_time_joda_time",
         "@maven//:net_jodah_expiringmap",

@@ -33,7 +33,7 @@ java_library(
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:io_swagger_swagger_annotations",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:org_springframework_data_spring_data_commons",
     ],
 )

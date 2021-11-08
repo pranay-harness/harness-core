@@ -20,7 +20,7 @@ java_library(
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:io_swagger_swagger_annotations",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:net_jodah_failsafe",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_hibernate_validator_hibernate_validator",

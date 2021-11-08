@@ -18,7 +18,7 @@ java_library(
         "@maven//:io_dropwizard_dropwizard_jersey",
         "@maven//:io_swagger_core_v3_swagger_annotations",
         "@maven//:io_swagger_swagger_annotations",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:org_codehaus_jackson_jackson_core_asl",
         "@maven//:org_hibernate_validator_hibernate_validator",

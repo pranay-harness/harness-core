@@ -17,7 +17,7 @@ java_library(
         "@maven//:com_google_inject_guice",
         "@maven//:com_squareup_retrofit2_retrofit",
         "@maven//:io_swagger_core_v3_swagger_annotations",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:org_slf4j_slf4j_api",
     ],
 )

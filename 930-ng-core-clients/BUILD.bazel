@@ -26,7 +26,7 @@ java_library(
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_squareup_retrofit2_retrofit",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:org_hibernate_validator_hibernate_validator",
         "@maven//:org_slf4j_slf4j_api",

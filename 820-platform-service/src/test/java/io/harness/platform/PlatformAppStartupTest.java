@@ -49,7 +49,7 @@ public class PlatformAppStartupTest extends CategoryTest {
   }
 
   @BeforeClass
-  public static void beforeClass() {
+  public static void beforeClass() throws Exception {
     MONGO_SERVER = startMongoServer();
     SUPPORT = new DropwizardTestSupport<PlatformConfiguration>(PlatformApplication.class,
         String.valueOf(new File("820-platform-service/src/test/resources/test-config.yml")),

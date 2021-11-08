@@ -19,7 +19,7 @@ java_library(
         "@maven//:com_google_http_client_google_http_client",
         "@maven//:com_google_inject_guice",
         "@maven//:io_swagger_swagger_annotations",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:org_hibernate_validator_hibernate_validator",
         "@maven//:org_mongodb_morphia_morphia",

@@ -1,9 +1,10 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.VIKAS;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
+import com.mongodb.ServerAddress;
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import io.dropwizard.testing.ConfigOverride;
+import io.dropwizard.testing.DropwizardTestSupport;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -11,27 +12,23 @@ import io.harness.ng.NextGenApplication;
 import io.harness.ng.NextGenConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.rule.Owner;
-
-import com.mongodb.ServerAddress;
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
-import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.DropwizardTestSupport;
-import java.io.File;
-import java.net.InetSocketAddress;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Response;
+import java.io.File;
+import java.net.InetSocketAddress;
+
+import static io.harness.rule.OwnerRule.VIKAS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @OwnedBy(HarnessTeam.CDC)
-@RunWith(PowerMockRunner.class)
+// @RunWith(PowerMockRunner.class) // TODO
 @PrepareForTest({PmsSdkModule.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*"})
 public class NGAppStartupTestBase extends CategoryTest {
@@ -57,7 +54,7 @@ public class NGAppStartupTestBase extends CategoryTest {
   }
 
   //  @BeforeClass
-  public static void beforeClass() {
+  public static void beforeClass() throws Exception {
     MONGO_SERVER = startMongoServer();
     //        initializeDefaultInstance(any());
     SUPPORT = new DropwizardTestSupport<NextGenConfiguration>(NextGenApplication.class,

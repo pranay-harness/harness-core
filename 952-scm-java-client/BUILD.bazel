@@ -22,7 +22,7 @@ java_library(
         "@maven//:commons_collections_commons_collections",
         "@maven//:io_grpc_grpc_api",
         "@maven//:io_grpc_grpc_netty_shaded",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_hibernate_validator_hibernate_validator",
         "@maven//:org_mongodb_morphia_morphia",

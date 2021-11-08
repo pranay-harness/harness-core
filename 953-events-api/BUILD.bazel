@@ -31,7 +31,7 @@ java_library(
         "@maven//:io_github_resilience4j_resilience4j_core",
         "@maven//:io_github_resilience4j_resilience4j_retry",
         "@maven//:io_vavr_vavr",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_redisson_redisson",
         "@maven//:org_slf4j_slf4j_api",

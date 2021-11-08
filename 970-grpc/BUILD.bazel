@@ -34,7 +34,7 @@ java_library(
         "@maven//:io_grpc_grpc_core",
         "@maven//:io_grpc_grpc_netty_shaded",
         "@maven//:io_grpc_grpc_services",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:joda_time_joda_time",
         "@maven//:net_openhft_chronicle_queue",
         "@maven//:net_openhft_chronicle_wire",

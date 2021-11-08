@@ -36,7 +36,7 @@ java_library(
         "@maven//:io_dropwizard_metrics_metrics_core",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_cache_cache_api",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:net_jodah_failsafe",
         "@maven//:org_apache_commons_commons_lang3",

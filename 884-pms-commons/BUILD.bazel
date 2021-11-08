@@ -40,7 +40,7 @@ java_library(
         "@maven//:io_dropwizard_dropwizard_lifecycle",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_cache_cache_api",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:org_apache_commons_commons_jexl3",
         "@maven//:org_json_json",
         "@maven//:org_mongodb_mongo_java_driver",

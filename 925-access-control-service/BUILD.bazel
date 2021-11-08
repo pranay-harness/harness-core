@@ -73,7 +73,7 @@ java_binary(
         "@maven//:io_swagger_swagger_jaxrs",
         "@maven//:io_swagger_swagger_models",
         "@maven//:javax_servlet_javax_servlet_api",
-        "@maven//:javax_validation_validation_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:net_jodah_failsafe",
         "@maven//:net_sourceforge_argparse4j_argparse4j",
