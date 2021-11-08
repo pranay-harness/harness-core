@@ -21,6 +21,7 @@ import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
+import io.harness.configuration.DeployVariant;
 import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
@@ -124,6 +125,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
+  @JsonProperty(defaultValue = "SAAS") private DeployVariant deployVariant = DeployVariant.SAAS;
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("ocVersion") private String ocVersion;

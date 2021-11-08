@@ -59,6 +59,7 @@ import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.config.PipelineConfig;
+import io.harness.configuration.DeployVariant;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.service.git.NGGitServiceImpl;
@@ -841,6 +842,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
   @Singleton
   public JobsFrequencyConfig jobsFrequencyConfig() {
     return configuration.getJobsFrequencyConfig();
+  }
+
+  @Provides
+  @Singleton
+  public DeployVariant getDeployVariant() {
+    return configuration.getDeployVariant();
   }
 
   @Provides

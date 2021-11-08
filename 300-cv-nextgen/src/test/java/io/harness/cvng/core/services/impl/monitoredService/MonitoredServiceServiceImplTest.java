@@ -25,7 +25,6 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.client.NextGenService;
@@ -33,7 +32,6 @@ import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
-import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
@@ -41,7 +39,6 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
-import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -124,7 +121,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Before
   public void setup() throws IllegalAccessException {
     builderFactory = BuilderFactory.getDefault();
-    healthSourceName = "healthSourceName";
+    healthSourceName = "health source name";
     healthSourceIdentifier = "healthSourceIdentifier";
     accountId = builderFactory.getContext().getAccountId();
     orgIdentifier = builderFactory.getContext().getOrgIdentifier();
@@ -133,8 +130,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
     feature = "Application Monitoring";
     connectorIdentifier = BuilderFactory.CONNECTOR_IDENTIFIER;
-    applicationName = "applicationName";
-    appTierName = "appTierName";
+    applicationName = "appApplicationName";
+    appTierName = "tier";
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
     monitoredServiceName = "monitoredServiceName";
     monitoredServiceIdentifier = "monitoredServiceIdentifier";
@@ -170,7 +167,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testCreate_withFailedValidation() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
+    HealthSource healthSource = builderFactory.createHealthSource(CVMonitoringCategory.ERRORS);
     healthSource.setName("some-health_source-name");
     monitoredServiceDTO.getSources().getHealthSources().add(healthSource);
     assertThatThrownBy(
@@ -670,7 +667,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     AppDynamicsCVConfig alreadySavedCVConfig = (AppDynamicsCVConfig) cvConfigs.get(0);
     assertCVConfig(alreadySavedCVConfig, CVMonitoringCategory.ERRORS);
 
-    HealthSource healthSource = createHealthSource(CVMonitoringCategory.PERFORMANCE);
+    HealthSource healthSource = builderFactory.createHealthSource(CVMonitoringCategory.PERFORMANCE);
     healthSource.setIdentifier("new-healthSource-identifier");
     monitoredServiceDTO.getSources().getHealthSources().add(healthSource);
     MonitoredServiceDTO savedMonitoredServiceDTO =
@@ -706,7 +703,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     AppDynamicsCVConfig alreadySavedCVConfig = (AppDynamicsCVConfig) cvConfigs.get(0);
     assertCVConfig(alreadySavedCVConfig, CVMonitoringCategory.ERRORS);
 
-    HealthSourceSpec healthSourceSpec = createHealthSourceSpec(CVMonitoringCategory.PERFORMANCE);
+    HealthSourceSpec healthSourceSpec = builderFactory.createHealthSourceSpec(CVMonitoringCategory.PERFORMANCE);
     monitoredServiceDTO.getSources().getHealthSources().iterator().next().setSpec(healthSourceSpec);
 
     MonitoredServiceDTO savedMonitoredServiceDTO =
@@ -1040,11 +1037,11 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         .identifier(identifier)
         .name(identifier)
         .serviceRef(serviceIdentifier)
-        .sources(
-            MonitoredServiceDTO.Sources.builder()
-                .healthSources(
-                    Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
-                .build())
+        .sources(MonitoredServiceDTO.Sources.builder()
+                     .healthSources(Arrays.asList(builderFactory.createHealthSource(CVMonitoringCategory.ERRORS))
+                                        .stream()
+                                        .collect(Collectors.toSet()))
+                     .build())
         .dependencies(
             Sets.newHashSet(dependentServiceIdentifiers.stream()
                                 .map(id -> ServiceDependencyDTO.builder().monitoredServiceIdentifier(id).build())
@@ -1054,24 +1051,24 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
   MonitoredServiceDTO createMonitoredServiceDTO() {
     return createMonitoredServiceDTOBuilder()
-        .sources(
-            MonitoredServiceDTO.Sources.builder()
-                .healthSources(
-                    Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
-                .changeSources(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())
-                                   .stream()
-                                   .collect(Collectors.toSet()))
-                .build())
+        .sources(MonitoredServiceDTO.Sources.builder()
+                     .healthSources(Arrays.asList(builderFactory.createHealthSource(CVMonitoringCategory.ERRORS))
+                                        .stream()
+                                        .collect(Collectors.toSet()))
+                     .changeSources(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())
+                                        .stream()
+                                        .collect(Collectors.toSet()))
+                     .build())
         .build();
   }
 
   MonitoredServiceDTO createMonitoredServiceDTOWithDependencies() {
     return createMonitoredServiceDTOBuilder()
-        .sources(
-            MonitoredServiceDTO.Sources.builder()
-                .healthSources(
-                    Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
-                .build())
+        .sources(MonitoredServiceDTO.Sources.builder()
+                     .healthSources(Arrays.asList(builderFactory.createHealthSource(CVMonitoringCategory.ERRORS))
+                                        .stream()
+                                        .collect(Collectors.toSet()))
+                     .build())
         .dependencies(
             Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
                 ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build()))
@@ -1085,27 +1082,6 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         .environmentRef(environmentIdentifier)
         .name(monitoredServiceName)
         .tags(tags);
-  }
-
-  HealthSource createHealthSource(CVMonitoringCategory cvMonitoringCategory) {
-    return HealthSource.builder()
-        .identifier(healthSourceIdentifier)
-        .name(healthSourceName)
-        .type(MonitoredServiceDataSourceType.APP_DYNAMICS)
-        .spec(createHealthSourceSpec(cvMonitoringCategory))
-        .build();
-  }
-
-  HealthSourceSpec createHealthSourceSpec(CVMonitoringCategory cvMonitoringCategory) {
-    return AppDynamicsHealthSourceSpec.builder()
-        .applicationName(applicationName)
-        .tierName(appTierName)
-        .connectorRef(connectorIdentifier)
-        .feature(feature)
-        .metricPacks(new HashSet<MetricPackDTO>() {
-          { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
-        })
-        .build();
   }
 
   void assertCommonMonitoredService(MonitoredService monitoredService, MonitoredServiceDTO monitoredServiceDTO) {
