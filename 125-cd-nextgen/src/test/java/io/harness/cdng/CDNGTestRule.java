@@ -93,6 +93,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.DSLContext;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -200,6 +201,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
             .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
             .toInstance(Mockito.mock(ConnectorService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
+        bind(DSLContext.class).toInstance(mock(DSLContext.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
         bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
