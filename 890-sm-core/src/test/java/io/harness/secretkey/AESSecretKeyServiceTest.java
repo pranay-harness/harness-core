@@ -8,15 +8,25 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.repositories.SecretKeyRepository;
 import io.harness.rule.Owner;
 
-import com.google.inject.Inject;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PL)
 public class AESSecretKeyServiceTest extends CategoryTest {
-  @Inject SecretKeyService aesSecretKeyService;
+  @InjectMocks AESSecretKeyServiceImpl aesSecretKeyService;
+  @Mock SecretKeyRepository secretKeyRepository;
+
+  @Before
+  public void beforeClass() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = MOHIT_GARG)

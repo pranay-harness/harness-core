@@ -36,6 +36,7 @@ import io.harness.secrets.setupusage.SecretSetupUsageBuilders;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.SMCoreRegistrars;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -99,6 +100,7 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
     });
 
     modules.add(mongoTypeModule(annotations));
+    modules.add(new SpringPersistenceTestModule());
 
     modules.add(new AbstractModule() {
       @Override

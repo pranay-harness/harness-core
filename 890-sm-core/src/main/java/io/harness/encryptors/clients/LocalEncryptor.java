@@ -23,6 +23,7 @@ import software.wings.beans.LocalEncryptionConfig;
 import com.amazonaws.encryptionsdk.AwsCrypto;
 import com.amazonaws.encryptionsdk.CryptoResult;
 import com.amazonaws.encryptionsdk.jce.JceMasterKey;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +44,7 @@ public class LocalEncryptor implements KmsEncryptor {
   private SecretKeyService secretKeyService;
   private FeatureFlagService featureFlagService;
 
+  @Inject
   public LocalEncryptor(@Named(SecretKeyConstants.AES_SECRET_KEY) SecretKeyService secretKeyService,
       FeatureFlagService featureFlagService) {
     this.secretKeyService = secretKeyService;
