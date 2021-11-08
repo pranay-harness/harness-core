@@ -26,6 +26,7 @@ import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.TaskLogContext;
+import io.harness.exception.FailureType;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
@@ -51,6 +52,7 @@ import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -214,12 +216,25 @@ public class DelegateQueueTask implements Runnable {
           log.info("Marking task as failed - {}: {}", taskId, errorMessage);
 
           if (delegateTasks.get(taskId) != null) {
-            delegateTaskService.handleResponse(delegateTasks.get(taskId), null,
-                DelegateTaskResponse.builder()
-                    .accountId(delegateTasks.get(taskId).getAccountId())
-                    .responseCode(DelegateTaskResponse.ResponseCode.FAILED)
-                    .response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build())
-                    .build());
+            if (delegateTasks.get(taskId).getData().getTaskType().equals(TaskType.SCRIPT.name())) {
+              delegateTaskService.handleResponse(delegateTasks.get(taskId), null,
+                  DelegateTaskResponse.builder()
+                      .accountId(delegateTasks.get(taskId).getAccountId())
+                      .responseCode(DelegateTaskResponse.ResponseCode.FAILED)
+                      .expired(true)
+                      .response(ErrorNotifyResponseData.builder()
+                                    .errorMessage(errorMessage)
+                                    .failureTypes(EnumSet.of(FailureType.TIMEOUT_ERROR))
+                                    .build())
+                      .build());
+            } else {
+              delegateTaskService.handleResponse(delegateTasks.get(taskId), null,
+                  DelegateTaskResponse.builder()
+                      .accountId(delegateTasks.get(taskId).getAccountId())
+                      .responseCode(DelegateTaskResponse.ResponseCode.FAILED)
+                      .response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build())
+                      .build());
+            }
           }
         }
       });

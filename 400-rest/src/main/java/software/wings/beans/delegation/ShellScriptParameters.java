@@ -95,6 +95,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private String publicKey;
   private SSHVaultConfig sshVaultConfig;
   private Boolean includeInfraSelectors;
+  private Integer sshTimeOut;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();

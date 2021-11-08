@@ -489,7 +489,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                 featureFlagService.isEnabled(DISABLE_WINRM_COMMAND_ENCODING, executionContext.getApp().getAccountId()))
             .disableWinRMEnvVariables(featureFlagService.isEnabled(
                 FeatureName.DISABLE_WINRM_ENV_VARIABLES, executionContext.getApp().getAccountId()))
-            .saveExecutionLogs(true);
+            .saveExecutionLogs(true)
+            .sshTimeOut(getTimeoutMillis());
     Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();

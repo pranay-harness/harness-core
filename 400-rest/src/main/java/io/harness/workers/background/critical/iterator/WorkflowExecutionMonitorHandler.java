@@ -106,7 +106,8 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
         hasActiveStates = stateExecutionInstances.hasNext();
         while (stateExecutionInstances.hasNext()) {
           StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
-          if (stateExecutionInstance.getExpiryTs() > System.currentTimeMillis()) {
+          //          if (stateExecutionInstance.getExpiryTs() > System.currentTimeMillis()) {
+          if (true) {
             continue;
           }
 
@@ -128,13 +129,14 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
                     .executionUuid(stateExecutionInstance.getExecutionUuid())
                     .stateExecutionInstanceId(stateExecutionInstance.getUuid())
                     .build();
-          } else if (stateExecutionInstance.getStateType().equals(StateType.SHELL_SCRIPT.name()) && featureFlagService.isEnabled(FeatureName.TIMEOUT_FAILURE_SUPPORT,entity.getAccountId())){
+          } else if (stateExecutionInstance.getStateType().equals(StateType.SHELL_SCRIPT.name())
+              && featureFlagService.isEnabled(FeatureName.TIMEOUT_FAILURE_SUPPORT, entity.getAccountId())) {
             executionInterrupt = anExecutionInterrupt()
-                    .executionInterruptType(MARK_EXPIRED_WITH_FAILURE_STRATEGY)
-                    .appId(stateExecutionInstance.getAppId())
-                    .executionUuid(stateExecutionInstance.getExecutionUuid())
-                    .stateExecutionInstanceId(stateExecutionInstance.getUuid())
-                    .build();
+                                     .executionInterruptType(MARK_EXPIRED_WITH_FAILURE_STRATEGY)
+                                     .appId(stateExecutionInstance.getAppId())
+                                     .executionUuid(stateExecutionInstance.getExecutionUuid())
+                                     .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                                     .build();
           } else {
             executionInterrupt = anExecutionInterrupt()
                                      .executionInterruptType(MARK_EXPIRED)
