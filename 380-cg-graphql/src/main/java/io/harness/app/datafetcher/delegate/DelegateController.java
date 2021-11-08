@@ -47,6 +47,8 @@ public class DelegateController {
         .uuid(delegate.getUuid())
         .status(delegate.getStatus().toString())
         .delegateProfileId(delegate.getDelegateProfileId())
+        .version(delegate.getVersion())
+        .pollingModeEnabled(delegate.isPolllingModeEnabled())
         .lastHeartBeat(delegate.getLastHeartBeat())
         .build();
   }
