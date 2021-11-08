@@ -41,6 +41,7 @@ public class TemplateServiceModuleRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
+          .addAll(NGCoreClientRegistrars.morphiaRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(FiltersRegistrars.morphiaRegistrars)

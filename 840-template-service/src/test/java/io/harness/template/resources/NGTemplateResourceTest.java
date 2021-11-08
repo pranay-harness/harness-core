@@ -22,11 +22,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateEntityType;
+import io.harness.ng.core.template.TemplateListType;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
 import io.harness.rule.Owner;
 import io.harness.template.beans.PermissionTypes;
 import io.harness.template.beans.TemplateDeleteListRequestDTO;
-import io.harness.template.beans.TemplateListType;
 import io.harness.template.beans.TemplateResponseDTO;
 import io.harness.template.beans.TemplateWrapperResponseDTO;
 import io.harness.template.entity.TemplateEntity;
@@ -253,6 +253,9 @@ public class NGTemplateResourceTest extends CategoryTest {
     assertThat(responseDTO.getData()).isEqualTo(true);
     verify(accessControlClient)
         .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER),
+            Resource.of(TEMPLATE, TEMPLATE_IDENTIFIER), PermissionTypes.TEMPLATE_DELETE_PERMISSION);
+    verify(accessControlClient)
+        .checkForAccessOrThrow(ResourceScope.of(ACCOUNT_ID, ORG_IDENTIFIER, null),
             Resource.of(TEMPLATE, TEMPLATE_IDENTIFIER), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
   }
 

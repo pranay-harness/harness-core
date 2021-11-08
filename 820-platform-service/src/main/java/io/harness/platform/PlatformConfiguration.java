@@ -70,10 +70,14 @@ public class PlatformConfiguration extends Configuration {
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
-  public static Collection<Class<?>> getPlatformServiceCombinedResourceClasses() {
+  public static Collection<Class<?>> getPlatformServiceCombinedResourceClasses(PlatformConfiguration appConfig) {
     Collection<Class<?>> resources = getNotificationServiceResourceClasses();
-    resources.addAll(getAuditServiceResourceClasses());
-    resources.addAll(getResourceGroupServiceResourceClasses());
+    if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
+      resources.addAll(getAuditServiceResourceClasses());
+    }
+    if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+      resources.addAll(getResourceGroupServiceResourceClasses());
+    }
     Reflections reflections = new Reflections(ENFORCEMENT_PACKAGE);
     resources.addAll(reflections.getTypesAnnotatedWith(Path.class));
     return resources;
