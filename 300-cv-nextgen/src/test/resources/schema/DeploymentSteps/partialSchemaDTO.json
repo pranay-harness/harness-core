@@ -1,176 +1,219 @@
 {
   "schema" : {
-    "type" : "object",
-    "required" : [ "identifier", "name", "type" ],
-    "properties" : {
-      "description" : {
-        "type" : "string"
-      },
-      "failureStrategies" : {
-        "type" : "array",
-        "items" : {
-          "$ref" : "#/definitions/cvng/FailureStrategyConfig"
-        }
-      },
-      "identifier" : {
-        "type" : "string",
-        "pattern" : "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
-      },
-      "name" : {
-        "type" : "string",
-        "pattern" : "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-      },
-      "template" : {
-        "$ref" : "#/definitions/cvng/TemplateLinkConfig"
-      },
-      "timeout" : {
-        "type" : "string",
-        "pattern" : "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
-      },
-      "type" : {
-        "type" : "string"
-      },
-      "when" : {
-        "$ref" : "#/definitions/cvng/StepWhenCondition"
-      }
-    },
     "$schema" : "http://json-schema.org/draft-07/schema#",
-    "allOf" : [ {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "Barrier"
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "identifier",
+          "name",
+          "type"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "failureStrategies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/cvng/FailureStrategyConfig"
+            }
+          },
+          "identifier": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+          },
+          "spec": {
+            "$ref": "#/definitions/cvng/StepSpecType"
+          },
+          "timeout": {
+            "type": "string",
+            "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
+          },
+          "type": {
+            "type": "string"
+          },
+          "when": {
+            "$ref": "#/definitions/cvng/StepWhenCondition"
           }
-        }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "Barrier"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/BarrierStepInfo"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "FlagConfiguration"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/FlagConfigurationStepInfo"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "HarnessApproval"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/HarnessApprovalStepInfo"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "Http"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/HttpStepInfo"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "JiraApproval"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/JiraApprovalStepInfo"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "JiraCreate"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/JiraCreateStepInfo"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "JiraUpdate"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/JiraUpdateStepInfo"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "ShellScript"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/ShellScriptStepInfo"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "Verify"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/cvng/CVNGStepInfo"
+                }
+              }
+            }
+          }
+        ]
       },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/BarrierStepInfo"
+      {
+        "type": "object",
+        "required": [
+          "identifier",
+          "name"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+          },
+          "template": {
+            "$ref": "#/definitions/cvng/TemplateLinkConfig"
           }
-        }
+        },
+        "additionalProperties": false
       }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "FlagConfiguration"
-          }
-        }
-      },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/FlagConfigurationStepInfo"
-          }
-        }
-      }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "HarnessApproval"
-          }
-        }
-      },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/HarnessApprovalStepInfo"
-          }
-        }
-      }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "Http"
-          }
-        }
-      },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/HttpStepInfo"
-          }
-        }
-      }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "JiraApproval"
-          }
-        }
-      },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/JiraApprovalStepInfo"
-          }
-        }
-      }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "JiraCreate"
-          }
-        }
-      },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/JiraCreateStepInfo"
-          }
-        }
-      }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "JiraUpdate"
-          }
-        }
-      },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/JiraUpdateStepInfo"
-          }
-        }
-      }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "ShellScript"
-          }
-        }
-      },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/ShellScriptStepInfo"
-          }
-        }
-      }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
-            "const" : "Verify"
-          }
-        }
-      },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/CVNGStepInfo"
-          }
-        }
-      }
-    } ],
+    ],
     "definitions" : {
       "cvng" : {
         "AbortFailureActionConfig" : {
@@ -985,6 +1028,72 @@
         },
         "JsonNode" : {
           "type" : "object",
+          "properties" : {
+            "array" : {
+              "type" : "boolean"
+            },
+            "bigDecimal" : {
+              "type" : "boolean"
+            },
+            "bigInteger" : {
+              "type" : "boolean"
+            },
+            "binary" : {
+              "type" : "boolean"
+            },
+            "boolean" : {
+              "type" : "boolean"
+            },
+            "containerNode" : {
+              "type" : "boolean"
+            },
+            "double" : {
+              "type" : "boolean"
+            },
+            "float" : {
+              "type" : "boolean"
+            },
+            "floatingPointNumber" : {
+              "type" : "boolean"
+            },
+            "int" : {
+              "type" : "boolean"
+            },
+            "integralNumber" : {
+              "type" : "boolean"
+            },
+            "long" : {
+              "type" : "boolean"
+            },
+            "missingNode" : {
+              "type" : "boolean"
+            },
+            "nodeType" : {
+              "type" : "string",
+              "enum" : [ "ARRAY", "BINARY", "BOOLEAN", "MISSING", "NULL", "NUMBER", "OBJECT", "POJO", "STRING" ]
+            },
+            "null" : {
+              "type" : "boolean"
+            },
+            "number" : {
+              "type" : "boolean"
+            },
+            "object" : {
+              "type" : "boolean"
+            },
+            "pojo" : {
+              "type" : "boolean"
+            },
+            "short" : {
+              "type" : "boolean"
+            },
+            "textual" : {
+              "type" : "boolean"
+            },
+            "valueNode" : {
+              "type" : "boolean"
+            }
+          },
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
         "KeyValuesCriteriaSpec" : {
@@ -1604,179 +1713,232 @@
           } ],
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
-        "StepElementConfig" : {
-          "type" : "object",
-          "required" : [ "identifier", "name", "type" ],
-          "properties" : {
-            "description" : {
-              "type" : "string"
+        "StepElementConfig": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "identifier",
+                "name",
+                "type"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "failureStrategies": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/cvng/FailureStrategyConfig"
+                  }
+                },
+                "identifier": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+                },
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+                },
+                "spec": {
+                  "$ref": "#/definitions/cvng/StepSpecType"
+                },
+                "timeout": {
+                  "type": "string",
+                  "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "Barrier",
+                    "FlagConfiguration",
+                    "HarnessApproval",
+                    "Http",
+                    "JiraApproval",
+                    "JiraCreate",
+                    "JiraUpdate",
+                    "ShellScript",
+                    "Verify"
+                  ]
+                },
+                "when": {
+                  "$ref": "#/definitions/cvng/StepWhenCondition"
+                }
+              },
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "Barrier"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/BarrierStepInfo"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "FlagConfiguration"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/FlagConfigurationStepInfo"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "HarnessApproval"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/HarnessApprovalStepInfo"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "Http"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/HttpStepInfo"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "JiraApproval"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/JiraApprovalStepInfo"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "JiraCreate"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/JiraCreateStepInfo"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "JiraUpdate"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/JiraUpdateStepInfo"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "ShellScript"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/ShellScriptStepInfo"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "Verify"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "spec": {
+                        "$ref": "#/definitions/cvng/CVNGStepInfo"
+                      }
+                    }
+                  }
+                }
+              ]
             },
-            "failureStrategies" : {
-              "type" : "array",
-              "items" : {
-                "$ref" : "#/definitions/cvng/FailureStrategyConfig"
-              }
-            },
-            "identifier" : {
-              "type" : "string",
-              "pattern" : "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
-            },
-            "name" : {
-              "type" : "string",
-              "pattern" : "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-            },
-            "template" : {
-              "$ref" : "#/definitions/cvng/TemplateLinkConfig"
-            },
-            "timeout" : {
-              "type" : "string",
-              "pattern" : "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
-            },
-            "type" : {
-              "type" : "string",
-              "enum" : [ "Barrier", "FlagConfiguration", "HarnessApproval", "Http", "JiraApproval", "JiraCreate", "JiraUpdate", "ShellScript", "Verify" ]
-            },
-            "when" : {
-              "$ref" : "#/definitions/cvng/StepWhenCondition"
+            {
+              "type": "object",
+              "required": [
+                "identifier",
+                "name"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "identifier": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+                },
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+                },
+                "template": {
+                  "$ref": "#/definitions/cvng/TemplateLinkConfig"
+                }
+              },
+              "additionalProperties": false
             }
-          },
-          "$schema" : "http://json-schema.org/draft-07/schema#",
-          "allOf" : [ {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "Barrier"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/BarrierStepInfo"
-                }
-              }
-            }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "FlagConfiguration"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/FlagConfigurationStepInfo"
-                }
-              }
-            }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "HarnessApproval"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/HarnessApprovalStepInfo"
-                }
-              }
-            }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "Http"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/HttpStepInfo"
-                }
-              }
-            }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "JiraApproval"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/JiraApprovalStepInfo"
-                }
-              }
-            }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "JiraCreate"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/JiraCreateStepInfo"
-                }
-              }
-            }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "JiraUpdate"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/JiraUpdateStepInfo"
-                }
-              }
-            }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "ShellScript"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/ShellScriptStepInfo"
-                }
-              }
-            }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "Verify"
-                }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/CVNGStepInfo"
-                }
-              }
-            }
-          } ]
+          ]
         },
         "StepGroupFailureActionConfig" : {
           "allOf" : [ {
