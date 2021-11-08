@@ -174,11 +174,13 @@ public class BuilderFactory {
         .environmentRef(context.getEnvIdentifier())
         .dependencies(Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier("service1").build(),
             ServiceDependencyDTO.builder().monitoredServiceIdentifier("service2").build()))
-        .sources(MonitoredServiceDTO.Sources.builder()
-                     .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
-                     .changeSources(Sets.newHashSet(getPagerDutyChangeSourceDTOBuilder().build(),
-                         getHarnessCDChangeSourceDTOBuilder().build(), getKubernetesChangeSourceDTOBuilder().build()))
-                     .build());
+        .sources(
+            MonitoredServiceDTO.Sources.builder()
+                .healthSources(
+                    Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
+                .changeSources(Sets.newHashSet(getPagerDutyChangeSourceDTOBuilder().build(),
+                    getHarnessCDChangeSourceDTOBuilder().build(), getKubernetesChangeSourceDTOBuilder().build()))
+                .build());
   }
 
   public HeatMapBuilder heatMapBuilder() {
@@ -213,23 +215,23 @@ public class BuilderFactory {
         .heatMapRisks(heatMapRisks);
   }
 
-  private HealthSource createHealthSource() {
+  public HealthSource createHealthSource(CVMonitoringCategory cvMonitoringCategory) {
     return HealthSource.builder()
         .identifier("healthSourceIdentifier")
         .name("health source name")
         .type(MonitoredServiceDataSourceType.APP_DYNAMICS)
-        .spec(createHealthSourceSpec())
+        .spec(createHealthSourceSpec(cvMonitoringCategory))
         .build();
   }
 
-  private HealthSourceSpec createHealthSourceSpec() {
+  public HealthSourceSpec createHealthSourceSpec(CVMonitoringCategory cvMonitoringCategory) {
     return AppDynamicsHealthSourceSpec.builder()
         .applicationName("appApplicationName")
         .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
         .metricPacks(new HashSet<MetricPackDTO>() {
-          { add(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build()); }
+          { add(MetricPackDTO.builder().identifier(cvMonitoringCategory).build()); }
         })
         .build();
   }
