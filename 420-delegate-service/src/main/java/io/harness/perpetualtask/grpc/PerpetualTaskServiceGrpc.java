@@ -44,12 +44,15 @@ public class PerpetualTaskServiceGrpc
   @Override
   public void perpetualTaskContext(
       PerpetualTaskContextRequest request, StreamObserver<PerpetualTaskContextResponse> responseObserver) {
+    log.info("DEL-2745 Starting PT perpetualTaskContext check ");
     try {
       responseObserver.onNext(
           PerpetualTaskContextResponse.newBuilder()
               .setPerpetualTaskContext(perpetualTaskService.perpetualTaskContext(request.getPerpetualTaskId().getId()))
               .build());
+      log.info("DEL-2745 PerpetualTaskContextResponse " + request.getPerpetualTaskId().getId());
       responseObserver.onCompleted();
+      log.info("DEL-2745 PerpetualTaskContextResponse COMPLETED");
     } catch (Exception e) {
       log.error("Unexpected error occurred while getting perpetual task context.", e);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());

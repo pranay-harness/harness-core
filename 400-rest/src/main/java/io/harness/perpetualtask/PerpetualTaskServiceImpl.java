@@ -222,14 +222,16 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   public PerpetualTaskExecutionContext perpetualTaskContext(String taskId) {
     log.info("Getting perpetual task context for task with id: {}", taskId);
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
+    log.info("Getting PerpetualTaskRecord for task with id: {}", taskId);
 
     PerpetualTaskExecutionParams params = getTaskParams(perpetualTaskRecord);
 
+    log.info("Getting PerpetualTaskExecutionParams : ");
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromSeconds(perpetualTaskRecord.getIntervalSeconds()))
                                          .setTimeout(Durations.fromMillis(perpetualTaskRecord.getTimeoutMillis()))
                                          .build();
-
+    log.info("Getting PerpetualTaskSchedule : " + schedule.getTimeout());
     return PerpetualTaskExecutionContext.newBuilder()
         .setTaskParams(params)
         .setTaskSchedule(schedule)
