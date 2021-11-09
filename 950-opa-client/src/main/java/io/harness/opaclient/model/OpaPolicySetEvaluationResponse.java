@@ -18,4 +18,7 @@ public class OpaPolicySetEvaluationResponse {
   String name;
   long created;
   List<OpaPolicyEvaluationResponse> details;
+  String account_id;
+  String org_id;
+  String project_id;
 }
