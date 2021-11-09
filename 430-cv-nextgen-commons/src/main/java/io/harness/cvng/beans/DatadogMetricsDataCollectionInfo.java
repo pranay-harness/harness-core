@@ -13,13 +13,19 @@ import java.util.stream.Collectors;
 
 @Data
 @Builder
-public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionInfo<DatadogConnectorDTO>{
+public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionInfo<DatadogConnectorDTO> {
     private List<MetricCollectionInfo> metricDefinitions;
 
     @Override
     public Map<String, Object> getDslEnvVariables(DatadogConnectorDTO connectorConfigDTO) {
         Map<String, Object> dslEnvVariables = new HashMap<>();
-        List<String> queries = metricDefinitions.stream().map(metricCollectionInfo -> metricCollectionInfo.query)
+        List<String> queries = metricDefinitions.stream()
+                .map(metricCollectionInfo -> {
+                    if (isCollectHostData() && metricCollectionInfo.getServiceInstanceIdentifierTag() != null && metricCollectionInfo.getGroupingQuery() != null) {
+                        return metricCollectionInfo.getGroupingQuery();
+                    }
+                    return metricCollectionInfo.getQuery();
+                })
                 .collect(Collectors.toList());
         dslEnvVariables.put("queries", queries);
         return dslEnvVariables;
@@ -27,7 +33,7 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
 
     @Override
     public String getBaseUrl(DatadogConnectorDTO connectorConfigDTO) {
-       return connectorConfigDTO.getUrl();
+        return connectorConfigDTO.getUrl();
     }
 
     @Override
@@ -37,13 +43,17 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
 
     @Override
     public Map<String, String> collectionParams(DatadogConnectorDTO connectorConfigDTO) {
-      return Collections.emptyMap();
+        return Collections.emptyMap();
     }
 
     @Data
     @Builder
     public static class MetricCollectionInfo {
         private String query;
+        private String groupingQuery;
         private String metricName;
+        private String metric;
+        private String serviceInstanceIdentifierTag;
+
     }
 }

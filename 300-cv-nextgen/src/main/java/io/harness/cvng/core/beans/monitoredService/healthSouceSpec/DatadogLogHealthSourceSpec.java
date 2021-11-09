@@ -7,7 +7,6 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DatadogLogCVConfig;
-import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.exception.InvalidRequestException;
 import lombok.*;
@@ -143,6 +142,6 @@ public class DatadogLogHealthSourceSpec extends HealthSourceSpec {
 
     @Override
     public DataSourceType getType() {
-        return DataSourceType.DATADOG_LOG;
+        return DataSourceType.DATADOG_LOGS;
     }
 }

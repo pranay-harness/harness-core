@@ -13,6 +13,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
+import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,10 @@ import java.util.stream.Collectors;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DatadogMetricHealthSourceSpec extends HealthSourceSpec {
 
+    @NotNull
+    String feature;
     private List<DatadogMetricHealthDefinition> metricDefinitions;
+
     @Override
     public HealthSource.CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier,
                                                                      String projectIdentifier, String environmentRef,
@@ -74,7 +78,7 @@ public class DatadogMetricHealthSourceSpec extends HealthSourceSpec {
 
 
     private List<DatadogMetricCVConfig> toCVConfigs(String accountId, String orgIdentifier, String projectIdentifier,
-                                                  String environmentRef, String serviceRef, String identifier, String name) {
+                                                    String environmentRef, String serviceRef, String identifier, String name) {
         // group things under same service_env_category_dashboard into one config
         Map<Key, List<DatadogMetricHealthDefinition>> keyToDefinitionMap = new HashMap<>();
 
@@ -82,6 +86,7 @@ public class DatadogMetricHealthSourceSpec extends HealthSourceSpec {
             Key key = Key.builder()
                     .category(definition.getRiskProfile().getCategory())
                     .dashboardName(definition.getDashboardName())
+                    .dashboardId(definition.getDashboardId())
                     .build();
             if (!keyToDefinitionMap.containsKey(key)) {
                 keyToDefinitionMap.put(key, new ArrayList<>());
@@ -101,8 +106,10 @@ public class DatadogMetricHealthSourceSpec extends HealthSourceSpec {
                     .monitoringSourceName(name)
                     .envIdentifier(environmentRef)
                     .serviceIdentifier(serviceRef)
+                    .productName(feature)
                     .category(key.getCategory())
                     .dashboardName(key.getDashboardName())
+                    .dashboardId(key.getDashboardId())
                     .build();
             cvConfig.fromMetricDefinitions(datadogDefinitions, key.getCategory());
             cvConfigs.add(cvConfig);
@@ -115,6 +122,7 @@ public class DatadogMetricHealthSourceSpec extends HealthSourceSpec {
         return Key.builder()
                 .category(cvConfig.getMetricPack().getCategory())
                 .dashboardName(cvConfig.getDashboardName())
+                .dashboardId(cvConfig.getDashboardId())
                 .build();
     }
 
@@ -123,5 +131,6 @@ public class DatadogMetricHealthSourceSpec extends HealthSourceSpec {
     private static class Key {
         CVMonitoringCategory category;
         String dashboardName;
+        String dashboardId;
     }
 }

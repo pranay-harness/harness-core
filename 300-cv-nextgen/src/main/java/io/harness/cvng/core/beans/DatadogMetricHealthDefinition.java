@@ -7,11 +7,14 @@ import lombok.Value;
 @Value
 @Builder
 public class DatadogMetricHealthDefinition {
+    String dashboardId;
     String dashboardName;
     String query;
+    String groupingQuery;
     String metricName;
+    String metric;
     String aggregation;
-    String serviceInstanceTag;
+    String serviceInstanceIdentifierTag;
     boolean isManualQuery;
     RiskProfile riskProfile;
 

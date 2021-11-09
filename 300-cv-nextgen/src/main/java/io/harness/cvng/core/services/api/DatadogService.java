@@ -25,7 +25,7 @@ public interface DatadogService {
                                   String projectIdentifier, String tracingId);
 
     List<TimeSeriesSampleDTO> getTimeSeriesPoints(String accountId, String connectorIdentifier, String orgIdentifier,
-                                                 String projectIdentifier, String query, String tracingId);
+                                                  String projectIdentifier, String query, String tracingId);
 
     List<LinkedHashMap> getSampleLogData(String accountId, String connectorIdentifier, String orgIdentifier,
                                          String projectIdentifier, String query, String tracingId);

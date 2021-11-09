@@ -6,6 +6,7 @@ import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
+import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.datadog.DatadogDashboardDTO;
 import io.harness.cvng.core.beans.datadog.DatadogDashboardDetail;
 import io.harness.cvng.core.services.impl.DatadogServiceImpl;
@@ -23,8 +24,7 @@ import java.util.stream.Collectors;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +33,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     private static final int PAGE_SIZE = 5;
     private static final String FILTER = "Datadog";
     private static final String MOCKED_DASHBOARD_ID = "mocked_dashboard_id";
+    private static final String MOCKED_QUERY = "mocked_query";
     private static final List<Map<String, Object>> mockedDashboards = Arrays.asList(
             createDatadogDashboardResponse("DatadogDashboard1", "path1"),
             createDatadogDashboardResponse("DatadogDashboard2", "path2"),
@@ -78,9 +79,8 @@ public class DatadogServiceImplTest extends CategoryTest {
         PageResponse<DatadogDashboardDTO> dashboardList = classUnderTest.getAllDashboards(
                 accountId, connectorIdentifier, orgIdentifier, projectIdentifier, PAGE_SIZE, 0, null, generateUuid());
 
-        verify(mockedOnboardingService).getOnboardingResponse(eq(accountId), requestCaptor.capture());
-        OnboardingRequestDTO onboardingRequestDTO = requestCaptor.getValue();
-        verifyOnBoardingRequest(onboardingRequestDTO);
+        OnboardingRequestDTO onboardingRequestDTO = getAndVerifyOnBoardingRequest();
+
 
         DataCollectionRequest<DatadogConnectorDTO> request = onboardingRequestDTO.getDataCollectionRequest();
         assertThat(request.getType().name()).isEqualTo(DataCollectionRequestType.DATADOG_DASHBOARD_LIST.name());
@@ -111,10 +111,7 @@ public class DatadogServiceImplTest extends CategoryTest {
                 classUnderTest.getDashboardDetails(MOCKED_DASHBOARD_ID, accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
                         generateUuid());
 
-        verify(mockedOnboardingService).getOnboardingResponse(eq(accountId), requestCaptor.capture());
-
-        OnboardingRequestDTO onboardingRequestDTO = requestCaptor.getValue();
-        verifyOnBoardingRequest(onboardingRequestDTO);
+        OnboardingRequestDTO onboardingRequestDTO = getAndVerifyOnBoardingRequest();
 
         DataCollectionRequest request = onboardingRequestDTO.getDataCollectionRequest();
         assertThat(request.getType().name()).isEqualTo(DataCollectionRequestType.DATADOG_DASHBOARD_DETAILS.name());
@@ -129,7 +126,7 @@ public class DatadogServiceImplTest extends CategoryTest {
                 .thenReturn(OnboardingResponseDTO.builder().result(mockedMetricTags).build());
 
         List<String> metricTags =
-                classUnderTest.getMetricTagsList(any(), accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
+                classUnderTest.getMetricTagsList("mocked_metric_name", accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
                         generateUuid());
 
         testMetricsListRequest(DataCollectionRequestType.DATADOG_METRIC_TAGS, metricTags, mockedMetricTags);
@@ -153,6 +150,18 @@ public class DatadogServiceImplTest extends CategoryTest {
     @Owner(developers = UNKNOWN)
     @Category(UnitTests.class)
     public void testGetTimeSeriesPoints() {
+        when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
+                .thenReturn(OnboardingResponseDTO.builder().result(new ArrayList<>()).build());
+
+        List<TimeSeriesSampleDTO> timeSeriesPoints =
+                classUnderTest.getTimeSeriesPoints(accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
+                        generateUuid(), MOCKED_QUERY);
+
+        OnboardingRequestDTO onboardingRequestDTO = getAndVerifyOnBoardingRequest();
+
+        DataCollectionRequest request = onboardingRequestDTO.getDataCollectionRequest();
+        assertThat(request.getType().name()).isEqualTo(DataCollectionRequestType.DATADOG_TIME_SERIES_POINTS.name());
+        assertThat(timeSeriesPoints).isNotNull();
     }
 
     @Test
@@ -162,9 +171,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     private void testMetricsListRequest(DataCollectionRequestType dataCollectionRequestType, List<String> result, List<String> expectedResult) {
-        verify(mockedOnboardingService).getOnboardingResponse(eq(accountId), requestCaptor.capture());
-        OnboardingRequestDTO onboardingRequestDTO = requestCaptor.getValue();
-        verifyOnBoardingRequest(onboardingRequestDTO);
+        OnboardingRequestDTO onboardingRequestDTO = getAndVerifyOnBoardingRequest();
 
         DataCollectionRequest request = onboardingRequestDTO.getDataCollectionRequest();
         assertThat(request.getType().name()).isEqualTo(dataCollectionRequestType.name());
@@ -172,12 +179,15 @@ public class DatadogServiceImplTest extends CategoryTest {
         assertThat(result).containsAll(expectedResult);
     }
 
-    private void verifyOnBoardingRequest(OnboardingRequestDTO onboardingRequestDTO) {
+    private OnboardingRequestDTO getAndVerifyOnBoardingRequest() {
+        verify(mockedOnboardingService).getOnboardingResponse(eq(accountId), requestCaptor.capture());
+        OnboardingRequestDTO onboardingRequestDTO = requestCaptor.getValue();
         assertThat(onboardingRequestDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
         assertThat(onboardingRequestDTO.getConnectorIdentifier()).isEqualTo(connectorIdentifier);
         assertThat(onboardingRequestDTO.getAccountId()).isEqualTo(accountId);
         assertThat(onboardingRequestDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
         assertThat(onboardingRequestDTO.getDataCollectionRequest()).isNotNull();
+        return onboardingRequestDTO;
     }
 
     private static Map<String, Object> createDatadogDashboardResponse(String name, String path) {

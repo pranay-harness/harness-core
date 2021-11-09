@@ -8,20 +8,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatadogMetricDataCollectionInfoMapper
-    implements DataCollectionInfoMapper<DatadogMetricsDataCollectionInfo, DatadogMetricCVConfig> {
-  @Override
-  public DatadogMetricsDataCollectionInfo toDataCollectionInfo(DatadogMetricCVConfig cvConfig) {
-    List<DatadogMetricsDataCollectionInfo.MetricCollectionInfo> metricDefinitions = new ArrayList<>();
-    cvConfig.getMetricInfoList().forEach(metricInfo -> metricDefinitions.add(
-            DatadogMetricsDataCollectionInfo.MetricCollectionInfo.builder()
-            .metricName(metricInfo.getMetricName())
-            .query(metricInfo.getQuery())
-            .build()));
-    DatadogMetricsDataCollectionInfo dataCollectionInfo =
-            DatadogMetricsDataCollectionInfo.builder()
-                    .metricDefinitions(metricDefinitions)
-                    .build();
-    dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
-    return dataCollectionInfo;
-  }
+        implements DataCollectionInfoMapper<DatadogMetricsDataCollectionInfo, DatadogMetricCVConfig> {
+    @Override
+    public DatadogMetricsDataCollectionInfo toDataCollectionInfo(DatadogMetricCVConfig cvConfig) {
+        List<DatadogMetricsDataCollectionInfo.MetricCollectionInfo> metricDefinitions = new ArrayList<>();
+        cvConfig.getMetricInfoList().forEach(metricInfo -> metricDefinitions.add(
+                DatadogMetricsDataCollectionInfo.MetricCollectionInfo.builder()
+                        .metricName(metricInfo.getMetricName())
+                        .metric(metricInfo.getMetric())
+                        .query(metricInfo.getQuery())
+                        .groupingQuery(metricInfo.getGroupingQuery())
+                        .serviceInstanceIdentifierTag(metricInfo.getServiceInstanceIdentifierTag())
+                        .build()));
+        DatadogMetricsDataCollectionInfo dataCollectionInfo =
+                DatadogMetricsDataCollectionInfo.builder()
+                        .metricDefinitions(metricDefinitions)
+                        .build();
+        dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
+        return dataCollectionInfo;
+    }
 }

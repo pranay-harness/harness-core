@@ -5,6 +5,7 @@ Var params = {}
 Var:params.put("from", Env:startTimeSeconds)
 Var:params.put("to", Env:endTimeSeconds)
 
+Var nullObject = null
 foreach query in Env:queries {
 Var:params.put("query", Var:query)
 Request metricRequest = new Request(url=Var:timeSeriesUrl, header=Env:commonHeaders, options=Var:params)
@@ -17,19 +18,26 @@ foreach metricResponse in Var:metricResponses {
 Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
   foreach timeSeriesPoints in Var:timeSeriesPointsList {
      Var metricName = extract(Var:timeSeriesPoints, $.metric)
-     Var txnName = extract(Var:timeSeriesPoints, $.display_name)
+        Var txnName = extract(Var:timeSeriesPoints, $.display_name)
 
-     Var points = extract(Var:timeSeriesPoints, $.pointlist)
-     foreach point in Var:points {
-         Var timestamp = Var:point[0]
-         Var value = Var:point[1]
-         Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
-         Var:returnList.append(Var:tsRecord)
-     }
+        Var tagSets = extract(Var:timeSeriesPoints, $.tag_set)
+        Var host = null
+        Var tagListLength = Var:tagSets.length()
+        Var emptyListCount = 0
+        if Var:tagListLength != Var:emptyListCount {
+            Var:host = Var:tagSets[0]
+        }
+
+        Var points = extract(Var:timeSeriesPoints, $.pointlist)
+        foreach point in Var:points {
+            Var timestamp = Var:point[0]
+            Var value = Var:point[1]
+            if Var:value != Var:nullObject {
+              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
+               Var:returnList.append(Var:tsRecord)
+            }
+        }
 }
 }
-
-
-
 
 return Var:returnList

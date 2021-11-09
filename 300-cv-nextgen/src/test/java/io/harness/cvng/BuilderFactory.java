@@ -330,6 +330,7 @@ public class BuilderFactory {
             .serviceIdentifier(context.getServiceIdentifier())
             .envIdentifier(context.getEnvIdentifier())
             .connectorIdentifier("connectorRef")
+            .dashboardId("dashboardId")
             .dashboardName("dashboardName")
             .category(CVMonitoringCategory.PERFORMANCE);
   }

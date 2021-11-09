@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 @Slf4j
 public class DatadogServiceImpl implements DatadogService {
 
@@ -115,7 +116,7 @@ public class DatadogServiceImpl implements DatadogService {
 
     @Override
     public List<TimeSeriesSampleDTO> getTimeSeriesPoints(String accountId, String connectorIdentifier, String orgIdentifier,
-                                                        String projectIdentifier, String query, String tracingId) {
+                                                         String projectIdentifier, String query, String tracingId) {
         Instant now = DateTimeUtils.roundDownTo1MinBoundary(Instant.now());
 
         DataCollectionRequest<DatadogConnectorDTO> request =
@@ -150,7 +151,8 @@ public class DatadogServiceImpl implements DatadogService {
                     .limit(1000L)
                     .build();
 
-            Type type = new TypeToken<List<LinkedHashMap>>() {}.getType();
+            Type type = new TypeToken<List<LinkedHashMap>>() {
+            }.getType();
             return performRequestAndGetDataResult(request, type, accountId, connectorIdentifier, orgIdentifier, tracingId, projectIdentifier);
         } catch (Exception ex) {
             String msg = "Exception while trying to fetch sample data. Please ensure that the query is valid.";

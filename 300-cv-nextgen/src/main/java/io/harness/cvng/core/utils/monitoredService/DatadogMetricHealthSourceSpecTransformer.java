@@ -22,22 +22,27 @@ public class DatadogMetricHealthSourceSpecTransformer implements CVConfigToHealt
         cvConfigs.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
             DatadogMetricHealthDefinition metricDefinition =
                     DatadogMetricHealthDefinition.builder()
+                            .dashboardId(cvConfig.getDashboardId())
                             .dashboardName(cvConfig.getDashboardName())
                             .metricName(metricInfo.getMetricName())
-                            .serviceInstanceTag(metricInfo.getServiceInstanceField())
+                            .metric(metricInfo.getMetric())
+                            .serviceInstanceIdentifierTag(metricInfo.getServiceInstanceIdentifierTag())
                             .query(metricInfo.getQuery())
+                            .groupingQuery(metricInfo.getGroupingQuery())
+                            .aggregation(metricInfo.getAggregation())
                             .isManualQuery(metricInfo.isManualQuery())
                             .riskProfile(
                                     RiskProfile.builder()
                                             .category(cvConfig.getMetricPack().getCategory())
                                             .metricType(metricInfo.getMetricType())
-                                            .thresholdTypes(cvConfig.getThresholdTypeOfMetric(metricInfo.getMetricName(), cvConfig))
+                                            .thresholdTypes(cvConfig.getThresholdTypeOfMetric(metricInfo.getMetric(), cvConfig))
                                             .build())
                             .build();
 
             metricDefinitions.add(metricDefinition);
         }));
         return DatadogMetricHealthSourceSpec.builder()
+                .feature(cvConfigs.get(0).getProductName())
                 .metricDefinitions(metricDefinitions)
                 .connectorRef(cvConfigs.get(0).getConnectorIdentifier())
                 .build();

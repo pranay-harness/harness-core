@@ -27,6 +27,7 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 @EqualsAndHashCode(callSuper = true)
 public class DatadogMetricCVConfig extends MetricCVConfig {
     private List<MetricInfo> metricInfoList;
+    private String dashboardId;
     private String dashboardName;
 
     public void fromMetricDefinitions(List<DatadogMetricHealthDefinition> datadogMetricDefinitions, CVMonitoringCategory category) {
@@ -35,6 +36,7 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
             metricInfoList = new ArrayList<>();
         }
         dashboardName = datadogMetricDefinitions.get(0).getDashboardName();
+        dashboardId = datadogMetricDefinitions.get(0).getDashboardId();
         MetricPack metricPack = MetricPack.builder()
                 .category(category)
                 .accountId(getAccountId())
@@ -47,19 +49,24 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
             TimeSeriesMetricType metricType = definition.getRiskProfile().getMetricType();
             metricInfoList.add(MetricInfo.builder()
                     .metricName(definition.getMetricName())
+                    .metric(definition.getMetric())
                     .query(definition.getQuery())
+                    .groupingQuery(definition.getGroupingQuery())
                     .metricType(metricType)
+                    .aggregation(definition.getAggregation())
                     .isManualQuery(definition.isManualQuery())
-                    .serviceInstanceField(definition.getServiceInstanceTag())
+                    .serviceInstanceIdentifierTag(definition.getServiceInstanceIdentifierTag())
                     .build());
 
             // add this metric to the pack and the corresponding thresholds
             Set<TimeSeriesThreshold> thresholds = getThresholdsToCreateOnSaveForCustomProviders(
-                    definition.getMetricName(), metricType, definition.getRiskProfile().getThresholdTypes());
+                    definition.getMetric(),
+                    metricType,
+                    definition.getRiskProfile().getThresholdTypes());
             metricPack.addToMetrics(MetricPack.MetricDefinition.builder()
                     .thresholds(new ArrayList<>(thresholds))
                     .type(metricType)
-                    .name(definition.getMetricName())
+                    .name(definition.getMetric())
                     .included(true)
                     .build());
         });
@@ -71,15 +78,23 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
     @FieldNameConstants(innerTypeName = "MetricInfoKeys")
     public static class MetricInfo {
         private String metricName;
+        private String metric;
         private String query;
+        private String groupingQuery;
+        private String aggregation;
         private TimeSeriesMetricType metricType;
         boolean isManualQuery;
-        private String serviceInstanceField;
+        private String serviceInstanceIdentifierTag;
     }
+
     @Override
     protected void validateParams() {
-      checkNotNull(metricInfoList, generateErrorMessageFromParam(DatadogMetricCVConfig.DatadogCVConfigKeys.metricInfoList));
-
+        checkNotNull(metricInfoList, generateErrorMessageFromParam(DatadogMetricCVConfig.DatadogCVConfigKeys.metricInfoList));
+        metricInfoList.forEach(metricInfo -> {
+            if (metricInfo.getServiceInstanceIdentifierTag() != null) {
+                checkNotNull(metricInfo.getGroupingQuery(), generateErrorMessageFromParam(MetricInfo.MetricInfoKeys.groupingQuery));
+            }
+        });
     }
 
     @Override
@@ -96,10 +111,11 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
             extends MetricCVConfigUpdatableEntity<DatadogMetricCVConfig, DatadogMetricCVConfig> {
         @Override
         public void setUpdateOperations(UpdateOperations<DatadogMetricCVConfig> updateOperations,
-                                        DatadogMetricCVConfig stackdriverCVConfig) {
-            setCommonOperations(updateOperations, stackdriverCVConfig);
-            updateOperations.set(DatadogCVConfigKeys.metricInfoList, stackdriverCVConfig.getMetricInfoList());
-            updateOperations.set(DatadogCVConfigKeys.dashboardName, stackdriverCVConfig.getDashboardName());
+                                        DatadogMetricCVConfig datadogMetricCVConfig) {
+            setCommonOperations(updateOperations, datadogMetricCVConfig);
+            updateOperations.set(DatadogCVConfigKeys.metricInfoList, datadogMetricCVConfig.getMetricInfoList());
+            updateOperations.set(DatadogCVConfigKeys.dashboardName, datadogMetricCVConfig.getDashboardName());
+            updateOperations.set(DatadogCVConfigKeys.dashboardId, datadogMetricCVConfig.getDashboardId());
         }
     }
 }
