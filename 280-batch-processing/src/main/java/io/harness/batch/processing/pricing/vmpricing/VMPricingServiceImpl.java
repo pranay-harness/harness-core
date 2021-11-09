@@ -37,21 +37,20 @@ public class VMPricingServiceImpl implements VMPricingService {
 
   @Override
   public ProductDetails getComputeVMPricingInfo(String instanceType, String region, CloudProvider cloudProvider) {
-    if (ImmutableSet.of("switzerlandnorth", "switzerlandwest", "germanywestcentral").contains(region)) {
-      region = "uksouth";
-    }
+    String supportedRegion = VMPricingService.getSimilarRegionIfNotSupportedByBanzai(region);
 
-    ProductDetails vmComputePricingInfo = getVMPricingInfoFromCacheIfPresent(instanceType, region, cloudProvider);
+    ProductDetails vmComputePricingInfo =
+        getVMPricingInfoFromCacheIfPresent(instanceType, supportedRegion, cloudProvider);
 
     if (vmComputePricingInfo == null
         && (ImmutableSet.of("n2-standard-16", "n2-standard-2").contains(instanceType)
             || GCPCustomInstanceDetailProvider.isCustomGCPInstance(instanceType, cloudProvider))) {
-      vmComputePricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, region);
+      vmComputePricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, supportedRegion);
     }
 
     if (null == vmComputePricingInfo) {
-      refreshCache(region, COMPUTE_SERVICE, cloudProvider);
-      vmComputePricingInfo = getVMPricingInfoFromCacheIfPresent(instanceType, region, cloudProvider);
+      refreshCache(supportedRegion, COMPUTE_SERVICE, cloudProvider);
+      vmComputePricingInfo = getVMPricingInfoFromCacheIfPresent(instanceType, supportedRegion, cloudProvider);
     }
 
     return vmComputePricingInfo;
