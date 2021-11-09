@@ -1,6 +1,7 @@
 # bucket for cloudfunctions zip storage
 resource "google_storage_bucket" "bucket1" {
   name = "ce-functions-deploy-${var.deployment}"
+  location = "us"
   project = "${var.projectId}"
 }
 

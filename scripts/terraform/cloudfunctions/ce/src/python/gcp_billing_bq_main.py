@@ -196,22 +196,29 @@ def syncDataset(jsonData):
     # for US region
     destination = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
     if jsonData["isFreshSync"]:
-        # Fresh sync
-        query = """  SELECT * FROM `%s.%s.gcp_billing_export_v1_*`;
+        # Fresh sync. Sync only for 45 days.
+        query = """  SELECT * FROM `%s.%s.gcp_billing_export_v1_*` WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 45 DAY);
         """ % (jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"])
         # Configure the query job.
         print_(" Destination :%s" % destination)
         job_config = bigquery.QueryJobConfig(
             destination=destination,
             write_disposition=bigquery.job.WriteDisposition.WRITE_TRUNCATE,
-            time_partitioning=bigquery.table.TimePartitioning()
+            time_partitioning=bigquery.table.TimePartitioning(),
+            query_parameters=[
+                bigquery.ScalarQueryParameter(
+                    "run_date",
+                    "DATE",
+                    datetime.datetime.utcnow().date(),
+                )
+            ]
         )
     else:
-        # Sync past 3 days only
+        # Sync past 3 days only. Specify columns here explicitely.
         query = """  DELETE FROM `%s` 
                 WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY); 
-            INSERT INTO `%s` 
-                SELECT * FROM `%s.%s.gcp_billing_export_v1_*`
+            INSERT INTO `%s` (billing_account_id,service,sku,usage_start_time,usage_end_time,project,labels,system_labels,location,export_time,cost,currency,currency_conversion_rate,usage,credits,invoice,cost_type,adjustment_info)
+                SELECT billing_account_id,service,sku,usage_start_time,usage_end_time,project,labels,system_labels,location,export_time,cost,currency,currency_conversion_rate,usage,credits,invoice,cost_type,adjustment_info FROM `%s.%s.gcp_billing_export_v1_*`
                 WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);
         """ % (destination, destination,
                jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"])
