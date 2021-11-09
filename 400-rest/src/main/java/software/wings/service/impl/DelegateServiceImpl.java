@@ -279,6 +279,7 @@ public class DelegateServiceImpl implements DelegateService {
    * The constant DELEGATE_DIR.
    */
   private static final String HARNESS_DELEGATE = "harness-delegate";
+  private static final String HARNESS_NG_DELEGATE = "harness-ng-delegate";
   public static final String DELEGATE_DIR = HARNESS_DELEGATE;
   public static final String DOCKER_DELEGATE = HARNESS_DELEGATE + "-docker";
   public static final String KUBERNETES_DELEGATE = HARNESS_DELEGATE + "-kubernetes";
@@ -562,14 +563,14 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails) {
-    validateSetupDetails(accountId, delegateSetupDetails);
+    validateKubernetesSetupDetails(accountId, delegateSetupDetails);
     return delegateSetupDetails;
   }
 
   @Override
   public File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
       String verificationServiceUrl, MediaType fileFormat) throws IOException {
-    validateSetupDetails(accountId, delegateSetupDetails);
+    validateKubernetesSetupDetails(accountId, delegateSetupDetails);
 
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
@@ -665,7 +666,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void validateSetupDetails(String accountId, DelegateSetupDetails delegateSetupDetails) {
+  private void validateKubernetesSetupDetails(String accountId, DelegateSetupDetails delegateSetupDetails) {
     if (null == delegateSetupDetails) {
       throw new InvalidRequestException("Delegate Setup Details must be provided.", USER);
     }
@@ -690,6 +691,10 @@ public class DelegateServiceImpl implements DelegateService {
       throw new InvalidRequestException("K8s permission type must be provided.", USER);
     } else if (k8sConfigDetails.getK8sPermissionType() == NAMESPACE_ADMIN && isBlank(k8sConfigDetails.getNamespace())) {
       throw new InvalidRequestException("K8s namespace must be provided for this type of permission.", USER);
+    }
+
+    if (!KUBERNETES.equals(delegateSetupDetails.getDelegateType())) {
+      throw new InvalidRequestException("Delegate type must be KUBERNETES.");
     }
   }
 
@@ -1461,7 +1466,6 @@ public class DelegateServiceImpl implements DelegateService {
   /**
    * Returns JreConfig for a given account Id on the basis of UPGRADE_JRE.
    *
-   * @param accountId
    * @return
    */
   private JreConfig getJreConfig() {
@@ -2123,6 +2127,7 @@ public class DelegateServiceImpl implements DelegateService {
                                       .name(delegateGroup.getName())
                                       .size(delegateGroup.getSizeDetails().getSize())
                                       .orgIdentifier(orgIdentifier)
+                                      .delegateType(delegateGroup.getDelegateType())
                                       .projectIdentifier(projectIdentifier)
                                       .build())
             .build());
@@ -2176,6 +2181,7 @@ public class DelegateServiceImpl implements DelegateService {
                                       .size(delegateGroup.getSizeDetails().getSize())
                                       .orgIdentifier(orgId)
                                       .projectIdentifier(projectId)
+                                      .delegateType(delegateGroup.getDelegateType())
                                       .build())
             .build());
 
@@ -2348,6 +2354,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                       .orgIdentifier(delegateParams.getOrgIdentifier())
                                                       .projectIdentifier(delegateParams.getProjectIdentifier())
                                                       .description(delegateParams.getDescription())
+                                                      .delegateType(delegateParams.getDelegateType())
                                                       .build();
       final DelegateGroup delegateGroup =
           upsertDelegateGroup(delegateParams.getDelegateName(), delegateParams.getAccountId(), delegateSetupDetails);
@@ -2648,6 +2655,7 @@ public class DelegateServiceImpl implements DelegateService {
       return persistence.createQuery(Delegate.class)
           .filter(DelegateKeys.accountId, accountId)
           .filter(DelegateKeys.delegateName, delegateName)
+          .filter(DelegateKeys.ng, true)
           .asKeyList()
           .stream()
           .map(key -> (String) key.getId())
@@ -2849,6 +2857,7 @@ public class DelegateServiceImpl implements DelegateService {
     String description = delegateSetupDetails != null ? delegateSetupDetails.getDescription() : null;
     String orgIdentifier = delegateSetupDetails != null ? delegateSetupDetails.getOrgIdentifier() : null;
     String projectIdentifier = delegateSetupDetails != null ? delegateSetupDetails.getProjectIdentifier() : null;
+    String delegateType = delegateSetupDetails != null ? delegateSetupDetails.getDelegateType() : KUBERNETES;
     DelegateSizeDetails sizeDetails = delegateSetupDetails != null
         ? fetchAvailableSizes()
               .stream()
@@ -2881,8 +2890,7 @@ public class DelegateServiceImpl implements DelegateService {
             .set(DelegateGroupKeys.name, name)
             .set(DelegateGroupKeys.accountId, accountId)
             .set(DelegateGroupKeys.ng, isNg)
-            .set(DelegateGroupKeys.delegateType, KUBERNETES); // TODO: Add support for other delegates also,once UI
-                                                              // passes the delegateType in DelegateSetupDetails
+            .set(DelegateGroupKeys.delegateType, delegateType);
 
     if (k8sConfigDetails != null) {
       setUnset(updateOperations, DelegateGroupKeys.k8sConfigDetails, k8sConfigDetails);
@@ -3677,5 +3685,115 @@ public class DelegateServiceImpl implements DelegateService {
       return delegateServiceClassicGrpcClient.expireTask(accountId, delegateTaskId);
     }
     return delegateTaskServiceClassic.expireTask(accountId, delegateTaskId);
+  }
+
+  public DelegateSizeDetails fetchDefaultDelegateSize() {
+    try (InputStream inputStream =
+             this.getClass().getClassLoader().getResourceAsStream("delegatesizes/default_size.json")) {
+      String fileContent = IOUtils.toString(inputStream, UTF_8);
+      return JsonUtils.asObject(fileContent, DelegateSizeDetails.class);
+
+    } catch (Exception e) {
+      log.error("Unexpected exception occurred while trying read default available delegate size from resource file.");
+    }
+
+    return null;
+  }
+
+  @Override
+  public void validateDockerSetupDetails(
+      String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType) {
+    if (delegateSetupDetails == null) {
+      throw new InvalidRequestException("Delegate Setup Details must be provided.");
+    }
+
+    if (delegateType != null && !delegateType.equals(delegateSetupDetails.getDelegateType())) {
+      throw new InvalidRequestException(String.format("Delegate type must be %s.", delegateType));
+    }
+
+    if (isBlank(delegateSetupDetails.getName())) {
+      throw new InvalidRequestException("Delegate Name must be provided.");
+    }
+    Query<DelegateGroup> query = persistence.createQuery(DelegateGroup.class)
+                                     .filter(DelegateGroupKeys.accountId, accountId)
+                                     .filter(DelegateGroupKeys.ng, true)
+                                     .filter(DelegateGroupKeys.name, delegateSetupDetails.getName());
+    if (query.get() != null) {
+      throw new InvalidRequestException("Delegate Name must be unique across account.");
+    }
+  }
+
+  @Override
+  public File downloadNgDocker(String managerHost, String verificationServiceUrl, String accountId,
+      DelegateSetupDetails delegateSetupDetails) throws IOException {
+    validateDockerSetupDetails(accountId, delegateSetupDetails, DOCKER);
+
+    File composeYaml = File.createTempFile(HARNESS_NG_DELEGATE + "-docker-compose", YAML);
+
+    ImmutableMap<String, String> scriptParams = getScriptParametersForTemplate(
+        managerHost, verificationServiceUrl, accountId, delegateSetupDetails.getName(), delegateSetupDetails);
+
+    saveProcessedTemplate(scriptParams, composeYaml, HARNESS_NG_DELEGATE + "-docker-compose.yaml.ftl");
+
+    return composeYaml;
+  }
+
+  @Override
+  public String createDelegateGroup(String accountId, DelegateSetupDetails delegateSetupDetails) {
+    validateDockerSetupDetails(accountId, delegateSetupDetails, DOCKER);
+    DelegateGroup delegateGroup = upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails);
+    return delegateGroup.getUuid();
+  }
+
+  private ImmutableMap<String, String> getScriptParametersForTemplate(String managerHost, String verificationServiceUrl,
+      String accountId, String delegateName, DelegateSetupDetails delegateSetupDetails) {
+    String version;
+    if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+      List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+      version = delegateVersions.get(delegateVersions.size() - 1);
+    } else {
+      version = EMPTY_VERSION;
+    }
+
+    DelegateSizeDetails sizeDetails = getDelegateSizeDetails(delegateSetupDetails);
+    ScriptRuntimeParamMapInquiry scriptRuntimeParamMapInquiry =
+        ScriptRuntimeParamMapInquiry.builder()
+            .delegateTags(delegateSetupDetails != null && isNotEmpty(delegateSetupDetails.getTags())
+                    ? String.join(",", delegateSetupDetails.getTags())
+                    : "")
+            .delegateDescription(delegateSetupDetails != null ? delegateSetupDetails.getDescription() : null)
+            .delegateOrgIdentifier(delegateSetupDetails != null ? delegateSetupDetails.getOrgIdentifier() : null)
+            .delegateProjectIdentifier(
+                delegateSetupDetails != null ? delegateSetupDetails.getProjectIdentifier() : null)
+            .delegateNamespace(delegateSetupDetails != null && delegateSetupDetails.getK8sConfigDetails() != null
+                    ? delegateSetupDetails.getK8sConfigDetails().getNamespace()
+                    : EMPTY)
+            .delegateXmx(String.valueOf(sizeDetails.getRam()))
+            .delegateCpu(sizeDetails.getCpu())
+            .delegateTaskLimit(sizeDetails.getTaskLimit())
+            .accountId(accountId)
+            .version(version)
+            .managerHost(managerHost)
+            .verificationHost(verificationServiceUrl)
+            .delegateName(delegateName)
+            .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .ceEnabled(false)
+            .build();
+
+    ImmutableMap<String, String> paramMap = getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry);
+
+    if (isEmpty(paramMap)) {
+      throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
+    }
+
+    return paramMap;
+  }
+
+  private DelegateSizeDetails getDelegateSizeDetails(DelegateSetupDetails delegateSetupDetails) {
+    return fetchAvailableSizes()
+        .stream()
+        .filter(size -> delegateSetupDetails != null && (size.getSize() == delegateSetupDetails.getSize()))
+        .findFirst()
+        .orElse(fetchDefaultDelegateSize());
   }
 }
