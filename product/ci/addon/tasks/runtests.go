@@ -1,10 +1,12 @@
 package tasks
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mattn/go-zglob"
 	"io"
 	"os"
 	"path/filepath"
@@ -171,6 +173,103 @@ func (r *runTestsTask) Run(ctx context.Context) (map[string]string, int32, error
 	return nil, r.numRetries, err
 }
 
+// get list of all file paths matching a provided regex
+func getFiles(path string) ([]string, error) {
+	matches, err := zglob.Glob(path)
+	if err != nil {
+		return []string{}, err
+	}
+	return matches, err
+}
+
+// detect java packages by reading all the files and parsing their package names
+func (r *runTestsTask) detectJavaPkgs() ([]string, error) {
+	plist := []string{}
+	excludeList := []string{"com.google"} // exclude any instances of these packages from the package list
+	wp, err := external.GetWrkspcPath()
+	if err != nil {
+		return plist, err
+	}
+	files, err := getFiles(fmt.Sprintf("%s/**/*.java", wp))
+	if err != nil {
+		return plist, err
+	}
+	kotlinFiles, err := getFiles(fmt.Sprintf("%s/**/*.kt", wp))
+	if err != nil {
+		return plist, err
+	}
+	// Create a list with all *.java and *.kt file paths
+	files = append(files, kotlinFiles...)
+	m := make(map[string]struct{})
+	for _, f := range files {
+		absPath, err := filepath.Abs(f)
+		if err != nil {
+			r.log.Errorw("could not get absolute path", "file_name", f, err)
+			continue
+		}
+		err = r.fs.ReadFile(absPath, func(fr io.Reader) error {
+			scanner := bufio.NewScanner(fr)
+			commentOpen := false
+			for scanner.Scan() {
+				l := strings.TrimSpace(scanner.Text())
+				if strings.Contains(l, "/*") {
+					commentOpen = true
+				}
+				if strings.Contains(l, "*/") {
+					commentOpen = false
+				}
+				if commentOpen || strings.HasPrefix(l, "//") {
+					continue
+				}
+				prev := ""
+				pkg := ""
+				for _, token := range strings.Fields(l) {
+					if prev == "package" {
+						pkg = token
+						break
+					}
+					prev = token
+				}
+				if pkg != "" {
+					pkg = strings.TrimSuffix(pkg, ";")
+					tokens := strings.Split(pkg, ".")
+					prefix := false
+					for _, exclude := range excludeList {
+						if strings.HasPrefix(pkg, exclude) {
+							r.log.Infow(fmt.Sprintf("Found package: %s having same package prefix as: %s. Excluding this package from the list...", pkg, exclude))
+							prefix = true
+							break
+						}
+					}
+					if !prefix {
+						pkg = tokens[0]
+						if len(tokens) > 1 {
+							pkg = pkg + "." + tokens[1]
+						}
+					}
+					if pkg == "" {
+						continue
+					}
+					if _, ok := m[pkg]; !ok {
+						plist = append(plist, pkg)
+						m[pkg] = struct{}{}
+					}
+					return nil
+				}
+			}
+			if err := scanner.Err(); err != nil {
+				r.log.Errorw(fmt.Sprintf("could not scan all the files. Error: %s", err))
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			r.log.Errorw("had issues while trying to auto detect java packages", err)
+		}
+	}
+	return plist, nil
+}
+
 // createJavaAgentArg creates the ini file which is required as input to the java agent
 // and returns back the arg to be added to the test command for generation of partial
 // call graph.
@@ -181,6 +280,16 @@ func (r *runTestsTask) createJavaAgentArg() (string, error) {
 	if err != nil {
 		r.log.Errorw(fmt.Sprintf("could not create nested directory %s", dir), zap.Error(err))
 		return "", err
+	}
+	if r.packages == "" {
+		r.log.Infow("trying to auto detect Java packages ... ")
+		plist, err := r.detectJavaPkgs()
+		if err != nil {
+			r.log.Errorw("could not auto detect Java packages", err)
+		} else {
+			r.log.Infow(fmt.Sprintf("auto detected Java packages: %s", plist))
+			r.packages = strings.Join(plist, ",")
+		}
 	}
 	data := fmt.Sprintf(`outDir: %s
 logLevel: 0
