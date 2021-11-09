@@ -31,8 +31,11 @@ else
 fi
 
 if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
+    echo "enable_appD=true"
     mkdir /opt/harness/AppServerAgent-20.8.0.30686 && unzip AppServerAgent-20.8.0.30686.zip -d /opt/harness/AppServerAgent-20.8.0.30686
+    echo "unzip complete"
     node_name="-Dappdynamics.agent.nodeName=$(hostname)"
+    echo "node name added"
     JAVA_OPTS=$JAVA_OPTS" -javaagent:/opt/harness/AppServerAgent-20.8.0.30686/javaagent.jar -Dappdynamics.jvm.shutdown.mark.node.as.historical=true"
     JAVA_OPTS="$JAVA_OPTS $node_name"
     echo "Using Appdynamics java agent"
