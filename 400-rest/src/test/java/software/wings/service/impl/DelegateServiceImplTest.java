@@ -110,6 +110,10 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -131,6 +135,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.slf4j.LoggerFactory;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
@@ -479,12 +484,20 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void testHandleDriverResponseWithNonExistingDriver() {
     DelegateTask delegateTask = DelegateTask.builder().build();
     DelegateTaskResponse delegateTaskResponse = mock(DelegateTaskResponse.class);
+    Logger logger = (Logger) LoggerFactory.getLogger(DelegateTaskServiceClassicImpl.class);
+    logger.setLevel(Level.ALL);
+    ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+    listAppender.start();
+    logger.addAppender(listAppender);
 
     when(delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId())).thenReturn(null);
 
     delegateTaskServiceClassic.handleDriverResponse(delegateTask, delegateTaskResponse);
 
-    verify(kryoSerializer, never()).asDeflatedBytes(any());
+    assertThat(listAppender.list).size().isEqualTo(1);
+    assertThat(listAppender.list.get(0).getMessage())
+        .isEqualTo("No DelegateCallbackService found, will not publish response...");
+    assertThat(listAppender.list.get(0).getLevel()).isEqualTo(Level.DEBUG);
   }
 
   @Test

@@ -1707,6 +1707,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     DelegateCallbackService delegateCallbackService =
         delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
     if (delegateCallbackService == null) {
+      log.debug("No DelegateCallbackService found, will not publish response...");
       return;
     }
 

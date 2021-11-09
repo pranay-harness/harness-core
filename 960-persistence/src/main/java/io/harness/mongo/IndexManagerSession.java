@@ -366,7 +366,7 @@ public class IndexManagerSession {
 
     switch (mode) {
       case AUTO:
-        log.warn("Creating index {} {}", indexCreator.getOptions().toString(), indexCreator.getKeys().toString());
+        log.info("Creating index {} {}", indexCreator.getOptions().toString(), indexCreator.getKeys().toString());
         for (int i = 0; i < 10; i++) {
           try {
             indexCreator.getCollection().createIndex(indexCreator.getKeys(), indexCreator.getOptions());
