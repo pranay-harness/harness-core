@@ -120,6 +120,7 @@ Prashant Pal prashant.pal@harness.io
 Prashant Sharma prashant.sharma@harness.io
 prashantsharma04 prashant.sharma@harness.io
 Prasun Banerjee prasun.banerjee@harness.io
+Prateek Barapatre prateek.barapatre@harness.io
 Praveen Kambam Sugavanam praveen.sugavanam@harness.io
 Praveen Sugavanam praveen.sugavanam@harness.io
 Puneet Saraswat puneet.saraswat@harness.io
