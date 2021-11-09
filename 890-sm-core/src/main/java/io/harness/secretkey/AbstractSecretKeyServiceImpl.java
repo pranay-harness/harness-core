@@ -8,7 +8,6 @@ import io.harness.repositories.SecretKeyRepository;
 import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.util.Optional;
-import javax.crypto.spec.SecretKeySpec;
 
 @OwnedBy(HarnessTeam.PL)
 public abstract class AbstractSecretKeyServiceImpl implements SecretKeyService {
@@ -18,8 +17,7 @@ public abstract class AbstractSecretKeyServiceImpl implements SecretKeyService {
   @Override
   public SecretKey createSecretKey() {
     new SecureRandom().nextBytes(nonce);
-    return secretKeyRepository.save(
-        SecretKey.builder().secretKeySpec(new SecretKeySpec(nonce, getAlgorithm())).build());
+    return secretKeyRepository.save(SecretKey.builder().key(nonce).algorithm(getAlgorithm()).build());
   }
 
   @Override

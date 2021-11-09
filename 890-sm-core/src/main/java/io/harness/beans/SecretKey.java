@@ -18,10 +18,15 @@ import org.springframework.data.annotation.Id;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@FieldNameConstants(innerTypeName = "SecretKeys")
+@FieldNameConstants(innerTypeName = "SecretKeyKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "SecretKey", noClassnameStored = true)
 public class SecretKey implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
-  private SecretKeySpec secretKeySpec;
+  private byte[] key;
+  private String algorithm;
+
+  public SecretKeySpec getSecretKeySpec() {
+    return new SecretKeySpec(key, algorithm);
+  }
 }

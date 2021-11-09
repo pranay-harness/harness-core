@@ -23,8 +23,6 @@ import io.harness.repositories.LocalEncryptionMigrationInfoRepository;
 import io.harness.secrets.SecretsDao;
 import io.harness.security.encryption.EncryptionType;
 
-import software.wings.beans.Account;
-
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.Optional;
@@ -49,8 +47,8 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
 
     accountIds.forEach(accountId -> {
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
-           AcquiredLock lock = persistentLocker.tryToAcquireLock(
-               Account.class, lockPrefix + featureFlag + ":" + accountId, Duration.ofSeconds(lockExpiry))) {
+           AcquiredLock lock = persistentLocker.tryToAcquireLock(LocalEncryptionMigrationInfo.class,
+               lockPrefix + featureFlag + ":" + accountId, Duration.ofSeconds(lockExpiry))) {
         if (lock == null) {
           log.error("Unable to fetch lock for running local encryption migration for feature: {} for account : {}",
               featureFlag, accountId);
