@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDC)
-public class JiraVariableCreator extends GenericStepVariableCreator {
+public class JiraStepVariableCreator extends GenericStepVariableCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
     Set<String> strings = new HashSet<>();
