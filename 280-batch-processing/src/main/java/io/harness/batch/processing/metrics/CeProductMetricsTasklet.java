@@ -4,6 +4,8 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.telemetry.Destination;
+import io.harness.telemetry.TelemetryReporter;
 
 import software.wings.beans.Account;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
@@ -15,6 +17,9 @@ import com.segment.analytics.messages.GroupMessage;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -31,6 +36,7 @@ public class CeProductMetricsTasklet implements Tasklet {
   @Autowired private ProductMetricsService productMetricsService;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private CeCloudMetricsService ceCloudMetricsService;
+  @Autowired TelemetryReporter telemetryReporter;
   private JobParameters parameters;
 
   @Override
@@ -45,8 +51,19 @@ public class CeProductMetricsTasklet implements Tasklet {
                         .minus(3, ChronoUnit.DAYS);
       log.info("Sending CE account traits through Segment group call.");
       sendStatsToSegment(accountId, start, end);
+      nextGenInstrumentation(accountId, start, end);
     }
     return null;
+  }
+
+  private void nextGenInstrumentation(String accountId, Instant start, Instant end) {
+    HashMap<String, Object> properties = new HashMap<>();
+    // TODO: Add Properties based on the Metric Needed in V1
+
+    Map<Destination, Boolean> destinations = new EnumMap(Destination.class) {
+      { put(Destination.AMPLITUDE, true); }
+    };
+    telemetryReporter.sendGroupEvent(accountId, properties, destinations);
   }
 
   public void sendStatsToSegment(String accountId, Instant start, Instant end) {
