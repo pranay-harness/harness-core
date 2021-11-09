@@ -301,6 +301,40 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
+  public void checkNotSupportedRegionsAreReplaced() throws Exception {
+    final String notSupportedRegion = "germanywestcentral";
+
+    k8sServiceProvider.setInstanceCategory(InstanceCategory.SPOT);
+    k8sServiceProvider.setRegion(notSupportedRegion);
+
+    when(k8sRecommendationDAO.getServiceProvider(any(), eq(nodePoolId))).thenReturn(k8sServiceProvider);
+
+    ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    when(banzaiRecommenderClient
+             .getRecommendation(eq(k8sServiceProvider.getCloudProvider().getCloudProviderName()),
+                 eq(k8sServiceProvider.getCloudProvider().getK8sService()), stringArgumentCaptor.capture(), any())
+             .execute())
+        .thenReturn(Response.success(getRecommendationResponse()));
+
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    // Node Recommendation is fetched for the default region
+    assertThat(stringArgumentCaptor.getValue()).isEqualTo("uksouth");
+
+    ArgumentCaptor<K8sServiceProvider> serviceProviderCaptor = ArgumentCaptor.forClass(K8sServiceProvider.class);
+    verify(k8sRecommendationDAO, times(1))
+        .insertNodeRecommendationResponse(any(), any(), any(), serviceProviderCaptor.capture(), any());
+
+    K8sServiceProvider serviceProvider = serviceProviderCaptor.getValue();
+
+    assertThat(serviceProvider).isNotNull();
+    // region replaced with default one
+    assertThat(serviceProvider.getRegion()).isEqualTo("uksouth");
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
   public void testTotalPriceIsCorrectInOnDemandRecommendation() throws Exception {
     assertThat(tasklet.execute(null, chunkContext)).isNull();
 
