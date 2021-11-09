@@ -4,13 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.connectors.CEAWSConnectorValidator;
-import io.harness.ccm.connectors.CEAzureConnectorValidator;
-import io.harness.ccm.connectors.CEGcpConnectorValidator;
+import io.harness.ccm.connectors.AbstractCEConnectorValidator;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.rest.RestResponse;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -38,18 +36,16 @@ public class CCMConnectorValidationResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Validate connector", nickname = "validate connector")
-  public RestResponse<ConnectorValidationResult> testConnection(
+  public ResponseDTO<ConnectorValidationResult> testConnection(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ConnectorResponseDTO connectorResponseDTO) {
     // Implement validation methods for each connector type
     ConnectorType connectorType = connectorResponseDTO.getConnector().getConnectorType();
-    log.info("Connector response dto {}", connectorResponseDTO);
-    if (connectorType.equals(ConnectorType.CE_AWS)) {
-      return new RestResponse(CEAWSConnectorValidator.validate(connectorResponseDTO, accountId));
-    } else if (connectorType.equals(ConnectorType.CE_AZURE)) {
-      return new RestResponse(CEAzureConnectorValidator.validate(connectorResponseDTO, accountId));
-    } else if (connectorType.equals(ConnectorType.GCP_CLOUD_COST)) {
-      return new RestResponse(CEGcpConnectorValidator.validate(connectorResponseDTO, accountId));
+    AbstractCEConnectorValidator ceConnectorValidator = io.harness.ccm.connectors.CEConnectorValidatorFactory.getValidator(connectorType);
+    if (ceConnectorValidator != null) {
+      log.info("Connector response dto {}", connectorResponseDTO);
+      return ResponseDTO.newResponse(ceConnectorValidator.validate(connectorResponseDTO, accountId));
+    } else {
+      return ResponseDTO.newResponse();
     }
-    return new RestResponse<>();
   }
 }

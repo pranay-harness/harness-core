@@ -7,6 +7,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.utils.RestCallToNGManagerClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,6 +42,7 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
     log.info("Calling ce-nextgen");
-    return (ConnectorValidationResult) ceNextGenResourceClient.testConnection(accountIdentifier, connectorResponseDTO);
+    return RestCallToNGManagerClientUtils.execute(
+        ceNextGenResourceClient.testConnection(accountIdentifier, connectorResponseDTO));
   }
 }

@@ -8,7 +8,6 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.ng.core.dto.ResponseDTO;
 
-import java.util.List;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -22,7 +21,7 @@ public interface CENextGenResourceClient {
 
   @GET(BASE_API + "/") Call<ResponseDTO<Boolean>> test();
 
-  @POST("/testconnection")
+  @POST("/ccm/api/testconnection")
   Call<ResponseDTO<ConnectorValidationResult>> testConnection(
       @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Body ConnectorResponseDTO connectorResponseDTO);

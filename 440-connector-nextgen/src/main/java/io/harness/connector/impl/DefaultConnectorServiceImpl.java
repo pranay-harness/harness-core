@@ -625,6 +625,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
               connectorInfo.getConnectorType().equals(ConnectorType.CE_AZURE)) {
         validationResult = connectionValidator.validate(connectorResponseDTO,
                 accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        log.info("validation result {}", validationResult);
       } else {
         validationResult = connectionValidator.validate(connectorInfo.getConnectorConfig(),
                 accountIdentifier, orgIdentifier, projectIdentifier, identifier);

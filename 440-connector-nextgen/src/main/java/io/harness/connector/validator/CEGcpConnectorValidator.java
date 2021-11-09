@@ -28,7 +28,6 @@ public class CEGcpConnectorValidator extends AbstractConnectorValidator {
   public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
     log.info("Calling ce-nextgen");
-    log.info("ceNextGenResourceClient {}", ceNextGenResourceClient);
     return RestCallToNGManagerClientUtils.execute(
         ceNextGenResourceClient.testConnection(accountIdentifier, connectorResponseDTO));
   }

@@ -271,6 +271,16 @@ public class EventJobScheduler {
     }
   }
 
+  @Scheduled(cron = "${scheduler-jobs-config.connectorHealthUpdateJobCron}")
+  public void runConnectorHealthUpdateJob() {
+    try {
+      budgetCostUpdateService.updateCosts();
+      log.info("Costs updated for budgets");
+    } catch (Exception ex) {
+      log.error("Exception while running runBudgetCostUpdateJob", ex);
+    }
+  }
+
   // log hit/miss rate and size of the LoadingCache periodically for tuning
   @Scheduled(cron = "0 0 */7 ? * *")
   public void printCacheStats() throws IllegalAccessException {

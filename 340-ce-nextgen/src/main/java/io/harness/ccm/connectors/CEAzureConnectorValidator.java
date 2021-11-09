@@ -1,16 +1,5 @@
 package io.harness.ccm.connectors;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.ConnectivityStatus;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.CEFeatures;
-import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
-import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
-import io.harness.ng.core.dto.ErrorDetail;
-import io.harness.remote.CEAzureSetupConfig;
-
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.storage.blob.BlobContainerClient;
@@ -23,23 +12,34 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.microsoft.aad.msal4j.MsalServiceException;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.CEFeatures;
+import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
+import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
+import io.harness.ng.core.dto.ErrorDetail;
+import io.harness.remote.CEAzureSetupConfig;
+import lombok.extern.slf4j.Slf4j;
+
 import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.CE)
-public class CEAzureConnectorValidator {
-  private static final String AZURE_STORAGE_SUFFIX = "blob.core.windows.net";
-  private static final String AZURE_STORAGE_URL_FORMAT = "https://%s.%s";
-  private static final String GENERIC_LOGGING_ERROR =
+public class CEAzureConnectorValidator extends io.harness.ccm.connectors.AbstractCEConnectorValidator {
+  private final String AZURE_STORAGE_SUFFIX = "blob.core.windows.net";
+  private final String AZURE_STORAGE_URL_FORMAT = "https://%s.%s";
+  private final String GENERIC_LOGGING_ERROR =
       "Failed to validate accountIdentifier:{} orgIdentifier:{} projectIdentifier:{}";
 
-  @Inject private static CEAzureSetupConfig ceAzureSetupConfig;
+  @Inject private  CEAzureSetupConfig ceAzureSetupConfig;
 
-  public static ConnectorValidationResult validate(
+  public ConnectorValidationResult validate(
       ConnectorResponseDTO connectorResponseDTO, String accountIdentifier) {
     final CEAzureConnectorDTO ceAzureConnectorDTO =
         (CEAzureConnectorDTO) connectorResponseDTO.getConnector().getConnectorConfig();
@@ -125,7 +125,7 @@ public class CEAzureConnectorValidator {
         .build();
   }
 
-  public static void validateIfContainerIsPresent(BlobContainerClient blobContainerClient, String directoryName)
+  public  void validateIfContainerIsPresent(BlobContainerClient blobContainerClient, String directoryName)
       throws Exception {
     // List the blob(s) in the container.
     for (BlobItem blobItem : blobContainerClient.listBlobsByHierarchy(directoryName)) {
@@ -135,7 +135,7 @@ public class CEAzureConnectorValidator {
   }
 
   @VisibleForTesting
-  public static BlobContainerClient getBlobContainerClient(String endpoint, String containerName, String tenantId) {
+  public  BlobContainerClient getBlobContainerClient(String endpoint, String containerName, String tenantId) {
     ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
                                                         .clientId(ceAzureSetupConfig.getAzureAppClientId())
                                                         .clientSecret(ceAzureSetupConfig.getAzureAppClientSecret())

@@ -1,20 +1,5 @@
 package io.harness.ccm.connectors;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.aws.AwsClient;
-import io.harness.connector.ConnectivityStatus;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.ConnectorValidationResult;
-import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
-import io.harness.delegate.beans.connector.CEFeatures;
-import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.ng.core.dto.ErrorDetail;
-import io.harness.remote.CEAwsSetupConfig;
-
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.policy.Action;
 import com.amazonaws.auth.policy.Policy;
@@ -29,6 +14,23 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.aws.AwsClient;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
+import io.harness.delegate.beans.connector.CEFeatures;
+import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
+import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.ng.core.dto.ErrorDetail;
+import io.harness.remote.CEAwsSetupConfig;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,29 +38,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.CE)
-public class CEAWSConnectorValidator {
-  private static final String COMPRESSION = "GZIP";
-  private static final String TIME_GRANULARITY = "HOURLY";
-  private static final String REPORT_VERSIONING = "OVERWRITE_REPORT";
-  private static final String RESOURCES = "RESOURCES";
+public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractCEConnectorValidator {
+  private  final String COMPRESSION = "GZIP";
+  private  final String TIME_GRANULARITY = "HOURLY";
+  private  final String REPORT_VERSIONING = "OVERWRITE_REPORT";
+  private  final String RESOURCES = "RESOURCES";
 
-  private static final String GENERIC_LOGGING_ERROR =
+  private  final String GENERIC_LOGGING_ERROR =
       "Failed to validate accountIdentifier:{} orgIdentifier:{} projectIdentifier:{}";
-  private static String lastErrorSummary = "Some of the permissions were missing.";
+  private  String lastErrorSummary = "Some of the permissions were missing.";
 
-  @Inject private static AwsClient awsClient;
-  @Inject private static CEAwsSetupConfig ceAwsSetupConfig;
+  @Inject private  AwsClient awsClient;
+  @Inject private  CEAwsSetupConfig ceAwsSetupConfig;
 
-  public static ConnectorValidationResult validate(
-      ConnectorResponseDTO connectorResponseDTO, String accountIdentifier) {
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier) {
     final CEAwsConnectorDTO ceAwsConnectorDTO =
-        (CEAwsConnectorDTO) connectorResponseDTO.getConnector().getConnectorConfig();
+            (CEAwsConnectorDTO) connectorResponseDTO.getConnector().getConnectorConfig();
     final List<CEFeatures> featuresEnabled = ceAwsConnectorDTO.getFeaturesEnabled();
     final CrossAccountAccessDTO crossAccountAccessDTO = ceAwsConnectorDTO.getCrossAccountAccess();
     final AwsCurAttributesDTO awsCurAttributesDTO = ceAwsConnectorDTO.getCurAttributes();
@@ -74,80 +74,80 @@ public class CEAWSConnectorValidator {
       if (featuresEnabled.contains(CEFeatures.VISIBILITY)) {
         final Policy eventsPolicy = getRequiredEventsPolicy();
         errorList.addAll(validateIfPolicyIsCorrect(
-            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEFeatures.VISIBILITY, eventsPolicy));
+                credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEFeatures.VISIBILITY, eventsPolicy));
       }
 
       if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
         final Policy optimizationPolicy = getRequiredOptimizationPolicy();
         errorList.addAll(validateIfPolicyIsCorrect(credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(),
-            CEFeatures.OPTIMIZATION, optimizationPolicy));
+                CEFeatures.OPTIMIZATION, optimizationPolicy));
       }
 
       if (featuresEnabled.contains(CEFeatures.BILLING)) {
         log.info("Destination bucket: {}", ceAwsSetupConfig.getDestinationBucket());
         final Policy curPolicy =
-            getRequiredCurPolicy(awsCurAttributesDTO.getS3BucketName(), ceAwsSetupConfig.getDestinationBucket());
+                getRequiredCurPolicy(awsCurAttributesDTO.getS3BucketName(), ceAwsSetupConfig.getDestinationBucket());
         errorList.addAll(validateIfPolicyIsCorrect(
-            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEFeatures.BILLING, curPolicy));
+                credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEFeatures.BILLING, curPolicy));
 
         errorList.addAll(validateResourceExists(credentialsProvider, awsCurAttributesDTO, errorList));
       }
     } catch (AWSSecurityTokenServiceException ex) {
       return ConnectorValidationResult.builder()
-          .status(ConnectivityStatus.FAILURE)
-          .errors(ImmutableList.of(ErrorDetail.builder()
-                                       .code(ex.getStatusCode())
-                                       .reason(ex.getErrorCode())
-                                       .message(ex.getErrorMessage())
-                                       .build()))
-          .errorSummary("Either the " + crossAccountAccessDTO.getCrossAccountRoleArn()
-              + " doesn't exist or Harness isn't a trusted entity on it or wrong externalId.")
-          .testedAt(Instant.now().toEpochMilli())
-          .build();
+              .status(ConnectivityStatus.FAILURE)
+              .errors(ImmutableList.of(ErrorDetail.builder()
+                      .code(ex.getStatusCode())
+                      .reason(ex.getErrorCode())
+                      .message(ex.getErrorMessage())
+                      .build()))
+              .errorSummary("Either the " + crossAccountAccessDTO.getCrossAccountRoleArn()
+                      + " doesn't exist or Harness isn't a trusted entity on it or wrong externalId.")
+              .testedAt(Instant.now().toEpochMilli())
+              .build();
     } catch (AmazonIdentityManagementException ex) {
       // assuming only one possible reason for AmazonIdentityManagementException here
       return ConnectorValidationResult.builder()
-          .errors(Collections.singletonList(ErrorDetail.builder()
-                                                .code(ex.getStatusCode())
-                                                .message(ex.getErrorCode())
-                                                .reason(ex.getErrorMessage())
-                                                .build()))
-          .errorSummary("Please allow " + crossAccountAccessDTO.getCrossAccountRoleArn()
-              + " to perform 'iam:SimulatePrincipalPolicy' on itself")
-          .status(ConnectivityStatus.FAILURE)
-          .build();
+              .errors(Collections.singletonList(ErrorDetail.builder()
+                      .code(ex.getStatusCode())
+                      .message(ex.getErrorCode())
+                      .reason(ex.getErrorMessage())
+                      .build()))
+              .errorSummary("Please allow " + crossAccountAccessDTO.getCrossAccountRoleArn()
+                      + " to perform 'iam:SimulatePrincipalPolicy' on itself")
+              .status(ConnectivityStatus.FAILURE)
+              .build();
     } catch (InvalidArgumentsException ex) {
       return ConnectorValidationResult.builder()
-          .status(ConnectivityStatus.FAILURE)
-          .errorSummary(ex.getMessage())
-          .testedAt(Instant.now().toEpochMilli())
-          .build();
+              .status(ConnectivityStatus.FAILURE)
+              .errorSummary(ex.getMessage())
+              .testedAt(Instant.now().toEpochMilli())
+              .build();
     } catch (Exception ex) {
       // These are unknown errors, they should be identified over time and parsed correctly
       log.error(GENERIC_LOGGING_ERROR, accountIdentifier, orgIdentifier, projectIdentifier, ex);
       return ConnectorValidationResult.builder()
-          .status(ConnectivityStatus.FAILURE)
-          .errorSummary(ex.getMessage())
-          .testedAt(Instant.now().toEpochMilli())
-          .build();
+              .status(ConnectivityStatus.FAILURE)
+              .errorSummary(ex.getMessage())
+              .testedAt(Instant.now().toEpochMilli())
+              .build();
     }
 
     if (!errorList.isEmpty()) {
       return ConnectorValidationResult.builder()
-          .status(ConnectivityStatus.FAILURE)
-          .errors(errorList)
-          .errorSummary(lastErrorSummary)
-          .testedAt(Instant.now().toEpochMilli())
-          .build();
+              .status(ConnectivityStatus.FAILURE)
+              .errors(errorList)
+              .errorSummary(lastErrorSummary)
+              .testedAt(Instant.now().toEpochMilli())
+              .build();
     }
 
     return ConnectorValidationResult.builder()
-        .status(ConnectivityStatus.SUCCESS)
-        .testedAt(Instant.now().toEpochMilli())
-        .build();
+            .status(ConnectivityStatus.SUCCESS)
+            .testedAt(Instant.now().toEpochMilli())
+            .build();
   }
 
-  private static Collection<ErrorDetail> validateIfPolicyIsCorrect(AWSCredentialsProvider credentialsProvider,
+  private Collection<ErrorDetail> validateIfPolicyIsCorrect(AWSCredentialsProvider credentialsProvider,
       String crossAccountRoleArn, CEFeatures feature, @NotNull Policy policy) {
     List<ErrorDetail> errorDetails = new ArrayList<>();
 
@@ -174,17 +174,17 @@ public class CEAWSConnectorValidator {
   }
 
   @VisibleForTesting
-  public static AWSCredentialsProvider getCredentialProvider(CrossAccountAccessDTO crossAccountAccessDTO) {
-    final AWSCredentialsProvider staticBasicAwsCredentials =
+  public AWSCredentialsProvider getCredentialProvider(CrossAccountAccessDTO crossAccountAccessDTO) {
+    final AWSCredentialsProvider BasicAwsCredentials =
         awsClient.constructStaticBasicAwsCredentials(ceAwsSetupConfig.getAccessKey(), ceAwsSetupConfig.getSecretKey());
     final AWSCredentialsProvider credentialsProvider =
-        awsClient.getAssumedCredentialsProvider(staticBasicAwsCredentials,
+        awsClient.getAssumedCredentialsProvider(BasicAwsCredentials,
             crossAccountAccessDTO.getCrossAccountRoleArn(), crossAccountAccessDTO.getExternalId());
     credentialsProvider.getCredentials();
     return credentialsProvider;
   }
 
-  private static Collection<ErrorDetail> validateResourceExists(AWSCredentialsProvider credentialsProvider,
+  private  Collection<ErrorDetail> validateResourceExists(AWSCredentialsProvider credentialsProvider,
       AwsCurAttributesDTO awsCurAttributesDTO, final List<ErrorDetail> errorList) {
     Optional<ReportDefinition> report =
         awsClient.getReportDefinition(credentialsProvider, awsCurAttributesDTO.getReportName());
@@ -205,7 +205,7 @@ public class CEAWSConnectorValidator {
     return validateIfBucketIsPresent(credentialsProvider, s3BucketDetails);
   }
 
-  private static void validateReport(
+  private  void validateReport(
       @NotNull ReportDefinition report, @NotNull String s3BucketName, final List<ErrorDetail> errorList) {
     if (!report.getS3Bucket().equals(s3BucketName)) {
       lastErrorSummary = String.format("Provided s3Bucket Name: %s, Actual s3bucket associated with the report: %s",
@@ -247,7 +247,7 @@ public class CEAWSConnectorValidator {
     }
   }
 
-  private static Collection<ErrorDetail> validateIfBucketIsPresent(
+  private  Collection<ErrorDetail> validateIfBucketIsPresent(
       AWSCredentialsProvider credentialsProvider, S3BucketDetails s3BucketDetails) {
     try {
       awsClient.getBucket(credentialsProvider, s3BucketDetails.getS3BucketName(), s3BucketDetails.getS3Prefix());
@@ -260,7 +260,7 @@ public class CEAWSConnectorValidator {
     return Collections.emptyList();
   }
 
-  private static Policy getRequiredOptimizationPolicy() {
+  private  Policy getRequiredOptimizationPolicy() {
     final String policyDocument = "{"
         + "  \"Version\": \"2012-10-17\","
         + "  \"Statement\": ["
@@ -301,7 +301,7 @@ public class CEAWSConnectorValidator {
     return Policy.fromJson(policyDocument);
   }
 
-  private static Policy getRequiredCurPolicy(final String customerBucketName, final String destinationBucketName) {
+  private  Policy getRequiredCurPolicy(final String customerBucketName, final String destinationBucketName) {
     final String policyDocument = "{"
         + "  \"Version\": \"2012-10-17\","
         + "  \"Statement\": ["
@@ -336,7 +336,7 @@ public class CEAWSConnectorValidator {
     return Policy.fromJson(policyDocument);
   }
 
-  private static Policy getRequiredEventsPolicy() {
+  private  Policy getRequiredEventsPolicy() {
     final String policyDocument = "{"
         + "  \"Version\": \"2012-10-17\","
         + "  \"Statement\": ["
@@ -363,4 +363,5 @@ public class CEAWSConnectorValidator {
         + "}";
     return Policy.fromJson(policyDocument);
   }
+
 }
