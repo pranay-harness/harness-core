@@ -118,7 +118,7 @@ public class SSOServiceTest extends WingsBaseTest {
     String xml = IOUtils.toString(getClass().getResourceAsStream("/okta-IDP-metadata.xml"), Charset.defaultCharset());
     when(ACCOUNT_SERVICE.get(anyString())).thenReturn(account);
     when(ACCOUNT_SERVICE.update(account)).thenReturn(account);
-    when(SAML_CLIENT_SERVICE.getSamlClient(anyString())).thenCallRealMethod();
+    when(SAML_CLIENT_SERVICE.getSamlClient(anyString(), anyString())).thenCallRealMethod();
 
     SamlSettings mockSamlSettings = SamlSettings.builder().build();
     mockSamlSettings.setAccountId(account.getUuid());
@@ -128,16 +128,16 @@ public class SSOServiceTest extends WingsBaseTest {
     mockSamlSettings.setDisplayName("Okta");
     when(SSO_SETTING_SERVICE.getSamlSettingsByAccountId(anyString())).thenReturn(mockSamlSettings);
 
-    SSOConfig settings = ssoService.uploadSamlConfiguration(
-        account.getUuid(), getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta", "group", true, logoutUrl);
+    SSOConfig settings = ssoService.uploadSamlConfiguration(account.getUuid(),
+        getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta", "group", true, logoutUrl, "app.harness.io");
     String idpRedirectUrl = ((SamlSettings) settings.getSsoSettings().get(0)).getUrl();
     assertThat(idpRedirectUrl)
         .isEqualTo("https://dev-274703.oktapreview.com/app/harnessiodev274703_testapp_1/exkefa5xlgHhrU1Mc0h7/sso/saml");
     assertThat(settings.getSsoSettings().get(0).getDisplayName()).isEqualTo("Okta");
 
     try {
-      ssoService.uploadSamlConfiguration(
-          account.getUuid(), getClass().getResourceAsStream("/SamlResponse.txt"), "Okta", "group", true, logoutUrl);
+      ssoService.uploadSamlConfiguration(account.getUuid(), getClass().getResourceAsStream("/SamlResponse.txt"), "Okta",
+          "group", true, logoutUrl, "app.harness.io");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_SAML_CONFIGURATION.name());
