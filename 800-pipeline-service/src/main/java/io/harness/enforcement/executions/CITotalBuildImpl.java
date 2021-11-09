@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public class CITotalBuildImpl implements RestrictionUsageInterface<StaticLimitRestrictionMetadataDTO> {
   @Inject AccountExecutionMetadataRepository accountExecutionMetadataRepository;
-  private static String moduleName = "ci_private_build";
+  private static final String moduleName = "ci_private_build";
   @Override
   public long getCurrentValue(String accountIdentifier, StaticLimitRestrictionMetadataDTO restrictionMetadataDTO) {
     Optional<AccountExecutionMetadata> accountExecutionMetadata =

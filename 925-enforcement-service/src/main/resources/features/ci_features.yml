@@ -52,12 +52,8 @@ features:
     description: Number of active committers
     restrictions:
       FREE:
-        restrictionType: RATE_LIMIT
-        limit: 200
-        clientName: cimanager
-        timeUnit:
-          unit: DAYS
-          numberOfUnits: 30
+        restrictionType: AVAILABILITY
+        enabled: true
       TEAM:
         restrictionType: RATE_LIMIT
         limit: 200

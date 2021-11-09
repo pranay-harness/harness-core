@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public class CIMonthlyBuildImpl implements RestrictionUsageInterface<RateLimitRestrictionMetadataDTO> {
   @Inject AccountExecutionMetadataRepository accountExecutionMetadataRepository;
-  private static String moduleName = "ci_private_build";
+  private static final String moduleName = "ci_private_build";
 
   @Override
   public long getCurrentValue(String accountIdentifier, RateLimitRestrictionMetadataDTO restrictionMetadataDTO) {
