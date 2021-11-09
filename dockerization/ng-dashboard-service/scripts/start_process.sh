@@ -29,7 +29,8 @@ if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_
 else
     java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/ng-dashboard-service.log 2>&1
 fi
-
+echo "enable_appD is"
+echo $ENABLE_APPDYNAMICS
 if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
     echo "enable_appD=true"
     mkdir /opt/harness/AppServerAgent-20.8.0.30686 && unzip AppServerAgent-20.8.0.30686.zip -d /opt/harness/AppServerAgent-20.8.0.30686
