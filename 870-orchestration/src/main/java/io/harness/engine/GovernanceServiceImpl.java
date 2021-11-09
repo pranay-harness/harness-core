@@ -163,6 +163,9 @@ public class GovernanceServiceImpl implements GovernanceService {
               .addAllPolicyMetadata(mapPolicyMetadata(setEvaluationResponse.getDetails()))
               .setIdentifier(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getIdentifier()))
               .setCreated(setEvaluationResponse.getCreated())
+              .setAccountId(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getAccount_id()))
+              .setOrgId(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getOrg_id()))
+              .setProjectId(HarnessStringUtils.emptyIfNull(setEvaluationResponse.getProject_id()))
               .build());
     }
     return policySetMetadataList;
