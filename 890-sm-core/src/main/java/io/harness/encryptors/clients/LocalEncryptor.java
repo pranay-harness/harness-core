@@ -87,6 +87,7 @@ public class LocalEncryptor implements KmsEncryptor {
       return null;
     }
 
+    // This means this record hasn't been migrated yet
     if (encryptedRecord.getEncryptedMech() == null) {
       return getLocalJavaDecryptedSecret(encryptedRecord);
     }

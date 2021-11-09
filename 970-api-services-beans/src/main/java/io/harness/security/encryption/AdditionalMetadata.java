@@ -14,4 +14,9 @@ public class AdditionalMetadata {
   public static final String AWS_ENCRYPTED_SECRET = "AwsEncryptedSecret";
 
   @Singular private Map<String, Object> values;
+
+  public Map<String, Object> addValues(Map<String, Object> newValues) {
+    newValues.forEach(values::put);
+    return values;
+  }
 }

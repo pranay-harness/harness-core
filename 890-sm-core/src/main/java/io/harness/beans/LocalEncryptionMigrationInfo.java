@@ -25,5 +25,6 @@ public class LocalEncryptionMigrationInfo implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
   @FdUniqueIndex private String accountId;
   private String lastMigratedRecordId;
-  private String lastMigratedRecordCreatedAtTimestamp;
+  private long lastMigratedRecordCreatedAtTimestamp;
+  private String mode;
 }

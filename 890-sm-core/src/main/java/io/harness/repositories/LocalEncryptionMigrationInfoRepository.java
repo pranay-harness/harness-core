@@ -12,5 +12,5 @@ import org.springframework.data.repository.CrudRepository;
 @OwnedBy(PL)
 @HarnessRepo
 public interface LocalEncryptionMigrationInfoRepository extends CrudRepository<LocalEncryptionMigrationInfo, String> {
-  Optional<LocalEncryptionMigrationInfo> findByAccountId(String accountId);
+  Optional<LocalEncryptionMigrationInfo> findByAccountIdAndMode(String accountId, String mode);
 }
