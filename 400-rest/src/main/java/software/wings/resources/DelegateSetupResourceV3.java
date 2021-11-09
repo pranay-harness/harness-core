@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.DelegateType.DOCKER;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_DELETE_PERMISSION;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_EDIT_PERMISSION;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_RESOURCE_TYPE;
@@ -118,6 +119,7 @@ public class DelegateSetupResourceV3 {
   private static final String ATTACHMENT_FILENAME = "attachment; filename=";
   public static final String YAML = ".yaml";
   private static final String TAR_GZ = ".tar.gz";
+  private static final String SH = ".sh";
 
   private final DelegateService delegateService;
   private final DelegateCache delegateCache;
@@ -962,6 +964,76 @@ public class DelegateSetupResourceV3 {
           .type("text/plain; charset=UTF-8")
           .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + HARNESS_DELEGATE_VALUES_YAML + YAML)
           .build();
+    }
+  }
+
+  @GET
+  @Path("/ng/validate-docker-delegate-details")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "validateDockerDelegateDetails", summary = "Validates docker delegate details.",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Validates docker delegate details.") })
+  public RestResponse<Void>
+  validateDockerSetupDetails(@Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Delegate name") @QueryParam("delegateName") String delegateName) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      DelegateSetupDetails delegateSetupDetails =
+          DelegateSetupDetails.builder().delegateType(DOCKER).name(delegateName).build();
+      delegateService.validateDockerSetupDetails(accountId, delegateSetupDetails, DOCKER);
+
+      return new RestResponse<>();
+    }
+  }
+
+  @POST
+  @Path("/ng/docker")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "downloadNgDocker",
+      summary =
+          "Generates docker-compose.yaml or launch-docker-delegate.sh file from the data specified in request body (Delegate setup details).",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Generated yaml or sh file.") })
+  public Response
+  downloadNgDocker(@Context HttpServletRequest request,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @RequestBody(required = true, description = "Delegate setup details, containing data to populate file values.")
+      DelegateSetupDetails delegateSetupDetails) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      String managerUrl = subdomainUrlHelper.getManagerUrl(request, accountId);
+      File delegateFile =
+          delegateService.downloadNgDocker(managerUrl, getVerificationUrl(request), accountId, delegateSetupDetails);
+
+      return Response.ok(delegateFile)
+          .header(CONTENT_TRANSFER_ENCODING, BINARY)
+          .type("text/plain; charset=UTF-8")
+          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + "docker-compose.yaml")
+          .build();
+    }
+  }
+
+  @POST
+  @Path("/ng/delegate-group")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  @Operation(operationId = "createDelegateGroup", summary = "Creates delegate group.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns HTTP 200 if delegate group was created successfully.")
+      })
+  public Response
+  createDelegateGroup(@Context HttpServletRequest request,
+      @Parameter(description = "Account id") @QueryParam("accountId") @NotEmpty String accountId,
+      @RequestBody(required = true, description = "Delegate setup details, containing data to store delegate group.")
+      DelegateSetupDetails delegateSetupDetails) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      delegateService.createDelegateGroup(accountId, delegateSetupDetails);
+
+      return Response.ok().build();
     }
   }
 
