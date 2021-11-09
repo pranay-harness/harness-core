@@ -31,4 +31,6 @@ public class DelegateSetupDetails implements YamlDTO {
   private K8sConfigDetails k8sConfigDetails;
 
   private Set<String> tags;
+
+  @NotNull private String delegateType;
 }

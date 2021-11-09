@@ -13,19 +13,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(PL)
 public class ServiceAccountDTO {
-  @ApiModelProperty(required = true) @EntityIdentifier String identifier;
-  @ApiModelProperty(required = true) @NotEmpty String name;
-  @ApiModelProperty(required = true) @Email String email;
+  @ApiModelProperty(required = true) @EntityIdentifier @NotBlank String identifier;
+  @ApiModelProperty(required = true) @NotBlank String name;
+  @ApiModelProperty(required = true) @Email @NotBlank String email;
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
-  @ApiModelProperty(required = true) String accountIdentifier;
+  @ApiModelProperty(required = true) @NotBlank String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
 }

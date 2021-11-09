@@ -10,7 +10,7 @@ import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_STABL
 import static io.harness.ng.core.template.TemplateEntityConstants.TEMPLATE_STABLE_TRUE_WITH_YAML_CHANGE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.template.beans.TemplateListType;
+import io.harness.ng.core.template.TemplateListType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

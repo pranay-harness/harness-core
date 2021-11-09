@@ -606,6 +606,10 @@ if [[ "$SEARCH_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE searchEnabled true
 fi
 
+if [[ "$GRAPHQL_ENABLED" == "false" ]]; then
+  yq write -i $CONFIG_FILE graphQLEnabled false
+fi
+
 if [[ "$MONGO_DEBUGGING_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE logging.loggers.[org.mongodb.morphia.query] TRACE
   yq write -i $CONFIG_FILE logging.loggers.connection TRACE
@@ -880,6 +884,7 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_F
 replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 replace_key_value portal.gatewayPathPrefix "$GATEWAY_PATH_PREFIX"
 replace_key_value portal.zendeskBaseUrl "$ZENDESK_BASE_URL"
+replace_key_value deployVariant "$DEPLOY_VERSION"
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"

@@ -9,6 +9,7 @@ shared_dependencies = [
     "//889-yaml-commons:module",
     "//890-sm-core:module",
     "//900-git-sync-sdk:module",
+    "//930-ng-core-clients:module",
     "//940-primary-version-manager:module",
     "//945-ng-audit-client:module",
     "//948-access-control-sdk:module",

@@ -9,6 +9,7 @@ import io.harness.platform.audit.AuditServiceConfiguration;
 import io.harness.platform.notification.NotificationServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.ResourceGroupServiceConfig;
+import io.harness.threading.ThreadPoolConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -42,6 +43,7 @@ public class PlatformConfiguration extends Configuration {
   public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement.client.resources";
 
   @Setter @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
+  @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
   @JsonProperty("auditServiceConfig") private AuditServiceConfiguration auditServiceConfig;
   @JsonProperty("resourceGroupServiceConfig") private ResourceGroupServiceConfig resoureGroupServiceConfig;
 
@@ -70,10 +72,14 @@ public class PlatformConfiguration extends Configuration {
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
-  public static Collection<Class<?>> getPlatformServiceCombinedResourceClasses() {
+  public static Collection<Class<?>> getPlatformServiceCombinedResourceClasses(PlatformConfiguration appConfig) {
     Collection<Class<?>> resources = getNotificationServiceResourceClasses();
-    resources.addAll(getAuditServiceResourceClasses());
-    resources.addAll(getResourceGroupServiceResourceClasses());
+    if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
+      resources.addAll(getAuditServiceResourceClasses());
+    }
+    if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+      resources.addAll(getResourceGroupServiceResourceClasses());
+    }
     Reflections reflections = new Reflections(ENFORCEMENT_PACKAGE);
     resources.addAll(reflections.getTypesAnnotatedWith(Path.class));
     return resources;

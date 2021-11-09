@@ -4919,6 +4919,7 @@ plain_artifacts = [
     "ru.vyarus:guice-validator:1.2.0",
     "software.amazon.awssdk:athena:2.10.18",
     "software.amazon.awssdk:auth:2.10.18",
+    "com.amazonaws:aws-encryption-sdk-java:2.3.3",
     "software.amazon.ion:ion-java:1.0.2",
     "stax:stax-api:1.0.1",
     "stax:stax:1.2.0",

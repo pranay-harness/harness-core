@@ -140,7 +140,6 @@ import io.harness.steps.resourcerestraint.ResourceRestraintInitializer;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
-import io.harness.threading.ThreadPoolConfig;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.token.remote.TokenClient;
 import io.harness.tracing.MongoRedisTracer;
@@ -266,8 +265,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     log.info("Starting Pipeline Service Application ...");
     MaintenanceController.forceMaintenance(true);
 
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        10, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(appConfig.getCommonPoolConfig().getCorePoolSize(),
+        appConfig.getCommonPoolConfig().getMaxPoolSize(), appConfig.getCommonPoolConfig().getIdleTime(),
+        appConfig.getCommonPoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
       @Provides
@@ -539,9 +540,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineEventHandlersMap(of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-        .executionPoolConfig(ThreadPoolConfig.builder().corePoolSize(20).maxPoolSize(100).idleTime(120L).build())
-        .orchestrationEventPoolConfig(
-            ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
+        .executionPoolConfig(config.getPmsSdkExecutionPoolConfig())
+        .orchestrationEventPoolConfig(config.getPmsSdkOrchestrationEventPoolConfig())
         .build();
   }
 
