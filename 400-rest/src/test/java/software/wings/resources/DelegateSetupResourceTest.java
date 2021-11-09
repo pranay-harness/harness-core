@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.DelegateType.DOCKER;
 import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.MARKO;
@@ -48,6 +49,7 @@ import io.harness.delegate.beans.DelegateGroupListing;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
+import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.filter.DelegateFilterPropertiesDTO;
 import io.harness.delegate.resources.DelegateSetupResourceV2;
 import io.harness.rest.RestResponse;
@@ -120,6 +122,8 @@ public class DelegateSetupResourceTest extends CategoryTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .instance(new DelegateSetupResource(delegateService, delegateScopeService, downloadTokenService,
+              subdomainUrlHelper, delegateCache, accessControlClient))
+          .instance(new DelegateSetupResourceV3(delegateService, delegateScopeService, downloadTokenService,
               subdomainUrlHelper, delegateCache, accessControlClient))
           .instance(new AbstractBinder() {
             @Override
@@ -345,6 +349,7 @@ public class DelegateSetupResourceTest extends CategoryTest {
                                             .description("desc")
                                             .size(DelegateSize.LARGE)
                                             .delegateConfigurationId("delConfigId")
+                                            .delegateType(DelegateType.KUBERNETES)
                                             .build();
 
     when(delegateService.validateKubernetesYaml(accountId, setupDetails)).thenReturn(setupDetails);
@@ -375,6 +380,7 @@ public class DelegateSetupResourceTest extends CategoryTest {
                                             .description("desc")
                                             .size(DelegateSize.LARGE)
                                             .delegateConfigurationId("delConfigId")
+                                            .delegateType(DelegateType.KUBERNETES)
                                             .build();
 
     when(delegateService.generateKubernetesYaml(
@@ -797,5 +803,68 @@ public class DelegateSetupResourceTest extends CategoryTest {
         .isEqualTo("attachment; filename=" + DelegateServiceImpl.HARNESS_DELEGATE_VALUES_YAML + ".yaml");
     assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
         .isEqualTo("Test");
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldDownloadNgDockerCompose() throws Exception {
+    File file = File.createTempFile("test", ".yaml");
+    try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
+      IOUtils.write("Test docker compose", outputStreamWriter);
+    }
+
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .name("name")
+                                            .description("desc")
+                                            .size(DelegateSize.LARGE)
+                                            .delegateType(DelegateType.DOCKER)
+                                            .build();
+
+    when(delegateService.downloadNgDocker(anyString(), anyString(), anyString(), eq(setupDetails))).thenReturn(file);
+    Response restResponse = RESOURCES.client()
+                                .target("/setup/delegates/v3/ng/docker?accountId=" + ACCOUNT_ID + "&fileFormat=yaml")
+                                .request()
+                                .post(entity(setupDetails, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
+
+    verify(delegateService, atLeastOnce()).downloadNgDocker(anyString(), anyString(), anyString(), eq(setupDetails));
+
+    assertThat(restResponse.getHeaderString("Content-Disposition"))
+        .isEqualTo("attachment; filename=docker-compose.yaml");
+    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
+        .isEqualTo("Test docker compose");
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldValidateDockerDelegateDetails() {
+    Response restResponse = RESOURCES.client()
+                                .target("/setup/delegates/v3/ng/validate-docker-delegate-details?accountId="
+                                    + ACCOUNT_ID + "&delegateName=name1")
+                                .request()
+                                .get();
+    DelegateSetupDetails details = DelegateSetupDetails.builder().delegateType(DOCKER).name("name1").build();
+    verify(delegateService, atLeastOnce())
+        .validateDockerSetupDetails(anyString(), eq(details), eq(DelegateType.DOCKER));
+
+    assertThat(restResponse.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldCreateDelegateGroup() throws Exception {
+    DelegateSetupDetails setupDetails =
+        DelegateSetupDetails.builder().name("name").description("desc").delegateType(DelegateType.DOCKER).build();
+
+    Response restResponse = RESOURCES.client()
+                                .target("/setup/delegates/v3/ng/delegate-group?accountId=" + ACCOUNT_ID)
+                                .request()
+                                .post(entity(setupDetails, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
+
+    verify(delegateService, atLeastOnce()).createDelegateGroup(anyString(), eq(setupDetails));
+
+    assertThat(restResponse.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
   }
 }
