@@ -190,6 +190,7 @@ delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
 
 apiUrl: "https://localhost:9080"
 deployMode: KUBERNETES
+deployVariant: SAAS
 envPath: ""
 
 kubectlVersion: v1.13.2
