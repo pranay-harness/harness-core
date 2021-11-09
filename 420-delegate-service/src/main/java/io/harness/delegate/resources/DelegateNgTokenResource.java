@@ -83,9 +83,10 @@ public class DelegateNgTokenResource {
           NGCommonEntityConstants.ORG_KEY) String orgId,
       @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @Parameter(description = "Delegate Token name") @QueryParam("tokenName") @NotNull String tokenName) {
+      @Parameter(description = "Delegate Token name") @QueryParam("tokenName") @NotNull String tokenName,
+      @Parameter(description = "Delegate Token Identifier") @QueryParam("identifier") @NotNull String identifier) {
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
-    return new RestResponse<>(delegateTokenService.createToken(accountId, owner, tokenName));
+    return new RestResponse<>(delegateTokenService.createToken(accountId, owner, tokenName, identifier));
   }
 
   @PUT

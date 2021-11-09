@@ -46,8 +46,9 @@ public class DelegateNgTokenServiceImpl implements DelegateNgTokenService {
   private static final String DEFAULT_TOKEN_NAME = "default";
 
   @Override
-  public DelegateTokenDetails createToken(String accountId, DelegateEntityOwner owner, String name) {
+  public DelegateTokenDetails createToken(String accountId, DelegateEntityOwner owner, String name, String identifier) {
     DelegateNgToken delegateToken = DelegateNgToken.builder()
+                                        .identifier(identifier)
                                         .accountId(accountId)
                                         .owner(owner)
                                         .name(name)
