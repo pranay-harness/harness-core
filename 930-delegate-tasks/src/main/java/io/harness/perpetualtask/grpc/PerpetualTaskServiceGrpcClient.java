@@ -54,6 +54,7 @@ public class PerpetualTaskServiceGrpcClient {
                          .setResponseCode(perpetualTaskResponse.getResponseCode())
                          .setResponseMessage(perpetualTaskResponse.getResponseMessage())
                          .build());
+      log.info("DEL-2745 : PT heartbeat check " + taskId.getId());
     } catch (StatusRuntimeException ex) {
       log.error("StatusRunTimeException: {}", ex.getMessage());
     }

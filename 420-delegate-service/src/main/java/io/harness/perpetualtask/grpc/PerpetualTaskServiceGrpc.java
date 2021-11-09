@@ -58,12 +58,16 @@ public class PerpetualTaskServiceGrpc
 
   @Override
   public void heartbeat(HeartbeatRequest request, StreamObserver<HeartbeatResponse> responseObserver) {
+    log.info("DEL-2745 Starting PT heartbeat check " + request.getHeartbeatTimestamp() + " for task id " + request.getId());
     PerpetualTaskResponse perpetualTaskResponse = PerpetualTaskResponse.builder()
                                                       .responseMessage(request.getResponseMessage())
                                                       .responseCode(request.getResponseCode())
                                                       .build();
+    log.info("DEL-2745 PT Construct PerpetualTaskResponse" + perpetualTaskResponse.toString());
     long heartbeatMillis = HTimestamps.toInstant(request.getHeartbeatTimestamp()).toEpochMilli();
+    log.info("DEL-2745 PT heartbeatMillis " + heartbeatMillis);
     perpetualTaskService.triggerCallback(request.getId(), heartbeatMillis, perpetualTaskResponse);
+    log.info("DEL-2745 PT trigger call back " + heartbeatMillis);
     responseObserver.onNext(HeartbeatResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
