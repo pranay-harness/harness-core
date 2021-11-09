@@ -39,7 +39,6 @@ public class RelatedAuditViewBuilder {
       AuditHeader auditHeader, EntityAuditRecord entityAuditRecord) {
     ObjectMapper mapper = new ObjectMapper();
     RelatedAuditView relatedAuditView = getAuditRelatedEntityView(auditHeader, entityAuditRecord);
-    // TODO
-    return null;//mapper.convertValue(relatedAuditView, new TypeReference<String, Object>() {});
+    return mapper.convertValue(relatedAuditView, new TypeReference<Map<String, Object>>() {});
   }
 }

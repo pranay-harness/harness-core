@@ -16,8 +16,10 @@ import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
@@ -28,7 +30,7 @@ import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @OwnedBy(HarnessTeam.CDC)
-// @RunWith(PowerMockRunner.class) // TODO
+@RunWith(PowerMockRunner.class)
 @PrepareForTest({PmsSdkModule.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*"})
 public class NGAppStartupTestBase extends CategoryTest {

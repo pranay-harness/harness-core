@@ -37,7 +37,6 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
   @NotEmpty String applicationName;
   @NotEmpty String tierName;
   @NotNull @NotEmpty @Valid Set<MetricPackDTO> metricPacks;
-  //
 
   @Override
   public HealthSource.CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier,
