@@ -173,6 +173,8 @@ public interface EnvironmentService extends OwnedByApplication {
    */
   List<String> getNames(@NotEmpty String accountId, @Nonnull List<String> envIds);
 
+  List<Environment> getEnvironmentsFromIds(@NotEmpty String accountId, @Nonnull List<String> envIds);
+
   Environment setConfigMapYaml(String appId, String envId, KubernetesPayload kubernetesPayload);
 
   Environment setConfigMapYamlForService(
