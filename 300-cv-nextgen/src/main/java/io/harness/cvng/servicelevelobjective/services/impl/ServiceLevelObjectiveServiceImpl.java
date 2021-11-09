@@ -2,6 +2,9 @@ package io.harness.cvng.servicelevelobjective.services.impl;
 
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
+import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
@@ -177,6 +180,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
 
   private void saveServiceLevelObjectiveEntity(
       ProjectParams projectParams, ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
+    prePersistenceCleanup(serviceLevelObjectiveDTO);
     ServiceLevelObjective serviceLevelObjective =
         ServiceLevelObjective.builder()
             .accountId(projectParams.getAccountIdentifier())
@@ -195,6 +199,19 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
             .build();
 
     hPersistence.save(serviceLevelObjective);
+  }
+
+  private void prePersistenceCleanup(ServiceLevelObjectiveDTO sloCreateDTO) {
+    SLOTarget sloTarget = sloCreateDTO.getTarget();
+    if (Objects.isNull(sloTarget.getType())) {
+      sloTarget.setType(sloTarget.getSpec().getType());
+    }
+    for (ServiceLevelIndicatorDTO serviceLevelIndicator : sloCreateDTO.getServiceLevelIndicators()) {
+      ServiceLevelIndicatorSpec serviceLevelIndicatorSpec = serviceLevelIndicator.getSpec();
+      if (Objects.isNull(serviceLevelIndicatorSpec.getType())) {
+        serviceLevelIndicatorSpec.setType(serviceLevelIndicatorSpec.getSpec().getType());
+      }
+    }
   }
 
   private void validate(ServiceLevelObjectiveDTO sloCreateDTO, ProjectParams projectParams) {
