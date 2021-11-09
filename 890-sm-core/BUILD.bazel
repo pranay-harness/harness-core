@@ -14,6 +14,7 @@ java_library(
         "//920-delegate-agent-beans:module",
         "//930-delegate-tasks:module",
         "//940-secret-manager-client:module",
+        "//940-feature-flag:module",
         "//950-delegate-tasks-beans:module",
         "//954-connector-beans:module",
         "//955-delegate-beans:module",
@@ -82,6 +83,7 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//940-feature-flag:tests",
         "//950-delegate-tasks-beans:module",
         "//955-delegate-beans:module",
         "//960-persistence:module",

@@ -3,10 +3,10 @@ package io.harness.beans;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import javax.crypto.spec.SecretKeySpec;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
@@ -18,10 +18,12 @@ import org.springframework.data.annotation.Id;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@FieldNameConstants(innerTypeName = "SecretKeys")
+@FieldNameConstants(innerTypeName = "LocalEncryptionMigrationInfoKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "SecretKey", noClassnameStored = true)
-public class SecretKey implements PersistentEntity {
+@Entity(value = "LocalEncryptionMigrationInfo", noClassnameStored = true)
+public class LocalEncryptionMigrationInfo implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
-  private SecretKeySpec secretKeySpec;
+  @FdUniqueIndex private String accountId;
+  private String lastMigratedRecordId;
+  private String lastMigratedRecordCreatedAtTimestamp;
 }
