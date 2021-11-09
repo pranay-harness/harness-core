@@ -47,6 +47,7 @@ public class PerpetualTaskServiceGrpcClient {
 
   public void heartbeat(PerpetualTaskId taskId, Instant taskStartTime, PerpetualTaskResponse perpetualTaskResponse) {
     try {
+      log.info("DEL-2745 : starting PT heartbeat check " + taskId.getId());
       serviceBlockingStub.withDeadlineAfter(60, TimeUnit.SECONDS)
           .heartbeat(HeartbeatRequest.newBuilder()
                          .setId(taskId.getId())
