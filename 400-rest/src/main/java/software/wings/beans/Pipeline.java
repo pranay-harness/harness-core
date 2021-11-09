@@ -76,6 +76,11 @@ public class Pipeline
                  .field(PipelineKeys.accountId)
                  .descSortField(PipelineKeys.createdAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_name")
+                 .field(PipelineKeys.accountId)
+                 .ascSortField(PipelineKeys.name)
+                 .build())
         .build();
   }
 
