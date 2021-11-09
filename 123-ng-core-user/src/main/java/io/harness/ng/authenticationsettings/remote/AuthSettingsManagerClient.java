@@ -68,7 +68,8 @@ public interface AuthSettingsManagerClient {
   Call<RestResponse<SSOConfig>> uploadSAMLMetadata(@Query("accountId") String accountId,
       @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
       @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
-      @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl);
+      @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl,
+      @Part("entityIdentifier") RequestBody entityIdentifier);
 
   @Multipart
   @PUT(API_PREFIX + "sso/saml-idp-metadata-upload")
