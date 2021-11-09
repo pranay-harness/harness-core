@@ -18,11 +18,13 @@ import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.GitAwareRedisProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import lombok.AllArgsConstructor;
+import org.redisson.api.RedissonClient;
 
 @AllArgsConstructor
 @OwnedBy(PIPELINE)
@@ -54,55 +56,62 @@ public class PipelineServiceEventsFrameworkModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
+      RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
-          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,
-              EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redissonClient,
+              EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_PRODUCER))
-          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_TOPIC, redisConfig,
-              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.PLAN_NOTIFY_EVENT_TOPIC, redissonClient,
+              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_REQUEST_PAYLOAD_DETAILS))
-          .toInstance(RedisProducer.of(WEBHOOK_REQUEST_PAYLOAD_DETAILS, redisConfig,
-              WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+          .toInstance(RedisProducer.of(WEBHOOK_REQUEST_PAYLOAD_DETAILS, redissonClient,
+              WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
-              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redissonClient,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(ORCHESTRATION_LOG))
-          .toInstance(RedisProducer.of(ORCHESTRATION_LOG, redisConfig,
-              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+          .toInstance(
+              RedisProducer.of(ORCHESTRATION_LOG, redissonClient, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE,
+                  PIPELINE_SERVICE.getServiceId(), redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT))
-          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT, redisConfig,
-              EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT, redissonClient,
+              EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId(),
+              redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, PIPELINE_SERVICE.getServiceId(),
-              redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
+              redissonClient, EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.POLLING_EVENTS_STREAM))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.POLLING_EVENTS_STREAM, PIPELINE_SERVICE.getServiceId(),
-              redisConfig, EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.POLLING_EVENTS_STREAM_BATCH_SIZE));
+              redissonClient, EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.POLLING_EVENTS_STREAM_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM, PIPELINE_SERVICE.getServiceId(),
-              redisConfig, EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_BATCH_SIZE));
+              redissonClient, EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(PLAN_NOTIFY_EVENT_TOPIC))
-          .toInstance(RedisConsumer.of(PLAN_NOTIFY_EVENT_TOPIC, PIPELINE_SERVICE.getServiceId(), redisConfig,
+          .toInstance(RedisConsumer.of(PLAN_NOTIFY_EVENT_TOPIC, PIPELINE_SERVICE.getServiceId(), redissonClient,
               EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_BATCH_SIZE));
+              EventsFrameworkConstants.PLAN_NOTIFY_EVENT_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Consumer.class)
           .annotatedWith(Names.named(PMS_ORCHESTRATION_NOTIFY_EVENT))
-          .toInstance(RedisConsumer.of(PMS_ORCHESTRATION_NOTIFY_EVENT, PIPELINE_SERVICE.getServiceId(), redisConfig,
+          .toInstance(RedisConsumer.of(PMS_ORCHESTRATION_NOTIFY_EVENT, PIPELINE_SERVICE.getServiceId(), redissonClient,
               EventsFrameworkConstants.PLAN_NOTIFY_EVENT_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT_BATCH_SIZE));
+              EventsFrameworkConstants.PMS_ORCHESTRATION_NOTIFY_EVENT_BATCH_SIZE, redisConfig.getEnvNamespace()));
     }
   }
 }
