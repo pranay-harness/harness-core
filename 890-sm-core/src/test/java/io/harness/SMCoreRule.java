@@ -23,12 +23,9 @@ import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagModule;
-import io.harness.ff.FeatureFlagService;
-import io.harness.ff.FeatureFlagServiceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.lock.DistributedLockImplementation;
-import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
@@ -45,7 +42,6 @@ import io.harness.secrets.SecretsFileService;
 import io.harness.secrets.SecretsRBACService;
 import io.harness.secrets.setupusage.SecretSetupUsageBuilder;
 import io.harness.secrets.setupusage.SecretSetupUsageBuilders;
-import io.harness.serializer.FeatureFlagBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.SMCoreRegistrars;
@@ -57,6 +53,7 @@ import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -75,6 +72,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
 public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -110,6 +108,12 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+      }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
       }
     });
 
