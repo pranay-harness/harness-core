@@ -1,15 +1,18 @@
 package io.harness.ccm.remote.resources;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.utils.LogAccountIdentifier;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
-import io.harness.eraro.ErrorCode;
-import io.harness.eraro.Level;
-import io.harness.eraro.ResponseMessage;
-import io.harness.rest.RestResponse;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -17,9 +20,17 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -29,21 +40,25 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
+// import org.springframework.web.bind.annotation.RequestBody;
 
 @Api("perspectiveReport")
-@Path("/perspectiveReport")
-@Produces("application/json")
+@Path("perspectiveReport")
+@Produces(MediaType.APPLICATION_JSON)
 @NextGenManagerAuth
 @Slf4j
 @Service
 @OwnedBy(CE)
+@Tag(name = "Cloud Cost Perspective Reports",
+    description = "This resource contains the APIs Reports created on Perspectives")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FailureDTO.class)) })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content = { @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ErrorDTO.class)) })
 public class PerspectiveReportResource {
-  private CEReportScheduleService ceReportScheduleService;
+  private final CEReportScheduleService ceReportScheduleService;
   private static final String accountIdPathParam = "{" + NGCommonEntityConstants.ACCOUNT_KEY + "}";
 
   @Inject
@@ -55,66 +70,100 @@ public class PerspectiveReportResource {
   @Timed
   @Path(accountIdPathParam)
   @ExceptionMetered
+  @LogAccountIdentifier
   @ApiOperation(value = "Get perspective reports", nickname = "getReportSetting")
-  public RestResponse<List<CEReportSchedule>> getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
-      @QueryParam("reportId") String reportId, @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
+  @Operation(operationId = "getReportSetting",
+      description = "Get Reports by Report identifier or by Perspective identifier",
+      summary = "Get Reports by Report identifier or by Perspective identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Returns a list of Report Schedules",
+            content = { @Content(mediaType = MediaType.APPLICATION_JSON) })
+      })
+  public ResponseDTO<List<CEReportSchedule>>
+  getReportSetting(
+      @Parameter(description = "The identifier of the Perspective") @QueryParam("perspectiveId") String perspectiveId,
+      @Parameter(description = "The identifier of the Report") @QueryParam("reportId") String reportId,
+      @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
     if (perspectiveId != null) {
-      return new RestResponse<>(ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
+      return ResponseDTO.newResponse(ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
     } else if (reportId != null) {
       List<CEReportSchedule> ceList = new ArrayList<>();
       CEReportSchedule rep = ceReportScheduleService.get(reportId, accountId);
       if (rep != null) {
         ceList.add(rep);
       }
-      return new RestResponse<>(ceList);
+      return ResponseDTO.newResponse(ceList);
     }
-    // INVALID_REQUEST
-    RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
-    addResponseMessage(
-        rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Either 'viewId' or 'reportId' is needed");
-    return rr;
+
+    throw new InvalidRequestException("Either 'viewId' or 'reportId' is needed");
   }
 
   @DELETE
   @Timed
   @Path(accountIdPathParam)
   @ExceptionMetered
+  @LogAccountIdentifier
   @ApiOperation(value = "Delete perspective reports", nickname = "deleteReportSetting")
-  public RestResponse<String> deleteReportSetting(@QueryParam("reportId") String reportId,
-      @QueryParam("perspectiveId") String perspectiveId,
-      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
+  @Operation(operationId = "deleteReportSetting",
+      description = "Delete setting by Report identifier or by Perspective identifier",
+      summary = "Delete setting by Report identifier or by Perspective identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Returns a generic string message when the operation is successful",
+            content = { @Content(mediaType = MediaType.APPLICATION_JSON) })
+      })
+  public ResponseDTO<String>
+  deleteReportSetting(@Parameter(description = "The Report Identifier") @QueryParam("reportId") String reportId,
+      @Parameter(description = "The Perspective Identifier") @QueryParam("perspectiveId") String perspectiveId,
+      @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId) {
+    final String deleteSuccessfulMsg = "Successfully deleted the record";
+
     if (perspectiveId != null) {
       ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
-      return new RestResponse<>("Successfully deleted the record");
+
+      return ResponseDTO.newResponse(deleteSuccessfulMsg);
     } else if (reportId != null) {
       ceReportScheduleService.delete(reportId, accountId);
-      return new RestResponse<>("Successfully deleted the record");
+
+      return ResponseDTO.newResponse(deleteSuccessfulMsg);
     }
-    // INVALID_REQUEST
-    RestResponse<String> rr = new RestResponse<>();
-    addResponseMessage(
-        rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Either 'viewId' or 'reportId' is needed");
-    return rr;
+
+    throw new InvalidRequestException("Either 'perspectiveId' or 'reportId' is needed");
   }
 
   @POST
   @Path(accountIdPathParam)
   @Timed
   @ExceptionMetered
+  @LogAccountIdentifier
+  @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
-  public RestResponse<List<CEReportSchedule>> createReportSetting(
-      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEReportSchedule schedule) {
+  @Operation(operationId = "createReportSetting",
+      description =
+          "Create setting by Report identifier or by Perspective identifier, by sending CEReportSchedule as request body",
+      summary = "Create Report Setting",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Returns a list of Report Schedules",
+            content = { @Content(mediaType = MediaType.APPLICATION_JSON) })
+      })
+  public ResponseDTO<List<CEReportSchedule>>
+  createReportSetting(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
+                          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Valid @NotNull String accountId,
+      @NotNull @Valid @RequestBody(
+          required = true, description = "CEReportSchedule object to be saved") CEReportSchedule schedule) {
     List<CEReportSchedule> ceList = new ArrayList<>();
     try {
-      CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
       ceList.add(ceReportScheduleService.createReportSetting(accountId, schedule));
-      return new RestResponse<>(ceList);
+      return ResponseDTO.newResponse(ceList);
     } catch (IllegalArgumentException e) {
       log.error("ERROR", e);
-      RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
-      addResponseMessage(
-          rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
-      return rr;
+
+      throw new InvalidRequestException("Schedule provided is invalid");
     }
   }
 
@@ -123,29 +172,25 @@ public class PerspectiveReportResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")
-  public RestResponse<List<CEReportSchedule>> updateReportSetting(
-      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEReportSchedule schedule) {
+  @Operation(operationId = "updateReportSetting",
+      description = "Update perspective reports by sending CEReportSchedule as request body",
+      summary = "Update perspective reports",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Returns a list of Report Schedules",
+            content = { @Content(mediaType = MediaType.APPLICATION_JSON) })
+      })
+  public ResponseDTO<List<CEReportSchedule>>
+  updateReportSetting(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @PathParam(
+                          NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @Valid @RequestBody(
+          required = true, description = "CEReportSchedule object to be updated") CEReportSchedule schedule) {
     try {
-      CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      return new RestResponse<>(ceReportScheduleService.update(accountId, schedule));
+      return ResponseDTO.newResponse(ceReportScheduleService.update(accountId, schedule));
     } catch (IllegalArgumentException e) {
       log.warn(String.valueOf(e));
-      RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
-      addResponseMessage(
-          rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
-      return rr;
+
+      throw new InvalidRequestException("Schedule provided is invalid");
     }
-  }
-
-  private static void addResponseMessage(RestResponse rr, ErrorCode errorCode, Level level, String message) {
-    ResponseMessage rm = ResponseMessage.builder().code(errorCode).level(level).message(message).build();
-
-    List<ResponseMessage> responseMessages = rr.getResponseMessages();
-    responseMessages.add(rm);
-    rr.setResponseMessages(responseMessages);
-  }
-
-  private Response prepareResponse(RestResponse restResponse, Response.Status status) {
-    return Response.status(status).entity(restResponse).type(MediaType.APPLICATION_JSON).build();
   }
 }

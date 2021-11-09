@@ -11,6 +11,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -28,6 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "CEViewKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceView", noClassnameStored = true)
+@Schema(description = "This object will contain the complete definition of a Cloud Cost Perspective")
 public final class CEView implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
                                      CreatedByAware, UpdatedByAware {
   @Id String uuid;
