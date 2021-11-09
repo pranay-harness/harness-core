@@ -12,14 +12,20 @@ import software.wings.service.intfc.EnvironmentService;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CustomEnvFilterYamlHandler extends EnvironmentFilterYamlHandler<CustomEnvFilter.Yaml, CustomEnvFilter> {
   @Inject private EnvironmentService environmentService;
 
   @Override
   public CustomEnvFilter.Yaml toYaml(CustomEnvFilter bean, String accountId) {
-    List<String> envNames = environmentService.getNames(accountId, bean.getEnvironments());
+    Map<String, String> envIdName = environmentService.getEnvironmentsFromIds(accountId, bean.getEnvironments())
+                                        .stream()
+                                        .collect(Collectors.toMap(Environment::getUuid, Environment::getName));
 
+    // Preserve the order of environments
+    List<String> envNames = bean.getEnvironments().stream().map(envIdName::get).collect(Collectors.toList());
     return CustomEnvFilter.Yaml.builder().environments(envNames).environmentFilterType(bean.getFilterType()).build();
   }
 

@@ -97,6 +97,8 @@ input SetupInput {
   from: Long
   #Input the end time of the freeze only when 'isDurationBased' is 'false'.
   to: Long
+  #Input a valid region based ID for time zone. Eg. Asia/Calcutta
+  timeZone: String!
   #Input the frequency for a recurring deployment freeze window. If not recurring leave it be null.
   freezeOccurrence: FreezeOccurrenceType
   #Input 'true' for running this Scheduled-Based freeze window forever(max 5 Years from now) else input 'false' and enter the expiry time for the window.
@@ -153,6 +155,7 @@ type Setup {
   duration: Long
   from: Long
   to: Long
+  timeZone: String
   freezeOccurrence: FreezeOccurrenceType
   untilForever: Boolean
   endTime: Long
