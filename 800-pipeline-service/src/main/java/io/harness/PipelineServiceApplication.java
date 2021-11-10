@@ -23,6 +23,8 @@ import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.executions.BuildRestrictionUsageImpl;
+import io.harness.enforcement.executions.CIMonthlyBuildImpl;
+import io.harness.enforcement.executions.CITotalBuildImpl;
 import io.harness.enforcement.executions.DeploymentRestrictionUsageImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -742,7 +744,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
         RestrictionUsageRegisterConfiguration.builder()
             .restrictionNameClassMap(
-                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder().build())
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
+                    .put(FeatureRestrictionName.MAX_TOTAL_BUILDS, CITotalBuildImpl.class)
+                    .put(FeatureRestrictionName.MAX_BUILDS_PER_MONTH, CIMonthlyBuildImpl.class)
+                    .build())
             .build();
     CustomRestrictionRegisterConfiguration customConfig =
         CustomRestrictionRegisterConfiguration.builder()
