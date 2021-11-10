@@ -1,7 +1,6 @@
 package io.harness.eventsframework.impl.redis;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import static io.harness.eventsframework.impl.redis.RedisUtils.REDIS_STREAM_INTERNAL_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -73,10 +72,8 @@ public class RedisProducer extends AbstractProducer {
     populateOtherProducerSpecificData(redisData);
 
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
-    log.info("Events framework - messageId: {}, metaData: {}", messageId, message.getMetadataMap());
-    if (this.getTopicName().equals(SETUP_USAGE)) {
-      log.info("Inserting setup usage data: {}", redisData);
-    }
+    redisData.remove(REDIS_STREAM_INTERNAL_KEY);
+    log.info("Events framework message inserted - messageId: {}, metaData: {}", messageId, redisData);
     return messageId.toString();
   }
 
