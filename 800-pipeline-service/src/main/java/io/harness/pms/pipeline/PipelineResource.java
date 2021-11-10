@@ -543,14 +543,14 @@ public class PipelineResource implements YamlSchemaResource {
     if (executionSummaryEntity.getEntityGitDetails() == null) {
       try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
                executionSummaryEntity.getGitSyncBranchContext(), false)) {
-        optionalPipelineEntity =
-            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+        optionalPipelineEntity = pmsPipelineService.getWithoutIsDeleted(
+            accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier());
       }
     } else {
       try (PmsGitSyncBranchContextGuard ignore = new PmsGitSyncBranchContextGuard(
                executionSummaryEntity.getEntityGitDetails().toGitSyncBranchContext(), false)) {
-        optionalPipelineEntity =
-            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+        optionalPipelineEntity = pmsPipelineService.getWithoutIsDeleted(
+            accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier());
       }
     }
     if (!optionalPipelineEntity.isPresent()) {
