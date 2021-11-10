@@ -6,6 +6,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -30,24 +31,27 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Builder
-@Entity(value = "delegateTokens", noClassnameStored = true)
-@FieldNameConstants(innerTypeName = "DelegateTokenKeys")
+@Entity(value = "delegateTokensNG", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "DelegateNgTokenKeys")
 @OwnedBy(HarnessTeam.DEL)
 @StoreIn(DbAliases.ALL)
-public class DelegateToken implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, NameAndValueAccess {
+public class DelegateNgToken
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, NameAndValueAccess {
   public static final Duration TTL = ofDays(30);
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .field(DelegateTokenKeys.accountId)
-                 .field(DelegateTokenKeys.name)
+                 .field(DelegateNgTokenKeys.accountId)
+                 .field(DelegateNgTokenKeys.owner)
+                 .field(DelegateNgTokenKeys.name)
                  .unique(true)
-                 .name("byAccountAndName")
+                 .name("byAccountOwnerAndName")
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .field(DelegateTokenKeys.accountId)
-                 .field(DelegateTokenKeys.status)
+                 .field(DelegateNgTokenKeys.accountId)
+                 .field(DelegateNgTokenKeys.owner)
+                 .field(DelegateNgTokenKeys.status)
                  .name("byAccountAndStatus")
                  .build())
         .build();
@@ -56,10 +60,11 @@ public class DelegateToken implements PersistentEntity, UuidAware, CreatedAtAwar
   @Id @NotNull private String uuid;
   @NotEmpty private String accountId;
   @NotEmpty private String name;
+  private DelegateEntityOwner owner;
   private EmbeddedUser createdBy;
   private long createdAt;
   private DelegateTokenStatus status;
   private String value;
-
+  @EntityIdentifier private String identifier;
   @FdTtlIndex private Date validUntil;
 }
