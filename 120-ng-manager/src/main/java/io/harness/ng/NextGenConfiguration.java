@@ -74,7 +74,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String ARTIFACTS_PACKAGE = "io.harness.ng.core.artifacts.resources";
   public static final String AUTHENTICATION_SETTINGS_PACKAGE = "io.harness.ng.authenticationsettings.resources";
   public static final String SERVICE_PACKAGE = "io.harness.ng.core.service.resources";
-  public static final String CD_OVERVIEW_PACKAGE = "io.harness.ng.cdOverview.resource";
+  public static final String CD_OVERVIEW_PACKAGE = "io.harness.ng.overview.resource";
   public static final String ACTIVITY_HISTORY_PACKAGE = "io.harness.ng.core.activityhistory.resource";
   public static final String SERVICE_ACCOUNTS_PACKAGE = "io.harness.ng.serviceaccounts.resource";
   public static final String BUCKETS_PACKAGE = "io.harness.ng.core.buckets.resources";
@@ -151,6 +151,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
+  @JsonProperty("ciManagerClientConfig") ServiceHttpClientConfig ciManagerClientConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

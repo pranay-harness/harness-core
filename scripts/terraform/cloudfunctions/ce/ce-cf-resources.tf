@@ -83,12 +83,6 @@ resource "google_pubsub_topic" "ce-gcp-billing-cf-topic" {
   project = "${var.projectId}"
 }
 
-# PubSub topic for GCP data pipeline
-resource "google_pubsub_topic" "ce-gcpdata-topic" {
-  name = "ce-gcpdata"
-  project = "${var.projectId}"
-}
-
 # PubSub topic for GCP Instance Inventory data pipeline. scheduler pushes into this
 resource "google_pubsub_topic" "ce-gcp-instance-inventory-data-topic" {
   name = "ce-gcp-instance-inventory-data-scheduler"
@@ -499,13 +493,6 @@ resource "google_storage_bucket_object" "ce-clusterdata-archive" {
   depends_on = ["data.archive_file.ce-clusterdata"]
 }
 
-resource "google_storage_bucket_object" "ce-gcpdata-archive" {
-  name = "ce-gcpdata.${data.archive_file.ce-gcpdata.output_md5}.zip"
-  bucket = "${google_storage_bucket.bucket1.name}"
-  source = "${path.module}/files/ce-gcpdata.zip"
-  depends_on = ["data.archive_file.ce-gcpdata"]
-}
-
 resource "google_storage_bucket_object" "ce-gcp-billing-bq-archive" {
   name = "ce-aws-billing-bq.${data.archive_file.ce-gcp-billing-bq.output_md5}.zip"
   bucket = "${google_storage_bucket.bucket1.name}"
@@ -642,33 +629,6 @@ resource "google_cloudfunctions_function" "ce-clusterdata-function" {
     }
 }
 
-resource "google_cloudfunctions_function" "ce-gcpdata-function" {
-  name                      = "ce-gcpdata-terraform"
-  description               = ""
-  entry_point               = "main"
-  available_memory_mb       = 256
-  timeout                   = 540
-  runtime                   = "python38"
-  project                   = "${var.projectId}"
-  region                    = "${var.region}"
-  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
-  source_archive_object     = "${google_storage_bucket_object.ce-gcpdata-archive.name}"
-  #labels = {
-  #  deployment_name           = "test"
-  #}
-  environment_variables = {
-    disabled = "false"
-    disable_for_accounts = ""
-    GCP_PROJECT = "${var.projectId}"
-  }
-  event_trigger {
-    event_type = "google.pubsub.topic.publish"
-    resource   = "${google_pubsub_topic.ce-gcpdata-topic.name}"
-    failure_policy {
-      retry = false
-    }
-  }
-}
 
 resource "google_cloudfunctions_function" "ce-gcp-billing-bq-function" {
   name                      = "ce-gcp-billing-bq-terraform"
