@@ -1,13 +1,12 @@
 package io.harness.plancreator.steps.internal;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-
 import io.harness.advisers.manualIntervention.ManualInterventionAdviserRollbackParameters;
 import io.harness.advisers.manualIntervention.ManualInterventionAdviserWithRollback;
 import io.harness.advisers.retry.RetryAdviserRollbackParameters;
 import io.harness.advisers.retry.RetryAdviserWithRollback;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
+import io.harness.plancreator.steps.GenericStepPmsPlanCreatorV2;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.yaml.ParameterField;
@@ -23,13 +22,11 @@ import com.google.protobuf.ByteString;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@OwnedBy(PIPELINE)
-public class PMSStepPlanCreator extends GenericStepPMSPlanCreator {
+@OwnedBy(HarnessTeam.PIPELINE)
+public class PmsStepPlanCreatorV2 extends GenericStepPmsPlanCreatorV2 {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet(StepSpecTypeConstants.BARRIER, StepSpecTypeConstants.HARNESS_APPROVAL,
-        StepSpecTypeConstants.JIRA_APPROVAL, StepSpecTypeConstants.JIRA_CREATE, StepSpecTypeConstants.JIRA_UPDATE,
-        StepSpecTypeConstants.FLAG_CONFIGURATION, StepSpecTypeConstants.SHELL_SCRIPT);
+    return Sets.newHashSet(StepSpecTypeConstants.HTTP);
   }
 
   @Override
