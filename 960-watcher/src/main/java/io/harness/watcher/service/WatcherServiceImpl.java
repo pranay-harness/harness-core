@@ -1451,7 +1451,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   @VisibleForTesting
   String getVersion() {
-    return (new VersionInfoManager()).getVersionInfo().getVersion();
+    return (new VersionInfoManager()).getVersionInfo().getFullVersion();
   }
 
   private void migrate(String newUrl) {
