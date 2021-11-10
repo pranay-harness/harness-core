@@ -518,6 +518,7 @@ import software.wings.search.framework.ElasticsearchBulkMigrationJob;
 import software.wings.search.framework.SearchDistributedLock;
 import software.wings.search.framework.SearchEntityIndexState;
 import software.wings.search.framework.SearchSourceEntitySyncState;
+import software.wings.search.framework.TimeScaleSourceEntitySyncState;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -1027,6 +1028,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TerragruntInfrastructureProvisioner.class);
     set.add(ThirdPartyApiCallLog.class);
     set.add(TimeScaleEntityIndexState.class);
+    set.add(TimeScaleSourceEntitySyncState.class);
     set.add(TimeSeriesDataRecord.class);
     set.add(TimeSeriesKeyTransactions.class);
     set.add(TimeSeriesMetricGroup.class);
