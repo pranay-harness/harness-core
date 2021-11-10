@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.service;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.ABHINAV;
@@ -34,9 +33,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
 
@@ -81,20 +80,19 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 @Slf4j
-@OwnedBy(CDC)
 public class YamlServiceImplTest extends WingsBaseTest {
-  private static final String RESOURCE_PATH = "400-rest/src/test/resources/yaml";
-
   @Mock private YamlHandlerFactory yamlHandlerFactory;
   @Mock private YamlHelper yamlHelper;
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private YamlGitService yamlGitService;
+  @Mock private transient YamlGitService yamlGitService;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject YamlServiceImpl yamlService = new YamlServiceImpl();
+  @Spy @InjectMocks private AuditHelper auditHelper;
   @Mock private AuditService auditService;
+  private static final String resourcePath = "400-rest/src/test/resources/yaml";
   @Mock ApplicationYamlHandler applicationYamlHandler;
   @Mock BaseYamlHandler baseYamlHandler;
   @Mock HarnessTagYamlHelper harnessTagYamlHelper;
-  @Spy @InjectMocks private AuditHelper auditHelper;
 
   @Before
   public void setUp() {
@@ -342,7 +340,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   }
   private InputStream setupInputStreamFromZipFile(final String fileName) throws FileNotFoundException {
     File file = null;
-    file = new File(RESOURCE_PATH + PATH_DELIMITER + fileName + ".zip");
+    file = new File(resourcePath + PATH_DELIMITER + fileName + ".zip");
     return new FileInputStream(file);
   }
 }

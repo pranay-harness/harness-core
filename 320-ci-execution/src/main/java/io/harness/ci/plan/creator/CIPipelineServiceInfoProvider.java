@@ -10,6 +10,7 @@ import io.harness.ci.plan.creator.filter.CIStageFilterJsonCreator;
 import io.harness.ci.plan.creator.stage.IntegrationStagePMSPlanCreator;
 import io.harness.ci.plan.creator.step.CIPMSStepFilterJsonCreator;
 import io.harness.ci.plan.creator.step.CIPMSStepPlanCreator;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
@@ -70,6 +71,7 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     StepInfo runTestsStepInfo = StepInfo.newBuilder()
                                     .setName("Run Tests")
                                     .setType(StepSpecTypeConstants.RUN_TEST)
+                                    .setFeatureRestrictionName(FeatureRestrictionName.TEST_INTELLIGENCE.name())
                                     .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("Build").build())
                                     .build();
 

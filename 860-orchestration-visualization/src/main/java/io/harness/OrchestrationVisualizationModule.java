@@ -10,6 +10,7 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.graph.stepDetail.PmsGraphStepDetailsServiceImpl;
 import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.redis.RedisConfig;
@@ -27,6 +28,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.redisson.api.RedissonClient;
 
 @OwnedBy(CDC)
 public class OrchestrationVisualizationModule extends AbstractModule {
@@ -57,11 +59,12 @@ public class OrchestrationVisualizationModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
+      RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
       bind(Consumer.class)
           .annotatedWith(Names.named(ORCHESTRATION_LOG))
-          .toInstance(RedisConsumer.of(ORCHESTRATION_LOG, PIPELINE_SERVICE.getServiceId(), redisConfig,
+          .toInstance(RedisConsumer.of(ORCHESTRATION_LOG, PIPELINE_SERVICE.getServiceId(), redissonClient,
               EventsFrameworkConstants.ORCHESTRATION_LOG_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.ORCHESTRATION_LOG_READ_BATCH_SIZE));
+              EventsFrameworkConstants.ORCHESTRATION_LOG_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
     }
   }
 

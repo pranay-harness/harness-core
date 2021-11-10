@@ -17,6 +17,7 @@ public class QLSetup {
   Long duration;
   Long from;
   Long to;
+  String timeZone;
   TimeRangeOccurrence freezeOccurrence;
   Boolean untilForever;
   Long endTime;

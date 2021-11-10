@@ -19,5 +19,6 @@ timeRangeBasedFreezeConfigs:
     durationBased: false
     from: '1507388740000'
     to: '1707392340000'
+    timeZone: Asia/Calcutta
   userGroups:
   - Account Administrator

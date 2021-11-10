@@ -2,7 +2,9 @@ package io.harness.cdng.usage.impl;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -15,16 +17,17 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.usage.beans.CDLicenseUsageDTO;
+import io.harness.cdng.usage.beans.ServiceInstanceUsageDTO;
+import io.harness.cdng.usage.beans.ServiceUsageDTO;
 import io.harness.dtos.InstanceDTO;
 import io.harness.licensing.beans.modules.types.CDLicenseType;
 import io.harness.licensing.usage.beans.ReferenceDTO;
 import io.harness.licensing.usage.params.CDUsageRequestParams;
-import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.service.instance.InstanceService;
+import io.harness.timescaledb.tables.pojos.Services;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -42,6 +45,7 @@ import org.mockito.MockitoAnnotations;
 public class CDLicenseUsageImplTest extends CategoryTest {
   @Mock private InstanceService instanceService;
   @Mock private ServiceEntityService serviceEntityService;
+  @Mock CDLicenseUsageDslHelper cdLicenseUsageHelper;
   @InjectMocks @Inject private CDLicenseUsageImpl cdLicenseUsage;
 
   private static final String accountIdentifier = "ACCOUNT_ID";
@@ -59,35 +63,74 @@ public class CDLicenseUsageImplTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.TATHAGAT)
   @Category(UnitTests.class)
-  public void testGetLicenseUsage() {
-    List<InstanceDTO> testInstanceDTOData = createTestInstanceDTOData(2);
-    List<ServiceEntity> testServiceEntityData = createTestServiceEntityData(2);
+  public void testGetServiceTypeLicenseUsage() {
+    prepareTestData();
 
-    when(instanceService.getInstancesDeployedAfter(anyString(), anyLong())).thenReturn(testInstanceDTOData);
-    when(serviceEntityService.find(anyString(), anyString(), anyString(), anyString(), anyBoolean()))
-        .thenReturn(testServiceEntityData.get(0))
-        .thenReturn(testServiceEntityData.get(1));
-
-    CDLicenseUsageDTO cdLicenseUsageDTO = cdLicenseUsage.getLicenseUsage(accountIdentifier, ModuleType.CD, timestamp,
-        CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
+    ServiceUsageDTO cdServiceUsageDTO = (ServiceUsageDTO) cdLicenseUsage.getLicenseUsage(accountIdentifier,
+        ModuleType.CD, timestamp, CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
-        .getInstancesDeployedAfter(
-            eq(accountIdentifier), eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(60)).toEpochMilli()));
-    verify(serviceEntityService, times(2)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
+        .getInstancesModifiedInInterval(eq(accountIdentifier),
+            eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
 
-    assertThat(cdLicenseUsageDTO.getActiveServiceInstances()).isNotNull();
-    List<ReferenceDTO> activeServiceInstanceReferences = cdLicenseUsageDTO.getActiveServiceInstances().getReferences();
-    assertThat(activeServiceInstanceReferences).hasSize(2);
+    assertActiveInstanceUsageDTOOutput(cdServiceUsageDTO);
+    assertActiveServiceDTOOutput(cdServiceUsageDTO);
 
+    assertThat(cdServiceUsageDTO.getServiceLicenses()).isNotNull();
+    assertThat(cdServiceUsageDTO.getServiceLicenses().getCount()).isEqualTo(6);
+    assertThat(cdServiceUsageDTO.getServiceLicenses().getReferences()).isNull();
+  }
+
+  private void assertActiveServiceDTOOutput(ServiceUsageDTO cdServiceUsageDTO) {
+    assertThat(cdServiceUsageDTO.getActiveServices()).isNotNull();
+    assertThat(cdServiceUsageDTO.getActiveServices().getCount()).isEqualTo(3);
+    assertThat(cdServiceUsageDTO.getActiveServices().getReferences().size()).isEqualTo(3);
+    assertThat(cdServiceUsageDTO.getActiveServices()).isNotNull();
+    List<ReferenceDTO> activeServiceReferences = cdServiceUsageDTO.getActiveServices().getReferences();
+    ReferenceDTO expectedActiveServiceReference = getExpectedActiveServiceReference();
+    assertThat(activeServiceReferences.get(0))
+        .isEqualToComparingOnlyGivenFields(expectedActiveServiceReference, "identifier", "name", "accountIdentifier",
+            "projectIdentifier", "orgIdentifier");
+  }
+
+  private void assertActiveInstanceUsageDTOOutput(ServiceUsageDTO cdServiceUsageDTO) {
+    assertThat(cdServiceUsageDTO.getActiveServiceInstances()).isNotNull();
+    assertThat(cdServiceUsageDTO.getActiveServiceInstances().getCount()).isEqualTo(90);
+    List<ReferenceDTO> activeServiceInstanceReferences = cdServiceUsageDTO.getActiveServiceInstances().getReferences();
+    assertThat(activeServiceInstanceReferences).hasSize(3);
+    ReferenceDTO expectedInstanceReference = getExpectedInstanceReference();
+    assertThat(activeServiceInstanceReferences.get(0))
+        .isEqualToComparingOnlyGivenFields(
+            expectedInstanceReference, "identifier", "name", "accountIdentifier", "projectIdentifier", "orgIdentifier");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetServiceInstanceTypeLicenseUsage() {
+    prepareTestData();
+    ServiceInstanceUsageDTO cdServiceInstanceUsageDTO =
+        (ServiceInstanceUsageDTO) cdLicenseUsage.getLicenseUsage(accountIdentifier, ModuleType.CD, timestamp,
+            CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICE_INSTANCES).build());
+
+    verify(instanceService, times(1))
+        .getInstancesModifiedInInterval(eq(accountIdentifier),
+            eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
+
+    assertThat(cdServiceInstanceUsageDTO.getActiveServiceInstances()).isNotNull();
+    List<ReferenceDTO> activeServiceInstanceReferences =
+        cdServiceInstanceUsageDTO.getActiveServiceInstances().getReferences();
+    assertThat(activeServiceInstanceReferences).hasSize(3);
     ReferenceDTO expectedInstanceReference = getExpectedInstanceReference();
     assertThat(activeServiceInstanceReferences.get(0))
         .isEqualToComparingOnlyGivenFields(
             expectedInstanceReference, "identifier", "name", "accountIdentifier", "projectIdentifier", "orgIdentifier");
 
-    assertThat(cdLicenseUsageDTO.getActiveServices()).isNotNull();
-    List<ReferenceDTO> activeServiceReferences = cdLicenseUsageDTO.getActiveServices().getReferences();
-    assertThat(activeServiceReferences).hasSize(2);
+    assertThat(cdServiceInstanceUsageDTO.getActiveServices()).isNotNull();
+    assertThat(cdServiceInstanceUsageDTO.getActiveServices().getCount()).isEqualTo(3);
+    assertThat(cdServiceInstanceUsageDTO.getActiveServices().getReferences().size()).isEqualTo(3);
+    assertThat(cdServiceInstanceUsageDTO.getActiveServices()).isNotNull();
+    List<ReferenceDTO> activeServiceReferences = cdServiceInstanceUsageDTO.getActiveServices().getReferences();
     ReferenceDTO expectedActiveServiceReference = getExpectedActiveServiceReference();
     assertThat(activeServiceReferences.get(0))
         .isEqualToComparingOnlyGivenFields(expectedActiveServiceReference, "identifier", "name", "accountIdentifier",
@@ -97,26 +140,42 @@ public class CDLicenseUsageImplTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.TATHAGAT)
   @Category(UnitTests.class)
-  public void testGetLicenseUsageEmptyActiveInstanceList() {
-    when(instanceService.getInstancesDeployedAfter(anyString(), anyLong())).thenReturn(emptyList());
+  public void testGetLicenseUsageEmptyAggregateServiceUsageInfo() {
+    when(cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
+             anyString(), anyDouble(), anyLong(), anyLong()))
+        .thenReturn(emptyList());
 
-    CDLicenseUsageDTO cdLicenseUsageDTO = cdLicenseUsage.getLicenseUsage(accountIdentifier, ModuleType.CD, timestamp,
-        CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
+    ServiceUsageDTO serviceTypeLicenseUsage = (ServiceUsageDTO) cdLicenseUsage.getLicenseUsage(accountIdentifier,
+        ModuleType.CD, timestamp, CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
-        .getInstancesDeployedAfter(
-            eq(accountIdentifier), eq(Instant.ofEpochSecond(timestamp).minus(Period.ofDays(60)).toEpochMilli()));
+        .getInstancesModifiedInInterval(eq(accountIdentifier),
+            eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
     verify(serviceEntityService, times(0)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
-    assertThat(cdLicenseUsageDTO.getActiveServices().getCount()).isZero();
-    assertThat(cdLicenseUsageDTO.getActiveServiceInstances().getCount()).isZero();
+    assertThat(serviceTypeLicenseUsage.getActiveServices().getCount()).isZero();
+    assertThat(serviceTypeLicenseUsage.getActiveServiceInstances().getCount()).isZero();
+    assertThat(serviceTypeLicenseUsage.getServiceLicenses().getCount()).isZero();
+  }
+
+  private void prepareTestData() {
+    List<InstanceDTO> testInstanceDTOData = createTestInstanceDTOData(3);
+    List<Services> testServiceData = createTestServiceData(3);
+    List<AggregateServiceUsageInfo> testServiceUsageInfoData = createTestServiceUsageInfoData(3);
+
+    when(cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
+             anyString(), anyDouble(), anyLong(), anyLong()))
+        .thenReturn(testServiceUsageInfoData);
+    when(instanceService.getInstancesModifiedInInterval(anyString(), anyLong(), anyLong()))
+        .thenReturn(testInstanceDTOData);
+    when(cdLicenseUsageHelper.getServiceEntities(any(), any())).thenReturn(testServiceData);
   }
 
   private ReferenceDTO getExpectedActiveServiceReference() {
     return ReferenceDTO.builder()
         .name("SERVICE0")
         .identifier("SERVICE0")
-        .accountIdentifier("ACCOUNT_ID0")
+        .accountIdentifier("ACCOUNT_ID")
         .projectIdentifier("PROJECT_ID0")
         .orgIdentifier("ORG_ID0")
         .build();
@@ -145,17 +204,21 @@ public class CDLicenseUsageImplTest extends CategoryTest {
     return instanceDTOList;
   }
 
-  List<ServiceEntity> createTestServiceEntityData(int dataSize) {
-    List<ServiceEntity> serviceEntityList = new ArrayList<>();
+  private List<Services> createTestServiceData(int dataSize) {
+    List<Services> services = new ArrayList<>();
     for (int i = 0; i < dataSize; i++) {
-      serviceEntityList.add(ServiceEntity.builder()
-                                .identifier(serviceIdentifier + i)
-                                .name(serviceIdentifier + i)
-                                .accountId(accountIdentifier + i)
-                                .projectIdentifier(projectIdentifier + i)
-                                .orgIdentifier(orgIdentifier + i)
-                                .build());
+      services.add(new Services(serviceIdentifier + i, accountIdentifier + i, orgIdentifier + i, projectIdentifier + i,
+          serviceIdentifier + i, serviceIdentifier + i, false, null, null));
     }
-    return serviceEntityList;
+    return services;
+  }
+
+  private List<AggregateServiceUsageInfo> createTestServiceUsageInfoData(int dataSize) {
+    List<AggregateServiceUsageInfo> serviceUsageInfoList = new ArrayList<>();
+    for (int i = 1; i <= dataSize; i++) {
+      serviceUsageInfoList.add(
+          new AggregateServiceUsageInfo(orgIdentifier, projectIdentifier, serviceIdentifier + i, 15L * i));
+    }
+    return serviceUsageInfoList;
   }
 }

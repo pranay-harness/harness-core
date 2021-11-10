@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.SMCoreTestBase;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUpdateData;
@@ -315,8 +316,8 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
     UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
     String sampleEncryptionKey = "SampleEncryptionKey";
     EncryptionType sampleEncryptionType = EncryptionType.CUSTOM;
-    updateOperations.set(EncryptedData.EncryptedDataKeys.encryptionKey, sampleEncryptionKey)
-        .set(EncryptedData.EncryptedDataKeys.encryptionType, sampleEncryptionType);
+    updateOperations.set(EncryptedDataKeys.encryptionKey, sampleEncryptionKey)
+        .set(EncryptedDataKeys.encryptionType, sampleEncryptionType);
     secretsDao.updateSecret(encryptedDataOptional.get(), updateOperations);
 
     encryptedDataOptional = secretsDao.getSecretById(encryptedData.getAccountId(), encryptedData.getUuid());

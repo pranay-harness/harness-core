@@ -175,14 +175,14 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
   public SSOConfig uploadSAMLMetadata(@NotNull @AccountIdentifier String accountId,
       @NotNull MultipartBody.Part inputStream, @NotNull String displayName, String groupMembershipAttr,
-      @NotNull Boolean authorizationEnabled, String logoutUrl) {
+      @NotNull Boolean authorizationEnabled, String logoutUrl, String entityIdentifier) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
-
-    return getResponse(managerClient.uploadSAMLMetadata(
-        accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
+    RequestBody entityIdentifierPart = createPartFromString(logoutUrl);
+    return getResponse(managerClient.uploadSAMLMetadata(accountId, inputStream, displayNamePart,
+        groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart));
   }
 
   @Override
