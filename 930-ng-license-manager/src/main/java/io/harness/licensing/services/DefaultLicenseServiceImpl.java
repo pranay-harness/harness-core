@@ -1,10 +1,7 @@
 package io.harness.licensing.services;
 
-import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
-import static io.harness.remote.client.RestClientUtils.getResponse;
-
-import static java.lang.String.format;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import io.harness.ModuleType;
 import io.harness.account.services.AccountService;
 import io.harness.beans.EmbeddedUser;
@@ -20,6 +17,7 @@ import io.harness.licensing.beans.EditionActionDTO;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
+import io.harness.licensing.beans.modules.UpgradeLicenseDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
 import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
 import io.harness.licensing.checks.LicenseComplianceResolver;
@@ -37,9 +35,11 @@ import io.harness.security.dto.UserPrincipal;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetryReporter;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import javax.ws.rs.NotFoundException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
@@ -48,10 +48,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.ws.rs.NotFoundException;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
+
+import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
+import static io.harness.remote.client.RestClientUtils.getResponse;
+import static java.lang.String.format;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -338,10 +338,26 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     Map<Edition, Set<EditionActionDTO>> result = new HashMap<>();
     for (Map.Entry<Edition, Set<EditionAction>> entry : editionStates.entrySet()) {
       Set<EditionActionDTO> dtos =
-          entry.getValue().stream().map(e -> toEditionActionDTO(e)).collect(Collectors.toSet());
+              entry.getValue().stream().map(e -> toEditionActionDTO(e)).collect(Collectors.toSet());
       result.put(entry.getKey(), dtos);
     }
     return result;
+  }
+
+  @Override
+  public ModuleLicenseDTO upgradeLicense(String accountIdentifier, UpgradeLicenseDTO upgradeLicenseDTO) {
+    AccountDTO accountDTO = accountService.getAccount(accountIdentifier);
+    if (accountDTO == null) {
+      throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
+    }
+
+    ModuleLicenseDTO trialLicenseDTO = licenseInterface.generateTrialLicense(upgradeLicenseDTO.getEdition(), accountIdentifier, upgradeLicenseDTO.getModuleType());
+
+    ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
+    trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.START_TRIAL);
+    return updateModuleLicense(trialLicenseDTO);
+
   }
 
   private EditionActionDTO toEditionActionDTO(EditionAction editionAction) {

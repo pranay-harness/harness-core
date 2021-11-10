@@ -5,6 +5,7 @@ import io.harness.licensing.Edition;
 import io.harness.licensing.beans.EditionActionDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
+import io.harness.licensing.beans.modules.UpgradeLicenseDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
 import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
 
@@ -21,4 +22,5 @@ public interface LicenseService extends LicenseCrudService {
   LicensesWithSummaryDTO getLicenseSummary(String accountIdentifier, ModuleType moduleType);
   Edition calculateAccountEdition(String accountIdentifier);
   Map<Edition, Set<EditionActionDTO>> getEditionActions(String accountIdentifier, ModuleType moduleType);
+  ModuleLicenseDTO upgradeLicense(String accountIdentifier, UpgradeLicenseDTO upgradeLicenseDTO);
 }

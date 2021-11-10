@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: permissionsConfiguration
-version: 10
+version: 11
 permissions:
   - identifier: core_project_delete
     name: Delete Project
@@ -362,6 +362,12 @@ permissions:
     name: View Licenses
     status: ACTIVE
     includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+  - identifier: core_license_edit
+    name: Edit Licenses
+    status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
   - identifier: core_serviceaccount_view

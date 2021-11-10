@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 12
+version: 13
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -208,6 +208,7 @@ roles:
         - core_resourcegroup_edit
         - core_resourcegroup_delete
         - core_license_view
+        - core_license_edit
         - core_authsetting_view
         - core_authsetting_edit
         - core_authsetting_delete

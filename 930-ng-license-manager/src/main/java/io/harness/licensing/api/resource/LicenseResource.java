@@ -1,7 +1,6 @@
 package io.harness.licensing.api.resource;
 
-import static io.harness.licensing.accesscontrol.LicenseAccessControlPermissions.VIEW_LICENSE_PERMISSION;
-
+import com.google.inject.Inject;
 import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -14,6 +13,7 @@ import io.harness.licensing.beans.EditionActionDTO;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
+import io.harness.licensing.beans.modules.UpgradeLicenseDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
 import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
 import io.harness.licensing.services.LicenseService;
@@ -22,8 +22,6 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
-
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -33,19 +31,24 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import retrofit2.http.Body;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import retrofit2.http.Body;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static io.harness.licensing.accesscontrol.LicenseAccessControlPermissions.EDIT_LICENSE_PERMISSION;
+import static io.harness.licensing.accesscontrol.LicenseAccessControlPermissions.VIEW_LICENSE_PERMISSION;
 
 @Api("licenses")
 @Path("licenses")
@@ -185,24 +188,43 @@ public class LicenseResource {
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns a free module license")
+                ApiResponse(responseCode = "default", description = "Returns a free module license")
       })
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO>
   startFreeLicense(@Parameter(description = "Account id to start a free license") @NotNull @QueryParam(
-                       NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
-          NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+                   @Parameter(description = "A Harness Platform module.") @NotNull @QueryParam(
+                           NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
     return ResponseDTO.newResponse(licenseService.startFreeLicense(accountIdentifier, moduleType));
   }
+
+  @PUT
+  @Path("upgrade")
+  @ApiOperation(value = "Upgrades existing license For A Module", nickname = "upgradeLicense")
+  @Operation(operationId = "upgradeLicense", summary = "Starts Free License For A Module",
+          responses =
+                  {
+                          @io.swagger.v3.oas.annotations.responses.
+                                  ApiResponse(responseCode = "default", description = "Returns upgraded module license")
+                  })
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = EDIT_LICENSE_PERMISSION)
+  public ResponseDTO<ModuleLicenseDTO>
+  upgradeLicense(@Parameter(description = "Account id to upgrade a license") @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+                 @NotNull @Valid @Body UpgradeLicenseDTO upgradeLicense
+  ) {
+    return ResponseDTO.newResponse(licenseService.upgradeLicense(accountIdentifier, upgradeLicense));
+  }
+
 
   @POST
   @Path("community")
   @ApiOperation(value = "Starts Community License For A Module", nickname = "startCommunityLicense")
   @InternalApi
   public ResponseDTO<ModuleLicenseDTO> startCommunityLicense(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
+          @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+          @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) ModuleType moduleType) {
     return ResponseDTO.newResponse(licenseService.startCommunityLicense(accountIdentifier, moduleType));
   }
 
