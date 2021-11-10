@@ -28,7 +28,7 @@ public class BuildRestrictionUsageImpl implements CustomRestrictionInterface {
       Optional<AccountExecutionMetadata> accountExecutionMetadata =
           accountExecutionMetadataRepository.findByAccountId(accountIdentifier);
       if (!accountExecutionMetadata.isPresent()
-          || accountExecutionMetadata.get().getModuleToExecutionCount().getOrDefault(moduleName, 0L) <= 2600) {
+          || accountExecutionMetadata.get().getModuleToExecutionCount().getOrDefault(moduleName, 0L) <= 2500) {
         return true;
       }
       LocalDate startDate = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate();

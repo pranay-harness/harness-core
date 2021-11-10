@@ -28,7 +28,7 @@ features:
     restrictions:
       FREE:
         restrictionType: STATIC_LIMIT
-        limit: 2600
+        limit: 2500
         clientName: pipelineService
       TEAM:
         restrictionType: AVAILABILITY
