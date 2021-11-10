@@ -34,6 +34,13 @@ public class JiraStepVariableCreator extends GenericStepVariableCreator {
     List<String> complexFields = new ArrayList<>();
     complexFields.add(YAMLFieldNameConstants.OUTPUT_VARIABLES);
 
+    List<YamlField> fields = yamlNode.fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YAMLFieldNameConstants.UUID) && !complexFields.contains(field.getName())) {
+        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+      }
+    });
+
     YamlField outputVariablesField = yamlNode.getField(YAMLFieldNameConstants.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
       addVariablesForOutputVariables(outputVariablesField, yamlOutputPropertiesMap);
