@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionCheck;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
+import io.harness.pms.contracts.interrupts.InterruptType;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -15,6 +16,9 @@ public interface InterruptService {
   List<Interrupt> fetchActiveInterrupts(String planExecutionId);
 
   List<Interrupt> fetchActiveInterruptsForNodeExecution(String planExecutionId, String nodeExecutionId);
+
+  List<Interrupt> fetchActiveInterruptsForNodeExecutionByType(
+      String planExecutionId, String nodeExecutionId, InterruptType interruptType);
 
   List<Interrupt> fetchAllInterrupts(String planExecutionId);
 
