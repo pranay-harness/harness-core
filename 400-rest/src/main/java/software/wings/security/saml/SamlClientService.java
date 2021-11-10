@@ -33,12 +33,15 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.hibernate.validator.constraints.NotBlank;
+import org.jooq.tools.StringUtils;
 
 @OwnedBy(PL)
 @Singleton
 @TargetModule(_950_NG_AUTHENTICATION_SERVICE)
+@Slf4j
 public class SamlClientService {
   public static final String SAML_REQUEST_URI_KEY = "SAMLRequest";
   public static final String SAML_TRIGGER_TYPE = "triggerType"; // login or test
@@ -73,12 +76,19 @@ public class SamlClientService {
     if (samlSettings == null) {
       throw new WingsException(ErrorCode.SAML_IDP_CONFIGURATION_NOT_AVAILABLE);
     }
-    return getSamlClient(samlSettings.getMetaDataFile());
+    String entityIdentifier = StringUtils.isEmpty(samlSettings.getEntityIdentifier())
+        ? RELYING_PARTY_IDENTIFIER
+        : samlSettings.getEntityIdentifier();
+    log.info("SAMLClientService is using relayingPartyIdentifier : {} for accountId: {} and samlSettings : {}",
+        entityIdentifier, samlSettings.getAccountId(), samlSettings);
+    return SamlClient.fromMetadata(entityIdentifier, null,
+        new InputStreamReader(new ByteArrayInputStream(samlSettings.getMetaDataFile().getBytes(UTF_8)), UTF_8));
   }
 
-  public SamlClient getSamlClient(String samlData) throws SamlException {
-    return SamlClient.fromMetadata(RELYING_PARTY_IDENTIFIER, null,
-        new InputStreamReader(new ByteArrayInputStream(samlData.getBytes(UTF_8)), UTF_8));
+  public SamlClient getSamlClient(String entityIdentifier, String samlMetaData) throws SamlException {
+    entityIdentifier = StringUtils.isEmpty(entityIdentifier) ? RELYING_PARTY_IDENTIFIER : entityIdentifier;
+    return SamlClient.fromMetadata(
+        entityIdentifier, null, new InputStreamReader(new ByteArrayInputStream(samlMetaData.getBytes(UTF_8)), UTF_8));
   }
 
   public SSORequest generateSamlRequest(User user) {

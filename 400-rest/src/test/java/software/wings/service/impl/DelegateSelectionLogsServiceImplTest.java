@@ -23,6 +23,7 @@ import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
@@ -51,6 +52,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
@@ -81,6 +83,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
 
   @Inject protected WingsPersistence wingsPersistence;
+  @Mock protected FeatureFlagService featureFlagService;
   @InjectMocks @Inject DelegateSelectionLogsServiceImpl delegateSelectionLogsService;
 
   private Map<String, String> obtainTaskSetupAbstractions() {

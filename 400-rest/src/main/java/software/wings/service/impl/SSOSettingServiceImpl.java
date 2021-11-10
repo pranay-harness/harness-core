@@ -141,6 +141,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       queriedSettings.setOrigin(settings.getOrigin());
       queriedSettings.setGroupMembershipAttr(settings.getGroupMembershipAttr());
       queriedSettings.setLogoutUrl(settings.getLogoutUrl());
+      queriedSettings.setEntityIdentifier(settings.getEntityIdentifier());
       String ssoSettingUuid = wingsPersistence.save(queriedSettings);
       savedSettings = wingsPersistence.get(SamlSettings.class, ssoSettingUuid);
     } else {

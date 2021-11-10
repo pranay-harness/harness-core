@@ -18,7 +18,7 @@ import io.harness.ccm.views.entities.ViewType;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
-import io.harness.rest.RestResponse;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -78,8 +78,8 @@ public class PerspectiveResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreatePerspectiveWithoutName() {
     perspective.setName("");
-    RestResponse<CEView> response = perspectiveResource.create(ACCOUNT_ID, false, perspective);
-    assertThat(response.getResource()).isNull();
+    ResponseDTO<CEView> response = perspectiveResource.create(ACCOUNT_ID, false, perspective);
+    assertThat(response.getData()).isNull();
   }
 
   @Test

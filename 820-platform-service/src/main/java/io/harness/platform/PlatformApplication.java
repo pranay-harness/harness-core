@@ -64,7 +64,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -119,9 +118,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
 
   @Override
   public void run(PlatformConfiguration appConfig, Environment environment) {
-    int numProcessors = Math.max(1, Runtime.getRuntime().availableProcessors());
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(numProcessors, numProcessors * 2, 500L,
-        TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(appConfig.getCommonPoolConfig().getCorePoolSize(),
+        appConfig.getCommonPoolConfig().getMaxPoolSize(), appConfig.getCommonPoolConfig().getIdleTime(),
+        appConfig.getCommonPoolConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting Platform Application ...");
     MaintenanceController.forceMaintenance(true);
     GodInjector godInjector = new GodInjector();

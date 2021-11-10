@@ -29,6 +29,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
+import io.harness.configuration.DeployVariant;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidCredentialsException;
@@ -95,6 +96,7 @@ public class AuthenticationManager {
   @Inject private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private LoginSettingsService loginSettingsService;
+  @Inject private DeployVariant deployVariant;
   @Named("PRIVILEGED") @Inject private AccessControlAdminClient accessControlAdminClient;
   private UserClient userClient;
   private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=invalidsso";
@@ -202,15 +204,17 @@ public class AuthenticationManager {
       throw ex;
     }
 
-    boolean showCaptcha = false;
-    try {
-      failedLoginAttemptCountChecker.check(user);
-    } catch (MaxLoginAttemptExceededException e) {
-      log.info("User exceeded max failed login attemts. {}", e.getMessage());
-      showCaptcha = true;
-    }
+    if (!DeployVariant.COMMUNITY.equals(deployVariant)) {
+      boolean showCaptcha = false;
+      try {
+        failedLoginAttemptCountChecker.check(user);
+      } catch (MaxLoginAttemptExceededException e) {
+        log.info("User exceeded max failed login attemts. {}", e.getMessage());
+        showCaptcha = true;
+      }
 
-    builder.showCaptcha(showCaptcha);
+      builder.showCaptcha(showCaptcha);
+    }
 
     if (user.getAccounts().isEmpty()) {
       return builder.authenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD).build();

@@ -9,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
@@ -30,6 +31,7 @@ import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 import io.harness.governance.ServiceFilter;
 import io.harness.governance.ServiceFilter.ServiceFilterType;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
+import io.harness.governance.TimeRangeOccurrence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -244,5 +246,116 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
         .deploymentFreeze(false)
         .timeRangeBasedFreezeConfigs(asList(freezeConfig, freezeConfig2, freezeConfig3))
         .build();
+  }
+
+  private GovernanceConfig generateGovernanceConfigTimeRangeTest() {
+    // expired window with end time less than current time
+    TimeRange timeRangeExpired = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000,
+        "Asia/Calcutta", false, null, System.currentTimeMillis() - 100_000, TimeRangeOccurrence.DAILY, false);
+
+    // active window with future expiry
+    TimeRange timeRangeActive = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000,
+        "Asia/Calcutta", false, null, System.currentTimeMillis() + 100_000_000, TimeRangeOccurrence.DAILY, false);
+
+    // inactive window with future expiry
+    TimeRange timeRangeInactive =
+        new TimeRange(System.currentTimeMillis() + 100_000, System.currentTimeMillis() + 200_000, "Asia/Calcutta",
+            false, null, System.currentTimeMillis() + 100_000_000, TimeRangeOccurrence.DAILY, false);
+
+    // non recurring expired window
+    TimeRange timeRangeExpiredNonRecurring = new TimeRange(System.currentTimeMillis() - 200_000,
+        System.currentTimeMillis() - 100_000, "Asia/Calcutta", false, null, null, null, false);
+
+    // non recurring inactive window schedules in future
+    TimeRange timeRangeNonRecurringInActive = new TimeRange(System.currentTimeMillis() + 200_000,
+        System.currentTimeMillis() + 300_000, "Asia/Calcutta", false, null, null, null, false);
+
+    // non recurring active window
+    TimeRange timeRangeNonRecurringActive = new TimeRange(System.currentTimeMillis(),
+        System.currentTimeMillis() + 300_000, "Asia/Calcutta", false, null, null, null, false);
+
+    TimeRangeBasedFreezeConfig freezeConfig =
+        TimeRangeBasedFreezeConfig.builder()
+            .applicable(true)
+            .appSelections(asList(CustomAppFilter.builder()
+                                      .apps(asList(APP_ID))
+                                      .blackoutWindowFilterType(BlackoutWindowFilterType.CUSTOM)
+                                      .envSelection(new AllEnvFilter(EnvironmentFilterType.ALL))
+                                      .build()))
+            .name("FREEZE1")
+            .timeRange(timeRangeExpired)
+            .build();
+    TimeRangeBasedFreezeConfig freezeConfig2 =
+        TimeRangeBasedFreezeConfig.builder().name("FREEZE2").applicable(true).timeRange(timeRangeActive).build();
+    TimeRangeBasedFreezeConfig freezeConfig3 =
+        TimeRangeBasedFreezeConfig.builder().name("FREEZE3").applicable(true).timeRange(timeRangeInactive).build();
+
+    TimeRangeBasedFreezeConfig freezeConfig4 = TimeRangeBasedFreezeConfig.builder()
+                                                   .name("FREEZE4")
+                                                   .applicable(true)
+                                                   .timeRange(timeRangeExpiredNonRecurring)
+                                                   .build();
+    TimeRangeBasedFreezeConfig freezeConfig5 = TimeRangeBasedFreezeConfig.builder()
+                                                   .name("FREEZE5")
+                                                   .applicable(true)
+                                                   .timeRange(timeRangeNonRecurringInActive)
+                                                   .build();
+
+    TimeRangeBasedFreezeConfig freezeConfig6 = TimeRangeBasedFreezeConfig.builder()
+                                                   .name("FREEZE6")
+                                                   .applicable(true)
+                                                   .timeRange(timeRangeNonRecurringActive)
+                                                   .build();
+
+    return GovernanceConfig.builder()
+        .deploymentFreeze(false)
+        .timeRangeBasedFreezeConfigs(
+            asList(freezeConfig, freezeConfig2, freezeConfig3, freezeConfig4, freezeConfig5, freezeConfig6))
+        .build();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkActiveStatus() {
+    GovernanceConfig governanceConfig = generateGovernanceConfigTimeRangeTest();
+
+    governanceConfig.getTimeRangeBasedFreezeConfigs().forEach(TimeRangeBasedFreezeConfig::toggleExpiredWindowsOff);
+    governanceConfig.getTimeRangeBasedFreezeConfigs().forEach(TimeRangeBasedFreezeConfig::recalculateFreezeWindowState);
+
+    // toggle the expired window as off
+    TimeRangeBasedFreezeConfig freezeConfigExpired = governanceConfig.getTimeRangeBasedFreezeConfigs().get(0);
+    assertThat(freezeConfigExpired.getFreezeWindowState())
+        .isEqualTo(TimeRangeBasedFreezeConfig.FreezeWindowStateType.INACTIVE);
+    assertThat(freezeConfigExpired.isApplicable()).isEqualTo(false);
+
+    TimeRangeBasedFreezeConfig freezeConfigActive = governanceConfig.getTimeRangeBasedFreezeConfigs().get(1);
+    assertThat(freezeConfigActive.getFreezeWindowState())
+        .isEqualTo(TimeRangeBasedFreezeConfig.FreezeWindowStateType.ACTIVE);
+    assertThat(freezeConfigActive.isApplicable()).isEqualTo(true);
+
+    TimeRangeBasedFreezeConfig freezeConfigInactive = governanceConfig.getTimeRangeBasedFreezeConfigs().get(2);
+    assertThat(freezeConfigInactive.getFreezeWindowState())
+        .isEqualTo(TimeRangeBasedFreezeConfig.FreezeWindowStateType.INACTIVE);
+    assertThat(freezeConfigInactive.isApplicable()).isEqualTo(true);
+
+    // toggle the expired window as off
+    TimeRangeBasedFreezeConfig freezeConfigNonRecurringExpired =
+        governanceConfig.getTimeRangeBasedFreezeConfigs().get(3);
+    assertThat(freezeConfigNonRecurringExpired.getFreezeWindowState())
+        .isEqualTo(TimeRangeBasedFreezeConfig.FreezeWindowStateType.INACTIVE);
+    assertThat(freezeConfigNonRecurringExpired.isApplicable()).isEqualTo(false);
+
+    TimeRangeBasedFreezeConfig freezeConfigNonRecurringInactive =
+        governanceConfig.getTimeRangeBasedFreezeConfigs().get(4);
+    assertThat(freezeConfigNonRecurringInactive.getFreezeWindowState())
+        .isEqualTo(TimeRangeBasedFreezeConfig.FreezeWindowStateType.INACTIVE);
+    assertThat(freezeConfigNonRecurringInactive.isApplicable()).isEqualTo(true);
+
+    TimeRangeBasedFreezeConfig freezeConfigNonRecurringActive =
+        governanceConfig.getTimeRangeBasedFreezeConfigs().get(5);
+    assertThat(freezeConfigNonRecurringActive.getFreezeWindowState())
+        .isEqualTo(TimeRangeBasedFreezeConfig.FreezeWindowStateType.ACTIVE);
+    assertThat(freezeConfigNonRecurringActive.isApplicable()).isEqualTo(true);
   }
 }
