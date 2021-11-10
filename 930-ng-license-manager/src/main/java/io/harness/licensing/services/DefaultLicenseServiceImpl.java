@@ -346,17 +346,22 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
   @Override
   public ModuleLicenseDTO upgradeLicense(String accountIdentifier, UpgradeLicenseDTO upgradeLicenseDTO) {
-    AccountDTO accountDTO = accountService.getAccount(accountIdentifier);
-    if (accountDTO == null) {
-      throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
+
+    if (upgradeLicenseDTO.getLicenseType() != LicenseType.TRIAL) {
+      throw new InvalidRequestException(String.format("Account [%s] is not upgrading a trial license", accountIdentifier));
     }
+    List<ModuleLicense> licenses = moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, upgradeLicenseDTO.getModuleType());
+    ModuleLicense latestLicense = ModuleLicenseHelper.getLatestLicense(licenses);
+
 
     ModuleLicenseDTO trialLicenseDTO = licenseInterface.generateTrialLicense(upgradeLicenseDTO.getEdition(), accountIdentifier, upgradeLicenseDTO.getModuleType());
 
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
-    licenseComplianceResolver.preCheck(trialLicense, EditionAction.START_TRIAL);
-    return updateModuleLicense(trialLicenseDTO);
+    trialLicense.setId(latestLicense.getId());
+    licenseComplianceResolver.preCheck(trialLicense, EditionAction.UPGRADE);
+    ModuleLicenseDTO newTrialLicenseDTO = licenseObjectConverter.toDTO(trialLicense);
+    return updateModuleLicense(newTrialLicenseDTO);
 
   }
 

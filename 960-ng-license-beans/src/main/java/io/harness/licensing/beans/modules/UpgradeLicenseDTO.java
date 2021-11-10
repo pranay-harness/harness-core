@@ -1,4 +1,4 @@
-package io.harness.licensing.beans.modules.types;
+package io.harness.licensing.beans.modules;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.ModuleType;
