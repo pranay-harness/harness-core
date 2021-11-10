@@ -29,4 +29,7 @@ public class InputSetSummaryResponseDTOPMS {
   Map<String, String> tags;
   @JsonIgnore Long version;
   EntityGitDetails gitDetails;
+  Long createdAt;
+  Long lastUpdatedAt;
+  Boolean isOutdated;
 }

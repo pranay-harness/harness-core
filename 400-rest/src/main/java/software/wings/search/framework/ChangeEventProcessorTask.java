@@ -5,6 +5,7 @@ import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeType;
 import io.harness.persistence.PersistentEntity;
 
 import software.wings.dl.WingsPersistence;
@@ -32,18 +33,23 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class ChangeEventProcessorTask implements Runnable {
   private ExecutorService executorService;
   private Set<SearchEntity<?>> searchEntities;
+  private Set<TimeScaleEntity<?>> timeScaleEntities;
   private WingsPersistence wingsPersistence;
   private ChangeEventMetricsTracker changeEventMetricsTracker;
   private BlockingQueue<ChangeEvent<?>> changeEventQueue;
+  private Set<String> accountIdsToSyncToTimescale;
   private long logMetricsCounter;
 
-  ChangeEventProcessorTask(Set<SearchEntity<?>> searchEntities, WingsPersistence wingsPersistence,
-      ChangeEventMetricsTracker changeEventMetricsTracker, BlockingQueue<ChangeEvent<?>> changeEventQueue) {
+  ChangeEventProcessorTask(Set<SearchEntity<?>> searchEntities, Set<TimeScaleEntity<?>> timeScaleEntities,
+      WingsPersistence wingsPersistence, ChangeEventMetricsTracker changeEventMetricsTracker,
+      BlockingQueue<ChangeEvent<?>> changeEventQueue, Set<String> accountIdsToSyncToTimescale) {
     this.searchEntities = searchEntities;
+    this.timeScaleEntities = timeScaleEntities;
     this.wingsPersistence = wingsPersistence;
     this.changeEventMetricsTracker = changeEventMetricsTracker;
     this.changeEventQueue = changeEventQueue;
     this.logMetricsCounter = 0;
+    this.accountIdsToSyncToTimescale = accountIdsToSyncToTimescale;
   }
 
   public void run() {
@@ -51,15 +57,25 @@ public class ChangeEventProcessorTask implements Runnable {
         searchEntities.size(), new ThreadFactoryBuilder().setNameFormat("change-processor-%d").build());
     try {
       boolean isRunningSuccessfully = true;
-      while (isRunningSuccessfully) {
+      boolean isTimeScaleRunningSuccessfully = true;
+
+      while (isRunningSuccessfully || isTimeScaleRunningSuccessfully) {
         ChangeEvent<?> changeEvent = changeEventQueue.poll(Integer.MAX_VALUE, TimeUnit.MINUTES);
-        if (changeEvent != null) {
-          isRunningSuccessfully = processChange(changeEvent);
+        if (isRunningSuccessfully) {
+          if (changeEvent != null) {
+            isRunningSuccessfully = processChange(changeEvent);
+          }
+        }
+        if (isTimeScaleRunningSuccessfully) {
+          if (changeEvent != null) {
+            isTimeScaleRunningSuccessfully = processTimeScaleChange(changeEvent);
+          }
         }
       }
+
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      log.error("ChangeEvent processor interrupted");
+      log.error("ChangeEvent processor interrupted", e);
     } finally {
       log.info("Shutting down search consumer service");
       executorService.shutdownNow();
@@ -94,7 +110,6 @@ public class ChangeEventProcessorTask implements Runnable {
     Instant start = Instant.now();
     Class<? extends PersistentEntity> sourceClass = changeEvent.getEntityType();
     List<Future<Boolean>> processChangeEventTaskFutures = new ArrayList<>();
-
     for (SearchEntity<?> searchEntity : searchEntities) {
       if (searchEntity.getSubscriptionEntities().contains(sourceClass)) {
         ChangeHandler changeHandler = searchEntity.getChangeHandler();
@@ -115,6 +130,51 @@ public class ChangeEventProcessorTask implements Runnable {
       }
       if (!isChangeHandled) {
         log.error("Could not process changeEvent {}", changeEvent.toString());
+        return false;
+      }
+    }
+
+    boolean isSaved = saveSearchSourceEntitySyncStateToken(sourceClass, changeEvent.getToken());
+    if (!isSaved) {
+      log.error("Could not save token. ChangeEvent {} could not be processed for entity {}", changeEvent.toString(),
+          sourceClass.getCanonicalName());
+    }
+
+    double timeTaken = Duration.between(start, Instant.now()).toMillis();
+    changeEventMetricsTracker.updateAverage(changeEvent.getEntityType().toString(), timeTaken);
+    logMetrics(changeEvent, timeTaken);
+    return isSaved;
+  }
+
+  private boolean processTimeScaleChange(ChangeEvent<?> changeEvent) {
+    Instant start = Instant.now();
+    Class<? extends PersistentEntity> sourceClass = changeEvent.getEntityType();
+    List<Future<Boolean>> processChangeEventTaskFutures = new ArrayList<>();
+
+    for (TimeScaleEntity<?> timeScaleEntity : timeScaleEntities) {
+      if (timeScaleEntity.getSourceEntityClass().equals(sourceClass)) {
+        ChangeHandler changeHandler = timeScaleEntity.getChangeHandler();
+        if ((ChangeType.DELETE.equals(changeEvent.getChangeType())
+                || timeScaleEntity.toProcessChangeEvent(accountIdsToSyncToTimescale, changeEvent.getFullDocument()))
+            && changeHandler != null) {
+          Callable<Boolean> processChangeEventTask = getProcessChangeEventTask(changeHandler, changeEvent);
+          processChangeEventTaskFutures.add(executorService.submit(processChangeEventTask));
+        }
+      }
+    }
+
+    for (Future<Boolean> processChangeEventFuture : processChangeEventTaskFutures) {
+      boolean isChangeHandled = false;
+      try {
+        isChangeHandled = processChangeEventFuture.get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.error("TimeScale Change Event thread interrupted", e);
+      } catch (ExecutionException e) {
+        log.error("TimeScale Change event thread interrupted due to exception", e.getCause());
+      }
+      if (!isChangeHandled) {
+        log.error("Could not process TimeScale changeEvent {}", changeEvent.toString());
         return false;
       }
     }

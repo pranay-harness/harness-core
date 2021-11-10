@@ -209,7 +209,7 @@ public class PerpetualTaskWorker {
         });
       }
     } catch (Exception ex) {
-      log.error("Exception in starting perpetual task ", ex);
+      log.error("Exception in starting perpetual task id " + task.getTaskId(), ex);
     }
   }
 

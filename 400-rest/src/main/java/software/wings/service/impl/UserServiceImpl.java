@@ -1062,8 +1062,11 @@ public class UserServiceImpl implements UserService {
     model.put(
         "subject", "You have been invited to the " + account.getCompanyName().toUpperCase() + " account at Harness");
     model.put("email", user.getEmail());
+    model.put("name", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
-    model.put("message", "You have been added to Harness Account: " + account.getAccountName());
+    model.put("message",
+        "You have been added to account " + account.getAccountName() + " on Harness Platform."
+            + " CLick below to Sign-in");
 
     SSOSettings ssoSettings = getSSOSettings(account);
     model.put("ssoUrl", checkGetDomainName(account, ssoSettings.getUrl()));
@@ -1574,11 +1577,12 @@ public class UserServiceImpl implements UserService {
     model.put("name", sanitizeUserName(user.getName()));
     model.put("url", loginUrl);
     model.put("company", account.getCompanyName());
-    model.put(
-        "subject", "You have been assigned new user groups in " + account.getCompanyName().toUpperCase() + " account");
+    model.put("subject",
+        "You have been assigned new user groups in " + account.getCompanyName().toUpperCase() + " account."
+            + " Click below to Sign-in");
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
-    model.put("message", "You have been assigned new user groups: " + String.join(",", userGroupNamesList));
+    model.put("message", "You have been added to following user group(s): " + String.join(",", userGroupNamesList));
     model.put("shouldMailContainTwoFactorInfo", Boolean.toString(false));
 
     // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
@@ -1819,6 +1823,9 @@ public class UserServiceImpl implements UserService {
     }
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+    if (user.isTwoFactorAuthenticationEnabled()) {
+      totpAuthHandler.sendTwoFactorAuthenticationResetEmail(user);
+    }
     // Empty user group list because this user invite is from NG and the method adds user to CG user groups
     moveAccountFromPendingToConfirmed(user, account, Collections.emptyList(), true);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);

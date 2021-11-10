@@ -11,6 +11,10 @@ replace_key_value () {
   fi
 }
 
+if [[ "" != "$SERVER_MAX_THREADS" ]]; then
+  yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
+fi
+
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
@@ -341,6 +345,7 @@ replace_key_value triggerConfig.webhookBaseUrl "$WEBHOOK_TRIGGER_BASEURL"
 replace_key_value triggerConfig.customBaseUrl "$CUSTOM_TRIGGER_BASEURL"
 
 replace_key_value opaServerConfig.baseUrl "$OPA_SERVER_BASEURL"
+replace_key_value opaServerConfig.secret "$OPA_SERVER_SECRET"
 
 
 #Iterators Configuration

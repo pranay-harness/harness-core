@@ -12,9 +12,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.rule.Owner;
 
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
@@ -26,7 +28,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class CICleanupTaskTest extends CategoryTest {
-  @Mock private CICleanupTaskHandler ciCleanupTaskHandler;
+  @Mock @Named(CITaskConstants.CLEANUP_AWS_VM) private CICleanupTaskHandler ciAwsVmCleanupTaskHandler;
+  @Mock @Named(CITaskConstants.CLEANUP_K8) private CICleanupTaskHandler ciK8CleanupTaskHandler;
 
   @InjectMocks
   private final CICleanupTask task =
@@ -45,9 +48,9 @@ public class CICleanupTaskTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void runWithTaskParams() {
-    CICleanupTaskParams params = mock(CICleanupTaskParams.class);
+    CICleanupTaskParams params = CIK8CleanupTaskParams.builder().build();
     K8sTaskExecutionResponse response = mock(K8sTaskExecutionResponse.class);
-    when(ciCleanupTaskHandler.executeTaskInternal(params)).thenReturn(response);
+    when(ciK8CleanupTaskHandler.executeTaskInternal(params)).thenReturn(response);
     assertEquals(task.run(params), response);
   }
 

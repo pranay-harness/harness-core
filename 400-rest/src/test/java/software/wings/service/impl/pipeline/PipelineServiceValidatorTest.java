@@ -334,4 +334,23 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
                        aVariable().name("var1").relatedField("var2,var3").entityType(EntityType.ENVIRONMENT).build())))
         .isTrue();
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void setRuntimeInputsConfigNullWhenWorkflowVariablesEmpty() {
+    PipelineStageElement pipelineStageElement = builder().workflowVariables(Collections.emptyMap()).build();
+    RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
+                                                  .runtimeInputVariables(new ArrayList<>(asList("var1, var2, var3")))
+                                                  .timeout(60001L)
+                                                  .userGroupIds(asList("UG_ID"))
+                                                  .timeoutAction(RepairActionCode.END_EXECUTION)
+                                                  .build();
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig);
+    when(userGroupService.get(any(), any())).thenReturn(UserGroup.builder().build());
+    assertThat(
+        pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID", new ArrayList<>()))
+        .isTrue();
+    assertThat(pipelineStageElement.getRuntimeInputsConfig()).isNull();
+  }
 }

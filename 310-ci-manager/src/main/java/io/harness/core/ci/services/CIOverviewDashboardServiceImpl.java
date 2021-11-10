@@ -7,6 +7,7 @@ import io.harness.app.beans.entities.BuildFailureInfo;
 import io.harness.app.beans.entities.BuildHealth;
 import io.harness.app.beans.entities.BuildInfo;
 import io.harness.app.beans.entities.BuildRepositoryCount;
+import io.harness.app.beans.entities.CIUsageResult;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
@@ -15,6 +16,8 @@ import io.harness.app.beans.entities.RepositoryBuildInfo;
 import io.harness.app.beans.entities.RepositoryInfo;
 import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
+import io.harness.licensing.usage.beans.ReferenceDTO;
+import io.harness.licensing.usage.beans.UsageDataDTO;
 import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.ng.core.dashboard.GitInfo;
 import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
@@ -180,6 +183,44 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return totalBuildSqlBuilder.toString();
   }
 
+  @Override
+  public UsageDataDTO getActiveCommitter(String accountId, long timestamp) {
+    long totalTries = 0;
+    String query = "select distinct moduleinfo_author_id, projectidentifier , orgidentifier from " + tableName
+        + " where accountid=? and moduleinfo_type ='CI' and moduleinfo_author_id is not null and startts<=? and startts>=?;";
+
+    while (totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountId);
+        statement.setLong(2, timestamp);
+        statement.setLong(3, timestamp - 30 * DAY_IN_MS);
+        resultSet = statement.executeQuery();
+        List<ReferenceDTO> usageReferences = new ArrayList<>();
+        while (resultSet != null && resultSet.next()) {
+          ReferenceDTO reference = ReferenceDTO.builder()
+                                       .identifier(resultSet.getString("moduleinfo_author_id"))
+                                       .projectIdentifier(resultSet.getString("projectidentifier"))
+                                       .orgIdentifier(resultSet.getString("orgidentifier"))
+                                       .build();
+          usageReferences.add(reference);
+        }
+        return UsageDataDTO.builder()
+            .count(usageReferences.size())
+            .displayName("Last 30 Days")
+            .references(usageReferences)
+            .build();
+      } catch (SQLException ex) {
+        log.error(ex.getMessage());
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return null;
+  }
+
   public StatusAndTime queryCalculatorForStatusAndTime(String query) {
     long totalTries = 0;
 
@@ -325,18 +366,23 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     long startDateCopy = startInterval;
     long endDateCopy = endInterval;
     while (startDateCopy < endDateCopy) {
-      long total = 0, success = 0, failed = 0;
+      long total = 0, success = 0, failed = 0, expired = 0, aborted = 0;
       for (int i = 0; i < time.size(); i++) {
         if (startDateCopy == getStartingDateEpochValue(time.get(i))) {
           total++;
           if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
             success++;
+          } else if (status.get(i).contentEquals(ExecutionStatus.EXPIRED.name())) {
+            expired++;
+          } else if (status.get(i).contentEquals(ExecutionStatus.ABORTED.name())) {
+            aborted++;
           } else if (failedList.contains(status.get(i))) {
             failed++;
           }
         }
       }
-      BuildCount buildCount = BuildCount.builder().total(total).success(success).failed(failed).build();
+      BuildCount buildCount =
+          BuildCount.builder().total(total).success(success).expired(expired).aborted(aborted).failed(failed).build();
       buildExecutionInfoList.add(BuildExecutionInfo.builder().time(startDateCopy).builds(buildCount).build());
       startDateCopy = startDateCopy + DAY_IN_MS;
     }
@@ -668,6 +714,16 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     }
 
     return DashboardBuildRepositoryInfo.builder().repositoryInfo(repositoryInfoList).build();
+  }
+
+  @Override
+  public CIUsageResult getCIUsageResult(String accountId, long timestamp) {
+    return CIUsageResult.builder()
+        .accountIdentifier(accountId)
+        .timestamp(timestamp)
+        .module("CI")
+        .activeCommitters(getActiveCommitter(accountId, timestamp))
+        .build();
   }
 
   private RepositoryInfo getRepositoryInfo(String repoName, long totalBuild, long success, long previousSuccess,

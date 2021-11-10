@@ -69,8 +69,8 @@ public class ConnectorMapper {
     }
 
     if (connectorInfo.getConnectorConfig() instanceof ManagerExecutable) {
-      Boolean executeOnManager = ((ManagerExecutable) connectorInfo.getConnectorConfig()).getExecuteOnManager();
-      connector.setExecuteOnManager(executeOnManager);
+      Boolean executeOnDelegate = ((ManagerExecutable) connectorInfo.getConnectorConfig()).getExecuteOnDelegate();
+      connector.setExecuteOnDelegate(executeOnDelegate);
     }
     return connector;
   }
@@ -183,8 +183,8 @@ public class ConnectorMapper {
     }
 
     if (connectorDTO instanceof ManagerExecutable) {
-      final Boolean executeOnManager = Optional.ofNullable(connector.getExecuteOnManager()).orElse(false);
-      ((ManagerExecutable) connectorDTO).setExecuteOnManager(executeOnManager);
+      final Boolean executeOnDelegate = Optional.ofNullable(connector.getExecuteOnDelegate()).orElse(true);
+      ((ManagerExecutable) connectorDTO).setExecuteOnDelegate(executeOnDelegate);
     }
     return connectorDTO;
   }

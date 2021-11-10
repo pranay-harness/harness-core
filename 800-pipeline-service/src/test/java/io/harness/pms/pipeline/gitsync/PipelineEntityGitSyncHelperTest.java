@@ -2,15 +2,18 @@ package io.harness.pms.pipeline.gitsync;
 
 import static io.harness.EntityType.PIPELINES;
 import static io.harness.rule.OwnerRule.BRIJESH;
+import static io.harness.rule.OwnerRule.NAMAN;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
@@ -18,6 +21,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.common.EntityReference;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
+import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
@@ -30,6 +37,7 @@ import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
+import com.google.protobuf.StringValue;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.Before;
@@ -183,6 +191,23 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testDeleteWithException() {
+    EntityReference entityReference = IdentifierRef.builder()
+                                          .identifier(identifier)
+                                          .accountIdentifier(accountId)
+                                          .orgIdentifier(orgId)
+                                          .projectIdentifier(projectId)
+                                          .build();
+    when(pipelineService.delete(accountId, orgId, projectId, identifier, null))
+        .thenThrow(new EventsFrameworkDownException("something wrong"));
+    assertThatThrownBy(() -> pipelineEntityGitSyncHelper.delete(entityReference))
+        .isInstanceOf(UnexpectedException.class)
+        .hasMessage("Producer shutdown: EventsFrameworkDownException: something wrong");
+  }
+
+  @Test
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testKeyGetters() {
@@ -192,5 +217,25 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
     assertEquals(pipelineEntityGitSyncHelper.getYamlGitConfigRefKey(), PipelineEntityKeys.yamlGitConfigRef);
     assertEquals(pipelineEntityGitSyncHelper.getUuidKey(), PipelineEntityKeys.uuid);
     assertEquals(pipelineEntityGitSyncHelper.getBranchKey(), PipelineEntityKeys.branch);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetYamlFromEntityRef() {
+    EntityDetailProtoDTO entityDetailProtoDTO =
+        EntityDetailProtoDTO.newBuilder()
+            .setIdentifierRef(IdentifierRefProtoDTO.newBuilder()
+                                  .setAccountIdentifier(StringValue.of(accountId))
+                                  .setOrgIdentifier(StringValue.of(orgId))
+                                  .setProjectIdentifier(StringValue.of(projectId))
+                                  .setIdentifier(StringValue.of(pipelineId))
+                                  .build())
+            .build();
+    doReturn(Optional.of(PipelineEntity.builder().yaml(pipelineYaml).build()))
+        .when(pipelineService)
+        .get(accountId, orgId, projectId, pipelineId, false);
+    String yamlFromEntityRef = pipelineEntityGitSyncHelper.getYamlFromEntityRef(entityDetailProtoDTO);
+    assertEquals(yamlFromEntityRef, pipelineYaml);
   }
 }

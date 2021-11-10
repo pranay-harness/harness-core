@@ -118,9 +118,10 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
     if (shouldLogAudits(templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
             templateToUpdate.getProjectIdentifier())) {
       supplier = ()
-          -> outboxService.save(new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(),
-              templateToUpdate.getOrgIdentifier(), templateToUpdate.getProjectIdentifier(), templateToUpdate,
-              oldTemplateEntity, "", TemplateUpdateEventType.OTHERS_EVENT));
+          -> outboxService.save(
+              new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(), templateToUpdate.getOrgIdentifier(),
+                  templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity, "",
+                  templateUpdateEventType != null ? templateUpdateEventType : TemplateUpdateEventType.OTHERS_EVENT));
     }
     return gitAwarePersistence.save(
         templateToUpdate, templateToUpdate.getYaml(), changeType, TemplateEntity.class, supplier);

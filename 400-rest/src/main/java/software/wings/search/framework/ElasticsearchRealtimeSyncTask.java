@@ -3,11 +3,14 @@ package software.wings.search.framework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.mongo.changestreams.ChangeEvent;
 import io.harness.mongo.changestreams.ChangeSubscriber;
 
 import com.google.inject.Inject;
 import java.util.Queue;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ElasticsearchRealtimeSyncTask {
   @Inject private ElasticsearchSyncHelper elasticsearchSyncHelper;
   @Inject private ChangeEventProcessor changeEventProcessor;
+  @Inject private FeatureFlagService featureFlagService;
 
   private void processChanges(Queue<ChangeEvent<?>> changeEvents) {
     while (!changeEvents.isEmpty()) {
@@ -43,7 +47,8 @@ public class ElasticsearchRealtimeSyncTask {
     log.info("Initializing change listeners for search entities");
     processChanges(pendingChangeEvents);
     elasticsearchSyncHelper.startChangeListeners(getChangeSubscriber());
-    changeEventProcessor.startProcessingChangeEvents();
+    Set<String> accountIdsToSyncToTimescale = featureFlagService.getAccountIds(FeatureName.TIME_SCALE_CG_SYNC);
+    changeEventProcessor.startProcessingChangeEvents(accountIdsToSyncToTimescale);
     boolean isAlive = true;
     while (!Thread.currentThread().isInterrupted() && isAlive) {
       Thread.sleep(2000);

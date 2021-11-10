@@ -406,7 +406,7 @@ public class PipelineResourceTest extends CategoryTest {
                              .rootFolder("root/.harness/")
                              .build()))
         .when(pmsPipelineService)
-        .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
+        .getWithoutIsDeleted(anyString(), anyString(), anyString(), anyString());
 
     doReturn(PipelineExecutionSummaryDTO.builder()
                  .pipelineIdentifier(PIPELINE_IDENTIFIER)

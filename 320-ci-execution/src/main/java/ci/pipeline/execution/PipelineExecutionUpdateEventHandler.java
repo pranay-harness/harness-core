@@ -10,7 +10,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.delegate.beans.ci.k8s.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.encryption.Scope;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -23,9 +23,11 @@ import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.states.codebase.CodeBaseTaskStep;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -34,11 +36,10 @@ import net.jodah.failsafe.RetryPolicy;
 @OwnedBy(HarnessTeam.CI)
 public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHandler {
   @Inject private GitBuildStatusUtility gitBuildStatusUtility;
-  @Inject private PodCleanupUtility podCleanupUtility;
+  @Inject private StageCleanupUtility stageCleanupUtility;
 
-  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
-
+  @Inject @Named("ciEventHandlerExecutor") private ExecutorService executorService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
@@ -47,9 +48,10 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
     String accountId = AmbianceUtils.getAccountId(ambiance);
     Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
     Status status = event.getStatus();
-
-    sendGitStatus(level, ambiance, status, event, accountId);
-    sendCleanupRequest(level, ambiance, status, accountId);
+    executorService.submit(() -> {
+      sendGitStatus(level, ambiance, status, event, accountId);
+      sendCleanupRequest(level, ambiance, status, accountId);
+    });
   }
 
   private void sendCleanupRequest(Level level, Ambiance ambiance, Status status, String accountId) {
@@ -59,10 +61,10 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
 
       Failsafe.with(retryPolicy).run(() -> {
         if (level.getStepType().getStepCategory() == StepCategory.STAGE && isFinalStatus(status)) {
-          CIK8CleanupTaskParams cik8CleanupTaskParams = podCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
+          CICleanupTaskParams ciCleanupTaskParams = stageCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
 
-          log.info("Received event with status {} to clean podName {}, planExecutionId {}, stage {}", status,
-              cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(), level.getIdentifier());
+          log.info("Received event with status {} to clean planExecutionId {}, stage {}", status,
+              ambiance.getPlanExecutionId(), level.getIdentifier());
 
           Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);
           DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
@@ -70,13 +72,13 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
                                                         .taskSetupAbstractions(abstractions)
                                                         .executionTimeout(java.time.Duration.ofSeconds(900))
                                                         .taskType("CI_CLEANUP")
-                                                        .taskParameters(cik8CleanupTaskParams)
+                                                        .taskParameters(ciCleanupTaskParams)
                                                         .taskDescription("CI cleanup pod task")
                                                         .build();
 
           String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
-          log.info("Submitted cleanup request with taskId {} for podName {}, planExecutionId {}, stage {}", taskId,
-              cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(), level.getIdentifier());
+          log.info("Submitted cleanup request with taskId {} for planExecutionId {}, stage {}", taskId,
+              ambiance.getPlanExecutionId(), level.getIdentifier());
         }
       });
     } catch (Exception ex) {
@@ -127,7 +129,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(Exception.class)
-        .withBackoff(10, 60, ChronoUnit.MINUTES)
+        .withBackoff(5, 60, ChronoUnit.SECONDS)
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));

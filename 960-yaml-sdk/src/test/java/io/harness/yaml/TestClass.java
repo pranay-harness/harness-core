@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(HarnessTeam.DX)
 public class TestClass {
@@ -115,13 +116,43 @@ public class TestClass {
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
-  @OneOfSet(fields = {"a, c", "b, d", "testString,", "e, f"})
+  @OneOfSet(fields = {"type,testInterface", "b, d", "testString,", "e, f"})
   @FieldDefaults(level = AccessLevel.PUBLIC)
   public static class ClassWithOneOfSetAnnotation {
     @NotNull String testString;
     String a;
-    String b;
-    @JsonProperty("jsontypeinfo") String c;
+    @NotEmpty String b;
+    @NotNull @JsonProperty("jsontypeinfo") String c;
     @ApiModelProperty(name = "apimodelproperty") String d;
+    @NotNull Types type;
+    @JsonProperty("spec")
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+    TestInterface testInterface;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  @OneOfSet(fields = {"a,mnop", "testInterface"})
+  public static class ClassWhichContainsInterfaceWithInternalAndOneOfSetAnnotation {
+    String mnop;
+    @NotNull String a;
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
+    TestInterface testInterface;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  @OneOfField(fields = {"x", "y"})
+  @OneOfSet(fields = {"x", "y"})
+  public static class ClassWithBothOneOfSetAndOneOfFieldAnnotation {
+    String testString;
+    String x;
+    String y;
   }
 }

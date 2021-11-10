@@ -2517,7 +2517,7 @@
                 "type": "string"
               }
             },
-            "executeOnManager": {
+            "executeOnDelegate": {
               "type": "boolean"
             },
             "type": {

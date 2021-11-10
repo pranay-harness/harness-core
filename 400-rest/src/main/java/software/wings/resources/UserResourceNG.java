@@ -127,7 +127,7 @@ public class UserResourceNG {
   @POST
   @Path("/signup-invite/community")
   public RestResponse<UserInfo> createCommunityUserAndCompleteSignup(SignupInviteDTO request) {
-    if (!accountService.listAllAccounts().isEmpty()) {
+    if (!accountService.listAllAccountsWithoutTheGlobalAccount().isEmpty()) {
       throw new InvalidRequestException(COMMUNITY_ACCOUNT_EXISTS);
     }
 

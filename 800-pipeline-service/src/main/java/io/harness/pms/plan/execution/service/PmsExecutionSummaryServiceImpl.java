@@ -7,6 +7,7 @@ import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.NodeType;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
@@ -28,7 +29,7 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
    * Updates all the fields in the stage graph from nodeExecutions.
    * @param planExecutionId
    */
-  public void updateStageUpdateOfIdentityType(String planExecutionId) {
+  public void updateStageOfIdentityType(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchStageExecutions(planExecutionId);
     Update update = new Update();
 
@@ -109,8 +110,10 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
     if (OrchestrationUtils.isStageNode(nodeExecution)
         || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
       // This condition is for retry execution graph generation.
-      if (!nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
-        updateStageUpdateOfIdentityType(planExecutionId);
+      if (nodeExecution.getNode().getNodeType() == NodeType.IDENTITY_PLAN_NODE
+          && StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
+        updateStageOfIdentityType(planExecutionId);
+        return;
       }
 
       Update update = new Update();

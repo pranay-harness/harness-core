@@ -41,6 +41,8 @@ public class DelegateParams {
   boolean proxy;
   boolean ceEnabled;
 
+  List<String> supportedTaskTypes;
+
   List<String> currentlyExecutingDelegateTasks;
   List<String> tags;
 }

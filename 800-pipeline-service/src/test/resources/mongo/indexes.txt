@@ -40,6 +40,9 @@ delegateScopes {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1
 delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
 delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
 delegateTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+delegateTokensNG {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "owner": 1, "status": 1}
+delegateTokensNG {"name": "byAccountOwnerAndName", "unique": true} {"accountId": 1, "owner": 1, "name": 1}
+delegateTokensNG {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 encryptedRecords {"name": "acctKmsIdx", "background": true} {"accountId": 1, "kmsId": 1}
 encryptedRecords {"name": "acctNameIdx", "unique": true} {"accountId": 1, "name": 1, "ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
 encryptedRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -76,6 +79,7 @@ inputSetsPMS {"name": "createdAt_1", "background": true} {"createdAt": 1}
 inputSetsPMS {"name": "unique_accountId_organizationId_projectId_pipelineId_inputSetId_repo_branch", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "pipelineIdentifier": 1, "identifier": 1, "yamlGitConfigRef": 1, "branch": 1}
 interrupts {"name": "planExecutionId_createdAt_idx", "background": true} {"planExecutionId": 1, "createdAt": -1}
 interrupts {"name": "planExecutionId_nodeExecutionId_createdAt_idx", "background": true} {"planExecutionId": 1, "nodeExecutionId": 1, "createdAt": -1}
+interrupts {"name": "planExecutionId_nodeExecutionId_type_createdAt_idx", "background": true} {"planExecutionId": 1, "nodeExecutionId": 1, "type": 1, "createdAt": -1}
 interrupts {"name": "planExecutionId_state_type_createdAt_idx", "background": true} {"planExecutionId": 1, "state": 1, "type": 1, "createdAt": -1}
 interrupts {"name": "state_type_monitoring_createdAt_idx", "background": true} {"state": 1, "type": 1, "createdAt": -1}
 interrupts {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
@@ -128,7 +132,9 @@ planExecutionsSummary {"name": "accountId_organizationId_projectId_pipelineId", 
 planExecutionsSummary {"name": "accountId_organizationId_projectId_pipelineId_createdAt_idx", "background": true} {"pipelineIdentifier": 1, "projectIdentifier": 1, "orgIdentifier": 1, "accountId": 1, "createdAt": 1}
 planExecutionsSummary {"name": "createdAt_1", "background": true} {"createdAt": 1}
 planExecutionsSummary {"name": "planExecutionId_1", "unique": true} {"planExecutionId": 1}
+planExecutionsSummary {"name": "root_execution_id", "background": true} {"retryExecutionMetadata.rootExecutionId": 1}
 planExecutionsSummary {"name": "unique_accountId_organizationId_projectId_planExecutionId", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "planExecutionId": 1}
+planExecutionsSummary {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 plans {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 pmsSdkInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pmsSdkInstances {"name": "name_1", "unique": true} {"name": 1}

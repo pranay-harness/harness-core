@@ -26,6 +26,24 @@ xxxxxxxx
     appenders: []
   maxThreads: 1024
 
+commonPoolConfig:
+  corePoolSize: ${COMMON_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${COMMON_POOL_MAX_SIZE:-100}
+  idleTime: ${COMMON_POOL_IDLE_TIME:-500}
+  timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
+
+pmsSdkExecutionPoolConfig:
+  corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-20}
+  maxPoolSize: ${PMS_SDK_EXECUTION_POOL_MAX_SIZE:-100}
+  idleTime: ${PMS_SDK_EXECUTION_POOL_IDLE_TIME:-120}
+  timeUnit: ${PMS_SDK_EXECUTION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
+pmsSdkOrchestrationEventPoolConfig:
+  corePoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_CORE_SIZE:-10}
+  maxPoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_MAX_SIZE:-50}
+  idleTime: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME:-120}
+  timeUnit: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
 mongo:
   uri: mongodb://localhost:27017/pms-harness
   connectTimeout: 30000
@@ -167,6 +185,7 @@ logStreamingServiceConfig:
 
 opaServerConfig:
   baseUrl: http://localhost:3000
+  secret: secret
 
 iteratorsConfig:
   webhook:

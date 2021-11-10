@@ -12,10 +12,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIInitializeTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIK8InitializeTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.rule.Owner;
 
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
@@ -27,8 +29,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class CIInitializeTaskTest extends CategoryTest {
-  @Mock private CIInitializeTaskHandler ciInitializeTaskHandler;
   @Mock private ILogStreamingTaskClient logStreamingTaskClient;
+  @Mock @Named(CITaskConstants.INIT_K8) private CIInitializeTaskHandler ciK8InitializeTaskHandler;
+  @Mock @Named(CITaskConstants.INIT_AWS_VM) private CIInitializeTaskHandler ciAwsVmInitializeTaskHandler;
 
   @InjectMocks
   private CIInitializeTask task =
@@ -47,9 +50,9 @@ public class CIInitializeTaskTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void runWithTaskParams() {
-    CIInitializeTaskParams params = mock(CIInitializeTaskParams.class);
+    CIInitializeTaskParams params = CIK8InitializeTaskParams.builder().build();
     K8sTaskExecutionResponse response = mock(K8sTaskExecutionResponse.class);
-    when(ciInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient)).thenReturn(response);
+    when(ciK8InitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient)).thenReturn(response);
     assertEquals(task.run(params), response);
   }
 
@@ -57,7 +60,7 @@ public class CIInitializeTaskTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void runWithObjectParams() {
-    CIInitializeTaskParams taskParams = mock(CIInitializeTaskParams.class);
+    CIInitializeTaskParams taskParams = CIK8InitializeTaskParams.builder().build();
     List<Object> params = new ArrayList<>();
     params.add(taskParams);
 

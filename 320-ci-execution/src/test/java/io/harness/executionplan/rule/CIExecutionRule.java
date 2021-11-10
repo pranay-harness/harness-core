@@ -25,12 +25,15 @@ import io.harness.ff.CIFeatureFlagNoopServiceImpl;
 import io.harness.ff.CIFeatureFlagService;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
+import io.harness.redis.RedisConfig;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -41,6 +44,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.time.TimeModule;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.base.Suppliers;
@@ -140,6 +144,23 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
                                                  .pvcDefaultStorageSize(25600)
                                                  .build(),
         false));
+    modules.add(TimeModule.getInstance());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return DistributedLockImplementation.NOOP;
+      }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisConfig() {
+        return RedisConfig.builder().build();
+      }
+    });
+    modules.add(PersistentLockModule.getInstance());
+
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

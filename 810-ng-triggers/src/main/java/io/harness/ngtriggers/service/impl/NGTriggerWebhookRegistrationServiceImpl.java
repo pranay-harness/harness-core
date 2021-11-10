@@ -5,12 +5,15 @@ import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HookEventType;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.ng.webhook.UpsertWebhookResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookRegistrationStatus;
 import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
 import io.harness.product.ci.scm.proto.WebhookResponse;
+import io.harness.utils.ConnectorUtils;
 import io.harness.webhook.remote.WebhookEventClient;
 
 import com.google.inject.Inject;
@@ -23,12 +26,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class NGTriggerWebhookRegistrationServiceImpl implements NGTriggerWebhookRegistrationService {
+  @Inject private final ConnectorUtils connectorUtils;
   private final WebhookEventClient webhookEventClient;
 
   @Override
   public WebhookRegistrationStatus registerWebhook(NGTriggerEntity ngTriggerEntity) {
+    BaseNGAccess ngAccess = BaseNGAccess.builder()
+                                .accountIdentifier(ngTriggerEntity.getAccountId())
+                                .orgIdentifier(ngTriggerEntity.getOrgIdentifier())
+                                .projectIdentifier(ngTriggerEntity.getProjectIdentifier())
+                                .build();
+    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(
+        ngAccess, ngTriggerEntity.getMetadata().getWebhook().getGit().getConnectorIdentifier());
+
     return registerWebhookInternal(ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getOrgIdentifier(),
-        ngTriggerEntity.getAccountId(), ngTriggerEntity.getMetadata().getWebhook().getGit().getRepoName(),
+        ngTriggerEntity.getAccountId(), connectorUtils.retrieveURL(connectorDetails),
         ngTriggerEntity.getMetadata().getWebhook().getGit().getConnectorIdentifier());
   }
 
