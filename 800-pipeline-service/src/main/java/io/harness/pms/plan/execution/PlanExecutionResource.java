@@ -304,6 +304,20 @@ public class PlanExecutionResource {
                   "Pipeline with the given ID: %s does not exist or has been deleted", pipelineIdentifier))
               .build());
     }
+
+    // Checking if this is the latest execution
+    PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
+        pmsExecutionService.getPipelineExecutionSummaryEntity(
+            accountId, orgIdentifier, projectIdentifier, planExecutionId, false);
+    if (!pipelineExecutionSummaryEntity.isLatestExecution()) {
+      return ResponseDTO.newResponse(
+          RetryInfo.builder()
+              .isResumable(false)
+              .errorMessage(
+                  "This execution is not the latest of all retried execution. You can only retry the latest execution.")
+              .build());
+    }
+
     String updatedPipeline = updatedPipelineEntity.get().getYaml();
 
     String executedPipeline = retryExecutionHelper.getYamlFromExecutionId(planExecutionId);

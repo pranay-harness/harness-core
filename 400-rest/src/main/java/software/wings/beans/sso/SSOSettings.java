@@ -26,6 +26,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -56,7 +57,7 @@ public abstract class SSOSettings extends Base implements AccountAccess {
   }
 
   @NotNull protected SSOType type;
-  @NotEmpty protected String displayName;
+  @NotBlank protected String displayName;
   @NotEmpty protected String url;
   private Long nextIteration;
   @FdIndex List<Long> nextIterations = new ArrayList<>();

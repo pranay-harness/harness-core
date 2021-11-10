@@ -38,7 +38,8 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
 
   @Override
   public ServiceDependencyGraphDTO getDependencyGraph(@NonNull ProjectParams projectParams,
-      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier) {
+      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier,
+      @NonNull boolean servicesAtRiskFilter) {
     List<MonitoredService> monitoredServices =
         monitoredServiceService.list(projectParams, serviceIdentifier, environmentIdentifier);
     Set<String> identifiers =
@@ -59,9 +60,29 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
     Map<ServiceEnvKey, RiskData> latestHealthScores = heatMapService.getLatestHealthScore(
         projectParams, new ArrayList<>(serviceIdentifiers), new ArrayList<>(environmentIdentifiers));
 
-    return constructGraph(monitoredServices, serviceDependencies, latestHealthScores,
-        nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),
+    ServiceDependencyGraphDTO serviceDependencyGraphDTO = constructGraph(monitoredServices, serviceDependencies,
+        latestHealthScores, nextGenService.getServiceIdNameMap(projectParams, new ArrayList<>(serviceIdentifiers)),
         nextGenService.getEnvironmentIdNameMap(projectParams, new ArrayList<>(environmentIdentifiers)));
+
+    if (servicesAtRiskFilter) {
+      List<ServiceSummaryDetails> unHealthyServiceSummaryDetails =
+          serviceDependencyGraphDTO.getNodes()
+              .stream()
+              .filter(x -> x.getRiskData().getHealthScore() != null && x.getRiskData().getHealthScore() <= 25)
+              .collect(Collectors.toList());
+      Map<String, ServiceSummaryDetails> serviceSummaryDetailsMap = unHealthyServiceSummaryDetails.stream().collect(
+          Collectors.toMap(ServiceSummaryDetails::getIdentifierRef, x -> x));
+      List<Edge> unHealthyEdges = serviceDependencyGraphDTO.getEdges()
+                                      .stream()
+                                      .filter(x
+                                          -> serviceSummaryDetailsMap.containsKey(x.getFrom())
+                                              && serviceSummaryDetailsMap.containsKey(x.getTo()))
+                                      .collect(Collectors.toList());
+      serviceDependencyGraphDTO.setNodes(unHealthyServiceSummaryDetails);
+      serviceDependencyGraphDTO.setEdges(unHealthyEdges);
+    }
+
+    return serviceDependencyGraphDTO;
   }
 
   private ServiceDependencyGraphDTO constructGraph(List<MonitoredService> monitoredServices,

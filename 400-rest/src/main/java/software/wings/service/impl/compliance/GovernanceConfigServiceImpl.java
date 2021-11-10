@@ -31,6 +31,7 @@ import io.harness.governance.ServiceFilter.ServiceFilterType;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.validation.Validator;
 
 import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
@@ -58,6 +59,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.segment.analytics.messages.TrackMessage;
 import com.segment.analytics.messages.TrackMessage.Builder;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -109,7 +111,24 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       if (governanceConfig == null) {
         return getDefaultGovernanceConfig(accountId);
       }
+      toggleExpiredWindows(governanceConfig, accountId);
+      populateWindowsStatus(governanceConfig, accountId);
       return governanceConfig;
+    }
+  }
+
+  private void populateWindowsStatus(GovernanceConfig governanceConfig, String accountId) {
+    if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)
+        && isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      governanceConfig.getTimeRangeBasedFreezeConfigs().forEach(
+          TimeRangeBasedFreezeConfig::recalculateFreezeWindowState);
+    }
+  }
+
+  private void toggleExpiredWindows(GovernanceConfig governanceConfig, String accountId) {
+    if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)
+        && isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      governanceConfig.getTimeRangeBasedFreezeConfigs().forEach(TimeRangeBasedFreezeConfig::toggleExpiredWindowsOff);
     }
   }
 
@@ -195,7 +214,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       if (!ListUtils.isEqualList(oldSetting.getWeeklyFreezeConfigs(), governanceConfig.getWeeklyFreezeConfigs())) {
         publishToSegment(accountId, user, EventType.BLACKOUT_WINDOW_UPDATED);
       }
-
+      toggleExpiredWindows(updatedSetting, accountId);
+      populateWindowsStatus(updatedSetting, accountId);
       return updatedSetting;
     }
   }
@@ -403,7 +423,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         .forEach(deploymentFreeze -> {
           validateName(deploymentFreeze.getName());
           validateAppEnvFilter(deploymentFreeze);
-          validateTimeRange(deploymentFreeze.getTimeRange());
+          validateTimeRange(deploymentFreeze.getTimeRange(), deploymentFreeze.getName());
         });
   }
 
@@ -438,14 +458,6 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         // update scenario, restore uuid and timezone
         entry.setUuid(oldWindow.getUuid());
 
-        // if no timezone(update from YAML) then fetch from db
-        if (isEmpty(entry.getTimeRange().getTimeZone())) {
-          new TimeRange(entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
-              oldWindow.getTimeRange().getTimeZone(), entry.getTimeRange().isDurationBased(),
-              entry.getTimeRange().getDuration(), entry.getTimeRange().getEndTime(),
-              entry.getTimeRange().getFreezeOccurrence(), false);
-        }
-
         if (isEmpty(entry.getDescription())) {
           entry.setDescription(null);
         }
@@ -455,8 +467,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
           if (oldWindow.checkIfActive()) {
             throw new InvalidRequestException("Cannot update active freeze window");
           }
-          validateUserGroups(entry.getUserGroups(), accountId);
         }
+        validateUserGroups(entry.getUserGroups(), accountId);
       }
     }
   }
@@ -467,7 +479,12 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     }
   }
 
-  private void validateTimeRange(TimeRange timeRange) {
+  private void validateTimeRange(TimeRange timeRange, String name) {
+    Validator.notNullCheck("Time zone cannot be empty", timeRange.getTimeZone());
+    if (!ZoneId.getAvailableZoneIds().contains(timeRange.getTimeZone())) {
+      throw new InvalidRequestException(
+          "Please select a valid time zone. Eg. Asia/Calcutta for freeze window: " + name);
+    }
     if (timeRange.getFrom() > timeRange.getTo()) {
       throw new InvalidRequestException("Window Start time is less than Window end Time");
     }
