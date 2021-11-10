@@ -183,6 +183,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final SecureRandom random = new SecureRandom();
 
   private static final boolean multiVersion;
+  private static boolean accountVersion;
 
   static {
     String deployMode = System.getenv().get("DEPLOY_MODE");
@@ -639,6 +640,10 @@ public class WatcherServiceImpl implements WatcherService {
                   drainingNeededList.add(delegateProcess);
                 }
               }
+              if (accountVersion) {
+                messageService.writeMessageToChannel(
+                    DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
+              }
 
               if (newDelegate) {
                 log.info("New delegate process {} is starting", delegateProcess);
@@ -961,6 +966,9 @@ public class WatcherServiceImpl implements WatcherService {
         if (config != null && config.getAction() == SELF_DESTRUCT) {
           selfDestruct();
         }
+        if (config != null && config.isAccountVersion()) {
+          accountVersion = true;
+        }
 
         return config != null ? config.getDelegateVersions() : null;
       } else {
@@ -1001,9 +1009,9 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     // Get patched version
-    final String patchVersion = substringAfter(version, "-");
-    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
-
+    final String patchVersion = !accountVersion ? substringAfter(version, "-") : "";
+    final String updatedVersion =
+        !accountVersion ? (version.contains("-") ? substringBefore(version, "-") : version) : "";
     RestResponse<DelegateScripts> restResponse = null;
     if (!delegateNg) {
       log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));
@@ -1228,7 +1236,8 @@ public class WatcherServiceImpl implements WatcherService {
       try {
         sleep(ofSeconds(5));
         log.info("Send kill -3 to delegateProcess {}", delegateProcess);
-        new ProcessExecutor().command("kill", "-3", delegateProcess).start();
+        final String killCmd = "kill -3 " + delegateProcess;
+        new ProcessExecutor().command("/bin/bash", "-c", killCmd).start();
         sleep(ofSeconds(15));
         ProcessControl.ensureKilled(delegateProcess, Duration.ofSeconds(120));
       } catch (Exception e) {
@@ -1442,7 +1451,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   @VisibleForTesting
   String getVersion() {
-    return (new VersionInfoManager()).getVersionInfo().getFullVersion();
+    return (new VersionInfoManager()).getVersionInfo().getVersion();
   }
 
   private void migrate(String newUrl) {
