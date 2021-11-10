@@ -86,6 +86,10 @@ public class ManagerGrpcClientModule extends ProviderModule {
     } else if (!("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
       String versionPrefix = "v-" + versionInfo.getVersion().replace('.', '-') + "-";
       String versionedAuthority = versionPrefix + config.authority;
+      log.info("Version Info " + versionInfo.getVersion());
+      log.info("Authority " + config.authority);
+      log.info("Target  " + config.target);
+
       if (isValidAuthority(versionedAuthority) && !config.isVersionCheckDisabled()) {
         log.info("Using versioned authority: {}", versionedAuthority);
         authorityToUse = versionedAuthority;
