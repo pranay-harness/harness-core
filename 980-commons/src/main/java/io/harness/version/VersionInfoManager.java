@@ -35,7 +35,7 @@ public class VersionInfoManager {
         versionInfo = IOUtils.toString(stream, StandardCharsets.UTF_8);
       }
     } catch (IOException exception) {
-      log.error("Error reading version info from file: {}", VERSION_INFO_YAML);
+      log.error("Error reading version info from file: {}", VERSION_INFO_YAML, exception);
       throw new VersionInfoException(exception);
     }
     return versionInfo;
