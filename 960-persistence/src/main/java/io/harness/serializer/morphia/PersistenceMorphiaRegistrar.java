@@ -20,6 +20,7 @@ import io.harness.persistence.CreatedByAccess;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.NameAccess;
+import io.harness.persistence.NameAndValueAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAccess;
 import io.harness.persistence.UpdatedAtAware;
@@ -64,6 +65,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(UuidAware.class);
     set.add(ValidUntilAccess.class);
     set.add(PersistentNGCronIterable.class);
+    set.add(NameAndValueAccess.class);
   }
 
   @Override

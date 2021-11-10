@@ -16,6 +16,7 @@ public enum Action {
   REVOKE_INVITE,
   ADD_COLLABORATOR,
   REMOVE_COLLABORATOR,
+  REVOKE_TOKEN,
 
   // Deprecated
   ADD_MEMBERSHIP,
