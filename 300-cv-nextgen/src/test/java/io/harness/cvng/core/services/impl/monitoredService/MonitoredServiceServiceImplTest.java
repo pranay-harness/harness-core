@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
+import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIVE_MIN;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.ANJAN;
@@ -56,6 +58,9 @@ import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
+import io.harness.cvng.dashboard.entities.HeatMap;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
+import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -68,7 +73,10 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -92,6 +100,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject CVConfigService cvConfigService;
   @Inject ChangeSourceService changeSourceService;
   @Inject MonitoredServiceService monitoredServiceService;
+  @Inject HeatMapService heatMapService;
   @Inject HPersistence hPersistence;
   @Inject ServiceDependencyService serviceDependencyService;
   @Mock NextGenService nextGenService;
@@ -113,7 +122,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   String monitoredServiceName;
   String monitoredServiceIdentifier;
   String changeSourceIdentifier;
-  String description;
+  Clock clock;
   ProjectParams projectParams;
   ServiceEnvironmentParams environmentParams;
   Map<String, String> tags;
@@ -135,7 +144,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
     monitoredServiceName = "monitoredServiceName";
     monitoredServiceIdentifier = "monitoredServiceIdentifier";
-    description = "description";
+    clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     changeSourceIdentifier = "changeSourceIdentifier";
     tags = new HashMap<String, String>() {
       {
@@ -160,6 +169,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(monitoredServiceService, "setupUsageEventService", setupUsageEventService, true);
     FieldUtils.writeField(changeSourceService, "changeSourceUpdateHandlerMap", new HashMap<>(), true);
     FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);
+    FieldUtils.writeField(heatMapService, "clock", clock, true);
+    FieldUtils.writeField(monitoredServiceService, "heatMapService", heatMapService, true);
   }
 
   @Test
@@ -443,8 +454,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                                       .build()));
     ChangeSummaryDTO changeSummary = ChangeSummaryDTO.builder().build();
     when(changeSourceServiceMock.getChangeSummary(any(), any(), any(), any())).thenReturn(changeSummary);
-    PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse =
-        monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, 0, 10, null);
+    PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse = monitoredServiceService.list(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, 0, 10, null, false);
     assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
     assertThat(monitoredServiceListDTOPageResponse.getTotalItems()).isEqualTo(1);
     MonitoredServiceListItemDTO monitoredServiceListItemDTO = monitoredServiceListDTOPageResponse.getContent().get(0);
@@ -481,7 +492,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
       { put(environmentIdentifier, "environmentName"); }
     });
     PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse =
-        monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, null, 0, 10, null);
+        monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, null, 0, 10, null, false);
     assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
     assertThat(monitoredServiceListDTOPageResponse.getTotalItems()).isEqualTo(3);
     MonitoredServiceListItemDTO monitoredServiceListItemDTO = monitoredServiceListDTOPageResponse.getContent().get(0);
@@ -1082,6 +1093,109 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         .environmentRef(environmentIdentifier)
         .name(monitoredServiceName)
         .tags(tags);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testList_serviceWithNoDependencies() {
+    MonitoredServiceDTO monitoredServiceOneDTO = createMonitoredServiceDTOWithCustomDependencies(
+        "service_1_local", environmentParams.getServiceIdentifier(), Sets.newHashSet("service_2_local"));
+    MonitoredServiceDTO monitoredServiceTwoDTO2 =
+        createMonitoredServiceDTOWithCustomDependencies("service_2_local", "service_2", Sets.newHashSet());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceOneDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceTwoDTO2);
+    PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse = monitoredServiceService.list(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, 0, 10, null, false);
+    monitoredServiceListDTOPageResponse.getContent().sort(
+        Comparator.comparing(MonitoredServiceListItemDTO::getIdentifier));
+    assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
+    assertThat(monitoredServiceListDTOPageResponse.getTotalItems()).isEqualTo(2);
+    assertThat(monitoredServiceListDTOPageResponse.getContent().get(0).getDependentHealthScore().size()).isEqualTo(1);
+    assertThat(monitoredServiceListDTOPageResponse.getContent().get(1).getDependentHealthScore().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testList_withServicesAtRiskFilter() throws IllegalAccessException {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    MonitoredServiceDTO monitoredServiceOneDTO = createMonitoredServiceDTOWithCustomDependencies(
+        "service_1_local", environmentParams.getServiceIdentifier(), Sets.newHashSet("service_2_local"));
+    MonitoredServiceDTO monitoredServiceTwoDTO2 = createMonitoredServiceDTOWithCustomDependencies(
+        "service_2_local", "service_2", Sets.newHashSet("service_1_local"));
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceOneDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceTwoDTO2);
+
+    HeatMap msOneHeatMap = builderFactory.heatMapBuilder()
+                               .serviceIdentifier(environmentParams.getServiceIdentifier())
+                               .heatMapResolution(FIVE_MIN)
+                               .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msOneHeatMap, endTime, 0.85, 0.75);
+    hPersistence.save(msOneHeatMap);
+    msOneHeatMap = builderFactory.heatMapBuilder()
+                       .serviceIdentifier(environmentParams.getServiceIdentifier())
+                       .heatMapResolution(FIVE_MIN)
+                       .category(CVMonitoringCategory.PERFORMANCE)
+                       .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msOneHeatMap, endTime, 0.85, 0.75);
+    hPersistence.save(msOneHeatMap);
+
+    HeatMap msTwoHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier("service_2").heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msTwoHeatMap, endTime, 0.65, 0.55);
+    hPersistence.save(msTwoHeatMap);
+    msTwoHeatMap = builderFactory.heatMapBuilder()
+                       .serviceIdentifier("service_2")
+                       .heatMapResolution(FIVE_MIN)
+                       .category(CVMonitoringCategory.PERFORMANCE)
+                       .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msTwoHeatMap, endTime, 0.65, 0.55);
+    hPersistence.save(msTwoHeatMap);
+
+    PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse = monitoredServiceService.list(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, 0, 10, null, true);
+
+    assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
+    assertThat(monitoredServiceListDTOPageResponse.getTotalItems()).isEqualTo(1);
+    MonitoredServiceListItemDTO monitoredServiceListItemDTO = monitoredServiceListDTOPageResponse.getContent().get(0);
+    assertThat(monitoredServiceListItemDTO.getName()).isEqualTo("service_1_local");
+    assertThat(monitoredServiceListItemDTO.getIdentifier()).isEqualTo("service_1_local");
+    assertThat(monitoredServiceListItemDTO.getServiceRef()).isEqualTo(serviceIdentifier);
+    assertThat(monitoredServiceListItemDTO.getEnvironmentRef()).isEqualTo(environmentIdentifier);
+    assertThat(monitoredServiceListItemDTO.getType()).isEqualTo(MonitoredServiceType.APPLICATION);
+    assertThat(monitoredServiceListItemDTO.isHealthMonitoringEnabled()).isTrue();
+    assertThat(monitoredServiceListItemDTO.getIdentifier()).isNotEqualTo("service_2_local");
+  }
+
+  private void setStartTimeEndTimeAndRiskScoreWith5MinBucket(
+      HeatMap heatMap, Instant endTime, double firstHalfRiskScore, double secondHalfRiskScore) {
+    Instant startTime = endTime.minus(4, ChronoUnit.HOURS);
+    heatMap.setHeatMapBucketStartTime(startTime);
+    heatMap.setHeatMapBucketEndTime(endTime);
+    List<HeatMapRisk> heatMapRisks = new ArrayList<>();
+
+    for (Instant time = startTime; time.isBefore(startTime.plus(2, ChronoUnit.HOURS));
+         time = time.plus(5, ChronoUnit.MINUTES)) {
+      heatMapRisks.add(HeatMapRisk.builder()
+                           .riskScore(firstHalfRiskScore)
+                           .startTime(time)
+                           .endTime(time.plus(5, ChronoUnit.MINUTES))
+                           .anomalousMetricsCount(1)
+                           .anomalousLogsCount(2)
+                           .build());
+    }
+    for (Instant time = startTime.plus(2, ChronoUnit.HOURS); time.isBefore(endTime);
+         time = time.plus(5, ChronoUnit.MINUTES)) {
+      heatMapRisks.add(HeatMapRisk.builder()
+                           .riskScore(secondHalfRiskScore)
+                           .startTime(time)
+                           .endTime(time.plus(5, ChronoUnit.MINUTES))
+                           .anomalousMetricsCount(1)
+                           .anomalousLogsCount(2)
+                           .build());
+    }
+    heatMap.setHeatMapRisks(heatMapRisks);
   }
 
   void assertCommonMonitoredService(MonitoredService monitoredService, MonitoredServiceDTO monitoredServiceDTO) {

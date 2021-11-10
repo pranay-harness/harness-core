@@ -175,9 +175,11 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier, @QueryParam("offset") @NotNull Integer offset,
-      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
-    return ResponseDTO.newResponse(monitoredServiceService.list(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, offset, pageSize, filter));
+      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter,
+      @NotNull @QueryParam("servicesAtRiskFilter") @ApiParam(
+          required = true, defaultValue = "false") boolean servicesAtRiskFilter) {
+    return ResponseDTO.newResponse(monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier,
+        environmentIdentifier, offset, pageSize, filter, servicesAtRiskFilter));
   }
 
   @GET
