@@ -11,6 +11,7 @@ import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREAD
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.NANDAN;
+import static io.harness.rule.OwnerRule.RAJ;
 import static io.harness.rule.OwnerRule.VIKAS_M;
 import static io.harness.rule.OwnerRule.VOJIN;
 
@@ -53,6 +54,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupService;
 
@@ -82,6 +84,7 @@ public class UserServiceImplTest extends WingsBaseTest {
   @Mock NgInviteClient ngInviteClient;
   @Mock SignupService signupService;
   @Mock EventPublishHelper eventPublishHelper;
+  @Mock TOTPAuthHandler totpAuthHandler;
   @Mock UserServiceLimitChecker userServiceLimitChecker;
   @Inject WingsPersistence wingsPersistence;
   private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
@@ -366,6 +369,33 @@ public class UserServiceImplTest extends WingsBaseTest {
     when(ngInviteClient.completeInvite(anyString())).thenReturn(req);
     when(req.execute()).thenReturn(Response.success(ResponseDTO.newResponse()));
     userServiceImpl.completeNGInvite(inviteDTO);
+    verify(eventPublishHelper, times(1)).publishUserRegistrationCompletionEvent(anyString(), any());
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void test_CompleteNgInvite_2FA() throws Exception {
+    Account account = anAccount()
+                          .withAccountName("harness")
+                          .withCompanyName("harness")
+                          .withAppId(GLOBAL_APP_ID)
+                          .withUuid(UUID)
+                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                          .build();
+    wingsPersistence.save(account);
+
+    String userEmail = "testemail@hello.com";
+    UserInviteDTO inviteDTO =
+        UserInviteDTO.builder().accountId(ACCOUNT_ID).email(userEmail).name(USER_NAME).token(UUID).build();
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    User user = User.Builder.anUser().twoFactorAuthenticationEnabled(true).email(userEmail).build();
+    wingsPersistence.save(user);
+    retrofit2.Call<ResponseDTO<Boolean>> req = mock(retrofit2.Call.class);
+    when(ngInviteClient.completeInvite(anyString())).thenReturn(req);
+    when(req.execute()).thenReturn(Response.success(ResponseDTO.newResponse()));
+    userServiceImpl.completeNGInvite(inviteDTO);
+    verify(totpAuthHandler, times(1)).sendTwoFactorAuthenticationResetEmail(any());
     verify(eventPublishHelper, times(1)).publishUserRegistrationCompletionEvent(anyString(), any());
   }
 
