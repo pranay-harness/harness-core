@@ -10,6 +10,7 @@ import io.harness.persistence.PersistentEntity;
 
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.SearchSourceEntitySyncState.SearchSourceEntitySyncStateKeys;
+import software.wings.search.framework.TimeScaleSourceEntitySyncState.TimeScaleSourceEntitySyncStateKeys;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.time.Duration;
@@ -102,6 +103,27 @@ public class ChangeEventProcessorTask implements Runnable {
     return true;
   }
 
+  private boolean saveTimeScaleSourceEntitySyncStateToken(Class<? extends PersistentEntity> sourceClass, String token) {
+    String sourceClassName = sourceClass.getCanonicalName();
+
+    Query<TimeScaleSourceEntitySyncState> query = wingsPersistence.createQuery(TimeScaleSourceEntitySyncState.class)
+                                                      .field(TimeScaleSourceEntitySyncStateKeys.timeScaleEntityClass)
+                                                      .equal(sourceClassName);
+
+    UpdateOperations<TimeScaleSourceEntitySyncState> updateOperations =
+        wingsPersistence.createUpdateOperations(TimeScaleSourceEntitySyncState.class)
+            .set(TimeScaleSourceEntitySyncStateKeys.lastSyncedToken, token);
+
+    TimeScaleSourceEntitySyncState timeScaleSourceEntitySyncState =
+        wingsPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
+    if (timeScaleSourceEntitySyncState == null || !timeScaleSourceEntitySyncState.getLastSyncedToken().equals(token)) {
+      log.error(
+          String.format("Timescale Entity %s token %s could not be updated", sourceClass.getCanonicalName(), token));
+      return false;
+    }
+    return true;
+  }
+
   private Callable<Boolean> getProcessChangeEventTask(ChangeHandler changeHandler, ChangeEvent changeEvent) {
     return () -> changeHandler.handleChange(changeEvent);
   }
@@ -179,7 +201,7 @@ public class ChangeEventProcessorTask implements Runnable {
       }
     }
 
-    boolean isSaved = saveSearchSourceEntitySyncStateToken(sourceClass, changeEvent.getToken());
+    boolean isSaved = saveTimeScaleSourceEntitySyncStateToken(sourceClass, changeEvent.getToken());
     if (!isSaved) {
       log.error("Could not save token. ChangeEvent {} could not be processed for entity {}", changeEvent.toString(),
           sourceClass.getCanonicalName());
