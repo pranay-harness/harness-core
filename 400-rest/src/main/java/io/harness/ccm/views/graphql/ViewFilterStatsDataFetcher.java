@@ -27,7 +27,6 @@ public class ViewFilterStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     QLCEViewFilterWrapper, QLCEViewGroupBy, QLCEViewSortCriteria> {
   @Inject ViewsBillingService viewsBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
-  @Inject BigQueryService bigQueryService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -35,9 +34,8 @@ public class ViewFilterStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort,
       Integer limit, Integer offset) {
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
-    BigQuery bigQuery = bigQueryService.get();
     return QLCEViewFilterData.builder()
-        .values(viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTableName, limit, offset))
+        .values(viewsBillingService.getFilterValueStats(filters, cloudProviderTableName, limit, offset))
         .build();
   }
 

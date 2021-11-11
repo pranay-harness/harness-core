@@ -46,7 +46,6 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
   @Inject private CEViewService ceViewService;
   @Inject private ViewsBillingService viewsBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
-  @Inject BigQueryService bigQueryService;
 
   private static final long CACHE_SIZE = 100;
 
@@ -191,8 +190,7 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
     // Getting supported fields from information schema
     String informationSchemaView = cloudBillingHelper.getInformationSchemaViewForDataset(accountId, columnView);
     String tableName = cloudBillingHelper.getTableName("AZURE");
-    BigQuery bigQuery = bigQueryService.get();
-    List<String> supportedFields = viewsBillingService.getColumnsForTable(bigQuery, informationSchemaView, tableName);
+    List<String> supportedFields = viewsBillingService.getColumnsForTable(informationSchemaView, tableName);
 
     // Adding fields which are common across all account types of azure
     supportedAzureFields.addAll(ViewFieldUtils.getAzureFields());

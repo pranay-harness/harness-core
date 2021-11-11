@@ -166,14 +166,14 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
     // Generating Trend data
     QLCEViewTrendInfo trendData =
-        viewsBillingService.getTrendStatsData(bigQuery, filters, aggregationFunction, cloudProviderTableName);
+        viewsBillingService.getTrendStatsData(filters, aggregationFunction, cloudProviderTableName);
     if (trendData == null) {
       throw new InvalidRequestException("Exception while generating report. No data to for cost trend");
     }
 
     // Generating table data
-    List<QLCEViewEntityStatsDataPoint> tableData = viewsBillingService.getEntityStatsDataPoints(bigQuery, filters,
-        groupBy, aggregationFunction, sortCriteria, cloudProviderTableName, DEFAULT_LIMIT, DEFAULT_OFFSET);
+    List<QLCEViewEntityStatsDataPoint> tableData = viewsBillingService.getEntityStatsDataPoints(
+        filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName, DEFAULT_LIMIT, DEFAULT_OFFSET);
     if (isEmpty(tableData)) {
       throw new InvalidRequestException("Exception while generating report. No data to for table");
     }
@@ -185,7 +185,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
                     .build());
     List<QLCEViewTimeSeriesData> chartData =
         viewsBillingService.convertToQLViewTimeSeriesData(viewsBillingService.getTimeSeriesStats(
-            bigQuery, filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName));
+            filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName));
     if (chartData == null) {
       throw new InvalidRequestException("Exception while generating report. No data to for chart");
     }

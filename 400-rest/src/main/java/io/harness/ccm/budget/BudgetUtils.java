@@ -75,7 +75,6 @@ public class BudgetUtils {
   @Inject BudgetTimescaleQueryHelper budgetTimescaleQueryHelper;
   @Inject BudgetDao budgetDao;
   @Inject ViewsBillingServiceImpl viewsBillingService;
-  @Inject private BigQueryService bigQueryService;
   @Inject private CloudBillingHelper cloudBillingHelper;
   private String DEFAULT_TIMEZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
@@ -385,8 +384,8 @@ public class BudgetUtils {
     filters.add(getViewFilter(viewId));
     filters.add(getPerspectiveTimeFilter(startTime, AFTER));
     return viewsBillingService.convertToQLViewTimeSeriesData(
-        viewsBillingService.getTimeSeriesStats(bigQueryService.get(), filters, groupBy, aggregationFunction,
-            Collections.emptyList(), cloudBillingHelper.getCloudProviderTableName(accountId, unified)));
+        viewsBillingService.getTimeSeriesStats(filters, groupBy, aggregationFunction, Collections.emptyList(),
+            cloudBillingHelper.getCloudProviderTableName(accountId, unified)));
   }
 
   private double getActualCostForPerspectiveBudget(Budget budget, String cloudProviderTable) {
@@ -417,8 +416,8 @@ public class BudgetUtils {
       cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(budget.getAccountId(), unified);
     }
 
-    QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
-        bigQueryService.get(), filters, getPerspectiveTotalCostAggregation(), cloudProviderTable);
+    QLCEViewTrendInfo trendData =
+        viewsBillingService.getTrendStatsData(filters, getPerspectiveTotalCostAggregation(), cloudProviderTable);
     return trendData.getValue().doubleValue();
   }
 
@@ -437,8 +436,8 @@ public class BudgetUtils {
       cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(budget.getAccountId(), unified);
     }
 
-    QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
-        bigQueryService.get(), filters, getPerspectiveTotalCostAggregation(), cloudProviderTable);
+    QLCEViewTrendInfo trendData =
+        viewsBillingService.getTrendStatsData(filters, getPerspectiveTotalCostAggregation(), cloudProviderTable);
     Instant endInstant = Instant.ofEpochMilli(endTime);
     QLBillingAmountData billingAmountData = QLBillingAmountData.builder()
                                                 .cost(BigDecimal.valueOf(trendData.getValue().doubleValue()))

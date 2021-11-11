@@ -7,7 +7,6 @@ import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unif
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
 
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
@@ -16,7 +15,6 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
-import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
@@ -27,7 +25,6 @@ public class ViewEntityStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     QLCEViewFilterWrapper, QLCEViewGroupBy, QLCEViewSortCriteria> {
   @Inject ViewsBillingService viewsBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
-  @Inject BigQueryService bigQueryService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -35,10 +32,9 @@ public class ViewEntityStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort,
       Integer limit, Integer offset) {
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
-    BigQuery bigQuery = bigQueryService.get();
     return QLCEViewEntityStatsData.builder()
         .data(viewsBillingService.getEntityStatsDataPoints(
-            bigQuery, filters, groupBy, aggregateFunction, sort, cloudProviderTableName, limit, offset))
+            filters, groupBy, aggregateFunction, sort, cloudProviderTableName, limit, offset))
         .build();
   }
 

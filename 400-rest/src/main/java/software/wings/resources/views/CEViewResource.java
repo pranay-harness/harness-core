@@ -13,7 +13,6 @@ import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import javax.validation.Valid;
@@ -35,17 +34,14 @@ public class CEViewResource {
   private CEViewService ceViewService;
   private CEReportScheduleService ceReportScheduleService;
   private ViewCustomFieldService viewCustomFieldService;
-  private BigQueryService bigQueryService;
   private CloudBillingHelper cloudBillingHelper;
 
   @Inject
   public CEViewResource(CEViewService ceViewService, CEReportScheduleService ceReportScheduleService,
-      ViewCustomFieldService viewCustomFieldService, BigQueryService bigQueryService,
-      CloudBillingHelper cloudBillingHelper) {
+      ViewCustomFieldService viewCustomFieldService, CloudBillingHelper cloudBillingHelper) {
     this.ceViewService = ceViewService;
     this.ceReportScheduleService = ceReportScheduleService;
     this.viewCustomFieldService = viewCustomFieldService;
-    this.bigQueryService = bigQueryService;
     this.cloudBillingHelper = cloudBillingHelper;
   }
 
@@ -64,9 +60,8 @@ public class CEViewResource {
   }
 
   private CEView updateTotalCost(CEView ceView) {
-    BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(ceView.getAccountId(), unified);
-    return ceViewService.updateTotalCost(ceView, bigQuery, cloudProviderTableName);
+    return ceViewService.updateTotalCost(ceView, cloudProviderTableName);
   }
 
   @GET

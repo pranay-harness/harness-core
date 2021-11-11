@@ -6,7 +6,6 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.budget.utils.BudgetUtils;
 import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.views.dao.CEReportScheduleDao;
@@ -45,7 +44,6 @@ import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.exception.InvalidRequestException;
 
-import com.google.cloud.bigquery.BigQuery;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -71,7 +69,6 @@ public class CEViewServiceImpl implements CEViewService {
   @Inject private ViewFilterBuilderHelper viewFilterBuilderHelper;
   @Inject private ViewsQueryHelper viewsQueryHelper;
   @Inject private BigQueryHelper bigQueryHelper;
-  @Inject private BigQueryService bigQueryService;
 
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
   private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(100) has been reached";
@@ -116,9 +113,9 @@ public class CEViewServiceImpl implements CEViewService {
 
   private double getCostForPerspective(String accountId, List<QLCEViewFilterWrapper> filters) {
     String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
-    ViewCostData costData = viewsBillingService.getCostData(bigQueryService.get(), filters,
-        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable,
-        viewsQueryHelper.buildQueryParams(accountId, false));
+    ViewCostData costData =
+        viewsBillingService.getCostData(filters, viewsQueryHelper.getPerspectiveTotalCostAggregation(),
+            cloudProviderTable, viewsQueryHelper.buildQueryParams(accountId, false));
     return costData.getCost();
   }
 
@@ -136,11 +133,10 @@ public class CEViewServiceImpl implements CEViewService {
     String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     ViewCostData costDataForForecast =
         ViewCostData.builder()
-            .cost(
-                viewsBillingService
-                    .getCostData(bigQueryService.get(), filters, viewsQueryHelper.getPerspectiveTotalCostAggregation(),
-                        cloudProviderTable, viewsQueryHelper.buildQueryParams(accountId, false))
-                    .getCost())
+            .cost(viewsBillingService
+                      .getCostData(filters, viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable,
+                          viewsQueryHelper.buildQueryParams(accountId, false))
+                      .getCost())
             .minStartTime(1000 * startTime)
             .maxStartTime(1000 * BudgetUtils.getStartOfCurrentDay() - BudgetUtils.ONE_DAY_MILLIS)
             .build();
@@ -238,7 +234,7 @@ public class CEViewServiceImpl implements CEViewService {
   }
 
   @Override
-  public CEView updateTotalCost(CEView ceView, BigQuery bigQuery, String cloudProviderTableName) {
+  public CEView updateTotalCost(CEView ceView, String cloudProviderTableName) {
     if (ceView.getViewState() != null && ceView.getViewState() == ViewState.COMPLETED) {
       List<QLCEViewAggregation> totalCostAggregationFunction = Collections.singletonList(
           QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
@@ -254,8 +250,8 @@ public class CEViewServiceImpl implements CEViewService {
       filters.add(
           viewFilterBuilderHelper.getViewTimeFilter(startEndTime.getEndTime(), QLCEViewTimeFilterOperator.BEFORE));
 
-      QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
-          bigQuery, filters, totalCostAggregationFunction, cloudProviderTableName);
+      QLCEViewTrendInfo trendData =
+          viewsBillingService.getTrendStatsData(filters, totalCostAggregationFunction, cloudProviderTableName);
       double totalCost = trendData.getValue().doubleValue();
       log.info("Total cost of view {}", totalCost);
       return ceViewDao.updateTotalCost(ceView.getUuid(), ceView.getAccountId(), totalCost);

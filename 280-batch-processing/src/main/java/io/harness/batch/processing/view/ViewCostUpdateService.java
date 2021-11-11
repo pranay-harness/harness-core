@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 public class ViewCostUpdateService {
   @Autowired private BatchMainConfig config;
   @Autowired private CEViewService ceViewService;
-  @Autowired private BigQueryService bigQueryService;
   @Autowired private AccountShardService accountShardService;
   @Autowired private CloudBillingHelper cloudBillingHelper;
 
@@ -37,7 +36,7 @@ public class ViewCostUpdateService {
       views.forEach(view -> {
         log.info("Updating view {}", view.getUuid());
         try {
-          ceViewService.updateTotalCost(view, bigQueryService.get(),
+          ceViewService.updateTotalCost(view,
               cloudBillingHelper.getCloudProviderTableName(
                   config.getBillingDataPipelineConfig().getGcpProjectId(), accountId, unified));
         } catch (Exception ex) {

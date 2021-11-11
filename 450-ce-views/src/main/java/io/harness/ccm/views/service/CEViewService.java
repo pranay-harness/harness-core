@@ -6,7 +6,6 @@ import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.graphql.QLCEView;
 
-import com.google.cloud.bigquery.BigQuery;
 import java.util.List;
 
 public interface CEViewService {
@@ -16,7 +15,7 @@ public interface CEViewService {
 
   CEView get(String uuid);
   CEView update(CEView ceView);
-  CEView updateTotalCost(CEView ceView, BigQuery bigQuery, String cloudProviderTableName);
+  CEView updateTotalCost(CEView ceView, String cloudProviderTableName);
   boolean delete(String uuid, String accountId);
   List<QLCEView> getAllViews(String accountId, boolean includeDefault);
   List<CEView> getViewByState(String accountId, ViewState viewState);

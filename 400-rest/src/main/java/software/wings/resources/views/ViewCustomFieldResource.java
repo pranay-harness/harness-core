@@ -69,7 +69,7 @@ public class ViewCustomFieldResource {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
-    return new RestResponse<>(viewCustomFieldService.save(viewCustomField, bigQuery, cloudProviderTableName));
+    return new RestResponse<>(viewCustomFieldService.save(viewCustomField, cloudProviderTableName));
   }
 
   private void modifyCustomField(ViewCustomField viewCustomField) {
@@ -132,7 +132,7 @@ public class ViewCustomFieldResource {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
-    viewCustomFieldService.validate(viewCustomField, bigQuery, cloudProviderTableName);
+    viewCustomFieldService.validate(viewCustomField, cloudProviderTableName);
     RestResponse rr = new RestResponse("Valid Formula");
     return prepareResponse(rr, Response.Status.OK);
   }
@@ -145,7 +145,7 @@ public class ViewCustomFieldResource {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
-    return new RestResponse<>(viewCustomFieldService.update(viewCustomField, bigQuery, cloudProviderTableName));
+    return new RestResponse<>(viewCustomFieldService.update(viewCustomField, cloudProviderTableName));
   }
 
   @DELETE

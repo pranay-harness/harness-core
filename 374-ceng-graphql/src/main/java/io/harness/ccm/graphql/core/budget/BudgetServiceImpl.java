@@ -226,8 +226,8 @@ public class BudgetServiceImpl implements BudgetService {
     filters.add(viewsQueryHelper.getPerspectiveTimeFilter(startTime, AFTER));
     String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     return perspectiveTimeSeriesHelper
-        .fetch(viewsBillingService.getTimeSeriesStats(bigQueryService.get(), filters, groupBy, aggregationFunction,
-                   Collections.emptyList(), cloudProviderTable),
+        .fetch(viewsBillingService.getTimeSeriesStats(
+                   filters, groupBy, aggregationFunction, Collections.emptyList(), cloudProviderTable),
             perspectiveTimeSeriesHelper.getTimePeriod(groupBy))
         .getStats();
   }

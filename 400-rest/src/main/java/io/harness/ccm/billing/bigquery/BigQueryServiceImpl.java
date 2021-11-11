@@ -8,6 +8,7 @@ import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getImpersonate
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.ValidationResult;
 
@@ -17,7 +18,12 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
+import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.TableResult;
 import com.google.inject.Singleton;
+import com.sun.istack.internal.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -27,6 +33,35 @@ public class BigQueryServiceImpl implements BigQueryService, io.harness.ccm.bigQ
   @Override
   public BigQuery get() {
     return get(null, null);
+  }
+
+  @Override
+  public TableResult query(@NotNull String query) {
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
+
+    TableResult result = null;
+    try {
+      result = this.get().query(queryConfig);
+    } catch (InterruptedException e) {
+      log.error("Failed to execute: {}", query, e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+
+    return result;
+  }
+
+  @Override
+  public Job create(@NotNull String query) {
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder(query).setDryRun(true).setUseQueryCache(false).build();
+
+    try {
+      return this.get().create(JobInfo.of(queryConfig));
+    } catch (BigQueryException e) {
+      log.error("Failed to create bigQuery: {}", query, e);
+      throw new InvalidRequestException(e.getMessage());
+    }
   }
 
   @Override

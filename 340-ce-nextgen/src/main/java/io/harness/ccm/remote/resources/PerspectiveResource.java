@@ -21,7 +21,6 @@ import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -62,16 +61,14 @@ public class PerspectiveResource {
   private final CEViewService ceViewService;
   private final CEReportScheduleService ceReportScheduleService;
   private final ViewCustomFieldService viewCustomFieldService;
-  private final BigQueryService bigQueryService;
   private final BigQueryHelper bigQueryHelper;
 
   @Inject
   public PerspectiveResource(CEViewService ceViewService, CEReportScheduleService ceReportScheduleService,
-      ViewCustomFieldService viewCustomFieldService, BigQueryService bigQueryService, BigQueryHelper bigQueryHelper) {
+      ViewCustomFieldService viewCustomFieldService, BigQueryHelper bigQueryHelper) {
     this.ceViewService = ceViewService;
     this.ceReportScheduleService = ceReportScheduleService;
     this.viewCustomFieldService = viewCustomFieldService;
-    this.bigQueryService = bigQueryService;
     this.bigQueryHelper = bigQueryHelper;
   }
 
@@ -157,9 +154,8 @@ public class PerspectiveResource {
   }
 
   private CEView updateTotalCost(CEView ceView) {
-    BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(ceView.getAccountId(), UNIFIED_TABLE);
-    return ceViewService.updateTotalCost(ceView, bigQuery, cloudProviderTableName);
+    return ceViewService.updateTotalCost(ceView, cloudProviderTableName);
   }
 
   @GET

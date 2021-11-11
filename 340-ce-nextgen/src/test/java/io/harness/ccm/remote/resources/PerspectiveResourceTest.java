@@ -60,8 +60,8 @@ public class PerspectiveResourceTest extends CategoryTest {
     when(ceViewService.update(perspective)).thenReturn(perspective);
     when(bigQueryHelper.getCloudProviderTableName(ACCOUNT_ID, UNIFIED_TABLE)).thenReturn(UNIFIED_TABLE_NAME);
 
-    perspectiveResource = new PerspectiveResource(
-        ceViewService, ceReportScheduleService, viewCustomFieldService, bigQueryService, bigQueryHelper);
+    perspectiveResource =
+        new PerspectiveResource(ceViewService, ceReportScheduleService, viewCustomFieldService, bigQueryHelper);
   }
 
   @Test

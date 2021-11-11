@@ -43,7 +43,6 @@ public class PerspectiveFieldsHelper {
   @Inject private ViewsBillingService viewsBillingService;
   @Inject private BusinessMappingService businessMappingService;
   @Inject BigQueryHelper bigQueryHelper;
-  @Inject BigQueryService bigQueryService;
   @Inject FeatureFlagService featureFlagService;
 
   private static final long CACHE_SIZE = 100;
@@ -214,8 +213,7 @@ public class PerspectiveFieldsHelper {
     // Getting supported fields from information schema
     String informationSchemaView = bigQueryHelper.getInformationSchemaViewForDataset(accountId, columnView);
     String tableName = bigQueryHelper.getTableName("AZURE");
-    BigQuery bigQuery = bigQueryService.get();
-    List<String> supportedFields = viewsBillingService.getColumnsForTable(bigQuery, informationSchemaView, tableName);
+    List<String> supportedFields = viewsBillingService.getColumnsForTable(informationSchemaView, tableName);
 
     // Adding fields which are common across all account types of azure
     supportedAzureFields.addAll(ViewFieldUtils.getAzureFields());

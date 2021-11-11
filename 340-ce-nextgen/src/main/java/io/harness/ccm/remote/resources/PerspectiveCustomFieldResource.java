@@ -5,7 +5,6 @@ import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
 import io.harness.ccm.views.entities.CEView;
@@ -21,7 +20,6 @@ import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -53,18 +51,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class PerspectiveCustomFieldResource {
   private ViewCustomFieldService viewCustomFieldService;
   private CustomFieldExpressionHelper customFieldExpressionHelper;
-  private BigQueryService bigQueryService;
   private BigQueryHelper bigQueryHelper;
   private ViewCustomFieldDao customFieldDao;
   private static final String labelsSubQuery = "(SELECT value FROM UNNEST(labels) WHERE KEY='%s')";
 
   @Inject
   public PerspectiveCustomFieldResource(ViewCustomFieldService viewCustomFieldService,
-      CustomFieldExpressionHelper customFieldExpressionHelper, BigQueryService bigQueryService,
-      BigQueryHelper bigQueryHelper, ViewCustomFieldDao customFieldDao) {
+      CustomFieldExpressionHelper customFieldExpressionHelper, BigQueryHelper bigQueryHelper,
+      ViewCustomFieldDao customFieldDao) {
     this.viewCustomFieldService = viewCustomFieldService;
     this.customFieldExpressionHelper = customFieldExpressionHelper;
-    this.bigQueryService = bigQueryService;
     this.bigQueryHelper = bigQueryHelper;
     this.customFieldDao = customFieldDao;
   }
@@ -76,9 +72,8 @@ public class PerspectiveCustomFieldResource {
   public RestResponse<ViewCustomField> saveCustomField(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
-    BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
-    return new RestResponse<>(viewCustomFieldService.save(viewCustomField, bigQuery, cloudProviderTableName));
+    return new RestResponse<>(viewCustomFieldService.save(viewCustomField, cloudProviderTableName));
   }
 
   private void modifyCustomField(ViewCustomField viewCustomField) {
@@ -142,9 +137,8 @@ public class PerspectiveCustomFieldResource {
   public RestResponse<String> validate(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
-    BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
-    viewCustomFieldService.validate(viewCustomField, bigQuery, cloudProviderTableName);
+    viewCustomFieldService.validate(viewCustomField, cloudProviderTableName);
     return new RestResponse<>("Valid Formula");
   }
 
@@ -155,9 +149,8 @@ public class PerspectiveCustomFieldResource {
   public RestResponse<ViewCustomField> update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @Valid @RequestBody ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
-    BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
-    return new RestResponse<>(viewCustomFieldService.update(viewCustomField, bigQuery, cloudProviderTableName));
+    return new RestResponse<>(viewCustomFieldService.update(viewCustomField, cloudProviderTableName));
   }
 
   @DELETE

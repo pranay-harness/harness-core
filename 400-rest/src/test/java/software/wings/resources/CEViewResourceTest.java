@@ -46,7 +46,7 @@ public class CEViewResourceTest extends CategoryTest {
   @ClassRule
   public static ResourceTestRule RESOURCES = ResourceTestRule.builder()
                                                  .instance(new CEViewResource(ceViewService, ceReportScheduleService,
-                                                     viewCustomFieldService, bigQueryService, cloudBillingHelper))
+                                                     viewCustomFieldService, cloudBillingHelper))
                                                  .build();
 
   private final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -88,7 +88,7 @@ public class CEViewResourceTest extends CategoryTest {
         .request()
         .post(entity(ceView, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
     verify(ceViewService).save(ceView);
-    verify(ceViewService).updateTotalCost(ceView, bigQueryService.get(), UNIFIED_TABLE);
+    verify(ceViewService).updateTotalCost(ceView, UNIFIED_TABLE);
   }
 
   @Test
@@ -113,7 +113,7 @@ public class CEViewResourceTest extends CategoryTest {
         .request()
         .put(entity(ceView, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
     verify(ceViewService).update(ceView);
-    verify(ceViewService).updateTotalCost(ceView, bigQueryService.get(), UNIFIED_TABLE);
+    verify(ceViewService).updateTotalCost(ceView, UNIFIED_TABLE);
   }
 
   @Test

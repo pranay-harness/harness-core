@@ -1,5 +1,6 @@
 package io.harness.ccm.views.service.impl;
 
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCondition;
@@ -12,10 +13,6 @@ import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.exception.InvalidRequestException;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryException;
-import com.google.cloud.bigquery.JobInfo;
-import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,13 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
   @Inject private ViewCustomFieldDao viewCustomFieldDao;
   @Inject private CEViewService ceViewService;
+  @Inject private BigQueryService bigQueryService;
 
   private static final String CUSTOM_FIELD_DUPLICATE_EXCEPTION = "Custom Field with given name already exists";
   private static final String CUSTOM_FIELD_IN_USE = "Custom Field in use, clean up all usages to delete the field";
 
   @Override
-  public ViewCustomField save(ViewCustomField viewCustomField, BigQuery bigQuery, String cloudProviderTableName) {
-    validateViewCustomField(viewCustomField, bigQuery, cloudProviderTableName, true, false);
+  public ViewCustomField save(ViewCustomField viewCustomField, String cloudProviderTableName) {
+    validateViewCustomField(viewCustomField, cloudProviderTableName, true, false);
     viewCustomFieldDao.save(viewCustomField);
     return viewCustomField;
   }
@@ -48,8 +46,8 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
   }
 
   @Override
-  public boolean validate(ViewCustomField viewCustomField, BigQuery bigQuery, String cloudProviderTableName) {
-    return validateViewCustomField(viewCustomField, bigQuery, cloudProviderTableName, false, false);
+  public boolean validate(ViewCustomField viewCustomField, String cloudProviderTableName) {
+    return validateViewCustomField(viewCustomField, cloudProviderTableName, false, false);
   }
 
   @Override
@@ -82,8 +80,8 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
   }
 
   @Override
-  public ViewCustomField update(ViewCustomField viewCustomField, BigQuery bigQuery, String cloudProviderTableName) {
-    validateViewCustomField(viewCustomField, bigQuery, cloudProviderTableName, false, true);
+  public ViewCustomField update(ViewCustomField viewCustomField, String cloudProviderTableName) {
+    validateViewCustomField(viewCustomField, cloudProviderTableName, false, true);
     return viewCustomFieldDao.update(viewCustomField);
   }
 
@@ -108,8 +106,8 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
     return viewCustomFieldDao.deleteByViewId(viewId, accountId);
   }
 
-  public boolean validateViewCustomField(ViewCustomField viewCustomField, BigQuery bigQuery,
-      String cloudProviderTableName, boolean isValidationOnSave, boolean isValidationOnUpdate) {
+  public boolean validateViewCustomField(ViewCustomField viewCustomField, String cloudProviderTableName,
+      boolean isValidationOnSave, boolean isValidationOnUpdate) {
     if (isValidationOnSave) {
       ViewCustomField savedCustomField = viewCustomFieldDao.findByName(
           viewCustomField.getAccountId(), viewCustomField.getViewId(), viewCustomField.getName());
@@ -143,14 +141,7 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
     selectQuery.addCustomFromTable(cloudProviderTableName);
     selectQuery.addCustomColumns(new CustomSql(viewCustomField.getSqlFormula()));
 
-    QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(selectQuery.toString()).setDryRun(true).setUseQueryCache(false).build();
-
-    try {
-      bigQuery.create(JobInfo.of(queryConfig));
-    } catch (BigQueryException e) {
-      throw new InvalidRequestException(e.getMessage());
-    }
+    bigQueryService.create(selectQuery.toString());
 
     return true;
   }

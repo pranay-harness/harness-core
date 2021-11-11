@@ -57,7 +57,7 @@ public class ViewCustomFieldServiceImplTest extends CategoryTest {
   public void shouldThrowExceptionWhileSavingCustomField() {
     doReturn(viewCustomField()).when(viewCustomFieldDao).findByName(ACCOUNT_ID, VIEW_ID, CUSTOM_FIELD_NAME);
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> viewCustomFieldService.save(viewCustomField(), bigQuery, "tableName"));
+        .isThrownBy(() -> viewCustomFieldService.save(viewCustomField(), "tableName"));
   }
 
   @Test
@@ -65,7 +65,7 @@ public class ViewCustomFieldServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSavingCustomField() {
     doReturn(null).when(viewCustomFieldDao).findByName(ACCOUNT_ID, VIEW_ID, CUSTOM_FIELD_NAME);
-    viewCustomFieldService.save(viewCustomField(), bigQuery, "tableName");
+    viewCustomFieldService.save(viewCustomField(), "tableName");
   }
 
   @Test

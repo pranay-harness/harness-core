@@ -59,8 +59,8 @@ public class ViewTimeSeriesStatsDataFetcher
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
     BigQuery bigQuery = bigQueryService.get();
 
-    return convertToQLViewTimeSeriesData(viewsBillingService.getTimeSeriesStats(
-        bigQuery, filters, groupBy, aggregateFunction, sort, cloudProviderTableName));
+    return convertToQLViewTimeSeriesData(
+        viewsBillingService.getTimeSeriesStats(filters, groupBy, aggregateFunction, sort, cloudProviderTableName));
   }
 
   public QLViewTimeSeriesData convertToQLViewTimeSeriesData(TableResult result) {

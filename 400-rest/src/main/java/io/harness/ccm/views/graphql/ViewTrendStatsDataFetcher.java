@@ -7,7 +7,6 @@ import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unif
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
 
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
@@ -17,7 +16,6 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
-import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import java.util.List;
 
@@ -27,16 +25,14 @@ public class ViewTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggre
     QLCEViewFilterWrapper, QLCEViewGroupBy, QLCEViewSortCriteria> {
   @Inject ViewsBillingService viewsBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
-  @Inject BigQueryService bigQueryService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCEViewAggregation> aggregateFunction,
       List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort) {
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
-    BigQuery bigQuery = bigQueryService.get();
     QLCEViewTrendInfo trendStatsData =
-        viewsBillingService.getTrendStatsData(bigQuery, filters, aggregateFunction, cloudProviderTableName);
+        viewsBillingService.getTrendStatsData(filters, aggregateFunction, cloudProviderTableName);
     return QLCEViewTrendStatsData.builder()
         .cost(QLBillingStatsInfo.builder()
                   .statsTrend(trendStatsData.getStatsTrend())
