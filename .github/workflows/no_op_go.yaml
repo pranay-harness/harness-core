@@ -55,6 +55,24 @@ jobs:
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
+      - name: Complete functionalTests1
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: runFunctionalTests1-Functional_tests
+          description: 'Mark functionalTests1 as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete functionalTests2
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: runFunctionalTests__2-Functional_tests
+          description: 'Mark functionalTests2  as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
       - name: Complete pmd checks
         uses: Sibz/github-status-action@v1
         with:
