@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 @Value
 @Builder
 public class DatadogMetricHealthDefinition {
@@ -15,6 +17,7 @@ public class DatadogMetricHealthDefinition {
     String metric;
     String aggregation;
     String serviceInstanceIdentifierTag;
+    List<String> metricTags;
     boolean isManualQuery;
     RiskProfile riskProfile;
 

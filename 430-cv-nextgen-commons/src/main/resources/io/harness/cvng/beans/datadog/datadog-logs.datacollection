@@ -17,14 +17,25 @@ Var nullObject = null
 Var responseList = []
 foreach logData in Var:logsData {
       Var message = extract(Var:logData, $.attributes.message)
-      Var host = extract(Var:logData, $.attributes.host)
-      if Var:host == Var:nullObject {
-        Var:host = "Unknown"
+      Var host = null
+      Var tags = extract(Var:logData, $.attributes.tags)
+      foreach tag in Var:tags {
+        Var tagSplit = Var:tag.split(":")
+        Var tagKey = Var:tagSplit[0]
+        if Env:serviceInstanceIdentifier == Var:tagKey {
+           Var:host = Var:tagKey
+           print Var:host
+        }
       }
+
+      if Var:host == Var:nullObject {
+         Var:host = extract(Var:logData, $.attributes.host)
+      }
+
       Var timestamp = extract(Var:logData, $.attributes.timestamp)
       Var timeStampVal = string-to-time(Var:timestamp)
 
-      Var logToReturn = new LogDataRecord(log=Var:message, timestamp=Var:timeStampVal, host=Var:hostResolved)
+      Var logToReturn = new LogDataRecord(log=Var:message, timestamp=Var:timeStampVal, host=Var:host)
       Var:responseList.append(Var:logToReturn)
-    }
+}
 return Var:responseList

@@ -23,6 +23,7 @@ public class DatadogMetricDataCollectionInfoMapper
         DatadogMetricsDataCollectionInfo dataCollectionInfo =
                 DatadogMetricsDataCollectionInfo.builder()
                         .metricDefinitions(metricDefinitions)
+                        .groupName(cvConfig.getDashboardName())
                         .build();
         dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
         return dataCollectionInfo;

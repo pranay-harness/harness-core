@@ -10,13 +10,12 @@ import lombok.Value;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DatadogLogDataCollectionInfo extends LogDataCollectionInfo<DatadogConnectorDTO> {
-  private static final int LOG_MAX_LIMIT = 1000;
+  public static final long LOG_MAX_LIMIT = 1000;
   DatadogLogDefinition logDefinition;
 
   @Override
@@ -26,6 +25,7 @@ public class DatadogLogDataCollectionInfo extends LogDataCollectionInfo<DatadogC
     String indexesParam = String.join(",", logDefinition.getIndexes());
     dslEnvVariables.put("indexes", indexesParam);
     dslEnvVariables.put("limit", LOG_MAX_LIMIT);
+    dslEnvVariables.put("serviceInstanceIdentifier", logDefinition.getServiceInstanceIdentifier());
     return dslEnvVariables;
   }
 

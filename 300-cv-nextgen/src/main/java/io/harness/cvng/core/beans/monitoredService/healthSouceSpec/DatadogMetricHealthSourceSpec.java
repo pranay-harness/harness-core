@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class DatadogMetricHealthSourceSpec extends HealthSourceSpec {
 
     @NotNull
-    String feature;
+    private String feature;
     private List<DatadogMetricHealthDefinition> metricDefinitions;
 
     @Override

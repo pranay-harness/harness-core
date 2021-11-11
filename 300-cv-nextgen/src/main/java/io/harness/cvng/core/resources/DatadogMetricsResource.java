@@ -21,7 +21,6 @@ import io.swagger.annotations.ApiResponses;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import java.util.List;
-import java.util.Set;
 
 @Api("datadog-metrics")
 @Path("/datadog-metrics")

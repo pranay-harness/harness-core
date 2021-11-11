@@ -18,8 +18,6 @@ foreach metricResponse in Var:metricResponses {
 Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
   foreach timeSeriesPoints in Var:timeSeriesPointsList {
      Var metricName = extract(Var:timeSeriesPoints, $.metric)
-        Var txnName = extract(Var:timeSeriesPoints, $.display_name)
-
         Var tagSets = extract(Var:timeSeriesPoints, $.tag_set)
         Var host = null
         Var tagListLength = Var:tagSets.length()
@@ -33,7 +31,7 @@ Var timeSeriesPointsList = extract(Var:metricResponse, $.series)
             Var timestamp = Var:point[0]
             Var value = Var:point[1]
             if Var:value != Var:nullObject {
-              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
+              Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:value, timestamp=Var:timestamp)
                Var:returnList.append(Var:tsRecord)
             }
         }

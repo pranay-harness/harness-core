@@ -20,9 +20,4 @@ public class DatadogUtils {
     headers.put("Accept", "application/json");
     return headers;
   }
-
-  public static Map<String, Object> getCommonEnvVariables(DatadogConnectorDTO datadogConnectorDTO) {
-    Map<String, Object> envMap = new HashMap<>();
-    return envMap;
-  }
 }

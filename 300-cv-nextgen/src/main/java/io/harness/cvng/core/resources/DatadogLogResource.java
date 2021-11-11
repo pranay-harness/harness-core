@@ -49,4 +49,19 @@ public class DatadogLogResource {
         return ResponseDTO.newResponse(datadogMetricsService.getSampleLogData(
                 accountId, connectorIdentifier, orgIdentifier, projectIdentifier, logSampleRequestDTO.getQuery(), tracingId));
     }
+
+    @GET
+    @Path("/log-indexes")
+    @Timed
+    @ExceptionMetered
+    @ApiOperation(value = "get datadog log indexes", nickname = "getDatadogLogIndexes")
+    public ResponseDTO<List<String>> getDatadogLogIndexes(
+            @NotNull @QueryParam("accountId") String accountId,
+            @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
+            @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+            @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+            @NotNull @QueryParam("tracingId") String tracingId) {
+        return ResponseDTO.newResponse(datadogMetricsService.getLogIndexes(
+                accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId));
+    }
 }

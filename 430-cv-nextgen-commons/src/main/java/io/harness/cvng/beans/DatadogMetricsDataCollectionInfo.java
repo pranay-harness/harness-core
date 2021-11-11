@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 @Data
 @Builder
 public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionInfo<DatadogConnectorDTO> {
+    private String groupName;
     private List<MetricCollectionInfo> metricDefinitions;
 
     @Override
@@ -21,13 +22,15 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
         Map<String, Object> dslEnvVariables = new HashMap<>();
         List<String> queries = metricDefinitions.stream()
                 .map(metricCollectionInfo -> {
-                    if (isCollectHostData() && metricCollectionInfo.getServiceInstanceIdentifierTag() != null && metricCollectionInfo.getGroupingQuery() != null) {
+                    if (isCollectHostData() && metricCollectionInfo.getServiceInstanceIdentifierTag() != null &&
+                            metricCollectionInfo.getGroupingQuery() != null) {
                         return metricCollectionInfo.getGroupingQuery();
                     }
                     return metricCollectionInfo.getQuery();
                 })
                 .collect(Collectors.toList());
         dslEnvVariables.put("queries", queries);
+        dslEnvVariables.put("groupName", groupName);
         return dslEnvVariables;
     }
 

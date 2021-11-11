@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -16,6 +17,7 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 @SuperBuilder
 @NoArgsConstructor
 @OwnedBy(CV)
+@EqualsAndHashCode(callSuper = true)
 public class DatadogDashboardListRequest extends DatadogRequest {
 
     private static final String DSL =

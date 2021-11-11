@@ -54,6 +54,7 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
                     .groupingQuery(definition.getGroupingQuery())
                     .metricType(metricType)
                     .aggregation(definition.getAggregation())
+                    .metricTags(definition.getMetricTags())
                     .isManualQuery(definition.isManualQuery())
                     .serviceInstanceIdentifierTag(definition.getServiceInstanceIdentifierTag())
                     .build());
@@ -82,6 +83,7 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
         private String query;
         private String groupingQuery;
         private String aggregation;
+        private List<String> metricTags;
         private TimeSeriesMetricType metricType;
         boolean isManualQuery;
         private String serviceInstanceIdentifierTag;

@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
 import java.util.Map;
@@ -16,6 +18,8 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 @SuperBuilder
 @NoArgsConstructor
 @OwnedBy(CV)
+@FieldNameConstants(innerTypeName = "DatadogTimeSeriesPointsRequestKeys")
+@EqualsAndHashCode(callSuper = true)
 public class DatadogTimeSeriesPointsRequest extends DatadogRequest {
     private static final String DSL =
             DataCollectionRequest.readDSL("datadog-time-series-points.datacollection", DatadogTimeSeriesPointsRequest.class);
@@ -23,6 +27,7 @@ public class DatadogTimeSeriesPointsRequest extends DatadogRequest {
     private Long from;
     private Long to;
     private String query;
+
     @Override
     public String getDSL() {
         return DSL;
@@ -31,10 +36,9 @@ public class DatadogTimeSeriesPointsRequest extends DatadogRequest {
     @Override
     public Map<String, Object> fetchDslEnvVariables() {
         Map<String, Object> commonVariables = super.fetchDslEnvVariables();
-        commonVariables.put("from", from);
-        commonVariables.put("to", to);
-        commonVariables.put("query", query);
-
+        commonVariables.put(DatadogTimeSeriesPointsRequestKeys.from, from);
+        commonVariables.put(DatadogTimeSeriesPointsRequestKeys.to, to);
+        commonVariables.put(DatadogTimeSeriesPointsRequestKeys.query, query);
         return commonVariables;
     }
 }

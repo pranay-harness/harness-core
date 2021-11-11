@@ -116,6 +116,6 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogTimeSeriesPointsRequest.class, 9069);
     kryo.register(DatadogLogSampleDataRequest.class, 9070);
     kryo.register(DatadogLogDataCollectionInfo.class, 9071);
-
+    kryo.register(DatadogLogIndexesRequest.class, 9072);
   }
 }

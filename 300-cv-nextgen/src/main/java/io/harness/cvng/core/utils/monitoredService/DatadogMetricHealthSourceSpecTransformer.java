@@ -30,6 +30,7 @@ public class DatadogMetricHealthSourceSpecTransformer implements CVConfigToHealt
                             .query(metricInfo.getQuery())
                             .groupingQuery(metricInfo.getGroupingQuery())
                             .aggregation(metricInfo.getAggregation())
+                            .metricTags(metricInfo.getMetricTags())
                             .isManualQuery(metricInfo.isManualQuery())
                             .riskProfile(
                                     RiskProfile.builder()

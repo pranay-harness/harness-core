@@ -8,6 +8,7 @@ import io.harness.delegate.beans.cvng.datadog.DatadogUtils;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -20,7 +21,7 @@ public abstract class DatadogRequest extends DataCollectionRequest<DatadogConnec
 
     @Override
     public Map<String, Object> fetchDslEnvVariables() {
-        return DatadogUtils.getCommonEnvVariables(getConnectorConfigDTO());
+        return new HashMap<>();
     }
 
     @Override

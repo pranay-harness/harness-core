@@ -7,7 +7,6 @@ import io.harness.ng.beans.PageResponse;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 
 public interface DatadogService {
 
@@ -29,4 +28,7 @@ public interface DatadogService {
 
     List<LinkedHashMap> getSampleLogData(String accountId, String connectorIdentifier, String orgIdentifier,
                                          String projectIdentifier, String query, String tracingId);
+
+    List<String> getLogIndexes(String accountId, String connectorIdentifier, String orgIdentifier,
+                                         String projectIdentifier, String tracingId);
 }
