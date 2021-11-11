@@ -3,7 +3,7 @@ syntax = "proto3";
 package io.harness.observer;
 
 option java_multiple_files = true;
-option go_package = "980_commons";
+option go_package = "952_remote_observers";
 
 service RemoteObserver {
   rpc observer(Informant) returns (Response);
