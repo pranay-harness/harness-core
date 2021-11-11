@@ -39,7 +39,7 @@ public class BuildRestrictionUsageImpl implements CustomRestrictionInterface {
                    .get(moduleName)
                    .getCountPerMonth()
                    .getOrDefault(yearMonth.toString(), 0L)
-            > 100;
+            <= 100;
       }
     }
     return true;
