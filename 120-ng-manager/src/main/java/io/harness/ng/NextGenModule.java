@@ -211,6 +211,8 @@ import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.token.TokenClientModule;
 import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
+import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
+import io.harness.utils.featureflaghelper.NGFeatureFlagHelperServiceImpl;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
@@ -637,6 +639,8 @@ public class NextGenModule extends AbstractModule {
 
     registerEventsFrameworkMessageListeners();
     registerEncryptors();
+
+    bind(FeatureFlagHelperService.class).to(NGFeatureFlagHelperServiceImpl.class);
   }
 
   void registerEncryptors() {
