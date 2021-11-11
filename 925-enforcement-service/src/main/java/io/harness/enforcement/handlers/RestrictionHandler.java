@@ -14,5 +14,5 @@ public interface RestrictionHandler {
       long currentCount, ModuleType moduleType, Edition edition);
   void fillRestrictionDTO(FeatureRestrictionName featureRestrictionName, Restriction restriction,
       String accountIdentifier, Edition edition, FeatureRestrictionDetailsDTO featureDetailsDTO);
-  RestrictionMetadataDTO getMetadataDTO(Restriction restriction);
+  RestrictionMetadataDTO getMetadataDTO(Restriction restriction, String accountIdentifier, ModuleType moduleType);
 }

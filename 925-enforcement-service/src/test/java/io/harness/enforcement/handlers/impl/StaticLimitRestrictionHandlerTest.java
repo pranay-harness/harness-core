@@ -81,7 +81,7 @@ public class StaticLimitRestrictionHandlerTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetMetadataDTO() {
-    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction);
+    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction, null, null);
 
     StaticLimitRestrictionMetadataDTO dto = (StaticLimitRestrictionMetadataDTO) metadataDTO;
     assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.STATIC_LIMIT);

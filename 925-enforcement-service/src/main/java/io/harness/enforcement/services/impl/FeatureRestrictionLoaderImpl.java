@@ -9,6 +9,7 @@ import io.harness.enforcement.bases.AvailabilityRestriction;
 import io.harness.enforcement.bases.CustomRestriction;
 import io.harness.enforcement.bases.DurationRestriction;
 import io.harness.enforcement.bases.FeatureRestriction;
+import io.harness.enforcement.bases.LicenseLimitRestriction;
 import io.harness.enforcement.bases.RateLimitRestriction;
 import io.harness.enforcement.bases.Restriction;
 import io.harness.enforcement.bases.StaticLimitRestriction;
@@ -130,7 +131,7 @@ public class FeatureRestrictionLoaderImpl implements FeatureRestrictionLoader {
 
     featureRestriction.getRestrictions().values().forEach(v -> {
       try {
-        validRestriction(v);
+        validRestriction(v, moduleType);
         loadUsageClientToLimitRestriction(v);
       } catch (Exception e) {
         throw new InvalidArgumentsException(
@@ -166,7 +167,7 @@ public class FeatureRestrictionLoaderImpl implements FeatureRestrictionLoader {
     }
   }
 
-  void validRestriction(Restriction restriction) {
+  void validRestriction(Restriction restriction, ModuleType moduleType) {
     if (restriction.getRestrictionType() == null) {
       throw new InvalidArgumentsException("Restriction type is missing");
     }
@@ -204,6 +205,15 @@ public class FeatureRestrictionLoaderImpl implements FeatureRestrictionLoader {
         DurationRestriction durationRestriction = (DurationRestriction) restriction;
         if (durationRestriction.getTimeUnit() == null || durationRestriction.getTimeUnit().getUnit() == null) {
           throw new InvalidArgumentsException("DurationRestriction is missing necessary config");
+        }
+        break;
+      case LICENSE_LIMIT:
+        LicenseLimitRestriction licenseLimitRestriction = (LicenseLimitRestriction) restriction;
+        if (ModuleType.CORE.equals(moduleType)) {
+          throw new InvalidArgumentsException("CORE feature can't have LicenseLimitRestriction");
+        }
+        if (licenseLimitRestriction.getClientName() == null || licenseLimitRestriction.getFieldName() == null) {
+          throw new InvalidArgumentsException("LicenseLimitRestriction is missing necessary config");
         }
         break;
       default:

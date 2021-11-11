@@ -68,7 +68,7 @@ public class DurationRestrictionHandlerTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetMetadataDTO() {
-    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction);
+    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction, null, null);
 
     DurationRestrictionMetadataDTO dto = (DurationRestrictionMetadataDTO) metadataDTO;
     assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.DURATION);

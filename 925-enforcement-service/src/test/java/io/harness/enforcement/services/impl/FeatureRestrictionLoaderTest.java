@@ -9,10 +9,9 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.enforcement.bases.FeatureRestriction;
-import io.harness.enforcement.bases.RateLimitRestriction;
 import io.harness.enforcement.bases.Restriction;
-import io.harness.enforcement.bases.StaticLimitRestriction;
 import io.harness.enforcement.configs.FeatureRestrictionConfig;
+import io.harness.enforcement.interfaces.EnforcementSdkSupportInterface;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -46,21 +45,17 @@ public class FeatureRestrictionLoaderTest extends CategoryTest {
       for (FeatureRestriction featureRestriction : config.getFeatures()) {
         featuresManagementJob.validFeatureInfo(featureRestriction);
         for (Restriction restriction : featureRestriction.getRestrictions().values()) {
-          featuresManagementJob.validRestriction(restriction);
+          featuresManagementJob.validRestriction(restriction, config.getModuleType());
 
           switch (restriction.getRestrictionType()) {
             case RATE_LIMIT:
-              RateLimitRestriction rateLimitRestriction = (RateLimitRestriction) restriction;
-              if (!validClientDefined(rateLimitRestriction.getClientName())) {
-                throw new InvalidArgumentsException(
-                    String.format("Client name [%s] is not defined in clients", rateLimitRestriction.getClientName()));
-              }
-              break;
             case STATIC_LIMIT:
-              StaticLimitRestriction staticLimitRestriction = (StaticLimitRestriction) restriction;
-              if (!validClientDefined(staticLimitRestriction.getClientName())) {
-                throw new InvalidArgumentsException(String.format(
-                    "Client name [%s] is not defined in clients", staticLimitRestriction.getClientName()));
+            case CUSTOM:
+            case LICENSE_LIMIT:
+              EnforcementSdkSupportInterface enforcementSdkSupport = (EnforcementSdkSupportInterface) restriction;
+              if (!validClientDefined(enforcementSdkSupport.getClientName())) {
+                throw new InvalidArgumentsException(
+                    String.format("Client name [%s] is not defined in clients", enforcementSdkSupport.getClientName()));
               }
               break;
             default:

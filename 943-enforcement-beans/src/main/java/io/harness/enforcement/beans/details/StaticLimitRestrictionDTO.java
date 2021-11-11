@@ -2,6 +2,7 @@ package io.harness.enforcement.beans.details;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.enforcement.constants.LimitSource;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -23,4 +24,6 @@ import lombok.experimental.SuperBuilder;
 public class StaticLimitRestrictionDTO extends RestrictionDTO {
   private Long limit;
   private Long count;
+  private LimitSource limitSource;
+  private boolean blockIfExceed;
 }

@@ -48,5 +48,8 @@ public class EnforcementModule extends AbstractModule {
     bind(RestrictionHandler.class)
         .annotatedWith(Names.named("durationRestrictionHandler"))
         .to(DurationRestrictionHandler.class);
+    bind(RestrictionHandler.class)
+        .annotatedWith(Names.named("durationRestrictionHandler"))
+        .to(DurationRestrictionHandler.class);
   }
 }

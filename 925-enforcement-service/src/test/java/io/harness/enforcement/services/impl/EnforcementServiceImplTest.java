@@ -28,6 +28,7 @@ import io.harness.enforcement.handlers.RestrictionHandlerFactory;
 import io.harness.enforcement.handlers.impl.AvailabilityRestrictionHandler;
 import io.harness.enforcement.handlers.impl.CustomRestrictionHandler;
 import io.harness.enforcement.handlers.impl.DurationRestrictionHandler;
+import io.harness.enforcement.handlers.impl.LicenseLimitRestrictionHandler;
 import io.harness.enforcement.handlers.impl.RateLimitRestrictionHandler;
 import io.harness.enforcement.handlers.impl.StaticLimitRestrictionHandler;
 import io.harness.licensing.Edition;
@@ -64,10 +65,10 @@ public class EnforcementServiceImplTest extends CategoryTest {
 
   @Before
   public void setup() throws IOException {
-    restrictionHandlerFactory =
-        new RestrictionHandlerFactory(new AvailabilityRestrictionHandler(), new StaticLimitRestrictionHandler(),
-            new RateLimitRestrictionHandler(), new CustomRestrictionHandler(), new DurationRestrictionHandler());
     licenseService = mock(LicenseService.class);
+    restrictionHandlerFactory = new RestrictionHandlerFactory(new AvailabilityRestrictionHandler(),
+        new StaticLimitRestrictionHandler(), new RateLimitRestrictionHandler(), new CustomRestrictionHandler(),
+        new DurationRestrictionHandler(), new LicenseLimitRestrictionHandler(licenseService));
 
     enforcementSdkClient = mock(EnforcementSdkClient.class);
     Call<ResponseDTO<FeatureRestrictionUsageDTO>> featureUsageCall = mock(Call.class);

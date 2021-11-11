@@ -1,6 +1,7 @@
 package io.harness.enforcement.bases;
 
 import io.harness.enforcement.beans.TimeUnit;
+import io.harness.enforcement.constants.LimitSource;
 import io.harness.enforcement.constants.RestrictionType;
 import io.harness.enforcement.interfaces.LimitRestrictionInterface;
 import io.harness.enforcement.services.impl.EnforcementSdkClient;
@@ -18,14 +19,20 @@ public class RateLimitRestriction extends Restriction implements LimitRestrictio
   String clientName;
   boolean allowedIfEqual;
   EnforcementSdkClient enforcementSdkClient;
+  LimitSource limitSource;
+  String fieldName;
+  boolean blockIfExceed;
 
   public RateLimitRestriction(RestrictionType restrictionType, long limit, TimeUnit timeUnit, boolean allowedIfEqual,
-      EnforcementSdkClient enforcementSdkClient) {
+      EnforcementSdkClient enforcementSdkClient, LimitSource limitSource, String fieldName, boolean blockIfExceed) {
     super(restrictionType);
     this.limit = limit;
     this.timeUnit = timeUnit;
     this.allowedIfEqual = allowedIfEqual;
     this.enforcementSdkClient = enforcementSdkClient;
+    this.limitSource = limitSource;
+    this.fieldName = fieldName;
+    this.blockIfExceed = blockIfExceed;
   }
 
   @Override

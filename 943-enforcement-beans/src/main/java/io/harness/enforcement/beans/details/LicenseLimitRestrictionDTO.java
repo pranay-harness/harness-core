@@ -1,8 +1,8 @@
-package io.harness.enforcement.beans.metadata;
+package io.harness.enforcement.beans.details;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.enforcement.constants.LimitSource;
+import io.harness.enforcement.beans.TimeUnit;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -21,9 +21,10 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.GTM)
-public class StaticLimitRestrictionMetadataDTO extends RestrictionMetadataDTO {
+public class LicenseLimitRestrictionDTO extends RestrictionDTO {
   private Long limit;
-  private boolean allowedIfEqual;
-  private LimitSource limitSource;
+  private String fieldName;
+  private Long count;
+  private TimeUnit timeUnit;
   private boolean blockIfExceed;
 }

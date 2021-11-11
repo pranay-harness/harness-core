@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EnforcementServiceImpl implements EnforcementService {
   private final Map<FeatureRestrictionName, FeatureRestriction> featureRestrictionMap;
-  private final io.harness.enforcement.handlers.RestrictionHandlerFactory restrictionHandlerFactory;
+  private final RestrictionHandlerFactory restrictionHandlerFactory;
   private final LicenseService licenseService;
 
   private static final AvailabilityRestriction DISABLED_RESTRICTION =
@@ -88,7 +88,7 @@ public class EnforcementServiceImpl implements EnforcementService {
     }
     FeatureRestriction featureRestriction = featureRestrictionMap.get(featureRestrictionName);
     Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
-    return toFeatureMetadataDTO(featureRestriction, edition);
+    return toFeatureMetadataDTO(featureRestriction, edition, accountIdentifier);
   }
 
   @Override
@@ -100,7 +100,8 @@ public class EnforcementServiceImpl implements EnforcementService {
       FeatureRestriction featureRestriction = featureRestrictionMap.get(name);
       Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
 
-      FeatureRestrictionMetadataDTO featureRestrictionMetadataDTO = toFeatureMetadataDTO(featureRestriction, edition);
+      FeatureRestrictionMetadataDTO featureRestrictionMetadataDTO =
+          toFeatureMetadataDTO(featureRestriction, edition, accountIdentifier);
       metadataDTOMap.put(name, featureRestrictionMetadataDTO);
     }
     return RestrictionMetadataMapResponseDTO.builder().metadataMap(metadataDTOMap).build();
@@ -110,7 +111,7 @@ public class EnforcementServiceImpl implements EnforcementService {
   public List<FeatureRestrictionMetadataDTO> getAllFeatureRestrictionMetadata() {
     return featureRestrictionMap.values()
         .stream()
-        .map(featureRestriction -> toFeatureMetadataDTO(featureRestriction, null))
+        .map(featureRestriction -> toFeatureMetadataDTO(featureRestriction, null, null))
         .collect(Collectors.toList());
   }
 
@@ -203,7 +204,8 @@ public class EnforcementServiceImpl implements EnforcementService {
     return featureDetailsDTO;
   }
 
-  private FeatureRestrictionMetadataDTO toFeatureMetadataDTO(FeatureRestriction feature, Edition edition) {
+  private FeatureRestrictionMetadataDTO toFeatureMetadataDTO(
+      FeatureRestriction feature, Edition edition, String accountIdentifier) {
     FeatureRestrictionMetadataDTO featureDetailsDTO = FeatureRestrictionMetadataDTO.builder()
                                                           .name(feature.getName())
                                                           .moduleType(feature.getModuleType())
@@ -211,15 +213,16 @@ public class EnforcementServiceImpl implements EnforcementService {
                                                           .build();
 
     Map<Edition, RestrictionMetadataDTO> restrictionMetadataDTOMap =
-        feature.getRestrictions().entrySet().stream().collect(
-            Collectors.toMap(Map.Entry::getKey, entry -> toRestrictionMetadataDTO(entry.getValue())));
+        feature.getRestrictions().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+            entry -> toRestrictionMetadataDTO(entry.getValue(), accountIdentifier, feature.getModuleType())));
     featureDetailsDTO.setRestrictionMetadata(restrictionMetadataDTOMap);
     return featureDetailsDTO;
   }
 
-  private RestrictionMetadataDTO toRestrictionMetadataDTO(Restriction restriction) {
+  private RestrictionMetadataDTO toRestrictionMetadataDTO(
+      Restriction restriction, String accountIdentifer, ModuleType moduleType) {
     RestrictionHandler handler = restrictionHandlerFactory.getHandler(restriction.getRestrictionType());
-    return handler.getMetadataDTO(restriction);
+    return handler.getMetadataDTO(restriction, accountIdentifer, moduleType);
   }
 
   private Restriction getRestriction(FeatureRestriction feature, Edition edition) {

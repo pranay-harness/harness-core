@@ -16,5 +16,6 @@ import lombok.experimental.SuperBuilder;
       @JsonSubTypes.Type(value = RateLimitRestrictionDTO.class, name = "RATE_LIMIT"),
       @JsonSubTypes.Type(value = CustomRestrictionDTO.class, name = "CUSTOM"),
       @JsonSubTypes.Type(value = DurationRestrictionDTO.class, name = "DURATION"),
+      @JsonSubTypes.Type(value = LicenseLimitRestrictionDTO.class, name = "LICENSE_LIMIT"),
 })
 public abstract class RestrictionDTO {}

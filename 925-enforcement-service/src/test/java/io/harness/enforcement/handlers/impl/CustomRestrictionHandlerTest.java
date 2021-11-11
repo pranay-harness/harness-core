@@ -79,7 +79,7 @@ public class CustomRestrictionHandlerTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetMetadataDTO() {
-    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction);
+    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction, null, null);
 
     CustomRestrictionMetadataDTO dto = (CustomRestrictionMetadataDTO) metadataDTO;
     assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.CUSTOM);

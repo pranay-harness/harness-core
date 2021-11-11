@@ -1,0 +1,30 @@
+moduleType: CD
+clients:
+  - name: ngmanager
+    clientConfig: ngManagerClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
+features:
+  - name: TEST6
+    description: test 6
+    restrictions:
+      FREE:
+        restrictionType: RATE_LIMIT
+        limit: 10
+        timeUnit:
+          unit: MONTHS
+          numberOfUnits: 1
+        clientName: ngmanager
+      TEAM:
+        restrictionType: LICENSE_LIMIT
+        fieldName: totalWorkload
+        timeUnit:
+          unit: MONTHS
+          numberOfUnits: 1
+        clientName: ngmanager
+      ENTERPRISE:
+        restrictionType: LICENSE_LIMIT
+        fieldName: totalWorkload
+        timeUnit:
+          unit: MONTHS
+          numberOfUnits: 1
+        clientName: ngmanager

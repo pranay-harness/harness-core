@@ -3,6 +3,7 @@ package io.harness.enforcement.beans.metadata;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.enforcement.beans.TimeUnit;
+import io.harness.enforcement.constants.LimitSource;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -25,4 +26,6 @@ public class RateLimitRestrictionMetadataDTO extends RestrictionMetadataDTO {
   private Long limit;
   private TimeUnit timeUnit;
   private boolean allowedIfEqual;
+  private LimitSource limitSource;
+  private boolean blockIfExceed;
 }

@@ -12,8 +12,18 @@ import io.harness.enforcement.exceptions.LimitExceededException;
 import io.harness.enforcement.handlers.RestrictionHandler;
 import io.harness.enforcement.handlers.RestrictionUtils;
 import io.harness.licensing.Edition;
+import io.harness.licensing.services.LicenseService;
+
+import com.google.inject.Inject;
 
 public class StaticLimitRestrictionHandler implements RestrictionHandler {
+  private final LicenseService licenseService;
+
+  @Inject
+  public StaticLimitRestrictionHandler(LicenseService licenseService) {
+    this.licenseService = licenseService;
+  }
+
   @Override
   public void check(FeatureRestrictionName featureRestrictionName, Restriction restriction, String accountIdentifier,
       ModuleType moduleType, Edition edition) {
@@ -48,7 +58,12 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
   }
 
   @Override
-  public RestrictionMetadataDTO getMetadataDTO(Restriction restriction) {
+  public RestrictionMetadataDTO getMetadataDTO(
+      Restriction restriction, String accountIdentifier, ModuleType moduleType) {
+    return generateMetadataDTO(restriction);
+  }
+
+  private StaticLimitRestrictionMetadataDTO generateMetadataDTO(Restriction restriction) {
     StaticLimitRestriction staticLimitRestriction = (StaticLimitRestriction) restriction;
     return StaticLimitRestrictionMetadataDTO.builder()
         .restrictionType(staticLimitRestriction.getRestrictionType())
@@ -59,7 +74,7 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
 
   private long getCurrentCount(FeatureRestrictionName featureRestrictionName,
       StaticLimitRestriction staticLimitRestriction, String accountIdentifier) {
-    RestrictionMetadataDTO metadataDTO = getMetadataDTO(staticLimitRestriction);
+    RestrictionMetadataDTO metadataDTO = generateMetadataDTO(staticLimitRestriction);
     return RestrictionUtils.getCurrentUsage(
         staticLimitRestriction, featureRestrictionName, accountIdentifier, metadataDTO);
   }

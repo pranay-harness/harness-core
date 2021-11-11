@@ -43,7 +43,8 @@ public class AvailabilityRestrictionHandler implements RestrictionHandler {
   }
 
   @Override
-  public RestrictionMetadataDTO getMetadataDTO(Restriction restriction) {
+  public RestrictionMetadataDTO getMetadataDTO(
+      Restriction restriction, String accountIdentifier, ModuleType moduleType) {
     AvailabilityRestriction availabilityRestriction = (AvailabilityRestriction) restriction;
     return AvailabilityRestrictionMetadataDTO.builder()
         .restrictionType(availabilityRestriction.getRestrictionType())
