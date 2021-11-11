@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.webhook.UpsertWebhookResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -48,7 +49,8 @@ public class NGTriggerWebhookRegistrationServiceTest extends CategoryTest {
   public void setUp() {
     ConnectorDetails connectorDetails = ConnectorDetails.builder().connectorType(ConnectorType.GITHUB).build();
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(connectorDetails);
-    when(connectorUtils.retrieveURL(connectorDetails)).thenReturn("https://github.com/wings-software/jhttp/");
+    when(connectorUtils.retrieveURL(connectorDetails)).thenReturn("https://github.com/wings-software/");
+    when(connectorUtils.getConnectionType(connectorDetails)).thenReturn(GitConnectionType.ACCOUNT);
   }
 
   @Test
