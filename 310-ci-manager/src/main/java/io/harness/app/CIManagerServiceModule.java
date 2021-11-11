@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
+import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CIExecutionServiceModule;
@@ -12,6 +13,7 @@ import io.harness.app.intfc.CIYamlSchemaService;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
@@ -25,12 +27,15 @@ import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoPersistence;
 import io.harness.opaclient.OpaClientModule;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ClientMode;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
@@ -47,6 +52,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -125,6 +131,25 @@ public class CIManagerServiceModule extends AbstractModule {
     return ImmutableMap.of(StepSpecType.class, set);
   }
 
+  @Provides
+  @Singleton
+  public TimeLimiter timeLimiter(ExecutorService executorService) {
+    return HTimeLimiter.create(executorService);
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return MONGO;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  RedisConfig redisConfig() {
+    return ciManagerConfiguration.getEventsFrameworkConfiguration().getRedisConfig();
+  }
+
   @Override
   protected void configure() {
     install(PrimaryVersionManagerModule.getInstance());
@@ -174,6 +199,7 @@ public class CIManagerServiceModule extends AbstractModule {
 
     install(new TokenClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.getServiceId()));
+    install(PersistentLockModule.getInstance());
 
     install(new AbstractManagerGrpcClientModule() {
       @Override
