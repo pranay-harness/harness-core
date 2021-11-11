@@ -25,7 +25,6 @@ import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
@@ -1289,7 +1288,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .annotatedWith(Names.named("TimeScaleDBConfig"))
         .toInstance(configuration.getTimeScaleDBConfig() != null ? configuration.getTimeScaleDBConfig()
                                                                  : TimeScaleDBConfig.builder().build());
-    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
@@ -1329,7 +1327,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     // End of deployment trigger dependencies
 
     install(new PerpetualTaskServiceModule());
-    install(new CESetupServiceModule());
+    install(CESetupServiceModule.getInstance());
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
