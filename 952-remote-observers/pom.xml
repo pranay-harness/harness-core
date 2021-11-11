@@ -7,7 +7,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>420-delegate-service</artifactId>
+    <artifactId>952-remote-observers</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
