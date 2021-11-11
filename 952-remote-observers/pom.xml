@@ -10,14 +10,6 @@
     <artifactId>420-delegate-service</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.smoketurner</groupId>
-            <artifactId>dropwizard-swagger</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-memory-backend</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
@@ -68,17 +60,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-ng-core-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>970-grpc</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>970-rbac-core</artifactId>
+            <artifactId>970-ng-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>980-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
