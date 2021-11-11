@@ -38,7 +38,7 @@ public class ServiceDependencyGraphResource {
       @QueryParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("envIdentifier") String envIdentifier, @QueryParam("serviceIdentifier") String serviceIdentifier,
       @QueryParam("servicesAtRiskFilter") @ApiParam(
-          required = true, defaultValue = "false") @NotNull final boolean servicesAtRiskFilter) {
+          defaultValue = "false") @NotNull final boolean servicesAtRiskFilter) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)
