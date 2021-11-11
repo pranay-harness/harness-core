@@ -209,6 +209,9 @@ delegateTasks {"name": "validUntil_1", "background": true, "expireAfterSeconds":
 delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
 delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
 delegateTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+delegateTokensNG {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "owner": 1, "status": 1}
+delegateTokensNG {"name": "byAccountOwnerAndName", "unique": true} {"accountId": 1, "owner": 1, "name": 1}
+delegateTokensNG {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegates {"name": "accountId_1", "background": true} {"accountId": 1}
 delegates {"name": "byAcctNgGroupIdOwner", "background": true} {"accountId": 1, "ng": 1, "delegateGroupId": 1, "owner": 1}
 delegates {"name": "capabilitiesCheckNextIteration_1", "background": true} {"capabilitiesCheckNextIteration": 1}
@@ -288,6 +291,7 @@ entityYamlRecord {"name": "index_1", "background": true} {"accountId": 1, "entit
 entityYamlRecord {"name": "index_2", "background": true} {"accountId": 1, "entityType": 1, "createdAt": -1}
 environments {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
 environments {"name": "accountId_1", "background": true} {"accountId": 1}
+environments {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 environments {"name": "appId_1", "background": true} {"appId": 1}
 environments {"name": "createdAt_1", "background": true} {"createdAt": 1}
 environments {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
@@ -605,6 +609,7 @@ pipelineExecutions {"name": "pipelineId_1", "background": true} {"pipelineId": 1
 pipelineGovernanceConfigs {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
 pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
+pipelines {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pollingDocuments {"name": "accountId", "background": true} {"accountId": 1}
@@ -705,6 +710,7 @@ serviceVariables {"name": "encryptedValue_1", "background": true} {"encryptedVal
 serviceVariables {"name": "serviceVariableUniqueIdx", "unique": true} {"entityId": 1, "templateId": 1, "overrideType": 1, "instances": 1, "expression": 1, "type": 1, "name": 1}
 services {"name": "accountCreatedAtIndex", "background": true} {"accountId": 1, "createdAt": -1}
 services {"name": "accountId_1", "background": true} {"accountId": 1}
+services {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 services {"name": "account_deploymentTypeIndex", "background": true} {"accountId": 1, "deploymentType": 1}
 services {"name": "appId_1", "background": true} {"appId": 1}
 services {"name": "artifactStreamIds_1", "background": true} {"artifactStreamIds": 1}
@@ -964,6 +970,7 @@ workflowVerificationResults {"name": "stateExecutionId_1", "unique": true} {"sta
 workflowVerificationResults {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflows {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
 workflows {"name": "accountId_1", "background": true} {"accountId": 1}
+workflows {"name": "accountId_name", "background": true} {"accountId": 1, "name": 1}
 workflows {"name": "account_orchestrationWorkflowTypeIndex", "background": true} {"accountId": 1, "orchestration.orchestrationWorkflowType": 1}
 workflows {"name": "appId_1", "background": true} {"appId": 1}
 workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}

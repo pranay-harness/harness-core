@@ -19,4 +19,5 @@ public class CIPipelineModuleInfo implements PipelineModuleInfo {
   private String tag;
   private String prNumber;
   private String buildType;
+  private Boolean isPrivateRepo;
 }

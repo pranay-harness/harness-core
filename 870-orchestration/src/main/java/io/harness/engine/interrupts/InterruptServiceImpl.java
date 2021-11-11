@@ -211,6 +211,13 @@ public class InterruptServiceImpl implements InterruptService {
         planExecutionId, nodeExecutionId, EnumSet.of(REGISTERED, PROCESSING));
   }
 
+  @Override
+  public List<Interrupt> fetchActiveInterruptsForNodeExecutionByType(
+      String planExecutionId, String nodeExecutionId, InterruptType interruptType) {
+    return interruptRepository.findByPlanExecutionIdAndNodeExecutionIdAndTypeAndStateInOrderByCreatedAtDesc(
+        planExecutionId, nodeExecutionId, interruptType, EnumSet.of(REGISTERED, PROCESSING));
+  }
+
   private void updatePlanStatus(String planExecutionId, String excludingNodeExecutionId) {
     Status planStatus = planExecutionService.calculateStatusExcluding(planExecutionId, excludingNodeExecutionId);
     if (!StatusUtils.isFinalStatus(planStatus)) {

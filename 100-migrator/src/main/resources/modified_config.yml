@@ -278,6 +278,7 @@ events-mongo:
   indexManagerMode: AUTO
 
 searchEnabled: false
+graphQLEnabled: true
 
 elasticsearch:
   uri: http://localhost:9200

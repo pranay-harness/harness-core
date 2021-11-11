@@ -48,6 +48,8 @@ import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskService;
 import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
+import io.harness.ccm.views.businessMapping.service.impl.BusinessMappingServiceImpl;
+import io.harness.ccm.views.businessMapping.service.intf.BusinessMappingService;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;
 import io.harness.ccm.views.service.CEViewService;
@@ -852,6 +854,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
   @Provides
   @Singleton
+  @Named("gcpConfig")
+  public io.harness.ccm.commons.beans.config.GcpConfig noOpDummyConfig() {
+    return io.harness.ccm.commons.beans.config.GcpConfig.builder().build();
+  }
+
+  @Provides
+  @Singleton
   public CdnStorageUrlGenerator cdnStorageUrlGenerator() {
     String clusterType = System.getenv("CLUSTER_TYPE");
     boolean isFreeCluster = StringUtils.equals(clusterType, "freemium");
@@ -1084,10 +1093,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(LoginSettingsService.class).to(LoginSettingsServiceImpl.class);
     bind(CCMSettingService.class).to(CCMSettingServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
+    bind(io.harness.ccm.bigQuery.BigQueryService.class).to(BigQueryServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
     bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
     bind(CEViewService.class).to(CEViewServiceImpl.class);
+    bind(BusinessMappingService.class).to(BusinessMappingServiceImpl.class);
     bind(CECommunicationsService.class).to(CECommunicationsServiceImpl.class);
     bind(CESlackWebhookService.class).to(CESlackWebhookServiceImpl.class);
     bind(CEReportScheduleService.class).to(CEReportScheduleServiceImpl.class);

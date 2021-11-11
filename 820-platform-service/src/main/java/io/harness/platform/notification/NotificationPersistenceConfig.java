@@ -71,7 +71,7 @@ public class NotificationPersistenceConfig extends AbstractMongoConfiguration {
 
   @Override
   protected Collection<String> getMappingBasePackages() {
-    return Collections.singleton("io.harness.notification.entities");
+    return Collections.singleton("io.harness");
   }
 
   @Bean

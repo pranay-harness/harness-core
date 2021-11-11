@@ -24,6 +24,9 @@ public interface PMSPipelineService {
   Optional<PipelineEntity> get(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean deleted);
 
+  Optional<PipelineEntity> getWithoutIsDeleted(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
+
   PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity, ChangeType changeType);
 
   PipelineEntity updatePipelineMetadata(

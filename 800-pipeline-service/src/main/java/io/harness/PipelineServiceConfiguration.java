@@ -21,6 +21,7 @@ import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.telemetry.segment.SegmentConfiguration;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
@@ -62,6 +63,9 @@ public class PipelineServiceConfiguration extends Configuration {
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
+  @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
+  @JsonProperty("pmsSdkExecutionPoolConfig") private ThreadPoolConfig pmsSdkExecutionPoolConfig;
+  @JsonProperty("pmsSdkOrchestrationEventPoolConfig") private ThreadPoolConfig pmsSdkOrchestrationEventPoolConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;

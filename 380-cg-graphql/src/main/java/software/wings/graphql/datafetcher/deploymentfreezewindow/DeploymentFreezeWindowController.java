@@ -77,6 +77,8 @@ public class DeploymentFreezeWindowController {
     Long from, to, duration = null, endTime = null;
     TimeRangeOccurrence freezeOccurrence = null;
     boolean durationBased = qlSetupInput.getIsDurationBased();
+    String timeZone = qlSetupInput.getTimeZone();
+
     boolean expires = false;
     Long FIVE_YEARS_IN_MILLIS = 157784760000L;
     Long ONE_YEAR_IN_MILLIS = FIVE_YEARS_IN_MILLIS / 5;
@@ -202,7 +204,7 @@ public class DeploymentFreezeWindowController {
     }
 
     // SETUP CREATED
-    return new TimeRange(from, to, null, durationBased, duration, endTime, freezeOccurrence, expires);
+    return new TimeRange(from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, expires);
   }
 
   private List<ApplicationFilter> populateAppSelectionsEntity(List<QLFreezeWindowInput> qlFreezeWindowInputList) {
@@ -421,6 +423,7 @@ public class DeploymentFreezeWindowController {
                           .isDurationBased(timeRange.isDurationBased())
                           .from(timeRange.getFrom())
                           .to(timeRange.getTo())
+                          .timeZone(timeRange.getTimeZone())
                           .duration(timeRange.getDuration())
                           .endTime(timeRange.getEndTime())
                           .freezeOccurrence(timeRange.getFreezeOccurrence())
