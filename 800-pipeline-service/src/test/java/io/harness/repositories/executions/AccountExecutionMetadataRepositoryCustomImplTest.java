@@ -57,9 +57,6 @@ public class AccountExecutionMetadataRepositoryCustomImplTest extends PipelineSe
         accountExecutionMetadataRepository.findByAccountId(ACCOUNT_ID);
     assertThat(accountExecutionMetadata.isPresent()).isTrue();
     assertThat(accountExecutionMetadata.get().getModuleToExecutionCount().get(CI)).isEqualTo(1L);
-    assertThat(accountExecutionMetadata.get().getModuleToExecutionInfoMap().get(CI).getCountPerMonth().getOrDefault(
-                   "2021-11", 0L))
-        .isEqualTo(1L);
     assertThat(accountExecutionMetadata.get().getModuleToExecutionCount().get(PRIVATE_REPO_BUILD_CI)).isEqualTo(1L);
     assertThat(accountExecutionMetadata.get().getModuleToExecutionInfoMap().get(PRIVATE_REPO_BUILD_CI)).isEqualTo(null);
   }
