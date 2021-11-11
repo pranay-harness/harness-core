@@ -60,14 +60,11 @@ public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExec
             // skip monthly build if the count have not reached 2500
             continue;
           }
-          AccountExecutionInfo accountExecutionInfo = AccountExecutionInfo.builder().build();
-
           LocalDate startDate = Instant.ofEpochMilli(startTS).atZone(ZoneId.systemDefault()).toLocalDate();
-          Long countOfMonth = accountExecutionInfo.getCountPerMonth().getOrDefault(
-              YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), 0L);
-          countOfMonth = countOfMonth + 1;
-          accountExecutionInfo.getCountPerMonth().put(
-              YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), countOfMonth);
+          Map<String, Long> countPerMonth = new HashMap<>();
+          countPerMonth.put(YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), 1L);
+          AccountExecutionInfo accountExecutionInfo =
+              AccountExecutionInfo.builder().countPerMonth(countPerMonth).build();
           moduleToExecutionInfoMap.put(module, accountExecutionInfo);
         }
         AccountExecutionMetadata newAccountExecutionMetadata = AccountExecutionMetadata.builder()
