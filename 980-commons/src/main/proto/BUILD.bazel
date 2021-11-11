@@ -8,4 +8,3 @@ harness_grpc_library(
         "//980-commons/src/main/proto/io/harness/virtualstack:980_commons_proto",
     ],
 )
-,
