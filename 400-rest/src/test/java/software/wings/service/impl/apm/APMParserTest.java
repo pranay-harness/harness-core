@@ -10,6 +10,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.jayway.jsonpath.JsonPath;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -110,14 +111,14 @@ public class APMParserTest extends WingsBaseTest {
   public void testJsonParserGraphana() throws IOException {
     String text500 =
         Resources.toString(APMParserTest.class.getResource("/apm/graphana_sample_response_500.json"), Charsets.UTF_8);
-
+    JsonPath.read(text500, "series[*].pointlist[0][0]");
     Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
     responseMapperMap.put(
-        "host", APMMetricInfo.ResponseMapper.builder().fieldName("host").jsonPath("[*].target").build());
+        "host", APMMetricInfo.ResponseMapper.builder().fieldName("host").jsonPath("series[*].tag_set[0]").build());
     responseMapperMap.put("timestamp",
-        APMMetricInfo.ResponseMapper.builder().fieldName("timestamp").jsonPath("[*].datapoints[*].[1]").build());
+        APMMetricInfo.ResponseMapper.builder().fieldName("timestamp").jsonPath("series[*].end").build());
     responseMapperMap.put(
-        "value", APMMetricInfo.ResponseMapper.builder().fieldName("value").jsonPath("[*].datapoints[*].[0]").build());
+        "value", APMMetricInfo.ResponseMapper.builder().fieldName("value").jsonPath("series[*].pointlist[0][1]").build());
     responseMapperMap.put(
         "txnName", APMMetricInfo.ResponseMapper.builder().fieldName("txnName").fieldValue("500X").build());
 
