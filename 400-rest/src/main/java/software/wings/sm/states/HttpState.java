@@ -614,6 +614,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
   private void renderTaskParameters(ExecutionContext context, StateExecutionData stateExecutionData,
       TaskParameters parameters, int expressionFunctorToken) {
+    context.resetPreparedCache();
     ExpressionReflectionUtils.applyExpression(parameters,
         (secretMode, value)
             -> context.renderExpression(value,

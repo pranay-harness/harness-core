@@ -57,6 +57,7 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
                  .field(ExecutionSweepingOutputKeys.levelRuntimeIdIdx)
                  .field(ExecutionSweepingOutputKeys.name)
                  .build())
+        .add(CompoundMongoIndex.builder().name("producedByRuntime_Idx").field("producedBy.runtimeId").build())
         .build();
   }
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
