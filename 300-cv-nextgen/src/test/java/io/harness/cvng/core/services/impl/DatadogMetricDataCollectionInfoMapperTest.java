@@ -20,7 +20,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PAVIC;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase {
@@ -32,7 +32,7 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
   private final BuilderFactory builderFactory = BuilderFactory.getDefault();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PAVIC)
   @Category(UnitTests.class)
   public void testToDataCollectionInfo() {
     MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();

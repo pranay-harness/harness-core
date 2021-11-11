@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PAVIC;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,7 +46,7 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PAVIC)
   @Category(UnitTests.class)
   public void transformToHealthSourceConfigPreconditionEmptyCVConfigs() {
     assertThatThrownBy(() -> classUnderTest.transform(Collections.emptyList()))
@@ -55,7 +55,7 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PAVIC)
   @Category(UnitTests.class)
   public void transformToHealthSourceConfigPreconditionDifferentIdentifier() {
     List<DatadogLogCVConfig> cvConfigs = createCVConfigs();
@@ -66,7 +66,7 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PAVIC)
   @Category(UnitTests.class)
   public void testTransformToHealthSourceConfigPreconditionForConnectorRef() {
     List<DatadogLogCVConfig> cvConfigs = createCVConfigs();
@@ -77,7 +77,7 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PAVIC)
   @Category(UnitTests.class)
   public void testTransformToHealthSourceConfigPreconditionForFeatureName() {
     List<DatadogLogCVConfig> cvConfigs = createCVConfigs();
@@ -88,7 +88,7 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PAVIC)
   @Category(UnitTests.class)
   public void testTransformToHealthSourceConfig() {
     List<DatadogLogCVConfig> cvConfigs = createCVConfigs();

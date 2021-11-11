@@ -12,7 +12,7 @@ public enum MonitoredServiceDataSourceType {
   @JsonProperty("Prometheus") PROMETHEUS,
   @JsonProperty("Splunk") SPLUNK,
   @JsonProperty("DatadogMetrics") DATADOG_METRICS,
-  @JsonProperty("DatadogLogs") DATADOG_LOGS;
+  @JsonProperty("DatadogLog") DATADOG_LOG;
 
   public static Map<DataSourceType, MonitoredServiceDataSourceType> dataSourceTypeMonitoredServiceDataSourceTypeMap =
       new HashMap<DataSourceType, MonitoredServiceDataSourceType>() {
@@ -24,7 +24,7 @@ public enum MonitoredServiceDataSourceType {
           put(DataSourceType.PROMETHEUS, PROMETHEUS);
           put(DataSourceType.SPLUNK, SPLUNK);
           put(DataSourceType.DATADOG_METRICS, DATADOG_METRICS);
-          put(DataSourceType.DATADOG_LOGS, DATADOG_LOGS);
+          put(DataSourceType.DATADOG_LOG, DATADOG_LOG);
         }
       };
 }

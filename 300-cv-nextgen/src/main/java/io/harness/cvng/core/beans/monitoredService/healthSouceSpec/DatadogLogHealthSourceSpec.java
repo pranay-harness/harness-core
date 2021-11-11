@@ -142,6 +142,6 @@ public class DatadogLogHealthSourceSpec extends HealthSourceSpec {
 
     @Override
     public DataSourceType getType() {
-        return DataSourceType.DATADOG_LOGS;
+        return DataSourceType.DATADOG_LOG;
     }
 }

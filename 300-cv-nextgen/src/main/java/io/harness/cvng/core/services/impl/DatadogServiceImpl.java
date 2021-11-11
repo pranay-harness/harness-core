@@ -12,6 +12,7 @@ import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.datadog.DatadogDashboardDTO;
 import io.harness.cvng.core.beans.datadog.DatadogDashboardDetail;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.DatadogService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.utils.DateTimeUtils;
@@ -38,8 +39,8 @@ public class DatadogServiceImpl implements DatadogService {
     private OnboardingService onboardingService;
 
     @Override
-    public PageResponse<DatadogDashboardDTO> getAllDashboards(String accountId, String connectorIdentifier, String orgIdentifier,
-                                                              String projectIdentifier, int pageSize, int offset, String filter, String tracingId) {
+    public PageResponse<DatadogDashboardDTO> getAllDashboards(ProjectParams projectParams, String connectorIdentifier,
+                                                              int pageSize, int offset, String filter, String tracingId) {
         DataCollectionRequest<DatadogConnectorDTO> request =
                 DatadogDashboardListRequest.builder().type(DataCollectionRequestType.DATADOG_DASHBOARD_LIST).build();
 
@@ -47,11 +48,9 @@ public class DatadogServiceImpl implements DatadogService {
         }.getType();
         List<DatadogDashboardDTO> dashboardList = performRequestAndGetDataResult(request,
                 type,
-                accountId,
+                projectParams,
                 connectorIdentifier,
-                orgIdentifier,
-                tracingId,
-                projectIdentifier);
+                tracingId);
 
         List<DatadogDashboardDTO> filteredList = dashboardList;
         if (isNotEmpty(filter)) {
@@ -64,7 +63,10 @@ public class DatadogServiceImpl implements DatadogService {
     }
 
     @Override
-    public List<DatadogDashboardDetail> getDashboardDetails(String dashboardId, String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String tracingId) {
+    public List<DatadogDashboardDetail> getDashboardDetails(ProjectParams projectParams,
+                                                            String connectorIdentifier,
+                                                            String dashboardId,
+                                                            String tracingId) {
         DataCollectionRequest<DatadogConnectorDTO> request =
                 DatadogDashboardDetailsRequest.builder().dashboardId(dashboardId).type(DataCollectionRequestType.DATADOG_DASHBOARD_DETAILS).build();
 
@@ -72,34 +74,29 @@ public class DatadogServiceImpl implements DatadogService {
         }.getType();
         return performRequestAndGetDataResult(request,
                 type,
-                accountId,
+                projectParams,
                 connectorIdentifier,
-                orgIdentifier,
-                tracingId,
-                projectIdentifier);
+                tracingId);
     }
 
     @Override
-    public List<String> getMetricTagsList(String metricName, String accountId, String connectorIdentifier,
-                                          String orgIdentifier, String projectIdentifier, String tracingId) {
+    public List<String> getMetricTagsList(ProjectParams projectParams, String connectorIdentifier, String metricName, String tracingId) {
         DataCollectionRequest<DatadogConnectorDTO> request =
                 DatadogMetricTagsRequest.builder().metric(metricName).type(DataCollectionRequestType.DATADOG_METRIC_TAGS)
                         .build();
 
         Type type = new TypeToken<List<String>>() {
         }.getType();
-        return performRequestAndGetDataResult(request,
+        return performRequestAndGetDataResult(
+                request,
                 type,
-                accountId,
+                projectParams,
                 connectorIdentifier,
-                orgIdentifier,
-                tracingId,
-                projectIdentifier);
+                tracingId);
     }
 
     @Override
-    public List<String> getActiveMetrics(String accountId, String connectorIdentifier,
-                                         String orgIdentifier, String projectIdentifier, String tracingId) {
+    public List<String> getActiveMetrics(ProjectParams projectParams, String connectorIdentifier, String tracingId) {
         DataCollectionRequest<DatadogConnectorDTO> request =
                 DatadogActiveMetricsRequest.builder().from(0).type(DataCollectionRequestType.DATADOG_ACTIVE_METRICS)
                         .build();
@@ -108,16 +105,16 @@ public class DatadogServiceImpl implements DatadogService {
         }.getType();
         return performRequestAndGetDataResult(request,
                 type,
-                accountId,
+                projectParams,
                 connectorIdentifier,
-                orgIdentifier,
-                tracingId,
-                projectIdentifier);
+                tracingId);
     }
 
     @Override
-    public List<TimeSeriesSampleDTO> getTimeSeriesPoints(String accountId, String connectorIdentifier, String orgIdentifier,
-                                                         String projectIdentifier, String query, String tracingId) {
+    public List<TimeSeriesSampleDTO> getTimeSeriesPoints(ProjectParams projectParams,
+                                                         String connectorIdentifier,
+                                                         String query,
+                                                         String tracingId) {
         Instant now = DateTimeUtils.roundDownTo1MinBoundary(Instant.now());
 
         DataCollectionRequest<DatadogConnectorDTO> request =
@@ -132,16 +129,13 @@ public class DatadogServiceImpl implements DatadogService {
 
         return performRequestAndGetDataResult(request,
                 type,
-                accountId,
+                projectParams,
                 connectorIdentifier,
-                orgIdentifier,
-                tracingId,
-                projectIdentifier);
+                tracingId);
     }
 
     @Override
-    public List<LinkedHashMap> getSampleLogData(String accountId, String connectorIdentifier, String orgIdentifier,
-                                                String projectIdentifier, String query, String tracingId) {
+    public List<LinkedHashMap> getSampleLogData(ProjectParams projectParams, String connectorIdentifier, String query, String tracingId) {
         try {
             Instant now = DateTimeUtils.roundDownTo1MinBoundary(Instant.now());
 
@@ -154,7 +148,7 @@ public class DatadogServiceImpl implements DatadogService {
 
             Type type = new TypeToken<List<LinkedHashMap>>() {
             }.getType();
-            return performRequestAndGetDataResult(request, type, accountId, connectorIdentifier, orgIdentifier, tracingId, projectIdentifier);
+            return performRequestAndGetDataResult(request, type, projectParams, connectorIdentifier, tracingId);
         } catch (Exception ex) {
             String msg = "Exception while trying to fetch sample data. Please ensure that the query is valid.";
             log.error(msg, ex);
@@ -163,8 +157,9 @@ public class DatadogServiceImpl implements DatadogService {
     }
 
     @Override
-    public List<String> getLogIndexes(String accountId, String connectorIdentifier,
-                                      String orgIdentifier, String projectIdentifier, String tracingId) {
+    public List<String> getLogIndexes(ProjectParams projectParams,
+                                      String connectorIdentifier,
+                                      String tracingId) {
         DataCollectionRequest<DatadogConnectorDTO> request =
                 DatadogLogIndexesRequest.builder()
                         .type(DataCollectionRequestType.DATADOG_LOG_INDEXES)
@@ -174,30 +169,26 @@ public class DatadogServiceImpl implements DatadogService {
         }.getType();
         return performRequestAndGetDataResult(request,
                 type,
-                accountId,
+                projectParams,
                 connectorIdentifier,
-                orgIdentifier,
-                tracingId,
-                projectIdentifier);
+                tracingId);
     }
 
     private <T> T performRequestAndGetDataResult(DataCollectionRequest<DatadogConnectorDTO> dataCollectionRequest,
                                                  Type type,
-                                                 String accountId,
+                                                 ProjectParams projectParams,
                                                  String connectorIdentifier,
-                                                 String orgIdentifier,
-                                                 String tracingId,
-                                                 String projectIdentifier) {
+                                                 String tracingId) {
         OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
                 .dataCollectionRequest(dataCollectionRequest)
                 .connectorIdentifier(connectorIdentifier)
-                .accountId(accountId)
-                .orgIdentifier(orgIdentifier)
+                .accountId(projectParams.getAccountIdentifier())
+                .orgIdentifier(projectParams.getOrgIdentifier())
+                .projectIdentifier(projectParams.getProjectIdentifier())
                 .tracingId(tracingId)
-                .projectIdentifier(projectIdentifier)
                 .build();
 
-        OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+        OnboardingResponseDTO response = onboardingService.getOnboardingResponse(projectParams.getAccountIdentifier(), onboardingRequestDTO);
         return new Gson().fromJson(JsonUtils.asJson(response.getResult()), type);
     }
 }

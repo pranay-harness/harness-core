@@ -15,7 +15,7 @@ public enum DataSourceType {
   NEW_RELIC("New Relic", VerificationType.TIME_SERIES, "appdynamics"),
   PROMETHEUS("Prometheus", VerificationType.TIME_SERIES, "prometheus"),
   DATADOG_METRICS("DatadogMetrics", VerificationType.TIME_SERIES, "datadog_metrics"),
-  DATADOG_LOGS("DatadogLogs", VerificationType.LOG, "datadog_logs");
+  DATADOG_LOG("DatadogLog", VerificationType.LOG, "datadog_log");
 
   private String displayName;
   private VerificationType verificationType;

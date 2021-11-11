@@ -14,7 +14,7 @@ import org.junit.experimental.categories.Category;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PAVIC;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DatadogLogDataCollectionInfoMapperTest extends CvNextGenTestBase {
@@ -30,7 +30,7 @@ public class DatadogLogDataCollectionInfoMapperTest extends CvNextGenTestBase {
   @Inject private DatadogLogDataCollectionInfoMapper classUnderTest;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PAVIC)
   @Category(UnitTests.class)
   public void testToDataCollectionInfo() {
     DatadogLogCVConfig datadogLogCVConfig =

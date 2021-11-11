@@ -2,9 +2,10 @@ package io.harness.cvng.core.beans.datadog;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.Value;
 
 import java.util.List;
-@Data
+@Value
 @Builder
 public class DatadogDashboardDetail {
 

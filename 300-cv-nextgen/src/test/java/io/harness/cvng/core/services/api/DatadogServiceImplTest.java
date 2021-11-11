@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PAVIC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
@@ -71,7 +71,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     @Test
-    @Owner(developers = UNKNOWN)
+    @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetAllDashboards() {
         when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
@@ -89,7 +89,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     @Test
-    @Owner(developers = UNKNOWN)
+    @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetAllDashboardsWithFilter() {
         when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
@@ -101,7 +101,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     @Test
-    @Owner(developers = UNKNOWN)
+    @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetDashboardDetails() throws Exception {
 
@@ -119,7 +119,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     @Test
-    @Owner(developers = UNKNOWN)
+    @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetMetricTagsList() {
         when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
@@ -133,7 +133,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     @Test
-    @Owner(developers = UNKNOWN)
+    @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetActiveMetrics() {
         when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
@@ -147,7 +147,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     @Test
-    @Owner(developers = UNKNOWN)
+    @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetTimeSeriesPoints() {
         when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
@@ -165,7 +165,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     @Test
-    @Owner(developers = UNKNOWN)
+    @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetSampleLogData() {
     }

@@ -39,7 +39,7 @@ public class DatadogLogCVConfig extends LogCVConfig {
 
     @Override
     public DataSourceType getType() {
-        return DataSourceType.DATADOG_LOGS;
+        return DataSourceType.DATADOG_LOG;
     }
 
     @Override

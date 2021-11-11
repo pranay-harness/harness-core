@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PAVIC;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -40,7 +40,7 @@ public class DatadogMetricHealthSourceSpecTransformerTest extends CvNextGenTestB
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PAVIC)
   @Category(UnitTests.class)
   public void testTransformToHealthSourceConfig() {
     DatadogMetricHealthSourceSpec datadogMetricHealthSourceSpec =

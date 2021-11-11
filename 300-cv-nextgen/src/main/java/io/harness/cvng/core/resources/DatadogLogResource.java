@@ -5,6 +5,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.core.beans.LogSampleRequestDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.DatadogService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -33,7 +34,7 @@ import java.util.List;
         })
 public class DatadogLogResource {
     @Inject
-    private DatadogService datadogMetricsService;
+    private DatadogService datadogService;
 
     @POST
     @Path("/sample-data")
@@ -41,13 +42,18 @@ public class DatadogLogResource {
     @ExceptionMetered
     @ApiOperation(value = "get sample data for a query", nickname = "getDatadogLogSampleData")
     public ResponseDTO<List<LinkedHashMap>> getDatadogSampleData(@NotNull @QueryParam("accountId") String accountId,
-                                                                     @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
-                                                                     @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-                                                                     @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-                                                                     @NotNull @QueryParam("tracingId") String tracingId,
-                                                                     @Body LogSampleRequestDTO logSampleRequestDTO) {
-        return ResponseDTO.newResponse(datadogMetricsService.getSampleLogData(
-                accountId, connectorIdentifier, orgIdentifier, projectIdentifier, logSampleRequestDTO.getQuery(), tracingId));
+                                                                 @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+                                                                 @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+                                                                 @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
+                                                                 @NotNull @QueryParam("tracingId") String tracingId,
+                                                                 @Body LogSampleRequestDTO logSampleRequestDTO) {
+        ProjectParams projectParams = ProjectParams.builder()
+                .accountIdentifier(accountId)
+                .orgIdentifier(orgIdentifier)
+                .projectIdentifier(projectIdentifier)
+                .build();
+        return ResponseDTO.newResponse(datadogService.getSampleLogData(
+                projectParams, connectorIdentifier, logSampleRequestDTO.getQuery(), tracingId));
     }
 
     @GET
@@ -55,13 +61,17 @@ public class DatadogLogResource {
     @Timed
     @ExceptionMetered
     @ApiOperation(value = "get datadog log indexes", nickname = "getDatadogLogIndexes")
-    public ResponseDTO<List<String>> getDatadogLogIndexes(
-            @NotNull @QueryParam("accountId") String accountId,
-            @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
-            @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-            @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-            @NotNull @QueryParam("tracingId") String tracingId) {
-        return ResponseDTO.newResponse(datadogMetricsService.getLogIndexes(
-                accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId));
+    public ResponseDTO<List<String>> getDatadogLogIndexes(@NotNull @QueryParam("accountId") String accountId,
+                                                          @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+                                                          @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+                                                          @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
+                                                          @NotNull @QueryParam("tracingId") String tracingId) {
+        ProjectParams projectParams = ProjectParams.builder()
+                .accountIdentifier(accountId)
+                .orgIdentifier(orgIdentifier)
+                .projectIdentifier(projectIdentifier)
+                .build();
+        return ResponseDTO.newResponse(datadogService.getLogIndexes(
+                projectParams, connectorIdentifier, tracingId));
     }
 }
