@@ -50,12 +50,18 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -86,21 +92,55 @@ import org.springframework.data.mongodb.core.query.Criteria;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Tag(name = "Environments", description = "This contains APIs related to Environments")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = NGCommonEntityConstants.BAD_REQUEST_CODE,
+    description = NGCommonEntityConstants.BAD_REQUEST_PARAM_MESSAGE,
+    content =
+    {
+      @Content(mediaType = NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE,
+          schema = @Schema(implementation = FailureDTO.class))
+      ,
+          @Content(mediaType = NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE,
+              schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = NGCommonEntityConstants.INTERNAL_SERVER_ERROR_CODE,
+    description = NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE,
+    content =
+    {
+      @Content(mediaType = NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE,
+          schema = @Schema(implementation = ErrorDTO.class))
+      ,
+          @Content(mediaType = NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE,
+              schema = @Schema(implementation = ErrorDTO.class))
+    })
 @OwnedBy(HarnessTeam.PIPELINE)
 public class EnvironmentResourceV2 {
   private final EnvironmentService environmentService;
   private final AccessControlClient accessControlClient;
 
+  public static final String ENVIRONMENT_PARAM_MESSAGE = "Environment Identifier for the entity";
+
   @GET
   @Path("{environmentIdentifier}")
   @NGAccessControlCheck(resourceType = ENVIRONMENT, permission = "core_environment_view")
   @ApiOperation(value = "Gets a Environment by identifier", nickname = "getEnvironmentV2")
-  public ResponseDTO<EnvironmentResponse> get(
-      @PathParam("environmentIdentifier") @ResourceIdentifier String environmentIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
+  @Operation(operationId = "getEnvironmentV2", summary = "Gets an Environment by identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "The saved Environment")
+      })
+  public ResponseDTO<EnvironmentResponse>
+  get(@Parameter(description = ENVIRONMENT_PARAM_MESSAGE) @PathParam(
+          "environmentIdentifier") @ResourceIdentifier String environmentIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Specify whether Environment is deleted or not") @QueryParam(
+          NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<Environment> environment =
         environmentService.get(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, deleted);
     String version = "0";
@@ -112,7 +152,16 @@ public class EnvironmentResourceV2 {
 
   @POST
   @ApiOperation(value = "Create an Environment", nickname = "createEnvironmentV2")
-  public ResponseDTO<EnvironmentResponse> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  @Operation(operationId = "createEnvironmentV2", summary = "Create an Environment",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the created Environment")
+      })
+  public ResponseDTO<EnvironmentResponse>
+  create(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Parameter(description = "Details of the Environment to be created")
       @Valid EnvironmentRequestDTO environmentRequestDTO) {
     throwExceptionForNoRequestDTO(environmentRequestDTO);
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
@@ -132,19 +181,39 @@ public class EnvironmentResourceV2 {
   @Path("{environmentIdentifier}")
   @ApiOperation(value = "Delete en environment by identifier", nickname = "deleteEnvironmentV2")
   @NGAccessControlCheck(resourceType = ENVIRONMENT, permission = "core_environment_delete")
-  public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @PathParam("environmentIdentifier") @ResourceIdentifier String environmentIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier) {
+  @Operation(operationId = "deleteEnvironmentV2", summary = "Delete an Environment by identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns true if the Environment is deleted")
+      })
+  public ResponseDTO<Boolean>
+  delete(@HeaderParam(IF_MATCH) String ifMatch,
+      @Parameter(description = ENVIRONMENT_PARAM_MESSAGE) @PathParam(
+          "environmentIdentifier") @ResourceIdentifier String environmentIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier) {
     return ResponseDTO.newResponse(environmentService.delete(accountId, orgIdentifier, projectIdentifier,
         environmentIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
   @PUT
   @ApiOperation(value = "Update an environment by identifier", nickname = "updateEnvironmentV2")
-  public ResponseDTO<EnvironmentResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  @Operation(operationId = "updateEnvironmentV2", summary = "Update an Environment by identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Environment")
+      })
+  public ResponseDTO<EnvironmentResponse>
+  update(@HeaderParam(IF_MATCH) String ifMatch,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Parameter(description = "Details of the Environment to be updated")
       @Valid EnvironmentRequestDTO environmentRequestDTO) {
     throwExceptionForNoRequestDTO(environmentRequestDTO);
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
@@ -161,8 +230,17 @@ public class EnvironmentResourceV2 {
   @PUT
   @Path("upsert")
   @ApiOperation(value = "Upsert an environment by identifier", nickname = "upsertEnvironmentV2")
-  public ResponseDTO<EnvironmentResponse> upsert(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  @Operation(operationId = "upsertEnvironmentV2", summary = "Upsert an Environment by identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Environment")
+      })
+  public ResponseDTO<EnvironmentResponse>
+  upsert(@HeaderParam(IF_MATCH) String ifMatch,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Parameter(description = "Details of the Environment to be updated")
       @Valid EnvironmentRequestDTO environmentRequestDTO) {
     throwExceptionForNoRequestDTO(environmentRequestDTO);
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
@@ -178,13 +256,30 @@ public class EnvironmentResourceV2 {
 
   @GET
   @ApiOperation(value = "Gets environment list", nickname = "getEnvironmentList")
-  public ResponseDTO<PageResponse<EnvironmentResponse>> listEnvironment(@QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("100") int size,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
+  @Operation(operationId = "getEnvironmentList", summary = "Gets Environment list for a project",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the list of Environments for a Project")
+      })
+  public ResponseDTO<PageResponse<EnvironmentResponse>>
+  listEnvironment(@Parameter(description = NGCommonEntityConstants.PAGE_PARAM_MESSAGE) @QueryParam(
+                      NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
+      @Parameter(description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.SIZE) @DefaultValue("100") int size,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
+      @Parameter(description = "The word to be searched and included in the list response") @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(description = "List of EnvironmentIds") @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @Parameter(
+          description =
+              "Specifies sorting criteria of the list. Like sorting based on the last updated entity, alphabetical sorting in an ascending or descending order")
+      @QueryParam("sort") List<String> sort) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
         Resource.of(ENVIRONMENT, null), ENVIRONMENT_VIEW_PERMISSION, "Unauthorized to list environments");
     Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
@@ -206,13 +301,30 @@ public class EnvironmentResourceV2 {
   @GET
   @Path("/list/access")
   @ApiOperation(value = "Gets environment access list", nickname = "getEnvironmentAccessList")
-  public ResponseDTO<List<EnvironmentResponse>> listAccessEnvironment(@QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("100") int size,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
+  @Operation(operationId = "getEnvironmentAccessList", summary = "Gets Environment Access list",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the list of Environments for a Project that are accessible")
+      })
+  public ResponseDTO<List<EnvironmentResponse>>
+  listAccessEnvironment(@Parameter(description = NGCommonEntityConstants.PAGE) @QueryParam(
+                            NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
+      @Parameter(description = NGCommonEntityConstants.SIZE) @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue(
+          "100") int size,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = "The word to be searched and included in the list response") @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(description = "List of EnvironmentIds") @QueryParam("envIdentifiers") List<String> envIdentifiers,
+      @Parameter(
+          description =
+              "Specifies sorting criteria of the list. Like sorting based on the last updated entity, alphabetical sorting in an ascending or descending order")
+      @QueryParam("sort") List<String> sort) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
         Resource.of(PROJECT, projectIdentifier), VIEW_PROJECT_PERMISSION, "Unauthorized to list environments");
     Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
