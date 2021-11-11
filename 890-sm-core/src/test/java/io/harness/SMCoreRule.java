@@ -51,6 +51,8 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.utils.featureflaghelper.CGFeatureFlagHelperServiceImpl;
+import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableList;
@@ -250,6 +252,7 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
         bind(SecretsAuditService.class).toInstance(mock(SecretsAuditService.class));
         bind(SecretsRBACService.class).toInstance(mock(SecretsRBACService.class));
         bind(SecretsManagerRBACService.class).toInstance(mock(SecretsManagerRBACService.class));
+        bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
 
         binder()
             .bind(SecretKeyService.class)
@@ -261,6 +264,7 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(SecretManagementCoreModule.getInstance());
+
     return modules;
   }
 

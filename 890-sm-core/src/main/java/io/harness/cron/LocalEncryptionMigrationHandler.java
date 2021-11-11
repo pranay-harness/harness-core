@@ -6,7 +6,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
-import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.beans.LocalEncryptionMigrationInfo;
 import io.harness.beans.PageRequest;
@@ -38,17 +37,21 @@ public abstract class LocalEncryptionMigrationHandler implements Runnable {
   @Inject protected LocalEncryptor localEncryptor;
   @Inject protected PersistentLocker persistentLocker;
 
+  private static final String LOCAL_ENCRYPTION_MIGRATION_CRON_PREFIX = "LOCAL_ENCRYPTION_MIGRATION_CRON:";
+  private static final long LOCAL_ENCRYPTION_CRON_LOCK_EXPIRY_IN_SECONDS = 60;
+
   private static final String PAGE_SIZE = "1000";
 
   abstract protected void performMigration(String accountId);
 
-  protected void startMigration(FeatureName featureFlag, String lockPrefix, long lockExpiry) {
+  protected void startMigration(FeatureName featureFlag) {
     Set<String> accountIds = featureFlagService.getAccountIds(featureFlag);
 
     accountIds.forEach(accountId -> {
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AcquiredLock lock = persistentLocker.tryToAcquireLock(LocalEncryptionMigrationInfo.class,
-               lockPrefix + featureFlag + ":" + accountId, Duration.ofSeconds(lockExpiry))) {
+               LOCAL_ENCRYPTION_MIGRATION_CRON_PREFIX + featureFlag + ":" + accountId,
+               Duration.ofSeconds(LOCAL_ENCRYPTION_CRON_LOCK_EXPIRY_IN_SECONDS))) {
         if (lock == null) {
           log.error("Unable to fetch lock for running local encryption migration for feature: {} for account : {}",
               featureFlag, accountId);

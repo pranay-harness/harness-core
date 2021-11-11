@@ -8,7 +8,6 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretKey;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptor;
-import io.harness.ff.FeatureFlagService;
 import io.harness.secretkey.SecretKeyConstants;
 import io.harness.secretkey.SecretKeyService;
 import io.harness.security.SimpleEncryption;
@@ -17,6 +16,7 @@ import io.harness.security.encryption.EncryptedMech;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
+import io.harness.utils.featureflaghelper.FeatureFlagHelperService;
 
 import software.wings.beans.LocalEncryptionConfig;
 
@@ -42,18 +42,18 @@ public class LocalEncryptor implements KmsEncryptor {
   private static final String AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP = "AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP";
   private static final AwsCrypto crypto = AwsCrypto.standard();
   private SecretKeyService secretKeyService;
-  private FeatureFlagService featureFlagService;
+  private FeatureFlagHelperService featureFlagService;
 
   @Inject
   public LocalEncryptor(@Named(SecretKeyConstants.AES_SECRET_KEY) SecretKeyService secretKeyService,
-      FeatureFlagService featureFlagService) {
+      FeatureFlagHelperService featureFlagService) {
     this.secretKeyService = secretKeyService;
     this.featureFlagService = featureFlagService;
   }
 
   @Override
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
-    if (featureFlagService.isEnabled(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE, accountId)) {
+    if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
       SecretKey secretKey = secretKeyService.createSecretKey();
       final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
       return EncryptedRecordData.builder()
@@ -64,7 +64,7 @@ public class LocalEncryptor implements KmsEncryptor {
     }
 
     final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
-    if (featureFlagService.isEnabled(FeatureName.LOCAL_MULTI_CRYPTO_MODE, accountId)) {
+    if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
       SecretKey secretKey = secretKeyService.createSecretKey();
       final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
       return EncryptedRecordData.builder()
@@ -94,7 +94,7 @@ public class LocalEncryptor implements KmsEncryptor {
 
     String secretKeyUuid = null;
     char[] encryptedSecret = null;
-    if (featureFlagService.isEnabled(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE, accountId)) {
+    if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
       secretKeyUuid = encryptedRecord.getEncryptionKey();
       encryptedSecret = encryptedRecord.getEncryptedValue();
     } else {

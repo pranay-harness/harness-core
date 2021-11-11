@@ -17,12 +17,10 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(HarnessTeam.PL)
 public class LocalMultiCryptoModeEncryptionMigrationHandler extends LocalEncryptionMigrationHandler {
   private static final FeatureName featureFlag = FeatureName.LOCAL_MULTI_CRYPTO_MODE;
-  private static final String LOCAL_ENCRYPTION_MIGRATION_CRON_PREFIX = "LOCAL_ENCRYPTION_MIGRATION_CRON:";
-  private static final long LOCAL_ENCRYPTION_CRON_LOCK_EXPIRY_IN_SECONDS = 60;
 
   @Override
   public void run() {
-    startMigration(featureFlag, LOCAL_ENCRYPTION_MIGRATION_CRON_PREFIX, LOCAL_ENCRYPTION_CRON_LOCK_EXPIRY_IN_SECONDS);
+    startMigration(featureFlag);
   }
 
   protected void performMigration(String accountId) {
