@@ -209,7 +209,7 @@ public class ReflectionUtils {
     try {
       return clazz.getMethod(methodName);
     } catch (NoSuchMethodException e) {
-      throw new UnsupportedOperationException(String.format("No method foudn with name %s", methodName));
+      throw new UnsupportedOperationException(String.format("No method found with name %s", methodName));
     }
   }
 }
