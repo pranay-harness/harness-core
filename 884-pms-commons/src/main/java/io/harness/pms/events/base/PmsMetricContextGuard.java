@@ -20,4 +20,8 @@ public class PmsMetricContextGuard extends ThreadAutoLogContext {
             .isMonitoringEnabled(Objects.equals(metadataMap.getOrDefault(PIPELINE_MONITORING_ENABLED, "false"), "true"))
             .build());
   }
+
+  public PmsMetricContextGuard(Map<String, String> contextMap) {
+    super(contextMap);
+  }
 }

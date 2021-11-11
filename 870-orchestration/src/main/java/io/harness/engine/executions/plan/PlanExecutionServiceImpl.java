@@ -19,20 +19,26 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.ExecutionMetadataKeys;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.events.PmsEventMonitoringConstants;
+import io.harness.pms.events.base.PmsMetricContextGuard;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.repositories.PlanExecutionRepository;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -48,11 +54,13 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 @Singleton
 public class PlanExecutionServiceImpl implements PlanExecutionService {
+  private static String ACTIVE_EXECUTION_COUNT_METRIC_NAME = "active_execution_count";
   @Inject private PlanExecutionRepository planExecutionRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private NodeStatusUpdateHandlerFactory nodeStatusUpdateHandlerFactory;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private MetricService metricService;
 
   @Getter private final Subject<PlanStatusUpdateObserver> planStatusUpdateSubject = new Subject<>();
 
@@ -181,5 +189,27 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
         .setMetadata(
             planExecution.getMetadata() == null ? ExecutionMetadata.newBuilder().build() : planExecution.getMetadata())
         .build();
+  }
+
+  @Override
+  public void registerActiveExecutionMetrics() {
+    Query query = query(where(PlanExecutionKeys.status).in(StatusUtils.activeStatuses()));
+    query.fields().include(PlanExecutionKeys.setupAbstractions).include(PlanExecutionKeys.metadata);
+    List<PlanExecution> planExecutions = mongoTemplate.find(query, PlanExecution.class);
+    for (PlanExecution planExecution : planExecutions) {
+      Map<String, String> metricContextMap =
+          ImmutableMap.<String, String>builder()
+              .put(PmsEventMonitoringConstants.ACCOUNT_ID,
+                  planExecution.getSetupAbstractions().get(SetupAbstractionKeys.accountId))
+              .put(PmsEventMonitoringConstants.ORG_ID,
+                  planExecution.getSetupAbstractions().get(SetupAbstractionKeys.orgIdentifier))
+              .put(PmsEventMonitoringConstants.PROJECT_ID,
+                  planExecution.getSetupAbstractions().get(SetupAbstractionKeys.projectIdentifier))
+              .put(PmsEventMonitoringConstants.PIPELINE_IDENTIFIER, planExecution.getMetadata().getPipelineIdentifier())
+              .build();
+      try (PmsMetricContextGuard pmsMetricContextGuard = new PmsMetricContextGuard(metricContextMap)) {
+        metricService.incCounter(ACTIVE_EXECUTION_COUNT_METRIC_NAME);
+      }
+    }
   }
 }
