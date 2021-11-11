@@ -6,6 +6,7 @@ import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.AnomaliesSummaryDTO;
+import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
@@ -46,8 +47,8 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
 
   List<MonitoredService> list(@NonNull ProjectParams projectParams, @NonNull List<String> identifiers);
 
-  PageResponse<MonitoredServiceListItemDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, Integer offset, Integer pageSize, String filter, boolean servicesAtRiskFilter);
+  PageResponse<MonitoredServiceListItemDTO> list(ProjectParams projectParams, String environmentIdentifier,
+      Integer offset, Integer pageSize, String filter, boolean servicesAtRiskFilter);
   List<EnvironmentResponse> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier);
   MonitoredServiceResponse createDefault(
       ProjectParams projectParams, String serviceIdentifier, String environmentIdentifier);
@@ -71,4 +72,5 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
 
   AnomaliesSummaryDTO getAnomaliesSummary(
       ProjectParams projectParams, String monitoredServiceIdentifier, TimeRangeParams timeRangeParams);
+  CountServiceDTO getCountOfServices(ProjectParams projectParams, String environmentIdentifier, String filter);
 }
