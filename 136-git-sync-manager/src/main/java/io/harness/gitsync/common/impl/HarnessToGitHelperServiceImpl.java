@@ -37,6 +37,7 @@ import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
+import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.gitsync.scm.ScmGitUtils;
 import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.EntityDetail;
@@ -50,6 +51,8 @@ import io.harness.utils.IdentifierRefHelper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +73,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitBranchSyncService gitBranchSyncService;
   private final GitCommitService gitCommitService;
   private final UserProfileHelper userProfileHelper;
+  private final GitSyncErrorService gitSyncErrorService;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
@@ -77,7 +81,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
       ScmOrchestratorService scmOrchestratorService, GitBranchSyncService gitBranchSyncService,
-      GitCommitService gitCommitService, UserProfileHelper userProfileHelper) {
+      GitCommitService gitCommitService, UserProfileHelper userProfileHelper, GitSyncErrorService gitSyncErrorService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
@@ -90,6 +94,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.gitBranchSyncService = gitBranchSyncService;
     this.gitCommitService = gitCommitService;
     this.userProfileHelper = userProfileHelper;
+    this.gitSyncErrorService = gitSyncErrorService;
   }
 
   private Optional<ConnectorResponseDTO> getConnector(
@@ -128,6 +133,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     saveGitEntity(pushInfo, entityDetail, yamlGitConfigDTO);
     if (!pushInfo.getIsSyncFromGit()) {
       saveGitCommit(pushInfo, yamlGitConfigDTO);
+      markResolvedErrors(pushInfo, yamlGitConfigDTO);
     }
     shortListTheBranch(
         yamlGitConfigDTO, entityRef.getAccountIdentifier(), pushInfo.getBranchName(), pushInfo.getIsNewBranch());
@@ -140,6 +146,12 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
                   yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getRepo(), pushInfo.getBranchName(),
                   ScmGitUtils.createFilePath(pushInfo.getFolderPath(), pushInfo.getFilePath())));
     }
+  }
+
+  private void markResolvedErrors(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
+    String completeFilePath = ScmGitUtils.createFilePath(pushInfo.getFolderPath(), pushInfo.getFilePath());
+    gitSyncErrorService.markResolvedErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo(),
+        pushInfo.getBranchName(), new HashSet<>(Collections.singleton(completeFilePath)), pushInfo.getCommitId());
   }
 
   private void saveGitEntity(PushInfo pushInfo, EntityDetailProtoDTO entityDetail, YamlGitConfigDTO yamlGitConfigDTO) {
