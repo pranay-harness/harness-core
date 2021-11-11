@@ -223,7 +223,8 @@ public enum FeatureName {
   NEW_KUBECTL_VERSION,
   CUSTOM_DASHBOARD_V2, // To be used only by ui to control flow from cg dashbaords to ng
   TIME_SCALE_CG_SYNC,
-  DELEGATE_SELECTION_LOGS_DISABLED;
+  DELEGATE_SELECTION_LOGS_DISABLED,
+  NG_STAGE_TEMPLATES;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
