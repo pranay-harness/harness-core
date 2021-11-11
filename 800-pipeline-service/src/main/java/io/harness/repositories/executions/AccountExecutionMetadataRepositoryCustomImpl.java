@@ -50,12 +50,30 @@ public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExec
       // If there is no entry, then create an entry in the db for the given account
       if (accountExecutionMetadata == null) {
         Map<String, Long> moduleToExecutionCount = new HashMap<>();
+        Map<String, AccountExecutionInfo> moduleToExecutionInfoMap = new HashMap<>();
         for (String module : moduleNames) {
+          // create total build for given module
           moduleToExecutionCount.put(module, 1L);
+
+          // create monthly build for given module
+          if (module.equalsIgnoreCase(PRIVATE_REPO_BUILD_CI)) {
+            // skip monthly build if the count have not reached 2500
+            continue;
+          }
+          AccountExecutionInfo accountExecutionInfo = AccountExecutionInfo.builder().build();
+
+          LocalDate startDate = Instant.ofEpochMilli(startTS).atZone(ZoneId.systemDefault()).toLocalDate();
+          Long countOfMonth = accountExecutionInfo.getCountPerMonth().getOrDefault(
+              YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), 0L);
+          countOfMonth = countOfMonth + 1;
+          accountExecutionInfo.getCountPerMonth().put(
+              YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), countOfMonth);
+          moduleToExecutionInfoMap.put(module, accountExecutionInfo);
         }
         AccountExecutionMetadata newAccountExecutionMetadata = AccountExecutionMetadata.builder()
                                                                    .accountId(accountId)
                                                                    .moduleToExecutionCount(moduleToExecutionCount)
+                                                                   .moduleToExecutionInfoMap(moduleToExecutionInfoMap)
                                                                    .build();
         mongoTemplate.save(newAccountExecutionMetadata);
         return;
