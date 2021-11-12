@@ -52,7 +52,7 @@ public class ViewFilterStatsDataFetcherTest extends CategoryTest {
     doReturn(UNIFIED_TABLE).when(cloudBillingHelper).getCloudProviderTableName(ACCOUNT_ID, CloudBillingHelper.unified);
     values.add(FILTER_VALUE_1);
     values.add(FILTER_VALUE_2);
-    doReturn(values).when(viewsBillingService).getFilterValueStats(bigQuery, filters, UNIFIED_TABLE, 10, 0);
+    doReturn(values).when(viewsBillingService).getFilterValueStats(filters, UNIFIED_TABLE, 10, 0);
   }
 
   @Test
