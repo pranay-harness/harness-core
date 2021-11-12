@@ -7,7 +7,6 @@ import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.D
 import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.ERROR;
 import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.IN_PROGRESS;
 import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepType.PROCESS_FILES_IN_MSVS;
-import static io.harness.ng.core.event.EntityToEntityProtoHelper.getEntityTypeFromProto;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -16,6 +15,10 @@ import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
 import io.harness.gitsync.EntityInfo;
@@ -87,6 +90,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   GitChangeSetMapper gitChangeSetMapper;
   GitSyncErrorService gitSyncErrorService;
   GitEntityService gitEntityService;
+  IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
   @Override
   public GitToHarnessProgressStatus processFiles(String accountId,
@@ -189,14 +193,19 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       @NotNull ChangeSet changeSet, @NotNull GitSyncEntityDTO gitSyncEntityDTO, String yamlGitConfigId) {
     EntityInfo.Builder builder = EntityInfo.newBuilder()
                                      .setYaml(changeSet.getYaml())
-                                     .setEntityType(getEntityTypeFromProto(gitSyncEntityDTO.getEntityType()))
                                      .setFilePath(changeSet.getFilePath())
                                      .setYamlGitConfigId(yamlGitConfigId)
                                      .setLastObjectId(changeSet.getObjectId());
     if (gitSyncEntityDTO.getEntityReference() != null) {
-      builder.setOrgIdentifier(gitSyncEntityDTO.getEntityReference().getOrgIdentifier())
-          .setProjectIdentifier(gitSyncEntityDTO.getEntityReference().getProjectIdentifier())
-          .setIdentifier(gitSyncEntityDTO.getEntityReference().getIdentifier());
+      IdentifierRefProtoDTO entityReference = identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(
+          changeSet.getAccountId(), gitSyncEntityDTO.getEntityReference().getOrgIdentifier(),
+          gitSyncEntityDTO.getEntityReference().getProjectIdentifier(),
+          gitSyncEntityDTO.getEntityReference().getIdentifier());
+      builder.setEntityDetail(EntityDetailProtoDTO.newBuilder()
+                                  .setIdentifierRef(entityReference)
+                                  .setType(EntityTypeProtoEnum.valueOf(gitSyncEntityDTO.getEntityType().name()))
+                                  .setName(gitSyncEntityDTO.getEntityName())
+                                  .build());
     }
     return builder.build();
   }
