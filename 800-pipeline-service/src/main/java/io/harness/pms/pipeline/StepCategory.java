@@ -1,5 +1,6 @@
 package io.harness.pms.pipeline;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -8,6 +9,8 @@ import lombok.Data;
 
 @Data
 @Builder
+@Schema(
+    name = "StepCategory", description = "This contains step category name, step data and internal step categories.")
 public class StepCategory {
   String name;
   @Builder.Default List<StepData> stepsData = new ArrayList<>();
