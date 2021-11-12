@@ -1,10 +1,9 @@
 package io.harness.cvng.beans.datadog;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

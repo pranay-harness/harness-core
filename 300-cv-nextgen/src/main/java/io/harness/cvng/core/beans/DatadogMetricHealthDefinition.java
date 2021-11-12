@@ -8,20 +8,20 @@ import lombok.Value;
 @Value
 @Builder
 public class DatadogMetricHealthDefinition {
-    String dashboardId;
-    String dashboardName;
-    String query;
-    String groupingQuery;
-    String metricName;
-    String metric;
-    String aggregation;
-    String serviceInstanceIdentifierTag;
-    List<String> metricTags;
-    boolean isManualQuery;
-    RiskProfile riskProfile;
+  String dashboardId;
+  String dashboardName;
+  String query;
+  String groupingQuery;
+  String metricName;
+  String metric;
+  String aggregation;
+  String serviceInstanceIdentifierTag;
+  List<String> metricTags;
+  boolean isManualQuery;
+  RiskProfile riskProfile;
 
-    @JsonProperty(value = "isManualQuery")
-    public boolean isManualQuery() {
-        return isManualQuery;
-    }
+  @JsonProperty(value = "isManualQuery")
+  public boolean isManualQuery() {
+    return isManualQuery;
+  }
 }

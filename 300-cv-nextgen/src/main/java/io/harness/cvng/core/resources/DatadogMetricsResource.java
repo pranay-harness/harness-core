@@ -41,17 +41,10 @@ public class DatadogMetricsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all datadog dashboards", nickname = "getDatadogDashboards")
-  public ResponseDTO<PageResponse<DatadogDashboardDTO>> getDatadogDashboards(
-      @NotNull @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+  public ResponseDTO<PageResponse<DatadogDashboardDTO>> getDatadogDashboards(@BeanParam ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @QueryParam("pageSize") @NotNull int pageSize, @QueryParam("offset") @NotNull int offset,
       @QueryParam("filter") String filter, @NotNull @QueryParam("tracingId") String tracingId) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
     return ResponseDTO.newResponse(
         datadogService.getAllDashboards(projectParams, connectorIdentifier, pageSize, offset, filter, tracingId));
   }
@@ -61,16 +54,9 @@ public class DatadogMetricsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get datadog dashboard details", nickname = "getDatadogDashboardDetails")
-  public ResponseDTO<List<DatadogDashboardDetail>> getDatadogDashboardDetails(
-      @NotNull @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+  public ResponseDTO<List<DatadogDashboardDetail>> getDatadogDashboardDetails(@BeanParam ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @NotNull @QueryParam("dashboardId") String dashboardId, @NotNull @QueryParam("tracingId") String tracingId) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
     return ResponseDTO.newResponse(
         datadogService.getDashboardDetails(projectParams, connectorIdentifier, dashboardId, tracingId));
   }
@@ -80,16 +66,9 @@ public class DatadogMetricsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get datadog active metrics", nickname = "getDatadogActiveMetrics")
-  public ResponseDTO<List<String>> getDatadogMetricTagsList(@NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+  public ResponseDTO<List<String>> getDatadogMetricTagsList(@BeanParam ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @NotNull @QueryParam("tracingId") String tracingId) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
     return ResponseDTO.newResponse(datadogService.getActiveMetrics(projectParams, connectorIdentifier, tracingId));
   }
 
@@ -98,16 +77,9 @@ public class DatadogMetricsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get datadog metric tag list", nickname = "getDatadogMetricTagsList")
-  public ResponseDTO<List<String>> getDatadogMetricTagsList(@NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+  public ResponseDTO<List<String>> getDatadogMetricTagsList(@BeanParam ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @NotNull @QueryParam("metric") String metricName, @NotNull @QueryParam("tracingId") String tracingId) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
     return ResponseDTO.newResponse(
         datadogService.getMetricTagsList(projectParams, metricName, connectorIdentifier, tracingId));
   }
@@ -117,16 +89,9 @@ public class DatadogMetricsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get datadog sample data", nickname = "getDatadogSampleData")
-  public ResponseDTO<List<TimeSeriesSampleDTO>> getDatadogSampleData(@NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+  public ResponseDTO<List<TimeSeriesSampleDTO>> getDatadogSampleData(@BeanParam ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @NotNull @QueryParam("tracingId") String tracingId, @NotNull @QueryParam("query") String query) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
     return ResponseDTO.newResponse(
         datadogService.getTimeSeriesPoints(projectParams, connectorIdentifier, query, tracingId));
   }

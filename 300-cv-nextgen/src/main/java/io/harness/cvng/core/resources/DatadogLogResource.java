@@ -40,16 +40,9 @@ public class DatadogLogResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get sample data for a query", nickname = "getDatadogLogSampleData")
-  public ResponseDTO<List<LinkedHashMap>> getDatadogSampleData(@NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+  public ResponseDTO<List<LinkedHashMap>> getDatadogSampleData(@BeanParam ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @NotNull @QueryParam("tracingId") String tracingId, @Body LogSampleRequestDTO logSampleRequestDTO) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
     return ResponseDTO.newResponse(
         datadogService.getSampleLogData(projectParams, connectorIdentifier, logSampleRequestDTO.getQuery(), tracingId));
   }
@@ -59,16 +52,9 @@ public class DatadogLogResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get datadog log indexes", nickname = "getDatadogLogIndexes")
-  public ResponseDTO<List<String>> getDatadogLogIndexes(@NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+  public ResponseDTO<List<String>> getDatadogLogIndexes(@BeanParam ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @NotNull @QueryParam("tracingId") String tracingId) {
-    ProjectParams projectParams = ProjectParams.builder()
-                                      .accountIdentifier(accountId)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .build();
     return ResponseDTO.newResponse(datadogService.getLogIndexes(projectParams, connectorIdentifier, tracingId));
   }
 }

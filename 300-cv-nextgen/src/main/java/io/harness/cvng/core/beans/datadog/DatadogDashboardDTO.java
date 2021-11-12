@@ -7,9 +7,7 @@ import lombok.Value;
 @Value
 @Builder
 public class DatadogDashboardDTO {
-    String id;
-    @SerializedName(value = "title")
-    String name;
-    @SerializedName(value = "url")
-    String path;
+  String id;
+  @SerializedName(value = "title") String name;
+  @SerializedName(value = "url") String path;
 }
