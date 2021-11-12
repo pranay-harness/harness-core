@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.delegate.beans.ConnectionMode;
@@ -19,14 +20,17 @@ import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.AccountPreference;
@@ -37,15 +41,27 @@ import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.managerclient.HttpsCertRequirement;
 import io.harness.managerclient.HttpsCertRequirementQuery;
+import io.harness.manifest.ManifestCollectionResponseHandler;
+import io.harness.network.SafeHttpCall;
+import io.harness.perpetualtask.PerpetualTaskLogContext;
+import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
+import io.harness.perpetualtask.instancesync.InstanceSyncResponsePublisher;
+import io.harness.persistence.HPersistence;
+import io.harness.polling.client.PollingResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
+import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.Account;
 import software.wings.core.managerConfiguration.ConfigurationController;
+import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
+import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
@@ -72,6 +88,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -91,6 +109,15 @@ public class DelegateAgentDmsResource {
   private final DelegateTaskServiceClassic delegateTaskServiceClassic;
   private final ConfigurationController configurationController;
   private final SubdomainUrlHelperIntfc subdomainUrlHelper;
+  private ConnectorHearbeatPublisher connectorHearbeatPublisher;
+  private KryoSerializer kryoSerializer;
+  private FeatureFlagService featureFlagService;
+  private InstanceSyncResponsePublisher instanceSyncResponsePublisher;
+  private PollingResourceClient pollingResourceClient;
+  private ManifestCollectionResponseHandler manifestCollectionResponseHandler;
+  private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
+  private InstanceHelper instanceHelper;
+  private HPersistence persistence;
 
   @DelegateAuth
   @POST
@@ -416,5 +443,127 @@ public class DelegateAgentDmsResource {
         .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
         .location(delegateParams.getLocation())
         .build();
+  }
+
+  //=================Remove after next release, added only for backward compatibility====================//
+
+  @POST
+  public RestResponse<Delegate> add(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      delegate.setAccountId(accountId);
+      return new RestResponse<>(delegateService.add(delegate));
+    }
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("{delegateId}/state-executions")
+  @Timed
+  @ExceptionMetered
+  public void saveApiCallLogs(
+      @PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId, byte[] logsBlob) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+      log.debug("About to convert logsBlob byte array into ThirdPartyApiCallLog.");
+      List<ThirdPartyApiCallLog> logs = (List<ThirdPartyApiCallLog>) kryoSerializer.asObject(logsBlob);
+      log.debug("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
+
+      persistence.save(logs);
+    }
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("artifact-collection/{perpetualTaskId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> processArtifactCollectionResult(
+      @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, byte[] response) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      BuildSourceExecutionResponse executionResponse = (BuildSourceExecutionResponse) kryoSerializer.asObject(response);
+
+      if (executionResponse.getBuildSourceResponse() != null) {
+        log.debug("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
+      }
+      artifactCollectionResponseHandler.processArtifactCollectionResult(accountId, perpetualTaskId, executionResponse);
+    }
+    return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("instance-sync/{perpetualTaskId}")
+  public RestResponse<Boolean> processInstanceSyncResult(@PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateResponseData response) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      instanceHelper.processInstanceSyncResponseFromPerpetualTask(perpetualTaskId.replaceAll("[\r\n]", ""), response);
+    } catch (Exception e) {
+      log.error("Failed to process results for perpetual task: [{}]", perpetualTaskId.replaceAll("[\r\n]", ""), e);
+    }
+    return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("instance-sync-ng/{perpetualTaskId}")
+  public RestResponse<Boolean> processInstanceSyncNGResult(
+      @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateResponseData response) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      instanceSyncResponsePublisher.publishInstanceSyncResponseToNG(
+          accountId, perpetualTaskId.replaceAll("[\r\n]", ""), response);
+    } catch (Exception e) {
+      log.error("Failed to process results for perpetual task: [{}]", perpetualTaskId.replaceAll("[\r\n]", ""), e);
+    }
+    return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("manifest-collection/{perpetualTaskId}")
+  public RestResponse<Boolean> processManifestCollectionResult(
+      @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, byte[] serializedExecutionResponse) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      ManifestCollectionExecutionResponse executionResponse =
+          (ManifestCollectionExecutionResponse) kryoSerializer.asObject(serializedExecutionResponse);
+
+      if (executionResponse.getManifestCollectionResponse() != null) {
+        log.debug("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
+      }
+      manifestCollectionResponseHandler.handleManifestCollectionResponse(accountId, perpetualTaskId, executionResponse);
+    }
+    return new RestResponse<>(Boolean.TRUE);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("connectors/{perpetualTaskId}")
+  public RestResponse<Boolean> publishNGConnectorHeartbeatResult(
+      @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, ConnectorHeartbeatDelegateResponse validationResult) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      connectorHearbeatPublisher.pushConnectivityCheckActivity(accountId, validationResult);
+    }
+    return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("polling/{perpetualTaskId}")
+  public RestResponse<Boolean> processPollingResultNg(@PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, byte[] serializedExecutionResponse) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      SafeHttpCall.executeWithExceptions(pollingResourceClient.processPolledResult(perpetualTaskId, accountId,
+          RequestBody.create(MediaType.parse("application/octet-stream"), serializedExecutionResponse)));
+    }
+    return new RestResponse<>(Boolean.TRUE);
   }
 }
