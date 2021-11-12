@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,6 +22,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("MergeInputSetRequest")
+@Schema(name = "MergeInputSetRequest", description = "Contains list of Input Set references and Stage Ids")
 public class MergeInputSetRequestDTOPMS {
   @NotEmpty List<String> inputSetReferences;
   boolean withMergedPipelineYaml;
