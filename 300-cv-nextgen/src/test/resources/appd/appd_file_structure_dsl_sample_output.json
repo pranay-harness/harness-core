@@ -1,0 +1,73 @@
+{
+  "accountId": "kmpySmUISimoRrJL6NL73w",
+  "result": [
+    {
+      "name": "Average Async Processing Time (ms)",
+      "type": "leaf"
+    },
+    {
+      "name": "Infrastructure Errors per Minute",
+      "type": "leaf"
+    },
+    {
+      "name": "HTTP Error Codes per Minute",
+      "type": "leaf"
+    },
+    {
+      "name": "Errors per Minute",
+      "type": "leaf"
+    },
+    {
+      "name": "Exceptions per Minute",
+      "type": "leaf"
+    },
+    {
+      "name": "Calls per Minute",
+      "type": "leaf"
+    },
+    {
+      "name": "Stall Count",
+      "type": "leaf"
+    },
+    {
+      "name": "Error Page Redirects per Minute",
+      "type": "leaf"
+    },
+    {
+      "name": "Average Response Time (ms)",
+      "type": "leaf"
+    },
+    {
+      "name": "Number of Very Slow Calls",
+      "type": "leaf"
+    },
+    {
+      "name": "Numbers",
+      "type": "folder"
+    },
+    {
+      "name": "Numbers z",
+      "type": "folder"
+    },
+    {
+      "name": "External Calls",
+      "type": "folder"
+    },
+    {
+      "name": "External Calls 2",
+      "type": "folder"
+    },
+    {
+      "name": "External Calls 3",
+      "type": "folder"
+    },
+    {
+      "name": "Individual Nodes",
+      "type": "folder"
+    }
+  ],
+  "projectIdentifier": "DevProject",
+  "orgIdentifier": "default",
+  "connectorIdentifier": "AppDtest",
+  "tracingId": "39jODmvFTAmzPtFvGJkOew"
+}
