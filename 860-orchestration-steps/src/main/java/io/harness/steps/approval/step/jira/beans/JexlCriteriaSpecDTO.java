@@ -7,6 +7,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("JexlCriteriaSpec")
+@Schema(name = "JexlCriteriaSpec", description = "This contains details of the Jexl Criteria")
 public class JexlCriteriaSpecDTO implements CriteriaSpecDTO {
   @NotEmpty String expression;
 
