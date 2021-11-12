@@ -8,7 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dashboards.DeploymentStatsSummary;
 import io.harness.dashboards.EnvCount;
 import io.harness.dashboards.GroupBy;
-import io.harness.dashboards.LandingDashboardRequest;
+import io.harness.dashboards.LandingDashboardRequestCD;
 import io.harness.dashboards.PipelinesExecutionDashboardInfo;
 import io.harness.dashboards.ProjectsDashboardInfo;
 import io.harness.dashboards.ServicesCount;
@@ -32,37 +32,37 @@ public interface CDLandingDashboardResourceClient {
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval, @NotNull @Query("sortBy") SortBy sortBy,
-      @NotNull @Body LandingDashboardRequest landingDashboardRequest);
+      @NotNull @Body LandingDashboardRequestCD landingDashboardRequestCD);
 
   @POST(LANDING_DASHBOARDS_API + "/topProjects")
   Call<ResponseDTO<ProjectsDashboardInfo>> getTopProjects(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval,
-      @NotNull @Body LandingDashboardRequest landingDashboardRequest);
+      @NotNull @Body LandingDashboardRequestCD landingDashboardRequestCD);
 
   @POST(LANDING_DASHBOARDS_API + "/deploymentStatsSummary")
   Call<ResponseDTO<DeploymentStatsSummary>> getDeploymentStatsSummary(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval, @NotNull @Query("groupBy") GroupBy groupBy,
-      @NotNull @Body LandingDashboardRequest landingDashboardRequest);
+      @NotNull @Body LandingDashboardRequestCD landingDashboardRequestCD);
 
   @POST(LANDING_DASHBOARDS_API + "/activeDeploymentStats")
   Call<ResponseDTO<PipelinesExecutionDashboardInfo>> getActiveDeploymentStats(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Query("orgProjectIdentifiers") List<String> orgProjectIdentifiers);
+      @NotNull @Body LandingDashboardRequestCD landingDashboardRequestCD);
 
   @POST(LANDING_DASHBOARDS_API + "/servicesCount")
   Call<ResponseDTO<ServicesCount>> getServicesCount(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval,
-      @NotNull @Body LandingDashboardRequest landingDashboardRequest);
+      @NotNull @Body LandingDashboardRequestCD landingDashboardRequestCD);
 
   @POST(LANDING_DASHBOARDS_API + "/envCount")
   Call<ResponseDTO<EnvCount>> getEnvCount(@NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval,
-      @NotNull @Body LandingDashboardRequest landingDashboardRequest);
+      @NotNull @Body LandingDashboardRequestCD landingDashboardRequestCD);
 }

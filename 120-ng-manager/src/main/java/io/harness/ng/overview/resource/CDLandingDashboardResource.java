@@ -12,7 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dashboards.DeploymentStatsSummary;
 import io.harness.dashboards.EnvCount;
 import io.harness.dashboards.GroupBy;
-import io.harness.dashboards.LandingDashboardRequest;
+import io.harness.dashboards.LandingDashboardRequestCD;
 import io.harness.dashboards.PipelinesExecutionDashboardInfo;
 import io.harness.dashboards.ProjectsDashboardInfo;
 import io.harness.dashboards.ServicesCount;
@@ -65,14 +65,13 @@ public class CDLandingDashboardResource {
   @ApiOperation(value = "Get Most Active Services", nickname = "getActiveServices")
   @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
   public ResponseDTO<ServicesDashboardInfo> getActiveServices(
-          @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-          @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-          @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
-          @NotNull @QueryParam("sortBy") SortBy sortBy,
-          @NotNull LandingDashboardRequest landingDashboardRequest) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
+      @NotNull @QueryParam("sortBy") SortBy sortBy, @NotNull LandingDashboardRequestCD landingDashboardRequestCD) {
     log.info("Getting most active services by: " + sortBy);
     return ResponseDTO.newResponse(cdLandingDashboardService.getActiveServices(
-        accountIdentifier, landingDashboardRequest.getOrgProjectIdentifiers(), startInterval, endInterval, sortBy));
+        accountIdentifier, landingDashboardRequestCD.getOrgProjectIdentifiers(), startInterval, endInterval, sortBy));
   }
 
   @POST
@@ -83,10 +82,10 @@ public class CDLandingDashboardResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
-      @NotNull LandingDashboardRequest landingDashboardRequest) {
+      @NotNull LandingDashboardRequestCD landingDashboardRequestCD) {
     log.info("Getting top projects");
-    return ResponseDTO.newResponse(
-        cdLandingDashboardService.getTopProjects(accountIdentifier, landingDashboardRequest.getOrgProjectIdentifiers(), startInterval, endInterval));
+    return ResponseDTO.newResponse(cdLandingDashboardService.getTopProjects(
+        accountIdentifier, landingDashboardRequestCD.getOrgProjectIdentifiers(), startInterval, endInterval));
   }
 
   @POST
@@ -97,10 +96,9 @@ public class CDLandingDashboardResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
-      @NotNull @QueryParam("groupBy") GroupBy groupBy,
-      @NotNull LandingDashboardRequest landingDashboardRequest) {
+      @NotNull @QueryParam("groupBy") GroupBy groupBy, @NotNull LandingDashboardRequestCD landingDashboardRequestCD) {
     return ResponseDTO.newResponse(cdLandingDashboardService.getDeploymentStatsSummary(
-        accountIdentifier, landingDashboardRequest.getOrgProjectIdentifiers(), startInterval, endInterval, groupBy));
+        accountIdentifier, landingDashboardRequestCD.getOrgProjectIdentifiers(), startInterval, endInterval, groupBy));
   }
 
   @POST
@@ -109,9 +107,9 @@ public class CDLandingDashboardResource {
   @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
   public ResponseDTO<PipelinesExecutionDashboardInfo> getActiveDeploymentStats(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @NotNull LandingDashboardRequest landingDashboardRequest) {
-    return ResponseDTO.newResponse(
-        cdLandingDashboardService.getActiveDeploymentStats(accountIdentifier, landingDashboardRequest.getOrgProjectIdentifiers()));
+      @NotNull LandingDashboardRequestCD landingDashboardRequestCD) {
+    return ResponseDTO.newResponse(cdLandingDashboardService.getActiveDeploymentStats(
+        accountIdentifier, landingDashboardRequestCD.getOrgProjectIdentifiers()));
   }
 
   @POST
@@ -121,9 +119,10 @@ public class CDLandingDashboardResource {
   public ResponseDTO<ServicesCount> getServicesCount(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval, @NotNull LandingDashboardRequest landingDashboardRequest) {
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
+      @NotNull LandingDashboardRequestCD landingDashboardRequestCD) {
     return ResponseDTO.newResponse(cdLandingDashboardService.getServicesCount(
-        accountIdentifier, landingDashboardRequest.getOrgProjectIdentifiers(), startInterval, endInterval));
+        accountIdentifier, landingDashboardRequestCD.getOrgProjectIdentifiers(), startInterval, endInterval));
   }
 
   @POST
@@ -133,8 +132,9 @@ public class CDLandingDashboardResource {
   public ResponseDTO<EnvCount> getEnvCount(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval, @NotNull LandingDashboardRequest landingDashboardRequest) {
-    return ResponseDTO.newResponse(
-        cdLandingDashboardService.getEnvCount(accountIdentifier, landingDashboardRequest.getOrgProjectIdentifiers(), startInterval, endInterval));
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
+      @NotNull LandingDashboardRequestCD landingDashboardRequestCD) {
+    return ResponseDTO.newResponse(cdLandingDashboardService.getEnvCount(
+        accountIdentifier, landingDashboardRequestCD.getOrgProjectIdentifiers(), startInterval, endInterval));
   }
 }

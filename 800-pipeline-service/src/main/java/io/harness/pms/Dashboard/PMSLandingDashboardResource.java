@@ -11,7 +11,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.dashboards.LandingDashboardRequest;
+import io.harness.pms.dashboards.LandingDashboardRequestPMS;
 import io.harness.pms.dashboards.PipelinesCount;
 
 import com.google.inject.Inject;
@@ -19,6 +19,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -49,10 +50,11 @@ public class PMSLandingDashboardResource {
   @ApiOperation(value = "Get pipelines count", nickname = "getPipelinesCount")
   @NGAccessControlCheck(resourceType = "ACCOUNT", permission = "core_account_view")
   public ResponseDTO<PipelinesCount> getPipelinesCount(
-          @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-          @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-          @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval, @NotNull LandingDashboardRequest landingDashboardRequest) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
+      @NotNull LandingDashboardRequestPMS landingDashboardRequestPMS) {
     return ResponseDTO.newResponse(pmsLandingDashboardService.getPipelinesCount(
-        accountIdentifier, landingDashboardRequest.getOrgProjectIdentifiers(), startInterval, endInterval));
+        accountIdentifier, landingDashboardRequestPMS.getOrgProjectIdentifiers(), startInterval, endInterval));
   }
 }
