@@ -35,6 +35,7 @@ import io.harness.validation.Update;
 
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
+import software.wings.beans.PipelineExecution.PipelineExecutionKeys;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
@@ -388,6 +389,8 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
     public static final String tags_name = tags + "." + NameValuePairKeys.name;
     public static final String triggeredByID = triggeredBy + "." + User.BaseKeys.uuid;
     public static final String pipelineSummary_pipelineId = pipelineSummary + "." + ExecutionArgsKeys.pipelineId;
+    public static final String pipelineExecution_pipelineStageExecutions =
+        pipelineExecution + "." + PipelineExecutionKeys.pipelineStageExecutions;
   }
 
   @PrePersist
