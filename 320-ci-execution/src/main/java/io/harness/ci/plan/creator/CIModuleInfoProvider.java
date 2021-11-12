@@ -55,7 +55,6 @@ import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
