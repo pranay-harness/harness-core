@@ -20,6 +20,7 @@ import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
+import io.harness.product.ci.scm.proto.GetUserReposResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
@@ -160,6 +161,11 @@ public class JgitGitServiceImpl implements ScmClient {
 
   @Override
   public FindCommitResponse findCommit(ScmConnector scmConnector, String commitId) {
+    return null;
+  }
+
+  @Override
+  public GetUserReposResponse getUserRepos(ScmConnector scmConnector) {
     return null;
   }
 }
