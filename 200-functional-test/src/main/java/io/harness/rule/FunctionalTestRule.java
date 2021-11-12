@@ -55,6 +55,7 @@ import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import io.harness.serializer.morphia.EventServerMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.springdata.SpringPersistenceModule;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -398,6 +399,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
+    configuration.setSegmentConfiguration(
+        SegmentConfiguration.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
     return configuration;
   }
 
