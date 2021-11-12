@@ -8,6 +8,7 @@ import io.harness.common.EntityReference;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GitSyncEntityDTOKeys")
+@Schema(name = "GitSyncEntity", description = "Contains information of Git Sync Entity")
 @OwnedBy(DX)
 public class GitSyncEntityDTO {
   private String entityName;
