@@ -105,6 +105,11 @@ segmentConfig:
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
+segmentConfiguration:
+  enabled: false
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
 salesforceConfig:
   userName: "user_name"
   password: "password"

@@ -72,6 +72,11 @@ segmentConfig:
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
+segmentConfiguration:
+  enabled: false
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
 distributedLockImplementation: MONGO
 
 redisLockConfig:
