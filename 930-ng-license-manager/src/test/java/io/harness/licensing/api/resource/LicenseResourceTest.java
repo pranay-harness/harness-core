@@ -20,7 +20,9 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
+import com.google.common.collect.Lists;
 import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -62,10 +64,12 @@ public class LicenseResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.ZHUO)
   @Category(UnitTests.class)
   public void testGetModuleLicense() {
-    doReturn(defaultModueLicenseDTO).when(licenseService).getModuleLicense(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
-    ResponseDTO<ModuleLicenseDTO> licenseResponseDTO =
-        licenseResource.getModuleLicense(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
-    Mockito.verify(licenseService, times(1)).getModuleLicense(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
+    doReturn(Lists.newArrayList(defaultModueLicenseDTO))
+        .when(licenseService)
+        .getModuleLicenses(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
+    ResponseDTO<List<ModuleLicenseDTO>> licenseResponseDTO =
+        licenseResource.getModuleLicenses(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
+    Mockito.verify(licenseService, times(1)).getModuleLicenses(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
     assertThat(licenseResponseDTO.getData()).isNotNull();
   }
 
