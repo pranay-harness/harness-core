@@ -7,7 +7,7 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.beans.EmbeddedUser;
-import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.impl.CEReportScheduleServiceImpl;
 import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;

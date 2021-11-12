@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.entities.ViewType;

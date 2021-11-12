@@ -5,10 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.billing.GcpBillingEntityDataPoints.GcpBillingEntityDataPointsBuilder;
 import io.harness.ccm.billing.bigquery.AliasExpression;
 import io.harness.ccm.billing.bigquery.BigQuerySQL;
-import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.ConstExpression;
 import io.harness.ccm.billing.bigquery.TruncExpression;
 

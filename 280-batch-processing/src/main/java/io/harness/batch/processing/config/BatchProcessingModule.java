@@ -13,7 +13,7 @@ import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.batch.processing.tasklet.util.ClusterHelperImpl;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
-import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudServiceImpl;
@@ -95,7 +95,6 @@ public class BatchProcessingModule extends AbstractModule {
     bind(CloudToHarnessMappingService.class).to(CloudToHarnessMappingServiceImpl.class);
     bind(ProductMetricsService.class).to(ProductMetricsServiceImpl.class);
     bind(CESlackWebhookService.class).to(CESlackWebhookServiceImpl.class);
-    bind(io.harness.ccm.bigQuery.BigQueryService.class).to(BigQueryServiceImpl.class);
     bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     bind(CeCloudMetricsService.class).to(CeCloudMetricsServiceImpl.class);
     bind(CEViewService.class).to(CEViewServiceImpl.class);
