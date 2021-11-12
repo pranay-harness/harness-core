@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.variables.VariableMergeServiceResponse.ServiceExpressionProperties;
@@ -106,10 +107,10 @@ public class VariableCreationBlobResponseUtils {
 
   public void mergeDependencies(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
-    if (isNotEmpty(otherResponse.getDependenciesMap())) {
-      otherResponse.getDependenciesMap().forEach((key, value) -> {
+    if (isNotEmpty(otherResponse.getDeps().getDependenciesMap())) {
+      otherResponse.getDeps().getDependenciesMap().forEach((key, value) -> {
         if (!builder.containsResolvedDependencies(key)) {
-          builder.putDependencies(key, value);
+          builder.setDeps(Dependencies.newBuilder().putDependencies(key, value).build());
         }
       });
     }

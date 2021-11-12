@@ -8,12 +8,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
-import io.harness.pms.contracts.plan.ErrorResponse;
-import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
-import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
-import io.harness.pms.contracts.plan.VariablesCreationMetadata;
-import io.harness.pms.contracts.plan.VariablesCreationResponse;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.*;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
@@ -60,6 +55,12 @@ public class VariableCreatorMergeService {
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
 
+    Dependencies dependencies1 =
+        Dependencies.newBuilder()
+            .setYaml(String.valueOf(processedYaml))
+            .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
+            .build();
+
     VariablesCreationMetadata.Builder metadataBuilder = VariablesCreationMetadata.newBuilder();
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
     if (gitSyncBranchContext != null) {
@@ -67,52 +68,56 @@ public class VariableCreatorMergeService {
     }
 
     VariablesCreationBlobResponse response =
-        createVariablesForDependenciesRecursive(services, dependencies, metadataBuilder.build());
+        createVariablesForDependenciesRecursive(services, dependencies1, metadataBuilder.build());
 
     return VariableCreationBlobResponseUtils.getMergeServiceResponse(
         YamlUtils.writeYamlString(processedYaml), response, serviceExpressionMap);
   }
 
   private VariablesCreationBlobResponse createVariablesForDependenciesRecursive(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies,
+      Map<String, PlanCreatorServiceInfo> services, Dependencies initialDependencies,
       VariablesCreationMetadata metadata) {
-    VariablesCreationBlobResponse.Builder responseBuilder =
-        VariablesCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
-    if (isEmpty(services) || isEmpty(dependencies)) {
-      return responseBuilder.build();
+    VariablesCreationBlobResponse.Builder finalResponseBuilder =
+        VariablesCreationBlobResponse.newBuilder().setDeps(initialDependencies);
+    if (isEmpty(services) || isEmpty(initialDependencies.getDependenciesMap())) {
+      return finalResponseBuilder.build();
     }
 
     // This map is for storing those dependencies which cannot be resolved by anyone.
     // We don't want to return early, thus we are storing unresolved dependencies so that variable resolution keeps on
     // working for other entities.
-    Map<String, YamlFieldBlob> unresolvedDependenciesMap = new HashMap<>();
-    for (int i = 0; i < MAX_DEPTH && isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
+    //    Dependencies unresolvedDependenciesMap = new HashMap<>();
+    Dependencies.Builder unresolvedDependencies = Dependencies.newBuilder();
+    for (int i = 0; i < MAX_DEPTH && isNotEmpty(finalResponseBuilder.getDeps().getDependenciesMap()); i++) {
       VariablesCreationBlobResponse variablesCreationBlobResponse =
-          obtainVariablesPerIteration(services, responseBuilder.getDependenciesMap(), metadata);
-      VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
-      unresolvedDependenciesMap.putAll(responseBuilder.getDependenciesMap());
-      responseBuilder.clearDependencies();
-      VariableCreationBlobResponseUtils.mergeDependencies(responseBuilder, variablesCreationBlobResponse);
-      VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
-      VariableCreationBlobResponseUtils.mergeYamlOutputProperties(responseBuilder, variablesCreationBlobResponse);
+          obtainVariablesPerIteration(services, finalResponseBuilder, metadata);
+      VariableCreationBlobResponseUtils.mergeResolvedDependencies(finalResponseBuilder, variablesCreationBlobResponse);
+      unresolvedDependencies.putAllDependencies(finalResponseBuilder.getDeps().getDependenciesMap());
+      finalResponseBuilder.clearDependencies();
+      VariableCreationBlobResponseUtils.mergeDependencies(finalResponseBuilder, variablesCreationBlobResponse);
+      VariableCreationBlobResponseUtils.mergeYamlProperties(finalResponseBuilder, variablesCreationBlobResponse);
+      VariableCreationBlobResponseUtils.mergeYamlOutputProperties(finalResponseBuilder, variablesCreationBlobResponse);
     }
 
-    responseBuilder.putAllDependencies(unresolvedDependenciesMap);
-    return responseBuilder.build();
+    finalResponseBuilder.setDeps(unresolvedDependencies);
+    return finalResponseBuilder.build();
   }
 
   private VariablesCreationBlobResponse obtainVariablesPerIteration(Map<String, PlanCreatorServiceInfo> services,
-      Map<String, YamlFieldBlob> dependencies, VariablesCreationMetadata metadata) {
+      VariablesCreationBlobResponse.Builder responseBuilder, VariablesCreationMetadata metadata) {
     CompletableFutures<VariablesCreationResponse> completableFutures = new CompletableFutures<>(executor);
+
     for (Map.Entry<String, PlanCreatorServiceInfo> entry : services.entrySet()) {
-      if (!pmsSdkHelper.containsSupportedDependency(entry.getValue(), dependencies)) {
+      if (!pmsSdkHelper.containsSupportedDependencyByYamlPath(entry.getValue(), responseBuilder.getDeps())) {
         continue;
       }
 
       completableFutures.supplyAsync(() -> {
         try {
-          return entry.getValue().getPlanCreationClient().createVariablesYaml(
-              VariablesCreationBlobRequest.newBuilder().putAllDependencies(dependencies).setMetadata(metadata).build());
+          return entry.getValue().getPlanCreationClient().createVariablesYaml(VariablesCreationBlobRequest.newBuilder()
+                                                                                  .setDeps(responseBuilder.getDeps())
+                                                                                  .setMetadata(metadata)
+                                                                                  .build());
         } catch (Exception ex) {
           log.error(String.format("Error connecting with service: [%s]. Is this service Running?", entry.getKey()), ex);
           ErrorResponse errorResponse = ErrorResponse.newBuilder()

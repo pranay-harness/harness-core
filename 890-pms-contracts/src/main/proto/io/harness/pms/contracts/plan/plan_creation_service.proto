@@ -86,6 +86,7 @@ message FilterCreationBlobResponse {
 message VariablesCreationBlobRequest {
   map<string, YamlFieldBlob> dependencies = 1;
   VariablesCreationMetadata metadata = 2;
+  Dependencies deps = 3;
 }
 
 message VariablesCreationResponse {
@@ -101,6 +102,7 @@ message VariablesCreationBlobResponse {
   map<string, YamlFieldBlob> resolvedDependencies = 3;
   repeated ErrorResponse errorResponse = 4;
   map<string, YamlOutputProperties> yamlOutputProperties = 5;
+  Dependencies deps = 6;
 }
 
 message ErrorResponse {
