@@ -67,6 +67,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -644,8 +645,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     return query.asList();
   }
 
-  private List<RiskData> getDependentServiceRiskScoreList(ProjectParams projectParams, List<String> dependentServices,
-      Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap) {
+  private List<RiskData> getSortedDependentServiceRiskScoreList(ProjectParams projectParams,
+      List<String> dependentServices, Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap) {
     List<RiskData> dependentServiceRiskScores = new ArrayList<>();
     dependentServices.forEach(dependentService -> {
       MonitoredService dependentMonitoredService = getMonitoredService(projectParams, dependentService);
@@ -655,8 +656,17 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                  .build();
       dependentServiceRiskScores.add(latestRiskScoreByServiceMap.get(dependentServiceEnvKey));
     });
-    dependentServiceRiskScores.sort(RiskData::compareTo);
-    return dependentServiceRiskScores;
+    List<RiskData> sortedDependentServiceWithPositiveRiskScores =
+        dependentServiceRiskScores.stream()
+            .filter(x -> x.getHealthScore() != null && x.getHealthScore() >= 0)
+            .collect(Collectors.toList());
+    sortedDependentServiceWithPositiveRiskScores.sort(Comparator.comparing(RiskData::getHealthScore));
+    List<RiskData> dependentServiceWithNegativeRiskScores =
+        dependentServiceRiskScores.stream()
+            .filter(x -> x.getHealthScore() == null || x.getHealthScore() < 0)
+            .collect(Collectors.toList());
+    sortedDependentServiceWithPositiveRiskScores.addAll(dependentServiceWithNegativeRiskScores);
+    return sortedDependentServiceWithPositiveRiskScores;
   }
 
   private Map<ServiceEnvKey, RiskData> getLatestRiskScoreByServiceMap(
@@ -687,21 +697,18 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Override
   public PageResponse<MonitoredServiceListItemDTO> list(ProjectParams projectParams, String environmentIdentifier,
       Integer offset, Integer pageSize, String filter, boolean servicesAtRiskFilter) {
-    List<MonitoredServiceListItemDTOBuilder> monitoredServiceListItemDTOS = new ArrayList<>();
     List<MonitoredService> monitoredServices = getMonitoredServicesFilteredByEnvIDAndTextAndSortedByLastUpdatedTime(
         projectParams, environmentIdentifier, filter);
     Map<String, MonitoredService> idToMonitoredServiceMap =
         monitoredServices.stream().collect(Collectors.toMap(MonitoredService::getIdentifier, Function.identity()));
-    Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap = new HashMap<>();
+    Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap =
+        getLatestRiskScoreByServiceMap(projectParams, monitoredServices);
+    List<MonitoredServiceListItemDTOBuilder> monitoredServiceListItemDTOS =
+        getMonitoredServicesAtRisk(monitoredServices, latestRiskScoreByServiceMap, servicesAtRiskFilter)
+            .stream()
+            .map(monitoredService -> toMonitorServiceListDTO(monitoredService))
+            .collect(Collectors.toList());
 
-    if (monitoredServices != null) {
-      latestRiskScoreByServiceMap = getLatestRiskScoreByServiceMap(projectParams, monitoredServices);
-      monitoredServiceListItemDTOS =
-          getMonitoredServicesAtRisk(monitoredServices, latestRiskScoreByServiceMap, servicesAtRiskFilter)
-              .stream()
-              .map(monitoredService -> toMonitorServiceListDTO(monitoredService))
-              .collect(Collectors.toList());
-    }
     PageResponse<MonitoredServiceListItemDTOBuilder> monitoredServiceListDTOBuilderPageResponse =
         PageUtils.offsetAndLimit(monitoredServiceListItemDTOS, offset, pageSize);
 
@@ -739,7 +746,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       String environmentName = environmentIdNameMap.get(serviceEnvKey.getEnvIdentifier());
       HistoricalTrend historicalTrend = historicalTrendList.get(index);
       RiskData monitoredServiceRiskScore = latestRiskScoreByServiceMap.get(serviceEnvKey);
-      List<RiskData> dependentServiceRiskScoreList = getDependentServiceRiskScoreList(projectParams,
+      List<RiskData> dependentServiceRiskScoreList = getSortedDependentServiceRiskScoreList(projectParams,
           monitoredServiceToDependentServicesMap.get(monitoredServiceListDTOBuilder.getIdentifier()),
           latestRiskScoreByServiceMap);
       index++;
@@ -938,13 +945,20 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     List<RiskData> allServiceRiskScoreList = heatMapService.getLatestRiskScoreForAllServicesList(
         serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getOrgIdentifier(),
         serviceEnvironmentParams.getProjectIdentifier(), serviceEnvIdentifiers);
-    List<RiskData> dependentRiskScoreList = allServiceRiskScoreList.subList(1, allServiceRiskScoreList.size())
-                                                .stream()
-                                                .filter(r -> r.getHealthScore() != null && r.getHealthScore() >= 0)
-                                                .collect(Collectors.toList());
-    RiskData minDependentRiskScore = dependentRiskScoreList.isEmpty()
-        ? RiskData.builder().riskStatus(Risk.NO_DATA).build()
-        : Collections.min(dependentRiskScoreList);
+    List<RiskData> dependentRiskScoreList = allServiceRiskScoreList.subList(1, allServiceRiskScoreList.size());
+    RiskData minDependentRiskScore = null;
+    if (!dependentRiskScoreList.isEmpty()) {
+      List<RiskData> filteredRiskScoreList = dependentRiskScoreList.stream()
+                                                 .filter(r -> r.getHealthScore() != null && r.getHealthScore() >= 0)
+                                                 .collect(Collectors.toList());
+      if (filteredRiskScoreList.isEmpty()) {
+        minDependentRiskScore = dependentRiskScoreList.contains(RiskData.builder().riskStatus(Risk.NO_ANALYSIS).build())
+            ? RiskData.builder().riskStatus(Risk.NO_ANALYSIS).build()
+            : RiskData.builder().riskStatus(Risk.NO_DATA).build();
+      } else {
+        minDependentRiskScore = Collections.min(filteredRiskScoreList, Comparator.comparing(RiskData::getHealthScore));
+      }
+    }
 
     return HealthScoreDTO.builder()
         .currentHealthScore(allServiceRiskScoreList.get(0))
@@ -1043,21 +1057,16 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
 
   @Override
   public CountServiceDTO getCountOfServices(ProjectParams projectParams, String environmentIdentifier, String filter) {
-    List<MonitoredServiceListItemDTOBuilder> monitoredServiceListItemDTOS = new ArrayList<>();
-    List<MonitoredService> monitoredServices = getMonitoredServicesFilteredByEnvIDAndTextAndSortedByLastUpdatedTime(
+    List<MonitoredService> allMonitoredServices = getMonitoredServicesFilteredByEnvIDAndTextAndSortedByLastUpdatedTime(
         projectParams, environmentIdentifier, filter);
-    if (monitoredServices != null) {
-      Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap =
-          getLatestRiskScoreByServiceMap(projectParams, monitoredServices);
-      monitoredServiceListItemDTOS = getMonitoredServicesAtRisk(monitoredServices, latestRiskScoreByServiceMap, true)
-                                         .stream()
-                                         .map(monitoredService -> toMonitorServiceListDTO(monitoredService))
-                                         .collect(Collectors.toList());
-    }
+    Map<ServiceEnvKey, RiskData> latestRiskScoreByServiceMap =
+        getLatestRiskScoreByServiceMap(projectParams, allMonitoredServices);
+    List<MonitoredService> monitoredServicesAtRisk =
+        getMonitoredServicesAtRisk(allMonitoredServices, latestRiskScoreByServiceMap, true);
 
     return CountServiceDTO.builder()
-        .allServicesCount(monitoredServices.size())
-        .servicesAtRiskCount(monitoredServiceListItemDTOS.size())
+        .allServicesCount(allMonitoredServices.size())
+        .servicesAtRiskCount(monitoredServicesAtRisk.size())
         .build();
   }
 }

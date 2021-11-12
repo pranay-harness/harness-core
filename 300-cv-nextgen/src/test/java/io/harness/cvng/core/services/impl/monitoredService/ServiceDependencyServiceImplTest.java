@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.rule.OwnerRule.KAPIL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
@@ -22,6 +23,7 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -142,6 +144,23 @@ public class ServiceDependencyServiceImplTest extends CvNextGenTestBase {
     serviceDependencies = serviceDependencyService.getServiceDependencies(
         context.getProjectParams(), Lists.newArrayList(context.getServiceIdentifier()));
     assertThat(serviceDependencies.size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetMonitoredServiceToDependentServicesMap() {
+    Set<ServiceDependencyDTO> serviceDependencyDTOS = new HashSet<>(generateRandomRefs(3));
+    createOrDeleteFromContext(context, serviceDependencyDTOS);
+    Map<String, List<String>> monitoredServiceToDependentServicesMap =
+        serviceDependencyService.getMonitoredServiceToDependentServicesMap(
+            context.getProjectParams(), Lists.newArrayList(context.getServiceIdentifier()));
+    assertThat(monitoredServiceToDependentServicesMap.get(context.getServiceIdentifier()).size()).isEqualTo(3);
+
+    createOrDeleteFromContext(context, Sets.newHashSet());
+    monitoredServiceToDependentServicesMap = serviceDependencyService.getMonitoredServiceToDependentServicesMap(
+        context.getProjectParams(), Lists.newArrayList(context.getServiceIdentifier()));
+    assertThat(monitoredServiceToDependentServicesMap.get(context.getServiceIdentifier()).size()).isEqualTo(0);
   }
 
   private void createOrDeleteFromContext(Context context, Set<ServiceDependencyDTO> serviceDependencyDTOS) {
