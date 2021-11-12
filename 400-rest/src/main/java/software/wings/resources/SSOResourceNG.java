@@ -99,10 +99,10 @@ public class SSOResourceNG {
   public RestResponse<SSOConfig> uploadSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
-      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
-      @FormDataParam("logoutUrl") String logoutUrl) {
-    return new RestResponse<>(ssoService.uploadSamlConfiguration(
-        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled, @FormDataParam("logoutUrl") String logoutUrl,
+      @FormDataParam("entityIdentifier") String entityIdentifier) {
+    return new RestResponse<>(ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName,
+        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier));
   }
 
   @PUT
@@ -113,10 +113,10 @@ public class SSOResourceNG {
   public RestResponse<SSOConfig> updateSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
-      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
-      @FormDataParam("logoutUrl") String logoutUrl) {
-    return new RestResponse<>(ssoService.updateSamlConfiguration(
-        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled, @FormDataParam("logoutUrl") String logoutUrl,
+      @FormDataParam("entityIdentifier") String entityIdentifier) {
+    return new RestResponse<>(ssoService.updateSamlConfiguration(accountId, uploadedInputStream, displayName,
+        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier));
   }
 
   @DELETE

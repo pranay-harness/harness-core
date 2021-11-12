@@ -1,7 +1,12 @@
 package io.harness;
 
+import static io.harness.lock.DistributedLockImplementation.NOOP;
+
 import static org.mockito.Mockito.mock;
 
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
@@ -16,13 +21,20 @@ import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.redis.RedisConfig;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.secretkey.AESSecretKeyServiceImpl;
+import io.harness.secretkey.SecretKeyConstants;
+import io.harness.secretkey.SecretKeyService;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secrets.SecretsAuditService;
@@ -33,6 +45,7 @@ import io.harness.secrets.setupusage.SecretSetupUsageBuilders;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.SMCoreRegistrars;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -40,12 +53,14 @@ import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -57,6 +72,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
 public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -93,9 +109,49 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
+      }
+    });
+
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
+      }
+    });
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisLockConfig() {
+        return RedisConfig.builder().build();
+      }
+
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return NOOP;
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
+    modules.add(new SpringPersistenceTestModule());
+    modules.add(FeatureFlagModule.getInstance());
 
     modules.add(new AbstractModule() {
       @Override
@@ -194,6 +250,11 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
         bind(SecretsAuditService.class).toInstance(mock(SecretsAuditService.class));
         bind(SecretsRBACService.class).toInstance(mock(SecretsRBACService.class));
         bind(SecretsManagerRBACService.class).toInstance(mock(SecretsManagerRBACService.class));
+
+        binder()
+            .bind(SecretKeyService.class)
+            .annotatedWith(Names.named(SecretKeyConstants.AES_SECRET_KEY))
+            .to(AESSecretKeyServiceImpl.class);
       }
     });
     modules.add(VersionModule.getInstance());

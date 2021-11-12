@@ -95,12 +95,13 @@ public class GitEntityServiceImpl implements GitEntityService {
   }
 
   @Override
-  public GitSyncEntityDTO get(String accountIdentifier, String completeFilePath, String repoUrl, String branch) {
+  public Optional<GitSyncEntityDTO> get(
+      String accountIdentifier, String completeFilePath, String repoUrl, String branch) {
     final Optional<GitFileLocation> entityDetails =
         gitFileLocationRepository.findByAccountIdAndCompleteGitPathAndRepoAndBranch(
             accountIdentifier, completeFilePath, repoUrl, branch);
     if (entityDetails.isPresent()) {
-      return buildGitSyncEntityDTO(entityDetails.get());
+      return Optional.ofNullable(buildGitSyncEntityDTO(entityDetails.get()));
     }
     // todo @deepak; Temprory fix, will add migration later
     List<GitFileLocation> gitFileLocations =
@@ -108,12 +109,10 @@ public class GitEntityServiceImpl implements GitEntityService {
     for (GitFileLocation gitFileLocation : gitFileLocations) {
       if (completeFilePath.equals(
               createFilePath(gitFileLocation.getFolderPath(), gitFileLocation.getEntityGitPath()))) {
-        return buildGitSyncEntityDTO(gitFileLocation);
+        return Optional.ofNullable(buildGitSyncEntityDTO(gitFileLocation));
       }
     }
-    throw new InvalidRequestException(
-        String.format("No git sync entity exists for the file path %s, in repoUrl %s and branch %s", completeFilePath,
-            repoUrl, branch));
+    return Optional.empty();
   }
 
   private GitSyncEntityListDTO buildGitSyncEntityListDTO(

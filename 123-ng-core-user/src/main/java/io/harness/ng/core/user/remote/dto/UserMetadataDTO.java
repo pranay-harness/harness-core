@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(PL)
+@Schema(name = "UserMetadata", description = "This is the view of the UserMetadata entity defined in Harness")
 public class UserMetadataDTO {
   String name;
   @ApiModelProperty(required = true) @NotEmpty String email;

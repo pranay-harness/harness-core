@@ -10,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,8 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("criteriaSpecWrapperDTO")
+@Schema(name = "CriteriaSpecWrapper",
+    description = "This contains details of Criteria Specifications such as Criteria Type")
 public class CriteriaSpecWrapperDTO {
   @NotNull CriteriaSpecType type;
 

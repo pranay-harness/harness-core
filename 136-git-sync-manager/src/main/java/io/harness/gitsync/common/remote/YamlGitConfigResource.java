@@ -1,5 +1,14 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_CODE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_CODE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toSetupGitSyncDTO;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTO;
@@ -17,10 +26,18 @@ import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.helper.GitEnabledHelper;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -41,6 +58,21 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Tag(name = "Git Sync", description = "Contains APIs for CRUD on Git Sync")
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = BAD_REQUEST_CODE, description = BAD_REQUEST_PARAM_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = INTERNAL_SERVER_ERROR_CODE, description = INTERNAL_SERVER_ERROR_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+    })
 @OwnedBy(DX)
 public class YamlGitConfigResource {
   private final YamlGitConfigService yamlGitConfigService;
@@ -49,8 +81,13 @@ public class YamlGitConfigResource {
   private final GitEnabledHelper gitEnabledHelper;
   @POST
   @ApiOperation(value = "Create a Git Sync", nickname = "postGitSync")
-  public GitSyncConfigDTO create(
-      @QueryParam("accountIdentifier") @NotEmpty String accountId, @NotNull @Valid GitSyncConfigDTO request) {
+  @Operation(operationId = "createGitSyncConfig", summary = "Creates Git Sync Config in given scope",
+      responses =
+      { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Successfully created Git Sync Config") })
+  public GitSyncConfigDTO
+  create(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountIdentifier") @NotEmpty String accountId,
+      @RequestBody(
+          required = true, description = "Details of Git Sync Config") @NotNull @Valid GitSyncConfigDTO request) {
     // todo(abhinav): when git sync comes at other level see for new permission
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, request.getOrgIdentifier(), request.getProjectIdentifier()),
@@ -62,8 +99,12 @@ public class YamlGitConfigResource {
 
   @PUT
   @ApiOperation(value = "Update Git Sync by id", nickname = "putGitSync")
-  public GitSyncConfigDTO update(@QueryParam("accountIdentifier") @NotEmpty String accountId,
-      @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
+  @Operation(operationId = "updateGitSyncConfig", summary = "Update existing Git Sync Config by Identifier",
+      responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Updated Git Sync Config") })
+  public GitSyncConfigDTO
+  update(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountIdentifier") @NotEmpty String accountId,
+      @RequestBody(required = true,
+          description = "Details of Git Sync Config") @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, updateGitSyncConfigDTO.getOrgIdentifier(),
                                                   updateGitSyncConfigDTO.getProjectIdentifier()),
         Resource.of(ResourceTypes.PROJECT, updateGitSyncConfigDTO.getProjectIdentifier()), EDIT_PROJECT_PERMISSION);
@@ -76,10 +117,19 @@ public class YamlGitConfigResource {
   @PUT
   @Path("{identifier}/folder/{folderIdentifier}/default")
   @ApiOperation(value = "Update Git Sync default by id", nickname = "putGitSyncDefault")
-  public GitSyncConfigDTO updateDefault(@QueryParam("projectId") String projectId,
-      @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("identifier") @NotEmpty String identifier,
-      @PathParam("folderIdentifier") @NotEmpty String folderIdentifier) {
+  @Operation(operationId = "updateDefaultFolder",
+      summary = "Update existing Git Sync Config default root folder by Identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Updated Git Sync Config default root folder")
+      })
+  public GitSyncConfigDTO
+  updateDefault(@Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectId") String projectId,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("organizationId") String organizationId,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") @NotEmpty String accountId,
+      @Parameter(description = "Git Sync Config Id") @PathParam("identifier") @NotEmpty String identifier,
+      @Parameter(description = "Folder Id") @PathParam("folderIdentifier") @NotEmpty String folderIdentifier) {
     YamlGitConfigDTO yamlGitConfigDTO =
         yamlGitConfigService.updateDefault(projectId, organizationId, accountId, identifier, folderIdentifier);
     return toSetupGitSyncDTO(yamlGitConfigDTO);
@@ -87,9 +137,18 @@ public class YamlGitConfigResource {
 
   @GET
   @ApiOperation(value = "List Git Sync", nickname = "listGitSync")
-  public List<GitSyncConfigDTO> list(@QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationId,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountId) {
+  @Operation(operationId = "getGitSyncConfigList", summary = "Lists Git Sync Config for the given scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "List of Git Sync Config for the given scope")
+      })
+  public List<GitSyncConfigDTO>
+  list(
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationId,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountId) {
     List<YamlGitConfigDTO> yamlGitConfigDTOs = yamlGitConfigService.list(projectId, organizationId, accountId);
     return yamlGitConfigDTOs.stream().map(YamlGitConfigMapper::toSetupGitSyncDTO).collect(Collectors.toList());
   }
@@ -97,10 +156,19 @@ public class YamlGitConfigResource {
   @GET
   @Path("/git-sync-enabled")
   @ApiOperation(value = "Is Git Sync EnabledForProject", nickname = "isGitSyncEnabled")
-  public GitEnabledDTO isGitSyncEnabled(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationIdentifier) {
+  @Operation(operationId = "isGitSyncEnabled", summary = "Check whether Git Sync is enabled for given scope or not",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Result of whether Git Sync is enabled for the scope")
+      })
+  public GitEnabledDTO
+  isGitSyncEnabled(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String organizationIdentifier) {
     return gitEnabledHelper.getGitEnabledDTO(projectIdentifier, organizationIdentifier, accountIdentifier);
   }
 }

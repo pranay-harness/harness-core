@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Schema(name = "ApproverInputInfo", description = "This contains details of Approver Inputs")
 public class ApproverInputInfoDTO {
   @NotEmpty String name;
   String defaultValue;

@@ -10,6 +10,7 @@ import io.harness.data.validator.EntityName;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(NON_NULL)
+@Schema(name = "ServiceRequest", description = "This is the ServiceRequest entity defined in Harness")
 public class ServiceRequestDTO {
   @EntityIdentifier String identifier;
   String orgIdentifier;

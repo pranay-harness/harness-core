@@ -644,10 +644,10 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      boolean invalid, String invalidYaml) {
-    return defaultConnectorService.markEntity(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalid, invalidYaml);
+  public boolean markEntityInvalid(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String invalidYaml) {
+    return defaultConnectorService.markEntityInvalid(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, invalidYaml);
   }
 
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {

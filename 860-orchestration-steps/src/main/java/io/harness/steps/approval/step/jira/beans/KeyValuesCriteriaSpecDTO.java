@@ -7,6 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("keyValueCriteriaSpec")
+@Schema(name = "KeyValuesCriteriaSpec", description = "This contains details of Key-Value Criteria specifications")
 public class KeyValuesCriteriaSpecDTO implements CriteriaSpecDTO {
   boolean matchAnyCondition;
   @NotNull List<ConditionDTO> conditions;

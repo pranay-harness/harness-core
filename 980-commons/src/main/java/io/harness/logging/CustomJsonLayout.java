@@ -10,6 +10,12 @@ import ch.qos.logback.classic.pattern.ThrowableHandlingConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.contrib.jackson.JacksonJsonFormatter;
 import ch.qos.logback.contrib.json.JsonLayoutBase;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,6 +35,7 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
   private static final String MESSAGE = "message";
   private static final String HARNESS = "harness";
   private static final String EXCEPTION = "exception";
+  private static final int MAX_BYTES = 20480;
 
   private final ThrowableHandlingConverter throwableProxyConverter;
 
@@ -63,7 +70,7 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
   protected Map<String, Object> toJsonMap(ILoggingEvent event) {
     Map<String, Object> map = new HashMap<>();
 
-    final String formattedMessage = event.getFormattedMessage();
+    final String formattedMessage = truncateLog(event.getFormattedMessage());
 
     addTimestamp(TIMESTAMP, true, event.getTimeStamp(), map);
     add(SEVERITY, true, String.valueOf(event.getLevel()), map);
@@ -76,7 +83,7 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
 
     if (log.isDebugEnabled() && event.getLevel().toInt() >= Level.INFO.toInt()) {
       for (Entry<String, String> entry : event.getMDCPropertyMap().entrySet()) {
-        if (formattedMessage.contains(entry.getValue())) {
+        if (formattedMessage != null && formattedMessage.contains(entry.getValue())) {
           try (AutoLogContext ignore = new MessagePatternLogContext(event.getMessage(), OVERRIDE_ERROR);
                AutoLogContext ignore2 = new MdcKeyLogContext(entry.getKey(), OVERRIDE_ERROR)) {
             log.debug("MDC table and the logging message have the same value {}", entry.getValue());
@@ -95,5 +102,29 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
         map.put(EXCEPTION, ex);
       }
     }
+  }
+
+  private static String truncateLog(final String message) {
+    if (message == null) {
+      return null;
+    }
+    final Charset charset = StandardCharsets.UTF_8;
+    final CharsetDecoder decoder = charset.newDecoder();
+    final byte[] sba = message.getBytes(charset);
+    if (sba.length <= MAX_BYTES) {
+      return message;
+    }
+    // Ensure truncation by having byte buffer = maxBytes
+    final ByteBuffer bb = ByteBuffer.wrap(sba, 0, MAX_BYTES);
+    final String endMessage = "... [message truncated because it was too long]";
+    // allocate slightly more so that we can append the info at the end
+    final byte[] endMessageBytes = endMessage.getBytes(charset);
+    final CharBuffer cb = CharBuffer.allocate(MAX_BYTES + endMessageBytes.length);
+    // Ignore an incomplete character
+    decoder.onMalformedInput(CodingErrorAction.IGNORE);
+    decoder.decode(bb, cb, true);
+    decoder.flush(cb);
+    cb.append(endMessage);
+    return new String(cb.array(), 0, cb.position());
   }
 }

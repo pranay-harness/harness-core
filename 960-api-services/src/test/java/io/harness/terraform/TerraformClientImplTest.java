@@ -16,7 +16,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
-import io.harness.exception.TerraformCommandExecutionException;
+import io.harness.exception.runtime.TerraformCliRuntimeException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.PlanJsonLogOutputStream;
@@ -249,7 +249,7 @@ public class TerraformClientImplTest extends CategoryTest {
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
 
-  @Test(expected = TerraformCommandExecutionException.class)
+  @Test(expected = TerraformCliRuntimeException.class)
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testCommandFailureThrowsException() throws InterruptedException, TimeoutException, IOException {

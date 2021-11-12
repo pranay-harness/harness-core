@@ -406,7 +406,7 @@ public class PipelineResourceTest extends CategoryTest {
                              .rootFolder("root/.harness/")
                              .build()))
         .when(pmsPipelineService)
-        .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
+        .getWithoutIsDeleted(anyString(), anyString(), anyString(), anyString());
 
     doReturn(PipelineExecutionSummaryDTO.builder()
                  .pipelineIdentifier(PIPELINE_IDENTIFIER)
@@ -416,7 +416,7 @@ public class PipelineResourceTest extends CategoryTest {
         .toDto(executionSummaryEntity, executionSummaryEntity.getEntityGitDetails());
 
     ResponseDTO<PipelineExecutionDetailDTO> executionDetails = pipelineResource.getExecutionDetail(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, STAGE_NODE_ID, PLAN_EXECUTION_ID);
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, STAGE_NODE_ID, PLAN_EXECUTION_ID);
 
     assertThat(executionDetails.getData().getPipelineExecutionSummary().getPipelineIdentifier())
         .isEqualTo(PIPELINE_IDENTIFIER);
@@ -439,8 +439,8 @@ public class PipelineResourceTest extends CategoryTest {
         .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, invalidPlanExecutionId, false);
 
     assertThatThrownBy(()
-                           -> pipelineResource.getExecutionDetail(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null,
-                               STAGE_NODE_ID, invalidPlanExecutionId))
+                           -> pipelineResource.getExecutionDetail(
+                               ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, STAGE_NODE_ID, invalidPlanExecutionId))
         .isInstanceOf(InvalidRequestException.class);
   }
 }
