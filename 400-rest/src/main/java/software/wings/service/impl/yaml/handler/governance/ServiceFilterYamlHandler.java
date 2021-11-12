@@ -18,6 +18,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ServiceFilterYamlHandler extends BaseYamlHandler<Yaml, ServiceFilter> {
@@ -33,9 +34,14 @@ public class ServiceFilterYamlHandler extends BaseYamlHandler<Yaml, ServiceFilte
     if (ServiceFilterType.ALL == bean.getFilterType()) {
       return Yaml.builder().filterType(bean.getFilterType().name()).build();
     }
+
+    // Preserve the order of services
     return Yaml.builder()
         .filterType(bean.getFilterType().name())
-        .services(serviceResourceService.getNames(accountId, bean.getServices()))
+        .services(serviceResourceService.fetchServicesByUuidsByAccountId(accountId, bean.getServices())
+                      .stream()
+                      .map(Service::getName)
+                      .collect(Collectors.toList()))
         .build();
   }
 

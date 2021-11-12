@@ -15,9 +15,11 @@ import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
+import java.util.List;
 
 @OwnedBy(CDC)
 public class RetryInterruptHandler implements InterruptHandler {
@@ -41,11 +43,19 @@ public class RetryInterruptHandler implements InterruptHandler {
       throw new InvalidRequestException(
           "NodeExecution is not in a retryable status. Current Status: " + nodeExecution.getStatus());
     }
+    if (nodeExecution.isOldRetry()) {
+      throw new InvalidRequestException("This Node is already Retried");
+    }
 
     if (ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
       throw new InvalidRequestException("Node Retry is supported only for Leaf Nodes");
     }
     interrupt.setState(State.PROCESSING);
+    List<Interrupt> activeInterrupts = interruptService.fetchActiveInterruptsForNodeExecutionByType(
+        interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(), InterruptType.RETRY);
+    if (activeInterrupts.size() > 0) {
+      throw new InvalidRequestException("A Retry Interrupt is already in process");
+    }
     return interruptService.save(interrupt);
   }
 
@@ -59,6 +69,6 @@ public class RetryInterruptHandler implements InterruptHandler {
     retryHelper.retryNodeExecution(
         interrupt.getNodeExecutionId(), interrupt.getParameters(), interrupt.getUuid(), interrupt.getInterruptConfig());
     planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);
-    return interruptService.markProcessed(interrupt.getUuid(), State.PROCESSED_SUCCESSFULLY);
+    return interrupt;
   }
 }

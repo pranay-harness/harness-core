@@ -13,6 +13,8 @@ import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
 import io.harness.delegate.events.DelegateGroupDeleteEvent;
 import io.harness.delegate.events.DelegateGroupUpsertEvent;
+import io.harness.delegate.events.DelegateNgTokenCreateEvent;
+import io.harness.delegate.events.DelegateNgTokenRevokeEvent;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.remote.NGObjectMapperHelper;
@@ -41,6 +43,10 @@ public class DelegateOutboxEventHandler implements OutboxEventHandler {
           return handleDelegateUpsertEvent(outboxEvent);
         case "DelegateGroupDeleteEvent":
           return handleDelegateDeleteEvent(outboxEvent);
+        case DelegateNgTokenCreateEvent.DELEGATE_TOKEN_CREATE_EVENT:
+          return handleDelegateNgTokenCreateEvent(outboxEvent);
+        case DelegateNgTokenRevokeEvent.DELEGATE_TOKEN_REVOKE_EVENT:
+          return handleDelegateNgTokenRevokeEvent(outboxEvent);
         default:
           return false;
       }
@@ -73,6 +79,38 @@ public class DelegateOutboxEventHandler implements OutboxEventHandler {
                                 .action(Action.DELETE)
                                 .module(ModuleType.CORE)
                                 .newYaml(getYamlString(delegateGroupDeleteEvent.getDelegateSetupDetails()))
+                                .timestamp(outboxEvent.getCreatedAt())
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .insertId(outboxEvent.getId())
+                                .build();
+    return auditClientService.publishAudit(auditEntry, globalContext);
+  }
+
+  private boolean handleDelegateNgTokenCreateEvent(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    DelegateNgTokenCreateEvent delegateNgTokenCreateEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), DelegateNgTokenCreateEvent.class);
+    AuditEntry auditEntry = AuditEntry.builder()
+                                .action(Action.CREATE)
+                                .module(ModuleType.CORE)
+                                .newYaml(getYamlString(delegateNgTokenCreateEvent.getToken()))
+                                .timestamp(outboxEvent.getCreatedAt())
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .insertId(outboxEvent.getId())
+                                .build();
+    return auditClientService.publishAudit(auditEntry, globalContext);
+  }
+
+  private boolean handleDelegateNgTokenRevokeEvent(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    DelegateNgTokenRevokeEvent delegateNgTokenRevokeEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), DelegateNgTokenRevokeEvent.class);
+    AuditEntry auditEntry = AuditEntry.builder()
+                                .action(Action.REVOKE_TOKEN)
+                                .module(ModuleType.CORE)
+                                .newYaml(getYamlString(delegateNgTokenRevokeEvent.getToken()))
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))

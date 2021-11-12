@@ -5,6 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(HarnessTeam.PL)
 public interface ManagerExecutable {
-  Boolean getExecuteOnManager();
-  void setExecuteOnManager(Boolean setExecuteOnManager);
+  Boolean getExecuteOnDelegate();
+  void setExecuteOnDelegate(Boolean executeOnDelegate);
 }

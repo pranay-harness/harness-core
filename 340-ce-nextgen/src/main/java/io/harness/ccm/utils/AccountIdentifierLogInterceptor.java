@@ -22,7 +22,7 @@ public class AccountIdentifierLogInterceptor implements MethodInterceptor {
     for (int i = 0; i < parameters.length; i++) {
       Parameter parameter = parameters[i];
       Object argument = methodInvocation.getArguments()[i];
-      if (parameter.isAnnotationPresent(AccountIdentifier.class)) {
+      if (argument != null && parameter.isAnnotationPresent(AccountIdentifier.class)) {
         return Optional.of((String) argument);
       }
     }

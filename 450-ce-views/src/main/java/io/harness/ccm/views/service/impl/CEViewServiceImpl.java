@@ -1,8 +1,14 @@
 package io.harness.ccm.views.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.bigQuery.BigQueryService;
+import io.harness.ccm.budget.utils.BudgetUtils;
+import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.views.dao.CEReportScheduleDao;
 import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.dto.DefaultViewIdDto;
@@ -30,6 +36,8 @@ import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.ccm.views.graphql.QLCEViewMetadataFilter;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
+import io.harness.ccm.views.graphql.ViewCostData;
+import io.harness.ccm.views.graphql.ViewsQueryHelper;
 import io.harness.ccm.views.helper.ViewFilterBuilderHelper;
 import io.harness.ccm.views.helper.ViewTimeRangeHelper;
 import io.harness.ccm.views.service.CEViewService;
@@ -41,6 +49,7 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -60,6 +69,9 @@ public class CEViewServiceImpl implements CEViewService {
   @Inject private ViewCustomFieldService viewCustomFieldService;
   @Inject private ViewTimeRangeHelper viewTimeRangeHelper;
   @Inject private ViewFilterBuilderHelper viewFilterBuilderHelper;
+  @Inject private ViewsQueryHelper viewsQueryHelper;
+  @Inject private BigQueryHelper bigQueryHelper;
+  @Inject private BigQueryService bigQueryService;
 
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
   private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(100) has been reached";
@@ -87,6 +99,63 @@ public class CEViewServiceImpl implements CEViewService {
     ceView.setUuid(null);
     ceViewDao.save(ceView);
     return ceView;
+  }
+
+  @Override
+  public Double getLastMonthCostForPerspective(String accountId, String perspectiveId) {
+    if (this.get(perspectiveId) == null) {
+      throw new InvalidRequestException(BudgetUtils.INVALID_PERSPECTIVE_ID_EXCEPTION);
+    }
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(perspectiveId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartOfMonth(true), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(
+        BudgetUtils.getStartOfMonth(false) - BudgetUtils.ONE_DAY_MILLIS, BEFORE));
+    return getCostForPerspective(accountId, filters);
+  }
+
+  private double getCostForPerspective(String accountId, List<QLCEViewFilterWrapper> filters) {
+    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
+    ViewCostData costData = viewsBillingService.getCostData(bigQueryService.get(), filters,
+        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable,
+        viewsQueryHelper.buildQueryParams(accountId, false));
+    return costData.getCost();
+  }
+
+  @Override
+  public Double getForecastCostForPerspective(String accountId, String perspectiveId) {
+    if (this.get(perspectiveId) == null) {
+      throw new InvalidRequestException(BudgetUtils.INVALID_PERSPECTIVE_ID_EXCEPTION);
+    }
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    long startTime = BudgetUtils.getStartTimeForForecasting();
+    long endTime = BudgetUtils.getEndOfMonthForCurrentBillingCycle();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(perspectiveId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(startTime, AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(endTime, BEFORE));
+    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
+    ViewCostData costDataForForecast =
+        ViewCostData.builder()
+            .cost(
+                viewsBillingService
+                    .getCostData(bigQueryService.get(), filters, viewsQueryHelper.getPerspectiveTotalCostAggregation(),
+                        cloudProviderTable, viewsQueryHelper.buildQueryParams(accountId, false))
+                    .getCost())
+            .minStartTime(1000 * startTime)
+            .maxStartTime(1000 * BudgetUtils.getStartOfCurrentDay() - BudgetUtils.ONE_DAY_MILLIS)
+            .build();
+    double costTillNow = getActualCostForPerspectiveBudget(accountId, perspectiveId);
+    return viewsQueryHelper.getRoundedDoubleValue(
+        costTillNow + viewsQueryHelper.getForecastCost(costDataForForecast, Instant.ofEpochMilli(endTime)));
+  }
+
+  @Override
+  public double getActualCostForPerspectiveBudget(String accountId, String perspectiveId) {
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(perspectiveId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartOfMonthForCurrentBillingCycle(), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getEndOfMonthForCurrentBillingCycle(), BEFORE));
+    return getCostForPerspective(accountId, filters);
   }
 
   public boolean validateView(CEView ceView) {

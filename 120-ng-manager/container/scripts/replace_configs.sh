@@ -115,6 +115,10 @@ if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.pipelineServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
 
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.ciManagerSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -368,3 +372,4 @@ replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SEC
 replace_key_value pipelineServiceClientConfig.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
 replace_key_value scopeAccessCheckEnabled "${SCOPE_ACCESS_CHECK:-true}"
 replace_key_value licenseConfig.deployVariant "$LICENSE_DEPLOY_VARIANT"
+replace_key_value ciManagerClientConfig.baseUrl "$CI_MANAGER_SERVICE_CLIENT_BASEURL"
