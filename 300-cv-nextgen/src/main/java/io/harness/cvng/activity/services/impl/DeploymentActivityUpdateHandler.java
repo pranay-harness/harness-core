@@ -5,6 +5,7 @@ import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
 
 import com.google.inject.Inject;
+import org.apache.commons.collections4.CollectionUtils;
 
 public class DeploymentActivityUpdateHandler extends ActivityUpdateHandler<DeploymentActivity> {
   @Inject ActivityService activityService;
@@ -17,6 +18,8 @@ public class DeploymentActivityUpdateHandler extends ActivityUpdateHandler<Deplo
 
   @Override
   public void handleUpdate(DeploymentActivity existingActivity, DeploymentActivity newActivity) {
-    activityService.updateActivityStatus(existingActivity);
+    if (CollectionUtils.isNotEmpty(existingActivity.getVerificationJobInstanceIds())) {
+      activityService.updateActivityStatus(existingActivity);
+    }
   }
 }

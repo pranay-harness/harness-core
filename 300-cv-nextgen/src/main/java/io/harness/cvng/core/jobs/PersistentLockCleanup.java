@@ -1,4 +1,4 @@
-package io.harness.cvng.maintenance;
+package io.harness.cvng.core.jobs;
 
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 

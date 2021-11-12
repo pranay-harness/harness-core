@@ -3,11 +3,8 @@ package io.harness.cvng.statemachine.services;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.metrics.CVNGMetricsUtils;
-import io.harness.cvng.metrics.beans.CVNGMetricAnalysisContext;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
@@ -15,7 +12,6 @@ import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrches
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
-import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
@@ -39,7 +35,6 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private AnalysisStateMachineService stateMachineService;
 
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private MetricService metricService;
 
   @Override
   public void queueAnalysis(String verificationTaskId, Instant startTime, Instant endTime) {
@@ -76,27 +71,6 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     Preconditions.checkNotNull(inputs.getVerificationTaskId(), "verificationTaskId can not be null");
     Preconditions.checkNotNull(inputs.getStartTime(), "startTime can not be null");
     Preconditions.checkNotNull(inputs.getEndTime(), "endTime can not be null");
-  }
-
-  @Override
-  public void recordMetrics() {
-    log.info("Recording Orchestrator Metrics");
-    List<AnalysisOrchestrator> orchestrators =
-        hPersistence.createQuery(AnalysisOrchestrator.class, excludeAuthority)
-            .field(AnalysisOrchestratorKeys.status)
-            .notIn(Arrays.asList(AnalysisStatus.COMPLETED, AnalysisStatus.SUCCESS))
-            .asList();
-    if (isNotEmpty(orchestrators)) {
-      orchestrators.stream()
-          .filter(orchestrator -> orchestrator.getAnalysisStateMachineQueue().size() > 5)
-          .forEach(orchestrator -> {
-            try (CVNGMetricAnalysisContext context =
-                     new CVNGMetricAnalysisContext(orchestrator.getAccountId(), orchestrator.getVerificationTaskId())) {
-              metricService.recordMetric(
-                  CVNGMetricsUtils.ORCHESTRATOR_QUEUE_SIZE, orchestrator.getAnalysisStateMachineQueue().size());
-            }
-          });
-    }
   }
 
   @Override
