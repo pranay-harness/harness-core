@@ -30,8 +30,6 @@ import org.mockito.MockitoAnnotations;
 
 public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase {
   @Inject private ConnectorChangeEventMessageProcessor connectorChangeEventMessageProcessor;
-  @Mock private DataCollectionTaskService dataCollectionTaskService;
-  @Mock private KubernetesActivitySourceService kubernetesActivitySourceService;
 
   private String accountIdentifier;
   private String orgIdentifier;
@@ -41,10 +39,6 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase 
   @Before
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
-    FieldUtils.writeField(
-        connectorChangeEventMessageProcessor, "dataCollectionTaskService", dataCollectionTaskService, true);
-    FieldUtils.writeField(
-        connectorChangeEventMessageProcessor, "kubernetesActivitySourceService", kubernetesActivitySourceService, true);
     accountIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
