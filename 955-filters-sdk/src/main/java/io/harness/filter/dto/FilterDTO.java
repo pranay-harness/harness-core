@@ -8,6 +8,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "FilterKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(DX)
+@Schema(name = "Filter", description = "This is the view of the Filter entity defined in Harness")
 public class FilterDTO implements PersistentEntity {
   @NotNull String name;
   @NotNull @EntityIdentifier String identifier;

@@ -1,5 +1,7 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -111,9 +113,10 @@ public class OrganizationResource {
       })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = CREATE_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse>
-  create(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @RequestBody(required = true, description = "Details of the Organization to be created") @NotNull
-      @Valid OrganizationRequest organizationDTO) {
+  create(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @RequestBody(required = true,
+          description = "Details of the Organization to create") @NotNull @Valid OrganizationRequest organizationDTO) {
     if (DEFAULT_ORG_IDENTIFIER.equals(organizationDTO.getOrganization().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as org identifier", DEFAULT_ORG_IDENTIFIER), USER);
@@ -133,8 +136,10 @@ public class OrganizationResource {
       })
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse>
-  get(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+  get(@Parameter(description = ORG_PARAM_MESSAGE) @NotNull @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, identifier);
     if (!organizationOptional.isPresent()) {
       throw new NotFoundException(String.format("Organization with identifier [%s] not found", identifier));
@@ -150,13 +155,15 @@ public class OrganizationResource {
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns a page of Organization")
+        ApiResponse(responseCode = "default", description = "Returns Organization details")
       })
   public ResponseDTO<PageResponse<OrganizationResponse>>
-  list(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Parameter(description = "list of projectIdentifiers to filter results by") @QueryParam(
+  list(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = "list of Project Ids for filtering results") @QueryParam(
           NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -177,10 +184,12 @@ public class OrganizationResource {
   @ApiOperation(value = "Get All Organizations list", nickname = "getAllOrganizationList", hidden = true)
   @InternalApi
   public ResponseDTO<PageResponse<OrganizationResponse>> listAllOrganizations(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Parameter(description = "list of projectIdentifiers to filter results by") @QueryParam(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = "list of ProjectIdentifiers to filter results by") @QueryParam(
           NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @Parameter(description = "Search term") @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
     Page<Organization> orgsPage = organizationService.listPermittedOrgs(accountIdentifier,
@@ -200,10 +209,13 @@ public class OrganizationResource {
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = EDIT_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse>
   update(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @NotNull @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @RequestBody(required = true,
-          description = "This is the updated Organization. This should have all the fields not just the updated ones")
+          description =
+              "This is the updated Organization. Please provide values for all fields, not just the fields you are updating")
       @NotNull @Valid OrganizationRequest organizationDTO) {
     if (DEFAULT_ORG_IDENTIFIER.equals(identifier)) {
       throw new InvalidRequestException(
@@ -229,8 +241,10 @@ public class OrganizationResource {
   @NGAccessControlCheck(resourceType = ORGANIZATION, permission = DELETE_ORGANIZATION_PERMISSION)
   public ResponseDTO<Boolean>
   delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+      @Parameter(description = ORG_PARAM_MESSAGE) @NotNull @PathParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     if (DEFAULT_ORG_IDENTIFIER.equals(identifier)) {
       throw new InvalidRequestException(
           String.format(
