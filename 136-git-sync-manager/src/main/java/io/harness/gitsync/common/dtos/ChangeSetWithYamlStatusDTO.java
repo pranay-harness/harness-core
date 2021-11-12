@@ -19,7 +19,8 @@ public class ChangeSetWithYamlStatusDTO {
     NIL("NIL"),
     PROJECT_ORG_IDENTIFIER_MISSING("Project or Org missing"),
     INVALID_ENTITY_TYPE("Invalid Entity Type"),
-    YAML_FROM_NOT_GIT_SYNCED_PROJECT("YAML from not git synced project");
+    YAML_FROM_NOT_GIT_SYNCED_PROJECT("YAML from not git synced project"),
+    ENTITY_NOT_FOUND("Entity not found");
 
     private String value;
 
