@@ -51,6 +51,7 @@ import io.harness.migrations.all.AddValidUntilToSecretUsageLogs;
 import io.harness.migrations.all.AddValidUntilToWorkflowExecution;
 import io.harness.migrations.all.AmendCorruptedEncryptedServiceVariable;
 import io.harness.migrations.all.ApiKeysSetNameMigration;
+import io.harness.migrations.all.CDPaidLicenseToNGMigration;
 import io.harness.migrations.all.CEViewsMigration;
 import io.harness.migrations.all.CleanUpDirectK8sInfraMappingEncryptedFieldsMigration;
 import io.harness.migrations.all.CleanupOrphanInfraMappings;
@@ -344,6 +345,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(203, AccountNextGenEnabledMigration.class))
         .add(Pair.of(204, DeleteOrphanPerpetualTaskMigration.class))
         .add(Pair.of(205, ManageApplicationTemplatePermissionMigration.class))
+        .add(Pair.of(206, CDPaidLicenseToNGMigration.class))
         .build();
   }
 }

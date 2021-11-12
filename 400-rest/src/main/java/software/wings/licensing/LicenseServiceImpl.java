@@ -143,21 +143,6 @@ public class LicenseServiceImpl implements LicenseService {
   public void checkForLicenseExpiry(Account account) {
     try {
       account = accountService.get(account.getUuid());
-      LicenseInfo licenseInfo = account.getLicenseInfo();
-
-      if (licenseInfo == null) {
-        return;
-      }
-
-      String accountStatus = licenseInfo.getAccountStatus();
-      String accountType = licenseInfo.getAccountType();
-      if (isEmpty(accountType)) {
-        return;
-      }
-
-      if (accountType.equals(AccountType.COMMUNITY)) {
-        return;
-      }
 
       // Check if all ng licenses inactive before decides expire account
       CheckExpiryResultDTO ngLicenseDecision = CheckExpiryResultDTO.builder().shouldDelete(false).build();
@@ -172,6 +157,22 @@ public class LicenseServiceImpl implements LicenseService {
           log.warn("Retry failed on check NG license allInactive flag for account {}, due to {}", account.getUuid(),
               ex.getMessage());
         }
+      }
+
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+
+      if (licenseInfo == null) {
+        return;
+      }
+
+      String accountStatus = licenseInfo.getAccountStatus();
+      String accountType = licenseInfo.getAccountType();
+      if (isEmpty(accountType)) {
+        return;
+      }
+
+      if (accountType.equals(AccountType.COMMUNITY)) {
+        return;
       }
 
       long expiryTime = licenseInfo.getExpiryTime();
