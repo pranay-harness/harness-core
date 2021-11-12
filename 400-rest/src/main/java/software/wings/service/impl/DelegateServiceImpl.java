@@ -2173,16 +2173,17 @@ public class DelegateServiceImpl implements DelegateService {
             .orgIdentifier(orgId)
             .projectIdentifier(projectId)
             .delegateGroupId(delegateGroupUuid)
-            .delegateSetupDetails(DelegateSetupDetails.builder()
-                                      .delegateConfigurationId(delegateGroup.getDelegateConfigurationId())
-                                      .description(delegateGroup.getDescription())
-                                      .k8sConfigDetails(delegateGroup.getK8sConfigDetails())
-                                      .name(delegateGroup.getName())
-                                      .size(delegateGroup.getSizeDetails().getSize())
-                                      .orgIdentifier(orgId)
-                                      .projectIdentifier(projectId)
-                                      .delegateType(delegateGroup.getDelegateType())
-                                      .build())
+            .delegateSetupDetails(
+                DelegateSetupDetails.builder()
+                    .delegateConfigurationId(delegateGroup.getDelegateConfigurationId())
+                    .description(delegateGroup.getDescription())
+                    .k8sConfigDetails(delegateGroup.getK8sConfigDetails())
+                    .name(delegateGroup.getName())
+                    .size(delegateGroup.getSizeDetails() != null ? delegateGroup.getSizeDetails().getSize() : null)
+                    .orgIdentifier(orgId)
+                    .projectIdentifier(projectId)
+                    .delegateType(delegateGroup.getDelegateType())
+                    .build())
             .build());
 
     DelegateEntityOwner owner = isNotEmpty(groupDelegates) ? groupDelegates.get(0).getOwner() : null;
