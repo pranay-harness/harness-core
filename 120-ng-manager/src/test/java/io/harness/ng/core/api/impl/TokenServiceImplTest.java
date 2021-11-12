@@ -4,10 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.ng.core.common.beans.ApiKeyType.SERVICE_ACCOUNT;
 import static io.harness.ng.core.common.beans.ApiKeyType.USER;
+import static io.harness.rule.OwnerRule.PIYUSH;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -17,6 +19,7 @@ import io.harness.NgManagerTestBase;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.AccountOrgProjectValidator;
 import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.ng.core.api.ApiKeyService;
@@ -62,6 +65,8 @@ public class TokenServiceImplTest extends NgManagerTestBase {
   private TransactionTemplate transactionTemplate;
   private Token token;
   private AccountService accountService;
+  Instant nextDay = Instant.now().plusSeconds(86400);
+  String tokensUUId = generateUuid();
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -93,7 +98,7 @@ public class TokenServiceImplTest extends NgManagerTestBase {
                    .build();
     token = Token.builder()
                 .scheduledExpireTime(Instant.now())
-                .validTo(Instant.now())
+                .validTo(Instant.now().plusSeconds(86500))
                 .validFrom(Instant.now())
                 .accountIdentifier(accountIdentifier)
                 .orgIdentifier(orgIdentifier)
@@ -106,7 +111,7 @@ public class TokenServiceImplTest extends NgManagerTestBase {
                 .description("")
                 .tags(new ArrayList<>())
                 .build();
-    token.setUuid(generateUuid());
+    token.setUuid(tokensUUId);
     when(accountOrgProjectValidator.isPresent(any(), any(), any())).thenReturn(true);
     when(transactionTemplate.execute(any())).thenReturn(token);
     FieldUtils.writeField(tokenService, "tokenRepository", tokenRepository, true);
@@ -135,6 +140,31 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     String tokenString = tokenService.createToken(tokenDTO);
     assertThat(tokenString).startsWith(SERVICE_ACCOUNT.getValue());
     assertThat(tokenString).contains(token.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PIYUSH)
+  @Category(UnitTests.class)
+  public void testInvalidToken_sat() {
+    try {
+      TokenDTO invalidExpiryTokenDTO = TokenDTO.builder()
+                                           .accountIdentifier(accountIdentifier)
+                                           .orgIdentifier(orgIdentifier)
+                                           .name(randomAlphabetic(10))
+                                           .projectIdentifier(projectIdentifier)
+                                           .identifier(identifier)
+                                           .parentIdentifier(parentIdentifier)
+                                           .apiKeyIdentifier(randomAlphabetic(10))
+                                           .apiKeyType(SERVICE_ACCOUNT)
+                                           .validTo(Instant.now().toEpochMilli())
+                                           .description("")
+                                           .tags(new HashMap<>())
+                                           .build();
+      tokenService.createToken(invalidExpiryTokenDTO);
+      failBecauseExceptionWasNotThrown(InvalidRequestException.class);
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(InvalidRequestException.class);
+    }
   }
 
   @Test

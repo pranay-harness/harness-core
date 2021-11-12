@@ -35,7 +35,7 @@ public class OverlayInputSetResponseDTOPMS {
   List<String> inputSetReferences;
   String overlayInputSetYaml;
   Map<String, String> tags;
-  boolean isInvalid;
+  boolean isOutdated;
 
   @ApiModelProperty(name = "isErrorResponse") boolean isErrorResponse;
   Map<String, String> invalidInputSetReferences;

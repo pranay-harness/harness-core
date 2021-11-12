@@ -17,9 +17,14 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.outbox.api.OutboxDao;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.redis.RedisConfig;
 import io.harness.repositories.FilterRepository;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.serializer.DelegateServiceRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -29,6 +34,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.WaiterConfiguration;
 import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
@@ -147,6 +153,9 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(FilterRepository.class).toInstance(mock(FilterRepository.class));
+        bind(OutboxDao.class).to(OutboxDaoImpl.class);
+        bind(OutboxService.class).to(OutboxServiceImpl.class);
+        bind(OutboxEventRepository.class).toInstance(mock(OutboxEventRepository.class));
       }
     });
 
@@ -167,5 +176,12 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return applyInjector(log, statement, frameworkMethod, target);
+  }
+
+  @Provides
+  @Singleton
+  OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
+    return new OutboxServiceImpl(
+        new OutboxDaoImpl(outboxEventRepository), NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER);
   }
 }

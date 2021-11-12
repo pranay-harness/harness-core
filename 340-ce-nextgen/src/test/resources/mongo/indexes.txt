@@ -18,6 +18,9 @@ clusterRecords {"name": "accountId_k8sBaseConnectorRefIdentifier", "unique": tru
 delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
 delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
 delegateTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+delegateTokensNG {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "owner": 1, "status": 1}
+delegateTokensNG {"name": "byAccountOwnerAndName", "unique": true} {"accountId": 1, "owner": 1, "name": 1}
+delegateTokensNG {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 gcpServiceAccount {"name": "account_id_service_account_email", "background": true} {"accountId": 1, "email": 1}
 instanceData {"name": "accountId_clusterId_instanceId_instanceState", "background": true} {"accountId": 1, "clusterId": 1, "instanceId": 1, "instanceState": 1}
 instanceData {"name": "accountId_clusterId_instanceName_usageStartTime", "background": true} {"accountId": 1, "clusterId": 1, "instanceName": 1, "usageStartTime": -1}

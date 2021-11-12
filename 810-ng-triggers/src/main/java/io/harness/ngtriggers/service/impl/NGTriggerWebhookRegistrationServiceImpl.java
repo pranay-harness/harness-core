@@ -3,9 +3,14 @@ package io.harness.ngtriggers.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.stripEnd;
+import static org.apache.commons.lang3.StringUtils.stripStart;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HookEventType;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.ng.webhook.UpsertWebhookResponseDTO;
@@ -38,9 +43,15 @@ public class NGTriggerWebhookRegistrationServiceImpl implements NGTriggerWebhook
                                 .build();
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(
         ngAccess, ngTriggerEntity.getMetadata().getWebhook().getGit().getConnectorIdentifier());
+    String url = connectorUtils.retrieveURL(connectorDetails);
+    if (connectorUtils.getConnectionType(connectorDetails).equals(GitConnectionType.ACCOUNT)
+        && ngTriggerEntity.getMetadata().getWebhook().getGit().getRepoName() != null) {
+      url = format("%s/%s", stripEnd(url, "/"),
+          stripStart(ngTriggerEntity.getMetadata().getWebhook().getGit().getRepoName(), "/"));
+    }
 
     return registerWebhookInternal(ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getOrgIdentifier(),
-        ngTriggerEntity.getAccountId(), connectorUtils.retrieveURL(connectorDetails),
+        ngTriggerEntity.getAccountId(), url,
         ngTriggerEntity.getMetadata().getWebhook().getGit().getConnectorIdentifier());
   }
 

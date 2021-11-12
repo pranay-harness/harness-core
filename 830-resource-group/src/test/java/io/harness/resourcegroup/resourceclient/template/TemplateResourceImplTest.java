@@ -15,7 +15,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.template.TemplateListType;
 import io.harness.rule.Owner;
+import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.remote.TemplateResourceClient;
 
 import com.google.inject.Inject;
@@ -50,7 +52,10 @@ public class TemplateResourceImplTest {
   public void testValidate() throws IOException {
     List<String> templateIds = Arrays.asList("TEMPLATE1", "TEMPLATE2");
     Call call = Mockito.mock(Call.class);
-    when(templateServiceClient.listTemplates(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, templateIds, 0, 2))
+    TemplateFilterPropertiesDTO templateFilterPropertiesDTO =
+        TemplateFilterPropertiesDTO.builder().templateIdentifiers(templateIds).build();
+    when(templateServiceClient.listTemplates(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER,
+             TemplateListType.STABLE_TEMPLATE_TYPE, 0, 2, templateFilterPropertiesDTO))
         .thenReturn(call);
     when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(PageResponse.getEmptyPageResponse(null))));
     assertThat(templateResource.validate(templateIds,
@@ -61,7 +66,8 @@ public class TemplateResourceImplTest {
                        .build()))
         .containsExactly(Boolean.FALSE, Boolean.FALSE);
     verify(templateServiceClient)
-        .listTemplates(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, templateIds, 0, 2);
+        .listTemplates(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, TemplateListType.STABLE_TEMPLATE_TYPE, 0,
+            2, templateFilterPropertiesDTO);
   }
 
   @Test

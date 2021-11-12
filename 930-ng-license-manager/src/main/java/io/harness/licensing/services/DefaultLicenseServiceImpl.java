@@ -407,7 +407,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   private void sendTrialEndEvents(ModuleLicense moduleLicense, EmbeddedUser user) {
     HashMap<String, Object> properties = new HashMap<>();
     String email = "unknown";
-    if (user != null) {
+    if (user != null && user.getEmail() != null) {
       email = user.getEmail();
     }
     properties.put("email", email);

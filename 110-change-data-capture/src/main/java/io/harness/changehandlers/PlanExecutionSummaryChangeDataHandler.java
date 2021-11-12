@@ -45,6 +45,10 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
       columnValueMapping.put("moduleinfo_branch_name", ciObject.get("branch").toString());
     }
 
+    if (ciObject.get("isPrivateRepo") != null) {
+      columnValueMapping.put("moduleinfo_is_private", ciObject.get("isPrivateRepo").toString());
+    }
+
     if (ciExecutionInfo != null) {
       DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
 

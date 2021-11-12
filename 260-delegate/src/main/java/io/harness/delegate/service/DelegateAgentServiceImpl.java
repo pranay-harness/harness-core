@@ -200,7 +200,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -515,36 +514,36 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       boolean isSample = "true".equals(System.getenv().get("SAMPLE_DELEGATE"));
 
-      log.info("DELEGATE_TYPE is: " + DELEGATE_TYPE);
+      final List<String> supportedTasks = Arrays.stream(TaskType.values()).map(Enum::name).collect(toList());
+
       if (isNotBlank(DELEGATE_TYPE)) {
-        log.info(
-            "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
+        log.info("Registering delegate with delegate Type: {}, DelegateGroupName: {} that supports tasks: {}",
+            DELEGATE_TYPE, DELEGATE_GROUP_NAME, supportedTasks);
       }
 
-      log.info("Delegate Group Id: {}", delegateGroupId);
-
-      DelegateParamsBuilder builder = DelegateParams.builder()
-                                          .ip(getLocalHostAddress())
-                                          .accountId(accountId)
-                                          .orgIdentifier(delegateOrgIdentifier)
-                                          .projectIdentifier(delegateProjectIdentifier)
-                                          .hostName(HOST_NAME)
-                                          .delegateName(DELEGATE_NAME)
-                                          .delegateGroupName(DELEGATE_GROUP_NAME)
-                                          .delegateGroupId(delegateGroupId)
-                                          .delegateProfileId(isNotBlank(delegateProfile) ? delegateProfile : null)
-                                          .description(description)
-                                          .version(getVersion())
-                                          .delegateType(DELEGATE_TYPE)
-                                          //.proxy(set to true if there is a system proxy)
-                                          .pollingModeEnabled(delegateConfiguration.isPollForTasks())
-                                          .ng(delegateNg)
-                                          .tags(isNotBlank(delegateTags) ? new ArrayList<>(
-                                                    Arrays.asList(delegateTags.trim().split("\\s*,+\\s*,*\\s*")))
-                                                                         : Collections.emptyList())
-                                          .sampleDelegate(isSample)
-                                          .location(Paths.get("").toAbsolutePath().toString())
-                                          .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
+      final DelegateParamsBuilder builder =
+          DelegateParams.builder()
+              .ip(getLocalHostAddress())
+              .accountId(accountId)
+              .orgIdentifier(delegateOrgIdentifier)
+              .projectIdentifier(delegateProjectIdentifier)
+              .hostName(HOST_NAME)
+              .delegateName(DELEGATE_NAME)
+              .delegateGroupName(DELEGATE_GROUP_NAME)
+              .delegateGroupId(delegateGroupId)
+              .delegateProfileId(isNotBlank(delegateProfile) ? delegateProfile : null)
+              .description(description)
+              .version(getVersion())
+              .delegateType(DELEGATE_TYPE)
+              .supportedTaskTypes(supportedTasks)
+              //.proxy(set to true if there is a system proxy)
+              .pollingModeEnabled(delegateConfiguration.isPollForTasks())
+              .ng(delegateNg)
+              .tags(isNotBlank(delegateTags) ? new ArrayList<>(asList(delegateTags.trim().split("\\s*,+\\s*,*\\s*")))
+                                             : emptyList())
+              .sampleDelegate(isSample)
+              .location(Paths.get("").toAbsolutePath().toString())
+              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
 
       delegateId = registerDelegate(builder);
       log.info("[New] Delegate registered in {} ms", clock.millis() - start);
@@ -1006,7 +1005,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private <T> T delegateExecute(Call<T> call) throws IOException {
+  private <T> T executeRestCall(Call<T> call) throws IOException {
     Response<T> response = null;
     try {
       response = call.execute();
@@ -1031,7 +1030,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private String registerDelegate(DelegateParamsBuilder builder) {
+  private String registerDelegate(final DelegateParamsBuilder builder) {
     updateBuilderIfEcsDelegate(builder);
     AtomicInteger attempts = new AtomicInteger(0);
     while (acquireTasks.get() && shouldContactManager()) {
@@ -1049,7 +1048,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                             .pollingModeEnabled(delegateConfiguration.isPollForTasks())
                                             .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
                                             .build();
-        restResponse = delegateExecute(delegateAgentDmsClient.registerDelegate(accountId, delegateParams));
+        restResponse = executeRestCall(delegateAgentDmsClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
         log.error(msg, e);
@@ -1106,7 +1105,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
         RestResponse<DelegateProfileParams> response = HTimeLimiter.callInterruptible21(timeLimiter,
             Duration.ofSeconds(15),
-            () -> delegateExecute(delegateAgentDmsClient.checkForProfile(delegateId, accountId, profileId, updated)));
+            () -> executeRestCall(delegateAgentDmsClient.checkForProfile(delegateId, accountId, profileId, updated)));
         if (response != null) {
           applyProfile(response.getResource());
         }
@@ -1226,7 +1225,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Part part = Part.createFormData("file", profileResult.getName(), requestFile);
     HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
         ()
-            -> delegateExecute(delegateAgentDmsClient.saveProfileResult(
+            -> executeRestCall(delegateAgentDmsClient.saveProfileResult(
                 delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)));
   }
 
@@ -1306,7 +1305,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         try {
           RestResponse<DelegateScripts> restResponse =
               HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1),
-                  () -> delegateExecute(delegateAgentDmsClient.getDelegateScripts(accountId, version, delegateName)));
+                  () -> executeRestCall(delegateAgentDmsClient.getDelegateScripts(accountId, version, delegateName)));
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
@@ -1351,7 +1350,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       try {
         DelegateTaskEventsResponse taskEventsResponse =
             HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
-                () -> delegateExecute(delegateAgentDmsClient.pollTaskEvents(delegateId, accountId)));
+                () -> executeRestCall(delegateAgentDmsClient.pollTaskEvents(delegateId, accountId)));
         if (shouldProcessDelegateTaskEvents(taskEventsResponse)) {
           List<DelegateTaskEvent> taskEvents = taskEventsResponse.getDelegateTaskEvents();
           log.info("Processing DelegateTaskEvents {}", taskEvents);
@@ -1682,7 +1681,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       lastHeartbeatSentAt.set(clock.millis());
 
       RestResponse<DelegateHeartbeatResponse> delegateParamsResponse =
-          delegateExecute(delegateAgentDmsClient.delegateHeartbeat(accountId, delegateParams));
+          executeRestCall(delegateAgentDmsClient.delegateHeartbeat(accountId, delegateParams));
       long now = clock.millis();
       log.info("Delegate {} received heartbeat response {} after sending. {} since last response.", delegateId,
           getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
@@ -1707,7 +1706,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
           ()
-              -> delegateExecute(
+              -> executeRestCall(
                   delegateAgentDmsClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)));
       lastHeartbeatSentAt.set(clock.millis());
 
@@ -1735,7 +1734,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       updateBuilderIfEcsDelegate(builder);
       DelegateParams delegateParams =
           builder.build().toBuilder().keepAlivePacket(true).pollingModeEnabled(true).build();
-      delegateExecute(delegateAgentDmsClient.registerDelegate(accountId, delegateParams));
+      executeRestCall(delegateAgentDmsClient.registerDelegate(accountId, delegateParams));
     } catch (UncheckedTimeoutException ex) {
       log.warn("Timed out sending Keep Alive Request", ex);
     } catch (Exception e) {
@@ -1877,7 +1876,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       DelegateTaskPackage delegateTaskPackage =
-          delegateExecute(delegateAgentDmsClient.acquireTask(delegateId, delegateTaskId, accountId));
+          executeRestCall(delegateAgentDmsClient.acquireTask(delegateId, delegateTaskId, accountId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
         if (log.isDebugEnabled()) {
           log.debug("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());

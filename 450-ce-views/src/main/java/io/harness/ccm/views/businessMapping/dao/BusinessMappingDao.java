@@ -60,6 +60,12 @@ public class BusinessMappingDao {
         .get();
   }
 
+  public BusinessMapping get(String uuid) {
+    return hPersistence.createQuery(BusinessMapping.class, excludeValidate)
+        .filter(BusinessMappingKeys.uuid, uuid)
+        .get();
+  }
+
   public List<BusinessMapping> findByAccountId(String accountId) {
     return hPersistence.createQuery(BusinessMapping.class).filter(BusinessMappingKeys.accountId, accountId).asList();
   }
