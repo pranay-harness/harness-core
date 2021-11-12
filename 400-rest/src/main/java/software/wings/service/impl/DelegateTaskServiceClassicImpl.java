@@ -27,8 +27,6 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
@@ -137,9 +135,6 @@ import software.wings.beans.GitValidationParameters;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.common.AuditHelper;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
@@ -1019,12 +1014,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     if (activeDelegates.isEmpty()) {
       if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
         log.info("No installed delegates found for the account. Task id: {}", task.getUuid());
-        alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoInstalledDelegates,
-            NoInstalledDelegatesAlert.builder().accountId(task.getAccountId()).build());
       } else {
         log.info("No delegates are active for the account. Task id: {}", task.getUuid());
-        alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
-            NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
       }
     } else if (eligibleDelegates.isEmpty()) {
       log.warn("{} delegates active but no delegates are eligible to execute task with id: {}", activeDelegates.size(),

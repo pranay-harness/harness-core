@@ -171,7 +171,6 @@ import software.wings.beans.DelegateStatus;
 import software.wings.beans.Event.Type;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.common.AuditHelper;
@@ -1008,9 +1007,6 @@ public class DelegateServiceImpl implements DelegateService {
       updatedDelegate = updateAllDelegatesIfECSType(delegate, updateOperations, "TAGS");
     } else {
       updatedDelegate = updateDelegate(delegate, updateOperations);
-      if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
-        alertService.delegateEligibilityUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
-      }
     }
 
     if (updatedDelegate != null && featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegate.getAccountId())) {
@@ -1038,9 +1034,6 @@ public class DelegateServiceImpl implements DelegateService {
       updatedDelegate = updateAllDelegatesIfECSType(delegate, updateOperations, "SCOPES");
     } else {
       updatedDelegate = updateDelegate(delegate, updateOperations);
-      if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
-        alertService.delegateEligibilityUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
-      }
     }
 
     if (updatedDelegate != null && featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegate.getAccountId())) {
@@ -1057,13 +1050,6 @@ public class DelegateServiceImpl implements DelegateService {
       updateOperations.unset(DelegateKeys.profileResult)
           .unset(DelegateKeys.profileError)
           .unset(DelegateKeys.profileExecutedAt);
-
-      DelegateProfileErrorAlert alertData = DelegateProfileErrorAlert.builder()
-                                                .accountId(delegate.getAccountId())
-                                                .hostName(delegate.getHostName())
-                                                .obfuscatedIpAddress(obfuscate(delegate.getIp()))
-                                                .build();
-      alertService.closeAlert(delegate.getAccountId(), GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);
 
       if (isNotBlank(previousDelegate.getProfileResult())) {
         try {
@@ -2074,12 +2060,6 @@ public class DelegateServiceImpl implements DelegateService {
               .obfuscatedIpAddress(obfuscate(existingDelegate.getIp()))
               .hostName(existingDelegate.getHostName())
               .build());
-      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError,
-          DelegateProfileErrorAlert.builder()
-              .accountId(accountId)
-              .obfuscatedIpAddress(obfuscate(existingDelegate.getIp()))
-              .hostName(existingDelegate.getHostName())
-              .build());
     } else {
       throw new InvalidRequestException("Unable to fetch delegate with delegate id " + delegateId);
     }
@@ -2496,10 +2476,6 @@ public class DelegateServiceImpl implements DelegateService {
       StringBuilder message = new StringBuilder(128).append("[X]").append(delegate.getUuid());
       updateBroadcastMessageIfEcsDelegate(message, delegate, registeredDelegate);
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(message.toString());
-
-      // TODO: revisit this call, it seems overkill
-      alertService.delegateAvailabilityUpdated(registeredDelegate.getAccountId());
-      alertService.delegateEligibilityUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
     }
 
     return registeredDelegate;
@@ -2608,16 +2584,6 @@ public class DelegateServiceImpl implements DelegateService {
   public void saveProfileResult(String accountId, String delegateId, boolean error, FileBucket fileBucket,
       InputStream uploadedInputStream, FormDataContentDisposition fileDetail) {
     Delegate delegate = delegateCache.get(accountId, delegateId, true);
-    DelegateProfileErrorAlert alertData = DelegateProfileErrorAlert.builder()
-                                              .accountId(accountId)
-                                              .hostName(delegate.getHostName())
-                                              .obfuscatedIpAddress(obfuscate(delegate.getIp()))
-                                              .build();
-    if (error) {
-      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);
-    } else {
-      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);
-    }
 
     FileMetadata fileMetadata = FileMetadata.builder()
                                     .fileName(new File(fileDetail.getFileName()).getName())
@@ -3425,8 +3391,6 @@ public class DelegateServiceImpl implements DelegateService {
       return null;
     }
 
-    alertService.delegateAvailabilityUpdated(delegate.getAccountId());
-
     for (Delegate delegateToBeUpdated : delegates) {
       try (AutoLogContext ignore = new DelegateLogContext(delegateToBeUpdated.getUuid(), OVERRIDE_NESTS)) {
         if ("SCOPES".equals(fieldBeingUpdate)) {
@@ -3441,9 +3405,6 @@ public class DelegateServiceImpl implements DelegateService {
         Delegate updatedDelegate = updateDelegate(delegateToBeUpdated, updateOperations);
         if (updatedDelegate.getUuid().equals(delegate.getUuid())) {
           retVal.add(updatedDelegate);
-        }
-        if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
-          alertService.delegateEligibilityUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
         }
       }
     }
