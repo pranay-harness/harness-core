@@ -366,18 +366,27 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
     setGitDetails(existingConnector, newConnector);
 
+    final Boolean executeOnDelegate = newConnector.getExecuteOnDelegate();
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+        newConnector.getOrgIdentifier(), newConnector.getProjectIdentifier(), newConnector.getIdentifier());
+
     if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
       if (existingConnector.getHeartbeatPerpetualTaskId() == null
-          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector) && executeOnDelegate) {
         PerpetualTaskId connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
             accountIdentifier, existingConnector.getOrgIdentifier(), existingConnector.getProjectIdentifier(),
             existingConnector.getIdentifier());
         newConnector.setHeartbeatPerpetualTaskId(
             connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
       } else if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
-        connectorHeartbeatService.resetPerpetualTask(
-            accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
-        newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+        if (executeOnDelegate) {
+          connectorHeartbeatService.resetPerpetualTask(
+              accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+          newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+        } else {
+          connectorHeartbeatService.deletePerpetualTask(
+              accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId(), fullyQualifiedIdentifier);
+        }
       }
     }
     try {

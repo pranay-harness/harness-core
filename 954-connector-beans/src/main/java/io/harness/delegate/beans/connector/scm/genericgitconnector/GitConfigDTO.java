@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
+import io.harness.connector.ManagerExecutable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -31,13 +32,14 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.DX)
-public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
+public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable, ManagerExecutable {
   @NotNull @JsonProperty("type") private GitAuthType gitAuthType;
   @NotNull @JsonProperty("connectionType") private GitConnectionType gitConnectionType;
   @NotNull @NotBlank String url;
   private String validationRepo;
   private String branchName;
   private Set<String> delegateSelectors;
+  private Boolean executeOnDelegate;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
@@ -48,7 +50,7 @@ public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, De
 
   @Builder
   public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitConnectionType gitConnectionType,
-      String url, String validationRepo, String branchName, Set<String> delegateSelectors) {
+      String url, String validationRepo, String branchName, Set<String> delegateSelectors, Boolean executeOnDelegate) {
     this.gitAuthType = gitAuthType;
     this.gitAuth = gitAuth;
     this.gitConnectionType = gitConnectionType;
@@ -56,6 +58,7 @@ public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, De
     this.validationRepo = validationRepo;
     this.branchName = branchName;
     this.delegateSelectors = delegateSelectors;
+    this.executeOnDelegate = executeOnDelegate;
   }
 
   @Override

@@ -1,14 +1,23 @@
 package io.harness.connector.validator;
 
+import static io.harness.NGConstants.CONNECTOR_STRING;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.helper.EncryptionHelper;
+import io.harness.connector.services.ConnectorService;
+import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.ConnectorValidationException;
@@ -17,6 +26,10 @@ import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.inject.Named;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.DX)
@@ -24,6 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractConnectorValidator implements ConnectionValidator {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject private EncryptionHelper encryptionHelper;
+  @Inject @Named("connectorDecoratorService") private ConnectorService connectorService;
+  @Inject private Map<String, ConnectorValidationParamsProvider> connectorValidationParamsProviderMap;
+  @Inject Map<String, ConnectorValidationHandler> connectorTypeToConnectorValidationHandlerMap;
+
   public <T extends ConnectorConfigDTO> DelegateResponseData validateConnector(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     TaskParameters taskParameters =
@@ -46,6 +63,31 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
       throw new ConnectorValidationException(errorMessage);
     }
     return responseData;
+  }
+
+  public ConnectorValidationResult validateConnectorViaManager(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    AtomicReference<ConnectorValidationHandler> connectorValidationHandler = new AtomicReference<>();
+
+    final Optional<ConnectorResponseDTO> connectorResponseDTO =
+        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    final ConnectorValidationParams connectorValidationParams =
+        connectorResponseDTO
+            .map(connectorResponse -> {
+              ConnectorType connectorType = connectorResponse.getConnector().getConnectorType();
+              connectorValidationHandler.set(
+                  connectorTypeToConnectorValidationHandlerMap.get(connectorType.getDisplayName()));
+              return connectorValidationParamsProviderMap.get(connectorType.getDisplayName())
+                  .getConnectorValidationParams(connectorResponse.getConnector(),
+                      connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier);
+            })
+            .orElseThrow(()
+                             -> new InvalidRequestException(String.format(
+                                 CONNECTOR_STRING, identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
+
+    final ConnectorValidationResult validate =
+        connectorValidationHandler.get().validate(connectorValidationParams, accountIdentifier);
+    return validate;
   }
 
   public List<EncryptedDataDetail> getEncryptionDetail(

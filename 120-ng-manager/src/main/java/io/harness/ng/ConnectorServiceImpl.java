@@ -18,17 +18,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.NgAutoLogContext;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.ConnectorActivityDetails;
-import io.harness.connector.ConnectorCatalogueResponseDTO;
-import io.harness.connector.ConnectorCategory;
-import io.harness.connector.ConnectorConnectivityDetails;
+import io.harness.connector.*;
 import io.harness.connector.ConnectorConnectivityDetails.ConnectorConnectivityDetailsBuilder;
-import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorFilterPropertiesDTO;
-import io.harness.connector.ConnectorInfoDTO;
-import io.harness.connector.ConnectorRegistryFactory;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.helper.ConnectorLogContext;
@@ -38,6 +29,7 @@ import io.harness.connector.services.ConnectorActivityService;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -142,15 +134,17 @@ public class ConnectorServiceImpl implements ConnectorService {
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
       connectorInfo.getConnectorConfig().validate();
+      final Boolean executeOnDelegate = checkConnectorExecutableOnDelegate(connectorInfo);
       boolean isHarnessManagedSecretManager =
           harnessManagedConnectorHelper.isHarnessManagedSecretManager(connectorInfo);
       boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
           connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
-      if (!isHarnessManagedSecretManager && isDefaultBranchConnector) {
+      if (!isHarnessManagedSecretManager && isDefaultBranchConnector && executeOnDelegate) {
         connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
             connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
       }
-      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager || !isDefaultBranchConnector) {
+      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager || !isDefaultBranchConnector
+          || !executeOnDelegate) {
         ConnectorResponseDTO connectorResponse;
         if (GitContextHelper.isUpdateToNewBranch()) {
           connectorResponse = getConnectorService(connectorInfo.getConnectorType())
@@ -185,6 +179,19 @@ public class ConnectorServiceImpl implements ConnectorService {
       }
       throw ex;
     }
+  }
+
+  private Boolean checkConnectorExecutableOnDelegate(ConnectorInfoDTO connectorInfo) {
+    final ConnectorConfigDTO connectorConfig = connectorInfo.getConnectorConfig();
+    if (connectorConfig instanceof ManagerExecutable) {
+      final Boolean executeOnDelegate = ((ManagerExecutable) connectorConfig).getExecuteOnDelegate();
+      if (executeOnDelegate == null) {
+        return Boolean.TRUE;
+      } else {
+        return executeOnDelegate;
+      }
+    }
+    return Boolean.TRUE;
   }
 
   private void runTestConnectionAsync(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
