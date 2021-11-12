@@ -115,7 +115,6 @@ public class PipelineEntity
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @Setter @NonFinal String invalidYamlString;
   @NonFinal Boolean isEntityInvalid;
 
   @Override
@@ -131,5 +130,10 @@ public class PipelineEntity
   @Override
   public void setEntityInvalid(boolean isEntityInvalid) {
     this.isEntityInvalid = isEntityInvalid;
+  }
+
+  @Override
+  public String getInvalidYamlString() {
+    return yaml;
   }
 }

@@ -36,7 +36,7 @@ public class SampleBean1 implements PersistentEntity, YamlDTO, GitSyncableEntity
   String filePath;
   String rootFolder;
   Boolean isEntityInvalid;
-  String invalidYamlString;
+  String yaml; // use to store yaml of invalid entity
 
   @Override
   public boolean isEntityInvalid() {
@@ -46,5 +46,10 @@ public class SampleBean1 implements PersistentEntity, YamlDTO, GitSyncableEntity
   @Override
   public void setEntityInvalid(boolean isEntityInvalid) {
     this.isEntityInvalid = isEntityInvalid;
+  }
+
+  @Override
+  public String getInvalidYamlString() {
+    return yaml;
   }
 }

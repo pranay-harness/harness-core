@@ -38,6 +38,4 @@ public interface GitSyncableEntity extends NGAccess {
   void setEntityInvalid(boolean isEntityInvalid);
 
   String getInvalidYamlString();
-
-  void setInvalidYamlString(String yamlString);
 }
