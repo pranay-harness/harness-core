@@ -42,6 +42,7 @@ var (
 	collectTestReportsFn = collectTestReports
 	runCmdFn             = runCmd
 	isManualFn           = external.IsManualExecution
+	getWorkspace         = external.GetWrkspcPath
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -186,7 +187,7 @@ func getFiles(path string) ([]string, error) {
 func (r *runTestsTask) detectJavaPkgs() ([]string, error) {
 	plist := []string{}
 	excludeList := []string{"com.google"} // exclude any instances of these packages from the package list
-	wp, err := external.GetWrkspcPath()
+	wp, err := getWorkspace()
 	if err != nil {
 		return plist, err
 	}
@@ -207,6 +208,10 @@ func (r *runTestsTask) detectJavaPkgs() ([]string, error) {
 			r.log.Errorw("could not get absolute path", "file_name", f, err)
 			continue
 		}
+		// TODO: (Vistaar)
+		// This doesn't handle some special cases right now such as when there is a package
+		// present in a multiline comment with multiple opening and closing comments.
+		// We will require to read all the lines together to handle this.
 		err = r.fs.ReadFile(absPath, func(fr io.Reader) error {
 			scanner := bufio.NewScanner(fr)
 			commentOpen := false
@@ -217,6 +222,7 @@ func (r *runTestsTask) detectJavaPkgs() ([]string, error) {
 				}
 				if strings.Contains(l, "*/") {
 					commentOpen = false
+					continue
 				}
 				if commentOpen || strings.HasPrefix(l, "//") {
 					continue

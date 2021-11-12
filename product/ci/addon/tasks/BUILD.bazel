@@ -42,6 +42,7 @@ go_test(
         "run_test.go",
         "runtests_test.go",
     ],
+    data = glob(["testdata/**"]),
     embed = [":tasks"],
     deps = [
         "//commons/go/lib/exec",
