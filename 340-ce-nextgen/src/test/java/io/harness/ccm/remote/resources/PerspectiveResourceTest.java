@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewState;
@@ -30,7 +29,6 @@ public class PerspectiveResourceTest extends CategoryTest {
   private CEViewService ceViewService = mock(CEViewService.class);
   private ViewCustomFieldService viewCustomFieldService = mock(ViewCustomFieldService.class);
   private CEReportScheduleService ceReportScheduleService = mock(CEReportScheduleService.class);
-  private BigQueryService bigQueryService = mock(BigQueryService.class);
   private BigQueryHelper bigQueryHelper = mock(BigQueryHelper.class);
   private PerspectiveResource perspectiveResource;
 
@@ -70,7 +68,7 @@ public class PerspectiveResourceTest extends CategoryTest {
   public void testCreatePerspective() {
     perspectiveResource.create(ACCOUNT_ID, false, perspective);
     verify(ceViewService).save(perspective);
-    verify(ceViewService).updateTotalCost(perspective, bigQueryService.get(), UNIFIED_TABLE_NAME);
+    verify(ceViewService).updateTotalCost(perspective, UNIFIED_TABLE_NAME);
   }
 
   @Test
@@ -89,7 +87,7 @@ public class PerspectiveResourceTest extends CategoryTest {
     perspective.setName(NEW_NAME);
     perspectiveResource.update(ACCOUNT_ID, perspective);
     verify(ceViewService).update(perspective);
-    verify(ceViewService).updateTotalCost(perspective, bigQueryService.get(), UNIFIED_TABLE_NAME);
+    verify(ceViewService).updateTotalCost(perspective, UNIFIED_TABLE_NAME);
   }
 
   @Test

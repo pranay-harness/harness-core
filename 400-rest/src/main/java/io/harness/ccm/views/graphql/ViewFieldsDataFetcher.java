@@ -8,7 +8,6 @@ import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.colu
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.views.entities.CEView;
@@ -26,7 +25,6 @@ import software.wings.security.annotations.AuthRule;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;

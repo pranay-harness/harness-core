@@ -2,7 +2,6 @@ package software.wings.resources.views;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;

@@ -7,7 +7,6 @@ import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unif
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
 
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
@@ -16,7 +15,6 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
-import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
