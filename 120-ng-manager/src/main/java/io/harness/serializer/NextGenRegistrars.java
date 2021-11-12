@@ -35,6 +35,7 @@ public class NextGenRegistrars {
           .addAll(NGFileServiceRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
+          .addAll(LicenseManagerRegistrars.kryoRegistrars)
           .add(PipelineServiceUtilKryoRegistrar.class)
           .build();
 
