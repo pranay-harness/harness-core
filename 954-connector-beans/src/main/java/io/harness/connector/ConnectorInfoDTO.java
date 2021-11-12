@@ -13,6 +13,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -28,6 +29,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)
+@Schema(name = "ConnectorInfo", description = "This is the view of the ConnectorInfo entity defined in Harness")
 public class ConnectorInfoDTO {
   @NotNull @NotBlank @NGEntityName String name;
   @NotNull @NotBlank @EntityIdentifier String identifier;
