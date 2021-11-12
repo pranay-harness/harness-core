@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: supportRolesConfiguration
-version: 2
+version: 3
 roles:
   - identifier: _super_account_viewer
     name: Super Account Viewer
@@ -29,6 +29,7 @@ roles:
       - ff_target_view
       - ff_environment_apiKeyView
       - ff_environment_view
+      - core_template_view
   - identifier: _super_account_admin
     name: Super Account Admin
     permissions:
@@ -104,6 +105,10 @@ roles:
       - ff_featureflag_toggle
       - core_dashboards_view
       - core_dashboards_edit
+      - core_template_view
+      - core_template_edit
+      - core_template_delete
+      - core_template_access
   - identifier: _super_organization_admin
     name: Super Org Admin
     permissions:
@@ -172,3 +177,7 @@ roles:
       - ff_featureflag_toggle
       - core_dashboards_view
       - core_dashboards_edit
+      - core_template_view
+      - core_template_edit
+      - core_template_delete
+      - core_template_access
