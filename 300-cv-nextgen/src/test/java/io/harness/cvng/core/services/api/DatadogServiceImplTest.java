@@ -9,6 +9,7 @@ import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.datadog.DatadogDashboardDTO;
 import io.harness.cvng.core.beans.datadog.DatadogDashboardDetail;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.impl.DatadogServiceImpl;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.ng.beans.PageResponse;
@@ -34,6 +35,7 @@ public class DatadogServiceImplTest extends CategoryTest {
     private static final String FILTER = "Datadog";
     private static final String MOCKED_DASHBOARD_ID = "mocked_dashboard_id";
     private static final String MOCKED_QUERY = "mocked_query";
+    private static final String MOCKED_METRIC_NAME = "mocked_metric_name";
     private static final List<Map<String, Object>> mockedDashboards = Arrays.asList(
             createDatadogDashboardResponse("DatadogDashboard1", "path1"),
             createDatadogDashboardResponse("DatadogDashboard2", "path2"),
@@ -44,29 +46,32 @@ public class DatadogServiceImplTest extends CategoryTest {
             createDatadogDashboardResponse("Dashboard7", "path7"));
 
     private static final List<Map<String, Object>> mockedFilteredDashboard = mockedDashboards
-            .stream().filter(datadogDashboardMap -> FILTER.equals(datadogDashboardMap.get("title")))
+            .stream()
+
+            .filter(datadogDashboardMap -> datadogDashboardMap.get("title").toString().toLowerCase().contains(FILTER.toLowerCase()))
             .collect(Collectors.toList());
 
     private static final List<String> mockedMetricTags = Arrays.asList("tag1", "tag2", "tag3");
     private static final List<String> mockedActiveMetrics = Arrays.asList("activeMetric1", "activeMetric2", "activeMetric3");
 
+
     @Mock
     private OnboardingService mockedOnboardingService;
     @InjectMocks
     private DatadogService classUnderTest = new DatadogServiceImpl();
-    private String accountId;
+    private ProjectParams mockedProjectParams;
     private String connectorIdentifier;
-    private String projectIdentifier;
-    private String orgIdentifier;
     @Captor
     private ArgumentCaptor<OnboardingRequestDTO> requestCaptor;
 
     @Before
     public void setup() {
-        accountId = generateUuid();
+        mockedProjectParams = ProjectParams.builder()
+                .accountIdentifier(generateUuid())
+                .orgIdentifier(generateUuid())
+                .projectIdentifier(generateUuid())
+                .build();
         connectorIdentifier = generateUuid();
-        projectIdentifier = generateUuid();
-        orgIdentifier = generateUuid();
         MockitoAnnotations.initMocks(this);
     }
 
@@ -74,10 +79,10 @@ public class DatadogServiceImplTest extends CategoryTest {
     @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetAllDashboards() {
-        when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
+        when(mockedOnboardingService.getOnboardingResponse(eq(mockedProjectParams.getAccountIdentifier()), any()))
                 .thenReturn(OnboardingResponseDTO.builder().result(mockedDashboards).build());
         PageResponse<DatadogDashboardDTO> dashboardList = classUnderTest.getAllDashboards(
-                accountId, connectorIdentifier, orgIdentifier, projectIdentifier, PAGE_SIZE, 0, null, generateUuid());
+                mockedProjectParams, connectorIdentifier, PAGE_SIZE, 0, null, generateUuid());
 
         OnboardingRequestDTO onboardingRequestDTO = getAndVerifyOnBoardingRequest();
 
@@ -92,10 +97,10 @@ public class DatadogServiceImplTest extends CategoryTest {
     @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetAllDashboardsWithFilter() {
-        when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
+        when(mockedOnboardingService.getOnboardingResponse(eq(mockedProjectParams.getAccountIdentifier()), any()))
                 .thenReturn(OnboardingResponseDTO.builder().result(mockedDashboards).build());
         PageResponse<DatadogDashboardDTO> dashboardList = classUnderTest.getAllDashboards(
-                accountId, connectorIdentifier, orgIdentifier, projectIdentifier, mockedDashboards.size(), 0, FILTER, generateUuid());
+                mockedProjectParams, connectorIdentifier, mockedDashboards.size(), 0, FILTER, generateUuid());
 
         assertThat(dashboardList.getContent().size()).isEqualTo(mockedFilteredDashboard.size());
     }
@@ -105,11 +110,10 @@ public class DatadogServiceImplTest extends CategoryTest {
     @Category(UnitTests.class)
     public void testGetDashboardDetails() throws Exception {
 
-        when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
+        when(mockedOnboardingService.getOnboardingResponse(eq(mockedProjectParams.getAccountIdentifier()), any()))
                 .thenReturn(OnboardingResponseDTO.builder().result(createMockedDashboardDetailsResponse()).build());
         List<DatadogDashboardDetail> dashboardDetailList =
-                classUnderTest.getDashboardDetails(MOCKED_DASHBOARD_ID, accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
-                        generateUuid());
+                classUnderTest.getDashboardDetails(mockedProjectParams, connectorIdentifier, MOCKED_DASHBOARD_ID, generateUuid());
 
         OnboardingRequestDTO onboardingRequestDTO = getAndVerifyOnBoardingRequest();
 
@@ -122,11 +126,12 @@ public class DatadogServiceImplTest extends CategoryTest {
     @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetMetricTagsList() {
-        when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
+        when(mockedOnboardingService.getOnboardingResponse(eq(mockedProjectParams.getAccountIdentifier()), any()))
                 .thenReturn(OnboardingResponseDTO.builder().result(mockedMetricTags).build());
 
         List<String> metricTags =
-                classUnderTest.getMetricTagsList("mocked_metric_name", accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
+                classUnderTest.getMetricTagsList(mockedProjectParams, connectorIdentifier,
+                        MOCKED_METRIC_NAME,
                         generateUuid());
 
         testMetricsListRequest(DataCollectionRequestType.DATADOG_METRIC_TAGS, metricTags, mockedMetricTags);
@@ -136,12 +141,11 @@ public class DatadogServiceImplTest extends CategoryTest {
     @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetActiveMetrics() {
-        when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
+        when(mockedOnboardingService.getOnboardingResponse(eq(mockedProjectParams.getAccountIdentifier()), any()))
                 .thenReturn(OnboardingResponseDTO.builder().result(mockedActiveMetrics).build());
 
         List<String> metricTags =
-                classUnderTest.getActiveMetrics(accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
-                        generateUuid());
+                classUnderTest.getActiveMetrics(mockedProjectParams, connectorIdentifier, generateUuid());
 
         testMetricsListRequest(DataCollectionRequestType.DATADOG_ACTIVE_METRICS, metricTags, mockedActiveMetrics);
     }
@@ -150,11 +154,11 @@ public class DatadogServiceImplTest extends CategoryTest {
     @Owner(developers = PAVIC)
     @Category(UnitTests.class)
     public void testGetTimeSeriesPoints() {
-        when(mockedOnboardingService.getOnboardingResponse(eq(accountId), any()))
+        when(mockedOnboardingService.getOnboardingResponse(eq(mockedProjectParams.getAccountIdentifier()), any()))
                 .thenReturn(OnboardingResponseDTO.builder().result(new ArrayList<>()).build());
 
         List<TimeSeriesSampleDTO> timeSeriesPoints =
-                classUnderTest.getTimeSeriesPoints(accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
+                classUnderTest.getTimeSeriesPoints(mockedProjectParams, connectorIdentifier,
                         generateUuid(), MOCKED_QUERY);
 
         OnboardingRequestDTO onboardingRequestDTO = getAndVerifyOnBoardingRequest();
@@ -180,12 +184,12 @@ public class DatadogServiceImplTest extends CategoryTest {
     }
 
     private OnboardingRequestDTO getAndVerifyOnBoardingRequest() {
-        verify(mockedOnboardingService).getOnboardingResponse(eq(accountId), requestCaptor.capture());
+        verify(mockedOnboardingService).getOnboardingResponse(eq(mockedProjectParams.getAccountIdentifier()), requestCaptor.capture());
         OnboardingRequestDTO onboardingRequestDTO = requestCaptor.getValue();
-        assertThat(onboardingRequestDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
+        assertThat(onboardingRequestDTO.getOrgIdentifier()).isEqualTo(mockedProjectParams.getOrgIdentifier());
         assertThat(onboardingRequestDTO.getConnectorIdentifier()).isEqualTo(connectorIdentifier);
-        assertThat(onboardingRequestDTO.getAccountId()).isEqualTo(accountId);
-        assertThat(onboardingRequestDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
+        assertThat(onboardingRequestDTO.getAccountId()).isEqualTo(mockedProjectParams.getAccountIdentifier());
+        assertThat(onboardingRequestDTO.getProjectIdentifier()).isEqualTo(mockedProjectParams.getProjectIdentifier());
         assertThat(onboardingRequestDTO.getDataCollectionRequest()).isNotNull();
         return onboardingRequestDTO;
     }
