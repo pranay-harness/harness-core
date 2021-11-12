@@ -14,7 +14,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.app.MainConfiguration;
@@ -23,8 +22,6 @@ import software.wings.beans.ManagerConfiguration;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.InvalidSMTPConfigAlert;
-import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.intfc.AlertService;
@@ -124,14 +121,9 @@ public class AlertCheckJob implements Job {
         return;
       }
     }
-    if (isEmpty(delegates)) {
-      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.NoInstalledDelegates,
-          NoInstalledDelegatesAlert.builder().accountId(accountId).build());
-    } else if (delegates.stream().allMatch(
-                   delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)) {
-      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.NoActiveDelegates,
-          NoActiveDelegatesAlert.builder().accountId(accountId).build());
-    } else {
+    if (!isEmpty(delegates)
+        && !delegates.stream().allMatch(
+            delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)) {
       checkIfAnyDelegatesAreDown(accountId, delegates);
     }
     checkForInvalidValidSMTP(accountId);
@@ -179,7 +171,6 @@ public class AlertCheckJob implements Job {
     for (Delegate delegate : delegates) {
       if (primaryConnections.contains(delegate.getUuid()) && isNotEmpty(delegate.getDelegateGroupName())) {
         String delegateGroupName = delegate.getDelegateGroupName();
-        closeDelegateScalingGroupDownAlert(accountId, delegateGroupName);
         connectedScalingGroups.add(delegateGroupName);
       }
     }
@@ -190,17 +181,5 @@ public class AlertCheckJob implements Job {
                                        .collect(Collectors.toSet());
 
     allScalingGroups.removeAll(connectedScalingGroups);
-
-    for (String disconnectedScalingGroup : allScalingGroups) {
-      AlertData alertData =
-          DelegatesScalingGroupDownAlert.builder().accountId(accountId).groupName(disconnectedScalingGroup).build();
-
-      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesScalingGroupDownAlert, alertData);
-    }
-  }
-
-  private void closeDelegateScalingGroupDownAlert(String accountId, String groupName) {
-    AlertData alertData = DelegatesScalingGroupDownAlert.builder().accountId(accountId).groupName(groupName).build();
-    alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesScalingGroupDownAlert, alertData);
   }
 }

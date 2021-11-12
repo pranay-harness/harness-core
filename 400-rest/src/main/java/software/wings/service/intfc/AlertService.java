@@ -38,10 +38,6 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication {
 
   void closeAlertsOfType(String accountId, String appId, AlertType alertType);
 
-  void delegateAvailabilityUpdated(String accountId);
-
-  void delegateEligibilityUpdated(String accountId, String delegateId);
-
   void deploymentCompleted(String appId, String executionId);
 
   Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
