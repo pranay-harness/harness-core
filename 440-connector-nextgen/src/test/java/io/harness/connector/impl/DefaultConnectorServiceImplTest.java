@@ -249,7 +249,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Category(UnitTests.class)
   public void testMarkConnectorInvalid() {
     createConnector(identifier, name);
-    connectorService.markEntity(accountIdentifier, null, null, identifier, true, "xyz");
+    connectorService.markEntityInvalid(accountIdentifier, null, null, identifier, "xyz");
     Optional<ConnectorResponseDTO> connectorResponseDTO =
         connectorService.get(accountIdentifier, null, null, identifier);
     assertThat(connectorResponseDTO).isPresent();
