@@ -10,13 +10,13 @@ public class DatadogLogDataCollectionInfoMapper
   @Override
   public DatadogLogDataCollectionInfo toDataCollectionInfo(DatadogLogCVConfig cvConfig) {
     DatadogLogDefinition definition = DatadogLogDefinition.builder()
-            .name(cvConfig.getQueryName())
-            .query(cvConfig.getQuery())
-            .indexes(cvConfig.getIndexes())
-            .serviceInstanceIdentifier(cvConfig.getServiceInstanceIdentifier())
-            .build();
+                                          .name(cvConfig.getQueryName())
+                                          .query(cvConfig.getQuery())
+                                          .indexes(cvConfig.getIndexes())
+                                          .serviceInstanceIdentifier(cvConfig.getServiceInstanceIdentifier())
+                                          .build();
     DatadogLogDataCollectionInfo datadogLogDataCollectionInfo =
-            DatadogLogDataCollectionInfo.builder().logDefinition(definition).build();
+        DatadogLogDataCollectionInfo.builder().logDefinition(definition).build();
     datadogLogDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
     return datadogLogDataCollectionInfo;
   }

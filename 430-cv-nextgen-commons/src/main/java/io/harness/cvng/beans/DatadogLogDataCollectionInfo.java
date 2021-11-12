@@ -3,13 +3,13 @@ package io.harness.cvng.beans;
 import io.harness.cvng.beans.datadog.DatadogLogDefinition;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.cvng.datadog.DatadogUtils;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 @Value
 @Builder
@@ -41,6 +41,6 @@ public class DatadogLogDataCollectionInfo extends LogDataCollectionInfo<DatadogC
 
   @Override
   public Map<String, String> collectionParams(DatadogConnectorDTO connectorConfigDTO) {
-   return Collections.emptyMap();
+    return Collections.emptyMap();
   }
 }

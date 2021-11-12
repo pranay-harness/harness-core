@@ -1,27 +1,26 @@
 package io.harness.cvng.core.utils.monitoredService;
 
-import com.google.inject.Inject;
+import static io.harness.rule.OwnerRule.PAVIC;
+
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.DatadogLogHealthSourceSpec;
 import io.harness.cvng.core.entities.DatadogLogCVConfig;
-
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static io.harness.rule.OwnerRule.PAVIC;
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
   private BuilderFactory builderFactory;
@@ -39,10 +38,12 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
   public void setup() {
     builderFactory = BuilderFactory.getDefault();
     queries = IntStream.range(1, QUERY_COUNT)
-            .mapToObj(index -> DatadogLogHealthSourceSpec.QueryDTO.builder()
-                    .name(randomAlphabetic(10))
-                    .query(randomAlphabetic(10)).build())
-            .collect(Collectors.toList());
+                  .mapToObj(index
+                      -> DatadogLogHealthSourceSpec.QueryDTO.builder()
+                             .name(randomAlphabetic(10))
+                             .query(randomAlphabetic(10))
+                             .build())
+                  .collect(Collectors.toList());
   }
 
   @Test
@@ -50,8 +51,8 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void transformToHealthSourceConfigPreconditionEmptyCVConfigs() {
     assertThatThrownBy(() -> classUnderTest.transform(Collections.emptyList()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("List of cvConfigs can not empty.");
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("List of cvConfigs can not empty.");
   }
 
   @Test
@@ -61,8 +62,8 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
     List<DatadogLogCVConfig> cvConfigs = createCVConfigs();
     cvConfigs.get(0).setIdentifier("different-identifier");
     assertThatThrownBy(() -> classUnderTest.transform(cvConfigs))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Group ID should be same for List of all configs.");
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Group ID should be same for List of all configs.");
   }
 
   @Test
@@ -72,8 +73,8 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
     List<DatadogLogCVConfig> cvConfigs = createCVConfigs();
     cvConfigs.get(0).setConnectorIdentifier("different-connector-ref");
     assertThatThrownBy(() -> classUnderTest.transform(cvConfigs))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("ConnectorRef should be same for List of all configs.");
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("ConnectorRef should be same for List of all configs.");
   }
 
   @Test
@@ -83,8 +84,8 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
     List<DatadogLogCVConfig> cvConfigs = createCVConfigs();
     cvConfigs.get(0).setProductName("different-product-name");
     assertThatThrownBy(() -> classUnderTest.transform(cvConfigs))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Application feature name should be same for List of all configs.");
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Application feature name should be same for List of all configs.");
   }
 
   @Test
@@ -101,13 +102,14 @@ public class DatadogLogSourceSpecTransformerTest extends CvNextGenTestBase {
 
   private List<DatadogLogCVConfig> createCVConfigs() {
     return queries.stream()
-            .map(query -> (DatadogLogCVConfig) builderFactory.datadogLogCVConfigBuilder()
-                    .queryName(query.getName())
-                    .query(query.getQuery())
-                    .connectorIdentifier(MOCKED_CONNECTOR_IDENTIFIER)
-                    .productName(MOCKED_PRODUCT_NAME)
-                    .identifier(MOCKED_GROUP_IDENTIFIER)
-                    .build())
-            .collect(Collectors.toList());
+        .map(query
+            -> (DatadogLogCVConfig) builderFactory.datadogLogCVConfigBuilder()
+                   .queryName(query.getName())
+                   .query(query.getQuery())
+                   .connectorIdentifier(MOCKED_CONNECTOR_IDENTIFIER)
+                   .productName(MOCKED_PRODUCT_NAME)
+                   .identifier(MOCKED_GROUP_IDENTIFIER)
+                   .build())
+        .collect(Collectors.toList());
   }
 }

@@ -1,8 +1,9 @@
 package io.harness.cvng.core.beans.datadog;
 
+import com.google.gson.annotations.SerializedName;
 import lombok.Builder;
 import lombok.Value;
-import com.google.gson.annotations.SerializedName;
+
 @Value
 @Builder
 public class DatadogDashboardDTO {

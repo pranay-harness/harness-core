@@ -99,8 +99,7 @@ public abstract class DataCollectionRequest<T extends ConnectorConfigDTO> implem
             maskingEvaluator, connectorInfoDTO.getConnectorConfig());
       case DATADOG:
         return DatadogCapabilityHelper.fetchRequiredExecutionCapabilities(
-                maskingEvaluator,
-                connectorInfoDTO.getConnectorConfig());
+            maskingEvaluator, connectorInfoDTO.getConnectorConfig());
       default:
         throw new InvalidRequestException("Connector capability not found");
     }

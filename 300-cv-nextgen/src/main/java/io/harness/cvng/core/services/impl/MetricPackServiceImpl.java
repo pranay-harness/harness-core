@@ -55,8 +55,8 @@ public class MetricPackServiceImpl implements MetricPackService {
           "/prometheus/metric-packs/default-error-pack.yaml", "/prometheus/metric-packs/default-infra-pack.yaml");
 
   static final List<String> DATADOG_METRICPACK_FILES =
-          Lists.newArrayList("/datadog/metric-packs/default-performance-pack.yaml",
-                  "/datadog/metric-packs/default-error-pack.yaml", "/datadog/metric-packs/default-infra-pack.yaml");
+      Lists.newArrayList("/datadog/metric-packs/default-performance-pack.yaml",
+          "/datadog/metric-packs/default-error-pack.yaml", "/datadog/metric-packs/default-infra-pack.yaml");
 
   private static final URL APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/performance-pack.datacollection");
@@ -77,7 +77,7 @@ public class MetricPackServiceImpl implements MetricPackService {
   public static final String PROMETHEUS_DSL;
 
   private static final URL DATADOG_DSL_PATH =
-          MetricPackServiceImpl.class.getResource("/datadog/dsl/metric-collection.datacollection");
+      MetricPackServiceImpl.class.getResource("/datadog/dsl/metric-collection.datacollection");
   public static final String DATADOG_DSL;
 
   private static final URL NEW_RELIC_DSL_PATH =

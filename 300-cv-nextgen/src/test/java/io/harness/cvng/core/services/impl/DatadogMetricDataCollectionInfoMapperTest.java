@@ -1,27 +1,22 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.rule.OwnerRule.PAVIC;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.DatadogMetricsDataCollectionInfo;
-import io.harness.cvng.beans.StackdriverDataCollectionInfo;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
-import io.harness.cvng.core.beans.DatadogMetricHealthDefinition;
 import io.harness.cvng.core.entities.DatadogMetricCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Arrays;
-
-import static io.harness.rule.OwnerRule.PAVIC;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase {
   private static final String MOCKED_DASHBOARD_NAME = "MockedDashboardName";
@@ -37,16 +32,15 @@ public class DatadogMetricDataCollectionInfoMapperTest extends CvNextGenTestBase
   public void testToDataCollectionInfo() {
     MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
     DatadogMetricCVConfig.MetricInfo metricInfo = DatadogMetricCVConfig.MetricInfo.builder()
-            .query(MOCKED_METRIC_QUERY)
-            .metricName(MOCKED_METRIC_NAME)
-            .metricType(TimeSeriesMetricType.INFRA)
-            .build();
+                                                      .query(MOCKED_METRIC_QUERY)
+                                                      .metricName(MOCKED_METRIC_NAME)
+                                                      .metricType(TimeSeriesMetricType.INFRA)
+                                                      .build();
 
-    DatadogMetricCVConfig datadogMetricCVConfig = builderFactory
-            .datadogMetricCVConfigBuilder()
-            .metricInfoList(Arrays.asList(metricInfo))
-            .dashboardName(MOCKED_DASHBOARD_NAME)
-            .build();
+    DatadogMetricCVConfig datadogMetricCVConfig = builderFactory.datadogMetricCVConfigBuilder()
+                                                      .metricInfoList(Arrays.asList(metricInfo))
+                                                      .dashboardName(MOCKED_DASHBOARD_NAME)
+                                                      .build();
     datadogMetricCVConfig.setMetricPack(metricPack);
 
     DatadogMetricsDataCollectionInfo collectionInfoResult = classUnderTest.toDataCollectionInfo(datadogMetricCVConfig);

@@ -279,11 +279,11 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
         .to(StackdriverMetricHealthSourceSpecTransformer.class);
     bind(CVConfigToHealthSourceTransformer.class)
-            .annotatedWith(Names.named(DataSourceType.DATADOG_METRICS.name()))
-            .to(DatadogMetricHealthSourceSpecTransformer.class);
+        .annotatedWith(Names.named(DataSourceType.DATADOG_METRICS.name()))
+        .to(DatadogMetricHealthSourceSpecTransformer.class);
     bind(CVConfigToHealthSourceTransformer.class)
-            .annotatedWith(Names.named(DataSourceType.DATADOG_LOG.name()))
-            .to(DatadogLogHealthSourceSpecTransformer.class);
+        .annotatedWith(Names.named(DataSourceType.DATADOG_LOG.name()))
+        .to(DatadogLogHealthSourceSpecTransformer.class);
 
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
@@ -307,11 +307,11 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
         .to(PrometheusDataCollectionInfoMapper.class);
     bind(DataCollectionInfoMapper.class)
-            .annotatedWith(Names.named(DataSourceType.DATADOG_METRICS.name()))
-            .to(DatadogMetricDataCollectionInfoMapper.class);
+        .annotatedWith(Names.named(DataSourceType.DATADOG_METRICS.name()))
+        .to(DatadogMetricDataCollectionInfoMapper.class);
     bind(DataCollectionInfoMapper.class)
-            .annotatedWith(Names.named(DataSourceType.DATADOG_LOG.name()))
-            .to(DatadogLogDataCollectionInfoMapper.class);
+        .annotatedWith(Names.named(DataSourceType.DATADOG_LOG.name()))
+        .to(DatadogLogDataCollectionInfoMapper.class);
 
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
@@ -382,9 +382,10 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
         .to(StackdriverLogCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
-    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_METRICS).to(DatadogMetricCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_METRICS)
+        .to(DatadogMetricCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_LOG)
-            .to(DatadogLogCVConfig.DatadogLogCVConfigUpdatableEntity.class);
+        .to(DatadogLogCVConfig.DatadogLogCVConfigUpdatableEntity.class);
     // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
     // if something goes wrong in feature flags stream
     // We are dependent on source of truth (Manager) for this.
