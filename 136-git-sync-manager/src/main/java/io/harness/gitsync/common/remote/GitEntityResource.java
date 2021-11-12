@@ -1,5 +1,16 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_CODE;
+import static io.harness.NGCommonEntityConstants.BAD_REQUEST_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_CODE;
+import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PAGE_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.SIZE_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.EntityType;
@@ -12,11 +23,19 @@ import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncRepoFilesListDTO;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -35,22 +54,47 @@ import retrofit2.http.Body;
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Tag(name = "Git Sync Entities", description = "This contains a list of APIs specific to Git Sync Entities")
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = BAD_REQUEST_CODE, description = BAD_REQUEST_PARAM_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.
+ApiResponse(responseCode = INTERNAL_SERVER_ERROR_CODE, description = INTERNAL_SERVER_ERROR_MESSAGE,
+    content =
+    {
+      @Content(mediaType = APPLICATION_JSON_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = APPLICATION_YAML_MEDIA_TYPE, schema = @Schema(implementation = ErrorDTO.class))
+    })
 @OwnedBy(DX)
 public class GitEntityResource {
   private GitEntityService gitEntityService;
   @GET
   @Path("{entityType}")
   @ApiOperation(value = "Get Git Sync Entity By Type", nickname = "listGitSyncEntitiesByType")
-  public ResponseDTO<PageResponse<GitSyncEntityListDTO>> listByType(
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
-      @QueryParam(YamlConstants.GITSYNC_CONFIG_ID) String gitSyncConfigId,
-      @QueryParam(YamlConstants.BRANCH) String branch,
-      @PathParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType,
-      @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
-      @QueryParam(NGCommonEntityConstants.SIZE) int size,
-      @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType) {
+  @Operation(operationId = "listGitSyncEntitiesByType",
+      summary = "Lists Git Sync Entity filtered by their Type for the given scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Paginated list of Git Sync Entities filtered by Entity Type")
+      })
+  public ResponseDTO<PageResponse<GitSyncEntityListDTO>>
+  listByType(@Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+                 NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
+      @Parameter(description = "Git Sync Config Id") @QueryParam(YamlConstants.GITSYNC_CONFIG_ID)
+      String gitSyncConfigId, @Parameter(description = "Branch Name") @QueryParam(YamlConstants.BRANCH) String branch,
+      @Parameter(description = "Entity Type") @PathParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType entityType,
+      @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0")
+      int page, @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) int size,
+      @Parameter(description = "Module Type") @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType) {
     // Added moduleType for now if in future we want to support product filter in entities as well.
     return ResponseDTO.newResponse(gitEntityService.getPageByType(
         projectIdentifier, organizationIdentifier, accountIdentifier, gitSyncConfigId, branch, entityType, page, size));
@@ -60,11 +104,24 @@ public class GitEntityResource {
   @Path("summary")
   @ApiOperation(value = "List Git Sync Entity by product for List of Repos and Entities",
       nickname = "listGitSyncEntitiesSummaryForRepoAndTypes")
+  @Operation(operationId = "listGitSyncEntitiesSummaryForRepoAndTypes",
+      summary = "Lists Git Sync Entity by product for the given list of Repos and Entity Types",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description =
+                        "Paginated list of Git Sync Entities by product based on given list of Repos and Entity Types")
+      })
   public ResponseDTO<GitSyncRepoFilesListDTO>
-  listSummary(@QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.SIZE) int size, @Body GitEntitySummaryFilterDTO gitEntityFilter) {
+  listSummary(@Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+                  NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
+      @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) int size,
+      @RequestBody(required = true, description = "Filter Git Sync Entity based on multiple parameters")
+      @Body GitEntitySummaryFilterDTO gitEntityFilter) {
     return ResponseDTO.newResponse(gitEntityService.listSummary(projectIdentifier, organizationIdentifier,
         accountIdentifier, gitEntityFilter.getModuleType(), gitEntityFilter.getSearchTerm(),
         gitEntityFilter.getGitSyncConfigIdentifiers(), gitEntityFilter.getEntityTypes(), size));
@@ -74,13 +131,27 @@ public class GitEntityResource {
   @Path("branch/{branch}")
   @ApiOperation(value = "List Git Sync Entity by product for Repo and Branch and List of Entities",
       nickname = "listGitSyncEntitiesSummaryForRepoAndBranch")
+  @Operation(operationId = "listGitSyncEntitiesSummaryForRepoAndBranch",
+      summary = "Lists Git Sync Entity by product for the given Repo, Branch and list of Entity Types",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            description =
+                "This contains a list of Product-wise Git Sync Entities specific to the given Repo, Branch, and Entity Types")
+      })
   public ResponseDTO<List<GitSyncEntityListDTO>>
-  listSummaryByRepoAndBranch(@QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.SIZE) int size,
-      @QueryParam(YamlConstants.GITSYNC_CONFIG_ID) String gitSyncConfigId,
-      @PathParam(YamlConstants.BRANCH) @NotEmpty String branch, @Body GitEntityBranchSummaryFilterDTO gitEntityFilter) {
+  listSummaryByRepoAndBranch(@Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+                                 NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
+      @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) int size,
+      @Parameter(description = "Git Sync Config Id") @QueryParam(
+          YamlConstants.GITSYNC_CONFIG_ID) String gitSyncConfigId,
+      @Parameter(description = "Branch Name") @PathParam(YamlConstants.BRANCH) @NotEmpty String branch,
+      @RequestBody(required = true, description = "Filter Git Sync Entity based on multiple parameters")
+      @Body GitEntityBranchSummaryFilterDTO gitEntityFilter) {
     return ResponseDTO.newResponse(gitEntityService.listSummaryByRepoAndBranch(projectIdentifier,
         organizationIdentifier, accountIdentifier, gitEntityFilter.getModuleType(), gitEntityFilter.getSearchTerm(),
         gitSyncConfigId, branch, gitEntityFilter.getEntityTypes(), size));
