@@ -13,6 +13,7 @@ import io.harness.pms.execution.ExecutionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
@@ -28,6 +29,7 @@ import org.bson.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("PipelineExecutionSummary")
+@Schema(name = "PipelineExecutionSummary", description = "This is the view of the Pipeline Execution Summary")
 public class PipelineExecutionSummaryDTO {
   String pipelineIdentifier;
   String planExecutionId;
