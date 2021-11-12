@@ -10,6 +10,7 @@ import io.harness.ng.core.activityhistory.NGActivityType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,6 +24,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @OwnedBy(DX)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("Activity")
+@Schema(name = "NGActivity", description = "This is the view of the NGActivity entity defined in Harness")
 public class NGActivityDTO {
   @NotBlank String accountIdentifier;
   EntityDetail referredEntity;
