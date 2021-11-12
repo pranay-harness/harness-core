@@ -395,7 +395,7 @@ public class InputSetResourcePMS {
 
   @DELETE
   @Path("{inputSetIdentifier}")
-  @ApiOperation(value = "Delete an inputSet by identifier", nickname = "deleteInputSetForPipeline")
+  @ApiOperation(value = "Delete an InputSet by identifier", nickname = "deleteInputSetForPipeline")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_DELETE)
   @Operation(operationId = "deleteInputSet", summary = "Delete the Input Set by Identifier",
       responses =
@@ -415,7 +415,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Parameter(
           description =
-              "Pipeline identifier for the input set. Input set will be deleted for the Pipeline corresponding to this Identifier")
+              "Pipeline identifier for the Input Set. Input Set will be deleted for the Pipeline corresponding to this Identifier")
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
     log.info(String.format("Deleting input set with identifier %s for pipeline %s in project %s, org %s, account %s",
@@ -472,11 +472,22 @@ public class InputSetResourcePMS {
   @Path("template")
   @ApiOperation(value = "Get template from a pipeline YAML", nickname = "getTemplateFromPipeline")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<InputSetTemplateResponseDTOPMS> getTemplateFromPipeline(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
+  @Operation(operationId = "runtimeInputTemplate", summary = "Fetch Runtime Input Template for a Pipeline",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description =
+                "Fetch Runtime Input Template for a Pipeline, along with any expressions whose value is needed for running specific Stages")
+      })
+  public ResponseDTO<InputSetTemplateResponseDTOPMS>
+  getTemplateFromPipeline(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Parameter(
+                              description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @Parameter(
+          description = PipelineResourceConstants.ORG_PARAM_MESSAGE) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier @Parameter(
+          description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @Parameter(
+          description = "Pipeline identifier for which we need the Runtime Input Template.") String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, InputSetTemplateRequestDTO inputSetTemplateRequestDTO) {
     log.info(String.format("Get template for pipeline %s in project %s, org %s, account %s", pipelineIdentifier,
         projectIdentifier, orgIdentifier, accountId));
@@ -490,17 +501,29 @@ public class InputSetResourcePMS {
   @POST
   @Path("merge")
   @ApiOperation(
-      value = "Merges given input sets list on pipeline and return input set template format of applied pipeline",
+      value = "Merges given Input Sets list on pipeline and return Input Set template format of applied pipeline",
       nickname = "getMergeInputSetFromPipelineTemplateWithListInput")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  @Operation(operationId = "mergeInputSets", summary = "Merge given Input Sets into a single Runtime Input YAML",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Merge given Input Sets into A single Runtime Input YAML")
+      })
   public ResponseDTO<MergeInputSetResponseDTOPMS>
   getMergeInputSetFromPipelineTemplate(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam("pipelineBranch") String pipelineBranch, @QueryParam("pipelineRepoID") String pipelineRepoID,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Parameter(
+          description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @Parameter(
+          description = PipelineResourceConstants.ORG_PARAM_MESSAGE) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @Parameter(
+          description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @Parameter(
+          description = "Identifier of the Pipeline to which the Input Sets belong") String pipelineIdentifier,
+      @Parameter(description = "Github branch of the Pipeline to which the Input Sets belong") @QueryParam(
+          "pipelineBranch") String pipelineBranch,
+      @Parameter(description = "Github Repo identifier of the Pipeline to which the Input Sets belong")
+      @QueryParam("pipelineRepoID") String pipelineRepoID, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) {
     List<String> inputSetReferences = mergeInputSetRequestDTO.getInputSetReferences();
     String mergedYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId, orgIdentifier,
@@ -522,17 +545,31 @@ public class InputSetResourcePMS {
   @POST
   @Path("mergeWithTemplateYaml")
   @ApiOperation(
-      value = "Merges given runtime input YAML on pipeline and return input set template format of applied pipeline",
+      value = "Merges given runtime input YAML on pipeline and return Input Set template format of applied pipeline",
       nickname = "getMergeInputSetFromPipelineTemplate")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  @Operation(operationId = "mergeRuntimeInputIntoPipeline",
+      summary = "Merge given Runtime Input YAML into the Pipeline",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Merge given Runtime Input YAML into the Pipeline")
+      })
   // TODO(Naman): Correct PipelineServiceClient when modifying this api
   public ResponseDTO<MergeInputSetResponseDTOPMS>
   getMergeInputSetFromPipelineTemplate(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam("pipelineBranch") String pipelineBranch, @QueryParam("pipelineRepoID") String pipelineRepoID,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Parameter(
+          description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @Parameter(
+          description = PipelineResourceConstants.ORG_PARAM_MESSAGE) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier @Parameter(
+          description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @Parameter(
+          description = "Identifier of the Pipeline to which the Input Sets belong") String pipelineIdentifier,
+      @QueryParam("pipelineBranch") @Parameter(
+          description = "Github branch of the Pipeline to which the Input Sets belong") String pipelineBranch,
+      @QueryParam("pipelineRepoID") @Parameter(
+          description = "Github Repo identifier of the Pipeline to which the Input Sets belong") String pipelineRepoID,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @NotNull @Valid MergeInputSetTemplateRequestDTO mergeInputSetTemplateRequestDTO) {
     String fullYaml = validateAndMergeHelper.mergeInputSetIntoPipeline(accountId, orgIdentifier, projectIdentifier,

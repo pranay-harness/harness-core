@@ -10,10 +10,13 @@ import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
+import io.harness.cvng.beans.appd.AppDynamicFetchFileStructureRequest;
+import io.harness.cvng.beans.appd.AppDynamicSingleMetricDataRequest;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsDataCollectionRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFetchAppRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
+import io.harness.cvng.beans.appd.AppDynamicsFileDefinition;
 import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
@@ -117,5 +120,8 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogLogSampleDataRequest.class, 9070);
     kryo.register(DatadogLogDataCollectionInfo.class, 9071);
     kryo.register(DatadogLogIndexesRequest.class, 9072);
+    kryo.register(AppDynamicsFileDefinition.class, 9065);
+    kryo.register(AppDynamicFetchFileStructureRequest.class, 9066);
+    kryo.register(AppDynamicSingleMetricDataRequest.class, 9067);
   }
 }

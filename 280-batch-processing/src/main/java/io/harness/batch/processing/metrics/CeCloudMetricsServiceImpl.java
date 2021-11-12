@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 
 import com.google.cloud.bigquery.FieldValue;

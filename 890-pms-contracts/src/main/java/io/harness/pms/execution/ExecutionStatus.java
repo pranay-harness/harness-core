@@ -9,9 +9,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Arrays;
 
 @OwnedBy(PIPELINE)
+@Schema(name = "ExecutionStatus", description = "This is the Execution Status of the entity")
 public enum ExecutionStatus {
   @JsonProperty("Running") RUNNING(Status.RUNNING, "Running"),
   @JsonProperty("AsyncWaiting") ASYNCWAITING(Status.ASYNC_WAITING, "AsyncWaiting"),

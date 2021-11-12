@@ -5,9 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.hazelcast.util.Preconditions.checkFalse;
 
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
+import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpServiceAccount;
 import io.harness.connector.ConnectivityStatus;
@@ -74,6 +77,7 @@ public class GcpSyncTasklet implements Tasklet {
   @Autowired private BatchMainConfig mainConfig;
   @Autowired private ConnectorResourceClient connectorResourceClient;
   @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Autowired private BatchJobScheduledDataDao batchJobScheduledDataDao;
   private JobParameters parameters;
   private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
 
@@ -82,6 +86,11 @@ public class GcpSyncTasklet implements Tasklet {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     Long endTime = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
+    BatchJobScheduledData batchJobScheduledData =
+        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(accountId, BatchJobType.SYNC_BILLING_REPORT_GCP);
+    if (null != batchJobScheduledData) {
+      endTime = batchJobScheduledData.getEndAt().toEpochMilli();
+    }
     BillingDataPipelineConfig billingDataPipelineConfig = mainConfig.getBillingDataPipelineConfig();
 
     if (billingDataPipelineConfig.isGcpSyncEnabled()) {
@@ -136,6 +145,7 @@ public class GcpSyncTasklet implements Tasklet {
 
         Long lastModifiedTime = tableGranularData.getLastModifiedTime();
         lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : table.getCreationTime();
+        log.info("Sync condition {} {}", lastModifiedTime, endTime);
         if (lastModifiedTime > endTime) {
           try {
             publishMessage(billingDataPipelineConfig.getGcpProjectId(),

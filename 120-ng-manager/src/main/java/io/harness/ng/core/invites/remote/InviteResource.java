@@ -1,5 +1,8 @@
 package io.harness.ng.core.invites.remote;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
@@ -45,6 +48,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -75,6 +84,20 @@ import org.springframework.data.mongodb.core.query.Criteria;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Tag(name = "Invite", description = "This contains APIs related to Invite as defined in Harness")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = FailureDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+    content =
+    {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
+      , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
+
 @NextGenManagerAuth
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
@@ -91,8 +114,16 @@ public class InviteResource {
   @GET
   @Path("invite")
   @ApiOperation(value = "Get invite", nickname = "getInvite")
-  public ResponseDTO<InviteDTO> getInviteWithToken(
-      @QueryParam("inviteId") String inviteId, @QueryParam("jwttoken") String jwtToken) {
+  @Operation(operationId = "getInvite", summary = "Gets an Invite by either Invite Id or JwtToken",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns the Invite having"
+                + " either InviteId or JwtToken as specified in request")
+      })
+  public ResponseDTO<InviteDTO>
+  getInviteWithToken(@Parameter(description = "Invitation Id") @QueryParam("inviteId") String inviteId,
+      @Parameter(description = "JWT Token") @QueryParam("jwttoken") String jwtToken) {
     if ((isBlank(inviteId) && isBlank(jwtToken)) || (!isBlank(inviteId) && !isBlank(jwtToken))) {
       throw new InvalidRequestException("Specify either inviteId or jwtToken");
     }
@@ -113,12 +144,19 @@ public class InviteResource {
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
+  @Operation(operationId = "getInvites", summary = "List all the Invites for a Project or Organization",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Paginated list of Invites")
+      })
   @NGAccessControlCheck(resourceType = USER, permission = VIEW_USER_PERMISSION)
-  public ResponseDTO<PageResponse<InviteDTO>> getInvites(
-      @QueryParam("accountIdentifier") @NotNull @AccountIdentifier String accountIdentifier,
-      @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
-      @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
-      @BeanParam PageRequest pageRequest) {
+  public ResponseDTO<PageResponse<InviteDTO>>
+  getInvites(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                 "accountIdentifier") @NotNull @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectIdentifier")
+      @ProjectIdentifier String projectIdentifier, @BeanParam PageRequest pageRequest) {
     projectIdentifier = stripToNull(projectIdentifier);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
@@ -143,13 +181,22 @@ public class InviteResource {
   @POST
   @Path("aggregate")
   @ApiOperation(value = "Get a page of pending users for access control", nickname = "getPendingUsersAggregated")
+  @Operation(operationId = "getPendingUsersAggregated", summary = "List of all the Invites pending users",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Paginated list of Pending Invites")
+      })
   @NGAccessControlCheck(resourceType = USER, permission = VIEW_USER_PERMISSION)
-  public ResponseDTO<PageResponse<InviteDTO>> getPendingInvites(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam("searchTerm") String searchTerm, @BeanParam PageRequest pageRequest,
-      ACLAggregateFilter aclAggregateFilter) {
+  public ResponseDTO<PageResponse<InviteDTO>>
+  getPendingInvites(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                        NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = "Search term") @QueryParam("searchTerm") String searchTerm,
+      @BeanParam PageRequest pageRequest, ACLAggregateFilter aclAggregateFilter) {
     PageResponse<InviteDTO> inviteDTOs = inviteService.getPendingInvites(
         accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, pageRequest, aclAggregateFilter);
     return ResponseDTO.newResponse(inviteDTOs);
@@ -157,11 +204,20 @@ public class InviteResource {
 
   @POST
   @ApiOperation(value = "Add a new invite for the specified project/organization", nickname = "sendInvite")
+  @Operation(operationId = "sendInvite", summary = "Send a user Invite to either Project or Organization",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the Invite Operation Response")
+      })
   @Deprecated
-  public ResponseDTO<List<InviteOperationResponse>> createInvitations(
-      @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Valid CreateInviteDTO createInviteDTO) {
+  public ResponseDTO<List<InviteOperationResponse>>
+  createInvitations(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                        "accountIdentifier") @NotNull String accountIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("orgIdentifier") String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectIdentifier") String projectIdentifier,
+      @RequestBody(required = true,
+          description = "Details of the Invite to create") @NotNull @Valid CreateInviteDTO createInviteDTO) {
     projectIdentifier = stripToNull(projectIdentifier);
     orgIdentifier = stripToNull(orgIdentifier);
     List<InviteOperationResponse> inviteOperationResponses =
@@ -197,7 +253,14 @@ public class InviteResource {
   @GET
   @Path("complete")
   @ApiOperation(value = "Complete user invite", nickname = "completeInvite", hidden = true)
-  public ResponseDTO<Boolean> completeInvite(@QueryParam("token") String token) {
+  @Operation(operationId = "completeInvite", summary = "Complete the User Invite",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the boolean status")
+      })
+  public ResponseDTO<Boolean>
+  completeInvite(@Parameter(description = "JWT Tokenn") @QueryParam("token") String token) {
     Optional<Invite> inviteOpt = inviteService.getInviteFromToken(token, false);
     return ResponseDTO.newResponse(inviteService.completeInvite(inviteOpt));
   }
@@ -205,8 +268,16 @@ public class InviteResource {
   @PUT
   @Path("{inviteId}")
   @ApiOperation(value = "Resend invite mail", nickname = "updateInvite")
-  public ResponseDTO<Optional<InviteDTO>> updateInvite(@PathParam("inviteId") @NotNull String inviteId,
-      @NotNull @Valid InviteDTO inviteDTO, @QueryParam("accountIdentifier") String accountIdentifier) {
+  @Operation(operationId = "updateInvite", summary = "Resend the Invite email",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the Invite")
+      })
+  public ResponseDTO<Optional<InviteDTO>>
+  updateInvite(@Parameter(description = "Invite id") @PathParam("inviteId") @NotNull String inviteId,
+      @RequestBody(required = true, description = "Details of the Updated Invite") @NotNull @Valid InviteDTO inviteDTO,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountIdentifier") String accountIdentifier) {
     NGAccess ngAccess = BaseNGAccess.builder().accountIdentifier(accountIdentifier).build();
     Invite invite = InviteMapper.toInvite(inviteDTO, ngAccess);
     invite.setId(inviteId);
@@ -217,9 +288,16 @@ public class InviteResource {
   @DELETE
   @Path("{inviteId}")
   @ApiOperation(value = "Delete a invite for the specified project/organization", nickname = "deleteInvite")
+  @Operation(operationId = "deleteInvite", summary = "Delete an Invite by Identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns either empty value of Deleted Invite")
+      })
   @Produces("application/json")
   @Consumes()
-  public ResponseDTO<Optional<InviteDTO>> delete(@PathParam("inviteId") @NotNull String inviteId) {
+  public ResponseDTO<Optional<InviteDTO>>
+  delete(@Parameter(description = "Invite Id") @PathParam("inviteId") @NotNull String inviteId) {
     Optional<Invite> inviteOptional = inviteService.deleteInvite(inviteId);
     return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
   }

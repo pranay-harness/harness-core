@@ -53,7 +53,7 @@ public class CliHelper {
                                             protected void processLine(String line) {
                                               log.error(line);
                                               executionLogCallback.saveExecutionLog(line, LogLevel.ERROR);
-                                              errorLogs.append(line);
+                                              errorLogs.append(' ').append(line);
                                             }
                                           });
 
@@ -62,7 +62,7 @@ public class CliHelper {
     return CliResponse.builder()
         .commandExecutionStatus(status)
         .output(processResult.outputUTF8())
-        .error(errorLogs.toString())
+        .error(errorLogs.toString().trim())
         .build();
   }
 }

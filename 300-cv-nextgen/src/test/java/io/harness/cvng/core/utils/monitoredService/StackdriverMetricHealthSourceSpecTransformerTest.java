@@ -1,6 +1,6 @@
 package io.harness.cvng.core.utils.monitoredService;
 
-import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +10,9 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.StackdriverDefinition;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.StackdriverMetricHealthSourceSpec;
+import io.harness.cvng.core.entities.AnalysisInfo.DeploymentVerification;
+import io.harness.cvng.core.entities.AnalysisInfo.LiveMonitoring;
+import io.harness.cvng.core.entities.AnalysisInfo.SLI;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.StackdriverCVConfig;
 import io.harness.rule.Owner;
@@ -43,7 +46,7 @@ public class StackdriverMetricHealthSourceSpecTransformerTest extends CvNextGenT
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
   public void testTransformToHealthSourceConfig() throws Exception {
     StackdriverMetricHealthSourceSpec spec =
@@ -59,6 +62,11 @@ public class StackdriverMetricHealthSourceSpecTransformerTest extends CvNextGenT
     assertThat(metricDefinition.getMetricName()).isEqualTo("metricName1");
     assertThat(metricDefinition.getJsonMetricDefinition()).isEqualTo(JsonUtils.asObject(metricDef, Object.class));
     assertThat(metricDefinition.getRiskProfile().getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
+    assertThat(metricDefinition.getAnalysis().getLiveMonitoring().getEnabled()).isTrue();
+    assertThat(metricDefinition.getAnalysis().getDeploymentVerification().getEnabled()).isTrue();
+    assertThat(metricDefinition.getSli().getEnabled()).isTrue();
+    assertThat(metricDefinition.getAnalysis().getRiskProfile().getCategory())
+        .isEqualTo(CVMonitoringCategory.PERFORMANCE);
   }
 
   private StackdriverCVConfig createCVConfig() throws IOException {
@@ -70,6 +78,9 @@ public class StackdriverMetricHealthSourceSpecTransformerTest extends CvNextGenT
 
     StackdriverCVConfig.MetricInfo metricInfo =
         StackdriverCVConfig.MetricInfo.builder().metricName("metricName1").jsonMetricDefinition(metricDef).build();
+    metricInfo.setDeploymentVerification(DeploymentVerification.builder().enabled(Boolean.TRUE).build());
+    metricInfo.setLiveMonitoring(LiveMonitoring.builder().enabled(Boolean.TRUE).build());
+    metricInfo.setSli(SLI.builder().enabled(Boolean.TRUE).build());
     cvConfig.setMetricPack(MetricPack.builder().category(CVMonitoringCategory.PERFORMANCE).build());
     cvConfig.setMetricInfoList(Arrays.asList(metricInfo));
     return cvConfig;
