@@ -24,7 +24,6 @@ RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_
 RUN curl -#k https://app.harness.io/public/shared/watchers/builds/openjdk-8u242/71500/watcher.jar -o watcher.jar
 
 RUN chmod 444 /opt/harness-delegate/watcher.jar
-RUN chmod 444 /opt/harness-delegate/msg/data/watcher-data
 
 CMD ./entrypoint.sh && bash -c ' \
     while [[ ! -e watcher.log ]]; do sleep 1s; done; tail -F watcher.log & \
