@@ -1,8 +1,6 @@
 package io.harness.cvng.core.beans.params;
 
-import io.harness.cvng.core.services.CVNextGenConstants;
-
-import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProjectParams {
-  @PathParam(CVNextGenConstants.ACCOUNT_IDENTIFIER_KEY) @NonNull String accountIdentifier;
-  @PathParam(CVNextGenConstants.ORG_IDENTIFIER_KEY) @NonNull String orgIdentifier;
-  @PathParam(CVNextGenConstants.PROJECT_IDENTIFIER_KEY) @NonNull String projectIdentifier;
+  @QueryParam("accountId") @NonNull String accountIdentifier;
+  @QueryParam("orgIdentifier") @NonNull String orgIdentifier;
+  @QueryParam("projectIdentifier") @NonNull String projectIdentifier;
 }
