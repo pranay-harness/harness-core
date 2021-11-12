@@ -1,5 +1,6 @@
 package io.harness.cvng.core.beans.monitoredService.healthSourceSpec;
 
+import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +11,10 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdType;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO.DeploymentVerificationDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO.LiveMonitoringDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.SLIDTO;
 import io.harness.cvng.core.beans.PrometheusMetricDefinition;
 import io.harness.cvng.core.beans.RiskProfile;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
@@ -270,6 +275,138 @@ public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
     assertThat(cvConfigUpdateResult.getDeleted()).isNotEmpty();
 
     assertThat(cvConfigUpdateResult.getDeleted().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void getCVConfigUpdateResult_withAnalysisInfo() {
+    PrometheusMetricDefinition metricDefinition =
+        PrometheusMetricDefinition.builder()
+            .metricName("sampleMetric")
+            .groupName("myMetricGroupName")
+            .prometheusMetric("container.cpu.usage.total")
+            .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                             .labelName("namespace")
+                                             .labelValue("cv-demo")
+                                             .build()))
+            .envFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                         .labelName("container")
+                                         .labelValue("cv-demo")
+                                         .build()))
+            .serviceIdentifier(serviceIdentifier)
+            .envIdentifier(envIdentifier)
+            .analysis(AnalysisDTO.builder()
+                          .liveMonitoring(LiveMonitoringDTO.builder().enabled(Boolean.TRUE).build())
+                          .deploymentVerification(DeploymentVerificationDTO.builder()
+                                                      .enabled(Boolean.TRUE)
+                                                      .serviceInstanceFieldName("pod")
+                                                      .build())
+                          .riskProfile(RiskProfile.builder()
+                                           .metricType(TimeSeriesMetricType.RESP_TIME)
+                                           .category(CVMonitoringCategory.PERFORMANCE)
+                                           .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                                           .build())
+                          .build())
+            .sli(SLIDTO.builder().enabled(Boolean.TRUE).build())
+            .build();
+    prometheusHealthSourceSpec.setMetricDefinitions(Arrays.asList(metricDefinition));
+
+    CVConfigUpdateResult cvConfigUpdateResult =
+        prometheusHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+            serviceIdentifier, identifier, name, Collections.emptyList(), null);
+    assertThat(cvConfigUpdateResult).isNotNull();
+    assertThat(cvConfigUpdateResult.getAdded()).isNotEmpty();
+    assertThat(cvConfigUpdateResult.getUpdated()).isEmpty();
+    assertThat(cvConfigUpdateResult.getDeleted()).isEmpty();
+
+    assertThat(cvConfigUpdateResult.getAdded().size()).isEqualTo(1);
+    List<PrometheusCVConfig> cvConfigList = (List<PrometheusCVConfig>) (List<?>) cvConfigUpdateResult.getAdded();
+    PrometheusCVConfig cvConfig = cvConfigList.get(0);
+    assertThat(cvConfig.getGroupName()).isEqualTo("myMetricGroupName");
+    assertThat(cvConfig.getServiceIdentifier()).isEqualTo(serviceIdentifier);
+    assertThat(cvConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
+    assertThat(cvConfig.getMetricInfoList().size()).isEqualTo(1);
+    PrometheusCVConfig.MetricInfo metricInfo = cvConfig.getMetricInfoList().get(0);
+    assertThat(metricInfo.getMetricName()).isEqualTo("sampleMetric");
+    assertThat(metricInfo.getPrometheusMetricName()).isEqualTo(metricDefinition.getPrometheusMetric());
+    assertThat(metricInfo.getEnvFilter()).isEqualTo(metricDefinition.getEnvFilter());
+    assertThat(metricInfo.getServiceFilter()).isEqualTo(metricDefinition.getServiceFilter());
+    assertThat(metricInfo.getServiceInstanceFieldName()).isEqualTo(metricDefinition.getServiceInstanceFieldName());
+    assertThat(metricInfo.getAggregation()).isEqualTo(metricDefinition.getAggregation());
+    assertThat(metricInfo.getAdditionalFilters()).isEqualTo(metricDefinition.getAdditionalFilters());
+    assertThat(metricInfo.getLiveMonitoring().isEnabled())
+        .isEqualTo(metricDefinition.getAnalysis().getLiveMonitoring().getEnabled());
+    assertThat(metricInfo.getDeploymentVerification().isEnabled())
+        .isEqualTo(metricDefinition.getAnalysis().getDeploymentVerification().getEnabled());
+    assertThat(metricInfo.getServiceInstanceFieldName())
+        .isEqualTo(metricDefinition.getAnalysis().getDeploymentVerification().getServiceInstanceFieldName());
+    assertThat(metricInfo.getMetricType()).isEqualTo(metricDefinition.getAnalysis().getRiskProfile().getMetricType());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void getCVConfigUpdateResult_withAnalysisInfoWithBackwardCompatibility() {
+    PrometheusMetricDefinition metricDefinition =
+        PrometheusMetricDefinition.builder()
+            .metricName("sampleMetric")
+            .groupName("myMetricGroupName")
+            .prometheusMetric("container.cpu.usage.total")
+            .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                             .labelName("namespace")
+                                             .labelValue("cv-demo")
+                                             .build()))
+            .envFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                         .labelName("container")
+                                         .labelValue("cv-demo")
+                                         .build()))
+            .serviceIdentifier(serviceIdentifier)
+            .envIdentifier(envIdentifier)
+            .riskProfile(RiskProfile.builder()
+                             .metricType(TimeSeriesMetricType.RESP_TIME)
+                             .category(CVMonitoringCategory.PERFORMANCE)
+                             .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                             .build())
+            .serviceInstanceFieldName("prod")
+            .analysis(AnalysisDTO.builder()
+                          .liveMonitoring(LiveMonitoringDTO.builder().enabled(Boolean.TRUE).build())
+                          .deploymentVerification(DeploymentVerificationDTO.builder().enabled(Boolean.TRUE).build())
+
+                          .build())
+            .sli(SLIDTO.builder().enabled(Boolean.TRUE).build())
+            .build();
+    prometheusHealthSourceSpec.setMetricDefinitions(Arrays.asList(metricDefinition));
+
+    CVConfigUpdateResult cvConfigUpdateResult =
+        prometheusHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+            serviceIdentifier, identifier, name, Collections.emptyList(), null);
+    assertThat(cvConfigUpdateResult).isNotNull();
+    assertThat(cvConfigUpdateResult.getAdded()).isNotEmpty();
+    assertThat(cvConfigUpdateResult.getUpdated()).isEmpty();
+    assertThat(cvConfigUpdateResult.getDeleted()).isEmpty();
+
+    assertThat(cvConfigUpdateResult.getAdded().size()).isEqualTo(1);
+    List<PrometheusCVConfig> cvConfigList = (List<PrometheusCVConfig>) (List<?>) cvConfigUpdateResult.getAdded();
+    PrometheusCVConfig cvConfig = cvConfigList.get(0);
+    assertThat(cvConfig.getGroupName()).isEqualTo("myMetricGroupName");
+    assertThat(cvConfig.getServiceIdentifier()).isEqualTo(serviceIdentifier);
+    assertThat(cvConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
+    assertThat(cvConfig.getMetricInfoList().size()).isEqualTo(1);
+    PrometheusCVConfig.MetricInfo metricInfo = cvConfig.getMetricInfoList().get(0);
+    assertThat(metricInfo.getMetricName()).isEqualTo("sampleMetric");
+    assertThat(metricInfo.getPrometheusMetricName()).isEqualTo(metricDefinition.getPrometheusMetric());
+    assertThat(metricInfo.getEnvFilter()).isEqualTo(metricDefinition.getEnvFilter());
+    assertThat(metricInfo.getServiceFilter()).isEqualTo(metricDefinition.getServiceFilter());
+    assertThat(metricInfo.getServiceInstanceFieldName()).isEqualTo(metricDefinition.getServiceInstanceFieldName());
+    assertThat(metricInfo.getAggregation()).isEqualTo(metricDefinition.getAggregation());
+    assertThat(metricInfo.getAdditionalFilters()).isEqualTo(metricDefinition.getAdditionalFilters());
+    assertThat(metricInfo.getLiveMonitoring().isEnabled())
+        .isEqualTo(metricDefinition.getAnalysis().getLiveMonitoring().getEnabled());
+    assertThat(metricInfo.getDeploymentVerification().isEnabled())
+        .isEqualTo(metricDefinition.getAnalysis().getDeploymentVerification().getEnabled());
+    assertThat(metricInfo.getServiceInstanceFieldName()).isEqualTo(metricDefinition.getServiceInstanceFieldName());
+    assertThat(metricInfo.getMetricType()).isEqualTo(metricDefinition.getRiskProfile().getMetricType());
   }
 
   private PrometheusCVConfig createCVConfig() {
