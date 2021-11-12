@@ -1,0 +1,16 @@
+Var url = concat(Env:baseUrl, "rest/applications/", Env:appName, "/metrics?output=json&metric-path=", Env:path)
+Var auth
+if Env:tokenBasedAuth == "true" {
+  Var authUrlSuffix = "api/oauth/access_token"
+  Var authUrl = concat(Env:baseUrl,Var:authUrlSuffix)
+  Var bodyMap = {}
+  Var:bodyMap.put("grant_type", "client_credentials")
+  Var:bodyMap.put("client_id", Env:clientId)
+  Var:bodyMap.put("client_secret", Env:clientSecret)
+  Var authResponse = sync-call(url=Var:authUrl, header=Env:commonHeaders, body=Var:bodyMap, bodyType=FORM_URL_ENCODED)
+  Var token = extract(Var:authResponse,$.access_token)
+  Var bearerStr = concat("Bearer ", Var:token)
+  Env:commonHeaders.put("Authorization", Var:bearerStr)
+}
+Var results = sync-call(url=Var:url, header=Env:commonHeaders)
+return Var:results

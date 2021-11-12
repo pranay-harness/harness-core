@@ -1,0 +1,37 @@
+Var baseMetricDataUrl = concat(Env:baseUrl, "rest/applications/", Env:applicationName, "/metric-data?output=JSON")
+Var metricDataUrl = concat(Var:baseMetricDataUrl, "&time-range-type=BETWEEN_TIMES&start-time=", Env:startTimeInMilliSeconds, "&end-time=", Env:endTimeInMilliSeconds, "&rollup=false&metric-path=")
+Var auth
+if Env:tokenBasedAuth == "true" {
+  Var authUrlSuffix = "api/oauth/access_token"
+  Var authUrl = concat(Env:baseUrl,Var:authUrlSuffix)
+  Var bodyMap = {}
+  Var:bodyMap.put("grant_type", "client_credentials")
+  Var:bodyMap.put("client_id", Env:clientId)
+  Var:bodyMap.put("client_secret", Env:clientSecret)
+  Var authResponse = sync-call(url=Var:authUrl, header=Env:commonHeaders, body=Var:bodyMap, bodyType=FORM_URL_ENCODED)
+  Var token = extract(Var:authResponse,$.access_token)
+  Var bearerStr = concat("Bearer ", Var:token)
+  Env:commonHeaders.put("Authorization", Var:bearerStr)
+}
+
+Var metricCall = concat(Var:metricDataUrl, Env:metricPath)
+Request metricRequest = new Request(url=Var:metricCall, header=Env:commonHeaders)
+Var metricArr = sync-call(url=Var:metricCall, header=Env:commonHeaders)
+
+Var metricsToReturn = []
+foreach metric in Var:metricArr {
+    Var metricName = extract(Var:metric,$.metricName)
+    if Var:metricName != "METRIC DATA NOT FOUND" {
+      Var metricPath = extract(Var:metric,$.metricPath)
+      Var metricPathSplit = Var:metricPath.split("|")
+      Var txnName = Var:metricPathSplit[0]
+      Var metricValues = extract(Var:metric,$.metricValues)
+      foreach metricValue in Var:metricValues {
+        Var value = extract(Var:metricValue,$.value)
+        Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
+        Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricPath, metricValue=Var:value, timestamp=Var:timestamp)
+        Var:metricsToReturn.append(Var:tsRecord)
+      }
+    }
+}
+return Var:metricsToReturn
