@@ -41,7 +41,7 @@ public class PMSEventConsumerService implements Managed {
     entityCRUDConsumerService.execute(entityCRUDStreamConsumer);
 
     webhookEventConsumerService =
-        Executors.newFixedThreadPool(5, new ThreadFactoryBuilder().setNameFormat(WEBHOOK_EVENTS_STREAM).build());
+        Executors.newFixedThreadPool(15, new ThreadFactoryBuilder().setNameFormat(WEBHOOK_EVENTS_STREAM).build());
     webhookEventConsumerService.execute(webhookEventStreamConsumer);
 
     pollingEventConsumerService = Executors.newFixedThreadPool(
