@@ -48,9 +48,32 @@ public class LocalEncryptor2Test extends SMCoreTestBase {
     EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, null);
 
     assertThat(encryptedRecord.getEncryptedMech()).isEqualTo(EncryptedMech.MULTI_CRYPTO);
+    assertThat(encryptedRecord.getEncryptedValue()).isNull();
+    assertThat(encryptedRecord.getEncryptionKey()).isNotNull();
     assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_KEY)).isNotNull();
     assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET))
         .isNotNull();
+
+    String decryptedValue = new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, null));
+    assertThat(decryptedValue).isEqualTo(valueToEncrypt);
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testEncryptDecryptAwsSdkMode() {
+    when(featureFlagHelperService.isEnabled(ACCOUNTID, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)).thenReturn(true);
+
+    String valueToEncrypt = "value";
+    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, null);
+
+    assertThat(encryptedRecord.getEncryptedMech()).isEqualTo(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO);
+    assertThat(encryptedRecord.getEncryptionKey()).isNotNull();
+    assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_KEY)).isNull();
+    assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET))
+        .isNull();
+    assertThat(encryptedRecord.getEncryptedValue()).isNull();
+    assertThat(encryptedRecord.getEncryptedValueBytes()).isNotNull();
 
     String decryptedValue = new String(localEncryptor.fetchSecretValue(ACCOUNTID, encryptedRecord, null));
     assertThat(decryptedValue).isEqualTo(valueToEncrypt);
