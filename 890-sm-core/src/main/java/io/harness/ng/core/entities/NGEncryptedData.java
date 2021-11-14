@@ -77,6 +77,7 @@ public class NGEncryptedData implements PersistentEntity, EncryptedRecord {
   boolean base64Encoded;
   AdditionalMetadata additionalMetadata;
   EncryptedMech encryptedMech;
+  private byte[] encryptedValueBytes;
 
   @Override
   @JsonIgnore

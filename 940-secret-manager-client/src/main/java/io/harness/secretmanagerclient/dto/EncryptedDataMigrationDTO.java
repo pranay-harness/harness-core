@@ -40,4 +40,5 @@ public class EncryptedDataMigrationDTO implements EncryptedRecord {
   private String projectIdentifier;
   private String identifier;
   private EncryptedMech encryptedMech;
+  private byte[] encryptedValueBytes;
 }

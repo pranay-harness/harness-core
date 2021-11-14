@@ -37,4 +37,5 @@ public class EncryptedRecordData implements EncryptedRecord {
   private boolean base64Encoded;
   private AdditionalMetadata additionalMetadata;
   private EncryptedMech encryptedMech;
+  private byte[] encryptedValueBytes;
 }

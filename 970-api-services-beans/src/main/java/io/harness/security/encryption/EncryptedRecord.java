@@ -14,6 +14,7 @@ public interface EncryptedRecord {
   Set<EncryptedDataParams> getParameters();
   String getEncryptionKey();
   char[] getEncryptedValue();
+  byte[] getEncryptedValueBytes();
   String getKmsId();
   EncryptionType getEncryptionType();
   char[] getBackupEncryptedValue(); // Only relevant in case of GLOBAL secret manager.

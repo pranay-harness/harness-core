@@ -198,6 +198,8 @@ public class EncryptedData implements EncryptedRecord, PersistentEntity, UuidAwa
 
   private EncryptedMech encryptedMech;
 
+  private byte[] encryptedValueBytes;
+
   public String getKmsId() {
     if (encryptionType == LOCAL) {
       return accountId;

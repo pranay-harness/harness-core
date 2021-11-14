@@ -27,10 +27,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import javax.crypto.spec.SecretKeySpec;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,10 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class LocalEncryptor implements KmsEncryptor {
-  private static final String AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP = "AWS_LOCAL_ENCRYPTION_ENABLED_WITH_BACKUP";
   private static final AwsCrypto crypto = AwsCrypto.standard();
-  private SecretKeyService secretKeyService;
-  private FeatureFlagHelperService featureFlagService;
+  private final SecretKeyService secretKeyService;
+  private final FeatureFlagHelperService featureFlagService;
 
   @Inject
   public LocalEncryptor(@Named(SecretKeyConstants.AES_SECRET_KEY) SecretKeyService secretKeyService,
@@ -55,10 +54,10 @@ public class LocalEncryptor implements KmsEncryptor {
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
     if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
       SecretKey secretKey = secretKeyService.createSecretKey();
-      final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
+      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
       return EncryptedRecordData.builder()
           .encryptionKey(secretKey.getUuid())
-          .encryptedValue(awsEncryptedSecret)
+          .encryptedValueBytes(awsEncryptedSecret)
           .encryptedMech(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO)
           .build();
     }
@@ -66,7 +65,7 @@ public class LocalEncryptor implements KmsEncryptor {
     final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
     if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
       SecretKey secretKey = secretKeyService.createSecretKey();
-      final char[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
+      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, secretKey);
       return EncryptedRecordData.builder()
           .encryptionKey(accountId)
           .encryptedValue(localJavaEncryptedSecret)
@@ -93,22 +92,22 @@ public class LocalEncryptor implements KmsEncryptor {
     }
 
     String secretKeyUuid = null;
-    char[] encryptedSecret = null;
+    byte[] encryptedSecret = null;
     if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE)) {
       secretKeyUuid = encryptedRecord.getEncryptionKey();
-      encryptedSecret = encryptedRecord.getEncryptedValue();
+      encryptedSecret = encryptedRecord.getEncryptedValueBytes();
     } else {
       secretKeyUuid =
           (String) encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_KEY);
       encryptedSecret =
-          (char[]) encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET);
+          (byte[]) encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET);
     }
 
     Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
     if (!secretKey.isPresent()) {
       // throw proper exception
     }
-    return getAwsDecryptedSecret(accountId, new String(encryptedSecret).getBytes(), secretKey.get()).toCharArray();
+    return getAwsDecryptedSecret(accountId, encryptedSecret, secretKey.get()).toCharArray();
   }
 
   @Override
@@ -128,14 +127,12 @@ public class LocalEncryptor implements KmsEncryptor {
 
   // ------------------------------ PRIVATE METHODS -----------------------------
 
-  private char[] getAwsEncryptedSecret(String accountId, String value, SecretKey secretKey) {
+  private byte[] getAwsEncryptedSecret(String accountId, String value, SecretKey secretKey) {
     JceMasterKey escrowPub =
         JceMasterKey.getInstance(secretKey.getSecretKeySpec(), "Escrow", "Escrow", "AES/GCM/NOPADDING");
     Map<String, String> context = Collections.singletonMap("accountId", accountId);
 
-    final byte[] encryptedBytes =
-        crypto.encryptData(escrowPub, value.getBytes(StandardCharsets.UTF_8), context).getResult();
-    return new String(encryptedBytes).toCharArray();
+    return crypto.encryptData(escrowPub, value.getBytes(StandardCharsets.UTF_8), context).getResult();
   }
 
   private String getAwsDecryptedSecret(String accountId, byte[] encryptedSecret, SecretKey secretKey) {
@@ -146,7 +143,8 @@ public class LocalEncryptor implements KmsEncryptor {
     if (!decryptResult.getMasterKeyIds().get(0).equals(accountId)) {
       // throw exception
     }
-    return Arrays.toString(decryptResult.getResult());
+
+    return new String(decryptResult.getResult(), StandardCharsets.UTF_8);
   }
 
   private char[] getLocalJavaEncryptedSecret(String accountId, String value) {
