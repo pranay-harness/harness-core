@@ -39,6 +39,7 @@ import io.harness.service.intfc.DelegateTokenService;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 
@@ -116,6 +117,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     MaintenanceController.forceMaintenance(true);
 
     configuration.setSegmentConfig(SegmentConfig.builder().enabled(false).build());
+    configuration.setSegmentConfiguration(SegmentConfiguration.builder().enabled(false).build());
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();

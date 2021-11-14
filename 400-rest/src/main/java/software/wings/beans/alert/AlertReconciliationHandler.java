@@ -15,7 +15,6 @@ import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.alert.Alert.AlertKeys;
-import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
@@ -57,34 +56,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
 
   @Override
   public void handle(Alert alert) {
-    switch (alert.getType()) {
-      case NoEligibleDelegates:
-        handleNoEligibleDelegates(alert);
-        break;
-      default:
-        persistence.update(
-            alert, persistence.createUpdateOperations(Alert.class).unset(AlertKeys.alertReconciliation_needed));
-        break;
-    }
-  }
-
-  public void handleNoEligibleDelegates(Alert alert) {
-    NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
-    NoEligibleDelegatesAlertReconciliation alertReconciliation =
-        (NoEligibleDelegatesAlertReconciliation) alert.getAlertReconciliation();
-
-    boolean canAssign = alertReconciliation.getDelegates().stream().anyMatch(delegateId
-        -> assignDelegateService.canAssign(null, delegateId, alert.getAccountId(), data.getAppId(), data.getEnvId(),
-            data.getInfraMappingId(), data.getTaskGroup(), data.getExecutionCapabilities(), null));
-
-    if (canAssign) {
-      alertService.close(alert);
-      return;
-    }
-
-    persistence.update(alert,
-        persistence.createUpdateOperations(Alert.class)
-            .unset(AlertKeys.alertReconciliation_needed)
-            .unset(AlertKeys.alertReconciliation + "." + NoEligibleDelegatesAlertReconciliationKeys.delegates));
+    persistence.update(
+        alert, persistence.createUpdateOperations(Alert.class).unset(AlertKeys.alertReconciliation_needed));
   }
 }

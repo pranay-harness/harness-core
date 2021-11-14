@@ -4,10 +4,12 @@ import static io.harness.delegate.cf.CfTestConstants.ACCOUNT_ID;
 import static io.harness.delegate.cf.CfTestConstants.APP_ID;
 import static io.harness.delegate.cf.CfTestConstants.APP_NAME;
 import static io.harness.delegate.cf.CfTestConstants.ORG;
+import static io.harness.delegate.cf.CfTestConstants.RUNNING;
 import static io.harness.delegate.cf.CfTestConstants.SPACE;
 import static io.harness.delegate.cf.CfTestConstants.STOPPED;
 import static io.harness.delegate.cf.CfTestConstants.getPcfConfig;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
 
 import static java.util.Collections.emptyList;
@@ -16,6 +18,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -41,6 +44,7 @@ import io.harness.logging.LogCallback;
 import io.harness.pcf.CfDeploymentManager;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -48,21 +52,26 @@ import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 @OwnedBy(HarnessTeam.CDP)
 @RunWith(MockitoJUnitRunner.class)
@@ -417,5 +426,625 @@ public class PcfRollbackCommandTaskHandlerTest extends CategoryTest {
         executionLogCallback, commandRollbackRequest, cfRequestConfig);
     assertThat(cfRequestConfig.getApplicationName()).isEqualTo("app1");
     verify(pcfCommandTaskHelper).unmapExistingRouteMaps(applicationDetail, cfRequestConfig, executionLogCallback);
+  }
+
+  @Test()
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  // Ideally we should assert the PCF app name which is passed to
+  // upSizeApplicationWithSteadyStateCheck
+  // mapRouteMapForApplication
+  // unmapRouteMapForApplication
+  // deleteApplication
+  //
+  // But we are not able to do so because we create one object of CfRequestConfig and update it property -
+  // "applicationName" before calling each of the above method.
+  // Hence using captor we will get the same object and value of app name will be the last one which was set
+  public void testVersionToVersionBasicCanaryRollback() throws PivotalClientApiException {
+    List<String> prodRoutes = Arrays.asList("harness-prod1-pcf.com", "harness-prod2-pcf.com");
+    String cfAppNamePrefix = "PaymentApp";
+    String newAppName = cfAppNamePrefix + "__6";
+    String prevActiveAppName = cfAppNamePrefix + "__5";
+    String inActiveAppName = cfAppNamePrefix + "__4";
+
+    CfAppSetupTimeDetails newApp = CfAppSetupTimeDetails.builder()
+                                       .applicationName(newAppName)
+                                       .applicationGuid("6")
+                                       .initialInstanceCount(0)
+                                       .urls(prodRoutes)
+                                       .build();
+
+    CfAppSetupTimeDetails prevActiveApp = CfAppSetupTimeDetails.builder()
+                                              .applicationName(prevActiveAppName)
+                                              .applicationGuid("5")
+                                              .initialInstanceCount(2)
+                                              .urls(prodRoutes)
+                                              .build();
+
+    CfAppSetupTimeDetails existingInActiveApp = CfAppSetupTimeDetails.builder()
+                                                    .applicationName(inActiveAppName)
+                                                    .applicationGuid("4")
+                                                    .initialInstanceCount(2)
+                                                    .urls(Collections.emptyList())
+                                                    .build();
+
+    CfCommandRollbackRequest cfCommandRequest =
+        getRollbackRequest(newApp, prevActiveApp, existingInActiveApp, cfAppNamePrefix, false, false, -1);
+
+    mockGetApplicationByName(prodRoutes, newAppName, prevActiveAppName, newApp, prevActiveApp);
+
+    ApplicationDetail prevActiveDetailsAfterUpSize = ApplicationDetail.builder()
+                                                         .id(prevActiveApp.getApplicationGuid())
+                                                         .instances(2)
+                                                         .diskQuota(1)
+                                                         .memoryLimit(1)
+                                                         .stack("Java")
+                                                         .memoryLimit(1)
+                                                         .name(prevActiveApp.getApplicationName())
+                                                         .requestedState(RUNNING)
+                                                         .runningInstances(2)
+                                                         .build();
+
+    doReturn(prevActiveDetailsAfterUpSize)
+        .when(cfDeploymentManager)
+        .upsizeApplicationWithSteadyStateCheck(any(), any());
+    doReturn(prevActiveDetailsAfterUpSize).when(cfDeploymentManager).resizeApplication(any());
+
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfRollbackCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
+
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CfDeployCommandResponse pcfDeployCommandResponse =
+        (CfDeployCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
+
+    assertThat(pcfDeployCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    verify(cfDeploymentManager, times(1)).upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    ArgumentCaptor<ArrayList> routesCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<CfRequestConfig> cfRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+
+    verify(cfDeploymentManager, times(1))
+        .mapRouteMapForApplication(cfRequestCaptor.capture(), routesCaptor.capture(), any());
+    List routesCaptorValue = routesCaptor.getValue();
+    assertThat(routesCaptorValue.size()).isEqualTo(2);
+    assertThat(routesCaptorValue.get(0)).isEqualTo(prodRoutes.get(0));
+    assertThat(routesCaptorValue.get(1)).isEqualTo(prodRoutes.get(1));
+
+    verify(cfDeploymentManager, times(1)).resizeApplication(any());
+
+    ArgumentCaptor<ArrayList> unMapRoutesCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<CfRequestConfig> unMapRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(cfDeploymentManager, times(1))
+        .unmapRouteMapForApplication(unMapRequestCaptor.capture(), unMapRoutesCaptor.capture(), any());
+    routesCaptorValue = routesCaptor.getValue();
+    assertThat(routesCaptorValue.size()).isEqualTo(2);
+    assertThat(routesCaptorValue.get(0)).isEqualTo(prodRoutes.get(0));
+    assertThat(routesCaptorValue.get(1)).isEqualTo(prodRoutes.get(1));
+
+    verify(cfDeploymentManager, times(1)).deleteApplication(any());
+    verify(cfDeploymentManager, times(0)).renameApplication(any(), any());
+  }
+
+  @Test()
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  // Before the start of the deployment following apps were present
+  //{PaymentApp_5, Guid = 5, Active}
+  //{PaymentApp_4, Guid = 4, InActive}
+  //{PaymentApp_3, Guid = 3}
+  //
+  // After App Setup step the apps would have been renamed to
+  //{PaymentApp,          Guid = 6, Active} --> New App
+  //{PaymentApp_INACTIVE, Guid = 5, InActive}
+  //{PaymentApp_4,        Guid = 4}
+  //{PaymentApp_3,        Guid = 3}
+  public void testVersionToNonVersionBasicCanaryRollback() throws PivotalClientApiException {
+    List<String> prodRoutes = Arrays.asList("harness-prod1-pcf.com", "harness-prod2-pcf.com");
+    String cfAppNamePrefix = "PaymentApp";
+    String prevActiveAppName = cfAppNamePrefix + "__INACTIVE";
+    String preInActiveAppName = cfAppNamePrefix + "__4";
+
+    CfAppSetupTimeDetails newApp = CfAppSetupTimeDetails.builder()
+                                       .applicationName(cfAppNamePrefix)
+                                       .applicationGuid("6")
+                                       .initialInstanceCount(0)
+                                       .urls(prodRoutes)
+                                       .build();
+
+    CfAppSetupTimeDetails prevActiveApp = CfAppSetupTimeDetails.builder()
+                                              .applicationName(prevActiveAppName)
+                                              .applicationGuid("5")
+                                              .initialInstanceCount(2)
+                                              .urls(prodRoutes)
+                                              .build();
+
+    CfAppSetupTimeDetails existingInActiveApp = CfAppSetupTimeDetails.builder()
+                                                    .applicationName(preInActiveAppName)
+                                                    .applicationGuid("4")
+                                                    .initialInstanceCount(2)
+                                                    .urls(Collections.emptyList())
+                                                    .build();
+
+    CfCommandRollbackRequest cfCommandRequest =
+        getRollbackRequest(newApp, prevActiveApp, existingInActiveApp, cfAppNamePrefix, true, true, 5);
+
+    mockGetApplicationByName(prodRoutes, cfAppNamePrefix, prevActiveAppName, newApp, prevActiveApp);
+
+    ApplicationDetail prevActiveDetailsAfterUpSize = ApplicationDetail.builder()
+                                                         .id(prevActiveApp.getApplicationGuid())
+                                                         .instances(2)
+                                                         .diskQuota(1)
+                                                         .memoryLimit(1)
+                                                         .stack("Java")
+                                                         .memoryLimit(1)
+                                                         .name(prevActiveAppName)
+                                                         .requestedState(RUNNING)
+                                                         .runningInstances(2)
+                                                         .build();
+
+    doReturn(prevActiveDetailsAfterUpSize)
+        .when(cfDeploymentManager)
+        .upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    doReturn(prevActiveDetailsAfterUpSize).when(cfDeploymentManager).resizeApplication(any());
+    doReturn(getPreviousReleasesAfterNonVersioningRenaming(cfCommandRequest))
+        .when(cfDeploymentManager)
+        .getPreviousReleases(any(), eq(cfAppNamePrefix));
+
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfRollbackCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
+
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CfDeployCommandResponse pcfDeployCommandResponse =
+        (CfDeployCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
+
+    assertThat(pcfDeployCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    verify(cfDeploymentManager, times(1)).upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    ArgumentCaptor<ArrayList> routesCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<CfRequestConfig> cfRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+
+    verify(cfDeploymentManager, times(1))
+        .mapRouteMapForApplication(cfRequestCaptor.capture(), routesCaptor.capture(), any());
+    List routesCaptorValue = routesCaptor.getValue();
+    assertThat(routesCaptorValue.size()).isEqualTo(2);
+    assertThat(routesCaptorValue.get(0)).isEqualTo(prodRoutes.get(0));
+    assertThat(routesCaptorValue.get(1)).isEqualTo(prodRoutes.get(1));
+
+    verify(cfDeploymentManager, times(1)).resizeApplication(any());
+
+    ArgumentCaptor<ArrayList> unMapRoutesCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<CfRequestConfig> unMapRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(cfDeploymentManager, times(1))
+        .unmapRouteMapForApplication(unMapRequestCaptor.capture(), unMapRoutesCaptor.capture(), any());
+    routesCaptorValue = routesCaptor.getValue();
+    assertThat(routesCaptorValue.size()).isEqualTo(2);
+    assertThat(routesCaptorValue.get(0)).isEqualTo(prodRoutes.get(0));
+    assertThat(routesCaptorValue.get(1)).isEqualTo(prodRoutes.get(1));
+
+    ArgumentCaptor<CfRequestConfig> deleteRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(cfDeploymentManager, times(1)).deleteApplication(deleteRequestCaptor.capture());
+    assertThat(deleteRequestCaptor.getValue().getApplicationName()).isEqualTo(newApp.getApplicationName());
+
+    ArgumentCaptor<CfRenameRequest> renamedRequestCaptor = ArgumentCaptor.forClass(CfRenameRequest.class);
+    verify(cfDeploymentManager, times(4)).renameApplication(renamedRequestCaptor.capture(), any());
+    List<CfRenameRequest> requestCaptorAllValues = renamedRequestCaptor.getAllValues();
+    assertThat(requestCaptorAllValues.size()).isEqualTo(4);
+
+    // first renaming due to non-version mode
+    assertThat(requestCaptorAllValues.get(0).getGuid())
+        .isEqualTo(cfCommandRequest.getAppsToBeDownSized().get(0).getApplicationGuid());
+    assertThat(requestCaptorAllValues.get(0).getNewName()).isEqualTo(cfAppNamePrefix);
+    assertThat(requestCaptorAllValues.get(1).getGuid())
+        .isEqualTo(cfCommandRequest.getExistingInActiveApplicationDetails().getApplicationGuid());
+    assertThat(requestCaptorAllValues.get(1).getNewName()).isEqualTo(cfAppNamePrefix + "__INACTIVE");
+
+    // second renaming due to non-version to version mode
+    assertThat(requestCaptorAllValues.get(2).getGuid())
+        .isEqualTo(cfCommandRequest.getAppsToBeDownSized().get(0).getApplicationGuid());
+    assertThat(requestCaptorAllValues.get(2).getNewName()).isEqualTo(cfAppNamePrefix + "__5");
+    assertThat(requestCaptorAllValues.get(3).getGuid())
+        .isEqualTo(cfCommandRequest.getExistingInActiveApplicationDetails().getApplicationGuid());
+    assertThat(requestCaptorAllValues.get(3).getNewName()).isEqualTo(cfAppNamePrefix + "__4");
+  }
+
+  @Test()
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  // Before the start of the deployment following apps were present
+  //{PaymentApp,          Guid = 5, Active}
+  //{PaymentApp_INACTIVE, Guid = 4, InActive}
+  //{PaymentApp_3,        Guid = 3}
+  //
+  // After App Setup step the apps would have been renamed to
+  //{PaymentApp,          Guid = 6, Active} --> New App
+  //{PaymentApp_INACTIVE, Guid = 5, InActive}
+  //{PaymentApp_4,        Guid = 4}
+  //{PaymentApp_3,        Guid = 3}
+  public void testNonVersionToNonVersionBasicCanaryRollback() throws PivotalClientApiException {
+    List<String> prodRoutes = Arrays.asList("harness-prod1-pcf.com", "harness-prod2-pcf.com");
+    String cfAppNamePrefix = "PaymentApp";
+    String prevActiveAppName = cfAppNamePrefix + "__INACTIVE";
+    String preInActiveAppName = cfAppNamePrefix + "__4";
+
+    CfAppSetupTimeDetails newApp = CfAppSetupTimeDetails.builder()
+                                       .applicationName(cfAppNamePrefix)
+                                       .applicationGuid("6")
+                                       .initialInstanceCount(0)
+                                       .urls(prodRoutes)
+                                       .build();
+
+    CfAppSetupTimeDetails prevActiveApp = CfAppSetupTimeDetails.builder()
+                                              .applicationName(prevActiveAppName)
+                                              .applicationGuid("5")
+                                              .initialInstanceCount(2)
+                                              .urls(prodRoutes)
+                                              .build();
+
+    CfAppSetupTimeDetails existingInActiveApp = CfAppSetupTimeDetails.builder()
+                                                    .applicationName(preInActiveAppName)
+                                                    .applicationGuid("4")
+                                                    .initialInstanceCount(2)
+                                                    .urls(Collections.emptyList())
+                                                    .build();
+
+    CfCommandRollbackRequest cfCommandRequest =
+        getRollbackRequest(newApp, prevActiveApp, existingInActiveApp, cfAppNamePrefix, true, false, -1);
+
+    mockGetApplicationByName(prodRoutes, cfAppNamePrefix, prevActiveAppName, newApp, prevActiveApp);
+
+    ApplicationDetail prevActiveDetailsAfterUpSize = ApplicationDetail.builder()
+                                                         .id(prevActiveApp.getApplicationGuid())
+                                                         .instances(2)
+                                                         .diskQuota(1)
+                                                         .memoryLimit(1)
+                                                         .stack("Java")
+                                                         .memoryLimit(1)
+                                                         .name(prevActiveAppName)
+                                                         .requestedState(RUNNING)
+                                                         .runningInstances(2)
+                                                         .build();
+
+    doReturn(prevActiveDetailsAfterUpSize)
+        .when(cfDeploymentManager)
+        .upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    doReturn(prevActiveDetailsAfterUpSize).when(cfDeploymentManager).resizeApplication(any());
+
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfRollbackCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
+
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CfDeployCommandResponse pcfDeployCommandResponse =
+        (CfDeployCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
+
+    assertThat(pcfDeployCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    verify(cfDeploymentManager, times(1)).upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    ArgumentCaptor<ArrayList> routesCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<CfRequestConfig> cfRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+
+    verify(cfDeploymentManager, times(1))
+        .mapRouteMapForApplication(cfRequestCaptor.capture(), routesCaptor.capture(), any());
+    List routesCaptorValue = routesCaptor.getValue();
+    assertThat(routesCaptorValue.size()).isEqualTo(2);
+    assertThat(routesCaptorValue.get(0)).isEqualTo(prodRoutes.get(0));
+    assertThat(routesCaptorValue.get(1)).isEqualTo(prodRoutes.get(1));
+
+    verify(cfDeploymentManager, times(1)).resizeApplication(any());
+
+    ArgumentCaptor<ArrayList> unMapRoutesCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<CfRequestConfig> unMapRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(cfDeploymentManager, times(1))
+        .unmapRouteMapForApplication(unMapRequestCaptor.capture(), unMapRoutesCaptor.capture(), any());
+    routesCaptorValue = routesCaptor.getValue();
+    assertThat(routesCaptorValue.size()).isEqualTo(2);
+    assertThat(routesCaptorValue.get(0)).isEqualTo(prodRoutes.get(0));
+    assertThat(routesCaptorValue.get(1)).isEqualTo(prodRoutes.get(1));
+
+    ArgumentCaptor<CfRequestConfig> deleteRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(cfDeploymentManager, times(1)).deleteApplication(deleteRequestCaptor.capture());
+    assertThat(deleteRequestCaptor.getValue().getApplicationName()).isEqualTo(newApp.getApplicationName());
+
+    ArgumentCaptor<CfRenameRequest> renamedRequestCaptor = ArgumentCaptor.forClass(CfRenameRequest.class);
+    verify(cfDeploymentManager, times(2)).renameApplication(renamedRequestCaptor.capture(), any());
+    List<CfRenameRequest> requestCaptorAllValues = renamedRequestCaptor.getAllValues();
+    assertThat(requestCaptorAllValues.size()).isEqualTo(2);
+
+    // first renaming due to non-version mode
+    assertThat(requestCaptorAllValues.get(0).getGuid())
+        .isEqualTo(cfCommandRequest.getAppsToBeDownSized().get(0).getApplicationGuid());
+    assertThat(requestCaptorAllValues.get(0).getNewName()).isEqualTo(cfAppNamePrefix);
+    assertThat(requestCaptorAllValues.get(1).getGuid())
+        .isEqualTo(cfCommandRequest.getExistingInActiveApplicationDetails().getApplicationGuid());
+    assertThat(requestCaptorAllValues.get(1).getNewName()).isEqualTo(cfAppNamePrefix + "__INACTIVE");
+  }
+
+  @Test()
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  // Before the start of the deployment following apps were present
+  //{PaymentApp,          Guid = 5, Active}
+  //{PaymentApp_INACTIVE, Guid = 4, InActive}
+  //{PaymentApp_3,        Guid = 3}
+  //
+  // After App Setup step the apps would have been renamed to
+  //{PaymentApp_6,        Guid = 6, Active} --> New App
+  //{PaymentApp_5,        Guid = 5, InActive}
+  //{PaymentApp_4,        Guid = 4}
+  //{PaymentApp_3,        Guid = 3}
+  public void testNonVersionToVersionBasicCanaryRollback() throws PivotalClientApiException {
+    List<String> prodRoutes = Arrays.asList("harness-prod1-pcf.com", "harness-prod2-pcf.com");
+    String cfAppNamePrefix = "PaymentApp";
+    String newAppName = cfAppNamePrefix + "__6";
+    String prevActiveAppName = cfAppNamePrefix + "__5";
+    String preInActiveAppName = cfAppNamePrefix + "__4";
+
+    CfAppSetupTimeDetails newApp = CfAppSetupTimeDetails.builder()
+                                       .applicationName(newAppName)
+                                       .applicationGuid("6")
+                                       .initialInstanceCount(0)
+                                       .urls(prodRoutes)
+                                       .build();
+
+    CfAppSetupTimeDetails prevActiveApp = CfAppSetupTimeDetails.builder()
+                                              .applicationName(prevActiveAppName)
+                                              .applicationGuid("5")
+                                              .initialInstanceCount(2)
+                                              .urls(prodRoutes)
+                                              .build();
+
+    CfAppSetupTimeDetails existingInActiveApp = CfAppSetupTimeDetails.builder()
+                                                    .applicationName(preInActiveAppName)
+                                                    .applicationGuid("4")
+                                                    .initialInstanceCount(2)
+                                                    .urls(Collections.emptyList())
+                                                    .build();
+
+    CfCommandRollbackRequest cfCommandRequest =
+        getRollbackRequest(newApp, prevActiveApp, existingInActiveApp, cfAppNamePrefix, false, true, -1);
+
+    mockGetApplicationByName(prodRoutes, cfAppNamePrefix, prevActiveAppName, newApp, prevActiveApp);
+
+    ApplicationDetail prevActiveDetailsAfterUpSize = ApplicationDetail.builder()
+                                                         .id(prevActiveApp.getApplicationGuid())
+                                                         .instances(2)
+                                                         .diskQuota(1)
+                                                         .memoryLimit(1)
+                                                         .stack("Java")
+                                                         .memoryLimit(1)
+                                                         .name(prevActiveAppName)
+                                                         .requestedState(RUNNING)
+                                                         .runningInstances(2)
+                                                         .build();
+
+    doReturn(prevActiveDetailsAfterUpSize)
+        .when(cfDeploymentManager)
+        .upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    doReturn(prevActiveDetailsAfterUpSize).when(cfDeploymentManager).resizeApplication(any());
+    doReturn(getPreviousReleasesDuringNonVersionToVersionRollback(cfCommandRequest))
+        .when(cfDeploymentManager)
+        .getPreviousReleases(any(), eq(cfAppNamePrefix));
+
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfRollbackCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
+
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CfDeployCommandResponse pcfDeployCommandResponse =
+        (CfDeployCommandResponse) cfCommandExecutionResponse.getPcfCommandResponse();
+
+    assertThat(pcfDeployCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    verify(cfDeploymentManager, times(1)).upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    ArgumentCaptor<ArrayList> routesCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<CfRequestConfig> cfRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+
+    verify(cfDeploymentManager, times(1))
+        .mapRouteMapForApplication(cfRequestCaptor.capture(), routesCaptor.capture(), any());
+    List routesCaptorValue = routesCaptor.getValue();
+    assertThat(routesCaptorValue.size()).isEqualTo(2);
+    assertThat(routesCaptorValue.get(0)).isEqualTo(prodRoutes.get(0));
+    assertThat(routesCaptorValue.get(1)).isEqualTo(prodRoutes.get(1));
+
+    verify(cfDeploymentManager, times(1)).resizeApplication(any());
+
+    ArgumentCaptor<ArrayList> unMapRoutesCaptor = ArgumentCaptor.forClass(ArrayList.class);
+    ArgumentCaptor<CfRequestConfig> unMapRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(cfDeploymentManager, times(1))
+        .unmapRouteMapForApplication(unMapRequestCaptor.capture(), unMapRoutesCaptor.capture(), any());
+    routesCaptorValue = routesCaptor.getValue();
+    assertThat(routesCaptorValue.size()).isEqualTo(2);
+    assertThat(routesCaptorValue.get(0)).isEqualTo(prodRoutes.get(0));
+    assertThat(routesCaptorValue.get(1)).isEqualTo(prodRoutes.get(1));
+
+    ArgumentCaptor<CfRequestConfig> deleteRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(cfDeploymentManager, times(1)).deleteApplication(deleteRequestCaptor.capture());
+    assertThat(deleteRequestCaptor.getValue().getApplicationName()).isEqualTo(newApp.getApplicationName());
+
+    ArgumentCaptor<CfRenameRequest> renamedRequestCaptor = ArgumentCaptor.forClass(CfRenameRequest.class);
+    verify(cfDeploymentManager, times(2)).renameApplication(renamedRequestCaptor.capture(), any());
+    List<CfRenameRequest> requestCaptorAllValues = renamedRequestCaptor.getAllValues();
+    assertThat(requestCaptorAllValues.size()).isEqualTo(2);
+
+    // renaming due to non-version to version mode
+    assertThat(requestCaptorAllValues.get(0).getGuid())
+        .isEqualTo(cfCommandRequest.getAppsToBeDownSized().get(0).getApplicationGuid());
+    assertThat(requestCaptorAllValues.get(0).getNewName()).isEqualTo(cfAppNamePrefix);
+    assertThat(requestCaptorAllValues.get(1).getGuid())
+        .isEqualTo(cfCommandRequest.getExistingInActiveApplicationDetails().getApplicationGuid());
+    assertThat(requestCaptorAllValues.get(1).getNewName()).isEqualTo(cfAppNamePrefix + "__INACTIVE");
+  }
+
+  private List<ApplicationSummary> getPreviousReleasesDuringNonVersionToVersionRollback(
+      CfCommandRollbackRequest rollbackRequest) {
+    String cfAppNamePrefix = rollbackRequest.getCfAppNamePrefix();
+    CfAppSetupTimeDetails inActiveApplicationDetails = rollbackRequest.getExistingInActiveApplicationDetails();
+    CfAppSetupTimeDetails prevActiveAppDetails = rollbackRequest.getAppsToBeDownSized().get(0);
+
+    List<ApplicationSummary> previousReleases = new ArrayList<>();
+    previousReleases.add(ApplicationSummary.builder()
+                             .name(cfAppNamePrefix + "__3")
+                             .diskQuota(1)
+                             .requestedState(STOPPED)
+                             .id("3")
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name(inActiveApplicationDetails.getApplicationName())
+                             .diskQuota(1)
+                             .requestedState(STOPPED)
+                             .id(inActiveApplicationDetails.getApplicationGuid())
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name(prevActiveAppDetails.getApplicationName())
+                             .diskQuota(1)
+                             .requestedState(RUNNING)
+                             .id(prevActiveAppDetails.getApplicationGuid())
+                             .instances(2)
+                             .memoryLimit(1)
+                             .runningInstances(2)
+                             .build());
+    return previousReleases;
+  }
+
+  private List<ApplicationSummary> getPreviousReleasesAfterNonVersioningRenaming(
+      CfCommandRollbackRequest rollbackRequest) {
+    String cfAppNamePrefix = rollbackRequest.getCfAppNamePrefix();
+    CfAppSetupTimeDetails inActiveApplicationDetails = rollbackRequest.getExistingInActiveApplicationDetails();
+    CfAppSetupTimeDetails prevActiveAppDetails = rollbackRequest.getAppsToBeDownSized().get(0);
+
+    List<ApplicationSummary> previousReleases = new ArrayList<>();
+    previousReleases.add(ApplicationSummary.builder()
+                             .name(cfAppNamePrefix + "__INACTIVE")
+                             .diskQuota(1)
+                             .requestedState(STOPPED)
+                             .id(inActiveApplicationDetails.getApplicationGuid())
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name(cfAppNamePrefix)
+                             .diskQuota(1)
+                             .requestedState(RUNNING)
+                             .id(prevActiveAppDetails.getApplicationGuid())
+                             .instances(2)
+                             .memoryLimit(1)
+                             .runningInstances(2)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name(cfAppNamePrefix + "__3")
+                             .diskQuota(1)
+                             .requestedState(STOPPED)
+                             .id("3")
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(0)
+                             .build());
+    return previousReleases;
+  }
+
+  private void mockGetApplicationByName(List<String> prodRoutes, String newAppName, String prevActiveAppName,
+      CfAppSetupTimeDetails newApp, CfAppSetupTimeDetails prevActiveApp) throws PivotalClientApiException {
+    when(cfDeploymentManager.getApplicationByName(any())).thenAnswer(new Answer<ApplicationDetail>() {
+      private int count = 0;
+
+      @Override
+      public ApplicationDetail answer(InvocationOnMock invocationOnMock) {
+        count++;
+        if (count == 1) {
+          return ApplicationDetail.builder()
+              .id(prevActiveApp.getApplicationGuid())
+              .instances(0)
+              .diskQuota(1)
+              .stack("Java")
+              .memoryLimit(1)
+              .name(prevActiveAppName)
+              .requestedState(STOPPED)
+              .runningInstances(0)
+              .urls()
+              .build();
+        } else if (count == 2) {
+          return ApplicationDetail.builder()
+              .id(prevActiveApp.getApplicationGuid())
+              .instances(2)
+              .diskQuota(1)
+              .stack("Java")
+              .memoryLimit(1)
+              .name(prevActiveAppName)
+              .requestedState(RUNNING)
+              .runningInstances(2)
+              .build();
+        } else if (count == 3) {
+          return ApplicationDetail.builder()
+              .id(prevActiveApp.getApplicationGuid())
+              .instances(0)
+              .diskQuota(1)
+              .stack("Java")
+              .memoryLimit(1)
+              .name(newAppName)
+              .requestedState(STOPPED)
+              .urls(prodRoutes)
+              .runningInstances(0)
+              .build();
+        } else if (count == 4) {
+          return ApplicationDetail.builder()
+              .id(newApp.getApplicationGuid())
+              .instances(0)
+              .diskQuota(1)
+              .stack("Java")
+              .memoryLimit(1)
+              .name(newAppName)
+              .requestedState(STOPPED)
+              .runningInstances(0)
+              .build();
+        }
+        return ApplicationDetail.builder()
+            .id(prevActiveApp.getApplicationGuid())
+            .instances(2)
+            .diskQuota(1)
+            .stack("Java")
+            .memoryLimit(1)
+            .name(prevActiveAppName)
+            .requestedState(RUNNING)
+            .runningInstances(2)
+            .build();
+      }
+    });
+  }
+
+  private CfCommandRollbackRequest getRollbackRequest(CfAppSetupTimeDetails newApp, CfAppSetupTimeDetails prevActiveApp,
+      CfAppSetupTimeDetails existingInActiveApp, String cfAppNamePrefix, boolean isNonVersion, boolean isVersionChanged,
+      int activeAppVersion) {
+    return CfCommandRollbackRequest.builder()
+        .pcfCommandType(CfCommandRequest.PcfCommandType.ROLLBACK)
+        .pcfConfig(getPcfConfig())
+        .accountId(ACCOUNT_ID)
+        .instanceData(Arrays.asList(
+            CfServiceData.builder().name(newApp.getApplicationName()).previousCount(2).desiredCount(0).build(),
+            CfServiceData.builder().name(prevActiveApp.getApplicationName()).previousCount(0).desiredCount(2).build()))
+        .resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST)
+        .organization(ORG)
+        .space(SPACE)
+        .timeoutIntervalInMin(5)
+        .nonVersioning(isNonVersion)
+        .versioningChanged(isVersionChanged)
+        .cfAppNamePrefix(cfAppNamePrefix)
+        .activeAppRevision(activeAppVersion)
+        .isStandardBlueGreenWorkflow(false)
+        .existingInActiveApplicationDetails(existingInActiveApp)
+        .appsToBeDownSized(Collections.singletonList(prevActiveApp))
+        .newApplicationDetails(newApp)
+        .build();
   }
 }

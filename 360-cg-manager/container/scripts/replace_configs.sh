@@ -346,6 +346,19 @@ if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
 
+#segmentConfiguration is for telemetry framework
+if [[ "" != "$SEGMENT_ENABLED_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_ENABLED_NG"
+fi
+
+if [[ "" != "$SEGMENT_URL_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_URL_NG"
+fi
+
+if [[ "" != "$SEGMENT_APIKEY_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_APIKEY_NG"
+fi
+
 if [[ "" != "$SALESFORCE_USERNAME" ]]; then
   yq write -i $CONFIG_FILE salesforceConfig.userName "$SALESFORCE_USERNAME"
 fi

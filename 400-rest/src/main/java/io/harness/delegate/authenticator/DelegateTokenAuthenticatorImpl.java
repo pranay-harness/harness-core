@@ -14,6 +14,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.context.GlobalContext;
+import io.harness.delegate.beans.DelegateNgToken;
+import io.harness.delegate.beans.DelegateNgToken.DelegateNgTokenKeys;
 import io.harness.delegate.beans.DelegateToken;
 import io.harness.delegate.beans.DelegateToken.DelegateTokenKeys;
 import io.harness.delegate.beans.DelegateTokenStatus;
@@ -26,6 +28,7 @@ import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NameAndValueAccess;
 import io.harness.security.DelegateTokenAuthenticator;
 
 import software.wings.beans.Account;
@@ -123,15 +126,32 @@ public class DelegateTokenAuthenticatorImpl implements DelegateTokenAuthenticato
 
   private boolean decryptJWTDelegateToken(String accountId, DelegateTokenStatus status, EncryptedJWT encryptedJWT) {
     long time_start = System.currentTimeMillis();
-
+    boolean result = false;
     Query<DelegateToken> query = persistence.createQuery(DelegateToken.class)
                                      .field(DelegateTokenKeys.accountId)
                                      .equal(accountId)
                                      .field(DelegateTokenKeys.status)
                                      .equal(status);
 
-    try (HIterator<DelegateToken> records = new HIterator<>(query.fetch())) {
-      for (DelegateToken delegateToken : records) {
+    result = decryptDelegateTokenByQuery(query, accountId, status, encryptedJWT);
+    if (!result) {
+      Query<DelegateNgToken> queryNg = persistence.createQuery(DelegateNgToken.class)
+                                           .field(DelegateNgTokenKeys.accountId)
+                                           .equal(accountId)
+                                           .field(DelegateNgTokenKeys.status)
+                                           .equal(status);
+      result = decryptDelegateTokenByQuery(queryNg, accountId, status, encryptedJWT);
+    }
+    long time_end = System.currentTimeMillis() - time_start;
+    log.debug("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
+        status.name(), time_end);
+    return result;
+  }
+
+  private boolean decryptDelegateTokenByQuery(
+      Query query, String accountId, DelegateTokenStatus status, EncryptedJWT encryptedJWT) {
+    try (HIterator<NameAndValueAccess> records = new HIterator<>(query.fetch())) {
+      for (NameAndValueAccess delegateToken : records) {
         try {
           decryptDelegateToken(encryptedJWT, delegateToken.getValue());
 
@@ -142,20 +162,12 @@ public class DelegateTokenAuthenticatorImpl implements DelegateTokenAuthenticato
             upsertGlobalContextRecord(
                 DelegateTokenGlobalContextData.builder().tokenName(delegateToken.getName()).build());
           }
-
-          long time_end = System.currentTimeMillis() - time_start;
-          log.debug("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
-              status.name(), time_end);
           return true;
         } catch (Exception e) {
           log.debug("Fail to decrypt Delegate JWT using delete token {} for the account {}", delegateToken.getName(),
               accountId);
         }
       }
-      long time_end = System.currentTimeMillis() - time_start;
-      log.debug("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
-          status.name(), time_end);
-
       return false;
     }
   }

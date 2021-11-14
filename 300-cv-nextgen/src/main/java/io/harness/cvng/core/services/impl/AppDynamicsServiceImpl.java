@@ -13,11 +13,17 @@ import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
+import io.harness.cvng.beans.appd.AppDynamicFetchFileStructureRequest;
+import io.harness.cvng.beans.appd.AppDynamicSingleMetricDataRequest;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsFetchAppRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
+import io.harness.cvng.beans.appd.AppDynamicsFileDefinition;
+import io.harness.cvng.beans.appd.AppDynamicsFileDefinition.FileType;
 import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.AppdynamicsMetricDataResponse;
+import io.harness.cvng.beans.appd.AppdynamicsMetricDataResponse.DataPoint;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
@@ -25,6 +31,7 @@ import io.harness.cvng.core.beans.AppdynamicsImportStatus;
 import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.AppDynamicsService;
@@ -40,6 +47,9 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import java.lang.reflect.Type;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -48,6 +58,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 
 @Slf4j
 @OwnedBy(CV)
@@ -57,6 +68,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   @Inject private MetricPackService metricPackService;
   @Inject private NextGenService nextGenService;
   @Inject private OnboardingService onboardingService;
+  @Inject private Clock clock;
 
   @Override
   // TODO: We need to find a testing strategy for Retrofit interfaces. The current way of mocking Call is too cumbersome
@@ -199,6 +211,73 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
+  public List<String> getBaseFolders(
+      ProjectParams projectParams, String connectorIdentifier, String appName, String path, String tracingId) {
+    // Base folders are at empty path
+    List<AppDynamicsFileDefinition> fileDefinitions =
+        getMetricStructure(projectParams, connectorIdentifier, appName, path, tracingId);
+    return fileDefinitions.stream()
+        .filter(fileDefinition -> fileDefinition.getType().equals(FileType.FOLDER))
+        .map(AppDynamicsFileDefinition::getName)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<AppDynamicsFileDefinition> getMetricStructure(ProjectParams projectParams, String connectorIdentifier,
+      String appName, String baseFolder, String tier, String metricPath, String tracingId) {
+    return getMetricStructure(
+        projectParams, connectorIdentifier, appName, getCompletePath(baseFolder, tier, metricPath), tracingId);
+  }
+
+  @Override
+  public AppdynamicsMetricDataResponse getMetricData(ProjectParams projectParams, String connectorIdentifier,
+      String appName, String baseFolder, String tier, String metricPath, String tracingId) {
+    Instant endTime = clock.instant();
+    Instant startTime = endTime.minus(Duration.ofHours(1));
+    DataCollectionRequest request = AppDynamicSingleMetricDataRequest.builder()
+                                        .applicationName(appName)
+                                        .startTime(startTime)
+                                        .endTime(endTime)
+                                        .metricPath(getCompletePath(baseFolder, tier, metricPath))
+                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA)
+                                        .build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(projectParams.getAccountIdentifier())
+                                                    .orgIdentifier(projectParams.getOrgIdentifier())
+                                                    .projectIdentifier(projectParams.getProjectIdentifier())
+                                                    .tracingId(tracingId)
+                                                    .build();
+
+    OnboardingResponseDTO response =
+        onboardingService.getOnboardingResponse(projectParams.getAccountIdentifier(), onboardingRequestDTO);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<TimeSeriesRecord>>() {}.getType();
+    List<TimeSeriesRecord> timeSeriesRecords = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+    if (CollectionUtils.isEmpty(timeSeriesRecords)) {
+      return AppdynamicsMetricDataResponse.builder()
+          .startTime(startTime.toEpochMilli())
+          .endTime(endTime.toEpochMilli())
+          .responseStatus(ThirdPartyApiResponseStatus.NO_DATA)
+          .build();
+    }
+    return AppdynamicsMetricDataResponse.builder()
+        .responseStatus(ThirdPartyApiResponseStatus.SUCCESS)
+        .startTime(startTime.toEpochMilli())
+        .endTime(endTime.toEpochMilli())
+        .dataPoints(timeSeriesRecords.stream()
+                        .map(timeSeriesRecord
+                            -> DataPoint.builder()
+                                   .timestamp(timeSeriesRecord.getTimestamp())
+                                   .value(timeSeriesRecord.getMetricValue())
+                                   .build())
+                        .collect(Collectors.toList()))
+        .build();
+  }
+
+  @Override
   public void checkConnectivity(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
     getApplications(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 0, 1, null);
@@ -227,5 +306,34 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
         .totalNumberOfApplications(isNotEmpty(appDynamicsApplications) ? appDynamicsApplications.size() : 0)
         .totalNumberOfEnvironments(totalNumberOfEnvironments)
         .build();
+  }
+
+  private List<AppDynamicsFileDefinition> getMetricStructure(
+      ProjectParams projectParams, String connectorIdentifier, String appName, String metricPath, String tracingId) {
+    DataCollectionRequest request = AppDynamicFetchFileStructureRequest.builder()
+                                        .appName(appName)
+                                        .path(metricPath)
+                                        .type(DataCollectionRequestType.APPDYNAMICS_FETCH_METRIC_STRUCTURE)
+                                        .build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(projectParams.getAccountIdentifier())
+                                                    .tracingId(tracingId)
+                                                    .orgIdentifier(projectParams.getOrgIdentifier())
+                                                    .projectIdentifier(projectParams.getProjectIdentifier())
+                                                    .build();
+
+    OnboardingResponseDTO response =
+        onboardingService.getOnboardingResponse(projectParams.getAccountIdentifier(), onboardingRequestDTO);
+
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<AppDynamicsFileDefinition>>() {}.getType();
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+  }
+
+  private String getCompletePath(String baseFolder, String tier, String metricPath) {
+    return baseFolder + "|" + tier + "|" + metricPath;
   }
 }

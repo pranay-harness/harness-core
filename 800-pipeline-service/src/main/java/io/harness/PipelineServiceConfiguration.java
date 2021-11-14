@@ -38,6 +38,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -178,7 +179,11 @@ public class PipelineServiceConfiguration extends Configuration {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 
-  public static Set<String> getUniquePackagesContainingResources() {
-    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  public static Set<String> getUniquePackagesContainingOpenApiResources() {
+    return getResourceClasses()
+        .stream()
+        .filter(x -> x.isAnnotationPresent(Tag.class))
+        .map(aClass -> aClass.getPackage().getName())
+        .collect(toSet());
   }
 }

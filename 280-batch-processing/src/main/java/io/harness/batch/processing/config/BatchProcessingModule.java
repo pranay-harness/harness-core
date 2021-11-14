@@ -13,7 +13,7 @@ import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.batch.processing.tasklet.util.ClusterHelperImpl;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
-import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudServiceImpl;
@@ -63,6 +63,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.name.Named;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,6 +73,18 @@ public class BatchProcessingModule extends AbstractModule {
   BatchProcessingModule(BatchMainConfig batchMainConfig) {
     this.batchMainConfig = batchMainConfig;
   }
+
+  /**
+   * Required by io.harness.ccm.commons.utils.BigQueryHelper, though io.harness.ccm.commons.beans.config.GcpConfig is
+   * utilized 340-ce-nextgen application only.
+   */
+  @Provides
+  @Singleton
+  @Named("gcpConfig")
+  public io.harness.ccm.commons.beans.config.GcpConfig noOpDummyConfig() {
+    return io.harness.ccm.commons.beans.config.GcpConfig.builder().build();
+  }
+
   @Override
   protected void configure() {
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);

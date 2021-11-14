@@ -13,7 +13,6 @@ import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
 import static io.harness.delegate.beans.K8sPermissionType.CLUSTER_ADMIN;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
-import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.ANKIT;
@@ -35,7 +34,6 @@ import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.XIN;
 
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.service.impl.DelegateServiceImpl.DELEGATE_DIR;
@@ -163,8 +161,6 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.features.api.UsageLimitedFeature;
@@ -2645,14 +2641,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.saveProfileResult(
         ACCOUNT_ID, DELEGATE_ID, false, FileBucket.PROFILE_RESULTS, inputStream, fileDetail);
 
-    verify(alertService)
-        .closeAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegateProfileError),
-            eq(DelegateProfileErrorAlert.builder()
-                    .accountId(ACCOUNT_ID)
-                    .hostName("hostname")
-                    .obfuscatedIpAddress(obfuscate("1.2.3.4"))
-                    .build()));
-
     Delegate delegate = persistence.get(Delegate.class, DELEGATE_ID);
     assertThat(delegate.getProfileExecutedAt()).isGreaterThanOrEqualTo(now);
     assertThat(delegate.isProfileError()).isFalse();
@@ -2679,14 +2667,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     long now = System.currentTimeMillis();
     delegateService.saveProfileResult(
         ACCOUNT_ID, DELEGATE_ID, true, FileBucket.PROFILE_RESULTS, inputStream, fileDetail);
-
-    verify(alertService)
-        .openAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegateProfileError),
-            eq(DelegateProfileErrorAlert.builder()
-                    .accountId(ACCOUNT_ID)
-                    .hostName("hostname")
-                    .obfuscatedIpAddress(obfuscate("1.2.3.4"))
-                    .build()));
 
     verify(fileService).deleteFile(eq("previous-result"), eq(FileBucket.PROFILE_RESULTS));
 

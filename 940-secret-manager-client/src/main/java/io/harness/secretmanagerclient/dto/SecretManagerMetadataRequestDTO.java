@@ -8,6 +8,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 @OwnedBy(PL)
 @Data
 @NoArgsConstructor
+@Schema(name = "Invite", description = "This is the view of the SecretManagerMetadataRequest entity defined in Harness")
 public class SecretManagerMetadataRequestDTO implements DecryptableEntity {
   @NotNull private EncryptionType encryptionType;
   private String orgIdentifier;

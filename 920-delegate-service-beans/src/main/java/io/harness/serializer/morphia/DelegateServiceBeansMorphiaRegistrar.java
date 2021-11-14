@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateCallbackRecord;
+import io.harness.delegate.beans.DelegateNgToken;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -29,6 +30,7 @@ public class DelegateServiceBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TaskSelectorMap.class);
     set.add(DelegateToken.class);
     set.add(PerpetualTaskScheduleConfig.class);
+    set.add(DelegateNgToken.class);
   }
 
   @Override

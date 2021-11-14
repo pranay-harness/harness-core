@@ -65,6 +65,7 @@ import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.serializer.morphia.ManagerTestMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.springdata.SpringPersistenceTestModule;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -382,6 +383,9 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
+    SegmentConfiguration segmentConfiguration =
+        SegmentConfiguration.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
+    configuration.setSegmentConfiguration(segmentConfiguration);
     return configuration;
   }
 

@@ -9,6 +9,7 @@ import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.AnomaliesSummaryDTO;
+import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
@@ -176,10 +177,14 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier, @QueryParam("offset") @NotNull Integer offset,
       @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter,
-      @NotNull @QueryParam("servicesAtRiskFilter") @ApiParam(
-          required = true, defaultValue = "false") boolean servicesAtRiskFilter) {
-    return ResponseDTO.newResponse(monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier,
-        environmentIdentifier, offset, pageSize, filter, servicesAtRiskFilter));
+      @NotNull @QueryParam("servicesAtRiskFilter") @ApiParam(defaultValue = "false") boolean servicesAtRiskFilter) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(monitoredServiceService.list(
+        projectParams, environmentIdentifier, offset, pageSize, filter, servicesAtRiskFilter));
   }
 
   @GET
@@ -418,5 +423,24 @@ public class MonitoredServiceResource {
                                           .endTime(Instant.ofEpochMilli(endTime))
                                           .build();
     return new RestResponse<>(monitoredServiceService.getAnomaliesSummary(projectParams, identifier, timeRangeParams));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/count-of-services")
+  @ApiOperation(value = "get count of types of services like Monitored Service, Services at Risk ",
+      nickname = "getCountOfServices")
+  public CountServiceDTO
+  getCountOfServices(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("environmentIdentifier") String environmentIdentifier, @QueryParam("filter") String filter) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return monitoredServiceService.getCountOfServices(projectParams, environmentIdentifier, filter);
   }
 }

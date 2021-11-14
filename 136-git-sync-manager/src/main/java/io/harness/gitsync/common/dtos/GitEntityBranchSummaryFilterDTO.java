@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitEntityBranchFilterSummaryProperties")
+@Schema(name = "GitEntityBranchSummaryFilter",
+    description = "This contains filters for Git Sync Entity such as Module Type, Entity Type and Search Term")
 @NoArgsConstructor
 @AllArgsConstructor
 public class GitEntityBranchSummaryFilterDTO {
