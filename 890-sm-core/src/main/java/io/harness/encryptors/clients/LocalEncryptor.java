@@ -8,6 +8,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretKey;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptor;
+import io.harness.exception.UnexpectedException;
 import io.harness.secretkey.SecretKeyConstants;
 import io.harness.secretkey.SecretKeyService;
 import io.harness.security.SimpleEncryption;
@@ -30,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import javax.crypto.spec.SecretKeySpec;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -105,7 +105,7 @@ public class LocalEncryptor implements KmsEncryptor {
 
     Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);
     if (!secretKey.isPresent()) {
-      // throw proper exception
+      throw new UnexpectedException(String.format("secret key not found for secret key id: %s", secretKeyUuid));
     }
     return getAwsDecryptedSecret(accountId, encryptedSecret, secretKey.get()).toCharArray();
   }
@@ -141,7 +141,7 @@ public class LocalEncryptor implements KmsEncryptor {
 
     final CryptoResult<byte[], ?> decryptResult = crypto.decryptData(escrowPub, encryptedSecret);
     if (!decryptResult.getMasterKeyIds().get(0).equals(accountId)) {
-      // throw exception
+      throw new UnexpectedException(String.format("Corrupted secret found for secret key : %s", secretKey.getUuid()));
     }
 
     return new String(decryptResult.getResult(), StandardCharsets.UTF_8);
