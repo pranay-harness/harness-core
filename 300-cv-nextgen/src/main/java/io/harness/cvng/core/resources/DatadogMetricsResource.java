@@ -21,7 +21,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 @Api("datadog-metrics")
 @Path("/datadog-metrics")
@@ -81,7 +85,7 @@ public class DatadogMetricsResource {
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @NotNull @QueryParam("metric") String metricName, @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(
-        datadogService.getMetricTagsList(projectParams, metricName, connectorIdentifier, tracingId));
+        datadogService.getMetricTagsList(projectParams, connectorIdentifier, metricName, tracingId));
   }
 
   @GET

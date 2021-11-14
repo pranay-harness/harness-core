@@ -10,11 +10,21 @@ import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -27,7 +37,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DatadogLogHealthSourceSpec extends HealthSourceSpec {
   @NotNull String feature;
-  @NotNull @NotEmpty @Valid List<DatadogLogHealthSourceSpec.QueryDTO> queries;
+  @NotNull @NotEmpty @Valid List<QueryDTO> queries;
 
   @Data
   @SuperBuilder
