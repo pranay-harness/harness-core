@@ -515,12 +515,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorValidationResult validate(ConnectorDTO connectorRequest, String accountIdentifier) {
     ConnectorInfoDTO connectorInfoDTO = connectorRequest.getConnectorInfo();
     Connector connector =
-            getConnectorOrThrowException(accountIdentifier, connectorRequest.getConnectorInfo().getOrgIdentifier(),
-                    connectorRequest.getConnectorInfo().getProjectIdentifier(),
-                    connectorRequest.getConnectorInfo().getIdentifier());
+        getConnectorOrThrowException(accountIdentifier, connectorRequest.getConnectorInfo().getOrgIdentifier(),
+            connectorRequest.getConnectorInfo().getProjectIdentifier(),
+            connectorRequest.getConnectorInfo().getIdentifier());
     ConnectorResponseDTO connectorResponseDTO = connectorMapper.writeDTO(connector);
-    return validateSafely(connectorResponseDTO, connectorInfoDTO, accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(),
-        connector.getIdentifier());
+    return validateSafely(connectorResponseDTO, connectorInfoDTO, accountIdentifier, connector.getOrgIdentifier(),
+        connector.getProjectIdentifier(), connector.getIdentifier());
   }
 
   public boolean validateTheIdentifierIsUnique(
@@ -594,7 +594,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier) {
     ConnectorValidationResult validationResult;
-    validationResult = validateSafely(connectorResponseDTO, connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    validationResult = validateSafely(
+        connectorResponseDTO, connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return validationResult;
   }
 
@@ -615,20 +616,22 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private ConnectorValidationResult validateSafely(ConnectorResponseDTO connectorResponseDTO, ConnectorInfoDTO connectorInfo, String accountIdentifier,
-      String orgIdentifier, String projectIdentifier, String identifier) {
+  private ConnectorValidationResult validateSafely(ConnectorResponseDTO connectorResponseDTO,
+      ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier) {
     ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorInfo.getConnectorType().toString());
     ConnectorValidationResult validationResult;
     try {
-      if (connectorInfo.getConnectorType().equals(ConnectorType.CE_AWS) ||
-              connectorInfo.getConnectorType().equals(ConnectorType.GCP_CLOUD_COST) ||
-              connectorInfo.getConnectorType().equals(ConnectorType.CE_AZURE)) {
-        validationResult = connectionValidator.validate(connectorResponseDTO,
-                accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+      log.info("connectorInfo.getConnectorType() {}", connectorInfo.getConnectorType());
+      if (connectorInfo.getConnectorType().equals(ConnectorType.CE_AWS)
+          || connectorInfo.getConnectorType().equals(ConnectorType.GCP_CLOUD_COST)
+          || connectorInfo.getConnectorType().equals(ConnectorType.CE_AZURE)) {
+        validationResult = connectionValidator.validate(
+            connectorResponseDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
         log.info("validation result {}", validationResult);
       } else {
-        validationResult = connectionValidator.validate(connectorInfo.getConnectorConfig(),
-                accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        validationResult = connectionValidator.validate(
+            connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier, identifier);
       }
 
     } catch (ConnectorValidationException | DelegateServiceDriverException ex) {

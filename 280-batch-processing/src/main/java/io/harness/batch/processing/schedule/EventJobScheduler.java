@@ -15,6 +15,7 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.cleanup.CEDataCleanupRequestService;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
+import io.harness.batch.processing.connectors.ConnectorsHealthUpdateService;
 import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.reports.ScheduledReportServiceImpl;
 import io.harness.batch.processing.service.AccountExpiryCleanupService;
@@ -78,6 +79,7 @@ public class EventJobScheduler {
   @Autowired private CEDataCleanupRequestService ceDataCleanupRequestService;
   @Autowired private CfClient cfClient;
   @Autowired private FeatureFlagService featureFlagService;
+  @Autowired private ConnectorsHealthUpdateService connectorsHealthUpdateService;
 
   @PostConstruct
   public void orderJobs() {
@@ -272,12 +274,16 @@ public class EventJobScheduler {
   }
 
   @Scheduled(cron = "${scheduler-jobs-config.connectorHealthUpdateJobCron}")
-  public void runConnectorHealthUpdateJob() {
+  public void runNGConnectorsHealthUpdateJob() {
     try {
-      budgetCostUpdateService.updateCosts();
-      log.info("Costs updated for budgets");
+      if (!batchMainConfig.getConnectorHealthUpdateJobConfig().isEnabled()){
+        log.info("connectorHealthUpdateJob is disabled in config");
+        return;
+      }
+      connectorsHealthUpdateService.update();
+      log.info("Updated health of the connectors in NG");
     } catch (Exception ex) {
-      log.error("Exception while running runBudgetCostUpdateJob", ex);
+      log.error("Exception while running runNGConnectorsHealthUpdateJob", ex);
     }
   }
 

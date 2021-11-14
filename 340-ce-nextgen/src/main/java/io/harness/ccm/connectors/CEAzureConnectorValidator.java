@@ -1,5 +1,17 @@
 package io.harness.ccm.connectors;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.CENextGenConfiguration;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.CEFeatures;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
+import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
+import io.harness.ng.core.dto.ErrorDetail;
+
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.storage.blob.BlobContainerClient;
@@ -12,35 +24,26 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.microsoft.aad.msal4j.MsalServiceException;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.ConnectivityStatus;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.CEFeatures;
-import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
-import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
-import io.harness.ng.core.dto.ErrorDetail;
-import io.harness.remote.CEAzureSetupConfig;
-import lombok.extern.slf4j.Slf4j;
-
 import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
+@Service
 @Singleton
 @OwnedBy(HarnessTeam.CE)
 public class CEAzureConnectorValidator extends io.harness.ccm.connectors.AbstractCEConnectorValidator {
   private final String AZURE_STORAGE_SUFFIX = "blob.core.windows.net";
   private final String AZURE_STORAGE_URL_FORMAT = "https://%s.%s";
   private final String GENERIC_LOGGING_ERROR =
-      "Failed to validate accountIdentifier:{} orgIdentifier:{} projectIdentifier:{}";
+      "Failed to validate accountIdentifier:{} orgIdentifier:{} projectIdentifier:{} connectorIdentifier:{} ";
 
-  @Inject private  CEAzureSetupConfig ceAzureSetupConfig;
+  @Inject CENextGenConfiguration configuration;
+  @Inject CEConnectorsUtil ceConnectorsUtil;
 
-  public ConnectorValidationResult validate(
-      ConnectorResponseDTO connectorResponseDTO, String accountIdentifier) {
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier) {
     final CEAzureConnectorDTO ceAzureConnectorDTO =
         (CEAzureConnectorDTO) connectorResponseDTO.getConnector().getConnectorConfig();
     final List<CEFeatures> featuresEnabled = ceAzureConnectorDTO.getFeaturesEnabled();
@@ -112,12 +115,32 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
             .testedAt(Instant.now().toEpochMilli())
             .build();
       }
-      log.error(GENERIC_LOGGING_ERROR, accountIdentifier, orgIdentifier, projectIdentifier, ex);
+      log.error(GENERIC_LOGGING_ERROR, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, ex);
       return ConnectorValidationResult.builder()
           .status(ConnectivityStatus.FAILURE)
           .errorSummary("Exception while validating billing export details")
           .testedAt(Instant.now().toEpochMilli())
           .build();
+    }
+    // Check for data at destination only when 24 hrs have elapsed since connector last modified at
+    long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
+    if (connectorResponseDTO.getLastModifiedAt() < now) {
+      if (!ceConnectorsUtil.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AZURE,
+              ceConnectorsUtil.JOB_TYPE_CLOUDFUNCTION)) {
+        // Data not available in unified table. Possibly an issue with CFs
+        // Check if Batch sync job has finished for this
+        /*
+        if (!ceConnectorsUtil.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AZURE,
+        ceConnectorsUtil.JOB_TYPE_BATCH)) { return ConnectorValidationResult.builder() .errorSummary("Error with syncing
+        data") .status(ConnectivityStatus.FAILURE) .build();
+        }
+        */
+        // Issue with CFs
+        return ConnectorValidationResult.builder()
+            .errorSummary("Error with processing data")
+            .status(ConnectivityStatus.FAILURE)
+            .build();
+      }
     }
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.SUCCESS)
@@ -125,7 +148,7 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
         .build();
   }
 
-  public  void validateIfContainerIsPresent(BlobContainerClient blobContainerClient, String directoryName)
+  public void validateIfContainerIsPresent(BlobContainerClient blobContainerClient, String directoryName)
       throws Exception {
     // List the blob(s) in the container.
     for (BlobItem blobItem : blobContainerClient.listBlobsByHierarchy(directoryName)) {
@@ -135,12 +158,13 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
   }
 
   @VisibleForTesting
-  public  BlobContainerClient getBlobContainerClient(String endpoint, String containerName, String tenantId) {
-    ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
-                                                        .clientId(ceAzureSetupConfig.getAzureAppClientId())
-                                                        .clientSecret(ceAzureSetupConfig.getAzureAppClientSecret())
-                                                        .tenantId(tenantId)
-                                                        .build();
+  public BlobContainerClient getBlobContainerClient(String endpoint, String containerName, String tenantId) {
+    ClientSecretCredential clientSecretCredential =
+        new ClientSecretCredentialBuilder()
+            .clientId(configuration.getCeAzureSetupConfig().getAzureAppClientId())
+            .clientSecret(configuration.getCeAzureSetupConfig().getAzureAppClientSecret())
+            .tenantId(tenantId)
+            .build();
     BlobServiceClient blobServiceClient =
         new BlobServiceClientBuilder().endpoint(endpoint).credential(clientSecretCredential).buildClient();
     return blobServiceClient.getBlobContainerClient(containerName);

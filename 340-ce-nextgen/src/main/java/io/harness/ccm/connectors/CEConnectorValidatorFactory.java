@@ -1,18 +1,26 @@
 package io.harness.ccm.connectors;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import io.harness.delegate.beans.connector.ConnectorType;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Singleton
 public class CEConnectorValidatorFactory {
-    public static io.harness.ccm.connectors.AbstractCEConnectorValidator getValidator(ConnectorType connectorType){
+    @Inject
+    Injector injector;
+    public io.harness.ccm.connectors.AbstractCEConnectorValidator getValidator(ConnectorType connectorType){
         switch (connectorType) {
-            case AWS:
-                return new io.harness.ccm.connectors.CEAWSConnectorValidator();
+            case CE_AWS:
+                return injector.getInstance(CEAWSConnectorValidator.class);
             case CE_AZURE:
-                return new io.harness.ccm.connectors.CEAzureConnectorValidator();
-            case GCP:
-                return new io.harness.ccm.connectors.CEGcpConnectorValidator();
+                return injector.getInstance(CEAzureConnectorValidator.class);
+            case GCP_CLOUD_COST:
+                return injector.getInstance(CEGcpConnectorValidator.class);
             default:
-                //TODO: add error message
+                log.error("Unknown connector type: {}", connectorType);
         }
         return null;
     }

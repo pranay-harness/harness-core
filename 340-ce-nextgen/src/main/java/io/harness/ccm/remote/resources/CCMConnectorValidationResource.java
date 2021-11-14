@@ -1,27 +1,29 @@
 package io.harness.ccm.remote.resources;
 
-import static io.harness.annotations.dev.HarnessTeam.CE;
-
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.connectors.AbstractCEConnectorValidator;
+import io.harness.ccm.connectors.CEConnectorValidatorFactory;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+
+import static io.harness.annotations.dev.HarnessTeam.CE;
 
 @Api("testconnection")
 @Path("/testconnection")
@@ -32,6 +34,8 @@ import org.springframework.stereotype.Service;
 @InternalApi
 @OwnedBy(CE)
 public class CCMConnectorValidationResource {
+  @Inject CEConnectorValidatorFactory ceConnectorValidatorFactory;
+
   @POST
   @Timed
   @ExceptionMetered
@@ -40,7 +44,7 @@ public class CCMConnectorValidationResource {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ConnectorResponseDTO connectorResponseDTO) {
     // Implement validation methods for each connector type
     ConnectorType connectorType = connectorResponseDTO.getConnector().getConnectorType();
-    AbstractCEConnectorValidator ceConnectorValidator = io.harness.ccm.connectors.CEConnectorValidatorFactory.getValidator(connectorType);
+    AbstractCEConnectorValidator ceConnectorValidator = ceConnectorValidatorFactory.getValidator(connectorType);
     if (ceConnectorValidator != null) {
       log.info("Connector response dto {}", connectorResponseDTO);
       return ResponseDTO.newResponse(ceConnectorValidator.validate(connectorResponseDTO, accountId));

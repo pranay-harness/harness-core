@@ -1,5 +1,17 @@
 package io.harness.ccm.connectors;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.CENextGenConfiguration;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
+import io.harness.ng.core.dto.ErrorDetail;
+
 import com.google.api.gax.paging.Page;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
@@ -8,61 +20,39 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.Table;
-import com.google.cloud.bigquery.TableResult;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.CENextGenConfiguration;
-import io.harness.ccm.bigQuery.BigQueryService;
-import io.harness.ccm.commons.constants.CloudProvider;
-import io.harness.connector.ConnectivityStatus;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
-import io.harness.ng.core.dto.ErrorDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
-
-import static io.harness.ccm.commons.utils.BigQueryHelper.DATA_SET_NAME_TEMPLATE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
+@Service
 @Singleton
 @OwnedBy(HarnessTeam.CE)
 public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractCEConnectorValidator {
+  @Inject CENextGenConfiguration configuration;
+  @Inject CEConnectorsUtil ceConnectorsUtil;
+
   public static final String GCP_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
   public static final String GCP_BILLING_EXPORT_V_1 = "gcp_billing_export_v1";
-  @Autowired
-  private  BigQueryService bigQueryService;
-  @Inject
-  
-  CENextGenConfiguration configuration;
+  private final String GENERIC_LOGGING_ERROR =
+      "Failed to validate accountIdentifier:{} orgIdentifier:{} projectIdentifier:{} connectorIdentifier:{} ";
 
-  private static final String BQ_PRE_AGG_TABLE_DATACHECK_TEMPLATE =
-          "SELECT count(*) as count FROM `%s.preAggregated` WHERE DATE(startTime) "
-                  + ">= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"%s\";%n";
-
-  public ConnectorValidationResult validate(
-      ConnectorResponseDTO connectorResponseDTO, String accountIdentifier) {
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier) {
     final GcpCloudCostConnectorDTO gcpCloudCostConnectorDTO =
         (GcpCloudCostConnectorDTO) connectorResponseDTO.getConnector().getConnectorConfig();
     String projectIdentifier = connectorResponseDTO.getConnector().getProjectIdentifier();
     String orgIdentifier = connectorResponseDTO.getConnector().getOrgIdentifier();
     String connectorIdentifier = connectorResponseDTO.getConnector().getIdentifier();
-    String projectId = gcpCloudCostConnectorDTO.getProjectId();
+    String projectId = gcpCloudCostConnectorDTO.getProjectId(); // Source project id
     String datasetId = gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId();
     String impersonatedServiceAccount = gcpCloudCostConnectorDTO.getServiceAccountEmail();
     try {
@@ -71,18 +61,34 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
       if (connectorValidationResult != null) {
         return connectorValidationResult;
       } else {
-        String dataSetName =
-                String.format(DATA_SET_NAME_TEMPLATE, modifyStringToComplyRegex(accountIdentifier));
-        if (!isDataPresentPreAgg(dataSetName, CloudProvider.GCP.name())) {
-          // Data not available at destination. Possibly an issue with CFs
-          return ConnectorValidationResult.builder()
-                  .errorSummary("Error with syncing data")
-                  .status(ConnectivityStatus.FAILURE)
-                  .build();
+        // 4. Check for data at destination only when 24 hrs have elapsed since connector last modified at
+        long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
+        if (connectorResponseDTO.getLastModifiedAt() < now) {
+          if (!ceConnectorsUtil.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.GCP_CLOUD_COST,
+                  ceConnectorsUtil.JOB_TYPE_CLOUDFUNCTION)) {
+            // Data not available in unified table.
+            // Check if Batch sync job has finished for this
+            /*
+            if (!ceConnectorsUtil.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.GCP_CLOUD_COST,
+            ceConnectorsUtil.JOB_TYPE_BATCH)) {
+              //Generic error message for issue with batch job
+              return ConnectorValidationResult.builder()
+                      .errorSummary("Error with syncing data")
+                      .status(ConnectivityStatus.FAILURE)
+                      .build();
+            }
+            */
+            // Issue with CFs
+            return ConnectorValidationResult.builder()
+                .errorSummary("Error with processing data")
+                .status(ConnectivityStatus.FAILURE)
+                .build();
+          }
         }
       }
     } catch (Exception ex) {
-      log.error("Unknown error occurred", ex);
+      // 5. Generic Error
+      log.error(GENERIC_LOGGING_ERROR, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, ex);
       return ConnectorValidationResult.builder()
           .errorSummary("Unknown error occurred")
           .status(ConnectivityStatus.FAILURE)
@@ -95,11 +101,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
         .build();
   }
 
-  public String modifyStringToComplyRegex(String accountInfo) {
-    return accountInfo.toLowerCase().replaceAll("[^a-z0-9]", "_");
-  }
-
-  public  ConnectorValidationResult validateAccessToBillingReport(
+  public ConnectorValidationResult validateAccessToBillingReport(
       String projectId, String datasetId, String impersonatedServiceAccount) {
     boolean isTablePresent = false;
     ServiceAccountCredentials sourceCredentials = getGcpCredentials(GCP_CREDENTIALS_PATH);
@@ -114,6 +116,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
     bigQuery = bigQueryOptionsBuilder.build().getService();
 
     try {
+      // 1. Check presence of dataset
       Dataset dataset = bigQuery.getDataset(datasetId);
       if (dataset == null) {
         log.error("Unable to find the dataset :" + datasetId);
@@ -125,8 +128,8 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
             .testedAt(Instant.now().toEpochMilli())
             .build();
       } else {
+        // 2. Check presence of table "gcp_billing_export_v1_*"
         log.info("dataset {} is present", datasetId);
-        // Check for presence of table "gcp_billing_export_v1_*"
         Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
         for (Table table : tableList.getValues()) {
           if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
@@ -145,6 +148,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
         return null;
       }
     } catch (BigQueryException be) {
+      // 3. Permissions check on the dataset
       log.error("Unable to access BigQuery Dataset", be);
       return ConnectorValidationResult.builder()
           .status(ConnectivityStatus.FAILURE)
@@ -156,7 +160,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
     }
   }
 
-  public  ServiceAccountCredentials getGcpCredentials(String googleCredentialPathSystemEnv) {
+  public ServiceAccountCredentials getGcpCredentials(String googleCredentialPathSystemEnv) {
     String googleCredentialsPath = System.getenv(googleCredentialPathSystemEnv);
     if (isEmpty(googleCredentialsPath)) {
       log.error("Missing environment variable for GCP credentials.");
@@ -173,7 +177,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
     return credentials;
   }
 
-  public  Credentials getGcpImpersonatedCredentials(
+  public Credentials getGcpImpersonatedCredentials(
       ServiceAccountCredentials sourceCredentials, String impersonatedServiceAccount) {
     if (impersonatedServiceAccount == null) {
       return sourceCredentials;
@@ -181,35 +185,5 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
       return ImpersonatedCredentials.create(sourceCredentials, impersonatedServiceAccount, null,
           Arrays.asList("https://www.googleapis.com/auth/cloud-platform"), 300);
     }
-  }
-
-  public  boolean isDataPresentPreAgg(String datasetId, String cloudProvider) {
-    BigQuery bigquery = bigQueryService.get();
-    String gcpProjectId = configuration.getGcpConfig().getGcpProjectId();
-    String tablePrefix = gcpProjectId + "." + datasetId;
-    String query = String.format(BQ_PRE_AGG_TABLE_DATACHECK_TEMPLATE, tablePrefix, cloudProvider);
-    QueryJobConfiguration queryConfig =
-            QueryJobConfiguration.newBuilder(query)
-                    .addNamedParameter("run_date", QueryParameterValue.date(String.valueOf(java.time.LocalDate.now())))
-                    .build();
-
-    // Get the results.
-    TableResult result;
-    try {
-      log.info("Running query: {}", query);
-      result = bigquery.query(queryConfig);
-    } catch (InterruptedException e) {
-      log.error("Failed to check for data. {}", e);
-      Thread.currentThread().interrupt();
-      return false;
-    }
-    // Print all pages of the results.
-    for (FieldValueList row : result.iterateAll()) {
-      long count = row.get("count").getLongValue();
-      if (count > 0) {
-        return true;
-      }
-    }
-    return false;
   }
 }
