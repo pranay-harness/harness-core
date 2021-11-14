@@ -39,6 +39,7 @@ public class LocalMultiCryptoModeEncryptionMigrationHandler extends LocalEncrypt
       EncryptedData encryptedData = encryptedDataPageResponse.iterator().next();
       EncryptedData migratedRecord = (EncryptedData) localEncryptor.encryptSecret(
           accountId, new String(localEncryptor.fetchSecretValue(accountId, encryptedData, null)), null);
+
       UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
       updateOperations.set(EncryptedDataKeys.encryptedMech, migratedRecord.getEncryptedMech())
           .set(EncryptedDataKeys.additionalMetadata,

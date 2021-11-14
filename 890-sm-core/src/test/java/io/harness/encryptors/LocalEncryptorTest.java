@@ -50,7 +50,8 @@ public class LocalEncryptorTest extends SMCoreTestBase {
     assertThat(encryptedRecord.getEncryptedMech()).isEqualTo(EncryptedMech.MULTI_CRYPTO);
     assertThat(encryptedRecord.getEncryptedValue()).isNull();
     assertThat(encryptedRecord.getEncryptionKey()).isNotNull();
-    assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_KEY)).isNotNull();
+    assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_UUID_KEY))
+        .isNotNull();
     assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET))
         .isNotNull();
 
@@ -69,7 +70,8 @@ public class LocalEncryptorTest extends SMCoreTestBase {
 
     assertThat(encryptedRecord.getEncryptedMech()).isEqualTo(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO);
     assertThat(encryptedRecord.getEncryptionKey()).isNotNull();
-    assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_KEY)).isNull();
+    assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_UUID_KEY))
+        .isNull();
     assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET))
         .isNull();
     assertThat(encryptedRecord.getEncryptedValue()).isNull();

@@ -71,7 +71,7 @@ public class LocalEncryptor implements KmsEncryptor {
           .encryptedValue(localJavaEncryptedSecret)
           .encryptedMech(EncryptedMech.MULTI_CRYPTO)
           .additionalMetadata(AdditionalMetadata.builder()
-                                  .value(AdditionalMetadata.SECRET_KEY_KEY, secretKey.getUuid())
+                                  .value(AdditionalMetadata.SECRET_KEY_UUID_KEY, secretKey.getUuid())
                                   .value(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret)
                                   .build())
           .build();
@@ -97,10 +97,8 @@ public class LocalEncryptor implements KmsEncryptor {
       secretKeyUuid = encryptedRecord.getEncryptionKey();
       encryptedSecret = encryptedRecord.getEncryptedValueBytes();
     } else {
-      secretKeyUuid =
-          (String) encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_KEY);
-      encryptedSecret =
-          (byte[]) encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET);
+      secretKeyUuid = (String) encryptedRecord.getAdditionalMetadata().getSecretKeyUuid();
+      encryptedSecret = (byte[]) encryptedRecord.getAdditionalMetadata().getAwsEncryptedSecret();
     }
 
     Optional<SecretKey> secretKey = secretKeyService.getSecretKey(secretKeyUuid);

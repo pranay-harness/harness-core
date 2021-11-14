@@ -3,10 +3,12 @@ package io.harness.cron;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.FeatureName;
 import io.harness.beans.LocalEncryptionMigrationInfo;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.security.encryption.EncryptedMech;
 
 import java.util.Optional;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -35,12 +37,22 @@ public class LocalAwsSdkEncryptionModeMigrationHandler extends LocalEncryptionMi
         getEncryptedRecords(accountId, pageRequest, lastMigrationState);
     while (encryptedDataPageResponse.iterator().hasNext()) {
       EncryptedData encryptedData = encryptedDataPageResponse.iterator().next();
-      EncryptedData migratedRecord = (EncryptedData) localEncryptor.encryptSecret(
-          accountId, new String(localEncryptor.fetchSecretValue(accountId, encryptedData, null)), null);
       UpdateOperations<EncryptedData> updateOperations = secretsDao.getUpdateOperations();
-      updateOperations.set(EncryptedData.EncryptedDataKeys.encryptedMech, migratedRecord.getEncryptedMech())
-          .set(EncryptedData.EncryptedDataKeys.additionalMetadata,
-              migratedRecord.getAdditionalMetadata().addValues(encryptedData.getAdditionalMetadata().getValues()));
+      if (encryptedData.getEncryptedMech() == null) {
+        EncryptedData migratedRecord = (EncryptedData) localEncryptor.encryptSecret(
+            accountId, new String(localEncryptor.fetchSecretValue(accountId, encryptedData, null)), null);
+
+        updateOperations.set(EncryptedDataKeys.encryptedMech, migratedRecord.getEncryptedMech())
+            .set(EncryptedDataKeys.encryptionKey, migratedRecord.getEncryptionKey())
+            .set(EncryptedDataKeys.encryptedValueBytes, migratedRecord.getEncryptedValueBytes())
+            .set(EncryptedDataKeys.encryptedValue, null);
+      } else {
+        updateOperations.set(EncryptedDataKeys.encryptedMech, EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO)
+            .set(EncryptedDataKeys.encryptionKey, encryptedData.getAdditionalMetadata().getSecretKeyUuid())
+            .set(EncryptedDataKeys.encryptedValueBytes, encryptedData.getAdditionalMetadata().getAwsEncryptedSecret())
+            .set(EncryptedDataKeys.encryptedValue, null);
+      }
+
       secretsDao.updateSecret(encryptedData, updateOperations);
       lastMigratedRecord = encryptedData;
     }
