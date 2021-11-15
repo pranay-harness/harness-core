@@ -26,4 +26,5 @@ public class SignupDTO {
   SignupAction signupAction;
   Edition edition;
   BillingFrequency billingFrequency;
+  String ipAddress;
 }

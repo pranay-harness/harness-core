@@ -121,8 +121,8 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException {
-    verifyReCaptcha(dto, captchaToken, "");
-    verifySignupDTO(dto, "");
+    verifyReCaptcha(dto, captchaToken);
+    verifySignupDTO(dto);
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
@@ -158,7 +158,7 @@ public class SignupServiceImpl implements SignupService {
       throw new InvalidRequestException("Community edition not found", ErrorCode.COMMNITY_EDITION_NOT_FOUND, USER);
     }
 
-    verifySignupDTO(dto, "");
+    verifySignupDTO(dto);
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
@@ -193,13 +193,13 @@ public class SignupServiceImpl implements SignupService {
    * Signup Invite in email verification blocking flow
    */
   @Override
-  public boolean createSignupInvite(SignupDTO dto, String captchaToken, String ipAddress) {
+  public boolean createSignupInvite(SignupDTO dto, String captchaToken) {
     if (DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
       throw new InvalidRequestException("You are not allowed to create a signup invite with community edition");
     }
 
-    verifyReCaptcha(dto, captchaToken, ipAddress);
-    verifySignupDTO(dto, ipAddress);
+    verifyReCaptcha(dto, captchaToken);
+    verifySignupDTO(dto);
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
@@ -216,14 +216,14 @@ public class SignupServiceImpl implements SignupService {
     try {
       getResponse(userClient.createNewSignupInvite(signupRequest));
     } catch (InvalidRequestException e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Create Signup Invite", ipAddress);
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Create Signup Invite", dto.getIpAddress());
       if (e.getMessage().contains("User with this email is already registered")) {
         throw new InvalidRequestException("Email is already signed up", ErrorCode.USER_ALREADY_REGISTERED, USER);
       }
       throw e;
     }
 
-    sendSucceedInvite(dto.getEmail(), dto.getUtmInfo(), ipAddress);
+    sendSucceedInvite(dto.getEmail(), dto.getUtmInfo(), dto.getIpAddress());
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(dto.getEmail());
       try {
@@ -243,7 +243,7 @@ public class SignupServiceImpl implements SignupService {
    * Complete Signup in email verification blocking flow
    */
   @Override
-  public UserInfo completeSignupInvite(String token, String ipAddress) {
+  public UserInfo completeSignupInvite(String token) {
     if (DeployVariant.COMMUNITY.equals(licenseConfig.getDeployVariant())) {
       throw new InvalidRequestException("You are not allowed to complete a signup invite with community edition");
     }
@@ -270,7 +270,7 @@ public class SignupServiceImpl implements SignupService {
       verificationTokenRepository.delete(verificationToken);
 
       sendSucceedTelemetryEvent(userInfo.getEmail(), userInfo.getUtmInfo(), userInfo.getDefaultAccountId(), userInfo,
-          SignupType.SIGNUP_FORM_FLOW, ipAddress);
+          SignupType.SIGNUP_FORM_FLOW, "");
       UserInfo finalUserInfo = userInfo;
       executorService.submit(() -> {
         try {
@@ -287,7 +287,7 @@ public class SignupServiceImpl implements SignupService {
       return userInfo;
     } catch (Exception e) {
       sendFailedTelemetryEvent(verificationToken.getEmail(), userInfo != null ? userInfo.getUtmInfo() : null, e, null,
-          "Complete Signup Invite", ipAddress);
+          "Complete Signup Invite", "");
       throw e;
     }
   }
@@ -335,23 +335,23 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
-  private void verifyReCaptcha(SignupDTO dto, String captchaToken, String ipAddress) {
+  private void verifyReCaptcha(SignupDTO dto, String captchaToken) {
     try {
       reCaptchaVerifier.verifyInvisibleCaptcha(captchaToken);
     } catch (Exception e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "ReCaptcha verification", ipAddress);
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "ReCaptcha verification", dto.getIpAddress());
       throw e;
     }
   }
 
-  private void verifySignupDTO(SignupDTO dto, String ipAddress) {
+  private void verifySignupDTO(SignupDTO dto) {
     try {
       signupValidator.validateSignup(dto);
     } catch (SignupException | UserAlreadyPresentException e) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Email validation", ipAddress);
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), e, null, "Email validation", dto.getIpAddress());
       throw e;
     } catch (WeakPasswordException we) {
-      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), we, null, "Password validation", ipAddress);
+      sendFailedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), we, null, "Password validation", dto.getIpAddress());
       throw we;
     }
   }
@@ -421,11 +421,10 @@ public class SignupServiceImpl implements SignupService {
    * Verify token in non email verification blocking flow
    *
    * @param token
-   * @param ipAddress
    * @return
    */
   @Override
-  public VerifyTokenResponseDTO verifyToken(String token, String ipAddress) {
+  public VerifyTokenResponseDTO verifyToken(String token) {
     Optional<SignupVerificationToken> verificationTokenOptional = verificationTokenRepository.findByToken(token);
 
     if (!verificationTokenOptional.isPresent()) {

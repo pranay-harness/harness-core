@@ -69,7 +69,8 @@ public class SignupResource {
   public RestResponse<Void> signup(
       SignupDTO dto, @QueryParam("captchaToken") @Nullable String captchaToken, @Context HttpServletRequest request) {
     String ipAddress = acquireIpAddress(request);
-    signupService.createSignupInvite(dto, captchaToken, ipAddress);
+    dto.setIpAddress(ipAddress);
+    signupService.createSignupInvite(dto, captchaToken);
     return new RestResponse<>();
   }
 
@@ -92,8 +93,7 @@ public class SignupResource {
   @PublicApi
   public RestResponse<UserInfo> completeSignupInvite(
       @PathParam("token") String token, @Context HttpServletRequest request) {
-    String ipAddress = acquireIpAddress(request);
-    return new RestResponse<>(signupService.completeSignupInvite(token, ipAddress));
+    return new RestResponse<>(signupService.completeSignupInvite(token));
   }
 
   /**
@@ -115,8 +115,7 @@ public class SignupResource {
   @PublicApi
   public RestResponse<VerifyTokenResponseDTO> verifyToken(
       @PathParam("token") String token, @Context HttpServletRequest request) {
-    String ipAddress = acquireIpAddress(request);
-    return new RestResponse<>(signupService.verifyToken(token, ipAddress));
+    return new RestResponse<>(signupService.verifyToken(token));
   }
 
   @POST

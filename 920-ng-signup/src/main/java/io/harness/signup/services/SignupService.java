@@ -15,13 +15,13 @@ public interface SignupService {
 
   UserInfo communitySignup(SignupDTO dto) throws WingsException;
 
-  boolean createSignupInvite(SignupDTO dto, String captchaToken, String ipAddress);
+  boolean createSignupInvite(SignupDTO dto, String captchaToken);
 
-  UserInfo completeSignupInvite(String token, String ipAddress);
+  UserInfo completeSignupInvite(String token);
 
   UserInfo oAuthSignup(OAuthSignupDTO dto, String ipAddress) throws WingsException;
 
-  VerifyTokenResponseDTO verifyToken(String token, String ipAddress);
+  VerifyTokenResponseDTO verifyToken(String token);
 
   void resendVerificationEmail(String email);
 }
