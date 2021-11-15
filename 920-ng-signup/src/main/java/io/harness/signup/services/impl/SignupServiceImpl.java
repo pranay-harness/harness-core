@@ -511,6 +511,9 @@ public class SignupServiceImpl implements SignupService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("reason", e.getMessage());
     properties.put("failedAt", failedAt);
+    if(ip==null) {
+      ip="";
+    }
     properties.put("ip", ip);
     addUtmInfoToProperties(utmInfo, properties);
 
@@ -533,6 +536,9 @@ public class SignupServiceImpl implements SignupService {
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
     properties.put("accountId", accountId);
     properties.put("source", source);
+    if(ip==null) {
+      ip="";
+    }
     properties.put("ip", ip);
 
     addUtmInfoToProperties(utmInfo, properties);
@@ -554,11 +560,14 @@ public class SignupServiceImpl implements SignupService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("email", email);
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
+    if(ip==null) {
+      ip="";
+    }
+    properties.put("ip", ip);
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(
         email, properties, ImmutableMap.<Destination, Boolean>builder().put(Destination.MARKETO, true).build());
     telemetryReporter.flush();
-    properties.put("ip", ip);
     ScheduledExecutorService tempExecutor = Executors.newSingleThreadScheduledExecutor();
     tempExecutor.schedule(
         ()
