@@ -3,7 +3,7 @@ package io.harness.ng.userprofile.commons;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class BitbucketSCMDTO extends SourceCodeManagerDTO {
-  @JsonProperty("authentication") BitbucketAuthenticationDTO authentication;
+  @JsonProperty("authentication") BitbucketAuthentication authentication;
 
   @Override
   public SCMType getType() {

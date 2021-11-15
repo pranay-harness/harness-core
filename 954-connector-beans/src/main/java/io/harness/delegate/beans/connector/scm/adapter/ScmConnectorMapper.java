@@ -4,25 +4,25 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(DX)
 public class ScmConnectorMapper {
-  public static GitConfigDTO toGitConfigDTO(ScmConnector scmConnector) {
-    if (scmConnector instanceof GithubConnectorDTO) {
-      return GithubToGitMapper.mapToGitConfigDTO((GithubConnectorDTO) scmConnector);
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
-      return GitlabToGitMapper.mapToGitConfigDTO((GitlabConnectorDTO) scmConnector);
-    } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return BitbucketToGitMapper.mapToGitConfigDTO((BitbucketConnectorDTO) scmConnector);
+  public static GitConfig toGitConfigDTO(ScmConnector scmConnector) {
+    if (scmConnector instanceof GithubConnector) {
+      return GithubToGitMapper.mapToGitConfigDTO((GithubConnector) scmConnector);
+    } else if (scmConnector instanceof GitlabConnector) {
+      return GitlabToGitMapper.mapToGitConfigDTO((GitlabConnector) scmConnector);
+    } else if (scmConnector instanceof BitbucketConnector) {
+      return BitbucketToGitMapper.mapToGitConfigDTO((BitbucketConnector) scmConnector);
     } else {
-      return (GitConfigDTO) scmConnector;
+      return (GitConfig) scmConnector;
     }
   }
 }

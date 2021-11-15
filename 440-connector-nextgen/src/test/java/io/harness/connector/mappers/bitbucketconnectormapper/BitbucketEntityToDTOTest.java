@@ -7,19 +7,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
-import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePasswordApiAccess;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccess;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentials;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePassword;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccess;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
@@ -49,36 +47,36 @@ public class BitbucketEntityToDTOTest extends CategoryTest {
     final String privateKeyRef = "privateKeyRef";
     final String validationRepo = "validationRepo";
 
-    final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
-        BitbucketAuthenticationDTO.builder()
+    final BitbucketAuthentication bitbucketAuthentication =
+        BitbucketAuthentication.builder()
             .authType(HTTP)
-            .credentials(BitbucketHttpCredentialsDTO.builder()
+            .credentials(BitbucketHttpCredentials.builder()
                              .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(BitbucketUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(BitbucketUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .username(username)
                                                       .build())
                              .build())
             .build();
 
-    final BitbucketApiAccessDTO bitbucketApiAccessDTO =
-        BitbucketApiAccessDTO.builder()
+    final BitbucketApiAccess bitbucketApiAccess =
+        BitbucketApiAccess.builder()
             .type(BitbucketApiAccessType.USERNAME_AND_TOKEN)
-            .spec(BitbucketUsernameTokenApiAccessDTO.builder()
+            .spec(BitbucketUsernameTokenApiAccess.builder()
                       .usernameRef(SecretRefHelper.createSecretRef(privateKeyRef))
                       .tokenRef(SecretRefHelper.createSecretRef(privateKeyRef))
                       .build())
             .build();
-    final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
-                                                            .url(url)
-                                                            .validationRepo(validationRepo)
-                                                            .connectionType(GitConnectionType.ACCOUNT)
-                                                            .authentication(bitbucketAuthenticationDTO)
-                                                            .apiAccess(bitbucketApiAccessDTO)
-                                                            .build();
+    final BitbucketConnector bitbucketConnectorDTO = BitbucketConnector.builder()
+                                                         .url(url)
+                                                         .validationRepo(validationRepo)
+                                                         .connectionType(GitConnectionType.ACCOUNT)
+                                                         .authentication(bitbucketAuthentication)
+                                                         .apiAccess(bitbucketApiAccess)
+                                                         .build();
 
-    final BitbucketConnector bitbucketConnector1 =
-        BitbucketConnector.builder()
+    final io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector bitbucketConnector1 =
+        io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector.builder()
             .hasApiAccess(true)
             .url(url)
             .validationRepo(validationRepo)
@@ -89,10 +87,13 @@ public class BitbucketEntityToDTOTest extends CategoryTest {
             .authenticationDetails(
                 BitbucketHttpAuthentication.builder()
                     .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                    .auth(BitbucketUsernamePassword.builder().username(username).passwordRef(passwordRef).build())
+                    .auth(io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword.builder()
+                              .username(username)
+                              .passwordRef(passwordRef)
+                              .build())
                     .build())
             .build();
-    final BitbucketConnectorDTO bitbucketConnector = bitbucketEntityToDTO.createConnectorDTO(bitbucketConnector1);
+    final BitbucketConnector bitbucketConnector = bitbucketEntityToDTO.createConnectorDTO(bitbucketConnector1);
     ObjectMapper objectMapper = new ObjectMapper();
     assertThat(objectMapper.readTree(objectMapper.writeValueAsString(bitbucketConnector)))
         .isEqualTo(objectMapper.readTree(objectMapper.writeValueAsString(bitbucketConnectorDTO)));

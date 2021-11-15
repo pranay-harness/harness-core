@@ -14,7 +14,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
@@ -193,8 +193,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     switch (storeDelegateConfig.getType()) {
       case GIT:
         GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
-        GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-        gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+        GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+        gitDecryptionHelper.decryptGitConfig(gitConfig, gitStoreDelegateConfig.getEncryptedDataDetails());
         break;
 
       case HTTP_HELM:

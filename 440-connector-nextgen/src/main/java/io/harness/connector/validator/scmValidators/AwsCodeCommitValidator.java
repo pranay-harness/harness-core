@@ -8,7 +8,7 @@ import io.harness.connector.validator.AbstractConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.task.TaskParameters;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public class AwsCodeCommitValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    AwsCodeCommitConnectorDTO connectorDTO = (AwsCodeCommitConnectorDTO) connectorConfig;
+    AwsCodeCommitConnector connectorDTO = (AwsCodeCommitConnector) connectorConfig;
     final List<DecryptableEntity> decryptableEntities = connectorDTO.getDecryptableEntities();
     return AwsCodeCommitTaskParams.builder()
         .awsConnector(connectorDTO)

@@ -5,9 +5,9 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.beans.gitapi.DecryptGitAPIAccessTaskResponse;
 import io.harness.delegate.beans.gitapi.DecryptGitAPiAccessTaskParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -48,31 +48,31 @@ public class DecryptGitAPIAccessTask extends AbstractDelegateRunnableTask {
   }
 
   private DecryptableEntity getDecrytableEntity(ScmConnector scmConnector) {
-    if (scmConnector instanceof GithubConnectorDTO) {
-      return getAPIAccess((GithubConnectorDTO) scmConnector);
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
-      return getAPIAccess((GitlabConnectorDTO) scmConnector);
-    } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return getAPIAccess((BitbucketConnectorDTO) scmConnector);
+    if (scmConnector instanceof GithubConnector) {
+      return getAPIAccess((GithubConnector) scmConnector);
+    } else if (scmConnector instanceof GitlabConnector) {
+      return getAPIAccess((GitlabConnector) scmConnector);
+    } else if (scmConnector instanceof BitbucketConnector) {
+      return getAPIAccess((BitbucketConnector) scmConnector);
     }
     throw new NotImplementedException("Unsupported Git Connector type " + scmConnector.getClass());
   }
 
-  private DecryptableEntity getAPIAccess(GithubConnectorDTO githubConnector) {
+  private DecryptableEntity getAPIAccess(GithubConnector githubConnector) {
     if (githubConnector == null || githubConnector.getApiAccess() == null) {
       return null;
     }
     return githubConnector.getApiAccess().getSpec();
   }
 
-  private DecryptableEntity getAPIAccess(GitlabConnectorDTO gitlabConnector) {
+  private DecryptableEntity getAPIAccess(GitlabConnector gitlabConnector) {
     if (gitlabConnector == null || gitlabConnector.getApiAccess() == null) {
       return null;
     }
     return gitlabConnector.getApiAccess().getSpec();
   }
 
-  private DecryptableEntity getAPIAccess(BitbucketConnectorDTO bitbucketConnector) {
+  private DecryptableEntity getAPIAccess(BitbucketConnector bitbucketConnector) {
     if (bitbucketConnector == null || bitbucketConnector.getApiAccess() == null) {
       return null;
     }

@@ -33,7 +33,7 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
@@ -164,18 +164,18 @@ public class TerraformStepHelper {
     }
     // TODO: fix manifest part, remove k8s dependency
     k8sStepHelper.validateManifest(store.getKind(), connectorDTO, validationMessage);
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
+    GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
     NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
     SSHKeySpecDTO sshKeySpecDTO =
-        gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceUtils.getAccountId(ambiance),
+        gitConfigAuthenticationInfoHelper.getSSHKey(gitConfig, AmbianceUtils.getAccountId(ambiance),
             AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
     List<EncryptedDataDetail> encryptedDataDetails =
-        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
+        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfig, sshKeySpecDTO, basicNGAccessObject);
     String repoName = gitStoreConfig.getRepoName() != null ? gitStoreConfig.getRepoName().getValue() : null;
-    if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT) {
-      String repoUrl = getGitRepoUrl(gitConfigDTO, repoName);
-      gitConfigDTO.setUrl(repoUrl);
-      gitConfigDTO.setGitConnectionType(GitConnectionType.REPO);
+    if (gitConfig.getGitConnectionType() == GitConnectionType.ACCOUNT) {
+      String repoUrl = getGitRepoUrl(gitConfig, repoName);
+      gitConfig.setUrl(repoUrl);
+      gitConfig.setGitConnectionType(GitConnectionType.REPO);
     }
     List<String> paths = new ArrayList<>();
     if (TF_CONFIG_FILES.equals(identifier)) {
@@ -184,7 +184,7 @@ public class TerraformStepHelper {
       paths.addAll(ParameterFieldHelper.getParameterFieldValue(gitStoreConfig.getPaths()));
     }
     GitStoreDelegateConfig gitStoreDelegateConfig = GitStoreDelegateConfig.builder()
-                                                        .gitConfigDTO(gitConfigDTO)
+                                                        .gitConfigDTO(gitConfig)
                                                         .sshKeySpecDTO(sshKeySpecDTO)
                                                         .encryptedDataDetails(encryptedDataDetails)
                                                         .fetchType(gitStoreConfig.getGitFetchType())
@@ -201,10 +201,10 @@ public class TerraformStepHelper {
         .build();
   }
 
-  private String getGitRepoUrl(GitConfigDTO gitConfigDTO, String repoName) {
+  private String getGitRepoUrl(GitConfig gitConfig, String repoName) {
     repoName = trimToEmpty(repoName);
     notEmptyCheck("Repo name cannot be empty for Account level git connector", repoName);
-    String purgedRepoUrl = gitConfigDTO.getUrl().replaceAll("/*$", "");
+    String purgedRepoUrl = gitConfig.getUrl().replaceAll("/*$", "");
     String purgedRepoName = repoName.replaceAll("^/*", "");
     return purgedRepoUrl + "/" + purgedRepoName;
   }

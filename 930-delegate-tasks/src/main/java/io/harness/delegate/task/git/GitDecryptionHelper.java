@@ -5,7 +5,7 @@ import static io.harness.connector.helper.GitApiAccessDecryptionHelper.hasApiAcc
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -21,7 +21,7 @@ public class GitDecryptionHelper {
   @Inject private SecretDecryptionService decryptionService;
   @Inject private SshSessionConfigMapper sshSessionConfigMapper;
 
-  public void decryptGitConfig(GitConfigDTO gitConfig, List<EncryptedDataDetail> encryptionDetails) {
+  public void decryptGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
     decryptionService.decrypt(gitConfig.getGitAuth(), encryptionDetails);
   }
 

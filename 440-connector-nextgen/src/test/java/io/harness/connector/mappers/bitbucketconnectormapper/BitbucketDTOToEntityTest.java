@@ -7,18 +7,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication;
-import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentials;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentials;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePassword;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
@@ -48,34 +46,39 @@ public class BitbucketDTOToEntityTest extends CategoryTest {
     final String privateKeyRef = "privateKeyRef";
     final String validationRepo = "validationRepo";
 
-    final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
-        BitbucketAuthenticationDTO.builder()
+    final BitbucketAuthentication bitbucketAuthentication =
+        BitbucketAuthentication.builder()
             .authType(HTTP)
-            .credentials(BitbucketHttpCredentialsDTO.builder()
+            .credentials(BitbucketHttpCredentials.builder()
                              .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(BitbucketUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(BitbucketUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .username(username)
                                                       .build())
                              .build())
             .build();
 
-    final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
-                                                            .url(url)
-                                                            .validationRepo(validationRepo)
-                                                            .connectionType(GitConnectionType.ACCOUNT)
-                                                            .authentication(bitbucketAuthenticationDTO)
-                                                            .build();
-    final BitbucketConnector bitbucketConnector = bitbucketDTOToEntity.toConnectorEntity(bitbucketConnectorDTO);
+    final BitbucketConnector bitbucketConnectorDTO = BitbucketConnector.builder()
+                                                         .url(url)
+                                                         .validationRepo(validationRepo)
+                                                         .connectionType(GitConnectionType.ACCOUNT)
+                                                         .authentication(bitbucketAuthentication)
+                                                         .build();
+    final io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector bitbucketConnector =
+        bitbucketDTOToEntity.toConnectorEntity(bitbucketConnectorDTO);
     assertThat(bitbucketConnector).isNotNull();
     assertThat(bitbucketConnector.getUrl()).isEqualTo(url);
     assertThat(bitbucketConnector.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(bitbucketConnector.getAuthType()).isEqualTo(HTTP);
     assertThat(bitbucketConnector.getAuthenticationDetails())
-        .isEqualTo(BitbucketHttpAuthentication.builder()
-                       .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                       .auth(BitbucketUsernamePassword.builder().username(username).passwordRef(passwordRef).build())
-                       .build());
+        .isEqualTo(
+            BitbucketHttpAuthentication.builder()
+                .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                .auth(io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword.builder()
+                          .username(username)
+                          .passwordRef(passwordRef)
+                          .build())
+                .build());
   }
 
   @Test
@@ -89,24 +92,25 @@ public class BitbucketDTOToEntityTest extends CategoryTest {
     final String insId = "insId";
     final String privateKeyRef = "privateKeyRef";
 
-    final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
-        BitbucketAuthenticationDTO.builder()
+    final BitbucketAuthentication bitbucketAuthentication =
+        BitbucketAuthentication.builder()
             .authType(HTTP)
-            .credentials(BitbucketHttpCredentialsDTO.builder()
+            .credentials(BitbucketHttpCredentials.builder()
                              .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(BitbucketUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(BitbucketUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .usernameRef(SecretRefHelper.createSecretRef(usernameRef))
                                                       .build())
                              .build())
             .build();
 
-    final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
-                                                            .url(url)
-                                                            .connectionType(GitConnectionType.REPO)
-                                                            .authentication(bitbucketAuthenticationDTO)
-                                                            .build();
-    final BitbucketConnector bitbucketConnector = bitbucketDTOToEntity.toConnectorEntity(bitbucketConnectorDTO);
+    final BitbucketConnector bitbucketConnectorDTO = BitbucketConnector.builder()
+                                                         .url(url)
+                                                         .connectionType(GitConnectionType.REPO)
+                                                         .authentication(bitbucketAuthentication)
+                                                         .build();
+    final io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector bitbucketConnector =
+        bitbucketDTOToEntity.toConnectorEntity(bitbucketConnectorDTO);
     assertThat(bitbucketConnector).isNotNull();
     assertThat(bitbucketConnector.getUrl()).isEqualTo(url);
     assertThat(bitbucketConnector.getAuthType()).isEqualTo(HTTP);
@@ -114,7 +118,10 @@ public class BitbucketDTOToEntityTest extends CategoryTest {
         .isEqualTo(
             BitbucketHttpAuthentication.builder()
                 .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                .auth(BitbucketUsernamePassword.builder().usernameRef(usernameRef).passwordRef(passwordRef).build())
+                .auth(io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword.builder()
+                          .usernameRef(usernameRef)
+                          .passwordRef(passwordRef)
+                          .build())
                 .build());
   }
 
@@ -124,19 +131,20 @@ public class BitbucketDTOToEntityTest extends CategoryTest {
   public void testToConnectorEntity_3() {
     final String url = "url";
     final String sshKeyRef = "sshKeyRef";
-    final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
-        BitbucketAuthenticationDTO.builder()
+    final BitbucketAuthentication bitbucketAuthentication =
+        BitbucketAuthentication.builder()
             .authType(GitAuthType.SSH)
             .credentials(
-                BitbucketSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+                BitbucketSshCredentials.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
 
-    final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
-                                                            .url(url)
-                                                            .connectionType(GitConnectionType.REPO)
-                                                            .authentication(bitbucketAuthenticationDTO)
-                                                            .build();
-    final BitbucketConnector bitbucketConnector = bitbucketDTOToEntity.toConnectorEntity(bitbucketConnectorDTO);
+    final BitbucketConnector bitbucketConnectorDTO = BitbucketConnector.builder()
+                                                         .url(url)
+                                                         .connectionType(GitConnectionType.REPO)
+                                                         .authentication(bitbucketAuthentication)
+                                                         .build();
+    final io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector bitbucketConnector =
+        bitbucketDTOToEntity.toConnectorEntity(bitbucketConnectorDTO);
     assertThat(bitbucketConnector).isNotNull();
     assertThat(bitbucketConnector.getUrl()).isEqualTo(url);
     assertThat(bitbucketConnector.getAuthType()).isEqualTo(GitAuthType.SSH);

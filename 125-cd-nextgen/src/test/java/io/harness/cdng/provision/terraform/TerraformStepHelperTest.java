@@ -38,7 +38,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.task.terraform.InlineTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo;
@@ -262,7 +262,7 @@ public class TerraformStepHelperTest extends CategoryTest {
         "var-file-01",
         TerraformVarFile.builder().identifier("var-file-01").type("Remote").spec(remoteTerraformVarFileSpec).build());
     doReturn(
-        ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.SSH).build()).build())
+        ConnectorInfoDTO.builder().connectorConfig(GitConfig.builder().gitAuthType(GitAuthType.SSH).build()).build())
         .when(mockK8sStepHelper)
         .getConnector(anyString(), any());
     doReturn(SSHKeySpecDTO.builder().build())
@@ -320,7 +320,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                          .name("terraform")
                                          .identifier("terraform")
                                          .connectorType(GITHUB)
-                                         .connectorConfig(GitConfigDTO.builder()
+                                         .connectorConfig(GitConfig.builder()
                                                               .gitAuthType(GitAuthType.HTTP)
                                                               .gitConnectionType(GitConnectionType.ACCOUNT)
                                                               .delegateSelectors(Collections.singleton("delegateName"))
@@ -419,7 +419,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                          .name("terraform")
                                          .identifier("terraform")
                                          .connectorType(GITHUB)
-                                         .connectorConfig(GitConfigDTO.builder()
+                                         .connectorConfig(GitConfig.builder()
                                                               .gitAuthType(GitAuthType.HTTP)
                                                               .gitConnectionType(GitConnectionType.ACCOUNT)
                                                               .delegateSelectors(Collections.singleton("delegateName"))
@@ -480,7 +480,7 @@ public class TerraformStepHelperTest extends CategoryTest {
   public void testSaveRollbackDestroyConfigInherited() {
     Ambiance ambiance = getAmbiance();
     doReturn(
-        ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.SSH).build()).build())
+        ConnectorInfoDTO.builder().connectorConfig(GitConfig.builder().gitAuthType(GitAuthType.SSH).build()).build())
         .when(mockK8sStepHelper)
         .getConnector(anyString(), any());
     doReturn(SSHKeySpecDTO.builder().build())
@@ -532,7 +532,7 @@ public class TerraformStepHelperTest extends CategoryTest {
   public void testSaveRollbackDestroyConfigInheritedNegativeScenario() {
     Ambiance ambiance = getAmbiance();
     doReturn(
-        ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.SSH).build()).build())
+        ConnectorInfoDTO.builder().connectorConfig(GitConfig.builder().gitAuthType(GitAuthType.SSH).build()).build())
         .when(mockK8sStepHelper)
         .getConnector(anyString(), any());
     doReturn(SSHKeySpecDTO.builder().build())

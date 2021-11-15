@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
@@ -22,7 +22,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(CI)
 public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilitiesSimpleCheck(GitConfigDTO gitConfig) {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilitiesSimpleCheck(GitConfig gitConfig) {
     List<ExecutionCapability> capabilityList = new ArrayList<>();
     GitAuthType gitAuthType = gitConfig.getGitAuthType();
     switch (gitAuthType) {
@@ -44,7 +44,7 @@ public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
   }
 
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
-      GitConfigDTO gitConfig, List<EncryptedDataDetail> encryptionDetails, SSHKeySpecDTO sshKeySpecDTO) {
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails, SSHKeySpecDTO sshKeySpecDTO) {
     List<ExecutionCapability> capabilityList = new ArrayList<>();
     capabilityList.add(GitConnectionNGCapability.builder()
                            .encryptedDataDetails(encryptionDetails)
@@ -55,17 +55,17 @@ public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
     return capabilityList;
   }
 
-  private String getGitSSHHostname(GitConfigDTO gitConfigDTO) {
-    String url = gitConfigDTO.getUrl();
-    if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT && !url.endsWith("/")) {
+  private String getGitSSHHostname(GitConfig gitConfig) {
+    String url = gitConfig.getUrl();
+    if (gitConfig.getGitConnectionType() == GitConnectionType.ACCOUNT && !url.endsWith("/")) {
       url += "/";
     }
     return GitClientHelper.getGitSCM(url);
   }
 
-  private String getGitSSHPort(GitConfigDTO gitConfigDTO) {
-    String url = gitConfigDTO.getUrl();
-    if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT && !url.endsWith("/")) {
+  private String getGitSSHPort(GitConfig gitConfig) {
+    String url = gitConfig.getUrl();
+    if (gitConfig.getGitConnectionType() == GitConnectionType.ACCOUNT && !url.endsWith("/")) {
       url += "/";
     }
     String port = GitClientHelper.getGitSCMPort(url);

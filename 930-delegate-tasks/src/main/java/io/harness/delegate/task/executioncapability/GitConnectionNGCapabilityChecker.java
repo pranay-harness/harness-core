@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
@@ -30,7 +30,7 @@ public class GitConnectionNGCapabilityChecker implements CapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     GitConnectionNGCapability capability = (GitConnectionNGCapability) delegateCapability;
-    GitConfigDTO gitConfig = capability.getGitConfig();
+    GitConfig gitConfig = capability.getGitConfig();
     List<EncryptedDataDetail> encryptedDataDetails = capability.getEncryptedDataDetails();
     SshSessionConfig sshSessionConfig = null;
 

@@ -6,8 +6,8 @@ import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAs
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
@@ -43,20 +43,20 @@ public class NGGitServiceImpl implements NGGitService {
   @Inject private GitClientV2 gitClientV2;
 
   @Override
-  public void validate(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
+  public void validate(GitConfig gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
     final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
     setGitBaseRequest(gitConfig, accountId, gitBaseRequest, YAML, sshSessionConfig);
     gitClientV2.validate(gitBaseRequest);
   }
   @Override
-  public void validateOrThrow(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
+  public void validateOrThrow(GitConfig gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
     final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
     setGitBaseRequest(gitConfig, accountId, gitBaseRequest, YAML, sshSessionConfig);
     gitClientV2.validateOrThrow(gitBaseRequest);
   }
 
   @VisibleForTesting
-  void setGitBaseRequest(GitConfigDTO gitConfig, String accountId, GitBaseRequest gitBaseRequest,
+  void setGitBaseRequest(GitConfig gitConfig, String accountId, GitBaseRequest gitBaseRequest,
       GitRepositoryType repositoryType, SshSessionConfig sshSessionConfig) {
     gitBaseRequest.setAuthRequest(getAuthRequest(gitConfig, sshSessionConfig));
     gitBaseRequest.setBranch(gitConfig.getBranchName());
@@ -65,12 +65,12 @@ public class NGGitServiceImpl implements NGGitService {
     gitBaseRequest.setAccountId(accountId);
   }
 
-  public AuthRequest getAuthRequest(GitConfigDTO gitConfig, SshSessionConfig sshSessionConfig) {
+  public AuthRequest getAuthRequest(GitConfig gitConfig, SshSessionConfig sshSessionConfig) {
     switch (gitConfig.getGitAuthType()) {
       case SSH:
         return JgitSshAuthRequest.builder().factory(getSshSessionFactory(sshSessionConfig)).build();
       case HTTP:
-        GitHTTPAuthenticationDTO httpAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
+        GitHTTPAuthentication httpAuthenticationDTO = (GitHTTPAuthentication) gitConfig.getGitAuth();
         String userName = getSecretAsStringFromPlainTextOrSecretRef(
             httpAuthenticationDTO.getUsername(), httpAuthenticationDTO.getUsernameRef());
         return UsernamePasswordAuthRequest.builder()
@@ -98,7 +98,7 @@ public class NGGitServiceImpl implements NGGitService {
   }
 
   @Override
-  public CommitAndPushResult commitAndPush(GitConfigDTO gitConfig, CommitAndPushRequest commitAndPushRequest,
+  public CommitAndPushResult commitAndPush(GitConfig gitConfig, CommitAndPushRequest commitAndPushRequest,
       String accountId, SshSessionConfig sshSessionConfig) {
     setGitBaseRequest(gitConfig, accountId, commitAndPushRequest, YAML, sshSessionConfig);
     return gitClientV2.commitAndPush(commitAndPushRequest);
@@ -106,9 +106,9 @@ public class NGGitServiceImpl implements NGGitService {
 
   @Override
   public FetchFilesResult fetchFilesByPath(GitStoreDelegateConfig gitStoreDelegateConfig, String accountId,
-      SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO) {
+      SshSessionConfig sshSessionConfig, GitConfig gitConfig) {
     FetchFilesByPathRequest fetchFilesByPathRequest = FetchFilesByPathRequest.builder()
-                                                          .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
+                                                          .authRequest(getAuthRequest(gitConfig, sshSessionConfig))
                                                           .filePaths(gitStoreDelegateConfig.getPaths())
                                                           .recursive(true)
                                                           .accountId(accountId)
@@ -116,16 +116,16 @@ public class NGGitServiceImpl implements NGGitService {
                                                           .commitId(gitStoreDelegateConfig.getCommitId())
                                                           .connectorId(gitStoreDelegateConfig.getConnectorName())
                                                           .repoType(YAML)
-                                                          .repoUrl(gitConfigDTO.getUrl())
+                                                          .repoUrl(gitConfig.getUrl())
                                                           .build();
     return gitClientV2.fetchFilesByPath(fetchFilesByPathRequest);
   }
 
   @Override
   public void downloadFiles(GitStoreDelegateConfig gitStoreDelegateConfig, String destinationDirectory,
-      String accountId, SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO) {
+      String accountId, SshSessionConfig sshSessionConfig, GitConfig gitConfig) {
     DownloadFilesRequest downloadFilesRequest = DownloadFilesRequest.builder()
-                                                    .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
+                                                    .authRequest(getAuthRequest(gitConfig, sshSessionConfig))
                                                     .filePaths(gitStoreDelegateConfig.getPaths())
                                                     .recursive(true)
                                                     .accountId(accountId)
@@ -133,7 +133,7 @@ public class NGGitServiceImpl implements NGGitService {
                                                     .commitId(gitStoreDelegateConfig.getCommitId())
                                                     .connectorId(gitStoreDelegateConfig.getConnectorName())
                                                     .repoType(YAML)
-                                                    .repoUrl(gitConfigDTO.getUrl())
+                                                    .repoUrl(gitConfig.getUrl())
                                                     .destinationDirectory(destinationDirectory)
                                                     .build();
     gitClientV2.downloadFiles(downloadFilesRequest);

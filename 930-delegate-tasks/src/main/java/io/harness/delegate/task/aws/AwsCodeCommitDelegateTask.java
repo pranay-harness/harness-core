@@ -12,8 +12,8 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -75,11 +75,11 @@ public class AwsCodeCommitDelegateTask extends AbstractDelegateRunnableTask {
 
   public DelegateResponseData handleValidateTask(
       AwsCodeCommitTaskParams awsCodeCommitTaskParams, List<EncryptedDataDetail> encryptionDetails) {
-    final AwsCodeCommitConnectorDTO awsConnector = awsCodeCommitTaskParams.getAwsConnector();
+    final AwsCodeCommitConnector awsConnector = awsCodeCommitTaskParams.getAwsConnector();
     final String url = awsConnector.getUrl();
     final String region = fetchRegion(url);
     final String repo = fetchRepo(url);
-    final AwsCodeCommitAuthenticationDTO authenticationDTO = awsConnector.getAuthentication();
+    final AwsCodeCommitAuthentication authenticationDTO = awsConnector.getAuthentication();
     final AwsConfig awsConfig = awsNgConfigMapper.mapAwsCodeCommit(authenticationDTO, encryptionDetails);
     try {
       awsClient.validateAwsCodeCommitCredential(awsConfig, region, repo);

@@ -20,12 +20,12 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileContentBatchResponse;
 import io.harness.connector.service.scm.ScmDelegateClient;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccess;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpec;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GitClientException;
@@ -170,25 +170,25 @@ public class ScmFetchFilesHelper {
     }
   }
 
-  private GithubConnectorDTO getGitHubConnector(GitConfig gitConfig) {
-    return GithubConnectorDTO.builder()
+  private GithubConnector getGitHubConnector(GitConfig gitConfig) {
+    return GithubConnector.builder()
         .url(gitConfig.getRepoUrl())
         .connectionType(REPO)
-        .apiAccess(GithubApiAccessDTO.builder()
+        .apiAccess(GithubApiAccess.builder()
                        .type(TOKEN)
-                       .spec(GithubTokenSpecDTO.builder()
+                       .spec(GithubTokenSpec.builder()
                                  .tokenRef(SecretRefData.builder().decryptedValue(gitConfig.getPassword()).build())
                                  .build())
                        .build())
         .build();
   }
 
-  private GitlabConnectorDTO getGitLabConnector(GitConfig gitConfig) {
-    return GitlabConnectorDTO.builder()
+  private GitlabConnector getGitLabConnector(GitConfig gitConfig) {
+    return GitlabConnector.builder()
         .url(gitConfig.getRepoUrl())
         .connectionType(REPO)
-        .apiAccess(GitlabApiAccessDTO.builder()
-                       .spec(GitlabTokenSpecDTO.builder()
+        .apiAccess(GitlabApiAccess.builder()
+                       .spec(GitlabTokenSpec.builder()
                                  .tokenRef(SecretRefData.builder().decryptedValue(gitConfig.getPassword()).build())
                                  .build())
                        .build())

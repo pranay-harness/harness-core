@@ -18,11 +18,11 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
@@ -173,26 +173,26 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
   void updateConnectionTypeAndUrlInWrapper(TriggerGitConnectorWrapper wrapper) {
     ConnectorConfigDTO connectorConfigDTO = wrapper.getConnectorConfigDTO();
 
-    if (connectorConfigDTO.getClass().isAssignableFrom(GithubConnectorDTO.class)) {
-      GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) connectorConfigDTO;
+    if (connectorConfigDTO.getClass().isAssignableFrom(GithubConnector.class)) {
+      GithubConnector githubConnector = (GithubConnector) connectorConfigDTO;
       wrapper.setConnectorType(ConnectorType.GITHUB);
-      wrapper.setUrl(githubConnectorDTO.getUrl());
-      wrapper.setGitConnectionType(githubConnectorDTO.getConnectionType());
-    } else if (connectorConfigDTO.getClass().isAssignableFrom(GitlabConnectorDTO.class)) {
-      GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) connectorConfigDTO;
+      wrapper.setUrl(githubConnector.getUrl());
+      wrapper.setGitConnectionType(githubConnector.getConnectionType());
+    } else if (connectorConfigDTO.getClass().isAssignableFrom(GitlabConnector.class)) {
+      GitlabConnector gitlabConnector = (GitlabConnector) connectorConfigDTO;
       wrapper.setConnectorType(ConnectorType.GITLAB);
-      wrapper.setUrl(gitlabConnectorDTO.getUrl());
-      wrapper.setGitConnectionType(gitlabConnectorDTO.getConnectionType());
-    } else if (connectorConfigDTO.getClass().isAssignableFrom(BitbucketConnectorDTO.class)) {
-      BitbucketConnectorDTO bitbucketConnectorDTO = (BitbucketConnectorDTO) connectorConfigDTO;
+      wrapper.setUrl(gitlabConnector.getUrl());
+      wrapper.setGitConnectionType(gitlabConnector.getConnectionType());
+    } else if (connectorConfigDTO.getClass().isAssignableFrom(BitbucketConnector.class)) {
+      BitbucketConnector bitbucketConnector = (BitbucketConnector) connectorConfigDTO;
       wrapper.setConnectorType(ConnectorType.BITBUCKET);
-      wrapper.setUrl(bitbucketConnectorDTO.getUrl());
-      wrapper.setGitConnectionType(bitbucketConnectorDTO.getConnectionType());
-    } else if (connectorConfigDTO.getClass().isAssignableFrom(AwsCodeCommitConnectorDTO.class)) {
-      AwsCodeCommitConnectorDTO awsCodeCommitConnectorDTO = (AwsCodeCommitConnectorDTO) connectorConfigDTO;
+      wrapper.setUrl(bitbucketConnector.getUrl());
+      wrapper.setGitConnectionType(bitbucketConnector.getConnectionType());
+    } else if (connectorConfigDTO.getClass().isAssignableFrom(AwsCodeCommitConnector.class)) {
+      AwsCodeCommitConnector awsCodeCommitConnector = (AwsCodeCommitConnector) connectorConfigDTO;
       wrapper.setConnectorType(ConnectorType.CODECOMMIT);
-      wrapper.setUrl(awsCodeCommitConnectorDTO.getUrl());
-      AwsCodeCommitUrlType urlType = awsCodeCommitConnectorDTO.getUrlType();
+      wrapper.setUrl(awsCodeCommitConnector.getUrl());
+      AwsCodeCommitUrlType urlType = awsCodeCommitConnector.getUrlType();
       if (urlType == AwsCodeCommitUrlType.REGION) {
         wrapper.setGitConnectionType(GitConnectionType.ACCOUNT);
       } else if (urlType == AwsCodeCommitUrlType.REPO) {

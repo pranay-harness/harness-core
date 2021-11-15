@@ -1,24 +1,23 @@
 package io.harness.connector.mappers.gitconnectormapper;
 
-import io.harness.connector.entities.embedded.gitconnector.GitConfig;
-import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentication;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthentication;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.inject.Singleton;
 
 @Singleton
-public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, GitConfig> {
+public class GitEntityToDTO
+    implements ConnectorEntityToDTOMapper<GitConfig, io.harness.connector.entities.embedded.gitconnector.GitConfig> {
   @Override
-  public GitConfigDTO createConnectorDTO(GitConfig gitConnector) {
-    GitAuthenticationDTO gitAuth = createGitAuthenticationDTO(gitConnector);
-    return GitConfigDTO.builder()
+  public GitConfig createConnectorDTO(io.harness.connector.entities.embedded.gitconnector.GitConfig gitConnector) {
+    GitAuthentication gitAuth = createGitAuthenticationDTO(gitConnector);
+    return GitConfig.builder()
         .gitAuthType(gitConnector.getAuthType())
         .gitConnectionType(gitConnector.getConnectionType())
         .url(gitConnector.getUrl())
@@ -28,7 +27,8 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, 
         .build();
   }
 
-  private GitAuthenticationDTO createGitAuthenticationDTO(GitConfig gitConfig) {
+  private GitAuthentication createGitAuthenticationDTO(
+      io.harness.connector.entities.embedded.gitconnector.GitConfig gitConfig) {
     switch (gitConfig.getAuthType()) {
       case HTTP:
         return createHTTPAuthenticationDTO(gitConfig);
@@ -40,19 +40,22 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, 
     }
   }
 
-  private GitHTTPAuthenticationDTO createHTTPAuthenticationDTO(GitConfig gitConfig) {
+  private GitHTTPAuthentication createHTTPAuthenticationDTO(
+      io.harness.connector.entities.embedded.gitconnector.GitConfig gitConfig) {
     GitUserNamePasswordAuthentication userNamePasswordAuth =
         (GitUserNamePasswordAuthentication) gitConfig.getAuthenticationDetails();
-    return GitHTTPAuthenticationDTO.builder()
+    return GitHTTPAuthentication.builder()
         .username(userNamePasswordAuth.getUserName())
         .usernameRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getUserNameRef()))
         .passwordRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getPasswordReference()))
         .build();
   }
 
-  private GitSSHAuthenticationDTO createSSHAuthenticationDTO(GitConfig gitConfig) {
-    GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
-    return GitSSHAuthenticationDTO.builder()
+  private GitSSHAuthentication createSSHAuthenticationDTO(
+      io.harness.connector.entities.embedded.gitconnector.GitConfig gitConfig) {
+    io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication gitSSHAuthentication =
+        (io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication) gitConfig.getAuthenticationDetails();
+    return GitSSHAuthentication.builder()
         .encryptedSshKey(SecretRefHelper.createSecretRef(gitSSHAuthentication.getSshKeyReference()))
         .build();
   }

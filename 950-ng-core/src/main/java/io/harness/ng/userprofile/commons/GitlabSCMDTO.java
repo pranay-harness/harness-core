@@ -3,7 +3,7 @@ package io.harness.ng.userprofile.commons;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthentication;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import javax.validation.Valid;
@@ -23,7 +23,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class GitlabSCMDTO extends SourceCodeManagerDTO {
-  @Valid @NotNull GitlabAuthenticationDTO authentication;
+  @Valid @NotNull GitlabAuthentication authentication;
   @Override
   public SCMType getType() {
     return SCMType.GITLAB;

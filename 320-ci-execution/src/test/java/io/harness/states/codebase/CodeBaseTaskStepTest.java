@@ -18,7 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
@@ -59,7 +59,7 @@ public class CodeBaseTaskStepTest extends CategoryTest {
     ManualExecutionSource executionSource = ManualExecutionSource.builder().branch("main").build();
     ConnectorDetails connectorDetails = ConnectorDetails.builder()
                                             .connectorType(ConnectorType.GITHUB)
-                                            .connectorConfig(GithubConnectorDTO.builder()
+                                            .connectorConfig(GithubConnector.builder()
                                                                  .url("http://github.com/octocat/")
                                                                  .connectionType(GitConnectionType.ACCOUNT)
                                                                  .build())
@@ -80,7 +80,7 @@ public class CodeBaseTaskStepTest extends CategoryTest {
     ManualExecutionSource executionSource = ManualExecutionSource.builder().prNumber("1").build();
     ConnectorDetails connectorDetails = ConnectorDetails.builder()
                                             .connectorType(ConnectorType.GITHUB)
-                                            .connectorConfig(GithubConnectorDTO.builder()
+                                            .connectorConfig(GithubConnector.builder()
                                                                  .connectionType(GitConnectionType.ACCOUNT)
                                                                  .url("http://github.com/octocat/hello-world")
                                                                  .build())

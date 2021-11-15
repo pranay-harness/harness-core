@@ -13,7 +13,7 @@ import io.harness.PipelineUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
@@ -36,7 +36,7 @@ public class BuildStatusPushParametersTest extends CIExecutionTestBase {
   private static final String SOME_URL = "https://url.com/owner/repo.git";
 
   @Mock private ConnectorUtils connectorUtils;
-  @Mock GithubConnectorDTO gitConfigDTO;
+  @Mock GithubConnector gitConfigDTO;
   @Mock private PipelineUtils pipelineUtils;
   @Mock private ConnectorDetails connectorDetails;
   @InjectMocks private GitBuildStatusUtility gitBuildStatusUtility;

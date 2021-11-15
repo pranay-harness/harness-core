@@ -5,13 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitConfig;
-import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentials;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -42,23 +41,22 @@ public class AwsCodeCommitDTOToEntityTest extends CategoryTest {
     SecretRefData secretKeySecretRefData =
         SecretRefData.builder().identifier(secretKeyRef).scope(Scope.ACCOUNT).build();
 
-    AwsCodeCommitSecretKeyAccessKeyDTO secretKeyAccessKeyDTO =
-        AwsCodeCommitSecretKeyAccessKeyDTO.builder().accessKey(accessKey).secretKeyRef(secretKeySecretRefData).build();
+    AwsCodeCommitSecretKeyAccessKey secretKeyAccessKeyDTO =
+        AwsCodeCommitSecretKeyAccessKey.builder().accessKey(accessKey).secretKeyRef(secretKeySecretRefData).build();
 
-    AwsCodeCommitHttpsCredentialsDTO httpsCredentialsDTO =
-        AwsCodeCommitHttpsCredentialsDTO.builder()
-            .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
-            .httpCredentialsSpec(secretKeyAccessKeyDTO)
-            .build();
-    AwsCodeCommitAuthenticationDTO authenticationDTO = AwsCodeCommitAuthenticationDTO.builder()
-                                                           .authType(AwsCodeCommitAuthType.HTTPS)
-                                                           .credentials(httpsCredentialsDTO)
-                                                           .build();
-    AwsCodeCommitConnectorDTO connectorDTO = AwsCodeCommitConnectorDTO.builder()
-                                                 .authentication(authenticationDTO)
-                                                 .url(url)
-                                                 .urlType(AwsCodeCommitUrlType.REPO)
-                                                 .build();
+    AwsCodeCommitHttpsCredentials httpsCredentialsDTO = AwsCodeCommitHttpsCredentials.builder()
+                                                            .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
+                                                            .httpCredentialsSpec(secretKeyAccessKeyDTO)
+                                                            .build();
+    AwsCodeCommitAuthentication authenticationDTO = AwsCodeCommitAuthentication.builder()
+                                                        .authType(AwsCodeCommitAuthType.HTTPS)
+                                                        .credentials(httpsCredentialsDTO)
+                                                        .build();
+    AwsCodeCommitConnector connectorDTO = AwsCodeCommitConnector.builder()
+                                              .authentication(authenticationDTO)
+                                              .url(url)
+                                              .urlType(AwsCodeCommitUrlType.REPO)
+                                              .build();
     AwsCodeCommitConfig awsCodeCommitConfig = awsCodeCommitDTOToEntity.toConnectorEntity(connectorDTO);
     assertThat(awsCodeCommitConfig).isNotNull();
     assertThat(awsCodeCommitConfig.getUrl()).isEqualTo(url);
@@ -66,11 +64,15 @@ public class AwsCodeCommitDTOToEntityTest extends CategoryTest {
     assertThat(awsCodeCommitConfig.getAuthentication().getAuthType()).isEqualTo(AwsCodeCommitAuthType.HTTPS);
     assertThat(awsCodeCommitConfig.getAuthentication().getCredentialsType())
         .isEqualTo(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY);
-    assertThat(
-        ((AwsCodeCommitSecretKeyAccessKey) awsCodeCommitConfig.getAuthentication().getCredential()).getAccessKey())
+    assertThat(((io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey)
+                       awsCodeCommitConfig.getAuthentication()
+                           .getCredential())
+                   .getAccessKey())
         .isEqualTo(accessKey);
-    assertThat(
-        ((AwsCodeCommitSecretKeyAccessKey) awsCodeCommitConfig.getAuthentication().getCredential()).getSecretKeyRef())
+    assertThat(((io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey)
+                       awsCodeCommitConfig.getAuthentication()
+                           .getCredential())
+                   .getSecretKeyRef())
         .isEqualTo(secretKeySecretRefData.toSecretRefStringValue());
   }
 }

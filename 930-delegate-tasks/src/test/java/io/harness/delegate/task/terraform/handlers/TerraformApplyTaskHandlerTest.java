@@ -16,8 +16,8 @@ import io.harness.cli.CliResponse;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
@@ -81,7 +81,7 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
   public void testApply() throws IOException, TimeoutException, InterruptedException {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     when(terraformBaseHelper.getGitBaseRequestForConfigFile(
-             anyString(), any(GitStoreDelegateConfig.class), any(GitConfigDTO.class)))
+             anyString(), any(GitStoreDelegateConfig.class), any(GitConfig.class)))
         .thenReturn(any(GitBaseRequest.class));
     when(terraformBaseHelper.fetchConfigFileAndPrepareScriptDir(
              any(), anyString(), anyString(), anyString(), any(), logCallback, anyString(), anyString()))
@@ -115,9 +115,9 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
                         .branch("main")
                         .path("main.tf")
                         .gitConfigDTO(
-                            GitConfigDTO.builder()
+                            GitConfig.builder()
                                 .gitAuthType(GitAuthType.HTTP)
-                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                .gitAuth(GitHTTPAuthentication.builder()
                                              .username(gitUsername)
                                              .passwordRef(SecretRefData.builder().identifier(gitPasswordRefId).build())
                                              .build())

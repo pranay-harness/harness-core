@@ -13,7 +13,7 @@ import io.harness.beans.Repository;
 import io.harness.beans.WebhookBaseAttributes;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -82,7 +82,7 @@ public class NgTriggersTestHelper {
   public ConnectorResponseDTO getAwsCodeCommitRepoConnectorResponsesDTO() {
     return ConnectorResponseDTO.builder()
         .connector(ConnectorInfoDTO.builder()
-                       .connectorConfig(AwsCodeCommitConnectorDTO.builder()
+                       .connectorConfig(AwsCodeCommitConnector.builder()
                                             .urlType(AwsCodeCommitUrlType.REPO)
                                             .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test")
                                             .build())
@@ -96,7 +96,7 @@ public class NgTriggersTestHelper {
   public ConnectorResponseDTO getAwsCodeCommitRegionConnectorResponsesDTO() {
     return ConnectorResponseDTO.builder()
         .connector(ConnectorInfoDTO.builder()
-                       .connectorConfig(AwsCodeCommitConnectorDTO.builder()
+                       .connectorConfig(AwsCodeCommitConnector.builder()
                                             .urlType(AwsCodeCommitUrlType.REGION)
                                             .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos")
                                             .build())
@@ -110,7 +110,7 @@ public class NgTriggersTestHelper {
   public ConnectorResponseDTO getAwsCodeCommitRepoConnectorResponsesDTO2() {
     return ConnectorResponseDTO.builder()
         .connector(ConnectorInfoDTO.builder()
-                       .connectorConfig(AwsCodeCommitConnectorDTO.builder()
+                       .connectorConfig(AwsCodeCommitConnector.builder()
                                             .urlType(AwsCodeCommitUrlType.REPO)
                                             .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test2")
                                             .build())

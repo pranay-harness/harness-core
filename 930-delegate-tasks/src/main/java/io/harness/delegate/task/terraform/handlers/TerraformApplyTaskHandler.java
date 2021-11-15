@@ -14,7 +14,7 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliResponse;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
@@ -63,7 +63,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
           CommandExecutionStatus.RUNNING);
     }
     GitBaseRequest gitBaseRequestForConfigFile = terraformBaseHelper.getGitBaseRequestForConfigFile(
-        taskParameters.getAccountId(), confileFileGitStore, (GitConfigDTO) confileFileGitStore.getGitConfigDTO());
+        taskParameters.getAccountId(), confileFileGitStore, (GitConfig) confileFileGitStore.getGitConfigDTO());
 
     String baseDir = terraformBaseHelper.getBaseDir(taskParameters.getEntityId());
 

@@ -15,11 +15,11 @@ import io.harness.cistatus.service.GithubAppConfig;
 import io.harness.cistatus.service.GithubService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpec;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
-import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpec;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
 import io.harness.delegate.beans.gitapi.GitApiFindPRTaskResponse;
 import io.harness.delegate.beans.gitapi.GitApiTaskParams;
 import io.harness.delegate.beans.gitapi.GitApiTaskResponse;
@@ -54,11 +54,11 @@ public class GithubApiClient implements GitApiClient {
     ConnectorDetails gitConnector = gitApiTaskParams.getConnectorDetails();
     try {
       if (gitConnector == null
-          || !gitConnector.getConnectorConfig().getClass().isAssignableFrom(GithubConnectorDTO.class)) {
+          || !gitConnector.getConnectorConfig().getClass().isAssignableFrom(GithubConnector.class)) {
         throw new InvalidRequestException(
             format("Invalid Connector %s, Need GithubConfig: ", gitConnector.getIdentifier()));
       }
-      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      GithubConnector gitConfigDTO = (GithubConnector) gitConnector.getConnectorConfig();
       String token = retrieveAuthToken(gitConnector);
       String gitApiURL = getGitApiURL(gitConfigDTO.getUrl());
 
@@ -109,20 +109,20 @@ public class GithubApiClient implements GitApiClient {
   }
 
   public String retrieveAuthToken(ConnectorDetails gitConnector) {
-    GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+    GithubConnector gitConfigDTO = (GithubConnector) gitConnector.getConnectorConfig();
     if (gitConfigDTO.getApiAccess() == null || gitConfigDTO.getApiAccess().getType() == null) {
       throw new InvalidRequestException(
           format("Failed to retrieve token info for github connector: ", gitConnector.getIdentifier()));
     }
 
-    GithubApiAccessSpecDTO spec = gitConfigDTO.getApiAccess().getSpec();
+    GithubApiAccessSpec spec = gitConfigDTO.getApiAccess().getSpec();
     GithubApiAccessType apiAccessType = gitConfigDTO.getApiAccess().getType();
     secretDecryptionService.decrypt(spec, gitConnector.getEncryptedDataDetails());
     String token = null;
     if (apiAccessType == TOKEN) {
-      token = new String(((GithubTokenSpecDTO) spec).getTokenRef().getDecryptedValue());
+      token = new String(((GithubTokenSpec) spec).getTokenRef().getDecryptedValue());
     } else if (gitConfigDTO.getApiAccess().getType() == GITHUB_APP) {
-      token = fetchTokenUsingGithubAppSpec(gitConfigDTO, (GithubAppSpecDTO) spec);
+      token = fetchTokenUsingGithubAppSpec(gitConfigDTO, (GithubAppSpec) spec);
     } else {
       throw new InvalidRequestException(
           format("Failed while retrieving token. Unsupported access type %s for Github accessType. Use Token Access",
@@ -132,7 +132,7 @@ public class GithubApiClient implements GitApiClient {
     return token;
   }
 
-  private String fetchTokenUsingGithubAppSpec(GithubConnectorDTO gitConfigDTO, GithubAppSpecDTO spec) {
+  private String fetchTokenUsingGithubAppSpec(GithubConnector gitConfigDTO, GithubAppSpec spec) {
     return githubService.getToken(GithubAppConfig.builder()
                                       .installationId(spec.getInstallationId())
                                       .appId(spec.getApplicationId())

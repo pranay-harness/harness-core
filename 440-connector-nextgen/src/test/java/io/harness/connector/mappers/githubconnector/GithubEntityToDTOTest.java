@@ -9,15 +9,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
-import io.harness.connector.entities.embedded.githubconnector.GithubConnector;
 import io.harness.connector.entities.embedded.githubconnector.GithubHttpAuthentication;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpec;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthentication;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentials;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
@@ -51,10 +50,10 @@ public class GithubEntityToDTOTest extends CategoryTest {
     final String privateKeyRef = "privateKeyRef";
     final String validationRepo = "validationRepo";
 
-    final GithubAuthenticationDTO githubAuthenticationDTO =
-        GithubAuthenticationDTO.builder()
+    final GithubAuthentication githubAuthentication =
+        GithubAuthentication.builder()
             .authType(HTTP)
-            .credentials(GithubHttpCredentialsDTO.builder()
+            .credentials(GithubHttpCredentials.builder()
                              .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
                              .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
@@ -63,25 +62,24 @@ public class GithubEntityToDTOTest extends CategoryTest {
                              .build())
             .build();
 
-    final GithubApiAccessDTO githubApiAccessDTO =
-        GithubApiAccessDTO.builder()
-            .type(GITHUB_APP)
-            .spec(GithubAppSpecDTO.builder()
-                      .applicationId(appId)
-                      .installationId(insId)
-                      .privateKeyRef(SecretRefHelper.createSecretRef(privateKeyRef))
-                      .build())
-            .build();
-    final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
-                                                      .url(url)
-                                                      .validationRepo(validationRepo)
-                                                      .connectionType(GitConnectionType.ACCOUNT)
-                                                      .authentication(githubAuthenticationDTO)
-                                                      .apiAccess(githubApiAccessDTO)
-                                                      .build();
+    final GithubApiAccess githubApiAccess = GithubApiAccess.builder()
+                                                .type(GITHUB_APP)
+                                                .spec(GithubAppSpec.builder()
+                                                          .applicationId(appId)
+                                                          .installationId(insId)
+                                                          .privateKeyRef(SecretRefHelper.createSecretRef(privateKeyRef))
+                                                          .build())
+                                                .build();
+    final GithubConnector githubConnectorDTO = GithubConnector.builder()
+                                                   .url(url)
+                                                   .validationRepo(validationRepo)
+                                                   .connectionType(GitConnectionType.ACCOUNT)
+                                                   .authentication(githubAuthentication)
+                                                   .apiAccess(githubApiAccess)
+                                                   .build();
 
-    final GithubConnector githubConnector1 =
-        GithubConnector.builder()
+    final io.harness.connector.entities.embedded.githubconnector.GithubConnector githubConnector1 =
+        io.harness.connector.entities.embedded.githubconnector.GithubConnector.builder()
             .hasApiAccess(true)
             .url(url)
             .validationRepo(validationRepo)
@@ -96,10 +94,13 @@ public class GithubEntityToDTOTest extends CategoryTest {
             .authenticationDetails(
                 GithubHttpAuthentication.builder()
                     .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                    .auth(io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword.builder().username(username).passwordRef(passwordRef).build())
+                    .auth(io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword.builder()
+                              .username(username)
+                              .passwordRef(passwordRef)
+                              .build())
                     .build())
             .build();
-    final GithubConnectorDTO githubConnector = githubEntityToDTO.createConnectorDTO(githubConnector1);
+    final GithubConnector githubConnector = githubEntityToDTO.createConnectorDTO(githubConnector1);
     ObjectMapper objectMapper = new ObjectMapper();
     assertThat(objectMapper.readTree(objectMapper.writeValueAsString(githubConnector)))
         .isEqualTo(objectMapper.readTree(objectMapper.writeValueAsString(githubConnectorDTO)));

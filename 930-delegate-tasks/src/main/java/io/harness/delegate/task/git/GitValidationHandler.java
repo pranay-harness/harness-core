@@ -9,7 +9,7 @@ import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.task.git.AbstractGitValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -31,7 +31,7 @@ public class GitValidationHandler extends AbstractGitValidationHandler {
   }
 
   @Override
-  public void decrypt(GitConfigDTO gitConfig, ScmValidationParams scmValidationParams, String accountIdentifier) {
+  public void decrypt(GitConfig gitConfig, ScmValidationParams scmValidationParams, String accountIdentifier) {
     gitDecryptionHelper.decryptGitConfig(gitConfig, scmValidationParams.getEncryptedDataDetails());
 
     if (hasApiAccess(scmValidationParams.getScmConnector())) {

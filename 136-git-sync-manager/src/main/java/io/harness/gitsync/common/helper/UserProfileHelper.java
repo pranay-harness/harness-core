@@ -5,11 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentials;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.SecretRefData;
@@ -45,8 +45,8 @@ public class UserProfileHelper {
     if (connector.getConnector().getConnectorType() != ConnectorType.GITHUB) {
       throw new InvalidRequestException("Git Sync only supported for github connector");
     }
-    final GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) connector.getConnector().getConnectorConfig();
-    githubConnectorDTO.setUrl(yamlGitConfig.getRepo());
+    final GithubConnector githubConnector = (GithubConnector) connector.getConnector().getConnectorConfig();
+    githubConnector.setUrl(yamlGitConfig.getRepo());
     final List<SourceCodeManagerDTO> sourceCodeManager =
         sourceCodeManagerService.get(userPrincipal.getUserId().getValue(), yamlGitConfig.getAccountIdentifier());
     final Optional<SourceCodeManagerDTO> sourceCodeManagerDTO =
@@ -57,18 +57,17 @@ public class UserProfileHelper {
     final GithubSCMDTO githubUserProfile = (GithubSCMDTO) sourceCodeManagerDTO.get();
     final SecretRefData tokenRef;
     try {
-      tokenRef =
-          ((GithubUsernameToken) ((GithubHttpCredentialsDTO) githubUserProfile.getAuthentication().getCredentials())
-                  .getHttpCredentialsSpec())
-              .getTokenRef();
+      tokenRef = ((GithubUsernameToken) ((GithubHttpCredentials) githubUserProfile.getAuthentication().getCredentials())
+                      .getHttpCredentialsSpec())
+                     .getTokenRef();
     } catch (Exception e) {
       throw new InvalidRequestException(
           "User Profile should contain github username token credentials for git sync", e);
     }
-    githubConnectorDTO.setApiAccess(GithubApiAccessDTO.builder()
-                                        .type(GithubApiAccessType.TOKEN)
-                                        .spec(GithubTokenSpecDTO.builder().tokenRef(tokenRef).build())
-                                        .build());
+    githubConnector.setApiAccess(GithubApiAccess.builder()
+                                     .type(GithubApiAccessType.TOKEN)
+                                     .spec(GithubTokenSpec.builder().tokenRef(tokenRef).build())
+                                     .build());
   }
 
   public UserPrincipal getUserPrincipal() {

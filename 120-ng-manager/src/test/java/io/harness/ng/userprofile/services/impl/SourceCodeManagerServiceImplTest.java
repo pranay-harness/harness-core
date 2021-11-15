@@ -15,24 +15,21 @@ import static org.mockito.Mockito.when;
 import io.harness.NgManagerTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication;
-import io.harness.connector.entities.embedded.githubconnector.GithubAuthentication;
 import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentication;
-import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentials;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKey;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentials;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthentication;
+import io.harness.delegate.beans.connector.scm.github.GithubSshCredentials;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthentication;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentials;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.userprofile.commons.AwsCodeCommitSCMDTO;
@@ -236,7 +233,8 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   }
 
   private SourceCodeManager bitbucketSCMCreate() {
-    BitbucketAuthentication bitbucketAuthentication = BitbucketSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
+    io.harness.connector.entities.embedded.bitbucketconnector.BitbucketAuthentication bitbucketAuthentication =
+        BitbucketSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
     return BitbucketSCM.builder()
         .userIdentifier(userIdentifier)
         .name(name)
@@ -247,22 +245,23 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   }
 
   private SourceCodeManagerDTO bitbucketSCMDTOCreate() {
-    BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
-        BitbucketAuthenticationDTO.builder()
+    BitbucketAuthentication bitbucketAuthentication =
+        BitbucketAuthentication.builder()
             .authType(GitAuthType.SSH)
             .credentials(
-                BitbucketSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+                BitbucketSshCredentials.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
     return BitbucketSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
         .accountIdentifier(accountIdentifier)
-        .authentication(bitbucketAuthenticationDTO)
+        .authentication(bitbucketAuthentication)
         .build();
   }
 
   private SourceCodeManager githubSCMCreate() {
-    GithubAuthentication githubAuthentication = GithubSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
+    io.harness.connector.entities.embedded.githubconnector.GithubAuthentication githubAuthentication =
+        GithubSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
     return GithubSCM.builder()
         .userIdentifier(userIdentifier)
         .name(name)
@@ -273,37 +272,36 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   }
 
   private SourceCodeManagerDTO githubSCMDTOCreate() {
-    GithubAuthenticationDTO githubAuthenticationDTO =
-        GithubAuthenticationDTO.builder()
+    GithubAuthentication githubAuthentication =
+        GithubAuthentication.builder()
             .authType(GitAuthType.SSH)
-            .credentials(
-                GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .credentials(GithubSshCredentials.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
     return GithubSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
         .accountIdentifier(accountIdentifier)
-        .authentication(githubAuthenticationDTO)
+        .authentication(githubAuthentication)
         .build();
   }
 
   private SourceCodeManagerDTO azureDevOpsSCMDTOCreate() {
-    GithubAuthenticationDTO githubAuthenticationDTO =
-        GithubAuthenticationDTO.builder()
+    GithubAuthentication githubAuthentication =
+        GithubAuthentication.builder()
             .authType(GitAuthType.SSH)
-            .credentials(
-                GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .credentials(GithubSshCredentials.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
     return AzureDevOpsSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
         .accountIdentifier(accountIdentifier)
-        .authentication(githubAuthenticationDTO)
+        .authentication(githubAuthentication)
         .build();
   }
 
   private SourceCodeManager gitlabSCMCreate() {
-    GitlabAuthentication gitlabAuthentication = GitlabSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
+    io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthentication gitlabAuthentication =
+        GitlabSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
     return GitlabSCM.builder()
         .userIdentifier(userIdentifier)
         .name(name)
@@ -314,27 +312,26 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   }
 
   private SourceCodeManagerDTO gitlabSCMDTOCreate() {
-    GitlabAuthenticationDTO gitlabAuthenticationDTO =
-        GitlabAuthenticationDTO.builder()
+    GitlabAuthentication gitlabAuthentication =
+        GitlabAuthentication.builder()
             .authType(GitAuthType.SSH)
-            .credentials(
-                GitlabSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .credentials(GitlabSshCredentials.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
     return GitlabSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
         .accountIdentifier(accountIdentifier)
-        .authentication(gitlabAuthenticationDTO)
+        .authentication(gitlabAuthentication)
         .build();
   }
 
   private SourceCodeManagerDTO awsCodeCommitSCMDTOCreate() {
-    AwsCodeCommitAuthenticationDTO awsCodeCommitAuthenticationDTO =
-        AwsCodeCommitAuthenticationDTO.builder()
+    AwsCodeCommitAuthentication awsCodeCommitAuthentication =
+        AwsCodeCommitAuthentication.builder()
             .authType(AwsCodeCommitAuthType.HTTPS)
-            .credentials(AwsCodeCommitHttpsCredentialsDTO.builder()
+            .credentials(AwsCodeCommitHttpsCredentials.builder()
                              .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
-                             .httpCredentialsSpec(AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+                             .httpCredentialsSpec(AwsCodeCommitSecretKeyAccessKey.builder()
                                                       .accessKey(accessKey)
                                                       .accessKeyRef(SecretRefHelper.createSecretRef(accessKeyRef))
                                                       .secretKeyRef(SecretRefHelper.createSecretRef(secretKeyRef))
@@ -346,7 +343,7 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
         .userIdentifier(userIdentifier)
         .name(name)
         .accountIdentifier(accountIdentifier)
-        .authentication(awsCodeCommitAuthenticationDTO)
+        .authentication(awsCodeCommitAuthentication)
         .build();
   }
 }

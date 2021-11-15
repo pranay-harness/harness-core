@@ -14,15 +14,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthentication;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthentication;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentials;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentials;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePassword;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
@@ -56,33 +56,33 @@ public class GitlabToGitMapperTest extends CategoryTest {
     final String privateKeyRef = "privateKeyRef";
     final String validationRepo = "validationRepo";
 
-    GitlabAuthenticationDTO gitlabAuthenticationDTO =
-        GitlabAuthenticationDTO.builder()
+    GitlabAuthentication gitlabAuthentication =
+        GitlabAuthentication.builder()
             .authType(HTTP)
-            .credentials(GitlabHttpCredentialsDTO.builder()
+            .credentials(GitlabHttpCredentials.builder()
                              .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GitlabUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(GitlabUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .username(username)
                                                       .build())
                              .build())
             .build();
 
-    GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
-                                                .url(url)
-                                                .validationRepo(validationRepo)
-                                                .connectionType(ACCOUNT)
-                                                .authentication(gitlabAuthenticationDTO)
-                                                .delegateSelectors(delegateSelectors)
-                                                .build();
-    GitConfigDTO gitConfigDTO = GitlabToGitMapper.mapToGitConfigDTO(gitlabConnectorDTO);
-    assertThat(gitConfigDTO).isNotNull();
-    assertThat(gitConfigDTO.getGitAuthType()).isEqualTo(HTTP);
-    assertThat(gitConfigDTO.getDelegateSelectors()).isEqualTo(delegateSelectors);
-    GitHTTPAuthenticationDTO gitAuthentication = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(ACCOUNT);
-    assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
-    assertThat(gitConfigDTO.getValidationRepo()).isEqualTo(validationRepo);
+    GitlabConnector gitlabConnector = GitlabConnector.builder()
+                                          .url(url)
+                                          .validationRepo(validationRepo)
+                                          .connectionType(ACCOUNT)
+                                          .authentication(gitlabAuthentication)
+                                          .delegateSelectors(delegateSelectors)
+                                          .build();
+    GitConfig gitConfig = GitlabToGitMapper.mapToGitConfigDTO(gitlabConnector);
+    assertThat(gitConfig).isNotNull();
+    assertThat(gitConfig.getGitAuthType()).isEqualTo(HTTP);
+    assertThat(gitConfig.getDelegateSelectors()).isEqualTo(delegateSelectors);
+    GitHTTPAuthentication gitAuthentication = (GitHTTPAuthentication) gitConfig.getGitAuth();
+    assertThat(gitConfig.getGitConnectionType()).isEqualTo(ACCOUNT);
+    assertThat(gitConfig.getUrl()).isEqualTo(url);
+    assertThat(gitConfig.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(gitAuthentication.getUsername()).isEqualTo(username);
     assertThat(gitAuthentication.getPasswordRef().toSecretRefStringValue()).isEqualTo(passwordRef);
   }
@@ -93,26 +93,26 @@ public class GitlabToGitMapperTest extends CategoryTest {
   public void testMappingToSSHGitConfigDTO() {
     final String url = "url";
     String sshKeyReference = "sshKeyReference";
-    final GitlabAuthenticationDTO gitlabAuthenticationDTO =
-        GitlabAuthenticationDTO.builder()
+    final GitlabAuthentication gitlabAuthentication =
+        GitlabAuthentication.builder()
             .authType(GitAuthType.SSH)
             .credentials(
-                GitlabSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyReference)).build())
+                GitlabSshCredentials.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyReference)).build())
             .build();
 
-    final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
-                                                      .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
-                                                      .authentication(gitlabAuthenticationDTO)
-                                                      .delegateSelectors(delegateSelectors)
-                                                      .build();
-    GitConfigDTO gitConfigDTO = GitlabToGitMapper.mapToGitConfigDTO(gitlabConnectorDTO);
-    assertThat(gitConfigDTO).isNotNull();
-    assertThat(gitConfigDTO.getGitAuthType()).isEqualTo(SSH);
-    GitSSHAuthenticationDTO gitAuthentication = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
+    final GitlabConnector gitlabConnector = GitlabConnector.builder()
+                                                .url(url)
+                                                .connectionType(GitConnectionType.REPO)
+                                                .authentication(gitlabAuthentication)
+                                                .delegateSelectors(delegateSelectors)
+                                                .build();
+    GitConfig gitConfig = GitlabToGitMapper.mapToGitConfigDTO(gitlabConnector);
+    assertThat(gitConfig).isNotNull();
+    assertThat(gitConfig.getGitAuthType()).isEqualTo(SSH);
+    GitSSHAuthentication gitAuthentication = (GitSSHAuthentication) gitConfig.getGitAuth();
     assertThat(gitAuthentication.getEncryptedSshKey()).isEqualTo(SecretRefHelper.createSecretRef(sshKeyReference));
-    assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
-    assertThat(gitConfigDTO.getDelegateSelectors()).isEqualTo(delegateSelectors);
-    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(REPO);
+    assertThat(gitConfig.getUrl()).isEqualTo(url);
+    assertThat(gitConfig.getDelegateSelectors()).isEqualTo(delegateSelectors);
+    assertThat(gitConfig.getGitConnectionType()).isEqualTo(REPO);
   }
 }

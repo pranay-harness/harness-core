@@ -9,9 +9,9 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.AbstractConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthentication;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
@@ -34,7 +34,7 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    final GitConfigDTO gitConfig = getGitConfigFromConnectorConfig(connectorConfig);
+    final GitConfig gitConfig = getGitConfigFromConnectorConfig(connectorConfig);
     SSHKeySpecDTO sshKeySpecDTO =
         gitConfigAuthenticationInfoHelper.getSSHKey(gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
     NGAccess ngAccess = getNgAccess(accountIdentifier, orgIdentifier, projectIdentifier);
@@ -72,23 +72,23 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
         .build();
   }
 
-  public abstract GitConfigDTO getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig);
+  public abstract GitConfig getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig);
 
   @Override
   public String getTaskType() {
     return NG_GIT_COMMAND.name();
   }
 
-  public void validateFieldsPresent(GitConfigDTO gitConfig) {
+  public void validateFieldsPresent(GitConfig gitConfig) {
     switch (gitConfig.getGitAuthType()) {
       case HTTP:
-        GitHTTPAuthenticationDTO gitAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
+        GitHTTPAuthentication gitAuthenticationDTO = (GitHTTPAuthentication) gitConfig.getGitAuth();
         validateRequiredFieldsPresent(
             gitAuthenticationDTO.getPasswordRef(), gitConfig.getUrl(), gitConfig.getGitConnectionType());
         break;
       case SSH:
-        GitSSHAuthenticationDTO gitSSHAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfig.getGitAuth();
-        validateRequiredFieldsPresent(gitSSHAuthenticationDTO.getEncryptedSshKey());
+        GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getGitAuth();
+        validateRequiredFieldsPresent(gitSSHAuthentication.getEncryptedSshKey());
         break;
       default:
         throw new UnknownEnumTypeException("Git Authentication Type",
@@ -115,7 +115,7 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
 
   public ConnectorValidationResult validate(ConnectorConfigDTO connectorConfigDTO, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
-    final GitConfigDTO gitConfig = getGitConfigFromConnectorConfig(connectorConfigDTO);
+    final GitConfig gitConfig = getGitConfigFromConnectorConfig(connectorConfigDTO);
     validateFieldsPresent(gitConfig);
     GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
         connectorConfigDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);

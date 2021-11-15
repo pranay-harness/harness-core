@@ -24,8 +24,8 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponse;
@@ -162,7 +162,7 @@ public class TriggerFilePathConditionFilterTest extends CategoryTest {
     // Init Data
     TriggerDetails triggerDetails = generateTriggerDetails();
 
-    GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder().build();
+    GithubConnector githubConnector = GithubConnector.builder().build();
     List<EncryptedDataDetail> encryptedDataDetails = emptyList();
     TriggerEventDataCondition pathCondition =
         TriggerEventDataCondition.builder().key(CHANGED_FILES).operator(EQUALS).value("test").build();
@@ -176,10 +176,8 @@ public class TriggerFilePathConditionFilterTest extends CategoryTest {
         FilterRequestData.builder().accountId("acc").webhookPayloadData(webhookPayloadData).build();
 
     // Mock apis
-    doReturn(ConnectorDetails.builder()
-                 .connectorConfig(githubConnectorDTO)
-                 .encryptedDataDetails(encryptedDataDetails)
-                 .build())
+    doReturn(
+        ConnectorDetails.builder().connectorConfig(githubConnector).encryptedDataDetails(encryptedDataDetails).build())
         .when(connectorUtils)
         .getConnectorDetails(any(NGAccess.class), eq("account.conn"));
 
@@ -204,7 +202,7 @@ public class TriggerFilePathConditionFilterTest extends CategoryTest {
     TaskParameters taskParameters = delegateTaskRequest.getTaskParameters();
     assertThat(ScmPathFilterEvaluationTaskParams.class.isAssignableFrom(taskParameters.getClass()));
     ScmPathFilterEvaluationTaskParams params = (ScmPathFilterEvaluationTaskParams) taskParameters;
-    assertThat(params.getScmConnector()).isEqualTo(githubConnectorDTO);
+    assertThat(params.getScmConnector()).isEqualTo(githubConnector);
     assertThat(params.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
     assertThat(params.getPrNumber()).isEqualTo(2);
     assertThat(params.getOperator()).isEqualTo(EQUALS.getValue());
@@ -240,7 +238,7 @@ public class TriggerFilePathConditionFilterTest extends CategoryTest {
     // Init Data
     TriggerDetails triggerDetails = generateTriggerDetails();
 
-    GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder().build();
+    GitlabConnector gitlabConnector = GitlabConnector.builder().build();
     List<EncryptedDataDetail> encryptedDataDetails = emptyList();
     TriggerEventDataCondition pathCondition =
         TriggerEventDataCondition.builder().key(CHANGED_FILES).operator(EQUALS).value("test").build();
@@ -254,10 +252,8 @@ public class TriggerFilePathConditionFilterTest extends CategoryTest {
         FilterRequestData.builder().accountId("acc").webhookPayloadData(webhookPayloadData).build();
 
     // Mock apis
-    doReturn(ConnectorDetails.builder()
-                 .connectorConfig(gitlabConnectorDTO)
-                 .encryptedDataDetails(encryptedDataDetails)
-                 .build())
+    doReturn(
+        ConnectorDetails.builder().connectorConfig(gitlabConnector).encryptedDataDetails(encryptedDataDetails).build())
         .when(connectorUtils)
         .getConnectorDetails(any(NGAccess.class), eq("account.conn"));
 
@@ -282,7 +278,7 @@ public class TriggerFilePathConditionFilterTest extends CategoryTest {
     TaskParameters taskParameters = delegateTaskRequest.getTaskParameters();
     assertThat(ScmPathFilterEvaluationTaskParams.class.isAssignableFrom(taskParameters.getClass()));
     ScmPathFilterEvaluationTaskParams params = (ScmPathFilterEvaluationTaskParams) taskParameters;
-    assertThat(params.getScmConnector()).isEqualTo(gitlabConnectorDTO);
+    assertThat(params.getScmConnector()).isEqualTo(gitlabConnector);
     assertThat(params.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
     assertThat(params.getPreviousCommit()).isEqualTo("before");
     assertThat(params.getLatestCommit()).isEqualTo("after");

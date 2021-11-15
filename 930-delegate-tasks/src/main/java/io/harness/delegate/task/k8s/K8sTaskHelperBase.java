@@ -66,7 +66,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
@@ -2273,12 +2273,12 @@ public class K8sTaskHelperBase {
             gitStoreDelegateConfig.getApiAuthEncryptedDataDetails());
         scmFetchFilesHelper.downloadFilesUsingScm(manifestFilesDirectory, gitStoreDelegateConfig, executionLogCallback);
       } else {
-        GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-        gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+        GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+        gitDecryptionHelper.decryptGitConfig(gitConfig, gitStoreDelegateConfig.getEncryptedDataDetails());
         SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
             gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
         ngGitService.downloadFiles(
-            gitStoreDelegateConfig, manifestFilesDirectory, accountId, sshSessionConfig, gitConfigDTO);
+            gitStoreDelegateConfig, manifestFilesDirectory, accountId, sshSessionConfig, gitConfig);
       }
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
@@ -2311,7 +2311,7 @@ public class K8sTaskHelperBase {
 
   private void printGitConfigInExecutionLogs(
       GitStoreDelegateConfig gitStoreDelegateConfig, LogCallback executionLogCallback) {
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+    GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
     if (isNotEmpty(gitStoreDelegateConfig.getManifestType()) && isNotEmpty(gitStoreDelegateConfig.getManifestId())) {
       executionLogCallback.saveExecutionLog("\n"
           + color(format("Fetching %s files with identifier: %s", gitStoreDelegateConfig.getManifestType(),
@@ -2320,7 +2320,7 @@ public class K8sTaskHelperBase {
     } else {
       executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
     }
-    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfig.getUrl());
 
     if (FetchType.BRANCH == gitStoreDelegateConfig.getFetchType()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitStoreDelegateConfig.getBranch());

@@ -1,6 +1,6 @@
 package io.harness.delegate.beans.executioncapability;
 
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -17,7 +17,7 @@ public class GitConnectionNGCapability implements ExecutionCapability {
     return EvaluationMode.AGENT;
   }
 
-  GitConfigDTO gitConfig;
+  GitConfig gitConfig;
   List<EncryptedDataDetail> encryptedDataDetails;
   CapabilityType capabilityType = CapabilityType.GIT_CONNECTION_NG;
   SSHKeySpecDTO sshKeySpecDTO;

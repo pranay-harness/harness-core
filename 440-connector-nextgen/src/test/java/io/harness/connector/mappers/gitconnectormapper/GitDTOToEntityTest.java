@@ -9,13 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.entities.embedded.gitconnector.GitConfig;
-import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthentication;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
@@ -51,16 +49,17 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                         .authorName("authorName")
                                                         .commitMessage("commitMessage")
                                                         .build();
-    GitHTTPAuthenticationDTO httpAuthentication =
-        GitHTTPAuthenticationDTO.builder().username(userName).passwordRef(passwordRef).build();
-    GitConfigDTO gitConfigDTO = GitConfigDTO.builder()
-                                    .gitAuthType(HTTP)
-                                    .gitConnectionType(ACCOUNT)
-                                    .url(url)
-                                    .validationRepo(validationRepo)
-                                    .gitAuth(httpAuthentication)
-                                    .build();
-    GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
+    GitHTTPAuthentication httpAuthentication =
+        GitHTTPAuthentication.builder().username(userName).passwordRef(passwordRef).build();
+    GitConfig gitConfigDTO = GitConfig.builder()
+                                 .gitAuthType(HTTP)
+                                 .gitConnectionType(ACCOUNT)
+                                 .url(url)
+                                 .validationRepo(validationRepo)
+                                 .gitAuth(httpAuthentication)
+                                 .build();
+    io.harness.connector.entities.embedded.gitconnector.GitConfig gitConfig =
+        gitDTOToEntity.toConnectorEntity(gitConfigDTO);
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.getUrl()).isEqualTo(url);
     assertThat(gitConfig.getValidationRepo()).isEqualTo(validationRepo);
@@ -83,17 +82,19 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                         .authorName("authorName")
                                                         .commitMessage("commitMessage")
                                                         .build();
-    GitSSHAuthenticationDTO httpAuthentication =
-        GitSSHAuthenticationDTO.builder().encryptedSshKey(SecretRefHelper.createSecretRef(sshKeyReference)).build();
-    GitConfigDTO gitConfigDTO =
-        GitConfigDTO.builder().gitAuthType(SSH).gitConnectionType(ACCOUNT).url(url).gitAuth(httpAuthentication).build();
-    GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
+    GitSSHAuthentication httpAuthentication =
+        GitSSHAuthentication.builder().encryptedSshKey(SecretRefHelper.createSecretRef(sshKeyReference)).build();
+    GitConfig gitConfigDTO =
+        GitConfig.builder().gitAuthType(SSH).gitConnectionType(ACCOUNT).url(url).gitAuth(httpAuthentication).build();
+    io.harness.connector.entities.embedded.gitconnector.GitConfig gitConfig =
+        gitDTOToEntity.toConnectorEntity(gitConfigDTO);
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.isSupportsGitSync()).isFalse();
     assertThat(gitConfig.getUrl()).isEqualTo(url);
     assertThat(gitConfig.getConnectionType()).isEqualTo(ACCOUNT);
     assertThat(gitConfig.getAuthType()).isEqualTo(SSH);
-    GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
+    io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication gitSSHAuthentication =
+        (io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication) gitConfig.getAuthenticationDetails();
     assertThat(gitSSHAuthentication.getSshKeyReference()).isEqualTo(sshKeyReference);
   }
 }

@@ -19,7 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.ngtriggers.NgTriggersTestHelper;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
@@ -89,7 +89,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
     ConnectorResponseDTO connectorResponseDTO1 =
         ConnectorResponseDTO.builder()
             .connector(ConnectorInfoDTO.builder()
-                           .connectorConfig(GithubConnectorDTO.builder()
+                           .connectorConfig(GithubConnector.builder()
                                                 .connectionType(GitConnectionType.REPO)
                                                 .url("https://github.com/owner1/repo1")
                                                 .build())
@@ -118,7 +118,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
     ConnectorResponseDTO connectorResponseDTO2 =
         ConnectorResponseDTO.builder()
             .connector(ConnectorInfoDTO.builder()
-                           .connectorConfig(GithubConnectorDTO.builder()
+                           .connectorConfig(GithubConnector.builder()
                                                 .connectionType(GitConnectionType.ACCOUNT)
                                                 .url("https://github.com/owner1")
                                                 .build())
@@ -147,7 +147,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
     ConnectorResponseDTO connectorResponseDTO3 =
         ConnectorResponseDTO.builder()
             .connector(ConnectorInfoDTO.builder()
-                           .connectorConfig(GithubConnectorDTO.builder()
+                           .connectorConfig(GithubConnector.builder()
                                                 .connectionType(GitConnectionType.ACCOUNT)
                                                 .url("https://github.com/owner1")
                                                 .build())

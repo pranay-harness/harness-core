@@ -33,11 +33,11 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -244,19 +244,19 @@ public class ConnectorUtils {
 
   public String retrieveURL(ConnectorDetails gitConnector) {
     if (gitConnector.getConnectorType() == GITHUB) {
-      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      GithubConnector gitConfigDTO = (GithubConnector) gitConnector.getConnectorConfig();
       return gitConfigDTO.getUrl();
     } else if (gitConnector.getConnectorType() == BITBUCKET) {
-      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      BitbucketConnector gitConfigDTO = (BitbucketConnector) gitConnector.getConnectorConfig();
       return gitConfigDTO.getUrl();
     } else if (gitConnector.getConnectorType() == GIT) {
-      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-      return gitConfigDTO.getUrl();
+      GitConfig gitConfig = (GitConfig) gitConnector.getConnectorConfig();
+      return gitConfig.getUrl();
     } else if (gitConnector.getConnectorType() == GITLAB) {
-      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      GitlabConnector gitConfigDTO = (GitlabConnector) gitConnector.getConnectorConfig();
       return gitConfigDTO.getUrl();
     } else if (gitConnector.getConnectorType() == CODECOMMIT) {
-      AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
+      AwsCodeCommitConnector gitConfigDTO = (AwsCodeCommitConnector) gitConnector.getConnectorConfig();
       return gitConfigDTO.getUrl();
     } else {
       throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported.");
@@ -265,16 +265,16 @@ public class ConnectorUtils {
 
   public GitConnectionType getConnectionType(ConnectorDetails gitConnector) {
     if (gitConnector.getConnectorType() == GITHUB) {
-      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      GithubConnector gitConfigDTO = (GithubConnector) gitConnector.getConnectorConfig();
       return gitConfigDTO.getConnectionType();
     } else if (gitConnector.getConnectorType() == BITBUCKET) {
-      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      BitbucketConnector gitConfigDTO = (BitbucketConnector) gitConnector.getConnectorConfig();
       return gitConfigDTO.getConnectionType();
     } else if (gitConnector.getConnectorType() == GIT) {
-      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-      return gitConfigDTO.getGitConnectionType();
+      GitConfig gitConfig = (GitConfig) gitConnector.getConnectorConfig();
+      return gitConfig.getGitConnectionType();
     } else if (gitConnector.getConnectorType() == GITLAB) {
-      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      GitlabConnector gitConfigDTO = (GitlabConnector) gitConnector.getConnectorConfig();
       return gitConfigDTO.getConnectionType();
     } else {
       throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported.");

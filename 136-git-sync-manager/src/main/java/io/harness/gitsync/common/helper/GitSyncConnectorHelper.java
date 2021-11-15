@@ -10,12 +10,12 @@ import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccess;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccess;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -111,36 +111,36 @@ public class GitSyncConnectorHelper {
   }
 
   public void validateTheAPIAccessPresence(ScmConnector scmConnector) {
-    if (scmConnector instanceof GithubConnectorDTO) {
-      checkAPIAccessFieldPresence((GithubConnectorDTO) scmConnector);
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
-      checkAPIAccessFieldPresence((GitlabConnectorDTO) scmConnector);
-    } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      checkAPIAccessFieldPresence((BitbucketConnectorDTO) scmConnector);
+    if (scmConnector instanceof GithubConnector) {
+      checkAPIAccessFieldPresence((GithubConnector) scmConnector);
+    } else if (scmConnector instanceof GitlabConnector) {
+      checkAPIAccessFieldPresence((GitlabConnector) scmConnector);
+    } else if (scmConnector instanceof BitbucketConnector) {
+      checkAPIAccessFieldPresence((BitbucketConnector) scmConnector);
     } else {
       throw new NotImplementedException(
           String.format("The scm apis for the provider type %s is not supported", scmConnector.getClass()));
     }
   }
 
-  private void checkAPIAccessFieldPresence(GithubConnectorDTO githubConnectorDTO) {
-    GithubApiAccessDTO apiAccess = githubConnectorDTO.getApiAccess();
+  private void checkAPIAccessFieldPresence(GithubConnector githubConnector) {
+    GithubApiAccess apiAccess = githubConnector.getApiAccess();
     if (apiAccess == null) {
       throw new InvalidRequestException(
           "The connector doesn't contain api access field which is required for the git sync ");
     }
   }
 
-  private void checkAPIAccessFieldPresence(GitlabConnectorDTO gitlabConnectorDTO) {
-    GitlabApiAccessDTO apiAccess = gitlabConnectorDTO.getApiAccess();
+  private void checkAPIAccessFieldPresence(GitlabConnector gitlabConnector) {
+    GitlabApiAccess apiAccess = gitlabConnector.getApiAccess();
     if (apiAccess == null) {
       throw new InvalidRequestException(
           "The connector doesn't contain api access field which is required for the git sync ");
     }
   }
 
-  private void checkAPIAccessFieldPresence(BitbucketConnectorDTO bitbucketConnectorDTO) {
-    BitbucketApiAccessDTO apiAccess = bitbucketConnectorDTO.getApiAccess();
+  private void checkAPIAccessFieldPresence(BitbucketConnector bitbucketConnector) {
+    BitbucketApiAccess apiAccess = bitbucketConnector.getApiAccess();
     if (apiAccess == null) {
       throw new InvalidRequestException(
           "The connector doesn't contain api access field which is required for the git sync ");

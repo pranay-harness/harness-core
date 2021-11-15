@@ -18,10 +18,10 @@ import io.harness.beans.FileContentBatchResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.service.scm.ScmDelegateClient;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpec;
 import io.harness.exception.GitClientException;
 import io.harness.logging.LogCallback;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
@@ -64,7 +64,7 @@ public class ScmFetchFilesHelperTest extends WingsBaseTest {
     LogCallback logCallback = mock(ExecutionLogCallback.class);
     GitConfig gitConfig = GitConfig.builder().repoUrl("helm-url").build();
     GitFileConfig gitFileConfig = GitFileConfig.builder().filePath("test").build();
-    doReturn(GithubConnectorDTO.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
+    doReturn(GithubConnector.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
     doReturn(FileContentBatchResponse.builder()
                  .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
                                                .addFileContents(FileContent.newBuilder()
@@ -89,7 +89,7 @@ public class ScmFetchFilesHelperTest extends WingsBaseTest {
     LogCallback logCallback = mock(ExecutionLogCallback.class);
     GitConfig gitConfig = GitConfig.builder().repoUrl("helm-url").build();
     GitFileConfig gitFileConfig = GitFileConfig.builder().filePath("test/test2/path.txt").build();
-    doReturn(GithubConnectorDTO.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
+    doReturn(GithubConnector.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
     when(scmDelegateClient.processScmRequest(any()))
         .thenReturn(FileContentBatchResponse.builder()
                         .fileBatchContentResponse(FileBatchContentResponse.newBuilder().build())
@@ -116,7 +116,7 @@ public class ScmFetchFilesHelperTest extends WingsBaseTest {
     List<String> filePathList = Collections.singletonList("test");
     GitConfig gitConfig = GitConfig.builder().repoUrl("helm-url").build();
     GitFileConfig gitFileConfig = GitFileConfig.builder().build();
-    doReturn(GithubConnectorDTO.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
+    doReturn(GithubConnector.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
     doReturn(FileContentBatchResponse.builder()
                  .fileBatchContentResponse(
                      FileBatchContentResponse.newBuilder()
@@ -140,7 +140,7 @@ public class ScmFetchFilesHelperTest extends WingsBaseTest {
     List<String> filePathList = Collections.singletonList("test");
     GitConfig gitConfig = GitConfig.builder().repoUrl("helm-url").build();
     GitFileConfig gitFileConfig = GitFileConfig.builder().build();
-    doReturn(GithubConnectorDTO.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
+    doReturn(GithubConnector.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
     doReturn(FileContentBatchResponse.builder()
                  .fileBatchContentResponse(
                      FileBatchContentResponse.newBuilder()
@@ -197,7 +197,7 @@ public class ScmFetchFilesHelperTest extends WingsBaseTest {
                                                                               .providerType(ProviderType.GITHUB)
                                                                               .build());
     assertThat(gitHubScmConnector.getUrl()).isEqualTo("GitHubURL");
-    assertThat(((GithubTokenSpecDTO) ((GithubConnectorDTO) gitHubScmConnector).getApiAccess().getSpec())
+    assertThat(((GithubTokenSpec) ((GithubConnector) gitHubScmConnector).getApiAccess().getSpec())
                    .getTokenRef()
                    .getDecryptedValue())
         .isEqualTo("password".toCharArray());
@@ -208,7 +208,7 @@ public class ScmFetchFilesHelperTest extends WingsBaseTest {
                                                                               .providerType(ProviderType.GITLAB)
                                                                               .build());
     assertThat(gitLabScmConnector.getUrl()).isEqualTo("GitlabURL");
-    assertThat(((GitlabTokenSpecDTO) ((GitlabConnectorDTO) gitLabScmConnector).getApiAccess().getSpec())
+    assertThat(((GitlabTokenSpec) ((GitlabConnector) gitLabScmConnector).getApiAccess().getSpec())
                    .getTokenRef()
                    .getDecryptedValue())
         .isEqualTo("password".toCharArray());

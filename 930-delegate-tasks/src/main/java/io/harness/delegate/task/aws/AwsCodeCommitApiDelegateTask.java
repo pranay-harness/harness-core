@@ -13,7 +13,7 @@ import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiTaskParams;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiTaskResponse;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentParams;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentTaskResult;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -77,8 +77,8 @@ public class AwsCodeCommitApiDelegateTask extends AbstractDelegateRunnableTask {
 
   private DelegateResponseData handleAwsDecorateWebHookPayloadTask(AwsCodeCommitApiTaskParams awsCodeCommitTaskParams) {
     List<EncryptedDataDetail> encryptionDetails = awsCodeCommitTaskParams.getEncryptedDataDetails();
-    AwsCodeCommitAuthenticationDTO authenticationDTO =
-        awsCodeCommitTaskParams.getAwsCodeCommitConnectorDTO().getAuthentication();
+    AwsCodeCommitAuthentication authenticationDTO =
+        awsCodeCommitTaskParams.getAwsCodeCommitConnector().getAuthentication();
     AwsConfig awsConfig = awsNgConfigMapper.mapAwsCodeCommit(authenticationDTO, encryptionDetails);
     AwsCodeCommitDataObtainmentParams apiParams =
         (AwsCodeCommitDataObtainmentParams) awsCodeCommitTaskParams.getApiParams();

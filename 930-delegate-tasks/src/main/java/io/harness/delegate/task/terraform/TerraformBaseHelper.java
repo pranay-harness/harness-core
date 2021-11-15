@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliResponse;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.LogCallback;
@@ -40,7 +40,7 @@ public interface TerraformBaseHelper {
   String getLatestCommitSHA(File repoDir);
 
   GitBaseRequest getGitBaseRequestForConfigFile(
-      String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfigDTO configFileGitConfigDTO);
+      String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfig configFileGitConfig);
 
   Map<String, String> buildcommitIdToFetchedFilesMap(String accountId, String configFileIdentifier,
       GitBaseRequest gitBaseRequestForConfigFile, List<TerraformVarFileInfo> varFileInfo);

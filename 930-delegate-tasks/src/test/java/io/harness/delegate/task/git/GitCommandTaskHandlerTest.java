@@ -26,14 +26,14 @@ import io.harness.connector.service.scm.ScmDelegateClient;
 import io.harness.connector.task.git.GitCommandTaskHandler;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
-import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpec;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccess;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpec;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -79,14 +79,14 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testGitCredentials() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder().build();
-    ScmConnector connector = GitlabConnectorDTO.builder().build();
+    GitConfig gitConfig = GitConfig.builder().build();
+    ScmConnector connector = GitlabConnector.builder().build();
     GitCommandExecutionResponse response = mock(GitCommandExecutionResponse.class, RETURNS_DEEP_STUBS);
     when(response.getConnectorValidationResult().getTestedAt()).thenReturn(SIMULATED_REQUEST_TIME_MILLIS);
     doReturn(response)
         .when(gitCommandTaskHandler)
         .handleValidateTask(
-            any(GitConfigDTO.class), any(ScmConnector.class), any(String.class), any(SshSessionConfig.class));
+            any(GitConfig.class), any(ScmConnector.class), any(String.class), any(SshSessionConfig.class));
 
     ConnectorValidationResult validationResult =
         gitCommandTaskHandler.validateGitCredentials(gitConfig, connector, ACCOUNT_IDENTIFIER, sshSessionConfig);
@@ -98,12 +98,12 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testGitCredentialsWhenException() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder().build();
-    ScmConnector connector = GitlabConnectorDTO.builder().build();
+    GitConfig gitConfig = GitConfig.builder().build();
+    ScmConnector connector = GitlabConnector.builder().build();
     doThrow(new InvalidRequestException(SIMULATED_EXCEPTION_MESSAGE))
         .when(gitCommandTaskHandler)
         .handleValidateTask(
-            any(GitConfigDTO.class), any(ScmConnector.class), any(String.class), any(SshSessionConfig.class));
+            any(GitConfig.class), any(ScmConnector.class), any(String.class), any(SshSessionConfig.class));
 
     ConnectorValidationResult validationResult =
         gitCommandTaskHandler.validateGitCredentials(gitConfig, connector, ACCOUNT_IDENTIFIER, sshSessionConfig);
@@ -114,12 +114,12 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testValidateTask() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder().gitConnectionType(GitConnectionType.REPO).build();
-    ScmConnector connector = GithubConnectorDTO.builder()
+    GitConfig gitConfig = GitConfig.builder().gitConnectionType(GitConnectionType.REPO).build();
+    ScmConnector connector = GithubConnector.builder()
                                  .url(TEST_GIT_REPO_URL)
-                                 .apiAccess(GithubApiAccessDTO.builder()
+                                 .apiAccess(GithubApiAccess.builder()
                                                 .type(GithubApiAccessType.GITHUB_APP)
-                                                .spec(GithubAppSpecDTO.builder()
+                                                .spec(GithubAppSpec.builder()
                                                           .applicationId(TEST_STRING_INPUT)
                                                           .installationId(TEST_STRING_INPUT)
                                                           .privateKeyRef(new SecretRefData(TEST_STRING_INPUT,
@@ -127,9 +127,7 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
                                                           .build())
                                                 .build())
                                  .build();
-    doNothing()
-        .when(gitService)
-        .validateOrThrow(any(GitConfigDTO.class), any(String.class), any(SshSessionConfig.class));
+    doNothing().when(gitService).validateOrThrow(any(GitConfig.class), any(String.class), any(SshSessionConfig.class));
     doReturn(TEST_STRING_INPUT).when(gitHubService).getToken(any(GithubAppConfig.class));
 
     GitCommandExecutionResponse response = (GitCommandExecutionResponse) gitCommandTaskHandler.handleValidateTask(
@@ -141,12 +139,12 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testValidateGithubAppWithException() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder().gitConnectionType(GitConnectionType.REPO).build();
-    ScmConnector connector = GithubConnectorDTO.builder()
+    GitConfig gitConfig = GitConfig.builder().gitConnectionType(GitConnectionType.REPO).build();
+    ScmConnector connector = GithubConnector.builder()
                                  .url(TEST_GIT_REPO_URL)
-                                 .apiAccess(GithubApiAccessDTO.builder()
+                                 .apiAccess(GithubApiAccess.builder()
                                                 .type(GithubApiAccessType.GITHUB_APP)
-                                                .spec(GithubAppSpecDTO.builder()
+                                                .spec(GithubAppSpec.builder()
                                                           .applicationId(TEST_STRING_INPUT)
                                                           .installationId(TEST_STRING_INPUT)
                                                           .privateKeyRef(new SecretRefData(TEST_STRING_INPUT,
@@ -166,9 +164,9 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testValidateTaskGivenScmConnectorWithoutApiAccess() {
-    GitConfigDTO gitConfig =
-        GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).validationRepo(TEST_STRING_INPUT).build();
-    ScmConnector connector = GithubConnectorDTO.builder().build();
+    GitConfig gitConfig =
+        GitConfig.builder().gitConnectionType(GitConnectionType.ACCOUNT).validationRepo(TEST_STRING_INPUT).build();
+    ScmConnector connector = GithubConnector.builder().build();
 
     GitCommandExecutionResponse response = (GitCommandExecutionResponse) gitCommandTaskHandler.handleValidateTask(
         gitConfig, connector, ACCOUNT_IDENTIFIER, sshSessionConfig);
@@ -179,11 +177,10 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testValidateTaskHandleApiAccessValidation() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).build();
-    ScmConnector connector =
-        GitlabConnectorDTO.builder()
-            .apiAccess(GitlabApiAccessDTO.builder().spec(GitlabTokenSpecDTO.builder().build()).build())
-            .build();
+    GitConfig gitConfig = GitConfig.builder().gitConnectionType(GitConnectionType.ACCOUNT).build();
+    ScmConnector connector = GitlabConnector.builder()
+                                 .apiAccess(GitlabApiAccess.builder().spec(GitlabTokenSpec.builder().build()).build())
+                                 .build();
     GetUserReposResponse userReposResponse = GetUserReposResponse.newBuilder().build();
     doReturn(userReposResponse).when(scmDelegateClient).processScmRequest(any());
 
@@ -196,11 +193,10 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testApiAccessValidationGivenExceptionInScmRequest() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).build();
-    ScmConnector connector =
-        GitlabConnectorDTO.builder()
-            .apiAccess(GitlabApiAccessDTO.builder().spec(GitlabTokenSpecDTO.builder().build()).build())
-            .build();
+    GitConfig gitConfig = GitConfig.builder().gitConnectionType(GitConnectionType.ACCOUNT).build();
+    ScmConnector connector = GitlabConnector.builder()
+                                 .apiAccess(GitlabApiAccess.builder().spec(GitlabTokenSpec.builder().build()).build())
+                                 .build();
     doThrow(new SCMRuntimeException(SIMULATED_EXCEPTION_MESSAGE)).when(scmDelegateClient).processScmRequest(any());
     assertThatThrownBy(
         () -> gitCommandTaskHandler.handleValidateTask(gitConfig, connector, ACCOUNT_IDENTIFIER, sshSessionConfig))
@@ -211,11 +207,10 @@ public class GitCommandTaskHandlerTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testApiAccessValidationGivenErrorInRepoResponse() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).build();
-    ScmConnector connector =
-        GitlabConnectorDTO.builder()
-            .apiAccess(GitlabApiAccessDTO.builder().spec(GitlabTokenSpecDTO.builder().build()).build())
-            .build();
+    GitConfig gitConfig = GitConfig.builder().gitConnectionType(GitConnectionType.ACCOUNT).build();
+    ScmConnector connector = GitlabConnector.builder()
+                                 .apiAccess(GitlabApiAccess.builder().spec(GitlabTokenSpec.builder().build()).build())
+                                 .build();
     GetUserReposResponse userReposResponse = GetUserReposResponse.newBuilder().setStatus(400).build();
     doReturn(userReposResponse).when(scmDelegateClient).processScmRequest(any());
 

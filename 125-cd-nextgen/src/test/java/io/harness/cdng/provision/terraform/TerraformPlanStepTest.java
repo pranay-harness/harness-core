@@ -22,7 +22,7 @@ import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -204,15 +204,15 @@ public class TerraformPlanStepTest extends CategoryTest {
                                .build())
             .build();
 
-    GitConfigDTO gitConfigDTO = GitConfigDTO.builder()
-                                    .gitAuthType(GitAuthType.HTTP)
-                                    .gitConnectionType(GitConnectionType.ACCOUNT)
-                                    .delegateSelectors(Collections.singleton("delegateName"))
-                                    .url("https://github.com/wings-software")
-                                    .branchName("master")
-                                    .build();
+    GitConfig gitConfig = GitConfig.builder()
+                              .gitAuthType(GitAuthType.HTTP)
+                              .gitConnectionType(GitConnectionType.ACCOUNT)
+                              .delegateSelectors(Collections.singleton("delegateName"))
+                              .url("https://github.com/wings-software")
+                              .branchName("master")
+                              .build();
     GitStoreDelegateConfig gitStoreDelegateConfig =
-        GitStoreDelegateConfig.builder().branch("master").connectorName("terraform").gitConfigDTO(gitConfigDTO).build();
+        GitStoreDelegateConfig.builder().branch("master").connectorName("terraform").gitConfigDTO(gitConfig).build();
     GitFetchFilesConfig gitFetchFilesConfig = GitFetchFilesConfig.builder()
                                                   .identifier("terraform")
                                                   .gitStoreDelegateConfig(gitStoreDelegateConfig)

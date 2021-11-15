@@ -12,7 +12,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
@@ -51,7 +51,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     GitCommandParams gitCommandParams = (GitCommandParams) parameters;
-    GitConfigDTO gitConfig = ScmConnectorMapper.toGitConfigDTO(gitCommandParams.getGitConfig());
+    GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO(gitCommandParams.getGitConfig());
     gitDecryptionHelper.decryptGitConfig(gitConfig, gitCommandParams.getEncryptionDetails());
     SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
         gitCommandParams.getSshKeySpecDTO(), gitCommandParams.getEncryptionDetails());
@@ -79,7 +79,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   }
 
   private DelegateResponseData handleCommitAndPush(
-      GitCommandParams gitCommandParams, GitConfigDTO gitConfig, SshSessionConfig sshSessionConfig) {
+      GitCommandParams gitCommandParams, GitConfig gitConfig, SshSessionConfig sshSessionConfig) {
     CommitAndPushRequest gitCommitRequest = (CommitAndPushRequest) gitCommandParams.getGitCommandRequest();
     log.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
     CommitAndPushResult gitCommitAndPushResult =

@@ -21,10 +21,10 @@ import io.harness.connector.service.scm.ScmDelegateClient;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpec;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.errorhandling.NGErrorHelper;
@@ -50,8 +50,8 @@ public class GitCommandTaskHandler {
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
 
-  public ConnectorValidationResult validateGitCredentials(GitConfigDTO gitConnector, ScmConnector scmConnector,
-      String accountIdentifier, SshSessionConfig sshSessionConfig) {
+  public ConnectorValidationResult validateGitCredentials(
+      GitConfig gitConnector, ScmConnector scmConnector, String accountIdentifier, SshSessionConfig sshSessionConfig) {
     GitCommandExecutionResponse delegateResponseData;
     try {
       delegateResponseData = (GitCommandExecutionResponse) handleValidateTask(
@@ -71,7 +71,7 @@ public class GitCommandTaskHandler {
   }
 
   public DelegateResponseData handleValidateTask(
-      GitConfigDTO gitConfig, ScmConnector scmConnector, String accountId, SshSessionConfig sshSessionConfig) {
+      GitConfig gitConfig, ScmConnector scmConnector, String accountId, SshSessionConfig sshSessionConfig) {
     log.info("Processing Git command: VALIDATE");
     handleGitValidation(gitConfig, accountId, sshSessionConfig);
     handleApiAccessValidation(scmConnector);
@@ -84,7 +84,7 @@ public class GitCommandTaskHandler {
         .build();
   }
 
-  private void handleGitValidation(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
+  private void handleGitValidation(GitConfig gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
     if (gitConfig.getGitConnectionType() == GitConnectionType.ACCOUNT) {
       if (isNotEmpty(gitConfig.getValidationRepo())) {
         String url = format("%s/%s", stripEnd(gitConfig.getUrl(), "/"), stripStart(gitConfig.getValidationRepo(), "/"));
@@ -101,8 +101,8 @@ public class GitCommandTaskHandler {
       return;
     }
 
-    if (scmConnector instanceof GithubConnectorDTO) {
-      GithubConnectorDTO gitHubConnector = (GithubConnectorDTO) scmConnector;
+    if (scmConnector instanceof GithubConnector) {
+      GithubConnector gitHubConnector = (GithubConnector) scmConnector;
       if (gitHubConnector.getApiAccess().getType() == GITHUB_APP) {
         validateGitHubApp(gitHubConnector);
         return;
@@ -122,9 +122,9 @@ public class GitCommandTaskHandler {
     }
   }
 
-  private void validateGitHubApp(GithubConnectorDTO gitHubConnector) {
-    GithubApiAccessDTO apiAccess = gitHubConnector.getApiAccess();
-    GithubAppSpecDTO apiAccessDTO = (GithubAppSpecDTO) apiAccess.getSpec();
+  private void validateGitHubApp(GithubConnector gitHubConnector) {
+    GithubApiAccess apiAccess = gitHubConnector.getApiAccess();
+    GithubAppSpec apiAccessDTO = (GithubAppSpec) apiAccess.getSpec();
     try {
       gitHubService.getToken(GithubAppConfig.builder()
                                  .appId(apiAccessDTO.getApplicationId())

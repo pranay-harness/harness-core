@@ -8,8 +8,8 @@ import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
 import io.harness.encryption.SecretRefData;
 import io.harness.git.GitClientV2;
 import io.harness.git.model.GitBaseRequest;
@@ -38,15 +38,15 @@ public class NGGitServiceImplTest extends CategoryTest implements MockableTestMi
   @Category(UnitTests.class)
   public void testGetGitBaseRequest() {
     final String accountId = "accountId";
-    GitConfigDTO gitConfigDTO = GitConfigDTO.builder()
-                                    .gitAuth(GitHTTPAuthenticationDTO.builder()
-                                                 .username("username")
-                                                 .passwordRef(SecretRefData.builder().build())
-                                                 .build())
-                                    .gitAuthType(GitAuthType.HTTP)
-                                    .build();
+    GitConfig gitConfig = GitConfig.builder()
+                              .gitAuth(GitHTTPAuthentication.builder()
+                                           .username("username")
+                                           .passwordRef(SecretRefData.builder().build())
+                                           .build())
+                              .gitAuthType(GitAuthType.HTTP)
+                              .build();
     final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
-    ngGitService.setGitBaseRequest(gitConfigDTO, accountId, gitBaseRequest, GitRepositoryType.YAML, null);
+    ngGitService.setGitBaseRequest(gitConfig, accountId, gitBaseRequest, GitRepositoryType.YAML, null);
     assertThat(gitBaseRequest).isNotNull();
     assertThat(gitBaseRequest.getRepoType()).isNotNull();
     assertThat(gitBaseRequest.getAccountId()).isNotNull();

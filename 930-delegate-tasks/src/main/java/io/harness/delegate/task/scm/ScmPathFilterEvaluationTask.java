@@ -10,9 +10,9 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -74,18 +74,18 @@ public class ScmPathFilterEvaluationTask extends AbstractDelegateRunnableTask {
 
   private void decrypt(ScmPathFilterEvaluationTaskParams filterQueryParams) {
     ScmConnector connector = filterQueryParams.getScmConnector();
-    if (GithubConnectorDTO.class.isAssignableFrom(connector.getClass())) {
-      GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) connector;
+    if (GithubConnector.class.isAssignableFrom(connector.getClass())) {
+      GithubConnector githubConnector = (GithubConnector) connector;
       secretDecryptionService.decrypt(
-          githubConnectorDTO.getApiAccess().getSpec(), filterQueryParams.getEncryptedDataDetails());
-    } else if (GitlabConnectorDTO.class.isAssignableFrom(connector.getClass())) {
-      GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) connector;
+          githubConnector.getApiAccess().getSpec(), filterQueryParams.getEncryptedDataDetails());
+    } else if (GitlabConnector.class.isAssignableFrom(connector.getClass())) {
+      GitlabConnector gitlabConnector = (GitlabConnector) connector;
       secretDecryptionService.decrypt(
-          gitlabConnectorDTO.getApiAccess().getSpec(), filterQueryParams.getEncryptedDataDetails());
-    } else if (BitbucketConnectorDTO.class.isAssignableFrom(BitbucketConnectorDTO.class)) {
-      BitbucketConnectorDTO bitbucketConnectorDTO = (BitbucketConnectorDTO) connector;
+          gitlabConnector.getApiAccess().getSpec(), filterQueryParams.getEncryptedDataDetails());
+    } else if (BitbucketConnector.class.isAssignableFrom(BitbucketConnector.class)) {
+      BitbucketConnector bitbucketConnector = (BitbucketConnector) connector;
       secretDecryptionService.decrypt(
-          bitbucketConnectorDTO.getApiAccess().getSpec(), filterQueryParams.getEncryptedDataDetails());
+          bitbucketConnector.getApiAccess().getSpec(), filterQueryParams.getEncryptedDataDetails());
     }
   }
 

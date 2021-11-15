@@ -20,7 +20,7 @@ import io.harness.connector.task.git.GitCommandTaskHandler;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
@@ -60,9 +60,7 @@ public class NGGitCommandTaskTest extends CategoryTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    doNothing()
-        .when(gitDecryptionHelper)
-        .decryptGitConfig(any(GitConfigDTO.class), anyListOf(EncryptedDataDetail.class));
+    doNothing().when(gitDecryptionHelper).decryptGitConfig(any(GitConfig.class), anyListOf(EncryptedDataDetail.class));
     doNothing()
         .when(gitDecryptionHelper)
         .decryptApiAccessConfig(any(ScmConnector.class), anyListOf(EncryptedDataDetail.class));
@@ -84,9 +82,9 @@ public class NGGitCommandTaskTest extends CategoryTest {
     doReturn(gitCommandExecutionResponse)
         .when(gitCommandTaskHandler)
         .handleValidateTask(
-            any(GitConfigDTO.class), any(ScmConnector.class), any(String.class), any(SshSessionConfig.class));
+            any(GitConfig.class), any(ScmConnector.class), any(String.class), any(SshSessionConfig.class));
     TaskParameters params = GitCommandParams.builder()
-                                .gitConfig(GitConfigDTO.builder().build())
+                                .gitConfig(GitConfig.builder().build())
                                 .gitCommandType(GitCommandType.VALIDATE)
                                 .build();
 
@@ -101,10 +99,9 @@ public class NGGitCommandTaskTest extends CategoryTest {
     CommitAndPushResult gitCommitAndPushResult = CommitAndPushResult.builder().build();
     doReturn(gitCommitAndPushResult)
         .when(gitService)
-        .commitAndPush(
-            any(GitConfigDTO.class), any(CommitAndPushRequest.class), anyString(), any(SshSessionConfig.class));
+        .commitAndPush(any(GitConfig.class), any(CommitAndPushRequest.class), anyString(), any(SshSessionConfig.class));
     TaskParameters params = GitCommandParams.builder()
-                                .gitConfig(GitConfigDTO.builder().build())
+                                .gitConfig(GitConfig.builder().build())
                                 .gitCommandType(GitCommandType.COMMIT_AND_PUSH)
                                 .build();
 
@@ -117,10 +114,8 @@ public class NGGitCommandTaskTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testUnsupportedGitOperation() {
-    TaskParameters params = GitCommandParams.builder()
-                                .gitConfig(GitConfigDTO.builder().build())
-                                .gitCommandType(GitCommandType.COMMIT)
-                                .build();
+    TaskParameters params =
+        GitCommandParams.builder().gitConfig(GitConfig.builder().build()).gitCommandType(GitCommandType.COMMIT).build();
 
     GitCommandExecutionResponse response = (GitCommandExecutionResponse) ngGitCommandTask.run(params);
     assertThat(response.getGitCommandStatus()).isEqualTo(GitCommandStatus.FAILURE);

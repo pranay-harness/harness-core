@@ -24,7 +24,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
@@ -83,7 +83,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
                 K8sManifestDelegateConfig.builder()
                     .storeDelegateConfig(
                         GitStoreDelegateConfig.builder()
-                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .gitConfigDTO(GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                             .build())
                     .build())
             .build();
@@ -129,7 +129,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
                 K8sManifestDelegateConfig.builder()
                     .storeDelegateConfig(
                         GitStoreDelegateConfig.builder()
-                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .gitConfigDTO(GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                             .build())
                     .build())
             .build();
@@ -163,7 +163,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
                 K8sManifestDelegateConfig.builder()
                     .storeDelegateConfig(
                         GitStoreDelegateConfig.builder()
-                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .gitConfigDTO(GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                             .build())
                     .build())
             .build();
@@ -202,7 +202,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
                 K8sManifestDelegateConfig.builder()
                     .storeDelegateConfig(
                         GitStoreDelegateConfig.builder()
-                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .gitConfigDTO(GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                             .build())
                     .build())
             .build();
@@ -486,7 +486,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
                 KustomizeManifestDelegateConfig.builder()
                     .storeDelegateConfig(
                         GitStoreDelegateConfig.builder()
-                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .gitConfigDTO(GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                             .build())
                     .pluginPath(pluginPath)
                     .build())
@@ -523,7 +523,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
                 KustomizeManifestDelegateConfig.builder()
                     .storeDelegateConfig(
                         GitStoreDelegateConfig.builder()
-                            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                            .gitConfigDTO(GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                             .build())
                     .pluginPath(pluginPath)
                     .build())

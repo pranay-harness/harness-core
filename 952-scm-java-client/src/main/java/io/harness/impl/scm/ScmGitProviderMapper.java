@@ -7,16 +7,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cistatus.service.GithubAppConfig;
 import io.harness.cistatus.service.GithubService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccess;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpec;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccess;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpec;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.git.GitClientHelper;
 import io.harness.product.ci.scm.proto.BitbucketCloudProvider;
@@ -41,19 +41,19 @@ public class ScmGitProviderMapper {
   }
 
   public Provider mapToSCMGitProvider(ScmConnector scmConnector, boolean debug) {
-    if (scmConnector instanceof GithubConnectorDTO) {
-      return mapToGithubProvider((GithubConnectorDTO) scmConnector, debug);
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
-      return mapToGitLabProvider((GitlabConnectorDTO) scmConnector, debug);
-    } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return mapToBitbucketProvider((BitbucketConnectorDTO) scmConnector, debug);
+    if (scmConnector instanceof GithubConnector) {
+      return mapToGithubProvider((GithubConnector) scmConnector, debug);
+    } else if (scmConnector instanceof GitlabConnector) {
+      return mapToGitLabProvider((GitlabConnector) scmConnector, debug);
+    } else if (scmConnector instanceof BitbucketConnector) {
+      return mapToBitbucketProvider((BitbucketConnector) scmConnector, debug);
     } else {
       throw new NotImplementedException(
           String.format("The scm apis for the provider type %s is not supported", scmConnector.getClass()));
     }
   }
 
-  private Provider mapToBitbucketProvider(BitbucketConnectorDTO bitbucketConnector, boolean debug) {
+  private Provider mapToBitbucketProvider(BitbucketConnector bitbucketConnector, boolean debug) {
     boolean skipVerify = checkScmSkipVerify();
     String bitBucketApiURL = GitClientHelper.getBitBucketApiURL(bitbucketConnector.getUrl());
     Provider.Builder builder = Provider.newBuilder().setEndpoint(bitBucketApiURL).setDebug(debug);
@@ -74,10 +74,10 @@ public class ScmGitProviderMapper {
     return skipVerify;
   }
 
-  private BitbucketCloudProvider createBitbucketCloudProvider(BitbucketConnectorDTO bitbucketConnector) {
-    BitbucketApiAccessDTO apiAccess = bitbucketConnector.getApiAccess();
-    BitbucketUsernameTokenApiAccessDTO bitbucketUsernameTokenApiAccessDTO =
-        (BitbucketUsernameTokenApiAccessDTO) apiAccess.getSpec();
+  private BitbucketCloudProvider createBitbucketCloudProvider(BitbucketConnector bitbucketConnector) {
+    BitbucketApiAccess apiAccess = bitbucketConnector.getApiAccess();
+    BitbucketUsernameTokenApiAccess bitbucketUsernameTokenApiAccessDTO =
+        (BitbucketUsernameTokenApiAccess) apiAccess.getSpec();
     String username = getSecretAsStringFromPlainTextOrSecretRef(
         bitbucketUsernameTokenApiAccessDTO.getUsername(), bitbucketUsernameTokenApiAccessDTO.getUsernameRef());
     String appPassword = String.valueOf(bitbucketUsernameTokenApiAccessDTO.getTokenRef().getDecryptedValue());
@@ -85,10 +85,10 @@ public class ScmGitProviderMapper {
     return BitbucketCloudProvider.newBuilder().setUsername(username).setAppPassword(appPassword).build();
   }
 
-  private BitbucketServerProvider createBitbucketServerProvider(BitbucketConnectorDTO bitbucketConnector) {
-    BitbucketApiAccessDTO apiAccess = bitbucketConnector.getApiAccess();
-    BitbucketUsernameTokenApiAccessDTO bitbucketUsernameTokenApiAccessDTO =
-        (BitbucketUsernameTokenApiAccessDTO) apiAccess.getSpec();
+  private BitbucketServerProvider createBitbucketServerProvider(BitbucketConnector bitbucketConnector) {
+    BitbucketApiAccess apiAccess = bitbucketConnector.getApiAccess();
+    BitbucketUsernameTokenApiAccess bitbucketUsernameTokenApiAccessDTO =
+        (BitbucketUsernameTokenApiAccess) apiAccess.getSpec();
     String username = getSecretAsStringFromPlainTextOrSecretRef(
         bitbucketUsernameTokenApiAccessDTO.getUsername(), bitbucketUsernameTokenApiAccessDTO.getUsernameRef());
     String personalAccessToken = String.valueOf(bitbucketUsernameTokenApiAccessDTO.getTokenRef().getDecryptedValue());
@@ -99,7 +99,7 @@ public class ScmGitProviderMapper {
         .build();
   }
 
-  private Provider mapToGitLabProvider(GitlabConnectorDTO gitlabConnector, boolean debug) {
+  private Provider mapToGitLabProvider(GitlabConnector gitlabConnector, boolean debug) {
     boolean skipVerify = checkScmSkipVerify();
     return Provider.newBuilder()
         .setGitlab(createGitLabProvider(gitlabConnector))
@@ -109,18 +109,18 @@ public class ScmGitProviderMapper {
         .build();
   }
 
-  private GitlabProvider createGitLabProvider(GitlabConnectorDTO gitlabConnector) {
+  private GitlabProvider createGitLabProvider(GitlabConnector gitlabConnector) {
     String accessToken = getAccessToken(gitlabConnector);
     return GitlabProvider.newBuilder().setPersonalToken(accessToken).build();
   }
 
-  private String getAccessToken(GitlabConnectorDTO gitlabConnector) {
-    GitlabApiAccessDTO apiAccess = gitlabConnector.getApiAccess();
-    GitlabTokenSpecDTO apiAccessDTO = (GitlabTokenSpecDTO) apiAccess.getSpec();
+  private String getAccessToken(GitlabConnector gitlabConnector) {
+    GitlabApiAccess apiAccess = gitlabConnector.getApiAccess();
+    GitlabTokenSpec apiAccessDTO = (GitlabTokenSpec) apiAccess.getSpec();
     return String.valueOf(apiAccessDTO.getTokenRef().getDecryptedValue());
   }
 
-  private Provider mapToGithubProvider(GithubConnectorDTO githubConnector, boolean debug) {
+  private Provider mapToGithubProvider(GithubConnector githubConnector, boolean debug) {
     boolean skipVerify = checkScmSkipVerify();
     return Provider.newBuilder()
         .setGithub(createGithubProvider(githubConnector))
@@ -130,7 +130,7 @@ public class ScmGitProviderMapper {
         .build();
   }
 
-  private GithubProvider createGithubProvider(GithubConnectorDTO githubConnector) {
+  private GithubProvider createGithubProvider(GithubConnector githubConnector) {
     switch (githubConnector.getApiAccess().getType()) {
       case GITHUB_APP:
         // todo @aradisavljevic: switch to scm provider for github app after it is implemented
@@ -145,9 +145,9 @@ public class ScmGitProviderMapper {
     }
   }
 
-  private String getAccessTokenFromGithubApp(GithubConnectorDTO githubConnector) {
-    GithubApiAccessDTO apiAccess = githubConnector.getApiAccess();
-    GithubAppSpecDTO apiAccessDTO = (GithubAppSpecDTO) apiAccess.getSpec();
+  private String getAccessTokenFromGithubApp(GithubConnector githubConnector) {
+    GithubApiAccess apiAccess = githubConnector.getApiAccess();
+    GithubAppSpec apiAccessDTO = (GithubAppSpec) apiAccess.getSpec();
     if (githubService == null) {
       throw new NotImplementedException("Token for Github App is only supported on delegate");
     }
@@ -164,9 +164,9 @@ public class ScmGitProviderMapper {
     }
   }
 
-  private String getAccessToken(GithubConnectorDTO githubConnector) {
-    GithubApiAccessDTO apiAccess = githubConnector.getApiAccess();
-    GithubTokenSpecDTO apiAccessDTO = (GithubTokenSpecDTO) apiAccess.getSpec();
+  private String getAccessToken(GithubConnector githubConnector) {
+    GithubApiAccess apiAccess = githubConnector.getApiAccess();
+    GithubTokenSpec apiAccessDTO = (GithubTokenSpec) apiAccess.getSpec();
     if (apiAccessDTO.getTokenRef() == null || apiAccessDTO.getTokenRef().getDecryptedValue() == null) {
       throw new InvalidArgumentsException("The personal access token is not set");
     }

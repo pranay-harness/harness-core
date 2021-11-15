@@ -10,8 +10,8 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthentication;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
@@ -37,7 +37,7 @@ public class GitConfigAuthenticationInfoHelper {
   @Inject SecretCrudService secretCrudService;
 
   public List<EncryptedDataDetail> getEncryptedDataDetails(
-      GitConfigDTO gitConfig, SSHKeySpecDTO sshKeySpecDTO, NGAccess ngAccess) {
+      GitConfig gitConfig, SSHKeySpecDTO sshKeySpecDTO, NGAccess ngAccess) {
     switch (gitConfig.getGitAuthType()) {
       case HTTP:
         return getEncryptionDetail(gitConfig.getGitAuth(), ngAccess);
@@ -61,11 +61,11 @@ public class GitConfigAuthenticationInfoHelper {
   }
 
   public SSHKeySpecDTO getSSHKey(
-      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      GitConfig gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     if (gitConfig.getGitAuthType() != SSH) {
       return null;
     }
-    GitSSHAuthenticationDTO gitAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfig.getGitAuth();
+    GitSSHAuthentication gitAuthenticationDTO = (GitSSHAuthentication) gitConfig.getGitAuth();
     SecretRefData sshKeyRef = gitAuthenticationDTO.getEncryptedSshKey();
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
         SecretRefHelper.getSecretConfigString(sshKeyRef), accountIdentifier, orgIdentifier, projectIdentifier);

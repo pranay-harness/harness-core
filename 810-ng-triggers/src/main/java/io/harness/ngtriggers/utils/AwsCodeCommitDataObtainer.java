@@ -18,7 +18,7 @@ import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentParam
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentTaskResult;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitRequestType;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
 import io.harness.mapper.proto.SCMProtoMessageMapper;
@@ -109,17 +109,16 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
             .accountId(details.getNgTriggerEntity().getAccountId())
             .executionTimeout(Duration.ofSeconds(30))
             .taskType("AWS_CODECOMMIT_API_TASK")
-            .taskParameters(
-                AwsCodeCommitApiTaskParams.builder()
-                    .requestType(AwsCodeCommitRequestType.OBTAIN_AWS_CODECOMMIT_DATA)
-                    .awsCodeCommitConnectorDTO((AwsCodeCommitConnectorDTO) connectorDetails.getConnectorConfig())
-                    .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
-                    .apiParams(AwsCodeCommitDataObtainmentParams.builder()
-                                   .repoArn(repository.getId())
-                                   .triggerUserArn(webhookPayloadData.getWebhookGitUser().getGitId())
-                                   .commitIds(commitIds)
-                                   .build())
-                    .build())
+            .taskParameters(AwsCodeCommitApiTaskParams.builder()
+                                .requestType(AwsCodeCommitRequestType.OBTAIN_AWS_CODECOMMIT_DATA)
+                                .awsCodeCommitConnector((AwsCodeCommitConnector) connectorDetails.getConnectorConfig())
+                                .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
+                                .apiParams(AwsCodeCommitDataObtainmentParams.builder()
+                                               .repoArn(repository.getId())
+                                               .triggerUserArn(webhookPayloadData.getWebhookGitUser().getGitId())
+                                               .commitIds(commitIds)
+                                               .build())
+                                .build())
             .build());
 
     if (BinaryResponseData.class.isAssignableFrom(responseData.getClass())) {

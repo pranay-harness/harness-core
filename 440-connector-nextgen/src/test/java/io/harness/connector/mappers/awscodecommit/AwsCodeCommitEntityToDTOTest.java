@@ -8,12 +8,11 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication;
 import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitConfig;
-import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentials;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
@@ -40,8 +39,12 @@ public class AwsCodeCommitEntityToDTOTest extends CategoryTest {
     String url = "https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test";
     String accessKey = "AKIAIOSFODNN7EXAMPLE";
     String secretKeyRef = ACCOUNT.getYamlRepresentation() + ".secretKeyRef";
-    AwsCodeCommitSecretKeyAccessKey awsCodeCommitSecretKeyAccessKey =
-        AwsCodeCommitSecretKeyAccessKey.builder().accessKey(accessKey).secretKeyRef(secretKeyRef).build();
+    io.harness.connector.entities.embedded.awscodecommitconnector
+        .AwsCodeCommitSecretKeyAccessKey awsCodeCommitSecretKeyAccessKey =
+        io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey.builder()
+            .accessKey(accessKey)
+            .secretKeyRef(secretKeyRef)
+            .build();
     AwsCodeCommitAuthentication awsCodeCommitAuthentication =
         AwsCodeCommitAuthentication.builder()
             .authType(AwsCodeCommitAuthType.HTTPS)
@@ -53,16 +56,16 @@ public class AwsCodeCommitEntityToDTOTest extends CategoryTest {
                                                   .urlType(AwsCodeCommitUrlType.REPO)
                                                   .authentication(awsCodeCommitAuthentication)
                                                   .build();
-    AwsCodeCommitConnectorDTO connectorDTO = awsCodeCommitEntityToDTO.createConnectorDTO(awsCodeCommitConfig);
+    AwsCodeCommitConnector connectorDTO = awsCodeCommitEntityToDTO.createConnectorDTO(awsCodeCommitConfig);
     assertThat(connectorDTO).isNotNull();
     assertThat(connectorDTO.getUrl()).isEqualTo(url);
     assertThat(connectorDTO.getUrlType()).isEqualTo(AwsCodeCommitUrlType.REPO);
     assertThat(connectorDTO.getAuthentication().getAuthType()).isEqualTo(AwsCodeCommitAuthType.HTTPS);
-    assertThat(((AwsCodeCommitHttpsCredentialsDTO) connectorDTO.getAuthentication().getCredentials()).getType())
+    assertThat(((AwsCodeCommitHttpsCredentials) connectorDTO.getAuthentication().getCredentials()).getType())
         .isEqualTo(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY);
-    AwsCodeCommitSecretKeyAccessKeyDTO secretKeyAccessKeyDTO =
-        (AwsCodeCommitSecretKeyAccessKeyDTO) ((AwsCodeCommitHttpsCredentialsDTO) connectorDTO.getAuthentication()
-                                                  .getCredentials())
+    AwsCodeCommitSecretKeyAccessKey secretKeyAccessKeyDTO =
+        (AwsCodeCommitSecretKeyAccessKey) ((AwsCodeCommitHttpsCredentials) connectorDTO.getAuthentication()
+                                               .getCredentials())
             .getHttpCredentialsSpec();
 
     assertThat(secretKeyAccessKeyDTO.getAccessKey()).isEqualTo(accessKey);

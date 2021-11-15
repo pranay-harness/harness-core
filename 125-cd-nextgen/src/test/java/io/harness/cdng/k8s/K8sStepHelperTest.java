@@ -89,13 +89,13 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthentication;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentials;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
@@ -412,10 +412,9 @@ public class K8sStepHelperTest extends CategoryTest {
                        .build())
             .build();
 
-    doReturn(
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).build())
-                        .build()))
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfig.builder().build()).build())
+                             .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -450,10 +449,9 @@ public class K8sStepHelperTest extends CategoryTest {
             .commandFlags(commandFlags)
             .build();
 
-    doReturn(
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).build())
-                        .build()))
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfig.builder().build()).build())
+                             .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -517,10 +515,9 @@ public class K8sStepHelperTest extends CategoryTest {
             .pluginPath(ParameterField.createValueField("/usr/bin/kustomize"))
             .build();
 
-    doReturn(
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).build())
-                        .build()))
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfig.builder().build()).build())
+                             .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -583,9 +580,9 @@ public class K8sStepHelperTest extends CategoryTest {
                                         .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
-    GitConfigDTO gitConfigDTO =
-        GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
-    connectorInfoDTO.setConnectorConfig(gitConfigDTO);
+    GitConfig gitConfig =
+        GitConfig.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
+    connectorInfoDTO.setConnectorConfig(gitConfig);
 
     doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
 
@@ -593,8 +590,8 @@ public class K8sStepHelperTest extends CategoryTest {
         gitStoreConfig, connectorInfoDTO, K8sManifestOutcome.builder().build(), paths, ambiance);
 
     assertThat(gitStoreDelegateConfig).isNotNull();
-    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
-    GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfig.class);
+    GitConfig convertedConfig = (GitConfig) gitStoreDelegateConfig.getGitConfigDTO();
     assertThat(convertedConfig.getUrl()).isEqualTo("http://localhost/parent-repo/module");
     assertThat(convertedConfig.getGitConnectionType()).isEqualTo(GitConnectionType.REPO);
   }
@@ -611,13 +608,13 @@ public class K8sStepHelperTest extends CategoryTest {
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
     List<EncryptedDataDetail> apiEncryptedDataDetails = new ArrayList<>();
-    GithubConnectorDTO githubConnectorDTO =
-        GithubConnectorDTO.builder()
+    GithubConnector githubConnector =
+        GithubConnector.builder()
             .connectionType(GitConnectionType.ACCOUNT)
             .url("http://localhost")
-            .authentication(GithubAuthenticationDTO.builder()
+            .authentication(GithubAuthentication.builder()
                                 .authType(GitAuthType.HTTP)
-                                .credentials(GithubHttpCredentialsDTO.builder()
+                                .credentials(GithubHttpCredentials.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_TOKEN)
                                                  .httpCredentialsSpec(GithubUsernameToken.builder()
                                                                           .username("usermane")
@@ -626,7 +623,7 @@ public class K8sStepHelperTest extends CategoryTest {
                                                  .build())
                                 .build())
             .build();
-    connectorInfoDTO.setConnectorConfig(githubConnectorDTO);
+    connectorInfoDTO.setConnectorConfig(githubConnector);
 
     doReturn(true).when(cdFeatureFlagHelper).isEnabled(any(), eq(OPTIMIZED_GIT_FETCH_FILES));
     doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
@@ -637,12 +634,12 @@ public class K8sStepHelperTest extends CategoryTest {
 
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.isOptimizedFilesFetch()).isTrue();
-    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GithubConnectorDTO.class);
+    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GithubConnector.class);
     assertThat(gitStoreDelegateConfig.getApiAuthEncryptedDataDetails()).isEqualTo(apiEncryptedDataDetails);
-    GithubConnectorDTO convertedGithubConnectorDTO = (GithubConnectorDTO) gitStoreDelegateConfig.getGitConfigDTO();
-    assertThat(convertedGithubConnectorDTO.getUrl()).isEqualTo("http://localhost/parent-repo/module");
-    assertThat(convertedGithubConnectorDTO.getConnectionType()).isEqualTo(GitConnectionType.REPO);
-    assertThat(convertedGithubConnectorDTO.getApiAccess()).isNotNull();
+    GithubConnector convertedGithubConnector = (GithubConnector) gitStoreDelegateConfig.getGitConfigDTO();
+    assertThat(convertedGithubConnector.getUrl()).isEqualTo("http://localhost/parent-repo/module");
+    assertThat(convertedGithubConnector.getConnectionType()).isEqualTo(GitConnectionType.REPO);
+    assertThat(convertedGithubConnector.getApiAccess()).isNotNull();
   }
 
   @Test
@@ -657,14 +654,14 @@ public class K8sStepHelperTest extends CategoryTest {
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
     List<EncryptedDataDetail> apiEncryptedDataDetails = new ArrayList<>();
-    GithubConnectorDTO githubConnectorDTO =
-        GithubConnectorDTO.builder()
+    GithubConnector githubConnector =
+        GithubConnector.builder()
             .connectionType(GitConnectionType.ACCOUNT)
             .url("http://localhost")
-            .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
-            .authentication(GithubAuthenticationDTO.builder()
+            .apiAccess(GithubApiAccess.builder().spec(GithubTokenSpec.builder().build()).build())
+            .authentication(GithubAuthentication.builder()
                                 .authType(GitAuthType.HTTP)
-                                .credentials(GithubHttpCredentialsDTO.builder()
+                                .credentials(GithubHttpCredentials.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
                                                  .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                                           .username("usermane")
@@ -673,7 +670,7 @@ public class K8sStepHelperTest extends CategoryTest {
                                                  .build())
                                 .build())
             .build();
-    connectorInfoDTO.setConnectorConfig(githubConnectorDTO);
+    connectorInfoDTO.setConnectorConfig(githubConnector);
 
     doReturn(true).when(cdFeatureFlagHelper).isEnabled(any(), eq(OPTIMIZED_GIT_FETCH_FILES));
     doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
@@ -684,12 +681,12 @@ public class K8sStepHelperTest extends CategoryTest {
 
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.isOptimizedFilesFetch()).isTrue();
-    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GithubConnectorDTO.class);
+    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GithubConnector.class);
     assertThat(gitStoreDelegateConfig.getApiAuthEncryptedDataDetails()).isEqualTo(apiEncryptedDataDetails);
-    GithubConnectorDTO convertedGithubConnectorDTO = (GithubConnectorDTO) gitStoreDelegateConfig.getGitConfigDTO();
-    assertThat(convertedGithubConnectorDTO.getUrl()).isEqualTo("http://localhost/parent-repo/module");
-    assertThat(convertedGithubConnectorDTO.getConnectionType()).isEqualTo(GitConnectionType.REPO);
-    assertThat(convertedGithubConnectorDTO.getApiAccess()).isNotNull();
+    GithubConnector convertedGithubConnector = (GithubConnector) gitStoreDelegateConfig.getGitConfigDTO();
+    assertThat(convertedGithubConnector.getUrl()).isEqualTo("http://localhost/parent-repo/module");
+    assertThat(convertedGithubConnector.getConnectionType()).isEqualTo(GitConnectionType.REPO);
+    assertThat(convertedGithubConnector.getApiAccess()).isNotNull();
   }
 
   @Test
@@ -703,9 +700,9 @@ public class K8sStepHelperTest extends CategoryTest {
                                         .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
-    GitConfigDTO gitConfigDTO =
-        GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
-    connectorInfoDTO.setConnectorConfig(gitConfigDTO);
+    GitConfig gitConfig =
+        GitConfig.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
+    connectorInfoDTO.setConnectorConfig(gitConfig);
 
     doReturn(true).when(cdFeatureFlagHelper).isEnabled(any(), eq(OPTIMIZED_GIT_FETCH_FILES));
     doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
@@ -714,9 +711,9 @@ public class K8sStepHelperTest extends CategoryTest {
         gitStoreConfig, connectorInfoDTO, K8sManifestOutcome.builder().build(), paths, ambiance);
 
     assertThat(gitStoreDelegateConfig).isNotNull();
-    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
+    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfig.class);
     assertThat(gitStoreDelegateConfig.isOptimizedFilesFetch()).isFalse();
-    GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+    GitConfig convertedConfig = (GitConfig) gitStoreDelegateConfig.getGitConfigDTO();
     assertThat(convertedConfig.getUrl()).isEqualTo("http://localhost/parent-repo/module");
     assertThat(convertedConfig.getGitConnectionType()).isEqualTo(GitConnectionType.REPO);
   }
@@ -732,13 +729,13 @@ public class K8sStepHelperTest extends CategoryTest {
                                         .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
-    GithubConnectorDTO githubConnectorDTO =
-        GithubConnectorDTO.builder()
+    GithubConnector githubConnector =
+        GithubConnector.builder()
             .connectionType(GitConnectionType.ACCOUNT)
             .url("http://localhost")
-            .authentication(GithubAuthenticationDTO.builder()
+            .authentication(GithubAuthentication.builder()
                                 .authType(GitAuthType.HTTP)
-                                .credentials(GithubHttpCredentialsDTO.builder()
+                                .credentials(GithubHttpCredentials.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
                                                  .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                                           .username("usermane")
@@ -747,7 +744,7 @@ public class K8sStepHelperTest extends CategoryTest {
                                                  .build())
                                 .build())
             .build();
-    connectorInfoDTO.setConnectorConfig(githubConnectorDTO);
+    connectorInfoDTO.setConnectorConfig(githubConnector);
 
     doReturn(true).when(cdFeatureFlagHelper).isEnabled(any(), eq(OPTIMIZED_GIT_FETCH_FILES));
     doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
@@ -756,9 +753,9 @@ public class K8sStepHelperTest extends CategoryTest {
         gitStoreConfig, connectorInfoDTO, K8sManifestOutcome.builder().build(), paths, ambiance);
 
     assertThat(gitStoreDelegateConfig).isNotNull();
-    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
+    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfig.class);
     assertThat(gitStoreDelegateConfig.isOptimizedFilesFetch()).isFalse();
-    GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+    GitConfig convertedConfig = (GitConfig) gitStoreDelegateConfig.getGitConfigDTO();
     assertThat(convertedConfig.getUrl()).isEqualTo("http://localhost/parent-repo/module");
     assertThat(convertedConfig.getGitConnectionType()).isEqualTo(GitConnectionType.REPO);
   }
@@ -774,9 +771,9 @@ public class K8sStepHelperTest extends CategoryTest {
                                         .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
-    GitConfigDTO gitConfigDTO =
-        GitConfigDTO.builder().gitConnectionType(GitConnectionType.REPO).url("http://localhost/repository").build();
-    connectorInfoDTO.setConnectorConfig(gitConfigDTO);
+    GitConfig gitConfig =
+        GitConfig.builder().gitConnectionType(GitConnectionType.REPO).url("http://localhost/repository").build();
+    connectorInfoDTO.setConnectorConfig(gitConfig);
 
     doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
 
@@ -784,8 +781,8 @@ public class K8sStepHelperTest extends CategoryTest {
         gitStoreConfig, connectorInfoDTO, K8sManifestOutcome.builder().build(), paths, ambiance);
 
     assertThat(gitStoreDelegateConfig).isNotNull();
-    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
-    GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfig.class);
+    GitConfig convertedConfig = (GitConfig) gitStoreDelegateConfig.getGitConfigDTO();
     assertThat(convertedConfig.getUrl()).isEqualTo("http://localhost/repository");
     assertThat(convertedConfig.getGitConnectionType()).isEqualTo(GitConnectionType.REPO);
   }
@@ -798,9 +795,9 @@ public class K8sStepHelperTest extends CategoryTest {
     GitStoreConfig gitStoreConfig = GithubStore.builder().paths(ParameterField.createValueField(paths)).build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
-    GitConfigDTO gitConfigDTO =
-        GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
-    connectorInfoDTO.setConnectorConfig(gitConfigDTO);
+    GitConfig gitConfig =
+        GitConfig.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
+    connectorInfoDTO.setConnectorConfig(gitConfig);
 
     doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
     try {
@@ -825,9 +822,8 @@ public class K8sStepHelperTest extends CategoryTest {
                                         .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
-    GitConfigDTO gitConfigDTO =
-        GitConfigDTO.builder().gitConnectionType(GitConnectionType.REPO).url("http://localhost").build();
-    connectorInfoDTO.setConnectorConfig(gitConfigDTO);
+    GitConfig gitConfig = GitConfig.builder().gitConnectionType(GitConnectionType.REPO).url("http://localhost").build();
+    connectorInfoDTO.setConnectorConfig(gitConfig);
 
     doReturn(sshKeySpecDTO).when(gitConfigAuthenticationInfoHelper).getSSHKey(any(), any(), any(), any());
 
@@ -853,10 +849,9 @@ public class K8sStepHelperTest extends CategoryTest {
                        .build())
             .build();
 
-    doReturn(
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).build())
-                        .build()))
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfig.builder().build()).build())
+                             .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -1100,15 +1095,14 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(manifestsOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
-    doReturn(
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder()
-                                       .connectorConfig(
-                                           GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
-                                       .name("test")
-                                       .build())
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder()
+                                            .connectorConfig(
+                                                GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                                            .name("test")
+                                            .build())
 
-                        .build()))
+                             .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -1171,14 +1165,13 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(manifestsOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
-    doReturn(
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder()
-                                       .connectorConfig(
-                                           GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
-                                       .name("test")
-                                       .build())
-                        .build()))
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder()
+                                            .connectorConfig(
+                                                GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                                            .name("test")
+                                            .build())
+                             .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -1755,15 +1748,14 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(optionalOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
-    doReturn(
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder()
-                                       .connectorConfig(
-                                           GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
-                                       .name("test")
-                                       .build())
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder()
+                                            .connectorConfig(
+                                                GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                                            .name("test")
+                                            .build())
 
-                        .build()))
+                             .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -2045,15 +2037,14 @@ public class K8sStepHelperTest extends CategoryTest {
 
     doReturn(manifestsOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
-    doReturn(
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder()
-                                       .connectorConfig(
-                                           GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
-                                       .name("test")
-                                       .build())
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder()
+                                            .connectorConfig(
+                                                GitConfig.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
+                                            .name("test")
+                                            .build())
 
-                        .build()))
+                             .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
     when(k8sStepExecutor.executeK8sTask(any(), any(), any(), any(), any(), anyBoolean(), any()))

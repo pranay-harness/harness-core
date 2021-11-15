@@ -3,7 +3,7 @@ package io.harness.delegate.beans.connector.awscodecommitconnector;
 import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -22,7 +22,7 @@ import lombok.EqualsAndHashCode;
 public class AwsCodeCommitValidationParams
     extends ConnectorCapabilityBaseHelper implements ConnectorValidationParams, ExecutionCapabilityDemander {
   private final String AWS_URL = "https://aws.amazon.com/";
-  private AwsCodeCommitConnectorDTO awsConnector;
+  private AwsCodeCommitConnector awsConnector;
   private List<EncryptedDataDetail> encryptionDetails;
   private String connectorName;
 

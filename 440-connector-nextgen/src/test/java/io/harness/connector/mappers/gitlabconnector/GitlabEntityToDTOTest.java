@@ -7,21 +7,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication;
-import io.harness.connector.entities.embedded.gitlabconnector.GitlabKerberos;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess;
-import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccess;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthentication;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentials;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberos;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpec;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePassword;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
@@ -51,33 +48,33 @@ public class GitlabEntityToDTOTest extends CategoryTest {
     final String privateKeyRef = "privateKeyRef";
     final String validationRepo = "validationRepo";
 
-    final GitlabAuthenticationDTO gitlabAuthenticationDTO =
-        GitlabAuthenticationDTO.builder()
+    final GitlabAuthentication gitlabAuthentication =
+        GitlabAuthentication.builder()
             .authType(HTTP)
-            .credentials(GitlabHttpCredentialsDTO.builder()
+            .credentials(GitlabHttpCredentials.builder()
                              .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GitlabUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(GitlabUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .username(username)
                                                       .build())
                              .build())
             .build();
 
-    final GitlabApiAccessDTO gitlabApiAccessDTO =
-        GitlabApiAccessDTO.builder()
+    final GitlabApiAccess gitlabApiAccess =
+        GitlabApiAccess.builder()
             .type(GitlabApiAccessType.TOKEN)
-            .spec(GitlabTokenSpecDTO.builder().tokenRef(SecretRefHelper.createSecretRef(privateKeyRef)).build())
+            .spec(GitlabTokenSpec.builder().tokenRef(SecretRefHelper.createSecretRef(privateKeyRef)).build())
             .build();
-    final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
-                                                      .url(url)
-                                                      .validationRepo(validationRepo)
-                                                      .connectionType(GitConnectionType.ACCOUNT)
-                                                      .authentication(gitlabAuthenticationDTO)
-                                                      .apiAccess(gitlabApiAccessDTO)
-                                                      .build();
+    final GitlabConnector gitlabConnectorDTO = GitlabConnector.builder()
+                                                   .url(url)
+                                                   .validationRepo(validationRepo)
+                                                   .connectionType(GitConnectionType.ACCOUNT)
+                                                   .authentication(gitlabAuthentication)
+                                                   .apiAccess(gitlabApiAccess)
+                                                   .build();
 
-    final GitlabConnector gitlabConnector1 =
-        GitlabConnector.builder()
+    final io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector gitlabConnector1 =
+        io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector.builder()
             .hasApiAccess(true)
             .url(url)
             .validationRepo(validationRepo)
@@ -87,10 +84,13 @@ public class GitlabEntityToDTOTest extends CategoryTest {
             .authenticationDetails(
                 GitlabHttpAuthentication.builder()
                     .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                    .auth(GitlabUsernamePassword.builder().username(username).passwordRef(passwordRef).build())
+                    .auth(io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword.builder()
+                              .username(username)
+                              .passwordRef(passwordRef)
+                              .build())
                     .build())
             .build();
-    final GitlabConnectorDTO gitlabConnector = gitlabEntityToDTO.createConnectorDTO(gitlabConnector1);
+    final GitlabConnector gitlabConnector = gitlabEntityToDTO.createConnectorDTO(gitlabConnector1);
     ObjectMapper objectMapper = new ObjectMapper();
     assertThat(objectMapper.readTree(objectMapper.writeValueAsString(gitlabConnector)))
         .isEqualTo(objectMapper.readTree(objectMapper.writeValueAsString(gitlabConnectorDTO)));
@@ -103,42 +103,45 @@ public class GitlabEntityToDTOTest extends CategoryTest {
     final String url = "url";
     final String tokenKeyRef = "privateKeyRef";
 
-    final GitlabAuthenticationDTO gitlabAuthenticationDTO =
-        GitlabAuthenticationDTO.builder()
+    final GitlabAuthentication gitlabAuthentication =
+        GitlabAuthentication.builder()
             .authType(HTTP)
-            .credentials(GitlabHttpCredentialsDTO.builder()
-                             .type(GitlabHttpAuthenticationType.KERBEROS)
-                             .httpCredentialsSpec(GitlabKerberosDTO.builder()
-                                                      .kerberosKeyRef(SecretRefHelper.createSecretRef(tokenKeyRef))
-                                                      .build())
-                             .build())
+            .credentials(
+                GitlabHttpCredentials.builder()
+                    .type(GitlabHttpAuthenticationType.KERBEROS)
+                    .httpCredentialsSpec(
+                        GitlabKerberos.builder().kerberosKeyRef(SecretRefHelper.createSecretRef(tokenKeyRef)).build())
+                    .build())
             .build();
 
-    final GitlabApiAccessDTO gitlabApiAccessDTO =
-        GitlabApiAccessDTO.builder()
+    final GitlabApiAccess gitlabApiAccess =
+        GitlabApiAccess.builder()
             .type(GitlabApiAccessType.TOKEN)
-            .spec(GitlabTokenSpecDTO.builder().tokenRef(SecretRefHelper.createSecretRef(tokenKeyRef)).build())
+            .spec(GitlabTokenSpec.builder().tokenRef(SecretRefHelper.createSecretRef(tokenKeyRef)).build())
             .build();
-    final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
-                                                      .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
-                                                      .authentication(gitlabAuthenticationDTO)
-                                                      .apiAccess(gitlabApiAccessDTO)
-                                                      .build();
+    final GitlabConnector gitlabConnectorDTO = GitlabConnector.builder()
+                                                   .url(url)
+                                                   .connectionType(GitConnectionType.REPO)
+                                                   .authentication(gitlabAuthentication)
+                                                   .apiAccess(gitlabApiAccess)
+                                                   .build();
 
-    final GitlabConnector gitlabConnector1 =
-        GitlabConnector.builder()
+    final io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector gitlabConnector1 =
+        io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector.builder()
             .hasApiAccess(true)
             .url(url)
             .gitlabApiAccess(GitlabTokenApiAccess.builder().tokenRef(tokenKeyRef).build())
             .connectionType(GitConnectionType.REPO)
             .authType(HTTP)
-            .authenticationDetails(GitlabHttpAuthentication.builder()
-                                       .type(GitlabHttpAuthenticationType.KERBEROS)
-                                       .auth(GitlabKerberos.builder().kerberosKeyRef(tokenKeyRef).build())
-                                       .build())
+            .authenticationDetails(
+                GitlabHttpAuthentication.builder()
+                    .type(GitlabHttpAuthenticationType.KERBEROS)
+                    .auth(io.harness.connector.entities.embedded.gitlabconnector.GitlabKerberos.builder()
+                              .kerberosKeyRef(tokenKeyRef)
+                              .build())
+                    .build())
             .build();
-    final GitlabConnectorDTO gitlabConnector = gitlabEntityToDTO.createConnectorDTO(gitlabConnector1);
+    final GitlabConnector gitlabConnector = gitlabEntityToDTO.createConnectorDTO(gitlabConnector1);
     ObjectMapper objectMapper = new ObjectMapper();
     assertThat(objectMapper.readTree(objectMapper.writeValueAsString(gitlabConnector)))
         .isEqualTo(objectMapper.readTree(objectMapper.writeValueAsString(gitlabConnectorDTO)));

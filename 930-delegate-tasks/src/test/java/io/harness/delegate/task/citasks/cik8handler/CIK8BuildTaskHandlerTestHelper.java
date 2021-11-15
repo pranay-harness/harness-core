@@ -26,8 +26,8 @@ import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthentication;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
@@ -171,13 +171,13 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static ConnectorDetails getGitConnector() {
     return ConnectorDetails.builder()
         .connectorType(ConnectorType.GIT)
-        .connectorConfig(GitConfigDTO.builder()
-                             .gitAuthType(GitAuthType.SSH)
-                             .gitAuth(GitSSHAuthenticationDTO.builder()
-                                          .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
-                                          .build())
-                             .url(gitSshRepoUrl)
-                             .build())
+        .connectorConfig(
+            GitConfig.builder()
+                .gitAuthType(GitAuthType.SSH)
+                .gitAuth(
+                    GitSSHAuthentication.builder().encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey)).build())
+                .url(gitSshRepoUrl)
+                .build())
         .build();
   }
 

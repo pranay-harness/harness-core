@@ -6,7 +6,7 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
@@ -66,14 +66,14 @@ public class TerraformTaskNGParameters
     log.info("Adding Required Execution Capabilities");
     if (configFile != null) {
       capabilities.add(GitConnectionNGCapability.builder()
-                           .gitConfig((GitConfigDTO) configFile.getGitStoreDelegateConfig().getGitConfigDTO())
+                           .gitConfig((GitConfig) configFile.getGitStoreDelegateConfig().getGitConfigDTO())
                            .encryptedDataDetails(configFile.getGitStoreDelegateConfig().getEncryptedDataDetails())
                            .sshKeySpecDTO(configFile.getGitStoreDelegateConfig().getSshKeySpecDTO())
                            .build());
 
-      GitConfigDTO gitConfigDTO = (GitConfigDTO) configFile.getGitStoreDelegateConfig().getGitConfigDTO();
-      if (isNotEmpty(gitConfigDTO.getDelegateSelectors())) {
-        capabilities.add(SelectorCapability.builder().selectors(gitConfigDTO.getDelegateSelectors()).build());
+      GitConfig gitConfig = (GitConfig) configFile.getGitStoreDelegateConfig().getGitConfigDTO();
+      if (isNotEmpty(gitConfig.getDelegateSelectors())) {
+        capabilities.add(SelectorCapability.builder().selectors(gitConfig.getDelegateSelectors()).build());
       }
     }
     if (varFileInfos != null && isNotEmpty(varFileInfos)) {
@@ -82,14 +82,14 @@ public class TerraformTaskNGParameters
           GitFetchFilesConfig gitFetchFilesConfig = ((RemoteTerraformVarFileInfo) varFileInfo).getGitFetchFilesConfig();
           capabilities.add(
               GitConnectionNGCapability.builder()
-                  .gitConfig((GitConfigDTO) gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO())
+                  .gitConfig((GitConfig) gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO())
                   .encryptedDataDetails(gitFetchFilesConfig.getGitStoreDelegateConfig().getEncryptedDataDetails())
                   .sshKeySpecDTO(gitFetchFilesConfig.getGitStoreDelegateConfig().getSshKeySpecDTO())
                   .build());
 
-          GitConfigDTO gitConfigDTO = (GitConfigDTO) gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO();
-          if (isNotEmpty(gitConfigDTO.getDelegateSelectors())) {
-            capabilities.add(SelectorCapability.builder().selectors(gitConfigDTO.getDelegateSelectors()).build());
+          GitConfig gitConfig = (GitConfig) gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO();
+          if (isNotEmpty(gitConfig.getDelegateSelectors())) {
+            capabilities.add(SelectorCapability.builder().selectors(gitConfig.getDelegateSelectors()).build());
           }
         }
       }

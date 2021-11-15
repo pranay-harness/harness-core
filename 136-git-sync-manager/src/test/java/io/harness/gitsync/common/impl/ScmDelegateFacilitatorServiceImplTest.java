@@ -18,8 +18,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.task.scm.GitFileTaskResponseData;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
@@ -69,8 +69,7 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
     when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(Collections.emptyList());
-    GithubConnectorDTO githubConnector =
-        GithubConnectorDTO.builder().apiAccess(GithubApiAccessDTO.builder().build()).build();
+    GithubConnector githubConnector = GithubConnector.builder().apiAccess(GithubApiAccess.builder().build()).build();
     ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder().connectorConfig(githubConnector).build();
     doReturn(Optional.of(ConnectorResponseDTO.builder().connector(connectorInfo).build()))
         .when(connectorService)

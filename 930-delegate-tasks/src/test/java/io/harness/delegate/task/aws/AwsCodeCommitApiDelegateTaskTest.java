@@ -26,8 +26,8 @@ import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiTaskResponse;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentParams;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentTaskResult;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitRequestType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -72,8 +72,8 @@ public class AwsCodeCommitApiDelegateTaskTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldObtainAwsCodeCommitDataSuccess() {
-    AwsCodeCommitConnectorDTO awsCodeCommitConnectorDTO =
-        AwsCodeCommitConnectorDTO.builder().authentication(AwsCodeCommitAuthenticationDTO.builder().build()).build();
+    AwsCodeCommitConnector awsCodeCommitConnector =
+        AwsCodeCommitConnector.builder().authentication(AwsCodeCommitAuthentication.builder().build()).build();
     AwsCodeCommitDataObtainmentParams awsCodeCommitDataObtainmentParams =
         AwsCodeCommitDataObtainmentParams.builder()
             .triggerUserArn("arn:aws:iam::123456789012:user/Development/product_1234/*")
@@ -82,7 +82,7 @@ public class AwsCodeCommitApiDelegateTaskTest extends CategoryTest {
             .build();
     AwsCodeCommitApiTaskParams taskParams = AwsCodeCommitApiTaskParams.builder()
                                                 .apiParams(awsCodeCommitDataObtainmentParams)
-                                                .awsCodeCommitConnectorDTO(awsCodeCommitConnectorDTO)
+                                                .awsCodeCommitConnector(awsCodeCommitConnector)
                                                 .requestType(AwsCodeCommitRequestType.OBTAIN_AWS_CODECOMMIT_DATA)
                                                 .encryptedDataDetails(Collections.emptyList())
                                                 .build();
@@ -153,8 +153,8 @@ public class AwsCodeCommitApiDelegateTaskTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldObtainAwsCodeCommitDataFailure() {
-    AwsCodeCommitConnectorDTO awsCodeCommitConnectorDTO =
-        AwsCodeCommitConnectorDTO.builder().authentication(AwsCodeCommitAuthenticationDTO.builder().build()).build();
+    AwsCodeCommitConnector awsCodeCommitConnector =
+        AwsCodeCommitConnector.builder().authentication(AwsCodeCommitAuthentication.builder().build()).build();
     AwsCodeCommitDataObtainmentParams awsCodeCommitDataObtainmentParams =
         AwsCodeCommitDataObtainmentParams.builder()
             .triggerUserArn("arn:aws:iam::123456789012:user/Development/product_1234/*")
@@ -163,7 +163,7 @@ public class AwsCodeCommitApiDelegateTaskTest extends CategoryTest {
             .build();
     AwsCodeCommitApiTaskParams taskParams = AwsCodeCommitApiTaskParams.builder()
                                                 .apiParams(awsCodeCommitDataObtainmentParams)
-                                                .awsCodeCommitConnectorDTO(awsCodeCommitConnectorDTO)
+                                                .awsCodeCommitConnector(awsCodeCommitConnector)
                                                 .requestType(AwsCodeCommitRequestType.OBTAIN_AWS_CODECOMMIT_DATA)
                                                 .encryptedDataDetails(Collections.emptyList())
                                                 .build();

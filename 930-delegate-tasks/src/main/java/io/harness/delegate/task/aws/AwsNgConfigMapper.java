@@ -18,9 +18,9 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentials;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.govern.Switch;
@@ -122,15 +122,14 @@ public class AwsNgConfigMapper {
   }
 
   public AwsConfig mapAwsCodeCommit(
-      AwsCodeCommitAuthenticationDTO authentication, List<EncryptedDataDetail> encryptionDetails) {
+      AwsCodeCommitAuthentication authentication, List<EncryptedDataDetail> encryptionDetails) {
     AwsConfig awsConfig = null;
 
     if (authentication.getAuthType() == AwsCodeCommitAuthType.HTTPS) {
-      final AwsCodeCommitHttpsCredentialsDTO credentials =
-          (AwsCodeCommitHttpsCredentialsDTO) authentication.getCredentials();
+      final AwsCodeCommitHttpsCredentials credentials = (AwsCodeCommitHttpsCredentials) authentication.getCredentials();
       if (credentials.getType() == ACCESS_KEY_AND_SECRET_KEY) {
-        AwsCodeCommitSecretKeyAccessKeyDTO secretKeyAccessKeyDTO =
-            (AwsCodeCommitSecretKeyAccessKeyDTO) credentials.getHttpCredentialsSpec();
+        AwsCodeCommitSecretKeyAccessKey secretKeyAccessKeyDTO =
+            (AwsCodeCommitSecretKeyAccessKey) credentials.getHttpCredentialsSpec();
 
         secretDecryptionService.decrypt(secretKeyAccessKeyDTO, encryptionDetails);
         final SecretRefData secretKeyRef = secretKeyAccessKeyDTO.getSecretKeyRef();

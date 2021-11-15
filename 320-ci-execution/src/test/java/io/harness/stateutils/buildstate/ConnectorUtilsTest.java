@@ -20,7 +20,7 @@ import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentication;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -97,7 +97,7 @@ public class ConnectorUtilsTest extends CIExecutionTestBase {
 
     when(connectorResourceClient.get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
         .thenReturn(getConnectorResourceCall);
-    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthentication.class)))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId01);
@@ -109,7 +109,7 @@ public class ConnectorUtilsTest extends CIExecutionTestBase {
     assertThat(connectorDetails.getProjectIdentifier())
         .isEqualTo(gitHubConnectorDto.getConnectorInfo().getProjectIdentifier());
     verify(connectorResourceClient, times(1)).get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
-    verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class));
+    verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthentication.class));
   }
 
   @Test
@@ -239,7 +239,7 @@ public class ConnectorUtilsTest extends CIExecutionTestBase {
 
     when(connectorResourceClient.get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
         .thenReturn(getConnectorResourceCall);
-    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthentication.class)))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
     assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId01))
@@ -265,7 +265,7 @@ public class ConnectorUtilsTest extends CIExecutionTestBase {
 
     when(connectorResourceClient.get(eq(unsupportedConnectorId), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
         .thenReturn(getConnectorResourceCall);
-    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthentication.class)))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
     assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, unsupportedConnectorId))
@@ -282,7 +282,7 @@ public class ConnectorUtilsTest extends CIExecutionTestBase {
 
     when(connectorResourceClient.get(eq(connectorId05), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
         .thenReturn(getConnectorResourceCall);
-    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthentication.class)))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId05);
@@ -297,6 +297,6 @@ public class ConnectorUtilsTest extends CIExecutionTestBase {
     assertThat(connectorDetails.getProjectIdentifier())
         .isEqualTo(awsCodeCommitConnectorDto.getConnectorInfo().getProjectIdentifier());
     verify(connectorResourceClient, times(1)).get(eq(connectorId05), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
-    verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class));
+    verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthentication.class));
   }
 }

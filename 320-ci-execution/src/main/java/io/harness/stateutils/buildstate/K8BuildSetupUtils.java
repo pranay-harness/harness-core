@@ -96,21 +96,21 @@ import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentials;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentials;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentials;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentials;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -683,23 +683,23 @@ public class K8BuildSetupUtils {
 
     validateGitConnector(gitConnector);
     if (gitConnector.getConnectorType() == GITHUB) {
-      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      GithubConnector gitConfigDTO = (GithubConnector) gitConnector.getConnectorConfig();
       validateGithubConnectorAuth(gitConfigDTO);
       envVars = retrieveGitSCMEnvVar(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
     } else if (gitConnector.getConnectorType() == GITLAB) {
-      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      GitlabConnector gitConfigDTO = (GitlabConnector) gitConnector.getConnectorConfig();
       validateGitlabConnectorAuth(gitConfigDTO);
       envVars = retrieveGitSCMEnvVar(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
     } else if (gitConnector.getConnectorType() == BITBUCKET) {
-      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      BitbucketConnector gitConfigDTO = (BitbucketConnector) gitConnector.getConnectorConfig();
       validateBitbucketConnectorAuth(gitConfigDTO);
       envVars = retrieveGitSCMEnvVar(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
     } else if (gitConnector.getConnectorType() == CODECOMMIT) {
-      AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
+      AwsCodeCommitConnector gitConfigDTO = (AwsCodeCommitConnector) gitConnector.getConnectorConfig();
       envVars = retrieveAwsCodeCommitEnvVar(gitConfigDTO, ciCodebase);
     } else if (gitConnector.getConnectorType() == GIT) {
-      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-      envVars = retrieveGitEnvVar(gitConfigDTO, ciCodebase);
+      GitConfig gitConfig = (GitConfig) gitConnector.getConnectorConfig();
+      envVars = retrieveGitEnvVar(gitConfig, ciCodebase);
     } else {
       throw new CIStageExecutionException("Unsupported git connector type" + gitConnector.getConnectorType());
     }
@@ -721,10 +721,10 @@ public class K8BuildSetupUtils {
     return envVars;
   }
 
-  private void validateGithubConnectorAuth(GithubConnectorDTO gitConfigDTO) {
+  private void validateGithubConnectorAuth(GithubConnector gitConfigDTO) {
     switch (gitConfigDTO.getAuthentication().getAuthType()) {
       case HTTP:
-        GithubHttpCredentialsDTO gitAuth = (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+        GithubHttpCredentials gitAuth = (GithubHttpCredentials) gitConfigDTO.getAuthentication().getCredentials();
         if (gitAuth.getType() != GithubHttpAuthenticationType.USERNAME_AND_PASSWORD
             && gitAuth.getType() != GithubHttpAuthenticationType.USERNAME_AND_TOKEN) {
           throw new CIStageExecutionException("Unsupported github connector auth type" + gitAuth.getType());
@@ -738,11 +738,10 @@ public class K8BuildSetupUtils {
     }
   }
 
-  private void validateBitbucketConnectorAuth(BitbucketConnectorDTO gitConfigDTO) {
+  private void validateBitbucketConnectorAuth(BitbucketConnector gitConfigDTO) {
     switch (gitConfigDTO.getAuthentication().getAuthType()) {
       case HTTP:
-        BitbucketHttpCredentialsDTO gitAuth =
-            (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+        BitbucketHttpCredentials gitAuth = (BitbucketHttpCredentials) gitConfigDTO.getAuthentication().getCredentials();
         if (gitAuth.getType() != BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD) {
           throw new CIStageExecutionException("Unsupported bitbucket connector auth type" + gitAuth.getType());
         }
@@ -755,10 +754,10 @@ public class K8BuildSetupUtils {
     }
   }
 
-  private void validateGitlabConnectorAuth(GitlabConnectorDTO gitConfigDTO) {
+  private void validateGitlabConnectorAuth(GitlabConnector gitConfigDTO) {
     switch (gitConfigDTO.getAuthentication().getAuthType()) {
       case HTTP:
-        GitlabHttpCredentialsDTO gitAuth = (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+        GitlabHttpCredentials gitAuth = (GitlabHttpCredentials) gitConfigDTO.getAuthentication().getCredentials();
         if (gitAuth.getType() != GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD
             && gitAuth.getType() != GitlabHttpAuthenticationType.USERNAME_AND_TOKEN) {
           throw new CIStageExecutionException("Unsupported gitlab connector auth type" + gitAuth.getType());
@@ -772,28 +771,27 @@ public class K8BuildSetupUtils {
     }
   }
 
-  private Map<String, String> retrieveGitEnvVar(GitConfigDTO gitConfigDTO, CodeBase ciCodebase) {
+  private Map<String, String> retrieveGitEnvVar(GitConfig gitConfig, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
-    String gitUrl =
-        IntegrationStageUtils.getGitURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
+    String gitUrl = IntegrationStageUtils.getGitURL(ciCodebase, gitConfig.getGitConnectionType(), gitConfig.getUrl());
     String domain = GitClientHelper.getGitSCM(gitUrl);
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_NETRC_MACHINE, domain);
-    switch (gitConfigDTO.getGitAuthType()) {
+    switch (gitConfig.getGitAuthType()) {
       case HTTP:
-        GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
+        GitHTTPAuthentication gitAuth = (GitHTTPAuthentication) gitConfig.getGitAuth();
         envVars.put(DRONE_NETRC_USERNAME, gitAuth.getUsername());
         break;
       case SSH:
         break;
       default:
-        throw new CIStageExecutionException("Unsupported bitbucket connector auth" + gitConfigDTO.getGitAuthType());
+        throw new CIStageExecutionException("Unsupported bitbucket connector auth" + gitConfig.getGitAuthType());
     }
     return envVars;
   }
 
-  private Map<String, String> retrieveAwsCodeCommitEnvVar(AwsCodeCommitConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
+  private Map<String, String> retrieveAwsCodeCommitEnvVar(AwsCodeCommitConnector gitConfigDTO, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
     GitConnectionType gitConnectionType =
         gitConfigDTO.getUrlType() == AwsCodeCommitUrlType.REPO ? GitConnectionType.REPO : GitConnectionType.ACCOUNT;
@@ -802,8 +800,8 @@ public class K8BuildSetupUtils {
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_AWS_REGION, getAwsCodeCommitRegion(gitConfigDTO.getUrl()));
     if (gitConfigDTO.getAuthentication().getAuthType() == AwsCodeCommitAuthType.HTTPS) {
-      AwsCodeCommitHttpsCredentialsDTO credentials =
-          (AwsCodeCommitHttpsCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      AwsCodeCommitHttpsCredentials credentials =
+          (AwsCodeCommitHttpsCredentials) gitConfigDTO.getAuthentication().getCredentials();
       if (credentials.getType() != AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY) {
         throw new CIStageExecutionException("Unsupported aws code commit connector auth type" + credentials.getType());
       }

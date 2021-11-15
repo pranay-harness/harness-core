@@ -76,22 +76,22 @@ import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentials;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccess;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentials;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpec;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameToken;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -263,24 +263,24 @@ public class K8sStepHelper {
   public void validateManifest(String manifestStoreType, ConnectorInfoDTO connectorInfoDTO, String message) {
     switch (manifestStoreType) {
       case ManifestStoreType.GIT:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof GitConfigDTO)) {
+        if (!(connectorInfoDTO.getConnectorConfig() instanceof GitConfig)) {
           throw new InvalidRequestException(format("Invalid connector selected in %s. Select Git connector", message));
         }
         break;
       case ManifestStoreType.GITHUB:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof GithubConnectorDTO)) {
+        if (!(connectorInfoDTO.getConnectorConfig() instanceof GithubConnector)) {
           throw new InvalidRequestException(
               format("Invalid connector selected in %s. Select Github connector", message));
         }
         break;
       case ManifestStoreType.GITLAB:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof GitlabConnectorDTO)) {
+        if (!(connectorInfoDTO.getConnectorConfig() instanceof GitlabConnector)) {
           throw new InvalidRequestException(
               format("Invalid connector selected in %s. Select GitLab connector", message));
         }
         break;
       case ManifestStoreType.BITBUCKET:
-        if (!(connectorInfoDTO.getConnectorConfig() instanceof BitbucketConnectorDTO)) {
+        if (!(connectorInfoDTO.getConnectorConfig() instanceof BitbucketConnector)) {
           throw new InvalidRequestException(
               format("Invalid connector selected in %s. Select Bitbucket connector", message));
         }
@@ -431,10 +431,10 @@ public class K8sStepHelper {
     NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
     ScmConnector scmConnector;
     List<EncryptedDataDetail> apiAuthEncryptedDataDetails = null;
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
+    GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
+    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfig, ambiance);
     List<EncryptedDataDetail> encryptedDataDetails =
-        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
+        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfig, sshKeySpecDTO, basicNGAccessObject);
     boolean optimizedFilesFetch = isOptimizedFilesFetch(connectorDTO, AmbianceUtils.getAccountId(ambiance));
 
     if (optimizedFilesFetch) {
@@ -445,7 +445,7 @@ public class K8sStepHelper {
       apiAuthEncryptedDataDetails =
           secretManagerClientService.getEncryptionDetails(basicNGAccessObject, apiAccessDecryptableEntity);
     } else {
-      scmConnector = gitConfigDTO;
+      scmConnector = gitConfig;
     }
 
     convertToRepoGitConfig(gitstoreConfig, scmConnector);
@@ -466,30 +466,30 @@ public class K8sStepHelper {
   }
 
   private void addApiAuthIfRequired(ScmConnector scmConnector) {
-    if (scmConnector instanceof GithubConnectorDTO && ((GithubConnectorDTO) scmConnector).getApiAccess() == null
-        && isGithubUsernameTokenAuth((GithubConnectorDTO) scmConnector)) {
-      GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) scmConnector;
+    if (scmConnector instanceof GithubConnector && ((GithubConnector) scmConnector).getApiAccess() == null
+        && isGithubUsernameTokenAuth((GithubConnector) scmConnector)) {
+      GithubConnector githubConnector = (GithubConnector) scmConnector;
       SecretRefData tokenRef =
-          ((GithubUsernameToken) ((GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials())
+          ((GithubUsernameToken) ((GithubHttpCredentials) githubConnector.getAuthentication().getCredentials())
                   .getHttpCredentialsSpec())
               .getTokenRef();
-      GithubApiAccessDTO apiAccessDTO = GithubApiAccessDTO.builder()
-                                            .type(GithubApiAccessType.TOKEN)
-                                            .spec(GithubTokenSpecDTO.builder().tokenRef(tokenRef).build())
-                                            .build();
-      githubConnectorDTO.setApiAccess(apiAccessDTO);
-    } else if (scmConnector instanceof GitlabConnectorDTO && ((GitlabConnectorDTO) scmConnector).getApiAccess() == null
-        && isGitlabUsernameTokenAuth((GitlabConnectorDTO) scmConnector)) {
-      GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) scmConnector;
+      GithubApiAccess apiAccessDTO = GithubApiAccess.builder()
+                                         .type(GithubApiAccessType.TOKEN)
+                                         .spec(GithubTokenSpec.builder().tokenRef(tokenRef).build())
+                                         .build();
+      githubConnector.setApiAccess(apiAccessDTO);
+    } else if (scmConnector instanceof GitlabConnector && ((GitlabConnector) scmConnector).getApiAccess() == null
+        && isGitlabUsernameTokenAuth((GitlabConnector) scmConnector)) {
+      GitlabConnector gitlabConnector = (GitlabConnector) scmConnector;
       SecretRefData tokenRef =
-          ((GitlabUsernameTokenDTO) ((GitlabHttpCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials())
+          ((GitlabUsernameToken) ((GitlabHttpCredentials) gitlabConnector.getAuthentication().getCredentials())
                   .getHttpCredentialsSpec())
               .getTokenRef();
-      GitlabApiAccessDTO apiAccessDTO = GitlabApiAccessDTO.builder()
-                                            .type(GitlabApiAccessType.TOKEN)
-                                            .spec(GitlabTokenSpecDTO.builder().tokenRef(tokenRef).build())
-                                            .build();
-      gitlabConnectorDTO.setApiAccess(apiAccessDTO);
+      GitlabApiAccess apiAccessDTO = GitlabApiAccess.builder()
+                                         .type(GitlabApiAccessType.TOKEN)
+                                         .spec(GitlabTokenSpec.builder().tokenRef(tokenRef).build())
+                                         .build();
+      gitlabConnector.setApiAccess(apiAccessDTO);
     }
   }
 
@@ -501,26 +501,26 @@ public class K8sStepHelper {
 
   private void convertToRepoGitConfig(GitStoreConfig gitstoreConfig, ScmConnector scmConnector) {
     String repoName = gitstoreConfig.getRepoName() != null ? gitstoreConfig.getRepoName().getValue() : null;
-    if (scmConnector instanceof GitConfigDTO) {
-      GitConfigDTO gitConfigDTO = (GitConfigDTO) scmConnector;
-      if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT) {
-        String repoUrl = getGitRepoUrl(gitConfigDTO, repoName);
-        gitConfigDTO.setUrl(repoUrl);
-        gitConfigDTO.setGitConnectionType(GitConnectionType.REPO);
+    if (scmConnector instanceof GitConfig) {
+      GitConfig gitConfig = (GitConfig) scmConnector;
+      if (gitConfig.getGitConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(gitConfig, repoName);
+        gitConfig.setUrl(repoUrl);
+        gitConfig.setGitConnectionType(GitConnectionType.REPO);
       }
-    } else if (scmConnector instanceof GithubConnectorDTO) {
-      GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) scmConnector;
-      if (githubConnectorDTO.getConnectionType() == GitConnectionType.ACCOUNT) {
-        String repoUrl = getGitRepoUrl(githubConnectorDTO, repoName);
-        githubConnectorDTO.setUrl(repoUrl);
-        githubConnectorDTO.setConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof GithubConnector) {
+      GithubConnector githubConnector = (GithubConnector) scmConnector;
+      if (githubConnector.getConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(githubConnector, repoName);
+        githubConnector.setUrl(repoUrl);
+        githubConnector.setConnectionType(GitConnectionType.REPO);
       }
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
-      GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) scmConnector;
-      if (gitlabConnectorDTO.getConnectionType() == GitConnectionType.ACCOUNT) {
-        String repoUrl = getGitRepoUrl(gitlabConnectorDTO, repoName);
-        gitlabConnectorDTO.setUrl(repoUrl);
-        gitlabConnectorDTO.setConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof GitlabConnector) {
+      GitlabConnector gitlabConnector = (GitlabConnector) scmConnector;
+      if (gitlabConnector.getConnectionType() == GitConnectionType.ACCOUNT) {
+        String repoUrl = getGitRepoUrl(gitlabConnector, repoName);
+        gitlabConnector.setUrl(repoUrl);
+        gitlabConnector.setConnectionType(GitConnectionType.REPO);
       }
     }
   }
@@ -571,8 +571,8 @@ public class K8sStepHelper {
     return paths;
   }
 
-  private SSHKeySpecDTO getSshKeySpecDTO(GitConfigDTO gitConfigDTO, Ambiance ambiance) {
-    return gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceUtils.getAccountId(ambiance),
+  private SSHKeySpecDTO getSshKeySpecDTO(GitConfig gitConfig, Ambiance ambiance) {
+    return gitConfigAuthenticationInfoHelper.getSSHKey(gitConfig, AmbianceUtils.getAccountId(ambiance),
         AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
   }
 
@@ -581,10 +581,8 @@ public class K8sStepHelper {
     return k8sEntityHelper.getK8sInfraDelegateConfig(infrastructure, ngAccess);
   }
 
-  public List<EncryptedDataDetail> getEncryptedDataDetails(
-      @Nonnull GitConfigDTO gitConfigDTO, @Nonnull Ambiance ambiance) {
-    return secretManagerClientService.getEncryptionDetails(
-        AmbianceUtils.getNgAccess(ambiance), gitConfigDTO.getGitAuth());
+  public List<EncryptedDataDetail> getEncryptedDataDetails(@Nonnull GitConfig gitConfig, @Nonnull Ambiance ambiance) {
+    return secretManagerClientService.getEncryptionDetails(AmbianceUtils.getNgAccess(ambiance), gitConfig.getGitAuth());
   }
 
   public TaskChainResponse queueK8sTask(StepElementParameters stepElementParameters, K8sDeployRequest k8sDeployRequest,
@@ -1370,27 +1368,27 @@ public class K8sStepHelper {
   }
 
   private boolean isGitlabTokenAuth(ScmConnector scmConnector) {
-    return scmConnector instanceof GitlabConnectorDTO
-        && (((GitlabConnectorDTO) scmConnector).getApiAccess() != null
-            || isGitlabUsernameTokenAuth((GitlabConnectorDTO) scmConnector));
+    return scmConnector instanceof GitlabConnector
+        && (((GitlabConnector) scmConnector).getApiAccess() != null
+            || isGitlabUsernameTokenAuth((GitlabConnector) scmConnector));
   }
 
-  private boolean isGitlabUsernameTokenAuth(GitlabConnectorDTO gitlabConnectorDTO) {
-    return gitlabConnectorDTO.getAuthentication().getCredentials() instanceof GitlabHttpCredentialsDTO
-        && ((GitlabHttpCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials())
+  private boolean isGitlabUsernameTokenAuth(GitlabConnector gitlabConnector) {
+    return gitlabConnector.getAuthentication().getCredentials() instanceof GitlabHttpCredentials
+        && ((GitlabHttpCredentials) gitlabConnector.getAuthentication().getCredentials())
                .getType()
                .equals(GitlabHttpAuthenticationType.USERNAME_AND_TOKEN);
   }
 
   private boolean isGithubTokenAuth(ScmConnector scmConnector) {
-    return scmConnector instanceof GithubConnectorDTO
-        && (((GithubConnectorDTO) scmConnector).getApiAccess() != null
-            || isGithubUsernameTokenAuth((GithubConnectorDTO) scmConnector));
+    return scmConnector instanceof GithubConnector
+        && (((GithubConnector) scmConnector).getApiAccess() != null
+            || isGithubUsernameTokenAuth((GithubConnector) scmConnector));
   }
 
-  private boolean isGithubUsernameTokenAuth(GithubConnectorDTO githubConnectorDTO) {
-    return githubConnectorDTO.getAuthentication().getCredentials() instanceof GithubHttpCredentialsDTO
-        && ((GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials())
+  private boolean isGithubUsernameTokenAuth(GithubConnector githubConnector) {
+    return githubConnector.getAuthentication().getCredentials() instanceof GithubHttpCredentials
+        && ((GithubHttpCredentials) githubConnector.getAuthentication().getCredentials())
                .getType()
                .equals(GithubHttpAuthenticationType.USERNAME_AND_TOKEN);
   }

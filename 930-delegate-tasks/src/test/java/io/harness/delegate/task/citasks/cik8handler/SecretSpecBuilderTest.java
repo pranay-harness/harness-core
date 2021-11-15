@@ -25,11 +25,11 @@ import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentials;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
 import io.harness.encryption.Scope;
@@ -181,8 +181,8 @@ public class SecretSpecBuilderTest extends CategoryTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldDecryptGitSecretVariablesForAwsCodeCommitConnector() {
-    AwsCodeCommitSecretKeyAccessKeyDTO awsCodeCommitSecretKeyAccessKeyDTO =
-        AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+    AwsCodeCommitSecretKeyAccessKey awsCodeCommitSecretKeyAccessKeyDTO =
+        AwsCodeCommitSecretKeyAccessKey.builder()
             .accessKey("AKIAIOSFODNN7EXAMPLE")
             .secretKeyRef(SecretRefData.builder()
                               .identifier("secretKeyRefIdentifier")
@@ -190,13 +190,13 @@ public class SecretSpecBuilderTest extends CategoryTest {
                               .decryptedValue("S3CR3TKEYEXAMPLE".toCharArray())
                               .build())
             .build();
-    AwsCodeCommitConnectorDTO awsCodeCommitConnectorDTO =
-        AwsCodeCommitConnectorDTO.builder()
+    AwsCodeCommitConnector awsCodeCommitConnector =
+        AwsCodeCommitConnector.builder()
             .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test")
             .urlType(AwsCodeCommitUrlType.REPO)
-            .authentication(AwsCodeCommitAuthenticationDTO.builder()
+            .authentication(AwsCodeCommitAuthentication.builder()
                                 .authType(AwsCodeCommitAuthType.HTTPS)
-                                .credentials(AwsCodeCommitHttpsCredentialsDTO.builder()
+                                .credentials(AwsCodeCommitHttpsCredentials.builder()
                                                  .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
                                                  .httpCredentialsSpec(awsCodeCommitSecretKeyAccessKeyDTO)
                                                  .build())
@@ -205,9 +205,9 @@ public class SecretSpecBuilderTest extends CategoryTest {
             .build();
     ConnectorDetails connectorDetails = ConnectorDetails.builder()
                                             .connectorType(ConnectorType.CODECOMMIT)
-                                            .connectorConfig(awsCodeCommitConnectorDTO)
+                                            .connectorConfig(awsCodeCommitConnector)
                                             .build();
-    when(secretDecryptionService.decrypt(eq(awsCodeCommitConnectorDTO), any())).thenReturn(awsCodeCommitConnectorDTO);
+    when(secretDecryptionService.decrypt(eq(awsCodeCommitConnector), any())).thenReturn(awsCodeCommitConnector);
     Map<String, SecretParams> gitSecretVariables = secretSpecBuilder.decryptGitSecretVariables(connectorDetails);
     assertThat(gitSecretVariables).containsOnlyKeys("DRONE_AWS_ACCESS_KEY", "DRONE_AWS_SECRET_KEY");
     assertThat(gitSecretVariables.get("DRONE_AWS_ACCESS_KEY"))

@@ -37,7 +37,7 @@ import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -227,17 +227,17 @@ public class K8sTaskNGTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testRunK8sManifestDelegateConfigGit() throws Exception {
-    final GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
+    final GitConfig gitConfig = GitConfig.builder().build();
     final List<EncryptedDataDetail> encryptedDataDetails = singletonList(EncryptedDataDetail.builder().build());
     testRunWithManifest(K8sManifestDelegateConfig.builder()
                             .storeDelegateConfig(GitStoreDelegateConfig.builder()
-                                                     .gitConfigDTO(gitConfigDTO)
+                                                     .gitConfigDTO(gitConfig)
                                                      .encryptedDataDetails(encryptedDataDetails)
                                                      .build())
                             .build(),
         null);
 
-    verify(gitDecryptionHelper).decryptGitConfig(gitConfigDTO, encryptedDataDetails);
+    verify(gitDecryptionHelper).decryptGitConfig(gitConfig, encryptedDataDetails);
   }
 
   @Test

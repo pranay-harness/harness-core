@@ -34,7 +34,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.FileBucket;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.shell.SshSessionConfigMapper;
@@ -421,21 +421,20 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
   }
 
   public GitBaseRequest getGitBaseRequestForConfigFile(
-      String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfigDTO configFileGitConfigDTO) {
-    secretDecryptionService.decrypt(configFileGitConfigDTO.getGitAuth(), confileFileGitStore.getEncryptedDataDetails());
+      String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfig configFileGitConfig) {
+    secretDecryptionService.decrypt(configFileGitConfig.getGitAuth(), confileFileGitStore.getEncryptedDataDetails());
 
     SshSessionConfig sshSessionConfig = null;
-    if (configFileGitConfigDTO.getGitAuthType() == SSH) {
+    if (configFileGitConfig.getGitAuthType() == SSH) {
       sshSessionConfig = getSshSessionConfig(confileFileGitStore);
     }
 
     return GitBaseRequest.builder()
         .branch(confileFileGitStore.getBranch())
         .commitId(confileFileGitStore.getCommitId())
-        .repoUrl(configFileGitConfigDTO.getUrl())
+        .repoUrl(configFileGitConfig.getUrl())
         .repoType(GitRepositoryType.TERRAFORM)
-        .authRequest(
-            ngGitService.getAuthRequest((GitConfigDTO) confileFileGitStore.getGitConfigDTO(), sshSessionConfig))
+        .authRequest(ngGitService.getAuthRequest((GitConfig) confileFileGitStore.getGitConfigDTO(), sshSessionConfig))
         .accountId(accountId)
         .connectorId(confileFileGitStore.getConnectorName())
         .build();
@@ -459,24 +458,23 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       if (varFile instanceof RemoteTerraformVarFileInfo) {
         GitFetchFilesConfig gitFetchFilesConfig = ((RemoteTerraformVarFileInfo) varFile).getGitFetchFilesConfig();
         GitStoreDelegateConfig gitStoreDelegateConfig = gitFetchFilesConfig.getGitStoreDelegateConfig();
-        GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+        GitConfig gitConfig = (GitConfig) gitStoreDelegateConfig.getGitConfigDTO();
 
         SshSessionConfig sshSessionConfig = null;
-        if (gitConfigDTO.getGitAuthType() == SSH) {
+        if (gitConfig.getGitAuthType() == SSH) {
           sshSessionConfig = getSshSessionConfig(gitStoreDelegateConfig);
         }
 
-        GitBaseRequest gitBaseRequest =
-            GitBaseRequest.builder()
-                .branch(gitStoreDelegateConfig.getBranch())
-                .commitId(gitStoreDelegateConfig.getCommitId())
-                .repoUrl(gitConfigDTO.getUrl())
-                .connectorId(gitStoreDelegateConfig.getConnectorName())
-                .authRequest(ngGitService.getAuthRequest(
-                    (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO(), sshSessionConfig))
-                .accountId(accountId)
-                .repoType(GitRepositoryType.TERRAFORM)
-                .build();
+        GitBaseRequest gitBaseRequest = GitBaseRequest.builder()
+                                            .branch(gitStoreDelegateConfig.getBranch())
+                                            .commitId(gitStoreDelegateConfig.getCommitId())
+                                            .repoUrl(gitConfig.getUrl())
+                                            .connectorId(gitStoreDelegateConfig.getConnectorName())
+                                            .authRequest(ngGitService.getAuthRequest(
+                                                (GitConfig) gitStoreDelegateConfig.getGitConfigDTO(), sshSessionConfig))
+                                            .accountId(accountId)
+                                            .repoType(GitRepositoryType.TERRAFORM)
+                                            .build();
         commitIdForConfigFilesMap.putIfAbsent(
             gitFetchFilesConfig.getIdentifier(), getLatestCommitSHAFromLocalRepo(gitBaseRequest));
       }
@@ -580,16 +578,15 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
         } else if (varFile instanceof RemoteTerraformVarFileInfo) {
           GitStoreDelegateConfig gitStoreDelegateConfig =
               ((RemoteTerraformVarFileInfo) varFile).getGitFetchFilesConfig().getGitStoreDelegateConfig();
-          GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+          GitConfig gitConfig = (GitConfig) gitStoreDelegateConfig.getGitConfigDTO();
           if (EmptyPredicate.isNotEmpty(gitStoreDelegateConfig.getPaths())) {
-            logCallback.saveExecutionLog(format("Fetching Var files from Git repository: [%s]", gitConfigDTO.getUrl()),
+            logCallback.saveExecutionLog(format("Fetching Var files from Git repository: [%s]", gitConfig.getUrl()),
                 INFO, CommandExecutionStatus.RUNNING);
 
-            secretDecryptionService.decrypt(
-                gitConfigDTO.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
+            secretDecryptionService.decrypt(gitConfig.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
 
             SshSessionConfig sshSessionConfig = null;
-            if (gitConfigDTO.getGitAuthType() == SSH) {
+            if (gitConfig.getGitAuthType() == SSH) {
               sshSessionConfig = getSshSessionConfig(gitStoreDelegateConfig);
             }
 
@@ -598,10 +595,10 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
                                         .commitId(gitStoreDelegateConfig.getCommitId())
                                         .filePaths(gitStoreDelegateConfig.getPaths())
                                         .connectorId(gitStoreDelegateConfig.getConnectorName())
-                                        .repoUrl(gitConfigDTO.getUrl())
+                                        .repoUrl(gitConfig.getUrl())
                                         .accountId(accountId)
                                         .recursive(true)
-                                        .authRequest(ngGitService.getAuthRequest(gitConfigDTO, sshSessionConfig))
+                                        .authRequest(ngGitService.getAuthRequest(gitConfig, sshSessionConfig))
                                         .repoType(GitRepositoryType.TERRAFORM)
                                         .destinationDirectory(tfVarDirectory)
                                         .build());

@@ -8,7 +8,7 @@ import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.SshSessionConfig;
@@ -22,7 +22,7 @@ public abstract class AbstractGitValidationHandler implements ConnectorValidatio
   public ConnectorValidationResult validate(
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
     final ScmValidationParams scmValidationParams = (ScmValidationParams) connectorValidationParams;
-    GitConfigDTO gitConfig = ScmConnectorMapper.toGitConfigDTO(scmValidationParams.getGitConfigDTO());
+    GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO(scmValidationParams.getGitConfig());
     if (gitConfig.getGitConnectionType() == ACCOUNT) {
       return ConnectorValidationResult.builder()
           .status(ConnectivityStatus.SUCCESS)
@@ -39,8 +39,7 @@ public abstract class AbstractGitValidationHandler implements ConnectorValidatio
         gitConfig, scmValidationParams.getScmConnector(), accountIdentifier, sshSessionConfig);
   }
 
-  public abstract void decrypt(
-      GitConfigDTO gitConfig, ScmValidationParams scmValidationParams, String accountIdentifier);
+  public abstract void decrypt(GitConfig gitConfig, ScmValidationParams scmValidationParams, String accountIdentifier);
 
   public abstract SshSessionConfig getSSHSessionConfig(
       SSHKeySpecDTO sshKeySpecDTO, List<EncryptedDataDetail> encryptionDetails);

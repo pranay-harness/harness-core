@@ -14,15 +14,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentials;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentials;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePassword;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthentication;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
@@ -56,32 +56,32 @@ public class BitbucketToGitMapperTest extends CategoryTest {
     final String privateKeyRef = "privateKeyRef";
     final String validationRepo = "validationRepo";
 
-    final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
-        BitbucketAuthenticationDTO.builder()
+    final BitbucketAuthentication bitbucketAuthentication =
+        BitbucketAuthentication.builder()
             .authType(HTTP)
-            .credentials(BitbucketHttpCredentialsDTO.builder()
+            .credentials(BitbucketHttpCredentials.builder()
                              .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(BitbucketUsernamePasswordDTO.builder()
+                             .httpCredentialsSpec(BitbucketUsernamePassword.builder()
                                                       .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
                                                       .username(username)
                                                       .build())
                              .build())
             .build();
-    final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
-                                                            .url(url)
-                                                            .validationRepo(validationRepo)
-                                                            .connectionType(GitConnectionType.ACCOUNT)
-                                                            .authentication(bitbucketAuthenticationDTO)
-                                                            .delegateSelectors(delegateSelectors)
-                                                            .build();
-    GitConfigDTO gitConfigDTO = BitbucketToGitMapper.mapToGitConfigDTO(bitbucketConnectorDTO);
-    assertThat(gitConfigDTO).isNotNull();
-    assertThat(gitConfigDTO.getGitAuthType()).isEqualTo(HTTP);
-    assertThat(gitConfigDTO.getDelegateSelectors()).isEqualTo(delegateSelectors);
-    GitHTTPAuthenticationDTO gitAuthentication = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(ACCOUNT);
-    assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
-    assertThat(gitConfigDTO.getValidationRepo()).isEqualTo(validationRepo);
+    final BitbucketConnector bitbucketConnector = BitbucketConnector.builder()
+                                                      .url(url)
+                                                      .validationRepo(validationRepo)
+                                                      .connectionType(GitConnectionType.ACCOUNT)
+                                                      .authentication(bitbucketAuthentication)
+                                                      .delegateSelectors(delegateSelectors)
+                                                      .build();
+    GitConfig gitConfig = BitbucketToGitMapper.mapToGitConfigDTO(bitbucketConnector);
+    assertThat(gitConfig).isNotNull();
+    assertThat(gitConfig.getGitAuthType()).isEqualTo(HTTP);
+    assertThat(gitConfig.getDelegateSelectors()).isEqualTo(delegateSelectors);
+    GitHTTPAuthentication gitAuthentication = (GitHTTPAuthentication) gitConfig.getGitAuth();
+    assertThat(gitConfig.getGitConnectionType()).isEqualTo(ACCOUNT);
+    assertThat(gitConfig.getUrl()).isEqualTo(url);
+    assertThat(gitConfig.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(gitAuthentication.getUsername()).isEqualTo(username);
     assertThat(gitAuthentication.getPasswordRef().toSecretRefStringValue()).isEqualTo(passwordRef);
   }
@@ -92,27 +92,26 @@ public class BitbucketToGitMapperTest extends CategoryTest {
   public void testMappingToSSHGitConfigDTO() {
     final String url = "url";
     String sshKeyReference = "sshKeyReference";
-    final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
-        BitbucketAuthenticationDTO.builder()
+    final BitbucketAuthentication bitbucketAuthentication =
+        BitbucketAuthentication.builder()
             .authType(GitAuthType.SSH)
-            .credentials(BitbucketSshCredentialsDTO.builder()
-                             .sshKeyRef(SecretRefHelper.createSecretRef(sshKeyReference))
-                             .build())
+            .credentials(
+                BitbucketSshCredentials.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyReference)).build())
             .build();
 
-    final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
-                                                            .url(url)
-                                                            .connectionType(GitConnectionType.REPO)
-                                                            .authentication(bitbucketAuthenticationDTO)
-                                                            .delegateSelectors(delegateSelectors)
-                                                            .build();
-    GitConfigDTO gitConfigDTO = BitbucketToGitMapper.mapToGitConfigDTO(bitbucketConnectorDTO);
-    assertThat(gitConfigDTO).isNotNull();
-    assertThat(gitConfigDTO.getGitAuthType()).isEqualTo(SSH);
-    GitSSHAuthenticationDTO gitAuthentication = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
+    final BitbucketConnector bitbucketConnector = BitbucketConnector.builder()
+                                                      .url(url)
+                                                      .connectionType(GitConnectionType.REPO)
+                                                      .authentication(bitbucketAuthentication)
+                                                      .delegateSelectors(delegateSelectors)
+                                                      .build();
+    GitConfig gitConfig = BitbucketToGitMapper.mapToGitConfigDTO(bitbucketConnector);
+    assertThat(gitConfig).isNotNull();
+    assertThat(gitConfig.getGitAuthType()).isEqualTo(SSH);
+    GitSSHAuthentication gitAuthentication = (GitSSHAuthentication) gitConfig.getGitAuth();
     assertThat(gitAuthentication.getEncryptedSshKey()).isEqualTo(SecretRefHelper.createSecretRef(sshKeyReference));
-    assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
-    assertThat(gitConfigDTO.getDelegateSelectors()).isEqualTo(delegateSelectors);
-    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(REPO);
+    assertThat(gitConfig.getUrl()).isEqualTo(url);
+    assertThat(gitConfig.getDelegateSelectors()).isEqualTo(delegateSelectors);
+    assertThat(gitConfig.getGitConnectionType()).isEqualTo(REPO);
   }
 }

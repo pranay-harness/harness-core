@@ -2,17 +2,15 @@ package io.harness.connector.mappers.awscodecommit;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication;
 import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitConfig;
-import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsSpecDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentials;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsSpec;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
@@ -23,27 +21,28 @@ import com.google.inject.Singleton;
 @OwnedBy(HarnessTeam.CI)
 @Singleton
 public class AwsCodeCommitEntityToDTO
-    implements ConnectorEntityToDTOMapper<AwsCodeCommitConnectorDTO, AwsCodeCommitConfig> {
+    implements ConnectorEntityToDTOMapper<AwsCodeCommitConnector, AwsCodeCommitConfig> {
   @Override
-  public AwsCodeCommitConnectorDTO createConnectorDTO(AwsCodeCommitConfig connector) {
-    final AwsCodeCommitAuthentication authentication = connector.getAuthentication();
+  public AwsCodeCommitConnector createConnectorDTO(AwsCodeCommitConfig connector) {
+    final io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication authentication =
+        connector.getAuthentication();
     final String url = connector.getUrl();
     final AwsCodeCommitUrlType urlType = connector.getUrlType();
-    return AwsCodeCommitConnectorDTO.builder()
+    return AwsCodeCommitConnector.builder()
         .url(url)
         .urlType(urlType)
         .authentication(buildAwsCodeCommitAuthenticationDTO(authentication))
         .build();
   }
 
-  public static AwsCodeCommitAuthenticationDTO buildAwsCodeCommitAuthenticationDTO(
-      AwsCodeCommitAuthentication authentication) {
-    AwsCodeCommitAuthenticationDTO authenticationDTO = null;
+  public static AwsCodeCommitAuthentication buildAwsCodeCommitAuthenticationDTO(
+      io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication authentication) {
+    AwsCodeCommitAuthentication authenticationDTO = null;
     final AwsCodeCommitAuthType connectionType = authentication.getAuthType();
     final AwsCodeCommitHttpsAuthType credentialsType = authentication.getCredentialsType();
     switch (connectionType) {
       case HTTPS:
-        authenticationDTO = AwsCodeCommitAuthenticationDTO.builder()
+        authenticationDTO = AwsCodeCommitAuthentication.builder()
                                 .authType(connectionType)
                                 .credentials(buildAwsCodeCommitHttpCredentialsDTO(credentialsType, authentication))
                                 .build();
@@ -54,32 +53,36 @@ public class AwsCodeCommitEntityToDTO
     return authenticationDTO;
   }
 
-  private static AwsCodeCommitHttpsCredentialsDTO buildAwsCodeCommitHttpCredentialsDTO(
-      AwsCodeCommitHttpsAuthType credentialsType, AwsCodeCommitAuthentication authentication) {
-    return AwsCodeCommitHttpsCredentialsDTO.builder()
+  private static AwsCodeCommitHttpsCredentials buildAwsCodeCommitHttpCredentialsDTO(
+      AwsCodeCommitHttpsAuthType credentialsType,
+      io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication authentication) {
+    return AwsCodeCommitHttpsCredentials.builder()
         .type(credentialsType)
         .httpCredentialsSpec(buildAwsCodeCommitHttpsCredentialsSpecDTO(credentialsType, authentication))
         .build();
   }
 
-  private static AwsCodeCommitHttpsCredentialsSpecDTO buildAwsCodeCommitHttpsCredentialsSpecDTO(
-      AwsCodeCommitHttpsAuthType credentialsType, AwsCodeCommitAuthentication authentication) {
-    AwsCodeCommitHttpsCredentialsSpecDTO awsCodeCommitHttpsCredentialsSpecDTO = null;
+  private static AwsCodeCommitHttpsCredentialsSpec buildAwsCodeCommitHttpsCredentialsSpecDTO(
+      AwsCodeCommitHttpsAuthType credentialsType,
+      io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication authentication) {
+    AwsCodeCommitHttpsCredentialsSpec awsCodeCommitHttpsCredentialsSpec = null;
     switch (credentialsType) {
       case ACCESS_KEY_AND_SECRET_KEY:
-        AwsCodeCommitSecretKeyAccessKey credential = (AwsCodeCommitSecretKeyAccessKey) authentication.getCredential();
+        io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey credential =
+            (io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey)
+                authentication.getCredential();
         SecretRefData secretKeyRef = SecretRefHelper.createSecretRef(credential.getSecretKeyRef());
         SecretRefData accessKeyRef = SecretRefHelper.createSecretRef(credential.getAccessKeyRef());
         String accessKey = credential.getAccessKey();
-        awsCodeCommitHttpsCredentialsSpecDTO = AwsCodeCommitSecretKeyAccessKeyDTO.builder()
-                                                   .accessKey(accessKey)
-                                                   .accessKeyRef(accessKeyRef)
-                                                   .secretKeyRef(secretKeyRef)
-                                                   .build();
+        awsCodeCommitHttpsCredentialsSpec = AwsCodeCommitSecretKeyAccessKey.builder()
+                                                .accessKey(accessKey)
+                                                .accessKeyRef(accessKeyRef)
+                                                .secretKeyRef(secretKeyRef)
+                                                .build();
         break;
       default:
         Switch.unhandled(credentialsType);
     }
-    return awsCodeCommitHttpsCredentialsSpecDTO;
+    return awsCodeCommitHttpsCredentialsSpec;
   }
 }

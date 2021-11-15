@@ -1,7 +1,7 @@
 package io.harness.delegate.beans.connector.awscodecommitconnector;
 
 import io.harness.delegate.beans.connector.ConnectorTaskParams;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -19,7 +19,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class AwsCodeCommitTaskParams
     extends ConnectorTaskParams implements TaskParameters, ExecutionCapabilityDemander {
-  private AwsCodeCommitConnectorDTO awsConnector;
+  private AwsCodeCommitConnector awsConnector;
   private List<EncryptedDataDetail> encryptionDetails;
 
   @Override

@@ -8,7 +8,7 @@ import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
@@ -28,9 +28,9 @@ public class ScmConnectorValidationParamsProvider implements ConnectorValidation
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     ConnectorConfigDTO connectorConfigDTO = connectorInfoDTO.getConnectorConfig();
     ScmConnector scmConnector = (ScmConnector) connectorConfigDTO;
-    final GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(scmConnector);
+    final GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO(scmConnector);
     SSHKeySpecDTO sshKeySpecDTO =
-        gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+        gitConfigAuthenticationInfoHelper.getSSHKey(gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
     NGAccess ngAccess = BaseNGAccess.builder()
                             .accountIdentifier(accountIdentifier)
                             .orgIdentifier(orgIdentifier)
@@ -38,7 +38,7 @@ public class ScmConnectorValidationParamsProvider implements ConnectorValidation
                             .build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     encryptedDataDetails.addAll(
-        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, ngAccess));
+        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfig, sshKeySpecDTO, ngAccess));
     if (GitApiAccessDecryptionHelper.hasApiAccess(scmConnector)) {
       encryptedDataDetails.addAll(
           gitConfigAuthenticationInfoHelper.getApiAccessEncryptedDataDetail(scmConnector, ngAccess));
@@ -46,7 +46,7 @@ public class ScmConnectorValidationParamsProvider implements ConnectorValidation
     return ScmValidationParams.builder()
         .scmConnector(scmConnector)
         .encryptedDataDetails(encryptedDataDetails)
-        .gitConfigDTO(gitConfigDTO)
+        .gitConfig(gitConfig)
         .connectorName(connectorName)
         .sshKeySpecDTO(sshKeySpecDTO)
         .build();

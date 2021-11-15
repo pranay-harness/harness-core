@@ -49,12 +49,12 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
@@ -526,16 +526,16 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   private void setConnectorGitRepo(ScmConnector scmConnector, String gitRepoURL) {
     scmConnector.setUrl(gitRepoURL);
-    if (scmConnector instanceof GitConfigDTO) {
-      ((GitConfigDTO) scmConnector).setGitConnectionType(GitConnectionType.REPO);
-    } else if (scmConnector instanceof GithubConnectorDTO) {
-      ((GithubConnectorDTO) scmConnector).setConnectionType(GitConnectionType.REPO);
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
-      ((GitlabConnectorDTO) scmConnector).setConnectionType(GitConnectionType.REPO);
-    } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      ((BitbucketConnectorDTO) scmConnector).setConnectionType(GitConnectionType.REPO);
-    } else if (scmConnector instanceof AwsCodeCommitConnectorDTO) {
-      ((AwsCodeCommitConnectorDTO) scmConnector).setUrlType(AwsCodeCommitUrlType.REPO);
+    if (scmConnector instanceof GitConfig) {
+      ((GitConfig) scmConnector).setGitConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof GithubConnector) {
+      ((GithubConnector) scmConnector).setConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof GitlabConnector) {
+      ((GitlabConnector) scmConnector).setConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof BitbucketConnector) {
+      ((BitbucketConnector) scmConnector).setConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof AwsCodeCommitConnector) {
+      ((AwsCodeCommitConnector) scmConnector).setUrlType(AwsCodeCommitUrlType.REPO);
     }
   }
 

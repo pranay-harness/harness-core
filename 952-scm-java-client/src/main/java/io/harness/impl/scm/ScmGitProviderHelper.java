@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.git.GitClientHelper;
 
 import com.google.inject.Inject;
@@ -20,12 +20,12 @@ public class ScmGitProviderHelper {
   @Inject GitClientHelper gitClientHelper;
 
   public String getSlug(ScmConnector scmConnector) {
-    if (scmConnector instanceof GithubConnectorDTO) {
-      return getSlugFromUrl(((GithubConnectorDTO) scmConnector).getUrl());
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
-      return getSlugFromUrl(((GitlabConnectorDTO) scmConnector).getUrl());
-    } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return getSlugFromUrlForBitbucket(((BitbucketConnectorDTO) scmConnector).getUrl());
+    if (scmConnector instanceof GithubConnector) {
+      return getSlugFromUrl(((GithubConnector) scmConnector).getUrl());
+    } else if (scmConnector instanceof GitlabConnector) {
+      return getSlugFromUrl(((GitlabConnector) scmConnector).getUrl());
+    } else if (scmConnector instanceof BitbucketConnector) {
+      return getSlugFromUrlForBitbucket(((BitbucketConnector) scmConnector).getUrl());
     } else {
       throw new NotImplementedException(
           String.format("The scm apis for the provider type %s is not supported", scmConnector.getClass()));

@@ -23,8 +23,8 @@ import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoH
 import io.harness.connector.validator.scmValidators.GitConnectorValidator;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
@@ -58,16 +58,16 @@ public class GitConnectorValidatorTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testConnectorValidationForFailedResponse() {
-    GitConfigDTO gitConfig = GitConfigDTO.builder()
-                                 .gitAuth(GitHTTPAuthenticationDTO.builder()
-                                              .passwordRef(SecretRefHelper.createSecretRef(ACCOUNT + "abcd"))
-                                              .username("username")
-                                              .build())
-                                 .gitConnectionType(GitConnectionType.REPO)
-                                 .branchName("branchName")
-                                 .url("url")
-                                 .gitAuthType(GitAuthType.HTTP)
-                                 .build();
+    GitConfig gitConfig = GitConfig.builder()
+                              .gitAuth(GitHTTPAuthentication.builder()
+                                           .passwordRef(SecretRefHelper.createSecretRef(ACCOUNT + "abcd"))
+                                           .username("username")
+                                           .build())
+                              .gitConnectionType(GitConnectionType.REPO)
+                              .branchName("branchName")
+                              .url("url")
+                              .gitAuthType(GitAuthType.HTTP)
+                              .build();
     GitCommandExecutionResponse gitResponse =
         GitCommandExecutionResponse.builder()
             .connectorValidationResult(ConnectorValidationResult.builder().status(FAILURE).build())
@@ -84,9 +84,9 @@ public class GitConnectorValidatorTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testConnectorValidationForSuccessfulResponse() {
-    GitConfigDTO gitConfig =
-        GitConfigDTO.builder()
-            .gitAuth(GitHTTPAuthenticationDTO.builder()
+    GitConfig gitConfig =
+        GitConfig.builder()
+            .gitAuth(GitHTTPAuthentication.builder()
                          .passwordRef(SecretRefHelper.createSecretRef(ACCOUNT.getYamlRepresentation() + ".abcd"))
                          .username("username")
                          .build())

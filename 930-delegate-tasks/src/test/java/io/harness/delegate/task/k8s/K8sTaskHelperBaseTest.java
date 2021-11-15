@@ -83,13 +83,13 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthentication;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentials;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -2584,7 +2584,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFetchManifestFilesAndWriteToDirectory() throws Exception {
     K8sTaskHelperBase spyHelperBase = spy(k8sTaskHelperBase);
-    GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
+    GitConfig gitConfig = GitConfig.builder().build();
     List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
     SshSessionConfig sshSessionConfig = mock(SshSessionConfig.class);
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
@@ -2592,7 +2592,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                                      .branch("master")
                                                      .fetchType(FetchType.BRANCH)
                                                      .connectorName("conenctor")
-                                                     .gitConfigDTO(gitConfigDTO)
+                                                     .gitConfigDTO(gitConfig)
                                                      .path("manifest")
                                                      .encryptedDataDetails(encryptionDataDetails)
                                                      .sshKeySpecDTO(sshKeySpecDTO)
@@ -2608,9 +2608,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId");
     assertThat(result).isTrue();
 
-    verify(gitDecryptionHelper, times(1)).decryptGitConfig(gitConfigDTO, encryptionDataDetails);
+    verify(gitDecryptionHelper, times(1)).decryptGitConfig(gitConfig, encryptionDataDetails);
     verify(ngGitService, times(1))
-        .downloadFiles(storeDelegateConfig, "manifest", "accountId", sshSessionConfig, gitConfigDTO);
+        .downloadFiles(storeDelegateConfig, "manifest", "accountId", sshSessionConfig, gitConfig);
   }
 
   @Test
@@ -2618,11 +2618,11 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFetchManifestFilesAndWriteToDirectoryOptimizedFileFetch() throws Exception {
     K8sTaskHelperBase spyHelperBase = spy(k8sTaskHelperBase);
-    GithubConnectorDTO githubConnectorDTO =
-        GithubConnectorDTO.builder()
-            .authentication(GithubAuthenticationDTO.builder()
+    GithubConnector githubConnector =
+        GithubConnector.builder()
+            .authentication(GithubAuthentication.builder()
                                 .authType(GitAuthType.HTTP)
-                                .credentials(GithubHttpCredentialsDTO.builder()
+                                .credentials(GithubHttpCredentials.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
                                                  .httpCredentialsSpec(GithubUsernamePassword.builder()
                                                                           .username("usermane")
@@ -2630,7 +2630,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                                                           .build())
                                                  .build())
                                 .build())
-            .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
+            .apiAccess(GithubApiAccess.builder().spec(GithubTokenSpec.builder().build()).build())
             .build();
     List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
     List<EncryptedDataDetail> apiAuthEncryptedDataDetails = new ArrayList<>();
@@ -2640,7 +2640,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                                      .branch("master")
                                                      .fetchType(FetchType.BRANCH)
                                                      .connectorName("conenctor")
-                                                     .gitConfigDTO(githubConnectorDTO)
+                                                     .gitConfigDTO(githubConnector)
                                                      .path("manifest")
                                                      .encryptedDataDetails(encryptionDataDetails)
                                                      .apiAuthEncryptedDataDetails(apiAuthEncryptedDataDetails)
@@ -2669,17 +2669,17 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testFetchManifestFilesAndWriteToDirectoryFailed() {
-    GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
+    GitConfig gitConfig = GitConfig.builder().build();
     List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
     GitStoreDelegateConfig storeDelegateConfig =
-        GitStoreDelegateConfig.builder().gitConfigDTO(gitConfigDTO).encryptedDataDetails(encryptionDataDetails).build();
+        GitStoreDelegateConfig.builder().gitConfigDTO(gitConfig).encryptedDataDetails(encryptionDataDetails).build();
 
     K8sManifestDelegateConfig manifestDelegateConfig =
         K8sManifestDelegateConfig.builder().storeDelegateConfig(storeDelegateConfig).build();
 
     doThrow(new RuntimeException("unable to decrypt"))
         .when(gitDecryptionHelper)
-        .decryptGitConfig(gitConfigDTO, encryptionDataDetails);
+        .decryptGitConfig(gitConfig, encryptionDataDetails);
 
     assertThatThrownBy(()
                            -> k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(

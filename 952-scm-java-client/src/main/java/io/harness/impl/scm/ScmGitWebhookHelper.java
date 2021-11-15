@@ -5,9 +5,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HookEventType;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.gitsync.common.impl.GitUtils;
 import io.harness.product.ci.scm.proto.BitbucketCloudWebhookEvent;
 import io.harness.product.ci.scm.proto.BitbucketCloudWebhookEvents;
@@ -32,16 +32,16 @@ import org.apache.commons.lang3.NotImplementedException;
 public class ScmGitWebhookHelper {
   public static boolean isIdenticalEvents(
       WebhookResponse webhookResponse, HookEventType hookEventType, ScmConnector scmConnector) {
-    if (scmConnector instanceof GithubConnectorDTO) {
+    if (scmConnector instanceof GithubConnector) {
       return compareEvents(
           webhookResponse.getNativeEvents().getGithub().getEventsList(), hookEventType.githubWebhookEvents);
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
+    } else if (scmConnector instanceof GitlabConnector) {
       return compareEvents(
           webhookResponse.getNativeEvents().getGitlab().getEventsList(), hookEventType.gitlabWebhookEvents);
-    } else if (scmConnector instanceof BitbucketConnectorDTO && GitUtils.isBitBucketCloud(scmConnector.getUrl())) {
+    } else if (scmConnector instanceof BitbucketConnector && GitUtils.isBitBucketCloud(scmConnector.getUrl())) {
       return compareEvents(webhookResponse.getNativeEvents().getBitbucketCloud().getEventsList(),
           hookEventType.bitbucketCloudWebhookEvents);
-    } else if (scmConnector instanceof BitbucketConnectorDTO && !GitUtils.isBitBucketCloud(scmConnector.getUrl())) {
+    } else if (scmConnector instanceof BitbucketConnector && !GitUtils.isBitBucketCloud(scmConnector.getUrl())) {
       return compareEvents(webhookResponse.getNativeEvents().getBitbucketServer().getEventsList(),
           hookEventType.bitbucketServerWebhookEvents);
     } else {
@@ -56,7 +56,7 @@ public class ScmGitWebhookHelper {
 
   public static CreateWebhookRequest getCreateWebhookRequest(CreateWebhookRequest.Builder createWebhookRequestBuilder,
       GitWebhookDetails gitWebhookDetails, ScmConnector scmConnector, WebhookResponse existingWebhook) {
-    if (scmConnector instanceof GithubConnectorDTO) {
+    if (scmConnector instanceof GithubConnector) {
       final List<GithubWebhookEvent> githubWebhookEvents = (existingWebhook != null)
           ? existingWebhook.getNativeEvents().getGithub().getEventsList()
           : Collections.emptyList();
@@ -69,7 +69,7 @@ public class ScmGitWebhookHelper {
                                  .build())
                   .build())
           .build();
-    } else if (scmConnector instanceof GitlabConnectorDTO) {
+    } else if (scmConnector instanceof GitlabConnector) {
       final List<GitlabWebhookEvent> gitlabWebhookEvents = (existingWebhook != null)
           ? existingWebhook.getNativeEvents().getGitlab().getEventsList()
           : Collections.emptyList();
@@ -82,7 +82,7 @@ public class ScmGitWebhookHelper {
                                  .build())
                   .build())
           .build();
-    } else if (scmConnector instanceof BitbucketConnectorDTO && GitUtils.isBitBucketCloud(scmConnector.getUrl())) {
+    } else if (scmConnector instanceof BitbucketConnector && GitUtils.isBitBucketCloud(scmConnector.getUrl())) {
       final List<BitbucketCloudWebhookEvent> bitbucketCloudWebhookEvents = (existingWebhook != null)
           ? existingWebhook.getNativeEvents().getBitbucketCloud().getEventsList()
           : Collections.emptyList();
@@ -96,7 +96,7 @@ public class ScmGitWebhookHelper {
                                          .build())
                   .build())
           .build();
-    } else if (scmConnector instanceof BitbucketConnectorDTO && !GitUtils.isBitBucketCloud(scmConnector.getUrl())) {
+    } else if (scmConnector instanceof BitbucketConnector && !GitUtils.isBitBucketCloud(scmConnector.getUrl())) {
       final List<BitbucketServerWebhookEvent> bitbucketServerWebhookEvents = (existingWebhook != null)
           ? existingWebhook.getNativeEvents().getBitbucketServer().getEventsList()
           : Collections.emptyList();

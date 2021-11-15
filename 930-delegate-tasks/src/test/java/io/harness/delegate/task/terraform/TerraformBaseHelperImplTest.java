@@ -19,7 +19,7 @@ import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.cli.CliResponse;
 import io.harness.connector.service.git.NGGitService;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.shell.SshSessionConfigMapper;
@@ -278,7 +278,7 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
 
   private GitStoreDelegateConfig getGitStoreDelegateConfig() {
     return GitStoreDelegateConfig.builder()
-        .gitConfigDTO(GitConfigDTO.builder().url("repourl").build())
+        .gitConfigDTO(GitConfig.builder().url("repourl").build())
         .connectorName("connectorId")
         .paths(Arrays.asList("filepath1", "filepath2"))
         .branch("master")

@@ -27,11 +27,11 @@ import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.pagerduty.PagerDutyConnectorDTO;
 import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
@@ -45,7 +45,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster")
-  , @JsonSubTypes.Type(value = GitConfigDTO.class, name = "Git"),
+  , @JsonSubTypes.Type(value = GitConfig.class, name = "Git"),
       @JsonSubTypes.Type(value = SplunkConnectorDTO.class, name = "Splunk"),
       @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
       @JsonSubTypes.Type(value = NewRelicConnectorDTO.class, name = "NewRelic"),
@@ -66,10 +66,10 @@ import java.util.List;
       @JsonSubTypes.Type(value = ArtifactoryConnectorDTO.class, name = "Artifactory"),
       @JsonSubTypes.Type(value = JiraConnectorDTO.class, name = "Jira"),
       @JsonSubTypes.Type(value = NexusConnectorDTO.class, name = "Nexus"),
-      @JsonSubTypes.Type(value = GithubConnectorDTO.class, name = "Github"),
-      @JsonSubTypes.Type(value = GitlabConnectorDTO.class, name = "Gitlab"),
-      @JsonSubTypes.Type(value = BitbucketConnectorDTO.class, name = "Bitbucket"),
-      @JsonSubTypes.Type(value = AwsCodeCommitConnectorDTO.class, name = "Codecommit"),
+      @JsonSubTypes.Type(value = GithubConnector.class, name = "Github"),
+      @JsonSubTypes.Type(value = GitlabConnector.class, name = "Gitlab"),
+      @JsonSubTypes.Type(value = BitbucketConnector.class, name = "Bitbucket"),
+      @JsonSubTypes.Type(value = AwsCodeCommitConnector.class, name = "Codecommit"),
       @JsonSubTypes.Type(value = CEAzureConnectorDTO.class, name = "CEAzure"),
       @JsonSubTypes.Type(value = CEKubernetesClusterConfigDTO.class, name = "CEK8sCluster"),
       @JsonSubTypes.Type(value = GcpCloudCostConnectorDTO.class, name = "GcpCloudCost"),

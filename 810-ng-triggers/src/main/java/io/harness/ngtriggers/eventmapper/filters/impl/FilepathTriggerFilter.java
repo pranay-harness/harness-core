@@ -20,9 +20,9 @@ import io.harness.beans.IdentifierRef;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnector;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams.ScmPathFilterEvaluationTaskParamsBuilder;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponse;
@@ -227,12 +227,12 @@ public class FilepathTriggerFilter implements TriggerFilter {
 
       ScmConnector connector = null;
       ConnectorConfigDTO connectorConfigDTO = connectorDetails.getConnectorConfig();
-      if (connectorConfigDTO.getClass().isAssignableFrom(GithubConnectorDTO.class)) {
-        connector = (GithubConnectorDTO) connectorConfigDTO;
-      } else if (connectorConfigDTO.getClass().isAssignableFrom(GitlabConnectorDTO.class)) {
-        connector = (GitlabConnectorDTO) connectorConfigDTO;
-      } else if (connectorConfigDTO.getClass().isAssignableFrom(BitbucketConnectorDTO.class)) {
-        connector = (BitbucketConnectorDTO) connectorConfigDTO;
+      if (connectorConfigDTO.getClass().isAssignableFrom(GithubConnector.class)) {
+        connector = (GithubConnector) connectorConfigDTO;
+      } else if (connectorConfigDTO.getClass().isAssignableFrom(GitlabConnector.class)) {
+        connector = (GitlabConnector) connectorConfigDTO;
+      } else if (connectorConfigDTO.getClass().isAssignableFrom(BitbucketConnector.class)) {
+        connector = (BitbucketConnector) connectorConfigDTO;
       }
 
       if (connector == null) {

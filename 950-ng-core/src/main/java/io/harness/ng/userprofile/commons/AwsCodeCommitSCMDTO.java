@@ -3,7 +3,7 @@ package io.harness.ng.userprofile.commons;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import javax.validation.Valid;
@@ -23,7 +23,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AwsCodeCommitSCMDTO extends SourceCodeManagerDTO {
-  @Valid @NotNull AwsCodeCommitAuthenticationDTO authentication;
+  @Valid @NotNull AwsCodeCommitAuthentication authentication;
 
   @Override
   public SCMType getType() {

@@ -83,18 +83,18 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswor
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentials;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthentication;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthentication;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentials;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -963,11 +963,11 @@ public class CIExecutionPlanTestHelper {
                            .name("gitLabConnector")
                            .identifier("gitLabConnector")
                            .connectorType(ConnectorType.GIT)
-                           .connectorConfig(GitConfigDTO.builder()
+                           .connectorConfig(GitConfig.builder()
                                                 .url("https://gitlab.com/harshjain123/springboot.git")
                                                 .branchName("master")
                                                 .gitAuthType(GitAuthType.HTTP)
-                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                .gitAuth(GitHTTPAuthentication.builder()
                                                              .username("username")
                                                              .passwordRef(SecretRefData.builder()
                                                                               .identifier("gitPassword")
@@ -986,11 +986,11 @@ public class CIExecutionPlanTestHelper {
                            .name("bitBucketConnector")
                            .identifier("bitBucketConnector")
                            .connectorType(ConnectorType.GIT)
-                           .connectorConfig(GitConfigDTO.builder()
+                           .connectorConfig(GitConfig.builder()
                                                 .url("https://harshjain12@bitbucket.org/harshjain12/springboot.git")
                                                 .branchName("master")
                                                 .gitAuthType(GitAuthType.HTTP)
-                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                .gitAuth(GitHTTPAuthentication.builder()
                                                              .username("username")
                                                              .passwordRef(SecretRefData.builder()
                                                                               .identifier("gitPassword")
@@ -1009,12 +1009,12 @@ public class CIExecutionPlanTestHelper {
                            .name("gitConnector")
                            .identifier("gitConnector")
                            .connectorType(ConnectorType.GIT)
-                           .connectorConfig(GitConfigDTO.builder()
+                           .connectorConfig(GitConfig.builder()
                                                 .url("https://github.com/wings-software/portal.git")
                                                 .branchName("master")
                                                 .gitAuthType(GitAuthType.HTTP)
                                                 .gitConnectionType(GitConnectionType.REPO)
-                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                .gitAuth(GitHTTPAuthentication.builder()
                                                              .username("username")
                                                              .passwordRef(SecretRefData.builder()
                                                                               .identifier("gitPassword")
@@ -1035,13 +1035,13 @@ public class CIExecutionPlanTestHelper {
                 .identifier("gitHubConnector")
                 .connectorType(ConnectorType.GITHUB)
                 .connectorConfig(
-                    GithubConnectorDTO.builder()
+                    GithubConnector.builder()
                         .url("https://github.com/wings-software/portal.git")
                         .connectionType(GitConnectionType.REPO)
                         .authentication(
-                            GithubAuthenticationDTO.builder()
+                            GithubAuthentication.builder()
                                 .authType(GitAuthType.HTTP)
-                                .credentials(GithubHttpCredentialsDTO.builder()
+                                .credentials(GithubHttpCredentials.builder()
                                                  .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
                                                  .httpCredentialsSpec(
                                                      GithubUsernamePassword.builder()
@@ -1067,17 +1067,17 @@ public class CIExecutionPlanTestHelper {
                 .identifier("awsCodeCommitConnector")
                 .connectorType(ConnectorType.CODECOMMIT)
                 .connectorConfig(
-                    AwsCodeCommitConnectorDTO.builder()
+                    AwsCodeCommitConnector.builder()
                         .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test")
                         .urlType(AwsCodeCommitUrlType.REPO)
                         .authentication(
-                            AwsCodeCommitAuthenticationDTO.builder()
+                            AwsCodeCommitAuthentication.builder()
                                 .authType(AwsCodeCommitAuthType.HTTPS)
                                 .credentials(
-                                    AwsCodeCommitHttpsCredentialsDTO.builder()
+                                    AwsCodeCommitHttpsCredentials.builder()
                                         .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
                                         .httpCredentialsSpec(
-                                            AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+                                            AwsCodeCommitSecretKeyAccessKey.builder()
                                                 .accessKey("AKIAIOSFODNN7EXAMPLE")
                                                 .secretKeyRef(SecretRefData.builder()
                                                                   .identifier("secretKeyRefIdentifier")
@@ -1099,12 +1099,12 @@ public class CIExecutionPlanTestHelper {
                            .name("gitConnector")
                            .identifier("gitConnector")
                            .connectorType(ConnectorType.GIT)
-                           .connectorConfig(GitConfigDTO.builder()
+                           .connectorConfig(GitConfig.builder()
                                                 .url("https://github.com/wings-software/")
                                                 .branchName("master")
                                                 .gitAuthType(GitAuthType.HTTP)
                                                 .gitConnectionType(GitConnectionType.ACCOUNT)
-                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                .gitAuth(GitHTTPAuthentication.builder()
                                                              .username("username")
                                                              .passwordRef(SecretRefData.builder()
                                                                               .identifier("gitPassword")

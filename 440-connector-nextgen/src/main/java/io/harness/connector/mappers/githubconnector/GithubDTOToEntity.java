@@ -2,27 +2,24 @@ package io.harness.connector.mappers.githubconnector;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.entities.embedded.githubconnector.GithubApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
-import io.harness.connector.entities.embedded.githubconnector.GithubAuthentication;
-import io.harness.connector.entities.embedded.githubconnector.GithubConnector;
 import io.harness.connector.entities.embedded.githubconnector.GithubHttpAuth;
 import io.harness.connector.entities.embedded.githubconnector.GithubHttpAuthentication;
 import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentication;
 import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAccess;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpec;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
-import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpec;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthentication;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubCredentials;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentials;
+import io.harness.delegate.beans.connector.scm.github.GithubSshCredentials;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpec;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePassword;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameToken;
 import io.harness.encryption.SecretRefData;
@@ -30,20 +27,22 @@ import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
 @OwnedBy(HarnessTeam.DX)
-public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConnectorDTO, GithubConnector> {
+public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConnector,
+    io.harness.connector.entities.embedded.githubconnector.GithubConnector> {
   @Override
-  public GithubConnector toConnectorEntity(GithubConnectorDTO configDTO) {
+  public io.harness.connector.entities.embedded.githubconnector.GithubConnector toConnectorEntity(
+      GithubConnector configDTO) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
-    GithubAuthentication githubAuthentication =
+    io.harness.connector.entities.embedded.githubconnector.GithubAuthentication githubAuthentication =
         buildAuthenticationDetails(gitAuthType, configDTO.getAuthentication().getCredentials());
     boolean hasApiAccess = hasApiAccess(configDTO.getApiAccess());
     GithubApiAccessType apiAccessType = null;
-    GithubApiAccess githubApiAccess = null;
+    io.harness.connector.entities.embedded.githubconnector.GithubApiAccess githubApiAccess = null;
     if (hasApiAccess) {
       apiAccessType = getApiAccessType(configDTO.getApiAccess());
       githubApiAccess = getApiAcessByType(configDTO.getApiAccess().getSpec(), apiAccessType);
     }
-    return GithubConnector.builder()
+    return io.harness.connector.entities.embedded.githubconnector.GithubConnector.builder()
         .connectionType(configDTO.getConnectionType())
         .authType(gitAuthType)
         .hasApiAccess(hasApiAccess)
@@ -55,16 +54,16 @@ public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConne
         .build();
   }
 
-  public static GithubAuthentication buildAuthenticationDetails(
-      GitAuthType gitAuthType, GithubCredentialsDTO credentialsDTO) {
+  public static io.harness.connector.entities.embedded.githubconnector.GithubAuthentication buildAuthenticationDetails(
+      GitAuthType gitAuthType, GithubCredentials credentialsDTO) {
     switch (gitAuthType) {
       case SSH:
-        final GithubSshCredentialsDTO sshCredentialsDTO = (GithubSshCredentialsDTO) credentialsDTO;
+        final GithubSshCredentials sshCredentialsDTO = (GithubSshCredentials) credentialsDTO;
         return GithubSshAuthentication.builder()
             .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSshKeyRef()))
             .build();
       case HTTP:
-        final GithubHttpCredentialsDTO httpCredentialsDTO = (GithubHttpCredentialsDTO) credentialsDTO;
+        final GithubHttpCredentials httpCredentialsDTO = (GithubHttpCredentials) credentialsDTO;
         final GithubHttpAuthenticationType type = httpCredentialsDTO.getType();
         return GithubHttpAuthentication.builder().type(type).auth(getHttpAuth(type, httpCredentialsDTO)).build();
       default:
@@ -74,7 +73,7 @@ public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConne
   }
 
   private static GithubHttpAuth getHttpAuth(
-      GithubHttpAuthenticationType type, GithubHttpCredentialsDTO httpCredentialsDTO) {
+      GithubHttpAuthenticationType type, GithubHttpCredentials httpCredentialsDTO) {
     switch (type) {
       case USERNAME_AND_PASSWORD:
         final GithubUsernamePassword usernamePasswordDTO =
@@ -106,19 +105,20 @@ public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConne
     return usernameRef;
   }
 
-  private GithubApiAccess getApiAcessByType(GithubApiAccessSpecDTO spec, GithubApiAccessType apiAccessType) {
+  private io.harness.connector.entities.embedded.githubconnector.GithubApiAccess getApiAcessByType(
+      GithubApiAccessSpec spec, GithubApiAccessType apiAccessType) {
     switch (apiAccessType) {
       case TOKEN:
-        final GithubTokenSpecDTO tokenSpec = (GithubTokenSpecDTO) spec;
+        final GithubTokenSpec tokenSpec = (GithubTokenSpec) spec;
         return GithubTokenApiAccess.builder()
             .tokenRef(SecretRefHelper.getSecretConfigString(tokenSpec.getTokenRef()))
             .build();
       case GITHUB_APP:
-        final GithubAppSpecDTO githubAppSpecDTO = (GithubAppSpecDTO) spec;
+        final GithubAppSpec githubAppSpec = (GithubAppSpec) spec;
         return GithubAppApiAccess.builder()
-            .applicationId(githubAppSpecDTO.getApplicationId())
-            .installationId(githubAppSpecDTO.getInstallationId())
-            .privateKeyRef(SecretRefHelper.getSecretConfigString(githubAppSpecDTO.getPrivateKeyRef()))
+            .applicationId(githubAppSpec.getApplicationId())
+            .installationId(githubAppSpec.getInstallationId())
+            .privateKeyRef(SecretRefHelper.getSecretConfigString(githubAppSpec.getPrivateKeyRef()))
             .build();
       default:
         throw new UnknownEnumTypeException(
@@ -126,15 +126,15 @@ public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConne
     }
   }
 
-  private GithubApiAccessType getApiAccessType(GithubApiAccessDTO apiAccess) {
+  private GithubApiAccessType getApiAccessType(GithubApiAccess apiAccess) {
     return apiAccess.getType();
   }
 
-  private boolean hasApiAccess(GithubApiAccessDTO apiAccess) {
+  private boolean hasApiAccess(GithubApiAccess apiAccess) {
     return apiAccess != null;
   }
 
-  private GitAuthType getAuthType(GithubAuthenticationDTO authentication) {
+  private GitAuthType getAuthType(GithubAuthentication authentication) {
     return authentication.getAuthType();
   }
 }

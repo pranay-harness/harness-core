@@ -2,7 +2,7 @@ package io.harness.connector.validator.scmValidators;
 
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class GitConnectorValidator extends AbstractGitConnectorValidator {
   @Override
-  public GitConfigDTO getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig) {
-    return (GitConfigDTO) connectorConfig;
+  public GitConfig getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig) {
+    return (GitConfig) connectorConfig;
   }
 
   @Override

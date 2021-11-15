@@ -23,8 +23,8 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.rule.Owner;
 
@@ -65,11 +65,10 @@ public class AwsCodeCommitDelegateTaskTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldHandleValidationTask() {
-    AwsCodeCommitConnectorDTO connectorDTO =
-        AwsCodeCommitConnectorDTO.builder()
-            .url("https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo")
-            .authentication(AwsCodeCommitAuthenticationDTO.builder().build())
-            .build();
+    AwsCodeCommitConnector connectorDTO = AwsCodeCommitConnector.builder()
+                                              .url("https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo")
+                                              .authentication(AwsCodeCommitAuthentication.builder().build())
+                                              .build();
     AwsCodeCommitTaskParams awsCodeCommitTaskParams =
         AwsCodeCommitTaskParams.builder().awsConnector(connectorDTO).encryptionDetails(Collections.emptyList()).build();
     AwsConfig awsConfig = AwsConfig.builder().build();
@@ -94,10 +93,10 @@ public class AwsCodeCommitDelegateTaskTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldHandleValidationTaskRegionFailure() {
-    AwsCodeCommitConnectorDTO connectorDTO = AwsCodeCommitConnectorDTO.builder()
-                                                 .url("https://git-codecommit")
-                                                 .authentication(AwsCodeCommitAuthenticationDTO.builder().build())
-                                                 .build();
+    AwsCodeCommitConnector connectorDTO = AwsCodeCommitConnector.builder()
+                                              .url("https://git-codecommit")
+                                              .authentication(AwsCodeCommitAuthentication.builder().build())
+                                              .build();
     AwsCodeCommitTaskParams awsCodeCommitTaskParams =
         AwsCodeCommitTaskParams.builder().awsConnector(connectorDTO).encryptionDetails(Collections.emptyList()).build();
 
@@ -112,10 +111,10 @@ public class AwsCodeCommitDelegateTaskTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldHandleValidationTaskRepoFailure() {
-    AwsCodeCommitConnectorDTO connectorDTO = AwsCodeCommitConnectorDTO.builder()
-                                                 .url("https://git-codecommit.us-east-1.amazonaws.com/v1")
-                                                 .authentication(AwsCodeCommitAuthenticationDTO.builder().build())
-                                                 .build();
+    AwsCodeCommitConnector connectorDTO = AwsCodeCommitConnector.builder()
+                                              .url("https://git-codecommit.us-east-1.amazonaws.com/v1")
+                                              .authentication(AwsCodeCommitAuthentication.builder().build())
+                                              .build();
     AwsCodeCommitTaskParams awsCodeCommitTaskParams =
         AwsCodeCommitTaskParams.builder().awsConnector(connectorDTO).encryptionDetails(Collections.emptyList()).build();
 
@@ -130,11 +129,10 @@ public class AwsCodeCommitDelegateTaskTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldHandleAmazonServiceException() {
-    AwsCodeCommitConnectorDTO connectorDTO =
-        AwsCodeCommitConnectorDTO.builder()
-            .url("https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo")
-            .authentication(AwsCodeCommitAuthenticationDTO.builder().build())
-            .build();
+    AwsCodeCommitConnector connectorDTO = AwsCodeCommitConnector.builder()
+                                              .url("https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo")
+                                              .authentication(AwsCodeCommitAuthentication.builder().build())
+                                              .build();
     AwsCodeCommitTaskParams awsCodeCommitTaskParams =
         AwsCodeCommitTaskParams.builder().awsConnector(connectorDTO).encryptionDetails(Collections.emptyList()).build();
     AwsConfig awsConfig = AwsConfig.builder().build();
@@ -155,11 +153,10 @@ public class AwsCodeCommitDelegateTaskTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldHandleAmazonClientException() {
-    AwsCodeCommitConnectorDTO connectorDTO =
-        AwsCodeCommitConnectorDTO.builder()
-            .url("https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo")
-            .authentication(AwsCodeCommitAuthenticationDTO.builder().build())
-            .build();
+    AwsCodeCommitConnector connectorDTO = AwsCodeCommitConnector.builder()
+                                              .url("https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo")
+                                              .authentication(AwsCodeCommitAuthentication.builder().build())
+                                              .build();
     AwsCodeCommitTaskParams awsCodeCommitTaskParams =
         AwsCodeCommitTaskParams.builder().awsConnector(connectorDTO).encryptionDetails(Collections.emptyList()).build();
     AwsConfig awsConfig = AwsConfig.builder().build();
@@ -180,11 +177,10 @@ public class AwsCodeCommitDelegateTaskTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldHandleOtherException() {
-    AwsCodeCommitConnectorDTO connectorDTO =
-        AwsCodeCommitConnectorDTO.builder()
-            .url("https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo")
-            .authentication(AwsCodeCommitAuthenticationDTO.builder().build())
-            .build();
+    AwsCodeCommitConnector connectorDTO = AwsCodeCommitConnector.builder()
+                                              .url("https://git-codecommit.us-east-1.amazonaws.com/v1/repos/MyDemoRepo")
+                                              .authentication(AwsCodeCommitAuthentication.builder().build())
+                                              .build();
     AwsCodeCommitTaskParams awsCodeCommitTaskParams =
         AwsCodeCommitTaskParams.builder().awsConnector(connectorDTO).encryptionDetails(Collections.emptyList()).build();
     AwsConfig awsConfig = AwsConfig.builder().build();

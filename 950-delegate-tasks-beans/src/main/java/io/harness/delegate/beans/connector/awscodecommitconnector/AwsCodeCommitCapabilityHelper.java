@@ -3,8 +3,8 @@ package io.harness.delegate.beans.connector.awscodecommitconnector;
 import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthentication;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
@@ -20,13 +20,13 @@ public class AwsCodeCommitCapabilityHelper extends ConnectorCapabilityBaseHelper
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
       ConnectorConfigDTO connectorConfigDTO, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilityList = new ArrayList<>();
-    AwsCodeCommitConnectorDTO awsCodeCommitConnectorDTO = (AwsCodeCommitConnectorDTO) connectorConfigDTO;
-    AwsCodeCommitAuthenticationDTO authentication = awsCodeCommitConnectorDTO.getAuthentication();
+    AwsCodeCommitConnector awsCodeCommitConnector = (AwsCodeCommitConnector) connectorConfigDTO;
+    AwsCodeCommitAuthentication authentication = awsCodeCommitConnector.getAuthentication();
     if (authentication.getAuthType() == AwsCodeCommitAuthType.HTTPS) {
       capabilityList.add(
           HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
     }
-    populateDelegateSelectorCapability(capabilityList, awsCodeCommitConnectorDTO.getDelegateSelectors());
+    populateDelegateSelectorCapability(capabilityList, awsCodeCommitConnector.getDelegateSelectors());
     return capabilityList;
   }
 }

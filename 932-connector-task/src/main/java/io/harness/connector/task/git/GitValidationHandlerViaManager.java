@@ -7,8 +7,8 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentication;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.remote.client.NGRestClientExecutor;
@@ -29,12 +29,12 @@ public class GitValidationHandlerViaManager extends AbstractGitValidationHandler
   }
 
   @Override
-  public void decrypt(GitConfigDTO gitConfig, ScmValidationParams scmValidationParams, String accountIdentifier) {
+  public void decrypt(GitConfig gitConfig, ScmValidationParams scmValidationParams, String accountIdentifier) {
     final DecryptableEntityWithEncryptionConsumers build = buildDecryptableEntityWithEncryptionConsumers(
         gitConfig.getGitAuth(), scmValidationParams.getEncryptedDataDetails());
     final DecryptableEntity decryptedGitAuth =
         restClientExecutor.getResponse(ngSecretDecryptionClient.decryptEncryptedDetails(build, accountIdentifier));
-    gitConfig.setGitAuth((GitAuthenticationDTO) decryptedGitAuth);
+    gitConfig.setGitAuth((GitAuthentication) decryptedGitAuth);
 
     if (hasApiAccess(scmValidationParams.getScmConnector())) {
       DecryptableEntity apiAccessDecryptableEntity =

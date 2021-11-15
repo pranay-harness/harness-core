@@ -15,11 +15,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccess;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
-import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpec;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
@@ -50,8 +50,8 @@ public class GitDecryptionHelperTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testDecryptGitConfig() {
-    gitDecryptionHelper.decryptGitConfig(GitConfigDTO.builder().build(), new ArrayList<>());
-    verify(decryptionService, times(1)).decrypt(any(GitConfigDTO.class), anyListOf(EncryptedDataDetail.class));
+    gitDecryptionHelper.decryptGitConfig(GitConfig.builder().build(), new ArrayList<>());
+    verify(decryptionService, times(1)).decrypt(any(GitConfig.class), anyListOf(EncryptedDataDetail.class));
   }
 
   @Test
@@ -79,10 +79,10 @@ public class GitDecryptionHelperTest extends CategoryTest {
   @Owner(developers = ABHINAV2)
   @Category(UnitTests.class)
   public void testDecryptApiAccessConfig() {
-    ScmConnector connector = GithubConnectorDTO.builder()
-                                 .apiAccess(GithubApiAccessDTO.builder()
+    ScmConnector connector = GithubConnector.builder()
+                                 .apiAccess(GithubApiAccess.builder()
                                                 .type(GithubApiAccessType.GITHUB_APP)
-                                                .spec(GithubAppSpecDTO.builder().build())
+                                                .spec(GithubAppSpec.builder().build())
                                                 .build())
                                  .build();
     doReturn(connector)

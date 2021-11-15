@@ -1,7 +1,7 @@
 package io.harness.delegate.beans.aws.codecommit;
 
 import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
-import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnector;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -23,7 +23,7 @@ public class AwsCodeCommitApiTaskParams
 
   AwsCodeCommitApiParams apiParams;
 
-  AwsCodeCommitConnectorDTO awsCodeCommitConnectorDTO;
+  AwsCodeCommitConnector awsCodeCommitConnector;
   List<EncryptedDataDetail> encryptedDataDetails;
 
   @NotEmpty AwsCodeCommitRequestType requestType;
@@ -33,8 +33,8 @@ public class AwsCodeCommitApiTaskParams
     List<ExecutionCapability> capabilityList = new ArrayList<>();
     capabilityList.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
-    if (awsCodeCommitConnectorDTO != null) {
-      populateDelegateSelectorCapability(capabilityList, awsCodeCommitConnectorDTO.getDelegateSelectors());
+    if (awsCodeCommitConnector != null) {
+      populateDelegateSelectorCapability(capabilityList, awsCodeCommitConnector.getDelegateSelectors());
     }
     return capabilityList;
   }

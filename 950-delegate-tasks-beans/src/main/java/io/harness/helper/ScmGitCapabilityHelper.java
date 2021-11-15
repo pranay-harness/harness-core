@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -21,12 +21,12 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.DX)
 public class ScmGitCapabilityHelper {
   public List<ExecutionCapability> getHttpConnectionCapability(ScmConnector scmConnector) {
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(scmConnector);
-    if (gitConfigDTO.getGitAuthType().equals(GitAuthType.HTTP)) {
+    GitConfig gitConfig = ScmConnectorMapper.toGitConfigDTO(scmConnector);
+    if (gitConfig.getGitAuthType().equals(GitAuthType.HTTP)) {
       List<ExecutionCapability> executionCapabilities = new ArrayList<>();
       executionCapabilities.add(HttpConnectionExecutionCapability.builder().url(scmConnector.getUrl()).build());
-      if (isNotEmpty(gitConfigDTO.getDelegateSelectors())) {
-        executionCapabilities.add(SelectorCapability.builder().selectors(gitConfigDTO.getDelegateSelectors()).build());
+      if (isNotEmpty(gitConfig.getDelegateSelectors())) {
+        executionCapabilities.add(SelectorCapability.builder().selectors(gitConfig.getDelegateSelectors()).build());
       }
       return executionCapabilities;
     }

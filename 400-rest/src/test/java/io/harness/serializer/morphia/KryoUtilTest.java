@@ -7,7 +7,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnector;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
@@ -27,7 +27,7 @@ import org.reflections.Reflections;
 public class KryoUtilTest extends WingsBaseTest {
   @Inject KryoSerializer kryoSerializer;
 
-  Class<?> classToRunTest = GithubConnectorDTO.class;
+  Class<?> classToRunTest = GithubConnector.class;
 
   @Test
   @Owner(developers = ABHINAV)

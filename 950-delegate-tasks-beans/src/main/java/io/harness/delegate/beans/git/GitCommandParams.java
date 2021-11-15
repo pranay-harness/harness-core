@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.connector.scm.GitCapabilityHelper;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -25,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CI)
 public class GitCommandParams extends ConnectorTaskParams implements TaskParameters, ExecutionCapabilityDemander {
-  GitConfigDTO gitConfig;
+  GitConfig gitConfig;
   ScmConnector scmConnector;
   GitCommandType gitCommandType;
   List<EncryptedDataDetail> encryptionDetails;
