@@ -4,12 +4,16 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.beans.MigrateSecretTask;
 import io.harness.config.PublisherConfiguration;
+import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueuePublisher;
+import io.harness.secretkey.AESSecretKeyServiceImpl;
+import io.harness.secretkey.SecretKeyConstants;
+import io.harness.secretkey.SecretKeyService;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secrets.SecretMigrationEventListener;
@@ -38,6 +42,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class SecretManagementCoreModule extends AbstractModule {
   private static SecretManagementCoreModule instance;
@@ -68,7 +73,6 @@ public class SecretManagementCoreModule extends AbstractModule {
     bind(SecretService.class).to(SecretServiceImpl.class);
     bind(SecretYamlHandler.class).to(SecretYamlHandlerImpl.class);
     bind(new TypeLiteral<QueueListener<MigrateSecretTask> >() {}).to(SecretMigrationEventListener.class);
-
     binder()
         .bind(SecretValidator.class)
         .annotatedWith(Names.named(SecretValidators.AWS_SECRET_MANAGAER_VALIDATOR.getName()))
@@ -93,6 +97,11 @@ public class SecretManagementCoreModule extends AbstractModule {
         .bind(SecretValidator.class)
         .annotatedWith(Names.named(SecretValidators.COMMON_SECRET_MANAGER_VALIDATOR.getName()))
         .to(BaseSecretValidator.class);
+
+    binder()
+        .bind(SecretKeyService.class)
+        .annotatedWith(Names.named(SecretKeyConstants.AES_SECRET_KEY))
+        .to(AESSecretKeyServiceImpl.class);
 
     registerRequiredBindings();
   }
