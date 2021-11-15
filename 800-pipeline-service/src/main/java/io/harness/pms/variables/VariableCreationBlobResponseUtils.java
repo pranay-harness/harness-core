@@ -99,8 +99,9 @@ public class VariableCreationBlobResponseUtils {
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
     if (isNotEmpty(otherResponse.getResolvedDeps().getDependenciesMap())) {
       otherResponse.getResolvedDeps().getDependenciesMap().forEach((key, value) -> {
-        builder.setResolvedDeps(Dependencies.newBuilder().putDependencies(key, value).build());
-        builder.getDeps().getDependenciesMap().remove(key);
+        builder.setResolvedDeps(
+            Dependencies.newBuilder().setYaml(otherResponse.getDeps().getYaml()).putDependencies(key, value).build());
+        //        builder.getDeps().getDependenciesMap().remove(key);
       });
     }
   }
@@ -110,7 +111,8 @@ public class VariableCreationBlobResponseUtils {
     if (isNotEmpty(otherResponse.getDeps().getDependenciesMap())) {
       otherResponse.getDeps().getDependenciesMap().forEach((key, value) -> {
         if (!builder.getResolvedDeps().containsDependencies(key)) {
-          builder.setDeps(Dependencies.newBuilder().putDependencies(key, value).build());
+          builder.setDeps(
+              Dependencies.newBuilder().setYaml(otherResponse.getDeps().getYaml()).putDependencies(key, value).build());
         }
       });
     }

@@ -52,12 +52,10 @@ public class VariableCreatorMergeService {
 
     YamlField processedYaml = YamlUtils.injectUuidWithLeafUuid(yaml);
     YamlField pipelineField = YamlUtils.getPipelineField(Objects.requireNonNull(processedYaml).getNode());
-    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
-    dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
 
     Dependencies dependencies1 =
         Dependencies.newBuilder()
-            .setYaml(String.valueOf(processedYaml))
+            .setYaml(processedYaml.getNode().getCurrJsonNode().toString())
             .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
             .build();
 
@@ -93,7 +91,7 @@ public class VariableCreatorMergeService {
           obtainVariablesPerIteration(services, finalResponseBuilder, metadata);
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(finalResponseBuilder, variablesCreationBlobResponse);
       unresolvedDependencies.putAllDependencies(finalResponseBuilder.getDeps().getDependenciesMap());
-      finalResponseBuilder.getDeps().getDependenciesMap().clear();
+      //      finalResponseBuilder.getDeps().getDependenciesMap().clear();
       VariableCreationBlobResponseUtils.mergeDependencies(finalResponseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlProperties(finalResponseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlOutputProperties(finalResponseBuilder, variablesCreationBlobResponse);
