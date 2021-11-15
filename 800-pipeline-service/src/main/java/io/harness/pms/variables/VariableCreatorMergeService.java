@@ -93,7 +93,7 @@ public class VariableCreatorMergeService {
           obtainVariablesPerIteration(services, finalResponseBuilder, metadata);
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(finalResponseBuilder, variablesCreationBlobResponse);
       unresolvedDependencies.putAllDependencies(finalResponseBuilder.getDeps().getDependenciesMap());
-      finalResponseBuilder.clearDependencies();
+      finalResponseBuilder.getDeps().getDependenciesMap().clear();
       VariableCreationBlobResponseUtils.mergeDependencies(finalResponseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlProperties(finalResponseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlOutputProperties(finalResponseBuilder, variablesCreationBlobResponse);

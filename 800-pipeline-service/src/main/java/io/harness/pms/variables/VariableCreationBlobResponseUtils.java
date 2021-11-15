@@ -97,10 +97,10 @@ public class VariableCreationBlobResponseUtils {
 
   public void mergeResolvedDependencies(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
-    if (isNotEmpty(otherResponse.getResolvedDependenciesMap())) {
-      otherResponse.getResolvedDependenciesMap().forEach((key, value) -> {
-        builder.putResolvedDependencies(key, value);
-        builder.removeDependencies(key);
+    if (isNotEmpty(otherResponse.getResolvedDeps().getDependenciesMap())) {
+      otherResponse.getResolvedDeps().getDependenciesMap().forEach((key, value) -> {
+        builder.setResolvedDeps(Dependencies.newBuilder().putDependencies(key, value).build());
+        builder.getDeps().getDependenciesMap().remove(key);
       });
     }
   }
@@ -109,7 +109,7 @@ public class VariableCreationBlobResponseUtils {
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
     if (isNotEmpty(otherResponse.getDeps().getDependenciesMap())) {
       otherResponse.getDeps().getDependenciesMap().forEach((key, value) -> {
-        if (!builder.containsResolvedDependencies(key)) {
+        if (!builder.getResolvedDeps().containsDependencies(key)) {
           builder.setDeps(Dependencies.newBuilder().putDependencies(key, value).build());
         }
       });
