@@ -129,7 +129,7 @@ public class SignupServiceImpl implements SignupService {
     AccountDTO account = createAccount(dto);
     UserInfo user = createUser(dto, account);
     sendSucceedTelemetryEvent(
-        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW, "");
+        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW, dto.getIpAddress());
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(user.getEmail());
       try {
