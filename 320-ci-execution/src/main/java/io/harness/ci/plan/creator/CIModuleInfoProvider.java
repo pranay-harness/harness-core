@@ -46,6 +46,9 @@ import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.states.InitializeTaskStep;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+import io.harness.telemetry.Category;
+import io.harness.telemetry.Destination;
+import io.harness.telemetry.TelemetryReporter;
 import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
@@ -53,6 +56,7 @@ import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.PRBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -60,6 +64,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -72,6 +77,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private ConnectorUtils connectorUtils;
+  @Inject TelemetryReporter telemetryReporter;
 
   @Override
   public boolean shouldRun(OrchestrationEvent event) {
@@ -91,6 +97,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     CIBuildAuthor author = null;
     Boolean isPrivateRepo = false;
     List<CIBuildCommit> triggerCommits = null;
+    HashMap<String, Object> properties = new HashMap<>();
     ExecutionTriggerInfo executionTriggerInfo = event.getAmbiance().getMetadata().getTriggerInfo();
     Ambiance ambiance = event.getAmbiance();
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
@@ -119,6 +126,8 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
             if (url == null) {
               url = connectorUtils.retrieveURL(connectorDetails);
             }
+            properties.put("connectorType", connectorDetails.getConnectorType());
+            properties.put("typeOfbuild", buildType);
             if (repoName == null) {
               repoName = getGitRepo(url);
             }
@@ -177,6 +186,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       author = ciWebhookInfoDTO.getAuthor();
 
       if (IntegrationStageUtils.isURLSame(webhookExecutionSource, url) && isNotEmpty(prNumber)) {
+        telemetryReporter.sendGroupEvent(AmbianceUtils.getAccountId(ambiance), properties, null);
         return CIPipelineModuleInfo.builder()
             .triggerRepoName(triggerRepoName)
             .branch(branch)
@@ -205,6 +215,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       }
     }
 
+    telemetryReporter.sendGroupEvent(AmbianceUtils.getAccountId(ambiance), properties, null);
     return CIPipelineModuleInfo.builder()
         .branch(branch)
         .triggerRepoName(triggerRepoName)
