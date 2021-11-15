@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.SMCoreTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.encryptors.clients.LocalEncryptor;
@@ -21,9 +23,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PL)
 public class LocalEncryptorTest extends SMCoreTestBase {
-  @InjectMocks @Inject private LocalEncryptor localEncryptor;
   @Mock private FeatureFlagHelperService featureFlagHelperService;
+  @InjectMocks @Inject private LocalEncryptor localEncryptor;
 
   private static final String ACCOUNTID = "accountId";
 
@@ -48,7 +51,7 @@ public class LocalEncryptorTest extends SMCoreTestBase {
     EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(ACCOUNTID, valueToEncrypt, null);
 
     assertThat(encryptedRecord.getEncryptedMech()).isEqualTo(EncryptedMech.MULTI_CRYPTO);
-    assertThat(encryptedRecord.getEncryptedValue()).isNull();
+    assertThat(encryptedRecord.getEncryptedValue()).isNotNull();
     assertThat(encryptedRecord.getEncryptionKey()).isNotNull();
     assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_UUID_KEY))
         .isNotNull();
@@ -70,10 +73,7 @@ public class LocalEncryptorTest extends SMCoreTestBase {
 
     assertThat(encryptedRecord.getEncryptedMech()).isEqualTo(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO);
     assertThat(encryptedRecord.getEncryptionKey()).isNotNull();
-    assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.SECRET_KEY_UUID_KEY))
-        .isNull();
-    assertThat(encryptedRecord.getAdditionalMetadata().getValues().get(AdditionalMetadata.AWS_ENCRYPTED_SECRET))
-        .isNull();
+    assertThat(encryptedRecord.getAdditionalMetadata()).isNull();
     assertThat(encryptedRecord.getEncryptedValue()).isNull();
     assertThat(encryptedRecord.getEncryptedValueBytes()).isNotNull();
 

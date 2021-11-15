@@ -40,15 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 public class LocalEncryptor implements KmsEncryptor {
   private static final AwsCrypto crypto = AwsCrypto.standard();
-  private final SecretKeyService secretKeyService;
-  private final FeatureFlagHelperService featureFlagService;
-
-  @Inject
-  public LocalEncryptor(@Named(SecretKeyConstants.AES_SECRET_KEY) SecretKeyService secretKeyService,
-      FeatureFlagHelperService featureFlagService) {
-    this.secretKeyService = secretKeyService;
-    this.featureFlagService = featureFlagService;
-  }
+  @Inject @Named(SecretKeyConstants.AES_SECRET_KEY) private SecretKeyService secretKeyService;
+  @Inject private FeatureFlagHelperService featureFlagService;
 
   @Override
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
@@ -61,7 +54,6 @@ public class LocalEncryptor implements KmsEncryptor {
           .encryptedMech(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO)
           .build();
     }
-
     final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
     if (featureFlagService.isEnabled(accountId, FeatureName.LOCAL_MULTI_CRYPTO_MODE)) {
       SecretKey secretKey = secretKeyService.createSecretKey();
@@ -76,7 +68,6 @@ public class LocalEncryptor implements KmsEncryptor {
                                   .build())
           .build();
     }
-
     return EncryptedRecordData.builder().encryptionKey(accountId).encryptedValue(localJavaEncryptedSecret).build();
   }
 
@@ -138,7 +129,7 @@ public class LocalEncryptor implements KmsEncryptor {
         JceMasterKey.getInstance(secretKey.getSecretKeySpec(), "Escrow", "Escrow", "AES/GCM/NOPADDING");
 
     final CryptoResult<byte[], ?> decryptResult = crypto.decryptData(escrowPub, encryptedSecret);
-    if (!decryptResult.getMasterKeyIds().get(0).equals(accountId)) {
+    if (!decryptResult.getEncryptionContext().get("accountId").equals(accountId)) {
       throw new UnexpectedException(String.format("Corrupted secret found for secret key : %s", secretKey.getUuid()));
     }
 
