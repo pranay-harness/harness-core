@@ -5,9 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
-import io.harness.pms.contracts.plan.YamlOutputProperties;
-import io.harness.pms.contracts.plan.YamlProperties;
+import io.harness.pms.contracts.plan.*;
 import io.harness.pms.sdk.core.pipeline.creators.CreatorResponse;
 import io.harness.pms.yaml.YamlField;
 
@@ -24,47 +22,38 @@ public class VariableCreationResponse implements CreatorResponse {
   @Singular Map<String, YamlProperties> yamlProperties;
   @Singular Map<String, YamlOutputProperties> yamlOutputProperties;
   @Singular Map<String, YamlField> resolvedDependencies;
-  @Singular Map<String, YamlField> dependencies;
+  Dependencies dependencies;
+  YamlUpdates yamlUpdates;
 
-  public void addResolvedDependencies(Map<String, YamlField> resolvedDependencies) {
-    if (EmptyPredicate.isEmpty(resolvedDependencies)) {
+  public void addDependencies(Dependencies dependencies) {
+    if (dependencies == null && EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
       return;
     }
-    resolvedDependencies.values().forEach(this::addResolvedDependency);
+    dependencies.getDependenciesMap().forEach((key, value) -> addDependency(dependencies.getYaml(), key, value));
   }
 
-  public void addResolvedDependency(YamlField yamlField) {
-    if (resolvedDependencies == null) {
-      resolvedDependencies = new HashMap<>();
-    } else if (!(resolvedDependencies instanceof HashMap)) {
-      resolvedDependencies = new HashMap<>(resolvedDependencies);
-    }
-
-    resolvedDependencies.put(yamlField.getNode().getUuid(), yamlField);
-    if (dependencies != null) {
-      dependencies.remove(yamlField.getNode().getUuid());
-    }
-  }
-
-  public void addDependencies(Map<String, YamlField> fields) {
-    if (EmptyPredicate.isEmpty(fields)) {
-      return;
-    }
-    fields.values().forEach(this::addDependency);
-  }
-
-  public void addDependency(YamlField field) {
-    String nodeId = field.getNode().getUuid();
-    if (dependencies != null && dependencies.containsKey(nodeId)) {
+  public void addDependency(String yaml, String nodeId, String yamlPath) {
+    if ((dependencies != null && dependencies.getDependenciesMap().containsKey(nodeId))) {
       return;
     }
 
     if (dependencies == null) {
-      dependencies = new HashMap<>();
-    } else if (!(dependencies instanceof HashMap)) {
-      dependencies = new HashMap<>(dependencies);
+      dependencies = Dependencies.newBuilder().setYaml(yaml).putDependencies(nodeId, yamlPath).build();
+      return;
     }
-    dependencies.put(nodeId, field);
+
+    dependencies = dependencies.toBuilder().putDependencies(nodeId, yamlPath).build();
+  }
+
+  public void addYamlUpdates(YamlUpdates otherYamlUpdates) {
+    if (otherYamlUpdates == null) {
+      return;
+    }
+    if (yamlUpdates == null) {
+      yamlUpdates = otherYamlUpdates;
+      return;
+    }
+    yamlUpdates = yamlUpdates.toBuilder().putAllFqnToYaml(otherYamlUpdates.getFqnToYamlMap()).build();
   }
 
   public void addYamlProperties(Map<String, YamlProperties> yamlProperties) {
@@ -108,15 +97,9 @@ public class VariableCreationResponse implements CreatorResponse {
   public VariablesCreationBlobResponse toBlobResponse() {
     VariablesCreationBlobResponse.Builder finalBuilder = VariablesCreationBlobResponse.newBuilder();
 
-    if (isNotEmpty(dependencies)) {
-      for (Map.Entry<String, YamlField> dependency : dependencies.entrySet()) {
-        finalBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
-      }
-    }
-
-    if (isNotEmpty(resolvedDependencies)) {
-      for (Map.Entry<String, YamlField> dependency : resolvedDependencies.entrySet()) {
-        finalBuilder.putResolvedDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
+    if (isNotEmpty(dependencies.getDependenciesMap())) {
+      for (Map.Entry<String, String> dependency : dependencies.getDependenciesMap().entrySet()) {
+        finalBuilder.getDeps().toBuilder().putDependencies(dependency.getKey(), dependency.getValue());
       }
     }
 
