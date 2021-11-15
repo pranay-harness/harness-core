@@ -30,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BuildJobEnvInfoBuilder {
   @Inject private InitializeStepInfoBuilder initializeStepInfoBuilder;
 
-  public BuildJobEnvInfo getCIBuildJobEnvInfo(
-      StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, List<ExecutionWrapperConfig> steps) {
+  public BuildJobEnvInfo getCIBuildJobEnvInfo(StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs,
+      List<ExecutionWrapperConfig> steps, String accountId) {
     // TODO Only kubernetes is supported currently
     IntegrationStageConfig integrationStage = (IntegrationStageConfig) stageElementConfig.getStageType();
     if (integrationStage.getInfrastructure() == null) {
@@ -41,7 +41,8 @@ public class BuildJobEnvInfoBuilder {
     Infrastructure infrastructure = integrationStage.getInfrastructure();
     if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT
         || infrastructure.getType() == Type.USE_FROM_STAGE) {
-      return initializeStepInfoBuilder.getInitializeStepInfoBuilder(stageElementConfig, ciExecutionArgs, steps);
+      return initializeStepInfoBuilder.getInitializeStepInfoBuilder(
+          stageElementConfig, ciExecutionArgs, steps, accountId);
     } // TODO (shubham): Handle Use from stage for AWS VM
     else if (infrastructure.getType() == Type.AWS_VM) {
       return AwsVmBuildJobInfo.builder().workDir(STEP_WORK_DIR).build();

@@ -224,6 +224,7 @@ public enum FeatureName {
   CUSTOM_DASHBOARD_V2, // To be used only by ui to control flow from cg dashbaords to ng
   TIME_SCALE_CG_SYNC,
   DELEGATE_SELECTION_LOGS_DISABLED,
+  CI_INCREASE_DEFAULT_RESOURCES,
   DISABLE_DEPLOYMENTS_SEARCH_AND_LIMIT_DEPLOYMENT_STATS;
 
   FeatureName() {

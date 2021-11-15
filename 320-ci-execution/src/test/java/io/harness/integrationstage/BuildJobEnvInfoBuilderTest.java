@@ -46,7 +46,7 @@ public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
     StageElementConfig stageElementConfig = awsVmBuildJobTestHelper.getAwsVmStage("test");
 
     BuildJobEnvInfo expected = AwsVmBuildJobInfo.builder().workDir(STEP_WORK_DIR).build();
-    BuildJobEnvInfo actual = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, null, null);
+    BuildJobEnvInfo actual = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(stageElementConfig, null, null, null);
     assertThat(actual).isEqualTo(expected);
   }
 }
