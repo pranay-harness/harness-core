@@ -9,9 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
-import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -24,7 +22,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
