@@ -52,6 +52,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -91,6 +97,27 @@ import retrofit2.http.Body;
           @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
               message = "TemplateRefs Resolved failed in given yaml.")
     })
+@Tag(name = "Templates", description = "This contains a list of APIs specific to the Templates")
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = NGCommonEntityConstants.BAD_REQUEST_CODE,
+    description = NGCommonEntityConstants.BAD_REQUEST_PARAM_MESSAGE,
+    content =
+    {
+      @Content(mediaType = NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE,
+          schema = @Schema(implementation = FailureDTO.class))
+      ,
+          @Content(mediaType = NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE,
+              schema = @Schema(implementation = FailureDTO.class))
+    })
+@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = NGCommonEntityConstants.INTERNAL_SERVER_ERROR_CODE,
+    description = NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE,
+    content =
+    {
+      @Content(mediaType = NGCommonEntityConstants.APPLICATION_JSON_MEDIA_TYPE,
+          schema = @Schema(implementation = ErrorDTO.class))
+      ,
+          @Content(mediaType = NGCommonEntityConstants.APPLICATION_YAML_MEDIA_TYPE,
+              schema = @Schema(implementation = ErrorDTO.class))
+    })
 @NextGenManagerAuth
 @Slf4j
 public class NGTemplateResource {
@@ -101,16 +128,31 @@ public class NGTemplateResource {
   private final AccessControlClient accessControlClient;
   private final TemplateMergeHelper templateMergeHelper;
 
+  public static final String TEMPLATE_PARAM_MESSAGE = "Template Identifier for the entity";
+
   @GET
   @Path("{templateIdentifier}")
   @ApiOperation(value = "Gets Template", nickname = "getTemplate")
-  public ResponseDTO<TemplateResponseDTO> get(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @QueryParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
-      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted,
+  @Operation(operationId = "getTemplate", summary = "Gets Template",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the saved Template")
+      })
+  public ResponseDTO<TemplateResponseDTO>
+  get(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @PathParam(
+          "templateIdentifier") @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "Version Label") @QueryParam(
+          NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
+      @Parameter(description = "Specifies whether Template is deleted or not") @QueryParam(
+          NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted,
+      @Parameter(description = "This contains details of Git Entity like Git Branch info")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     // if label is not given, return stable template
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
@@ -135,13 +177,25 @@ public class NGTemplateResource {
 
   @POST
   @ApiOperation(value = "Creates a Template", nickname = "createTemplate")
-  public ResponseDTO<TemplateWrapperResponseDTO> create(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull String templateYaml,
-      @QueryParam("setDefaultTemplate") @DefaultValue("false") boolean setDefaultTemplate,
-      @QueryParam("comments") String comments) {
+  @Operation(operationId = "createTemplate", summary = "Creates a Template",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the created Template")
+      })
+  public ResponseDTO<TemplateWrapperResponseDTO>
+  create(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = "This contains details of Git Entity like Git Branch, Git Repository to be created")
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo,
+      @Parameter(description = "Template YAML") @NotNull String templateYaml,
+      @Parameter(description = "Specify true if Default Template is to be set") @QueryParam(
+          "setDefaultTemplate") @DefaultValue("false") boolean setDefaultTemplate,
+      @Parameter(description = "Comments") @QueryParam("comments") String comments) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountId, orgId, projectId, templateYaml);
@@ -161,13 +215,26 @@ public class NGTemplateResource {
   @PUT
   @Path("/updateStableTemplate/{templateIdentifier}/{versionLabel}")
   @ApiOperation(value = "Updating stable template label", nickname = "updateStableTemplate")
-  public ResponseDTO<String> updateStableTemplate(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @QueryParam("comments") String comments) {
+  @Operation(operationId = "updateStableTemplate", summary = "Updating stable Template Label",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Template Label")
+      })
+  public ResponseDTO<String>
+  updateStableTemplate(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @PathParam(
+          "templateIdentifier") @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "Version Label") @PathParam(
+          NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
+      @Parameter(description = "This contains details of Git Entity like Git Branch info to be updated")
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @Parameter(description = "Comments") @QueryParam("comments") String comments) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
     log.info(String.format(
@@ -182,15 +249,30 @@ public class NGTemplateResource {
   @PUT
   @Path("/update/{templateIdentifier}/{versionLabel}")
   @ApiOperation(value = "Updating existing template label", nickname = "updateExistingTemplateLabel")
-  public ResponseDTO<TemplateWrapperResponseDTO> updateExistingTemplateLabel(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
-      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull String templateYaml,
-      @QueryParam("setDefaultTemplate") @DefaultValue("false") boolean setDefaultTemplate,
-      @QueryParam("comments") String comments) {
+  @Operation(operationId = "updateExistingTemplateLabel", summary = "Updating the existing Template Label",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the updated Template Label")
+      })
+  public ResponseDTO<TemplateWrapperResponseDTO>
+  updateExistingTemplateLabel(@HeaderParam(IF_MATCH) String ifMatch,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @PathParam(
+          "templateIdentifier") @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "Version Label") @PathParam(
+          NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
+      @Parameter(description = "This contains details of Git Entity like Git Branch information to be updated")
+      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo,
+      @Parameter(description = "Template YAML") @NotNull String templateYaml,
+      @Parameter(description = "Specify true if Default Template is to be set") @QueryParam(
+          "setDefaultTemplate") @DefaultValue("false") boolean setDefaultTemplate,
+      @Parameter(description = "Comments") @QueryParam("comments") String comments) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_EDIT_PERMISSION);
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(
@@ -214,12 +296,25 @@ public class NGTemplateResource {
   @DELETE
   @Path("/{templateIdentifier}/{versionLabel}")
   @ApiOperation(value = "Deletes template versionLabel", nickname = "deleteTemplateVersionLabel")
-  public ResponseDTO<Boolean> deleteTemplate(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @NotNull @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
+  @Operation(operationId = "deleteTemplateVersionLabel", summary = "Deletes Template VersionLabel",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns true if the Template is deleted")
+      })
+  public ResponseDTO<Boolean>
+  deleteTemplate(@HeaderParam(IF_MATCH) String ifMatch,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @PathParam(
+          "templateIdentifier") @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "Version Label") @NotNull @PathParam(
+          NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
+      @Parameter(description = "This contains details of Git Entity like Git Branch information to be deleted")
       @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo, @QueryParam("comments") String comments) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_DELETE_PERMISSION);
@@ -234,14 +329,28 @@ public class NGTemplateResource {
   @Path("/{templateIdentifier}")
   @ApiOperation(value = "Deletes multiple template versionLabels of a particular template identifier",
       nickname = "deleteTemplateVersionsOfIdentifier")
+  @Operation(operationId = "deleteTemplateVersionsOfIdentifier",
+      summary = "Deletes multiple Template VersionLabels of a Template Identifier",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns true if the Template VersionLabels of a Template Identifier are deleted")
+      })
   public ResponseDTO<Boolean>
   deleteTemplateVersionsOfParticularIdentifier(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @PathParam(
+          "templateIdentifier") @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "List of Template Version Labels to be deleted")
       @Body TemplateDeleteListRequestDTO templateDeleteListRequestDTO,
-      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo, @QueryParam("comments") String comments) {
+      @Parameter(description = "This contains details of Git Entity like Git Branch information to be deleted")
+      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo,
+      @Parameter(description = "Comments") @QueryParam("comments") String comments) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_DELETE_PERMISSION);
     log.info(
@@ -255,17 +364,39 @@ public class NGTemplateResource {
   @POST
   @Path("/list")
   @ApiOperation(value = "Gets all template list", nickname = "getTemplateList")
+  @Operation(operationId = "getTemplateList", summary = "Gets all Template list",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns a list of all the Templates")
+      })
   // will return non deleted templates only
-  public ResponseDTO<Page<TemplateSummaryResponseDTO>> listTemplates(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
-      @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @QueryParam("filterIdentifier") String filterIdentifier,
-      @NotNull @QueryParam("templateListType") TemplateListType templateListType,
-      @QueryParam(INCLUDE_ALL_TEMPLATES_ACCESSIBLE) Boolean includeAllTemplatesAccessibleAtScope,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @Body TemplateFilterPropertiesDTO filterProperties,
+  public ResponseDTO<Page<TemplateSummaryResponseDTO>>
+  listTemplates(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                    NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = NGCommonEntityConstants.PAGE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PAGE) @DefaultValue("0") int page,
+      @Parameter(description = NGCommonEntityConstants.SIZE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.SIZE) @DefaultValue("25") int size,
+      @Parameter(
+          description =
+              "Specifies sorting criteria of the list. Like sorting based on the last updated entity, alphabetical sorting in an ascending or descending order")
+      @QueryParam("sort") List<String> sort,
+      @Parameter(description = "The word to be searched and included in the list response") @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Parameter(description = "Filter Identifier") @QueryParam("filterIdentifier") String filterIdentifier,
+      @Parameter(description = "Template List Type") @NotNull @QueryParam(
+          "templateListType") TemplateListType templateListType,
+      @Parameter(description = "Specify true if all accessible Templates are to be included") @QueryParam(
+          INCLUDE_ALL_TEMPLATES_ACCESSIBLE) Boolean includeAllTemplatesAccessibleAtScope,
+      @Parameter(description = "This contains details of Git Entity like Git Branch info")
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @Parameter(description = "This contains details of Template filters based on Template Types and Template Names ")
+      @Body TemplateFilterPropertiesDTO filterProperties,
       @QueryParam("getDistinctFromBranches") Boolean getDistinctFromBranches) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
@@ -292,13 +423,27 @@ public class NGTemplateResource {
   @Path("/updateTemplateSettings/{templateIdentifier}")
   @ApiOperation(value = "Updating template settings, template scope and template stable version",
       nickname = "updateTemplateSettings")
+  @Operation(operationId = "updateTemplateSettings",
+      summary = "Updating Template Settings, Template Scope and Template Stable Version",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns true if Template Settings, Template Scope and Template Stable Version are updated")
+      })
   public ResponseDTO<Boolean>
-  updateTemplateSettings(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @QueryParam("updateStableTemplateVersion") String updateStableTemplateVersion,
-      @QueryParam("currentScope") Scope currentScope, @QueryParam("updateScope") Scope updateScope,
+  updateTemplateSettings(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                             NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @PathParam(
+          "templateIdentifier") @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "Update Stable Template Version") @QueryParam(
+          "updateStableTemplateVersion") String updateStableTemplateVersion,
+      @Parameter(description = "Current Scope") @QueryParam("currentScope") Scope currentScope,
+      @Parameter(description = "Update Scope") @QueryParam("updateScope") Scope updateScope,
+      @Parameter(description = "This contains details of Git Entity like Git Branch info")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("getDistinctFromBranches") Boolean getDistinctFromBranches) {
     if (updateScope != currentScope) {
@@ -322,12 +467,23 @@ public class NGTemplateResource {
   @GET
   @Path("/templateInputs/{templateIdentifier}")
   @ApiOperation(value = "Gets template input set yaml", nickname = "getTemplateInputSetYaml")
-  public ResponseDTO<String> getTemplateInputsYaml(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String templateLabel) {
+  @Operation(operationId = "getTemplateInputSetYaml", summary = "Gets Template Input Set YAML",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Returns the Template Input Set YAML")
+      })
+  public ResponseDTO<String>
+  getTemplateInputsYaml(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                            NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @PathParam(
+          "templateIdentifier") @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "Template Label") @NotNull @QueryParam(
+          NGCommonEntityConstants.VERSION_LABEL_KEY) String templateLabel) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, templateIdentifier), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
     // if label not given, then consider stable template label
@@ -341,6 +497,7 @@ public class NGTemplateResource {
   @POST
   @Path("/applyTemplates")
   @ApiOperation(value = "Gets complete yaml with templateRefs resolved", nickname = "getYamlWithTemplateRefsResolved")
+  @Hidden
   public ResponseDTO<TemplateMergeResponseDTO> applyTemplates(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -353,6 +510,7 @@ public class NGTemplateResource {
   @GET
   @ApiOperation(value = "dummy api for checking template schema", nickname = "dummyApiForSwaggerSchemaCheck")
   @Path("/dummyApiForSwaggerSchemaCheck")
+  @Hidden
   // DO NOT DELETE THIS WITHOUT CONFIRMING WITH UI
   public ResponseDTO<NGTemplateConfig> dummyApiForSwaggerSchemaCheck() {
     log.info("Get Template Config schema");
