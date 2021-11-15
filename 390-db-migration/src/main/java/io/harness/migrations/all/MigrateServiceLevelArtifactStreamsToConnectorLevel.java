@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;

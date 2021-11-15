@@ -52,6 +52,7 @@ import io.harness.persistence.UuidAware;
 
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
+import software.wings.beans.CGConstants;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
@@ -290,7 +291,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   }
 
   private boolean isResourceLookupEntity(EntityAuditRecord record) {
-    if (Application.GLOBAL_APP_ID.equals(record.getAppId())) {
+    if (CGConstants.GLOBAL_APP_ID.equals(record.getAppId())) {
       return true;
     }
     if (resourceTypeSet.contains(record.getEntityType())

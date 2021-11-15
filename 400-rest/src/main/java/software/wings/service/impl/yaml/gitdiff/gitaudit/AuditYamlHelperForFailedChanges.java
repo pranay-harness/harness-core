@@ -3,8 +3,8 @@ package software.wings.service.impl.yaml.gitdiff.gitaudit;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -23,6 +23,7 @@ import io.harness.git.model.ChangeType;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.beans.Application;
+import software.wings.beans.CGConstants;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.DeploymentSpecification;
 import software.wings.beans.EntityType;
@@ -165,7 +166,7 @@ public class AuditYamlHelperForFailedChanges {
 
   private EntityAuditRecord generateEntityAuditRecordForFailedChange(GitAuditDataWrapper auditRequestData) {
     // Change is for app level entity
-    if (!Application.GLOBAL_APP_ID.equals(auditRequestData.getAppId())) {
+    if (!CGConstants.GLOBAL_APP_ID.equals(auditRequestData.getAppId())) {
       return generateAuditRecordIfAppLevelEntityChange(auditRequestData);
     }
 
@@ -650,7 +651,7 @@ public class AuditYamlHelperForFailedChanges {
 
   private Application getApplicationDetails(String accountId, String yamlFilePath) {
     String appName = StringUtils.EMPTY;
-    String appId = Application.GLOBAL_APP_ID;
+    String appId = CGConstants.GLOBAL_APP_ID;
 
     if (matchWithRegex(YamlType.APPLICATION.getPrefixExpression(), yamlFilePath)) {
       try {

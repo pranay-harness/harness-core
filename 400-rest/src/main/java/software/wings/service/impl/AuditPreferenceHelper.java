@@ -19,9 +19,9 @@ import io.harness.exception.WingsException;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.beans.AccountAuditFilter;
-import software.wings.beans.Application;
 import software.wings.beans.ApplicationAuditFilter;
 import software.wings.beans.AuditPreference;
+import software.wings.beans.CGConstants;
 import software.wings.beans.Preference;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -200,10 +200,10 @@ public class AuditPreferenceHelper {
       // e.g. {ResourceTypes=[], ResourceIds=[]}
       if (!filterHasOperationTypes) {
         searchFilter =
-            buildSearchFilter(AuditHeaderKeys.appIdEntityRecord, EQ, new String[] {Application.GLOBAL_APP_ID});
+            buildSearchFilter(AuditHeaderKeys.appIdEntityRecord, EQ, new String[] {CGConstants.GLOBAL_APP_ID});
       } else {
         searchFilter = generateElementMatchFilterWithOperationType(
-            auditPreference, Arrays.asList(buildSearchFilter("appId", EQ, new String[] {Application.GLOBAL_APP_ID})));
+            auditPreference, Arrays.asList(buildSearchFilter("appId", EQ, new String[] {CGConstants.GLOBAL_APP_ID})));
       }
 
     } else {

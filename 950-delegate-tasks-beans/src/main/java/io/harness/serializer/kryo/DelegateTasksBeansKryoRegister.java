@@ -16,6 +16,7 @@ import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
+import io.harness.ccm.config.CCMConfig;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
@@ -417,11 +418,13 @@ import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.beans.AwsConfig;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.s3.S3FileRequest;
 import software.wings.beans.servicenow.ServiceNowFields;
+import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
@@ -462,6 +465,9 @@ import org.json.JSONObject;
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
+    kryo.register(AwsConfig.class, 5013);
+    kryo.register(ShellScriptProvisionParameters.class, 7151);
+    kryo.register(CCMConfig.class, 7248);
     kryo.register(AlwaysFalseValidationCapability.class, 19036);
     kryo.register(AppDynamicsConnectionTaskParams.class, 19107);
     kryo.register(AppDynamicsConnectionTaskResponse.class, 19108);

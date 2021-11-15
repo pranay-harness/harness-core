@@ -11,7 +11,7 @@ import static io.harness.ng.core.account.AuthenticationMechanism.OAUTH;
 import static io.harness.ng.core.account.AuthenticationMechanism.SAML;
 import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 
 import static java.util.Arrays.asList;
 

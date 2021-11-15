@@ -8,7 +8,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.shell.ScriptType.POWERSHELL;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.command.CommandType.INSTALL;
 import static software.wings.beans.command.CommandUnitType.DOWNLOAD_ARTIFACT;
 import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.aDownloadArtifactCommandUnit;

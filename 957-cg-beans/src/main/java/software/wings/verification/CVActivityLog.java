@@ -5,7 +5,6 @@ import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogHelper.doneColoring;
 import static software.wings.beans.LogWeight.Bold;
-import static software.wings.common.VerificationConstants.ACTIVITY_LOG_TTL_WEEKS;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
@@ -42,6 +41,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "cvActivityLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  private static final long ACTIVITY_LOG_TTL_WEEKS = 2;
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

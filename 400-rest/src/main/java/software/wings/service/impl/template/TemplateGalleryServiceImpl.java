@@ -7,7 +7,7 @@ import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateGallery.ACCOUNT_ID_KEY2;
 import static software.wings.beans.template.TemplateGallery.GALLERY_KEY;
 import static software.wings.beans.template.TemplateGallery.GalleryKey;

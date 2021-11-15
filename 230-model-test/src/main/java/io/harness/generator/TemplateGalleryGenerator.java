@@ -3,7 +3,7 @@ package io.harness.generator;
 import static io.harness.govern.Switch.unhandled;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_COMMAND_LIBRARY_GALLERY;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
