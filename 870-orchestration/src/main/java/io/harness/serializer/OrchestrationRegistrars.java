@@ -138,6 +138,7 @@ public class OrchestrationRegistrars {
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .add(NGCoreKryoRegistrar.class)
           .add(ProjectAndOrgKryoRegistrar.class)
           .add(SecretManagerClientKryoRegistrar.class)
