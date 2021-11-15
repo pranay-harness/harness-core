@@ -104,6 +104,8 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//930-ng-core-clients:module",
+        "//940-resource-group-beans:module",
         "//945-ng-audit-client:module",
         "//947-access-control-core:module",
         "//949-access-control-commons:module",

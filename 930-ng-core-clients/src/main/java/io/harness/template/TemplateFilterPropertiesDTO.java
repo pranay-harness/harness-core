@@ -11,6 +11,7 @@ import io.harness.ng.core.template.TemplateEntityType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("TemplateFilterProperties")
+@Schema(name = "TemplateFilterProperties", description = "This contains details of the Template Filter")
 @JsonTypeName(TEMPLATE_FILTER)
 @OwnedBy(CDC)
 public class TemplateFilterPropertiesDTO extends FilterPropertiesDTO {
