@@ -512,8 +512,7 @@ public class SignupServiceImpl implements SignupService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("reason", e.getMessage());
     properties.put("failedAt", failedAt);
-    ip = ip == null ? "" : ip;
-    properties.put("ip", ip);
+    properties.put("ip", ip == null ? "" : ip);
     addUtmInfoToProperties(utmInfo, properties);
 
     if (accountDTO != null) {
@@ -535,8 +534,7 @@ public class SignupServiceImpl implements SignupService {
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
     properties.put("accountId", accountId);
     properties.put("source", source);
-    ip = ip == null ? "" : ip;
-    properties.put("ip", ip);
+    properties.put("ip", ip == null ? "" : ip);
 
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(userInfo.getEmail(), properties,
@@ -557,8 +555,7 @@ public class SignupServiceImpl implements SignupService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("email", email);
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
-    ip = ip == null ? "" : ip;
-    properties.put("ip", ip);
+    properties.put("ip", ip == null ? "" : ip);
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(
         email, properties, ImmutableMap.<Destination, Boolean>builder().put(Destination.MARKETO, true).build());
