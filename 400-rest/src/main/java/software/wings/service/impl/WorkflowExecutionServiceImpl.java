@@ -48,9 +48,9 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;

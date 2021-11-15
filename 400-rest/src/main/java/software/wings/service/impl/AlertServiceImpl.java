@@ -6,7 +6,7 @@ import static io.harness.logging.Misc.getDurationString;
 import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.alerts.AlertStatus.Pending;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.beans.alert.AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT;

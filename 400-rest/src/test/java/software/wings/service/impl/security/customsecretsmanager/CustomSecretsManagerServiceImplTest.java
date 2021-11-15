@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.command.CommandType.START;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;

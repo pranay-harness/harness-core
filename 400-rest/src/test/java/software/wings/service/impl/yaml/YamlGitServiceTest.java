@@ -4,7 +4,7 @@ import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.SSH;
 
 import static org.assertj.core.api.Assertions.assertThat;

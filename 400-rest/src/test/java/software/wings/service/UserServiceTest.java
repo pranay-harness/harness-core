@@ -23,7 +23,7 @@ import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.AccountType.PAID;
 import static software.wings.beans.AccountType.TRIAL;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.EmailVerificationToken.Builder.anEmailVerificationToken;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;

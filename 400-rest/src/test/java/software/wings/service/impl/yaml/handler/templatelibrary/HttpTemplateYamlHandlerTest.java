@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HTTP;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.HTTP_TEMPLATE_VALID_YAML_FILE_PATH;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.INVALID_HTTP_TEMPLATE_VALID_YAML_FILE_PATH;

@@ -31,6 +31,7 @@ public class CvNextGenRegistrars {
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .addAll(AccessControlClientRegistrars.kryoRegistrars)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -42,6 +43,7 @@ public class CvNextGenRegistrars {
           .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

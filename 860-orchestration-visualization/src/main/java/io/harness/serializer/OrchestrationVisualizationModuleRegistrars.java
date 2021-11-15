@@ -20,6 +20,7 @@ public class OrchestrationVisualizationModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationRegistrars.kryoRegistrars)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .add(OrchestrationVisualizationKryoRegistrar.class)
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
@@ -29,6 +30,7 @@ public class OrchestrationVisualizationModuleRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .add(OrchestrationVisualizationMorphiaRegistrar.class)
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

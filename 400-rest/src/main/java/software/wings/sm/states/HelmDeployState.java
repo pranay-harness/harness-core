@@ -18,7 +18,7 @@ import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.CGConstants.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
