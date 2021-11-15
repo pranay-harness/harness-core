@@ -128,8 +128,8 @@ public class SignupServiceImpl implements SignupService {
 
     AccountDTO account = createAccount(dto);
     UserInfo user = createUser(dto, account);
-    sendSucceedTelemetryEvent(
-        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW, dto.getIpAddress());
+    sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user,
+        SignupType.SIGNUP_FORM_FLOW, dto.getIpAddress());
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(user.getEmail());
       try {
@@ -501,7 +501,8 @@ public class SignupServiceImpl implements SignupService {
                                        .build();
       return getResponse(userClient.createNewUser(userRequest));
     } catch (Exception e) {
-      sendFailedTelemetryEvent(signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "User creation", signupDTO.getIpAddress());
+      sendFailedTelemetryEvent(
+          signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "User creation", signupDTO.getIpAddress());
       throw e;
     }
   }
@@ -511,9 +512,7 @@ public class SignupServiceImpl implements SignupService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("reason", e.getMessage());
     properties.put("failedAt", failedAt);
-    if(ip==null) {
-      ip="";
-    }
+    ip = ip == null ? "" : ip;
     properties.put("ip", ip);
     addUtmInfoToProperties(utmInfo, properties);
 
@@ -536,9 +535,7 @@ public class SignupServiceImpl implements SignupService {
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
     properties.put("accountId", accountId);
     properties.put("source", source);
-    if(ip==null) {
-      ip="";
-    }
+    ip = ip == null ? "" : ip;
     properties.put("ip", ip);
 
     addUtmInfoToProperties(utmInfo, properties);
@@ -560,9 +557,7 @@ public class SignupServiceImpl implements SignupService {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("email", email);
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
-    if(ip==null) {
-      ip="";
-    }
+    ip = ip == null ? "" : ip;
     properties.put("ip", ip);
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(
