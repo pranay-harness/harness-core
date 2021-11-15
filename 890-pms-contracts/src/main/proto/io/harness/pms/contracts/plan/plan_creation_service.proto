@@ -103,7 +103,7 @@ message VariablesCreationBlobResponse {
   repeated ErrorResponse errorResponse = 4;
   map<string, YamlOutputProperties> yamlOutputProperties = 5;
   Dependencies deps = 6;
-  Dependencies resolvedDeps = 7;
+  YamlUpdates yamlUpdates = 7;
 }
 
 message ErrorResponse {
