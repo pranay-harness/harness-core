@@ -1,7 +1,8 @@
-package io.serializer.kryo;
+package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.InputSetValidatorType;
 import io.harness.connector.ConnectivityStatus;
@@ -63,6 +64,7 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(Resource.class, 22009);
     kryo.register(HttpRequestInfo.class, 22010);
     kryo.register(RequestMetadata.class, 22011);
+    kryo.register(ModuleType.class, 22012);
 
     kryo.register(HttpHeaderConfig.class, 19462);
 

@@ -151,21 +151,24 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       criteria.and(ResourceGroupKeys.allowedScopeLevels).in(resourceGroupFilterDTO.getScopeLevelFilter());
     }
 
+    List<Criteria> andOperatorCriteriaList = new ArrayList<>();
+
     if (ManagedFilter.ONLY_MANAGED.equals(resourceGroupFilterDTO.getManagedFilter())) {
-      criteria.andOperator(managedCriteria);
+      andOperatorCriteriaList.add(managedCriteria);
     } else if (ManagedFilter.ONLY_CUSTOM.equals(resourceGroupFilterDTO.getManagedFilter())) {
-      criteria.andOperator(scopeCriteria);
+      andOperatorCriteriaList.add(scopeCriteria);
     } else {
-      criteria.orOperator(scopeCriteria, managedCriteria);
+      andOperatorCriteriaList.add(new Criteria().orOperator(scopeCriteria, managedCriteria));
     }
 
     if (isNotEmpty(resourceGroupFilterDTO.getSearchTerm())) {
-      criteria.orOperator(Criteria.where(ResourceGroupKeys.name).regex(resourceGroupFilterDTO.getSearchTerm(), "i"),
+      andOperatorCriteriaList.add(new Criteria().orOperator(
+          Criteria.where(ResourceGroupKeys.name).regex(resourceGroupFilterDTO.getSearchTerm(), "i"),
           Criteria.where(ResourceGroupKeys.identifier).regex(resourceGroupFilterDTO.getSearchTerm(), "i"),
           Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.key)
               .regex(resourceGroupFilterDTO.getSearchTerm(), "i"),
           Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.value)
-              .regex(resourceGroupFilterDTO.getSearchTerm(), "i"));
+              .regex(resourceGroupFilterDTO.getSearchTerm(), "i")));
     }
 
     if (isNotEmpty(resourceGroupFilterDTO.getResourceSelectorFilterList())) {
@@ -176,8 +179,10 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
                                                              .is(resourceSelectorFilter.getResourceType())
                                                              .and(StaticResourceSelectorKeys.identifiers)
                                                              .is(resourceSelectorFilter.getResourceIdentifier()))));
-      criteria.orOperator(resourceSelectorCriteria.toArray(new Criteria[0]));
+      andOperatorCriteriaList.add(new Criteria().orOperator(resourceSelectorCriteria.toArray(new Criteria[0])));
     }
+
+    criteria.andOperator(andOperatorCriteriaList.toArray(new Criteria[0]));
 
     return criteria;
   }

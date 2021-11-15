@@ -27,6 +27,7 @@ public class CiBeansRegistrars {
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
+          .addAll(LicenseBeanRegistrar.kryoRegistrars)
           .add(CIBeansKryoRegistrar.class)
           .build();
 

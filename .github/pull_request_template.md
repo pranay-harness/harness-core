@@ -20,3 +20,5 @@ You can use the following comments to re-trigger PR Checks
 - runUnitTests2: `trigger unittest2`
 - runUnitTests3: `trigger unittest3`
 - runUnitTests4: `trigger unittest4`
+- runFunctionalTests_1: `trigger ft1`
+- runFunctionalTests_2: `trigger ft2`

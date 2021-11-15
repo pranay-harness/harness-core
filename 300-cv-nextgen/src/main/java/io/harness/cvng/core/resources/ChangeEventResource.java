@@ -55,7 +55,10 @@ public class ChangeEventResource {
   @NextGenManagerAuth
   @Path(CHANGE_EVENT_PATH + "/register")
   @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEvent")
-  public RestResponse<Boolean> register(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+  public RestResponse<Boolean> register(
+      @PathParam(CVNextGenConstants.ACCOUNT_IDENTIFIER_KEY) @NonNull String accountIdentifier,
+      @PathParam(CVNextGenConstants.ORG_IDENTIFIER_KEY) @NonNull String orgIdentifier,
+      @PathParam(CVNextGenConstants.PROJECT_IDENTIFIER_KEY) @NonNull String projectIdentifier,
       @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
     return new RestResponse<>(changeEventService.register(changeEventDTO));
   }
@@ -130,7 +133,11 @@ public class ChangeEventResource {
   @Path(CHANGE_EVENT_PATH + "/{activityId}")
   @ExceptionMetered
   @ApiOperation(value = "get ChangeEvent detail", nickname = "getChangeEventDetail")
-  public RestResponse<ChangeEventDTO> getChangeEventDetail(@PathParam("activityId") String activityId) {
+  public RestResponse<ChangeEventDTO> getChangeEventDetail(
+      @PathParam(CVNextGenConstants.ACCOUNT_IDENTIFIER_KEY) @NonNull String accountIdentifier,
+      @PathParam(CVNextGenConstants.ORG_IDENTIFIER_KEY) @NonNull String orgIdentifier,
+      @PathParam(CVNextGenConstants.PROJECT_IDENTIFIER_KEY) @NonNull String projectIdentifier,
+      @PathParam("activityId") String activityId) {
     return new RestResponse<>(changeEventService.get(activityId));
   }
 
