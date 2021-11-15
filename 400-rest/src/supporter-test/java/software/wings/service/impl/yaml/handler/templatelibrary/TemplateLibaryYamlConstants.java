@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.common.TemplateConstants.ARTIFACT_SOURCE;
 import static software.wings.common.TemplateConstants.HTTP;

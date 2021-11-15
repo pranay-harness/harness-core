@@ -16,6 +16,7 @@ public class VerificationRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .add(VerificationKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
+          .addAll(DelegateTaskRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -23,5 +24,6 @@ public class VerificationRegistrars {
           .add(VerificationMorphiaRegistrar.class)
           .add(PrimaryVersionManagerMorphiaRegistrar.class)
           .add(VerificationMorphiaRegistrars.class)
+          .addAll(DelegateTaskRegistrars.morphiaRegistrars)
           .build();
 }

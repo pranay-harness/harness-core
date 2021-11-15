@@ -10,7 +10,7 @@ import static io.harness.expression.ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABL
 
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.service.impl.ArtifactStreamServiceImpl.ARTIFACT_STREAM_DEBUG_LOG;
 
 import static java.lang.String.format;
@@ -194,8 +194,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
               }
 
               Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-              artifactStreams.add(
-                  ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
+              artifactStreams.add(prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
             }
           }
 
@@ -230,8 +229,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
         }
 
         Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-        artifactStreams.add(
-            ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
+        artifactStreams.add(prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
       }
     }
 
@@ -570,8 +568,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
                 continue;
               }
               Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-              artifactStreams.add(
-                  ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
+              artifactStreams.add(prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
             }
             serviceVariable.setArtifactStreamSummaries(artifactStreams);
           }
@@ -593,13 +590,31 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
                 continue;
               }
               Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-              artifactStreams.add(
-                  ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
+              artifactStreams.add(prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
             }
             variable.setArtifactStreamSummaries(artifactStreams);
           }
         }
       }
     }
+  }
+
+  public static ArtifactStreamSummary prepareSummaryFromArtifactStream(
+      ArtifactStream artifactStream, Artifact lastCollectedArtifact) {
+    if (artifactStream == null) {
+      return null;
+    }
+
+    String lastCollectedArtifactName = null;
+    if (lastCollectedArtifact != null) {
+      lastCollectedArtifactName = lastCollectedArtifact.getBuildNo();
+    }
+    return ArtifactStreamSummary.builder()
+        .artifactStreamId(artifactStream.getUuid())
+        .settingId(artifactStream.getSettingId())
+        .displayName(artifactStream.getName())
+        .lastCollectedArtifact(lastCollectedArtifactName)
+        .name(artifactStream.getName())
+        .build();
   }
 }

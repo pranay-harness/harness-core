@@ -41,8 +41,6 @@ import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFileDefinition;
 import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
-import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
-import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.beans.pagerduty.PagerDutyRegisterWebhookRequest;
@@ -116,9 +114,6 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AppDynamicsFetchAppRequest.class, 9046);
     kryo.register(AppDynamicsFetchTiersRequest.class, 9047);
 
-    kryo.register(ApiCallLogDTO.class, 9048);
-    kryo.register(ApiCallLogDTOField.class, 9049);
-    kryo.register(ApiCallLogDTO.FieldType.class, 9050);
     kryo.register(NewRelicApplicationFetchRequest.class, 9051);
     kryo.register(NewRelicMetricPackValidationRequest.class, 9052);
     kryo.register(AppDynamicsMetricDataValidationRequest.class, 9053);
