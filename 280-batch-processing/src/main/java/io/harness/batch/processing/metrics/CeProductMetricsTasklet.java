@@ -19,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +37,11 @@ public class CeProductMetricsTasklet implements Tasklet {
   @Autowired private ProductMetricsService productMetricsService;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private CeCloudMetricsService ceCloudMetricsService;
+  @Autowired private CENGTelemetryService cengTelemetryService;
   @Autowired TelemetryReporter telemetryReporter;
   private JobParameters parameters;
+
+  private static final String CONNECTORS_TELEMETRY = "CE_CONNECTORS";
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
@@ -58,8 +62,7 @@ public class CeProductMetricsTasklet implements Tasklet {
 
   private void nextGenInstrumentation(String accountId, Instant start, Instant end) {
     HashMap<String, Object> properties = new HashMap<>();
-    // TODO: Add Properties based on the Metric Needed in V1
-
+    properties.put(CONNECTORS_TELEMETRY, cengTelemetryService.getNextGenConnectorsCountByType(accountId));
     Map<Destination, Boolean> destinations = new EnumMap(Destination.class) {
       { put(Destination.AMPLITUDE, true); }
     };
