@@ -62,16 +62,6 @@ public class NoOpAlertService implements AlertService {
   }
 
   @Override
-  public void delegateAvailabilityUpdated(String accountId) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void delegateEligibilityUpdated(String accountId, String delegateId) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public void deploymentCompleted(String appId, String executionId) {
     throw new UnsupportedOperationException();
   }

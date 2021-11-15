@@ -211,11 +211,11 @@ public class OverviewDashboardServiceImplTest {
         .thenReturn(mapOfOrganizationIdentifierAndOrganizationName);
     doReturn(requestActiveDeploymentStats)
         .when(cdLandingDashboardResourceClient)
-        .getActiveDeploymentStats(anyString(), anyList());
+        .getActiveDeploymentStats(anyString(), any());
     when(cdLandingDashboardResourceClient.getDeploymentStatsSummary(
-             anyString(), anyList(), eq(startTime1), eq(endTime1), any()))
+             anyString(), eq(startTime1), eq(endTime1), any(), any()))
         .thenReturn(requestDeploymentStatsSummary);
-    when(cdLandingDashboardResourceClient.get(anyString(), anyList(), eq(startTime1), eq(endTime1), any()))
+    when(cdLandingDashboardResourceClient.get(anyString(), eq(startTime1), eq(endTime1), any(), any()))
         .thenReturn(requestServicesDashboardInfo);
     when(parallelRestCallExecutor.executeRestCalls(anyList())).thenReturn(deploymentStatsOverviewRestCallResponseList1);
 
@@ -242,11 +242,11 @@ public class OverviewDashboardServiceImplTest {
     Call<ResponseDTO<ActiveProjectsCountDTO>> requestProjectsCount = Mockito.mock(Call.class);
 
     when(dashboardRBACService.listAccessibleProject(anyString(), anyString())).thenReturn(listOfAccessibleProjects);
-    when(cdLandingDashboardResourceClient.getServicesCount(anyString(), anyList(), eq(startTime1), eq(endTime1)))
+    when(cdLandingDashboardResourceClient.getServicesCount(anyString(), eq(startTime1), eq(endTime1), any()))
         .thenReturn(requestServicesCount);
-    when(cdLandingDashboardResourceClient.getEnvCount(anyString(), anyList(), eq(startTime1), eq(endTime1)))
+    when(cdLandingDashboardResourceClient.getEnvCount(anyString(), eq(startTime1), eq(endTime1), any()))
         .thenReturn(requestEnvCount);
-    when(pmsLandingDashboardResourceClient.getPipelinesCount(anyString(), anyList(), eq(startTime1), eq(endTime1)))
+    when(pmsLandingDashboardResourceClient.getPipelinesCount(anyString(), eq(startTime1), eq(endTime1), any()))
         .thenReturn(requestPipelinesCount);
     when(userNGClient.getAccessibleProjectsCount(anyString(), anyString(), eq(startTime1), eq(endTime1)))
         .thenReturn(requestProjectsCount);
@@ -272,7 +272,7 @@ public class OverviewDashboardServiceImplTest {
     when(dashboardRBACService.listAccessibleProject(anyString(), anyString())).thenReturn(listOfAccessibleProjects);
     when(dashboardRBACService.getMapOfOrganizationIdentifierAndOrganizationName(anyString(), anyList()))
         .thenReturn(mapOfOrganizationIdentifierAndOrganizationName);
-    when(cdLandingDashboardResourceClient.getTopProjects(anyString(), anyList(), eq(startTime1), eq(endTime1)))
+    when(cdLandingDashboardResourceClient.getTopProjects(anyString(), eq(startTime1), eq(endTime1), any()))
         .thenReturn(requestProjectsDashboardInfo);
 
     when(parallelRestCallExecutor.executeRestCalls(anyList()))

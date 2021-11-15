@@ -7,8 +7,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
-import static software.wings.beans.alert.AlertType.PerpetualTaskAlert;
-
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -52,7 +50,6 @@ import software.wings.beans.TaskType;
 import software.wings.service.InstanceSyncConstants;
 import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
@@ -67,21 +64,6 @@ import lombok.extern.slf4j.Slf4j;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("software.wings.service.InstanceSyncConstants")
 public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
-  public static final String NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK =
-      "No delegate available to handle perpetual task of %s task type";
-
-  public static final String NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK =
-      "No delegates found. Tasks require a delegate to be installed";
-
-  public static final String NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK =
-      "No eligible delegate to handle perpetual task of %s task type";
-
-  public static final String FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK =
-      "Failed to assign any Delegate to perpetual task of %s task type";
-
-  public static final String PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE =
-      "Perpetual task of %s task type failed to be assigned to any Delegate";
-
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
@@ -90,10 +72,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
   @Inject private MorphiaPersistenceRequiredProvider<PerpetualTaskRecord> persistenceRequiredProvider;
-  @Inject private transient AlertService alertService;
   @Inject private AccountService accountService;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
 
   PersistenceIterator<PerpetualTaskRecord> assignmentIterator;
   PersistenceIterator<PerpetualTaskRecord> rebalanceIterator;
@@ -159,10 +139,6 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             if (!isAbleToExecutePerpetualTask) {
               perpetualTaskService.updateTaskUnassignedReason(
                   taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES, taskRecord.getAssignTryCount());
-
-              raiseAlert(
-                  taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
-
               return;
             }
           }
@@ -173,19 +149,10 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
           perpetualTaskService.appointDelegate(
               taskRecord.getAccountId(), taskId, delegateId, System.currentTimeMillis());
 
-          alertService.closeAlert(taskRecord.getAccountId(), null, PerpetualTaskAlert,
-              software.wings.beans.alert.PerpetualTaskAlert.builder()
-                  .accountId(taskRecord.getAccountId())
-                  .perpetualTaskType(taskRecord.getPerpetualTaskType())
-                  .build());
-
         } else if ((response instanceof RemoteMethodReturnValueData)
             && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
           perpetualTaskService.updateTaskUnassignedReason(
               taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES, taskRecord.getAssignTryCount());
-
-          raiseAlert(
-              taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
 
           log.error("Invalid request exception: ", ((RemoteMethodReturnValueData) response).getException());
         } else {
@@ -196,21 +163,13 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
         ignoredOnPurpose(exception);
         perpetualTaskService.updateTaskUnassignedReason(
             taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_INSTALLED, taskRecord.getAssignTryCount());
-        raiseAlert(taskRecord, NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK);
       } catch (NoAvailableDelegatesException exception) {
         ignoredOnPurpose(exception);
         perpetualTaskService.updateTaskUnassignedReason(
             taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE, taskRecord.getAssignTryCount());
-        raiseAlert(
-            taskRecord, format(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
       } catch (WingsException exception) {
-        raiseAlert(taskRecord,
-            format(PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE, taskRecord.getPerpetualTaskType()));
         ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       } catch (Exception e) {
-        raiseAlert(
-            taskRecord, format(FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
-
         log.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
       }
     }
@@ -265,16 +224,6 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
                   .build())
         .setupAbstractions(perpetualTaskExecutionBundle.getSetupAbstractionsMap())
         .build();
-  }
-
-  private void raiseAlert(PerpetualTaskRecord taskRecord, String message) {
-    alertService.openAlert(taskRecord.getAccountId(), null, PerpetualTaskAlert,
-        software.wings.beans.alert.PerpetualTaskAlert.builder()
-            .accountId(taskRecord.getAccountId())
-            .perpetualTaskType(taskRecord.getPerpetualTaskType())
-            .message(message)
-            .description(taskRecord.getTaskDescription())
-            .build());
   }
 
   @Override
