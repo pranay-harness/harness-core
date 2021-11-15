@@ -127,7 +127,7 @@ public class SignupServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(SignupInviteDTO.builder().build())));
     when(userClient.createNewSignupInvite(any(SignupInviteDTO.class))).thenReturn(createNewSignupInviteCall);
 
-    boolean result = signupServiceImpl.createSignupInvite(signupDTO, null, "");
+    boolean result = signupServiceImpl.createSignupInvite(signupDTO, null);
 
     verify(reCaptchaVerifier, times(1)).verifyInvisibleCaptcha(anyString());
     verify(telemetryReporter, times(1)).sendIdentifyEvent(eq(EMAIL), any(), any());
@@ -149,7 +149,7 @@ public class SignupServiceImplTest extends CategoryTest {
         SignupVerificationToken.builder().email(EMAIL).validUntil(Long.MAX_VALUE).build();
     when(verificationTokenRepository.findByToken("token")).thenReturn(Optional.of(verificationToken));
     when(accessControlClient.hasAccess(any(), any(), any())).thenReturn(true);
-    UserInfo userInfo = signupServiceImpl.completeSignupInvite("token", "127.0.0.1");
+    UserInfo userInfo = signupServiceImpl.completeSignupInvite("token");
 
     verify(telemetryReporter, times(1)).sendIdentifyEvent(eq(EMAIL), any(), any());
     verify(executorService, times(1));
@@ -163,7 +163,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCompleteSignupInviteWithInvalidToken() throws IOException {
     when(verificationTokenRepository.findByToken("token")).thenReturn(Optional.ofNullable(null));
-    signupServiceImpl.completeSignupInvite("token", "127.0.0.1");
+    signupServiceImpl.completeSignupInvite("token");
   }
 
   @Test
@@ -283,7 +283,7 @@ public class SignupServiceImplTest extends CategoryTest {
                                     .userId("1")
                                     .token("2")
                                     .build()));
-    VerifyTokenResponseDTO verifyTokenResponseDTO = signupServiceImpl.verifyToken("2", "127.0.0.1");
+    VerifyTokenResponseDTO verifyTokenResponseDTO = signupServiceImpl.verifyToken("2");
     assertThat(verifyTokenResponseDTO.getAccountIdentifier()).isEqualTo(ACCOUNT_ID);
   }
 }
